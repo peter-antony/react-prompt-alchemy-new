@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface DropdownItem {
@@ -14,6 +14,7 @@ export interface ConfigurableButtonConfig {
   tooltipTitle: string;
   showDropdown: boolean;
   dropdownItems?: DropdownItem[];
+  onClick: () => void;
   tooltipPosition?: 'top' | 'right' | 'bottom' | 'left';
 }
 
@@ -53,11 +54,17 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
   }, [showDropdown]);
 
   const handleMainButtonClick = () => {
-    if (hasDropdown) {
-      setShowDropdown(!showDropdown);
+    if (!hasDropdown) {
+      onClick?.();
     } else {
+      // Only navigate if the user clicks the label, not the arrow
       onClick?.();
     }
+  };
+
+  const handleChevronClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDropdown(!showDropdown);
   };
 
   const handleDropdownItemClick = (item: DropdownItem) => {
@@ -85,21 +92,40 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
       <button
         ref={buttonRef}
         className={cn(
-          "border border-blue-500 text-blue-500 hover:bg-blue-50 rounded px-3 py-1 flex items-center transition-colors duration-200",
+          "border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded px-3 flex items-center transition-colors duration-200 gap-2",
           className
         )}
         onClick={handleMainButtonClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
+        type="button"
       >
-        <span>{label}</span>
+        <span
+          onClick={config.onClick}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+          className="select-none flex items-center text-sm font-medium gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          {label}
+        </span>
         {hasDropdown && (
-          <ChevronDown 
-            className={cn(
-              "h-4 w-4 ml-2 transition-transform duration-200",
-              showDropdown ? "rotate-180" : ""
-            )} 
-          />
+          <>
+            <div className="w-px h-9 bg-blue-500 ml-2 mr-1" />
+            <span
+              onClick={handleChevronClick}
+              style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+              tabIndex={0}
+              role="button"
+              aria-label="Show dropdown"
+            >
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  showDropdown ? "rotate-180" : ""
+                )}
+              />
+            </span>
+          </>
         )}
       </button>
 
@@ -127,11 +153,11 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
 
       {/* Dropdown Menu */}
       {hasDropdown && showDropdown && dropdownItems && (
-        <div className="absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 transition-opacity duration-200">
+        <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50 transition-opacity duration-200">
           {dropdownItems.map((item, index) => (
             <button
               key={index}
-              className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center transition-colors duration-150 first:rounded-t last:rounded-b"
+              className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center transition-colors duration-150 first:rounded-t-md last:rounded-b-md"
               onClick={() => handleDropdownItemClick(item)}
             >
               {item.icon && <span className="mr-2">{item.icon}</span>}

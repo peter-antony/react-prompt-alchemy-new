@@ -42,3 +42,9 @@ export const API_ENDPOINTS = {
     SAVE: (userId: string, gridId: string) => `/users/${userId}/preferences/${gridId}`,
   },
 } as const;
+
+export const ROUTES = {
+  HOME: '/',
+  DASHBOARD: '/dashboard',
+  TRIP_EXECUTION: '/trip-execution',
+} as const;

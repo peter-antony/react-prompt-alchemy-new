@@ -6,8 +6,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { FieldRenderer } from './FieldRenderer';
 import { EnhancedFieldVisibilityModal } from './EnhancedFieldVisibilityModal';
-import { PanelStatusIndicator } from './PanelStatusIndicator';
+// import { PanelStatusIndicator } from './PanelStatusIndicator';
 import { DynamicPanelProps, PanelConfig, PanelSettings } from '@/types/dynamicPanel';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import ConfirmSwitch from '../../assets/images/ConfirmSwitch.png';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
@@ -18,6 +20,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   panelOrder = 1,
   startingTabIndex = 1,
   panelTitle: initialPanelTitle,
+  panelIcon: initialPanelIcon,
   panelConfig: initialPanelConfig,
   formName,
   initialData = {},
@@ -30,10 +33,13 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   userId = 'default-user',
   panelWidth = 'full',
   collapsible = false,
-  showPreview = false
+  showPreview = false,
+  className = '',
+  panelSubTitle = '',
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
+  const [panelIcon, setPanelIcon] = useState(initialPanelIcon);
   const [currentPanelWidth, setCurrentPanelWidth] = useState<'full' | 'half' | 'third' | 'quarter' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12>(panelWidth);
   const [isCollapsible, setIsCollapsible] = useState(collapsible);
   const [panelVisible, setPanelVisible] = useState(true);
@@ -61,6 +67,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   });
 
   const { control, watch, setValue, getValues } = form;
+  const [isSwitchModalOpen, setSwitchModalOpen] = useState(false);
 
   // Expose getFormValues method via ref
   useImperativeHandle(ref, () => ({
@@ -266,7 +273,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
           e.stopPropagation();
           setIsConfigModalOpen(true);
         }}
-        className="h-6 w-6 text-gray-400 hover:text-gray-600"
+        className="h-5 w-5 text-gray-400 hover:text-gray-600"
       >
         <Settings className="h-3 w-3" />
       </Button>
@@ -282,19 +289,30 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Card className="border border-gray-200 shadow-sm">
+        <Card className="border border-gray-200 shadow-sm mb-6">
           {showHeader ? (
             <CollapsibleTrigger asChild>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4 cursor-pointer hover:bg-gray-50">
+              <CardHeader className="flex border-b border-gray-300 flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4 cursor-pointer hover:bg-gray-50">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-purple-500 rounded"></div>
+                  {/* <div className="w-5 h-5 border-2 border-purple-500 rounded"></div> */}
+                  <div className="">{panelIcon}</div>
                   <CardTitle className="text-sm font-medium text-gray-700">{panelTitle}</CardTitle>
-                   <PanelStatusIndicator 
+                  {/* {isEditQuickOrder && quickOrder && (
+                    <>
+                      <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-semibold border border-blue-200">
+                        {quickOrder.QuickUniqueID || "QO/00001/2025"}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold border border-green-200">
+                        {quickOrder.Status || "Confirmed"}
+                      </span>
+                    </>
+                  )} */}
+                  {/* <PanelStatusIndicator 
                      panelConfig={panelConfig}
                      formData={getValues() || {}}
                      showStatus={showStatusIndicator}
-                   />
-                  {showPreview && (
+                   /> */}
+                  {panelSubTitle && (
                     <span className="text-xs text-blue-600 font-medium">DB000023/42</span>
                   )}
                 </div>
@@ -339,50 +357,92 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   }
 
   return (
-    <Card 
-      className={`${getWidthClass()} border border-gray-200 shadow-sm relative`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {showHeader ? (
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 border-2 border-purple-500 rounded"></div>
-            <CardTitle className="text-sm font-medium text-gray-700">{panelTitle}</CardTitle>
-            <PanelStatusIndicator 
-              panelConfig={panelConfig}
-              formData={getValues() || {}}
-              showStatus={showStatusIndicator}
-            />
-            {showPreview && (
-              <span className="text-xs text-blue-600 font-medium">DB000023/42</span>
-            )}
+    <>
+      <Card 
+        className={`${getWidthClass()} ${className} relative` + (panelTitle === "Order Details" ? " " : " border shadow-sm mb-6")}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {showHeader ? (
+          <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4` +
+            (panelTitle === "Order Details" ? " " : " border-b mb-3")
+          }>
+            <div className={`flex items-center` + (panelTitle === "Order Details" ? " " : " gap-2")}>
+              {/* <div className="w-5 h-5 border-2 border-purple-500 rounded"></div> */}
+              <div className="">{panelIcon}</div>
+              <CardTitle className="text-sm font-medium text-gray-700">{panelTitle}</CardTitle>
+              {/* <PanelStatusIndicator 
+                panelConfig={panelConfig}
+                formData={getValues() || {}}
+                showStatus={showStatusIndicator}
+              /> */}
+              {panelSubTitle && (
+                <span onClick={() => setSwitchModalOpen(true)} className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full cursor-pointer">DB000023/42</span>
+              )}
+            </div>
+            <SettingsButton />
+          </CardHeader>
+        ) : (
+          <div className="absolute top-2 right-2 z-10">
+            <SettingsButton />
           </div>
-          <SettingsButton />
-        </CardHeader>
-      ) : (
-        <div className="absolute top-2 right-2 z-10">
-          <SettingsButton />
-        </div>
-      )}
-      
-      <CardContent className={`px-4 pb-4 ${!showHeader ? 'pt-8' : ''}`}>
-        <PanelContent />
-      </CardContent>
+        )}
+        
+        <CardContent className={`px-4 pb-4 ${!showHeader ? 'pt-8' : ''}`}>
+          <PanelContent />
+        </CardContent>
 
-      {!showPreview && (
-        <EnhancedFieldVisibilityModal
-          open={isConfigModalOpen}
-          onClose={() => setIsConfigModalOpen(false)}
-          panelConfig={panelConfig}
-          panelTitle={panelTitle}
-          panelWidth={currentPanelWidth}
-          collapsible={isCollapsible}
-          panelVisible={panelVisible}
-          showHeader={showHeader}
-          onSave={handleConfigSave}
-        />
-      )}
-    </Card>
+        {!showPreview && (
+          <EnhancedFieldVisibilityModal
+            open={isConfigModalOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            panelConfig={panelConfig}
+            panelTitle={panelTitle}
+            panelWidth={currentPanelWidth}
+            collapsible={isCollapsible}
+            panelVisible={panelVisible}
+            showHeader={showHeader}
+            onSave={handleConfigSave}
+          />
+        )}
+      </Card>
+
+      <Dialog open={isSwitchModalOpen} onOpenChange={setSwitchModalOpen}>
+        <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs">
+          <div className="flex flex-col items-center py-4 px-6">
+            {/* Icon */}
+            <DialogTitle></DialogTitle>
+            <div className="mb-4">
+              {/* Replace with your actual icon or image */}
+              <img src={ConfirmSwitch} alt="Switch Icon" className="w-20 h-20" />
+            </div>
+            {/* Title */}
+            <div className="font-semibold text-xl text-center mb-2">Confirm Switch?</div>
+            {/* Description */}
+            <div className="text-gray-500 text-center mb-6">
+              Any unsaved data from your current session will be lost, and you may need to re-enter it.
+            </div>
+            {/* Buttons */}
+            <div className="flex gap-4 w-full justify-center">
+              <button
+                className="border rounded px-6 py-2 text-gray-700 text-sm hover:bg-gray-100 flex-1"
+                onClick={() => setSwitchModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600 text-white rounded px-6 py-2 text-sm font-medium flex-1"
+                onClick={() => {
+                  // handle continue logic here
+                  setSwitchModalOpen(false);
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 });

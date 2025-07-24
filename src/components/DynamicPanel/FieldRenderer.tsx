@@ -45,7 +45,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         control={control}
         render={({ field }) => (
           <div>
-            <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+            {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
             <div className="text-xs text-gray-700 bg-gray-50 p-2 rounded border min-h-[32px] flex items-center">
               {field.value || '-'}
             </div>
@@ -67,7 +67,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <Input
                   type="text"
                   {...field}
@@ -91,7 +91,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <Textarea
                   {...field}
                   {...eventHandlers}
@@ -114,7 +114,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <RadioGroup
                   value={field.value || ''}
                   onValueChange={(value) => {
@@ -156,7 +156,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
                   <select
                     {...field}
@@ -192,7 +192,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
                   <Input
                     type="date"
@@ -201,7 +201,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     className={baseInputClasses}
                     tabIndex={tabIndex}
                   />
-                  <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+                  {/* <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
                 </div>
               </div>
             );
@@ -218,7 +218,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
                   <Input
                     type="time"
@@ -227,7 +227,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     className={baseInputClasses}
                     tabIndex={tabIndex}
                   />
-                  <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+                  {/* <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
                 </div>
               </div>
             );
@@ -244,7 +244,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
                   <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">
                     €
@@ -279,7 +279,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
                   <Input
                     type="search"
@@ -342,7 +342,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <InputDropdown
                   value={fieldValue}
                   onChange={(newValue) => {
@@ -374,7 +374,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             return (
               <div>
-                <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <Input
                   type="text"
                   {...field}

@@ -11,6 +11,9 @@ export interface FieldConfig {
   width?: 'third' | 'half' | 'two-thirds' | 'full'; // Field width configuration
   options?: { label: string; value: string }[]; // For select and radio fields
   placeholder?: string;
+  inputType?: any;
+  onChange?: (value: any) => void;
+  labelFlag?: boolean; // Flag to indicate if label should be displayed
   color?: string; // For card field type background color
   fieldColour?: string; // For card field type color
   // Event handlers for field interactions
@@ -30,6 +33,10 @@ export interface PanelConfig {
   [fieldId: string]: FieldConfig;
 }
 
+export interface getOrderFormDetailsConfig {
+  [fieldId: string]: FieldConfig;
+}
+
 export interface PanelSettings {
   title: string;
   width?: 'full' | 'half' | 'third' | 'quarter' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
@@ -44,6 +51,7 @@ export interface DynamicPanelProps {
   panelOrder?: number; // Add panel order for tab navigation
   startingTabIndex?: number; // Starting tabIndex for sequential navigation across panels
   panelTitle: string;
+  panelIcon?: React.ReactNode;
   panelConfig: PanelConfig;
   formName?: string; // Form name for the panel form element
   initialData?: Record<string, any>;
@@ -57,6 +65,8 @@ export interface DynamicPanelProps {
   panelWidth?: 'full' | 'half' | 'third' | 'quarter' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
   collapsible?: boolean;
   showPreview?: boolean;
+  className?: string;
+  panelSubTitle?: string;
 }
 
 export interface FieldVisibilityConfig {

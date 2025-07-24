@@ -12,7 +12,8 @@ export type GridColumnType =
   | 'Date'                 // Formatted date
   | 'Dropdown'             // Selectable value from list (for edit or filter)
   | 'EditableText'         // Inline editable text
-  | 'SubRow';              // Sub-row expandable content
+  | 'SubRow'              // Sub-row expandable content
+  | 'DateFormat';
 
 export interface GridColumnConfig {
   key: string;
@@ -115,6 +116,7 @@ export interface GridPlugin {
 export interface SmartGridProps {
   columns: GridColumnConfig[];
   data: any[];
+  parentPage?: string;
   editableColumns?: string[] | boolean;
   mandatoryColumns?: string[];
   onInlineEdit?(rowIndex: number, updatedRow: any): void;
