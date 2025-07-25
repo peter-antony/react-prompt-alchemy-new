@@ -387,9 +387,12 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4` +
             (panelTitle === "Order Details" ? " " : " border-b mb-3")
           }>
-            <div className={`flex items-center` + (panelTitle === "Order Details" ? " " : " gap-2")}>
+            <div className="flex items-center gap-2">
+            {/* <div className={`flex items-center` + (panelTitle === "Order Details" ? " " : " gap-2")}> */}
               {/* <div className="w-5 h-5 border-2 border-purple-500 rounded"></div> */}
-              <div className="">{panelIcon}</div>
+              {panelTitle !== 'Order Details' && (
+                <div className="">{panelIcon}</div>
+              )}
               <CardTitle className="text-sm font-medium text-gray-700">{panelTitle}</CardTitle>
               <PanelStatusIndicator 
                 panelConfig={panelConfig}

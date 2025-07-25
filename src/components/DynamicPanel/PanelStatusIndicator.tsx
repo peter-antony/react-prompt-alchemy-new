@@ -34,15 +34,15 @@ export const PanelStatusIndicator: React.FC<PanelStatusIndicatorProps> = ({
   if (completedMandatory === totalMandatory) {
     status = 'complete';
     icon = <Check className="h-4 w-4" />;
-    colorClass = 'text-green-600 bg-green-100';
+    colorClass = 'text-white bg-green-600';
   } else if (completedMandatory > 0) {
     status = 'partial';
-    icon = <Clock className="h-4 w-4" />;
-    colorClass = 'text-amber-600 bg-amber-100';
+    icon = <Check className="h-4 w-4" />;
+    colorClass = 'text-white bg-amber-600';
   } else {
     status = 'empty';
-    icon = <X className="h-4 w-4" />;
-    colorClass = 'text-red-600 bg-red-100';
+    icon = <Check className="h-4 w-4" />;
+    colorClass = 'text-gray-600 bg-gray-100 border border-gray-300';
   }
 
   return (

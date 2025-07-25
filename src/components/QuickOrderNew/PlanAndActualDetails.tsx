@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   X,
   Search,
@@ -36,7 +36,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { DynamicPanel } from "@/components/DynamicPanel";
+import { DynamicPanel, type DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig, PanelSettings } from "@/types/dynamicPanel";
 import { BillingDetailsPanel } from "./BillingDetails";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
@@ -97,63 +97,50 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
     console.log(`Saved config for panel ${panelId}:`, settings);
   };
 
+  const wagonDetailsRef = useRef<DynamicPanelRef>(null);
+  const containerDetailsRef = useRef<DynamicPanelRef>(null);
+  const productDetailsRef = useRef<DynamicPanelRef>(null);
+  const thuDetailsRef = useRef<DynamicPanelRef>(null);
+  const journeyDetailsRef = useRef<DynamicPanelRef>(null);
+  const otherDetailsRef = useRef<DynamicPanelRef>(null);
+
   const handleSavePlanActuals = () => {
-    localStorage.setItem('planActualsSaved', 'true');
-    console.log("planType = ",planType)
-     // Check button Type Plan or Actuals
-    if(planType=="plan"){
-      // jsonStore.setPlanDetails({
-      //   PlanLineUniqueID: "R01",
-      //   PlanSeqNo: "value",
-      //   ModeFlag: "Insert",
-      //   WagonDetails: wagonDetailsData,
-      //   ContainerDetails: containerDetailsData,
-      //   ProductDetails: productDetailsData,
-      //   THUDetails: thuDetailsData,
-      //   JourneyAndSchedulingDetails: journeyDetailsData,
-      //   OtherDetails: otherDetailsData,
-      // });
-      const planObj={
-        PlanLineUniqueID: "R02",
-        PlanSeqNo: "SEQPL01",
-        ModeFlag: "Insert",
-        WagonDetails: wagonDetailsData,
-        ContainerDetails: containerDetailsData,
-        ProductDetails: productDetailsData,
-        THUDetails: thuDetailsData,
-        JourneyAndSchedulingDetails: journeyDetailsData,
-        OtherDetails: otherDetailsData,
-      }
-      jsonStore.pushPlanDetails(planObj);
-    }else{
-      // jsonStore.setActualDetails({
-      //   PlanLineUniqueID: "R01",
-      //   PlanSeqNo: "value",
-      //   ModeFlag: "Insert",
-      //   WagonDetails: wagonDetailsData,
-      //   ContainerDetails: containerDetailsData,
-      //   ProductDetails: productDetailsData,
-      //   THUDetails: thuDetailsData,
-      //   JourneyAndSchedulingDetails: journeyDetailsData,
-      //   OtherDetails: otherDetailsData,
-      // });
-      const actualObj={
-        ActualLineUniqueID: "R01",
-        ActualSeqNo: "SEQAC01",
-        ModeFlag: "Insert",
-        WagonDetails: wagonDetailsData,
-        ContainerDetails: containerDetailsData,
-        ProductDetails: productDetailsData,
-        THUDetails: thuDetailsData,
-        JourneyAndSchedulingDetails: journeyDetailsData,
-        OtherDetails: otherDetailsData,
-      }
-      jsonStore.pushPlanDetails(actualObj);
-    }
-    const QUICORD = jsonStore.getQuickOrder();
-    console.log("SAVE--AFTER  QUICK ORDER DETAILS :: ",QUICORD)
-    onCloseDrawer();
+    const formValues = {
+      wagonNewDetails : wagonDetailsRef.current?.getFormValues() || {},
+      containerDetails : containerDetailsRef.current?.getFormValues() || {},
+      productDetails : productDetailsRef.current?.getFormValues() || {},
+      thuDetails : thuDetailsRef.current?.getFormValues() || {},
+      journeyDetails : journeyDetailsRef.current?.getFormValues() || {},
+      otherDetails : otherDetailsRef.current?.getFormValues() || {},
+    };
+
+    console.log("save wagon details", formValues);
+
+    // Set the PlanDetails in jsonStore with the updated form values using corresponding set methods
+
+  
+
+    // Use the setPlanDetails method from jsonStore to update the PlanDetails
+    // Get the current PlanDetails from jsonStore
+    const currentPlanDetails = jsonStore.getPlanDetails() || {};
+
+    // Prepare the updated PlanDetails by merging new form values with existing ones
+    const updatedPlanDetails = {
+      ...currentPlanDetails,
+      WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
+      ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
+      ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
+      THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
+      JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+      OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
+    };
+    console.log("updatedPlanDetails ", updatedPlanDetails);
+    // Set the updated PlanDetails in jsonStore
+    jsonStore.setPlanDetails(updatedPlanDetails);
+    const fullJson = jsonStore.getPlanDetails();
+    console.log("FULL Plan JSON :: ", fullJson);
   };
+
   const [billingData, setBillingData] = useState({
     billingDetail: "DB00023/42",
     contractPrice: 1200.0,
@@ -306,7 +293,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
       visible: true,
       editable: true,
       order: 3,
-      value: { dropdown: "EA", input: "EA" },
+      value: { dropdown: "EA", input: "" },
       options: [
         { label: "EA", value: "EA" },
         { label: "EU", value: "EU" },
@@ -321,7 +308,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
       visible: true,
       editable: true,
       order: 4,
-      value: { dropdown: "TON", input: "TON" },
+      value: { dropdown: "TON", input: "" },
       options: [
         { label: "TON", value: "TON" },
         { label: "KG", value: "KG" },
@@ -333,7 +320,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
       label: "Container Load Weight",
       fieldType: "inputdropdown",
       width: 'third',
-      value: { dropdown: "TON", input: "TON" },
+      value: { dropdown: "TON", input: "" },
       inputType: "number",
       mandatory: false,
       visible: true,
@@ -875,9 +862,182 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
 
   // Update jsonStore on saveUserPanelConfig
   const handleSaveUserPanelConfig = (userId, panelId, settings) => {
-
     saveUserPanelConfig(userId, panelId, settings);
   };
+
+  const [bulkUpdateTitle, setbulkUpdateTitle] = useState('Bulk Update');
+  const [bulkUpdateData, setbulkUpdateData] = useState();
+  const billingDetailsRef = useRef<DynamicPanelRef>(null);
+  const bulkUpdatePanelConfig: PanelConfig = {
+    PlannedDateTime: {
+      id: 'PlannedDateTime',
+      label: 'Planned Date and Time',
+      fieldType: 'date',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+    },
+    RevisedPlannedDateTime: {
+      id: 'RevisedPlannedDateTime',
+      label: 'Revised Planned Date and Time',
+      fieldType: 'date',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+    },
+    ActualDateTime: {
+      id: 'ActualDateTime',
+      label: 'Actual Date and Time',
+      fieldType: 'date',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+    },
+    Activity: {
+      id: 'Activity',
+      label: 'Activity',
+      fieldType: 'select',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      options: [
+        { label: 'Loading', value: 'Loading' }
+      ],
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
+        }
+      }
+    },
+    ActivityLocation: {
+      id: 'ActivityLocation',
+      label: 'Activity Location',
+      fieldType: 'search',
+      width: 'full',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      placeholder: 'Search location...'
+    },
+    WagonGroup: {
+      id: 'WagonGroup',
+      label: 'Wagon Group',
+      fieldType: 'select',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      options: [
+        { label: 'Group 1', value: 'Group 1' },
+        { label: 'Group 2', value: 'Group 2' }
+      ],
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
+        }
+      }
+    },
+    ContainerGroup: {
+      id: 'ContainerGroup',
+      label: 'Container Group',
+      fieldType: 'select',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      options: [
+        { label: 'Container 1', value: 'Container 1' },
+        { label: 'Container 2', value: 'Container 2' }
+      ],
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
+        }
+      }
+    },
+    Product: {
+      id: 'Product',
+      label: 'Product',
+      fieldType: 'select',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      options: [
+        { label: 'Product 1', value: 'Product 1' },
+        { label: 'Product 2', value: 'Product 2' }
+      ],
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
+        }
+      }
+    },
+    ProductWeight: {
+      id: 'ProductWeight',
+      label: 'Product Weight',
+      fieldType: 'inputdropdown',
+      width: 'half',
+      value: { dropdown: '', input: '' },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      options: [
+        { label: 'TON', value: 'TON' },
+        { label: 'KG', value: 'KG' },
+        { label: 'LBS', value: 'LBS' },
+      ]
+    },
+    Wagon: {
+      id: 'Wagon',
+      label: 'Wagon',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      placeholder: 'Enter Wagon',
+      width: 'half',
+    },
+    Container: {
+      id: 'Container',
+      label: 'Container',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      placeholder: 'Enter Wagon',
+      width: 'half',
+    }
+  };
+
+  const onDefaultDetailsSave = () => {
+
+  }
 
   return (
     <>
@@ -1034,6 +1194,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const wagonDetailsVisibleCount = Object.values(wagonDetailsVisible).filter(config => config.visible).length;
                         panels.push(
                         <DynamicPanel
+                          ref = {wagonDetailsRef}
                           key="wagon-details"
                           panelId="wagon-details"
                           panelOrder={1}
@@ -1058,6 +1219,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const containerDetailsVisibleCount = Object.values(containerDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                         <DynamicPanel
+                          ref={containerDetailsRef}
                           key="container-details"
                           panelId="container-details"
                           panelOrder={2}
@@ -1080,6 +1242,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const productDetailsVisibleCount = Object.values(productDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                         <DynamicPanel
+                          ref={productDetailsRef}
                           key="product-details"
                           panelId="product-details"
                           panelOrder={3}
@@ -1102,6 +1265,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const thuDetailsVisibleCount = Object.values(thuDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                         <DynamicPanel
+                          ref={thuDetailsRef}
                           key = "thu-details"
                           panelId="thu-details"
                           panelOrder={4}
@@ -1124,6 +1288,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const journeyDetailsVisibleCount = Object.values(journeyDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                         <DynamicPanel
+                          ref={journeyDetailsRef}
                           key = "journey-details"
                           panelId="journey-details"
                           panelOrder={5}
@@ -1146,6 +1311,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
                         const otherDetailsVisibleCount = Object.values(otherDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
+                            ref={otherDetailsRef}
                             key = "other-details"
                             panelId="other-details"
                             panelOrder={6}
@@ -1201,10 +1367,30 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
         title="Bulk Update"
         isBack={false}
       >
-        <div>
-          {/* <PlanAndActualDetails onCloseDrawer={() => setIsBulkUpdateOpen(false)}></PlanAndActualDetails> */}
-          <BulkUpdatePlanActuals onClose={() => setIsBulkUpdateOpen(false)} />
+      <div className="">
+        <div className="mt-0 text-sm text-gray-600">
+          <DynamicPanel
+            ref={billingDetailsRef}
+            key="Bulk-Update"
+            panelId="Bulk-Update"
+            panelOrder={1}
+            panelTitle={bulkUpdateTitle}
+            panelConfig={bulkUpdatePanelConfig}
+            initialData={bulkUpdateData}
+            formName="bulkUpdateForm"
+            onTitleChange={setbulkUpdateTitle}
+            getUserPanelConfig={getUserPanelConfig}
+            saveUserPanelConfig={saveUserPanelConfig}
+            userId="current-user"
+          />
+          {/* <Bulk-Update /> */}
         </div>
+        <div className="flex bg-white justify-end w-full px-4 border-t border-gray-300">
+          <button type="button" className="bg-blue-600 my-2 text-white text-sm px-6 py-2 rounded font-medium" onClick={onDefaultDetailsSave}>
+            Default Details
+          </button>
+        </div>
+      </div>
       </SideDrawer>
     </>
   );
