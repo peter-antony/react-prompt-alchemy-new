@@ -6,10 +6,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { FieldRenderer } from './FieldRenderer';
 import { EnhancedFieldVisibilityModal } from './EnhancedFieldVisibilityModal';
-// import { PanelStatusIndicator } from './PanelStatusIndicator';
+import { PanelStatusIndicator } from './PanelStatusIndicator';
 import { DynamicPanelProps, PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ConfirmSwitch from '../../assets/images/ConfirmSwitch.png';
+import { combineInputDropdownValue, InputDropdownValue, splitInputDropdownValue } from '@/utils/inputDropdown';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
@@ -56,6 +57,15 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       if (config.value !== undefined && config.value !== '') {
         defaults[fieldId] = config.value;
       }
+      // Force split for UnitPrice for debugging
+      // if (fieldId === 'UnitPrice' && typeof defaults[fieldId] === 'string') {
+      //   console.log('Forcing split for UnitPrice:', defaults[fieldId]);
+      //   defaults[fieldId] = splitInputDropdownValue(defaults[fieldId]);
+      // }
+      // Or keep your generic logic for all inputdropdowns
+      if (config.fieldType === 'inputdropdown' && typeof defaults[fieldId] === 'string') {
+        defaults[fieldId] = splitInputDropdownValue(defaults[fieldId]);
+      }
     });
     return defaults;
   }, [initialData, panelConfig]);
@@ -71,8 +81,18 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
 
   // Expose getFormValues method via ref
   useImperativeHandle(ref, () => ({
-    getFormValues: () => getValues()
-  }), [getValues]);
+    getFormValues: () => {
+      const values = getValues();
+      // Convert all inputdropdown fields to string using the utility
+      const result: Record<string, any> = { ...values };
+      Object.entries(panelConfig).forEach(([fieldId, config]) => {
+        if (config.fieldType === 'inputdropdown' && result[fieldId]) {
+          result[fieldId] = combineInputDropdownValue(result[fieldId] as InputDropdownValue);
+        }
+      });
+      return result;
+    }
+  }), [getValues, panelConfig]);
 
   // Load user configuration on mount
   useEffect(() => {
@@ -307,11 +327,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                       </span>
                     </>
                   )} */}
-                  {/* <PanelStatusIndicator 
+                  <PanelStatusIndicator 
                      panelConfig={panelConfig}
                      formData={getValues() || {}}
                      showStatus={showStatusIndicator}
-                   /> */}
+                   />
                   {panelSubTitle && (
                     <span className="text-xs text-blue-600 font-medium">DB000023/42</span>
                   )}
@@ -371,11 +391,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
               {/* <div className="w-5 h-5 border-2 border-purple-500 rounded"></div> */}
               <div className="">{panelIcon}</div>
               <CardTitle className="text-sm font-medium text-gray-700">{panelTitle}</CardTitle>
-              {/* <PanelStatusIndicator 
+              <PanelStatusIndicator 
                 panelConfig={panelConfig}
                 formData={getValues() || {}}
                 showStatus={showStatusIndicator}
-              /> */}
+              />
               {panelSubTitle && (
                 <span onClick={() => setSwitchModalOpen(true)} className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full cursor-pointer">DB000023/42</span>
               )}

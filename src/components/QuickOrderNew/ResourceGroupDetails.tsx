@@ -41,6 +41,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Attachments from './OrderForm/Attachments';
 import CardDetails, { CardDetailsItem } from '../Common/Card-View-Details';
 import { SimpleDropDown } from "../Common/SimpleDropDown";
+// import { combineInputDropdownValue } from '@/utils/inputDropdown';
 
 interface ResourceGroupDetailsFormProps {
   isEditQuickOrder?: boolean
@@ -92,53 +93,26 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
     setBasicDetailsData(formValues.basicDetails);
     setOperationalDetailsData(formValues.operationalDetails);
     setBillingDetailsData(formValues.billingDetails);
+
+    jsonStore.setBasicDetails({
+      ...jsonStore.getJsonData().basicDetails,
+      ...formValues.basicDetails
+    });
+    jsonStore.setOperationalDetails({
+      ...jsonStore.getJsonData().operationalDetails,
+      ...formValues.operationalDetails
+    });
+    jsonStore.setBillingDetails({
+      ...jsonStore.getJsonData().billingDetails,
+      ...formValues.billingDetails
+    });
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL JSON :: ", fullJson);
+
   }
 
-  // const handleSaveDetails = () => {
-  //   // To get the DynamicPanel form field values for formName="basicDetailsForm", you can use the DOM API:
-  //   const basicDetailsForm = document.forms['basicDetailsForm'];
-  //   const operationalDetailsForm = document.forms['operationalDetailsForm'];
-  //   const billingDetailsForm = document.forms['billingDetailsForm'];
-  //   let newBasicDetails: Record<string, any> = {};
-  //   if (basicDetailsForm) {
-  //     const formData = new FormData(basicDetailsForm);
-  //     for (let [key, value] of formData.entries()) {
-  //       newBasicDetails[key] = value;
-  //     }
-  //   }
-  //   let newOperationalDetails: Record<string, any> = {};
-
-  //   if (operationalDetailsForm) {
-  //     const formData = new FormData(operationalDetailsForm);
-  //     for (let [key, value] of formData.entries()) {
-  //       newOperationalDetails[key] = value;
-  //     }
-  //   }
-  //   let newBillingDetails: Record<string, any> = {};
-
-  //   if (billingDetailsForm) {
-      
-  //     const formData = new FormData(billingDetailsForm);
-  //     for (let [key, value] of formData.entries()) {
-  //       console.log("[",key,"]=",value);
-  //       newBillingDetails[key] = value;
-  //     }
-  //   }
-  //   console.log("BASIC DETAILS-- inside RESOURCEGROUP  && ",newBasicDetails)
-   
-  //   // FromDate: (operationalDetailsData as any).FromDate ? format((operationalDetailsData as any).FromDate, 'dd/MM/yyyy') : '',
-  //   // ToDate: (operationalDetailsData as any).ToDate ? format((operationalDetailsData as any).ToDate, 'dd/MM/yyyy') : '',
-
-
-  //   // Save to store
-  //   jsonStore.setBasicDetails(newBasicDetails);
-  //   jsonStore.setOperationalDetails(newOperationalDetails);
-  //   jsonStore.setBillingDetails(newBillingDetails);
-  //   const fullJson = jsonStore.getJsonData();
-  //   console.log("FULL JSON :: ", fullJson);
-  //   toast.success('Details saved successfully');
-  // };
   
+
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
     return {
@@ -177,7 +151,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       ContractPrice: data.ContractPrice ?? '',
       NetAmount: data.NetAmount ?? '',
       BillingType: data.BillingType ?? '',
-      UnitPrice: data.UnitPrice ?? { dropdown: '', input: '' },
+      UnitPrice: data.UnitPrice ?? '',
       BillingQty: data.BillingQty ?? '',
       Tariff: data.Tariff ?? '',
       TariffType: data.TariffType ?? '',
@@ -289,7 +263,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       //     console.log('Description blur event:', event);
       //   }
       // }
-    }   
+    }
   };
 
   // Operational Details Panel Configuration
@@ -449,7 +423,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       label: 'Unit Price',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: { dropdown: '', input: '1395.00' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -766,7 +740,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
                     {(() => {
                       let currentTabIndex = 1;
                       const panels = [];
-                      
+
                       // Panel 1: Basic Details
                       if (basicDetailsVisible) {
                         const basicDetailsVisibleCount = Object.values(basicDetailsConfig).filter(config => config.visible).length;
@@ -825,7 +799,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
                     {(() => {
                       let currentTabIndex = 1;
                       const panels = [];
-                      
+
                       // Panel 3: Billing Details
                       if (billingDetailsVisible) {
                         panels.push(
@@ -856,17 +830,17 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
                   </div>
                 </div>
 
-                  {/* Show message when all panels are hidden */}
-                  {!basicDetailsVisible && !operationalDetailsVisible && !billingDetailsVisible && (
-                    <div className="bg-white p-8 rounded-lg shadow-sm text-center">
-                      <EyeOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">All panels are hidden</h3>
-                      <p className="text-gray-500 mb-4">Use the "Manage Panels" button above to show panels.</p>
-                    </div>
-                  )}
+                {/* Show message when all panels are hidden */}
+                {!basicDetailsVisible && !operationalDetailsVisible && !billingDetailsVisible && (
+                  <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+                    <EyeOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">All panels are hidden</h3>
+                    <p className="text-gray-500 mb-4">Use the "Manage Panels" button above to show panels.</p>
+                  </div>
+                )}
 
-                  {/* Debug Data Display */}
-                  {/* {(basicDetailsVisible || operationalDetailsVisible || billingDetailsVisible) && (
+                {/* Debug Data Display */}
+                {/* {(basicDetailsVisible || operationalDetailsVisible || billingDetailsVisible) && (
                     <div className="bg-white p-6 rounded-lg shadow-sm">
                       <h3 className="text-lg font-semibold mb-4">Current Form Data</h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -995,7 +969,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
                 />
                 <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
               </div>
-              <Button  className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
+              <Button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
                 <Filter className="w-5 h-5 text-gray-500" />
               </Button>
             </div>

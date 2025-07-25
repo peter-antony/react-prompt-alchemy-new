@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { CalendarIcon, Search, CircleArrowOutUpRight, Paperclip, BookX, Link, Copy, CircleX, CheckCircle, AlertCircle, X } from 'lucide-react'; import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import jsonStore from '@/stores/jsonStore';
 import { useEffect } from 'react';
 import Toast from '../../Common/Toast';
 import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
-import { DynamicPanel } from '@/components/DynamicPanel';
+import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 
 interface OrderFormProps {
   onSaveDraft: () => void;
@@ -53,64 +53,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
   //   }
   // }, []);
 
-  // Utility to normalize keys from store to config field IDs
-  function normalizeOrderFormDetails(data) {
-    console.log("DATA : ",data)
-    return {
-      OrderType: data.OrderType,
-      QuickOrderDate: data.QuickOrderDate,
-      Contract: data.Contract,
-      Customer: data.Customer,
-      Vendor: data.Vendor,
-      Cluster: data.Cluster,
-      CustomerQuickOrderNo: data.CustomerQuickOrderNo,
-      Customer_Supplier_RefNo: data.Customer_Supplier_RefNo,
-      QCUserDefined1: data.QCUserDefined1,
-      Remark1: data.Remark1,
-      Summary: data.Summary
-    };
-    
-  }
-  onConfirm = () => {
-    if (!isEditQuickOrder) {
-      // Create mode: merge formData into QuickOrder, keep other fields unchanged
-      const currentJson = jsonStore.getJsonData();
-      const updatedQuickOrder = {
-        ...currentJson.ResponseResult.QuickOrder,
-        ...formData
-      };
-      console.log("updatedQuickOrder = ",updatedQuickOrder)
-      const updatedJson = {
-        ...currentJson,
-        ResponseResult: {
-          ...currentJson.ResponseResult,
-          QuickOrder: updatedQuickOrder
-        }
-      };
-      const newBasicDetails = Object.fromEntries(
-        Object.entries(formData).filter(([key]) =>
-          ["OrderType", "QuickOrderDate", "Contract", "Customer","Vendor","Cluster","CustomerQuickOrderNo","Customer_Supplier_RefNo","QCUserDefined1","Remark1","Summary"].includes(key)
-        )
-      );
-      jsonStore.setJsonData(updatedJson);
-      console.log("NEW JSON : ", jsonStore.getQuickOrder())
-      setToastOpen(true);
-    } else {
-      // Edit mode: update only matching fields in QuickOrder
-      const quickOrder = jsonStore.getQuickOrder();
-      if (quickOrder) {
-        const updatedQuickOrder = { ...quickOrder };
-        Object.keys(formData).forEach(field => {
-          if (quickOrder.hasOwnProperty(field)) {
-            updatedQuickOrder[field] = formData[field];
-          }
-        });
-        jsonStore.setQuickOrder(updatedQuickOrder);
-        setToastOpen(true);
-      }
-    }
-  };
- 
+
+
   //Contracts Array
   const contracts = [
     {
@@ -193,21 +137,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
       setOrderType(quickOrder.OrderType || 'buy');
       setFormData(normalizeOrderFormDetails(quickOrder));
+      setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
     } else if (!isEditQuickOrder) {
       setOrderType('buy');
-      setFormData({
-        OrderType: '',
-        QuickOrderDate: '',
-        Contract: '',
-        Customer: '',
-        Vendor: '',
-        Cluster: '',
-        CustomerQuickOrderNo: '',
-        Customer_Supplier_RefNo: '',
-        QCUserDefined1: '',
-        Remark1: '',
-        Summary: ''
-      });
+      setFormData(normalizeOrderFormDetails({}));
+      setmoreInfoData(normalizeMoreInfoDetails({}));
     }
   }, [isEditQuickOrder]);
   // Local array of order IDs for suggestions
@@ -238,10 +172,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
   const [isCopyModalOpen, setCopyModalOpen] = useState(false);
 
   const [OrderFormTitle, setOrderFormTitle] = useState('Order Details');
-
+  //ORDER DETAILS FORM
   const getOrderFormDetailsConfig = (OrderType: string): PanelConfig => ({
     // const OrderFormDetailsConfig: PanelConfig = {
-      
+
     OrderType: {
       id: 'OrderType',
       label: '',
@@ -385,7 +319,42 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       placeholder: 'Enter Summary'
     },
   });
+  // Utility to normalize keys from store to config field IDs
+  function normalizeOrderFormDetails(data) {
+    console.log("DATA : ", data)
+    return {
+      OrderType: data.OrderType,
+      QuickOrderDate: data.QuickOrderDate,
+      Contract: data.Contract,
+      Customer: data.Customer,
+      Vendor: data.Vendor,
+      Cluster: data.Cluster,
+      CustomerQuickOrderNo: data.CustomerQuickOrderNo,
+      Customer_Supplier_RefNo: data.Customer_Supplier_RefNo,
+      QCUserDefined1: data.QCUserDefined1,
+      Remark1: data.Remark1,
+      Summary: data.Summary
+    };
 
+  }
+
+  const orderDetailsRef = useRef<DynamicPanelRef>(null);
+  const onSaveDetails = () => {
+    const formValues = {
+      QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+      // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
+    };
+    setFormData(formValues.QuickOrder);
+
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      ...formValues.QuickOrder
+    });
+
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL JSON :: ", fullJson);
+
+  }
   // Mock functions for user config management
   const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
     const stored = localStorage.getItem(`panel-config-${userId}-${panelId}`);
@@ -396,61 +365,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     localStorage.setItem(`panel-config-${userId}-${panelId}`, JSON.stringify(settings));
     console.log(`Saved config for panel ${panelId}:`, settings);
   };
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
 
-    // Handle suggestions for customer order number
-    if (field === 'customerOrderNo') {
-      if (value.length > 0) {
-        const filtered = orderIds.filter(id =>
-          id.toLowerCase().includes(value.toLowerCase())
-        );
-        setSuggestions(filtered);
-        setShowOrderNoSuggestions(true);
-      } else {
-        setSuggestions([]);
-        setShowOrderNoSuggestions(false);
-      }
-    }
-    if (field === 'customerRefNo') {
-      if (value.length > 0) {
-        const filtered = customerRefIds.filter(id =>
-          id.toLowerCase().includes(value.toLowerCase())
-        );
-        setSuggestions(filtered);
-        setShowCustomerRefSuggestions(true);
-      } else {
-        setSuggestions([]);
-        setShowCustomerRefSuggestions(false);
-      }
-    }
-  };
-
-  const handleOrderNoSuggestionClick = (suggestion: string) => {
-    setFormData(prev => ({ ...prev, customerOrderNo: suggestion }));
-    setSuggestions([]);
-    setShowOrderNoSuggestions(false);
-  };
-
-
-  const handleCustomerRefSuggestionClick = (suggestion: string) => {
-    setFormData(prev => ({ ...prev, customerRefNo: suggestion }));
-    setSuggestions([]);
-    setShowCustomerRefSuggestions(false);
-  };
-
-  const handleQcChange = (dropdownValue: string, inputValue: string) => {
-    setQcDropdown(dropdownValue);
-    setQcInput(inputValue);
-    setFormData(prev => ({
-      ...prev,
-      qcValue: `${dropdownValue}-${inputValue}`
-    }));
-  };
-
-  // const isFormValid = () => {
-  //   return OrderDate && formData.contract && formData.customer;
-  // };
   const parseDDMMYYYY = (dateStr) => {
     // Expects dateStr in 'DD/MM/YYYY'
     const [day, month, year] = dateStr.split('/').map(Number);
@@ -458,26 +373,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     return new Date(year, month - 1, day);
   }
 
-  const handlePanelDataChange = (updatedData: any) => {
-    console.log("Updated form data:", updatedData.OrderType);
-    const OrderFormDetailsConfig = getOrderFormDetailsConfig(OrderType);
-    setFormData(prev => ({
-      ...prev,
-      ...updatedData,
-    }));
-    // If orderType is changed, update orderType state as well
-    if (updatedData.OrderType) setOrderType(updatedData.OrderType);
-    console.log("Updated form data:", formData);
-
-  };
-
+  //MORE INFO DETAILS
   const moreInfoPanelConfig: PanelConfig = {
     PrimaryDocTypeandNo: {
       id: 'PrimaryDocType',
       label: 'Primary Doc Type and No.',
       fieldType: 'inputdropdown',
       width: 'full',
-      value: { dropdown: '', input: '' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -492,7 +395,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       label: 'Secondary Doc Type and No.',
       fieldType: 'inputdropdown',
       width: 'full',
-      value: { dropdown: '', input: '' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -541,7 +444,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       label: 'QC Userdefined 2',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: { dropdown: '', input: '' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -556,7 +459,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       label: 'QC Userdefined 2',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: { dropdown: '', input: '' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -591,23 +494,43 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     }
   };
   const [moreInfoTitle, setmoreInfoTitle] = useState('More Info');
-  const [moreInfoData, setmoreInfoData] = useState();
+  const initialMoreInfoDetails = normalizeMoreInfoDetails(jsonStore.getQuickOrder() || {});
+  const [moreInfoData, setmoreInfoData] = useState(initialMoreInfoDetails);
+    // Utility to normalize MoreInfo details from store to config field IDs
+  function normalizeMoreInfoDetails(data) {
+    return {
+      PrimaryDocTypeandNo: data.PrimaryDocTypeandNo,
+      SecondaryDocTypeandNo: data.SecondaryDocTypeandNo,
+      PrimaryDocDate: data.PrimaryDocDate,
+      SecondaryDocDate: data.SecondaryDocDate,
+      WBS: data.WBS,
+      QCUserdefined2: data.QCUserdefined2,
+      QCUserdefined3: data.QCUserdefined3,
+      Remarks2: data.Remarks2,
+      Remarks3: data.Remarks3
+    };
+  }
+  const moreInfoDetailsRef = useRef<DynamicPanelRef>(null);
   const onSave = () => {
-    console.log("FORM DATA : ", formData);
+    const formValues = {
+      moreInfo: moreInfoDetailsRef.current?.getFormValues() || {},
+    };
+    setFormData(formValues.moreInfo);
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      ...formValues.moreInfo
+    });
+
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL JSON :: ", fullJson);
+    setToastOpen(true);
   }
   const handleMoreInfoDataChange = (updatedData: any) => {
     console.log("Updated form data:", updatedData.OrderType);
-    // const OrderFormDetailsConfig = getOrderFormDetailsConfig(OrderType);
-    // setFormData(prev => ({
-    //   ...prev,
-    //   ...updatedData,
-    // }));
-    // // If orderType is changed, update orderType state as well
-    // if (updatedData.OrderType) setOrderType(updatedData.OrderType);
-    // console.log("Updated form data:", formData);
-
   };
-
+  const copyDetails = ()=>{
+    
+  }
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       {/* <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
@@ -624,20 +547,20 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
         )}
       </h2> */}
       <DynamicPanel
+        ref={orderDetailsRef}
         key={OrderType} // <-- This will force remount on orderType change
-        panelId="order-details"
+        panelId={OrderType}
         panelTitle="Order Details"
         panelConfig={getOrderFormDetailsConfig(OrderType)}
         initialData={formData}
-        onDataChange={handlePanelDataChange}
         onTitleChange={setOrderFormTitle}
         getUserPanelConfig={getUserPanelConfig}
         saveUserPanelConfig={saveUserPanelConfig}
         userId="current-user"
         className="my-custom-orderform-panel"
-      /> 
+      />
 
-      
+
 
       {/* Form Actions */}
       <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200">
@@ -647,7 +570,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
         <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setAttachmentsOpen(true)}>
           <Paperclip className="w-5 h-5 text-gray-600" />
         </button>
-        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={(e) => setHistoryOpen(true)}>
+        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={(e) => onSaveDetails()}>
           <BookX className="w-5 h-5 text-gray-600" />
         </button>
         <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setLinkedOrdersOpen(true)}>
@@ -665,6 +588,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
         <div className="">
           <div className="mt-0 text-sm text-gray-600">
             <DynamicPanel
+              ref={moreInfoDetailsRef}
               key="More-Info"
               panelId="More-Info"
               panelOrder={1}
@@ -726,7 +650,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
             </div>
             {/* Copy Details Button */}
             <div className="px-6 pb-6">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onClick={(e) => onConfirm()}>Copy Details</button>
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onClick={(e) => copyDetails()}>Copy Details</button>
             </div>
           </div>
         </DialogContent>

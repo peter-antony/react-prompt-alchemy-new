@@ -17,7 +17,8 @@ function getQuickOrder() {
 
 function setQuickOrder(data: any) {
   if (jsonData && jsonData.ResponseResult) {
-    jsonData.ResponseResult.QuickOrder = data;
+    const oldQuickOrder = jsonData.ResponseResult.QuickOrder || {};
+    jsonData.ResponseResult.QuickOrder = { ...oldQuickOrder, ...data };
     return true;
   }
   return false;
