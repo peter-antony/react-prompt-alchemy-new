@@ -55,7 +55,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     );
   }
 
-  const baseInputClasses = "h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:z-50 focus:relative focus:outline-none";
+  const baseInputClasses = "h-8 text-xs border-gray-300 focus:border-blue-500";
 
   switch (fieldType) {
     case 'text':
@@ -96,7 +96,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className="min-h-[60px] text-xs border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:z-50 focus:relative focus:outline-none"
+                  className="min-h-[60px] text-xs border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none"
                   tabIndex={tabIndex}
                 />
               </div>
@@ -161,7 +161,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   <select
                     {...field}
                     {...eventHandlers}
-                    className="w-full h-8 px-3 text-xs rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none"
+                    className="w-full h-8 px-3 text-xs rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none"
                     tabIndex={tabIndex}
                   >
                     <option value="">Select...</option>

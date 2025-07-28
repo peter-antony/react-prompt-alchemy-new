@@ -41,20 +41,20 @@ const NewCreateQuickOrder = ({ isEditQuickOrder }: NewCreateQuickOrderProps) => 
   };
 
   return (
-    <div className="flex gap-6 mb-11">
+    <div className="flex gap-6">
         {/* Left Column - Order Form */}
         <div className="lg:col-span-1 w-2/6">
-        <OrderForm
+          <OrderForm
             onSaveDraft={handleSaveDraft}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
             isEditQuickOrder={isEditQuickOrder}
-        />
+          />
         </div>
         
         {/* Right Column - Resource Group Panel */}
         <div className="lg:col-span-1 w-4/6">
-        <NewResourceGroup onAddResource={handleAddResource} isEditQuickOrder={isEditQuickOrder} />
+          <NewResourceGroup onAddResource={handleAddResource} isEditQuickOrder={isEditQuickOrder} />
         </div>
     </div>
   );
