@@ -1,4 +1,3 @@
-
 import { GridColumnConfig, SortConfig, FilterConfig } from '@/types/smartgrid';
 
 export function processGridData(

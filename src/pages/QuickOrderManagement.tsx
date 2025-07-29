@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { SmartGrid } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
-import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload } from 'lucide-react';
+import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -15,6 +15,7 @@ import BulkUpload from '@/components/QuickOrderNew/BulkUpload';
 import { PlanAndActualDetails } from '@/components/QuickOrderNew/PlanAndActualDetails';
 import jsonStore from '@/stores/jsonStore';
 import { useFooterStore } from '@/stores/footerStore';
+import CommonPopup from '@/components/Common/CommonPopup';
 
 interface SampleData {
   QuickUniqueID: any;
@@ -46,6 +47,56 @@ const QuickOrderManagement = () => {
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { setFooter, resetFooter } = useFooterStore();
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [fields, setFields] = useState([
+    {
+      type: "select",
+      label: "Reason Code",
+      name: "reasonCode",
+      placeholder: "Select Reason Code",
+      options: [
+        { value: "A", label: "Reason A" },
+        { value: "B", label: "Reason B" },
+      ],
+      value: "",
+    },
+    {
+      type: "text",
+      label: "Reason Code Desc.",
+      name: "reasonDesc",
+      placeholder: "Enter Reason Code Description",
+      value: "",
+    },
+  ]);
+
+  const handleFieldChange = (name, value) => {
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const [popupTitle, setPopupTitle] = useState('');
+  const [popupButtonName, setPopupButtonName] = useState('');
+  const [popupBGColor, setPopupBGColor] = useState('');
+  const [popupTextColor, setPopupTextColor] = useState('');
+  const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const orderConfirmhandler = () => {
+    setPopupOpen(true);
+    setPopupTitle('Amend');
+    setPopupButtonName('Amend');
+    setPopupBGColor('bg-blue-600');
+    setPopupTextColor('text-blue-600');
+    setPopupTitleBgColor('bg-blue-100');
+  };
+
+  const quickOrderCancelhandler = () => {
+    setPopupOpen(true);
+    setPopupTitle('Cancel Bill');
+    setPopupButtonName('Cancel');
+    setPopupBGColor('bg-red-600');
+    setPopupTextColor('text-red-500');
+    setPopupTitleBgColor('bg-red-50');
+  };
 
   useEffect(() => {
     setFooter({
@@ -62,20 +113,26 @@ const QuickOrderManagement = () => {
       rightButtons: [
         {
           label: "Cancel",
-          onClick: () => console.log("Cancel clicked"),
           // disabled: true,
-          type: 'Button'
+          type: 'Button',
+          onClick: () => {
+            console.log("Cancel clicked");
+            quickOrderCancelhandler();
+          },
         },
         {
           label: "Confirm",
-          onClick: () => console.log("Confirm clicked"),
-          // disabled: true,
           type: "Button",
+          // disabled: true,
+          onClick: () => {
+            console.log("Confirm clicked"),
+            orderConfirmhandler();
+          },
         },
       ],
     });
     return () => resetFooter();
-  }, [setFooter, resetFooter]);
+  }, []);
 
   const initialColumns: GridColumnConfig[] = [
     {
@@ -294,8 +351,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Save",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "Hire",
       "TotalNet": 284.52
@@ -305,8 +362,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "-1/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Save",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -316,8 +373,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "109/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Save",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -327,8 +384,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "110/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -338,8 +395,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "111/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -349,8 +406,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "112/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -360,8 +417,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "113/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -371,8 +428,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "114-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -382,8 +439,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "115-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -393,8 +450,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "116-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -404,8 +461,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "117-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -415,8 +472,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "118-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -426,8 +483,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "119-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -437,8 +494,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "120-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -448,8 +505,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "121-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -459,8 +516,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "122-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -470,8 +527,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "123-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -481,8 +538,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "124-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -492,8 +549,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "126-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -503,8 +560,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "129-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -514,8 +571,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "130-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -525,8 +582,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "131-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -536,8 +593,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "132-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -547,8 +604,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "133-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -558,8 +615,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "134-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -569,8 +626,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "135-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -580,8 +637,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "136-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -591,8 +648,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "137-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -602,8 +659,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "138-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -613,8 +670,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "139-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -624,8 +681,8 @@ const QuickOrderManagement = () => {
       "QuickOrderNo": "140-BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
       "Status": "Fresh",
-      "CustomerOrVendor": "",
-      "Customer_Supplier_RefNo": "",
+      "CustomerOrVendor": "Oltis Group",
+      "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
       "OrderType": "BUY",
       "TotalNet": 284.52
@@ -827,6 +884,21 @@ const QuickOrderManagement = () => {
               <div className="mt-0 text-sm text-gray-600"><BulkUpload /></div>
             </div>
           </SideDrawer>
+          <CommonPopup
+            open={popupOpen}
+            onClose={() => setPopupOpen(false)}
+            title={popupTitle}
+            titleColor={popupTextColor}
+            titleBGColor={popupTitleBgColor}
+            icon={<NotebookPen className="w-4 h-4" />}
+            fields={fields as any}
+            onFieldChange={handleFieldChange}
+            onSubmit={() => {
+              setPopupOpen(false);
+            }}
+            submitLabel={popupButtonName}
+            submitColor={popupBGColor}
+          />
         </div>
       </AppLayout>
     </>

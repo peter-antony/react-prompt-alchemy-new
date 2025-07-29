@@ -14,7 +14,7 @@ import {
   ChevronDown, 
 } from 'lucide-react';
 import { SmartGridProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
-import { exportToCSV } from '@/utils/gridExport';
+import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
@@ -42,6 +42,7 @@ export function SmartGrid({
   onUpdate,
   onLinkClick,
   onSubRowToggle,
+  onServerFilter,
   paginationMode = 'pagination',
   nestedRowRenderer,
   plugins = [],
@@ -108,6 +109,7 @@ export function SmartGrid({
 
   const [pageSize] = useState(10);
   const [showFilterRow, setShowFilterRow] = useState(false);
+  const [showFilterSystem, setShowFilterSystem] = useState(false);
   const [filterSystemFilters, setFilterSystemFilters] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
@@ -298,14 +300,60 @@ export function SmartGrid({
       value: filterValue.value,
       operator: filterValue.operator || 'contains'
     }));
-    setFilters(legacyFilters);
-  }, [setFilters]);
+    
+    // Check if any filters require server-side processing
+    const serverFilters = legacyFilters.filter(filter => {
+      const column = currentColumns.find(col => col.key === filter.column);
+      return column?.filterMode === 'server';
+    });
+    
+    const localFilters = legacyFilters.filter(filter => {
+      const column = currentColumns.find(col => col.key === filter.column);
+      return column?.filterMode !== 'server';
+    });
+    
+    // Apply server-side filters if any and onServerFilter is provided
+    if (serverFilters.length > 0 && onServerFilter) {
+      onServerFilter(serverFilters).catch(error => {
+        console.error('Server-side filtering failed:', error);
+        toast({
+          title: "Error",
+          description: "Failed to apply server-side filters",
+          variant: "destructive"
+        });
+      });
+    }
+    
+    // Set local filters only
+    setFilters(localFilters);
+  }, [setFilters, currentColumns, onServerFilter, toast]);
 
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
-  const handleExport = useCallback((format: 'csv') => {
+  const handleExport = useCallback((format: 'csv' | 'xlsx') => {
     const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
-    exportToCSV(processedData, orderedColumns, filename);
-  }, [processedData, orderedColumns]);
+    try {
+      if (format === 'csv') {
+        exportToCSV(processedData, orderedColumns, filename);
+        toast({
+          title: "Success",
+          description: "CSV file exported successfully"
+        });
+      } else if (format === 'xlsx') {
+        exportToExcel(processedData, orderedColumns, filename);
+        toast({
+          title: "Success",
+          description: "Excel file exported successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Error",
+        description: `Failed to export ${format.toUpperCase()} file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
+  }, [processedData, orderedColumns, toast]);
 
   const handleResetPreferences = useCallback(async () => {
     const defaultPreferences = {
@@ -322,6 +370,7 @@ export function SmartGrid({
       await savePreferences(defaultPreferences);
       setSort(undefined);
       setFilters([]);
+      // setFilterSystemFilters({}); // Also clear filter system filters
       setGlobalFilter('');
       setColumnWidths({});
       setShowColumnFilters(false);
@@ -698,12 +747,12 @@ export function SmartGrid({
         defaultConfigurableButtonLabel={defaultConfigurableButtonLabel}
         gridTitle={gridTitle}
         recordCount={recordCount}
+        showFilterSystem={showFilterSystem}
+        setShowFilterSystem={setShowFilterSystem}
       />
 
        {/* Advanced Filter System */}
-       {gridTitle === "Plan List" ? (
-        <></>
-       ) : (
+       {gridTitle !== "Plan List" && showFilterSystem && (
         <div className="">
           <FilterSystem
             columns={orderedColumns}
@@ -899,7 +948,7 @@ export function SmartGrid({
                               currentFilter={currentFilter}
                               onFilterChange={(filter) => {
                                 if (filter) {
-                                  handleColumnFilterChange(filter);
+                                  handleColumnFilterChange(filter, column, onServerFilter);
                                 } else {
                                   handleClearColumnFilter(column.key);
                                 }
@@ -945,82 +994,83 @@ export function SmartGrid({
                   </TableRow>
                 ) : (
                   paginatedData.map((row, rowIndex) => (
-                    <>
-                      <TableRow key={rowIndex}
-                        className={cn(
-                          "hover:bg-gray-50/50 transition-colors duration-150 border-b border-gray-100",
-                          rowClassName ? rowClassName(row, rowIndex) : ''
-                        )}
-                      >
-                        {/* Checkbox cell */}
-                        {showCheckboxes && (
-                          <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
-                            <input 
-                              type="checkbox" 
-                              className="rounded" 
-                              checked={currentSelectedRows.has(rowIndex)}
-                              onChange={() => {
-                                const newSet = new Set(currentSelectedRows);
-                                if (newSet.has(rowIndex)) {
-                                  newSet.delete(rowIndex);
-                                } else {
-                                  newSet.add(rowIndex);
-                                }
-                                handleSelectionChange(newSet);
-                              }}
-                            />
-                          </TableCell>
-                        )}
-                        {orderedColumns.map((column, columnIndex) => {
-                          const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
-                          
-                          return (
-                            <TableCell 
-                              key={column.key} 
-                              className="relative px-3 py-3 border-r border-gray-50 last:border-r-0 align-middle"
-                              style={{ 
-                                width: `${widthPercentage}%`,
-                                minWidth: `${Math.max(80, column.width * 0.8)}px`,
-                                maxWidth: `${column.width * 1.5}px`
-                              }}
-                            >
-                              <div className="overflow-hidden">
-                                {renderCell(row, column, rowIndex, columnIndex)}
+                      <>
+                        <TableRow key={rowIndex}
+                          className={cn(
+                            "hover:bg-gray-50/50 transition-colors duration-150 border-b border-gray-100",
+                            rowClassName ? rowClassName(row, rowIndex) : ''
+                          )}
+                        >
+                          {/* Checkbox cell */}
+                          {showCheckboxes && (
+                            <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
+                              <input 
+                                type="checkbox" 
+                                className="rounded" 
+                                checked={currentSelectedRows.has(rowIndex)}
+                                onChange={() => {
+                                  const newSet = new Set(currentSelectedRows);
+                                  if (newSet.has(rowIndex)) {
+                                    newSet.delete(rowIndex);
+                                  } else {
+                                    newSet.add(rowIndex);
+                                  }
+                                  handleSelectionChange(newSet);
+                                }}
+                              />
+                            </TableCell>
+                          )}
+                          {orderedColumns.map((column, columnIndex) => {
+                            const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
+                            
+                            return (
+                              <TableCell 
+                                key={column.key} 
+                                className="relative px-3 py-3 border-r border-gray-50 last:border-r-0 align-middle"
+                                style={{ 
+                                  width: `${widthPercentage}%`,
+                                  minWidth: `${Math.max(80, column.width * 0.8)}px`,
+                                  maxWidth: `${column.width * 1.5}px`
+                                }}
+                              >
+                                <div className="overflow-hidden">
+                                  {renderCell(row, column, rowIndex, columnIndex)}
+                                </div>
+                              </TableCell>
+                            );
+                          })}
+                          {/* Plugin row actions */}
+                          {plugins.some(plugin => plugin.rowActions) && (
+                            <TableCell className="px-3 py-3 text-center align-top w-[100px]">
+                              <div className="flex items-center justify-center space-x-1">
+                                <PluginRowActions
+                                  plugins={plugins}
+                                  gridAPI={gridAPI}
+                                  row={row}
+                                  rowIndex={rowIndex}
+                                />
                               </div>
                             </TableCell>
-                          );
-                        })}
-                        {/* Plugin row actions */}
-                        {plugins.some(plugin => plugin.rowActions) && (
-                          <TableCell className="px-3 py-3 text-center align-top w-[100px]">
-                            <div className="flex items-center justify-center space-x-1">
-                              <PluginRowActions
-                                plugins={plugins}
-                                gridAPI={gridAPI}
-                                row={row}
-                                rowIndex={rowIndex}
-                              />
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                      {/* Nested row content */}
-                      {effectiveNestedRowRenderer && expandedRows.has(rowIndex) && (
-                        <TableRow className="bg-gray-50/30">
-                          <TableCell 
-                            colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)} 
-                            className="p-0 border-b border-gray-200"
-                          >
-                            <div className="bg-gradient-to-r from-gray-50/50 to-white border-l-4 border-blue-500">
-                              <div className="">
-                                {effectiveNestedRowRenderer(row, rowIndex)}
-                              </div>
-                            </div>
-                          </TableCell>
+                          )}
                         </TableRow>
-                      )}
-                    </>
-                  ))
+                        {/* Nested row content */}
+                        {effectiveNestedRowRenderer && expandedRows.has(rowIndex) && (
+                          <TableRow className="bg-gray-50/30">
+                            <TableCell 
+                              colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)} 
+                              className="p-0 border-b border-gray-200"
+                            >
+                              <div className="bg-gradient-to-r from-gray-50/50 to-white border-l-4 border-blue-500">
+                                <div className="">
+                                  {effectiveNestedRowRenderer(row, rowIndex)}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                      )
+                    )
                 )}
               </TableBody>
             </Table>

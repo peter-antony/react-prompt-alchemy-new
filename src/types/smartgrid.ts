@@ -5,14 +5,15 @@ import { ConfigurableButtonConfig } from '@/components/ui/configurable-button';
 export type GridColumnType =
   | 'Link'                 // Clickable cell with optional onClick or URL
   | 'Badge'                // Color-coded label based on value
+  | 'LinkWithText'        // Clickable cell with text and optional onClick or URL
+  | 'TextWithTwoRow'       // Text with two rows, useful for displaying more information
   | 'DateTimeRange'        // Two date-time values in a vertical stack
   | 'TextWithTooltip'      // Text with an info icon showing a tooltip
   | 'ExpandableCount'      // "+N" style count, expandable to view details
   | 'Text'                 // Standard text cell
   | 'Date'                 // Formatted date
   | 'Dropdown'             // Selectable value from list (for edit or filter)
-  | 'EditableText'         // Inline editable text
-  | 'SubRow'              // Sub-row expandable content
+  | 'EditableText'        // Inline editable text
   | 'DateFormat';
 
 export interface GridColumnConfig {
@@ -41,9 +42,6 @@ export interface GridColumnConfig {
   
   // ExpandableCount specific properties
   renderExpandedContent?: (rowData: any) => React.ReactNode;
-  
-  // SubRow specific properties
-  subRowColumns?: GridColumnConfig[];
 }
 
 // Legacy interfaces for backward compatibility
@@ -95,7 +93,7 @@ export interface GridAPI {
   columns: GridColumnConfig[];
   preferences: GridPreferences;
   actions: {
-    exportData: (format: 'csv' | 'excel' | 'json') => void;
+    exportData: (format: 'csv' | 'xlsx' | 'json') => void;
     resetPreferences: () => void;
     toggleRowSelection: (rowIndex: number) => void;
     selectAllRows: () => void;
@@ -191,26 +189,4 @@ export interface CellEditProps {
   column: Column;
   onSave: (value: any) => void;
   onCancel: () => void;
-}
-
-// SmartGridPlus specific interfaces
-export interface SmartGridPlusProps extends SmartGridProps {
-  // Row operations
-  inlineRowAddition?: boolean;
-  inlineRowEditing?: boolean;
-  onAddRow?: (row: any) => Promise<void> | void;
-  onEditRow?: (row: any, rowIndex: number) => Promise<void> | void;
-  onDeleteRow?: (row: any, rowIndex: number) => Promise<void> | void;
-  
-  // Default values and validation
-  defaultRowValues?: Record<string, any>;
-  validationRules?: {
-    requiredFields?: string[];
-    maxLength?: Record<string, number>;
-    customValidationFn?: (values: Record<string, any>) => Record<string, string>;
-  };
-  
-  // UI configuration
-  addRowButtonLabel?: string;
-  addRowButtonPosition?: "top-left" | "top-right" | "top";
 }

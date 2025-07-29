@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 
 interface PopupField {
@@ -39,7 +39,7 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
     submitColor,
 }) => (
     <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs">
+        <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs" aria-describedby="custom-popup-id">
             <div className="flex flex-col">
                 {/* Header */}
                 <DialogTitle>
@@ -53,6 +53,7 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                         </button>
                     </div>
                 </DialogTitle>
+                <DialogDescription></DialogDescription>
                 {/* Fields */}
                 <form
                     onSubmit={e => {
@@ -93,6 +94,7 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                 <button
                     type="submit"
                     className={`mt-4 w-full ${submitColor} text-white rounded px-6 py-2 text-sm font-medium`}
+                    onClick={onClose}
                 >
                     {submitLabel}
                 </button>

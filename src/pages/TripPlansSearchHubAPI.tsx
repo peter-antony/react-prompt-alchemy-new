@@ -2,23 +2,35 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { SmartGrid } from '@/components/SmartGrid';
 import { GridColumnConfig, FilterConfig } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { MoreHorizontal, Plus, Printer, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { DynamicPanel } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { ConfigurableButton, ConfigurableButtonConfig } from '@/components/ui/configurable-button';
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { Breadcrumb } from "../components/Breadcrumb";
+import { AppLayout } from "@/components/AppLayout";
+import { useNavigate } from "react-router-dom";
+import { tripService } from "@/api/services";
+import { useFooterStore } from "@/stores/footerStore";
+
 import { useTrips, useCreateTrip, useUpdateTrip, useDeleteTrip } from '@/hooks/queries/useTripQueries';
 import { QueryParams, TripCreateInput } from '@/api/types';
+
+interface TripPlanData {
+  id: string;
+  status: string;
+  tripBillingStatus: string;
+  plannedStartEndDateTime: string;
+  actualStartEndDateTime: string;
+  departurePoint: string;
+  arrivalPoint: string;
+  customer: string;
+  draftBill: string;
+}
 
 const TripPlansSearchHubAPI = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -29,9 +41,11 @@ const TripPlansSearchHubAPI = () => {
     sort: 'createdAt',
     order: 'desc'
   });
-  
+
   const gridState = useSmartGridState();
   const { toast } = useToast();
+  const { setFooter, resetFooter } = useFooterStore();
+
 
   // API hooks
   const { data: tripsResponse, isLoading, error, refetch } = useTrips(queryParams);
@@ -90,16 +104,101 @@ const TripPlansSearchHubAPI = () => {
     }
   };
 
-  // Initialize columns
+  // Initialize columns and data
   useEffect(() => {
     gridState.setColumns(columns);
-  }, []);
+    if (!tripsResponse) return;
+
+
+    const processedData = tripsResponse.data?.map((row: any) => ({
+      ...row,
+      status: {
+        value: row.status,
+        variant: getStatusColor(row.status),
+      },
+      tripBillingStatus: {
+        value: row.tripBillingStatus,
+        variant: getStatusColor(row.tripBillingStatus),
+      },
+    }));
+    gridState.setGridData(processedData);
+    console.log('GridState------', processedData);
+
+  }, [tripsResponse]);
+
+  useEffect(() => {
+    setFooter({
+      visible: true,
+      pageName: 'Trip_Execution',
+      leftButtons: [
+        {
+          label: "CIM/CUV Report",
+          onClick: () => console.log("CIM/CUV Report"),
+          type: "Icon",
+          iconName: 'BookText'
+        },
+        {
+          label: "Dropdown Menu",
+          onClick: () => console.log("Menu"),
+          type: "Icon",
+          iconName: 'EllipsisVertical'
+        },
+      ],
+      rightButtons: [
+        {
+          label: "Cancel",
+          onClick: () => console.log("Cancel clicked"),
+          // disabled: true,
+          type: 'Button'
+        },
+      ],
+    });
+    return () => resetFooter();
+  }, [setFooter, resetFooter]);
+
+  const breadcrumbItems = [
+    { label: "Home", href: "/dashboard", active: false },
+    { label: "Trip Execution API", active: true },
+    // { label: 'Trip Execution Management', active: false },
+  ];
+  // Navigate to the create new quick order page
+  const navigate = useNavigate();
+  // Configurable buttons for the grid toolbar
+  const configurableButtons: ConfigurableButtonConfig[] = [
+    {
+      label: "Create Trip",
+      tooltipTitle: "Create trip",
+      showDropdown: true, // Enable dropdown for future functionality
+      onClick: () => {
+        navigate("/");
+      },
+      dropdownItems: [
+        {
+          label: "Add New",
+          icon: <Plus className="h-4 w-4" />,
+          onClick: () => {
+            // setIsDrawerOpen(true);
+          },
+        },
+        {
+          label: "Bulk Upload",
+          icon: <Upload className="h-4 w-4" />,
+          onClick: () => {
+            toast({
+              title: "Bulk Upload",
+              description: "Opening bulk upload dialog...",
+            });
+          },
+        },
+      ],
+    },
+  ];
 
   const columns: GridColumnConfig[] = [
     {
-      key: 'id',
-      label: 'Trip Plan No',
-      type: 'Link',
+      key: "id",
+      label: "Trip Plan No",
+      type: "Link",
       sortable: true,
       editable: false,
       mandatory: true,
@@ -108,19 +207,9 @@ const TripPlansSearchHubAPI = () => {
       filterMode: 'server'
     },
     {
-      key: 'title',
-      label: 'Title',
-      type: 'Text',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      filterable: true,
-      filterMode: 'server'
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      type: 'Badge',
+      key: "status",
+      label: "Status",
+      type: "Badge",
       sortable: true,
       editable: false,
       subRow: false,
@@ -128,88 +217,194 @@ const TripPlansSearchHubAPI = () => {
       filterMode: 'server'
     },
     {
-      key: 'startDate',
-      label: 'Start Date',
-      type: 'Date',
+      key: "tripBillingStatus",
+      label: "Trip Billing Status",
+      type: "Badge",
       sortable: true,
-      editable: true,
+      editable: false,
+      subRow: false,
+      filterable: true,
+      filterMode: 'server'
+    },
+    {
+      key: "plannedStartEndDateTime",
+      label: "Planned Start and End Date Time",
+      type: "DateTimeRange",
+      sortable: true,
+      editable: false,
       subRow: true,
       filterable: true,
       filterMode: 'local'
     },
     {
-      key: 'endDate',
-      label: 'End Date',
-      type: 'Date',
+      key: "actualStartEndDateTime",
+      label: "Actual Start and End Date Time",
+      type: "DateTimeRange",
       sortable: true,
-      editable: true,
+      editable: false,
       subRow: true,
       filterable: true,
       filterMode: 'local'
     },
     {
-      key: 'cost',
-      label: 'Cost',
-      type: 'Text',
+      key: "departurePoint",
+      label: "Departure Point",
+      type: "Text",
       sortable: true,
-      editable: true,
+      editable: false,
       subRow: true,
       filterable: true,
       filterMode: 'local'
     },
     {
-      key: 'currency',
-      label: 'Currency',
-      type: 'Text',
+      key: "arrivalPoint",
+      label: "Arrival Point",
+      type: "Text",
       sortable: true,
-      editable: true,
+      editable: false,
       subRow: true,
       filterable: true,
       filterMode: 'local'
     },
     {
-      key: 'description',
-      label: 'Description',
-      type: 'Text',
-      sortable: false,
-      editable: true,
+      key: "customer",
+      label: "Customer",
+      type: "Text",
+      sortable: true,
+      editable: false,
       subRow: false,
       filterable: true,
       filterMode: 'local'
+    },
+    {
+      key: "draftBill",
+      label: "Draft Bill",
+      type: "Link",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      filterable: true,
+      filterMode: 'local'
+    },
+  ];
+  const sampleNoAPIData: TripPlanData[] = [
+    {
+      id: "TRIP00000001",
+      status: "Released",
+      tripBillingStatus: "Draft Bill Raised",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
+    },
+    {
+      id: "TRIP00000002",
+      status: "Under Execution",
+      tripBillingStatus: "Not Eligible",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
+    },
+    {
+      id: "TRIP00000003",
+      status: "Initiated",
+      tripBillingStatus: "Revenue Leakage",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
+    },
+    {
+      id: "TRIP00000004",
+      status: "Cancelled",
+      tripBillingStatus: "Invoice Created",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
+    },
+    {
+      id: "TRIP00000005",
+      status: "Deleted",
+      tripBillingStatus: "Invoice Approved",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
+    },
+    {
+      id: "TRIP00000006",
+      status: "Confirmed",
+      tripBillingStatus: "Not Eligible",
+      plannedStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      actualStartEndDateTime:
+        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
+      departurePoint: "VLA-70",
+      arrivalPoint: "CUR-25",
+      customer: "+3",
+      draftBill: "DB/000234",
     }
   ];
 
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
-      'draft': 'bg-gray-100 text-gray-800 border-gray-300',
-      'pending': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      'approved': 'bg-green-100 text-green-800 border-green-300',
-      'rejected': 'bg-red-100 text-red-800 border-red-300'
+      Released: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      "Under Execution": "bg-purple-100 text-purple-800 border-purple-300",
+      Initiated: "bg-blue-100 text-blue-800 border-blue-300",
+      Cancelled: "bg-red-100 text-red-800 border-red-300",
+      Deleted: "bg-red-100 text-red-800 border-red-300",
+      Confirmed: "bg-green-100 text-green-800 border-green-300",
+      "Draft Bill Raised": "bg-orange-100 text-orange-800 border-orange-300",
+      "Not Eligible": "bg-red-100 text-red-800 border-red-300",
+      "Revenue Leakage": "bg-red-100 text-red-800 border-red-300",
+      "Invoice Created": "bg-blue-100 text-blue-800 border-blue-300",
+      "Invoice Approved": "bg-green-100 text-green-800 border-green-300",
     };
     return statusColors[status] || 'bg-gray-100 text-gray-800 border-gray-300';
   };
 
-  const processedData = useMemo(() => {
-    if (!tripsResponse?.data) return [];
-    
-    return tripsResponse.data.map(trip => ({
-      ...trip,
+  const processedNoAPIData = useMemo(() => {
+    return sampleNoAPIData.map((row) => ({
+      ...row,
       status: {
-        value: trip.status,
-        variant: getStatusColor(trip.status)
+        value: row.status,
+        variant: getStatusColor(row.status),
       },
-      startDate: new Date(trip.startDate).toLocaleDateString(),
-      endDate: new Date(trip.endDate).toLocaleDateString(),
-      cost: `${trip.cost} ${trip.currency}`
+      tripBillingStatus: {
+        value: row.tripBillingStatus,
+        variant: getStatusColor(row.tripBillingStatus),
+      },
     }));
-  }, [tripsResponse]);
+  }, []);
 
   const handleLinkClick = (value: any, row: any) => {
     console.log('Trip clicked:', value, row);
-    toast({
-      title: "Trip Details",
-      description: `Clicked on trip: ${row.id}`
-    });
+    // toast({
+    //   title: "Trip Details",
+    //   description: `Clicked on trip: ${row.id}`
+    // });
   };
 
   const handleUpdate = async (updatedRow: any) => {
@@ -249,7 +444,7 @@ const TripPlansSearchHubAPI = () => {
       }
     };
     setQueryParams(newQueryParams);
-    
+
     toast({
       title: "Search",
       description: "Searching with filters..."
@@ -264,7 +459,7 @@ const TripPlansSearchHubAPI = () => {
       sort: 'createdAt',
       order: 'desc'
     });
-    
+
     toast({
       title: "Cleared",
       description: "Search filters have been cleared"
@@ -281,7 +476,7 @@ const TripPlansSearchHubAPI = () => {
         cost: 0,
         currency: 'USD'
       };
-      
+
       await createTripMutation.mutateAsync(newTrip);
     } catch (error) {
       console.error('Create trip failed:', error);
@@ -298,16 +493,16 @@ const TripPlansSearchHubAPI = () => {
 
   const handleServerFilter = async (filters: FilterConfig[]) => {
     console.log('Server filters applied:', filters);
-    
+
     // Convert FilterConfig[] to QueryParams filters format
     const serverFilters: Record<string, any> = {};
-    
+
     filters.forEach(filter => {
       if (filter.value !== undefined && filter.value !== null && filter.value !== '') {
         serverFilters[filter.column] = filter.value;
       }
     });
-    
+
     const newQueryParams: QueryParams = {
       ...queryParams,
       page: 1, // Reset to first page when filtering
@@ -316,9 +511,9 @@ const TripPlansSearchHubAPI = () => {
         ...serverFilters
       }
     };
-    
+
     setQueryParams(newQueryParams);
-    
+
     toast({
       title: "Column Filters Applied",
       description: `Applied ${filters.length} server-side filters`
@@ -343,7 +538,10 @@ const TripPlansSearchHubAPI = () => {
           icon: <Upload className="h-4 w-4" />,
           onClick: handleBulkUpload
         }
-      ]
+      ],
+      onClick: function (): void {
+        throw new Error('Function not implemented.');
+      }
     }
   ];
 
@@ -379,92 +577,66 @@ const TripPlansSearchHubAPI = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Breadcrumbs */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/" className="text-blue-600 hover:text-blue-800">
-                Home
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-600">
-                Trip Plans Search Hub (API)
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {/* Search Panel */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Search Filters</h2>
-            <div className="flex space-x-2">
-              <Button onClick={handleSearch} disabled={isLoading}>
-                Search
-              </Button>
-              <Button variant="outline" onClick={handleClear}>
-                Clear
-              </Button>
+    <>
+      <AppLayout>
+        <div className="min-h-screen bg-gray-50">
+          <div className="container-fluid mx-auto p-4 px-6 space-y-6">
+            <div className="hidden md:block">
+              <Breadcrumb items={breadcrumbItems} />
             </div>
-          </div>
-          <DynamicPanel
-            panelId="trip-search-filters"
-            panelTitle="Search Filters"
-            panelConfig={searchPanelConfig}
-            initialData={searchData}
-            onDataChange={handleSearchDataChange}
-          />
-        </div>
 
-        {/* Grid Container */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <SmartGrid
-            key={`grid-${gridState.forceUpdate}`}
-            columns={gridState.columns.length > 0 ? gridState.columns : columns}
-            data={processedData}
-            paginationMode="pagination"
-            onLinkClick={handleLinkClick}
-            onUpdate={handleUpdate}
-            onSubRowToggle={gridState.handleSubRowToggle}
-            onServerFilter={handleServerFilter}
-            selectedRows={selectedRows}
-            onSelectionChange={handleRowSelection}
-            rowClassName={(row: any, index: number) => 
-              selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-            }
-            nestedRowRenderer={renderSubRow}
-            configurableButtons={gridConfigurableButtons}
-            showDefaultConfigurableButton={false}
-            gridTitle="Trip Plans (API)"
-            recordCount={tripsResponse?.pagination?.total || processedData.length}
-          />
-        </div>
-
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-gray-700">Loading trips...</span>
+            {/* Grid Container */}
+            <div className="rounded-lg mt-4">
+              <SmartGrid
+                key={`grid-${gridState.forceUpdate}`}
+                columns={gridState.columns.length > 0 ? gridState.columns : columns}
+                data={gridState.gridData.length > 0
+                  ? gridState.gridData
+                  : gridState.gridData}
+                paginationMode="pagination"
+                onLinkClick={handleLinkClick}
+                onUpdate={handleUpdate}
+                onSubRowToggle={gridState.handleSubRowToggle}
+                onServerFilter={handleServerFilter}
+                selectedRows={selectedRows}
+                onSelectionChange={handleRowSelection}
+                rowClassName={(row: any, index: number) =>
+                  selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                }
+                nestedRowRenderer={renderSubRow}
+                configurableButtons={gridConfigurableButtons}
+                showDefaultConfigurableButton={false}
+                gridTitle="Trip Plans (API)"
+                // recordCount={tripsResponse?.pagination?.total || processedNoAPIData.length}
+                recordCount={gridState.gridData.length > 0
+                  ? gridState.gridData.length
+                  : gridState.gridData.length}
+              />
             </div>
-          </div>
-        )}
-      </div>
 
-      <style>{`
-        .smart-grid-row-selected {
-          background-color: #eff6ff !important;
-          border-left: 4px solid #3b82f6 !important;
-        }
-        .smart-grid-row-selected:hover {
-          background-color: #dbeafe !important;
-        }
-      `}</style>
-    </div>
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-700">Loading trips...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* <style>{`
+              .smart-grid-row-selected {
+                background-color: #eff6ff !important;
+                border-left: 4px solid #3b82f6 !important;
+              }
+              .smart-grid-row-selected:hover {
+                background-color: #dbeafe !important;
+              }
+            `}</style> */}
+        </div>
+      </AppLayout >
+    </>
   );
 };
 

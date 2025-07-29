@@ -28,16 +28,15 @@ export interface QueryParams {
 // Trip types
 export interface Trip {
   id: string;
-  title: string;
-  description: string;
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
-  startDate: string;
-  endDate: string;
-  cost: number;
-  currency: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
+  status: string;
+  tripBillingStatus: string;
+  // status: 'draft' | 'pending' | 'approved' | 'rejected';
+  plannedStartEndDateTime: string;
+  actualStartEndDateTime: string;
+  departurePoint: any;
+  arrivalPoint: any;
+  customer: any;
+  draftBill: any;
 }
 
 export interface TripCreateInput {
