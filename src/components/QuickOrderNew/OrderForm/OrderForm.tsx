@@ -538,7 +538,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     
   }
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className='bg-white rounded-lg border border-gray-200'>
+      <div className="orderFormScroll">
       {/* <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
         Order Details
         {isEditQuickOrder && quickOrder && (
@@ -565,6 +566,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
         userId="current-user"
         className="my-custom-orderform-panel"
       />
+    </div>
 
 
 

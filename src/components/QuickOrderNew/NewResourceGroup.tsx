@@ -81,7 +81,7 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
   return (
     <>
       {!isEditQuickOrder ?
-        <div className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="rounded-lg p-8 flex flex-col items-center justify-center h-full">
           <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             {/* <Plus className="w-10 h-10 text-blue-500" /> */}
             <img src={AddIcon} alt='Add' className="w-20 h-20" />

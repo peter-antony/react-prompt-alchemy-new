@@ -23,8 +23,8 @@ const CreateQuickOrder = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="container mx-auto p-4 px-6 space-y-6">
+      <div className="main-content-h bg-gray-100">
+        <div className="container mx-auto p-4 px-6 ">
           <div className="hidden md:block">
             <Breadcrumb items={breadcrumbItems} />
           </div>
