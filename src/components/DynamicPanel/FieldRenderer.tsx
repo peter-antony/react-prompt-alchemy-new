@@ -116,13 +116,15 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <RadioGroup
+                  {...field}
+                  {...eventHandlers}
                   value={field.value || ''}
                   onValueChange={(value) => {
                     field.onChange(value);
                     events?.onChange?.(value, { target: { value } } as any);
                   }}
                   className="flex gap-4 focus-within:z-50 relative"
-                  {...(events && { 
+                  {...(events && {
                     onClick: events.onClick && ((e: React.MouseEvent) => events.onClick!(e, field.value)),
                     onFocus: events.onFocus,
                     onBlur: events.onBlur
@@ -130,9 +132,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 >
                   {options?.map((option, index) => (
                     <div key={option.value} className="flex items-center space-x-2">
-                      <RadioGroupItem 
-                        value={option.value} 
-                        id={`${config.id}-${option.value}`} 
+                      <RadioGroupItem
+                        value={option.value}
+                        id={`${config.id}-${option.value}`}
                         tabIndex={index === 0 ? tabIndex : -1}
                       />
                       <Label htmlFor={`${config.id}-${option.value}`} className="text-xs">
@@ -307,9 +309,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               background: `linear-gradient(135deg, ${color}20, ${color}10)`,
               borderColor: `${color}40`
             } : {};
-            
+
             return (
-              <div 
+              <div
                 className="border rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md"
                 style={color ? cardStyle : {}}
                 onClick={events?.onClick ? (e) => events.onClick!(e, field.value) : undefined}
@@ -319,7 +321,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 <div className="text-sm font-medium text-muted-foreground mb-2">
                   {config.label}
                 </div>
-                <div 
+                <div
                   className="text-lg font-bold"
                   style={{ color: fieldColour || 'inherit' }}
                 >
@@ -339,7 +341,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
             const fieldValue = field.value || {};
-            
+
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}

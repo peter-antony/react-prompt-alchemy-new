@@ -190,7 +190,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       visible: true,
       editable: true,
       order: 1,
-      onChange: (val: string) => setOrderType(val), // To update state on change
+      events: {
+        onChange: (val: string) =>{
+          setOrderType(val), // To update state on change
+          getOrderFormDetailsConfig(OrderType);
+        } 
+
+      }
     },
     QuickOrderDate: {
       id: 'QuickOrderDate',
