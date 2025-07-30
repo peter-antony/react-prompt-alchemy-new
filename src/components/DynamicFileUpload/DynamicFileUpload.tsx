@@ -343,8 +343,8 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
                     {/* <div className="p-2 bg-red-100 rounded"> */}
                       <FileText className="w-8 h-8 text-red-500" />
                     {/* </div> */}
-                    <div>
-                      <p className="font-medium text-sm text-gray-900">{file.file.name}</p>
+                    <div className='w-48'>
+                      <p className="font-medium text-sm text-gray-900 truncate">{file.file.name}</p>
                       <p className="text-xs text-gray-500">
                         {new Date().toLocaleDateString('en-GB', { 
                           day: '2-digit', 
@@ -495,7 +495,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
                           {/* {getFileIcon(file.fileName)} */}
                           {/* <span className={`sr-only ${iconColor}`}>File icon</span> */}
                         </div>
-                        <div className="">
+                        <div className="w-48">
                           <h4 className="font-medium text-sm text-gray-900 truncate">{file.fileName}</h4>
                           <Badge variant="secondary" className="text-xs text-gray-400 p-0 bg-white hover:bg-white">
                             {file.category}
