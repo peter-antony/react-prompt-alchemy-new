@@ -28,7 +28,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <AppHeader />
           </div>
           
-          <main className={`flex-1 overflow-auto mt-16 ${config.visible ? 'pb-20' : ''}`}>
+          <main className={`flex-1 overflow-auto mt-16 ${config.visible ? 'padding-bottom-4r' : ''}`}>
             {children}
           </main>
 

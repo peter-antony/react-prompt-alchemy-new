@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { SmartGrid } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
-import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen } from 'lucide-react';
+import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen, Edit, Trash2, Eye, Settings, GitPullRequest } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -170,7 +170,7 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'Customer_Supplier_RefNo',
-      label: 'Cust/Sup.Ref.No.',
+      label: 'Cust/Sup. Ref. No.',
       type: 'Text',
       // type: 'TextWithTooltip',
       sortable: true,
@@ -197,12 +197,44 @@ const QuickOrderManagement = () => {
     {
       key: 'TotalNet',
       label: 'Total Net',
-      type: 'Text',
+      type: 'CurrencyWithSymbol',
       sortable: true,
       editable: false,
       subRow: false
     },
-
+    {
+      key: 'actions',
+      label: '',
+      type: 'ActionButton',
+      sortable: false,
+      editable: false,
+      subRow: false,
+      width: 80,
+      actionButtons: [
+        // {
+        //   icon: <Eye className="h-4 w-4 text-blue-600" />,
+        //   tooltip: 'View Details',
+        //   onClick: (rowData) => {
+        //     console.log('View clicked for:', rowData);
+        //     // Navigate to view page or open modal
+        //     navigate(`/create-quick-order?id=${encodeURIComponent(rowData.QuickUniqueID)}&mode=view`);
+        //   },
+        //   variant: 'ghost',
+        //   size: 'sm'
+        // },
+        {
+          icon: <GitPullRequest className="h-8 w-8" />,
+          tooltip: 'Order',
+          onClick: (rowData) => {
+            console.log('clicked for:', rowData);
+            // Show confirmation dialog
+          },
+          variant: 'ghost',
+          size: 'lg',
+          // disabled: (rowData) => rowData.Status.value === 'Save' || rowData.Status.value === 'Deleted'
+        }
+      ]
+    }
   ];
 
   // const initialColumns: GridColumnConfig[] = [
@@ -349,7 +381,7 @@ const QuickOrderManagement = () => {
     {
       "QuickUniqueID": 99,
       "QuickOrderNo": "",
-      "QuickOrderDate": "2022-06-16T00:00:00",
+      "QuickOrderDate": "2025-03-12T00:00:00",
       "Status": "Save",
       "CustomerOrVendor": "Oltis Group",
       "Customer_Supplier_RefNo": "CSR/111/2024",
@@ -383,7 +415,7 @@ const QuickOrderManagement = () => {
       "QuickUniqueID": 110,
       "QuickOrderNo": "110/BUY",
       "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
+      "Status": "Under Amendment",
       "CustomerOrVendor": "Oltis Group",
       "Customer_Supplier_RefNo": "CSR/111/2024",
       "Contract": "CON000000116",
@@ -692,19 +724,15 @@ const QuickOrderManagement = () => {
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       // Status column colors
-      'Released': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      'Under Execution': 'bg-purple-100 text-purple-800 border-purple-300',
-      'Fresh': 'bg-blue-100 text-blue-800 border-blue-300 rounded-2xl',
-      'Cancelled': 'bg-red-100 text-red-800 border-red-300',
-      'Deleted': 'bg-red-100 text-red-800 border-red-300',
-      'Save': 'bg-green-100 text-green-800 border-green-300 rounded-2xl',
-
-      // Trip Billing Status colors
-      'Confirmed': 'bg-orange-100 text-orange-800 border-orange-300',
-      'Not Eligible': 'bg-red-100 text-red-800 border-red-300',
-      'Revenue Leakage': 'bg-red-100 text-red-800 border-red-300',
-      'Invoice Created': 'bg-blue-100 text-blue-800 border-blue-300',
-      'Invoice Approved': 'bg-green-100 text-green-800 border-green-300'
+      'Released': 'badge-fresh-green rounded-2xl',
+      'Under Execution': 'badge-purple rounded-2xl',
+      'Fresh': 'badge-blue rounded-2xl',
+      'Cancelled': 'badge-red rounded-2xl',
+      'Deleted': 'badge-red rounded-2xl',
+      'Save': 'badge-green rounded-2xl',
+      'Under Amendment': 'badge-orange rounded-2xl',
+      'Confirmed': 'badge-green rounded-2xl',
+      'Initiated': 'badge-blue rounded-2xl',
     };
     return statusColors[status] || 'bg-gray-100 text-gray-800 border-gray-300';
   };
@@ -715,10 +743,6 @@ const QuickOrderManagement = () => {
       Status: {
         value: row.Status,
         variant: getStatusColor(row.Status)
-      },
-      tripBillingStatus: {
-        value: row.tripBillingStatus,
-        variant: getStatusColor(row.tripBillingStatus)
       }
     }));
   }, []);
@@ -804,7 +828,7 @@ const QuickOrderManagement = () => {
   return (
     <>
       <AppLayout>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen main-bg">
           <div className="container-fluid mx-auto p-4 px-6 space-y-6">
             <div className="hidden md:block">
               <Breadcrumb items={breadcrumbItems} />

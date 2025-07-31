@@ -14,7 +14,9 @@ export type GridColumnType =
   | 'Date'                 // Formatted date
   | 'Dropdown'             // Selectable value from list (for edit or filter)
   | 'EditableText'        // Inline editable text
-  | 'DateFormat';
+  | 'DateFormat'
+  | 'CurrencyWithSymbol'
+  | 'ActionButton';        // Clickable button with SVG icon
 
 export interface GridColumnConfig {
   key: string;
@@ -42,6 +44,16 @@ export interface GridColumnConfig {
   
   // ExpandableCount specific properties
   renderExpandedContent?: (rowData: any) => React.ReactNode;
+  
+  // ActionButton specific properties
+  actionButtons?: Array<{
+    icon: React.ReactNode;
+    tooltip?: string;
+    onClick: (rowData: any) => void;
+    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+    size?: 'default' | 'sm' | 'lg' | 'icon';
+    disabled?: boolean | ((rowData: any) => boolean);
+  }>;
 }
 
 // Legacy interfaces for backward compatibility

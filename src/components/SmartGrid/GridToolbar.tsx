@@ -1,11 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Search, 
-  Filter, 
-  RotateCcw, 
-  Download, 
+import {
+  Search,
+  Filter,
+  RotateCcw,
+  Download,
   CheckSquare,
   Grid2x2,
   List,
@@ -41,7 +41,7 @@ interface GridToolbarProps {
   onColumnVisibilityToggle?: (columnId: string) => void;
   onColumnHeaderChange?: (columnId: string, header: string) => void;
   onResetToDefaults?: () => void;
-  onExport?: (format: 'csv'| 'xlsx') => void;
+  onExport?: (format: 'csv' | 'xlsx') => void;
   onSubRowToggle?: (columnKey: string) => void;
   configurableButtons?: ConfigurableButtonConfig[];
   showDefaultConfigurableButton?: boolean;
@@ -95,8 +95,8 @@ export function GridToolbar({
   };
 
   // Determine which buttons to show
-  const buttonsToShow = configurableButtons && configurableButtons.length > 0 
-    ? configurableButtons 
+  const buttonsToShow = configurableButtons && configurableButtons.length > 0
+    ? configurableButtons
     : (showDefaultConfigurableButton ? [defaultConfigurableButton] : []);
 
   return (
@@ -109,8 +109,8 @@ export function GridToolbar({
               {gridTitle}
             </span>
             {recordCount !== undefined && gridTitle !== 'Plan List' && (
-              <span 
-                className="inline-flex items-center justify-center rounded-full bg-blue-50 text-blue-500 text-xs px-2 py-1 ml-3 border font-medium border-blue-200"
+              <span
+                className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium"
                 aria-label={`${gridTitle} count ${recordCount}`}
               >
                 {recordCount}
@@ -142,7 +142,7 @@ export function GridToolbar({
           {gridTitle !== 'Plan List' && (
             <span className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3.33333 14L3.33333 10M3.33333 10C4.06971 10 4.66667 9.40305 4.66667 8.66667C4.66667 7.93029 4.06971 7.33333 3.33333 7.33333C2.59695 7.33333 2 7.93029 2 8.66667C2 9.40305 2.59695 10 3.33333 10ZM3.33333 4.66667V2M8 14V10M8 4.66667V2M8 4.66667C7.26362 4.66667 6.66667 5.26362 6.66667 6C6.66667 6.73638 7.26362 7.33333 8 7.33333C8.73638 7.33333 9.33333 6.73638 9.33333 6C9.33333 5.26362 8.73638 4.66667 8 4.66667ZM12.6667 14V11.3333M12.6667 11.3333C13.403 11.3333 14 10.7364 14 10C14 9.26362 13.403 8.66667 12.6667 8.66667C11.9303 8.66667 11.3333 9.26362 11.3333 10C11.3333 10.7364 11.9303 11.3333 12.6667 11.3333ZM12.6667 6V2" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.33333 14L3.33333 10M3.33333 10C4.06971 10 4.66667 9.40305 4.66667 8.66667C4.66667 7.93029 4.06971 7.33333 3.33333 7.33333C2.59695 7.33333 2 7.93029 2 8.66667C2 9.40305 2.59695 10 3.33333 10ZM3.33333 4.66667V2M8 14V10M8 4.66667V2M8 4.66667C7.26362 4.66667 6.66667 5.26362 6.66667 6C6.66667 6.73638 7.26362 7.33333 8 7.33333C8.73638 7.33333 9.33333 6.73638 9.33333 6C9.33333 5.26362 8.73638 4.66667 8 4.66667ZM12.6667 14V11.3333M12.6667 11.3333C13.403 11.3333 14 10.7364 14 10C14 9.26362 13.403 8.66667 12.6667 8.66667C11.9303 8.66667 11.3333 9.26362 11.3333 10C11.3333 10.7364 11.9303 11.3333 12.6667 11.3333ZM12.6667 6V2" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
           )}
@@ -185,15 +185,15 @@ export function GridToolbar({
             {/* <SlidersHorizontal className="h-4 w-4 text-gray-600" /> */}
             <span className="right-8 top-1/2 transform text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3.33333 14L3.33333 10M3.33333 10C4.06971 10 4.66667 9.40305 4.66667 8.66667C4.66667 7.93029 4.06971 7.33333 3.33333 7.33333C2.59695 7.33333 2 7.93029 2 8.66667C2 9.40305 2.59695 10 3.33333 10ZM3.33333 4.66667V2M8 14V10M8 4.66667V2M8 4.66667C7.26362 4.66667 6.66667 5.26362 6.66667 6C6.66667 6.73638 7.26362 7.33333 8 7.33333C8.73638 7.33333 9.33333 6.73638 9.33333 6C9.33333 5.26362 8.73638 4.66667 8 4.66667ZM12.6667 14V11.3333M12.6667 11.3333C13.403 11.3333 14 10.7364 14 10C14 9.26362 13.403 8.66667 12.6667 8.66667C11.9303 8.66667 11.3333 9.26362 11.3333 10C11.3333 10.7364 11.9303 11.3333 12.6667 11.3333ZM12.6667 6V2" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.33333 14L3.33333 10M3.33333 10C4.06971 10 4.66667 9.40305 4.66667 8.66667C4.66667 7.93029 4.06971 7.33333 3.33333 7.33333C2.59695 7.33333 2 7.93029 2 8.66667C2 9.40305 2.59695 10 3.33333 10ZM3.33333 4.66667V2M8 14V10M8 4.66667V2M8 4.66667C7.26362 4.66667 6.66667 5.26362 6.66667 6C6.66667 6.73638 7.26362 7.33333 8 7.33333C8.73638 7.33333 9.33333 6.73638 9.33333 6C9.33333 5.26362 8.73638 4.66667 8 4.66667ZM12.6667 14V11.3333M12.6667 11.3333C13.403 11.3333 14 10.7364 14 10C14 9.26362 13.403 8.66667 12.6667 8.66667C11.9303 8.66667 11.3333 9.26362 11.3333 10C11.3333 10.7364 11.9303 11.3333 12.6667 11.3333ZM12.6667 6V2" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
           </Button>
         )}
 
-        <Button 
+        <Button
           variant="ghost"
-          size="sm" 
+          size="sm"
           onClick={() => setShowCheckboxes(!showCheckboxes)}
           disabled={loading}
           title="Toggle Checkboxes"
@@ -238,10 +238,10 @@ export function GridToolbar({
         )}
 
         {gridTitle !== 'Plan List' && (
-          <Button 
+          <Button
             variant="ghost"
-            size="sm" 
-            onClick={onResetToDefaults} 
+            size="sm"
+            onClick={onResetToDefaults}
             disabled={loading}
             title="Reset All"
             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
@@ -249,7 +249,7 @@ export function GridToolbar({
             <RotateCcw className="h-4 w-4 text-gray-600" />
           </Button>
         )}
-        
+
         {/* <Button 
           variant="ghost"
           size="sm" 
@@ -262,9 +262,9 @@ export function GridToolbar({
         </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
+            <Button
               variant="ghost"
-              size="sm" 
+              size="sm"
               disabled={loading}
               title="Export Data"
               className="w-16 h-9 flex items-center justify-center rounded hover:bg-gray-100 p-0 border border-gray-300"
@@ -284,10 +284,10 @@ export function GridToolbar({
         </DropdownMenu>
 
         {gridTitle === 'Plan List' && (
-          <Button 
+          <Button
             variant="ghost"
-            size="sm" 
-            onClick={onResetToDefaults} 
+            size="sm"
+            onClick={onResetToDefaults}
             disabled={loading}
             title="MoreInfo"
             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
@@ -308,7 +308,17 @@ export function GridToolbar({
             <ChevronDown className="h-4 w-4 mr-1" />
           </Button>
         )}
-        
+
+        {gridTitle !== 'Plan List' && (
+          <div className="h-8 w-3 flex justify-center">
+            <div className="" style={{
+              'width': '1px',
+              'height': 'inherit',
+              'border': '1px solid #EAECF0'
+            }}></div>
+          </div>
+        )}
+
         {/* Configurable Buttons */}
         {buttonsToShow.map((buttonConfig, index) => (
           <ConfigurableButton
@@ -317,6 +327,6 @@ export function GridToolbar({
           />
         ))}
       </div>
-    </div>
+    </div >
   );
 }

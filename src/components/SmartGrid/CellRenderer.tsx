@@ -38,6 +38,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   onLinkClick,
   loading = false
 }) => {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const [tempValue, setTempValue] = useState(value);
 
   const handleSave = () => {
@@ -80,7 +81,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const getDefaultStatusColor = (status: any, columnKey: string) => {
     // Safely convert to string and handle non-string inputs
     const statusString = String(status || '').toLowerCase();
-    
+
     if (columnKey.toLowerCase().includes('status')) {
       switch (statusString) {
         case 'released':
@@ -143,7 +144,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   // DateTimeRange renderer
   const renderDateTimeRange = () => {
-    const [date, time] = String(value).split(' ');
+    const [date, time] = String(value).split('\n');
     return (
       <div className="text-sm min-w-0">
         <div className="text-gray-900 font-medium truncate">{date}</div>
@@ -155,7 +156,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   // TextWithTooltip renderer
   const renderTextWithTooltip = () => {
     const tooltipText = column.infoTextField ? row[column.infoTextField] : `More info about ${value}`;
-    
+
     return (
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-gray-900 font-medium truncate flex-1" title={String(value)}>
@@ -172,7 +173,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
                 <Info className="h-3 w-3 text-blue-600" />
               </button>
             </TooltipTrigger>
-            <TooltipContent 
+            <TooltipContent
               className="max-w-xs p-3 text-sm bg-white border border-gray-200 shadow-lg z-50"
               sideOffset={5}
             >
@@ -283,7 +284,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   // Date renderer
   const renderDate = () => {
     if (!value) return <span className="text-gray-400">-</span>;
-    
+
     try {
       const date = new Date(value);
       const formattedDate = date.toLocaleDateString();
@@ -291,6 +292,75 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     } catch {
       return <span className="truncate" title={String(value)}>{value}</span>;
     }
+  };
+
+  // Date renderer
+  const renderDateFormat = () => {
+    if (!value) return <span className="text-gray-400">-</span>;
+
+    try {
+      const date = new Date(value);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = monthNames[date.getMonth()];
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+      return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+    } catch {
+      return <span className="truncate" title={String(value)}>{value}</span>;
+    }
+  };
+
+  // Currency with symbol renderer
+  const renderCurrencySymbol = () => {
+    return <span className="font-semibold">&euro; {value}</span>
+  }
+
+  // Action button renderer
+  const renderActionButton = () => {
+    if (!column.actionButtons || column.actionButtons.length === 0) {
+      return <span className="text-gray-400">-</span>;
+    }
+
+    return (
+      <div className="flex items-center justify-center w-full">
+        {column.actionButtons.map((button, index) => {
+          const isDisabled = typeof button.disabled === 'function' 
+            ? button.disabled(row) 
+            : button.disabled || false;
+
+          const buttonElement = (
+            <Button
+              key={index}
+              variant={button.variant || 'ghost'}
+              size={button.size || 'sm'}
+              onClick={(e) => {
+                e.stopPropagation();
+                button.onClick(row);
+              }}
+              disabled={isDisabled}
+              className="h-8 w-8 p-0 hover:bg-gray-100 rotate-90"
+            >
+              {button.icon}
+            </Button>
+          );
+
+          if (button.tooltip) {
+            return (
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>
+                  {buttonElement}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{button.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return buttonElement;
+        })}
+      </div>
+    );
   };
 
   // Main renderer switch
@@ -312,6 +382,12 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderDropdown();
       case 'Date':
         return renderDate();
+      case 'DateFormat':
+        return renderDateFormat();
+      case 'CurrencyWithSymbol':
+        return renderCurrencySymbol();
+      case 'ActionButton':
+        return renderActionButton();
       case 'Text':
       default:
         return <span className="text-gray-900 truncate" title={String(value)}>{value}</span>;
@@ -319,8 +395,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   };
 
   return (
-    <div className="flex items-center min-w-0 w-full">
-      {renderCellContent()}
-    </div>
+    <TooltipProvider>
+      <div className="flex items-center min-w-0 w-full">
+        {renderCellContent()}
+      </div>
+    </TooltipProvider>
   );
 };

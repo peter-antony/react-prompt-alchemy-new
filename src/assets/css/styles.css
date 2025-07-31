@@ -18,6 +18,38 @@ body::-webkit-scrollbar-thumb {
   --gray-bg: #F2F4F7;
   --font-color-100: #D0D5DD;
   --text-gray-600: #475467;
+
+  /* Badge green*/
+  --badge-text-green: #039855;
+  --badge-bg-green: #ECFDF3;
+  --badge-border-green: #A6F4C5;
+  --badge-padding: 2px 8px 2px 8px;
+
+  /* Badge blue */
+  --badge-text-blue: #0068CF;
+  --badge-bg-blue: #EAF4FF;
+  --badge-border-blue: #AFD7FF;
+
+  /* Badge orange */
+  --badge-text-orange: #EC4A0A;
+  --badge-bg-orange: #FFEAD5;
+  --badge-border-orange: #FDDCAB;
+
+  /* Badge red */
+  --badge-text-red: #D92D20;
+  --badge-bg-red: #FEF3F2;
+  --badge-border-red: #FECDCA;
+
+  /* Badge fresh-green */
+  --badge-text-fresh-green: #779A15;
+  --badge-bg-fresh-green: #F7FCE8;
+  --badge-border-fresh-green: #DBF19D;
+
+  /* Badge purple */
+  --badge-text-purple: #6938EF;
+  --badge-bg-purple: #F4F3FF;
+  --badge-border-purple: #D9D6FE;
+
 }
 .main-content-h{
   min-height: calc(100vh - 110px);
@@ -187,6 +219,67 @@ body::-webkit-scrollbar-thumb {
 }
 .w-96{
   width: 96%;
+}
+
+.main-bg {
+  background-color: var(--body-bg);
+}
+
+.padding-bottom-4r {
+  padding-bottom: 4rem;
+}
+
+.badge-green {
+  color: var(--badge-text-green);
+  font-weight: 500;
+  background-color: var(--badge-bg-green);
+  border: 1px solid var(--badge-border-green);
+  padding: var(--badge-padding);
+}
+
+.badge-blue {
+  color: var(--badge-text-blue);
+  font-weight: 500;
+  background-color: var(--badge-bg-blue);
+  border: 1px solid var(--badge-border-blue);
+  padding: var(--badge-padding);
+}
+
+.badge-orange {
+  color: var(--badge-text-orange);
+  font-weight: 500;
+  background-color: var(--badge-bg-orange);
+  border: 1px solid var(--badge-border-orange);
+  padding: var(--badge-padding);
+}
+
+.badge-red {
+  color: var(--badge-text-red);
+  font-weight: 500;
+  background-color: var(--badge-bg-red);
+  border: 1px solid var(--badge-border-red);
+  padding: var(--badge-padding);
+}
+
+.badge-purple {
+  color: var(--badge-text-purple);
+  font-weight: 500;
+  background-color: var(--badge-bg-purple);
+  border: 1px solid var(--badge-border-purple);
+  padding: var(--badge-padding);
+}
+
+.badge-fresh-green {
+  color: var(--badge-text-fresh-green);
+  font-weight: 500;
+  background-color: var(--badge-bg-fresh-green);
+  border: 1px solid var(--badge-border-fresh-green);
+  padding: var(--badge-padding);
+}
+
+
+.table-header-bg {
+  background-color: var(--gray-bg);
 }
 
 

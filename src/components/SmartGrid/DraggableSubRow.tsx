@@ -32,14 +32,15 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>('');
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   // Get sub-row columns and apply custom ordering
   const subRowColumns = columns.filter(col => col.subRow === true);
-  const orderedSubRowColumns = subRowColumnOrder.length > 0 
+  const orderedSubRowColumns = subRowColumnOrder.length > 0
     ? subRowColumnOrder
-        .map(id => subRowColumns.find(col => col.key === id))
-        .filter((col): col is GridColumnConfig => col !== undefined)
-        .concat(subRowColumns.filter(col => !subRowColumnOrder.includes(col.key)))
+      .map(id => subRowColumns.find(col => col.key === id))
+      .filter((col): col is GridColumnConfig => col !== undefined)
+      .concat(subRowColumns.filter(col => !subRowColumnOrder.includes(col.key)))
     : subRowColumns;
 
   const handleDragStart = useCallback((e: React.DragEvent, columnKey: string) => {
@@ -64,7 +65,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
 
   const handleDrop = useCallback((e: React.DragEvent, targetColumnKey: string) => {
     e.preventDefault();
-    
+
     if (!draggedColumn || draggedColumn === targetColumnKey) {
       setDraggedColumn(null);
       setDragOverColumn(null);
@@ -159,10 +160,10 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             const [startDateTime, endDateTime] = dateTimeString.split('\n');
             return (
               <div className="space-y-1">
-                <div className="text-xs text-gray-500">Start:</div>
-                <div className="font-medium text-sm">{startDateTime}</div>
-                <div className="text-xs text-gray-500">End:</div>
-                <div className="font-medium text-sm">{endDateTime}</div>
+                {/* <div className="text-xs text-gray-500">Start:</div> */}
+                <div className="font-medium text-sm">{startDateTime} & {endDateTime}</div>
+                {/* <div className="text-xs text-gray-500">End:</div> */}
+                {/* <div className="font-medium text-sm">{endDateTime}</div> */}
               </div>
             );
           }
@@ -173,6 +174,17 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             return <div className="font-medium text-sm">{date.toLocaleDateString()}</div>;
           } catch {
             return <div className="font-medium text-sm">{String(value)}</div>;
+          }
+        case 'DateFormat':
+          try {
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            const formattedDate = `${day}-${month}-${year}`;
+            return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+          } catch {
+            return <span className="truncate" title={String(value)}>{String(value)}</span>;
           }
         default:
           return <div className="font-medium text-sm break-words">{String(value)}</div>;
@@ -212,7 +224,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           const value = row[column.key];
           const isDragged = draggedColumn === column.key;
           const isDragOver = dragOverColumn === column.key;
-          
+
           return (
             <div
               key={column.key}
@@ -253,7 +265,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Drag indicator overlay */}
               {isDragOver && (
                 <div className="absolute inset-0 bg-blue-200/30 rounded-lg border-2 border-blue-400 border-dashed animate-pulse" />

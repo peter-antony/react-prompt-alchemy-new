@@ -124,13 +124,93 @@ const TripPlansSearchHub = () => {
       order: 7,
     },
   };
+  const columns: GridColumnConfig[] = [
+    {
+      key: "id",
+      label: "Trip Plan No",
+      type: "Link",
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false,
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "Badge",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "tripBillingStatus",
+      label: "Trip Billing Status",
+      type: "Badge",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "plannedStartEndDateTime",
+      label: "Planned Start and End Date Time",
+      type: "DateTimeRange",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "actualStartEndDateTime",
+      label: "Actual Start and End Date Time",
+      type: "DateTimeRange",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "departurePoint",
+      label: "Departure Point",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "arrivalPoint",
+      label: "Arrival Point",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "customer",
+      label: "Customer",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "draftBill",
+      label: "Draft Bill",
+      type: "Link",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+  ];
 
   // Initialize columns and data
   useEffect(() => {
     gridState.setColumns(columns);
+
+    let isMounted = true;
+
     tripService.getTrips()
-    .then((data: any) => {
-      const processedData = data.map((row: any) => ({
+      .then((data: any) => {
+        if (!isMounted) return;
+
+        const processedData = data?.map((row: any) => ({
           ...row,
           status: {
             value: row.status,
@@ -141,14 +221,21 @@ const TripPlansSearchHub = () => {
             variant: getStatusColor(row.tripBillingStatus),
           },
         }));
+
         gridState.setGridData(processedData);
-    })
-    .catch((error: any) =>{
-      console.log(error);
-      gridState.setGridData([]);
-    }) 
-    .finally(() => console.log('Trip finally'));
-  }, []);
+      })
+      .catch((error: any) => {
+        console.error("Trip fetch failed:", error);
+        if (isMounted) gridState.setGridData([]);
+      })
+      .finally(() => {
+        if (isMounted) console.log('Trip finally');
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Add dependencies if needed
 
   useEffect(() => {
     setFooter({
@@ -216,82 +303,6 @@ const TripPlansSearchHub = () => {
           },
         },
       ],
-    },
-  ];
-
-  const columns: GridColumnConfig[] = [
-    {
-      key: "id",
-      label: "Trip Plan No",
-      type: "Link",
-      sortable: true,
-      editable: false,
-      mandatory: true,
-      subRow: false,
-    },
-    {
-      key: "status",
-      label: "Status",
-      type: "Badge",
-      sortable: true,
-      editable: false,
-      subRow: false,
-    },
-    {
-      key: "tripBillingStatus",
-      label: "Trip Billing Status",
-      type: "Badge",
-      sortable: true,
-      editable: false,
-      subRow: false,
-    },
-    {
-      key: "plannedStartEndDateTime",
-      label: "Planned Start and End Date Time",
-      type: "DateTimeRange",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "actualStartEndDateTime",
-      label: "Actual Start and End Date Time",
-      type: "DateTimeRange",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "departurePoint",
-      label: "Departure Point",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "arrivalPoint",
-      label: "Arrival Point",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "customer",
-      label: "Customer",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-    },
-    {
-      key: "draftBill",
-      label: "Draft Bill",
-      type: "Link",
-      sortable: true,
-      editable: false,
-      subRow: false,
     },
   ];
 
@@ -378,17 +389,23 @@ const TripPlansSearchHub = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
-      Released: "bg-yellow-100 text-yellow-800 border-yellow-300",
-      "Under Execution": "bg-purple-100 text-purple-800 border-purple-300",
-      Initiated: "bg-blue-100 text-blue-800 border-blue-300",
-      Cancelled: "bg-red-100 text-red-800 border-red-300",
-      Deleted: "bg-red-100 text-red-800 border-red-300",
-      Confirmed: "bg-green-100 text-green-800 border-green-300",
-      "Draft Bill Raised": "bg-orange-100 text-orange-800 border-orange-300",
-      "Not Eligible": "bg-red-100 text-red-800 border-red-300",
-      "Revenue Leakage": "bg-red-100 text-red-800 border-red-300",
-      "Invoice Created": "bg-blue-100 text-blue-800 border-blue-300",
-      "Invoice Approved": "bg-green-100 text-green-800 border-green-300",
+      // Status column colors
+      'Released': 'badge-fresh-green rounded-2xl',
+      'Under Execution': 'badge-purple rounded-2xl',
+      'Fresh': 'badge-blue rounded-2xl',
+      'Cancelled': 'badge-red rounded-2xl',
+      'Deleted': 'badge-red rounded-2xl',
+      'Save': 'badge-green rounded-2xl',
+      'Under Amendment': 'badge-orange rounded-2xl',
+      'Confirmed': 'badge-green rounded-2xl',
+      'Initiated': 'badge-blue rounded-2xl',
+
+      // Trip Billing Status colors
+      'Draft Bill Raised': 'badge-orange rounded-2xl',
+      'Not Eligible': 'badge-red rounded-2xl',
+      'Revenue Leakage': 'badge-red rounded-2xl',
+      'Invoice Created': 'badge-blue rounded-2xl',
+      'Invoice Approved': 'badge-fresh-green rounded-2xl'
     };
     return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
   };

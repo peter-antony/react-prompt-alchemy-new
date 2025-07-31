@@ -772,7 +772,7 @@ export function SmartGrid({
         <ScrollArea className="w-full">
           {/* <div className="w-9/12"> */}
             <Table className="w-full">
-              <TableHeader className="sticky top-0 z-20 bg-white shadow-sm border-b-2 border-gray-100">
+              <TableHeader className="sticky top-0 bg-white shadow-sm border-b-2 border-gray-100">
                 <TableRow className="hover:bg-transparent">
                   {/* Checkbox header */}
                   {showCheckboxes && (
