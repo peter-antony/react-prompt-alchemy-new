@@ -158,11 +158,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
   ];
   // Local array of customer ref IDs for suggestions
   const customerRefIds = [
-    '1234567890',
-    '1234567891',
-    '1234567892',
-    '1234567893',
-    '1234567894',
+    'CR234567890',
+    'CR344678910',
+    'CR344678920',
+    'CR345678930',
+    'CR345678940',
   ];
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
   const [isBack, setIsBack] = useState(true);
@@ -263,26 +263,28 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
       label: 'Customer Internal Order No.',
-      fieldType: 'text',
+      fieldType: 'search',
       width: 'full',
       value: '',
       mandatory: false,
       visible: OrderType === 'buy',
       editable: true,
       order: 6,
-      placeholder: 'IO/0000000042'
+      placeholder: 'IO/0000000042',
+      searchData: orderIds, // <-- This is the local array for suggestions
     },
     Customer_Supplier_RefNo: {
       id: 'Customer_Supplier_RefNo',
       label: 'Customer/ Supplier Ref. No.',
-      fieldType: 'text',
+      fieldType: 'search',
       width: 'half',
-      value: '',
+      value: 'CR0000001',
       mandatory: false,
       visible: true,
       editable: true,
       order: 7,
-      placeholder: 'Enter Ref. No.'
+      placeholder: 'Enter Ref. No.',
+      searchData: customerRefIds, // <-- This is the local array for suggestions
     },
     QCUserDefined1: {
       id: 'QCUserDefined1',

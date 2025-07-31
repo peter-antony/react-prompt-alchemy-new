@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Controller, Control } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { InputDropdown } from '@/components/ui/input-dropdown';
@@ -21,7 +21,10 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   fieldId,
   tabIndex
 }) => {
+  // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
+  // For search fieldType, get searchData from config as any (if present)
+  const searchData: string[] | undefined = (config as any).searchData;
 
   // Helper function to create event handlers that include field value
   const createEventHandlers = (field: any) => ({
@@ -56,6 +59,76 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   }
 
   const baseInputClasses = "h-8 text-xs border-gray-300 focus:border-blue-500";
+
+  // --- UPDATED: search fieldType with suggestions ---
+  if (fieldType === 'search') {
+    return (
+      <Controller
+        name={fieldId}
+        control={control}
+        render={({ field }) => {
+          const [inputValue, setInputValue] = useState(field.value || '');
+          const [showSuggestions, setShowSuggestions] = useState(false);
+
+          useEffect(() => {
+            setInputValue(field.value || '');
+          }, [field.value]);
+
+          // Use the searchData array from config
+          const suggestions: string[] = searchData || [];
+          const filteredSuggestions = inputValue
+            ? suggestions.filter(item =>
+                item.toLowerCase().includes(inputValue.toLowerCase())
+              )
+            : [];
+
+          return (
+            <div className="relative focus-within:z-50">
+              <Input
+                type="search"
+                value={inputValue}
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  field.onChange(e.target.value);
+                  setShowSuggestions(true);
+                  events?.onChange?.(e.target.value, e);
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder={placeholder || 'Search...'}
+                className={`${baseInputClasses} pr-8`}
+                tabIndex={tabIndex}
+                autoComplete="off"
+              />
+              <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <ul
+                  className="absolute left-0 right-0 bg-white border border-gray-200 rounded shadow z-50 mt-1 max-h-40 overflow-y-auto text-xs"
+                  style={{ listStyle: 'none', margin: 0, padding: 0 }}
+                >
+                  {filteredSuggestions.map((suggestion, idx) => (
+                    <li
+                      key={idx}
+                      onMouseDown={() => {
+                        setInputValue(suggestion);
+                        field.onChange(suggestion);
+                        setShowSuggestions(false);
+                        events?.onChange?.(suggestion, { target: { value: suggestion } } as any);
+                      }}
+                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
+                    >
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        }}
+      />
+    );
+  }
+  // --- END UPDATED ---
 
   switch (fieldType) {
     case 'text':
@@ -265,33 +338,6 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     step="0.01"
                     tabIndex={tabIndex}
                   />
-                </div>
-              </div>
-            );
-          }}
-        />
-      );
-
-    case 'search':
-      return (
-        <Controller
-          name={fieldId}
-          control={control}
-          render={({ field }) => {
-            const eventHandlers = createEventHandlers(field);
-            return (
-              <div>
-                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
-                <div className="relative focus-within:z-50">
-                  <Input
-                    type="search"
-                    {...field}
-                    {...eventHandlers}
-                    placeholder={placeholder || 'Search...'}
-                    className={`${baseInputClasses} pr-8`}
-                    tabIndex={tabIndex}
-                  />
-                  <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                 </div>
               </div>
             );

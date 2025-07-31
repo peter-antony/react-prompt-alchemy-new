@@ -27,6 +27,7 @@ export interface FieldConfig {
     onMouseEnter?: (event: React.MouseEvent) => void;
     onMouseLeave?: (event: React.MouseEvent) => void;
   };
+  searchData?: string[]; // For search field type, local array for suggestions
 }
 
 export interface PanelConfig {
