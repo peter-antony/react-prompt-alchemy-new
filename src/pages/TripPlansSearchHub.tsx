@@ -19,21 +19,12 @@ import { useNavigate } from "react-router-dom";
 import { tripService } from "@/api/services";
 import { useFooterStore } from "@/stores/footerStore";
 
-interface TripPlanData {
-  id: string;
-  status: string;
-  tripBillingStatus: string;
-  plannedStartEndDateTime: string;
-  actualStartEndDateTime: string;
-  departurePoint: string;
-  arrivalPoint: string;
-  customer: string;
-  draftBill: string;
-}
+
 
 const TripPlansSearchHub = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [searchData, setSearchData] = useState<Record<string, any>>({});
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const gridState = useSmartGridState();
   const { toast } = useToast();
@@ -185,7 +176,7 @@ const TripPlansSearchHub = () => {
     {
       key: "customer",
       label: "Customer",
-      type: "Text",
+      type: "CustomerCountBadge",
       sortable: true,
       editable: false,
       subRow: false,
@@ -203,33 +194,92 @@ const TripPlansSearchHub = () => {
   // Initialize columns and data
   useEffect(() => {
     gridState.setColumns(columns);
+    gridState.setLoading(true); // Set loading state
+    setApiStatus('loading');
 
     let isMounted = true;
 
     tripService.getTrips()
-      .then((data: any) => {
+      .then((response: any) => {
         if (!isMounted) return;
 
-        const processedData = data?.map((row: any) => ({
-          ...row,
-          status: {
-            value: row.status,
-            variant: getStatusColor(row.status),
-          },
-          tripBillingStatus: {
-            value: row.tripBillingStatus,
-            variant: getStatusColor(row.tripBillingStatus),
-          },
-        }));
+        console.log('API Response:', response); // Debug log
 
-        gridState.setGridData(processedData);
+        // Handle paginated response structure
+        const data = response?.data || response;
+
+        if (!data || !Array.isArray(data)) {
+          console.warn('API returned invalid data format:', response);
+          console.warn('Expected array but got:', typeof data, data);
+          if (isMounted) {
+            gridState.setGridData([]);
+            gridState.setLoading(false);
+            setApiStatus('error');
+          }
+          return;
+        }
+
+        const processedData = data.map((row: any) => {
+          // Helper function for status color (defined inline to avoid hoisting issues)
+          const getStatusColorLocal = (status: string) => {
+            const statusColors: Record<string, string> = {
+              // Status column colors
+              'Released': 'badge-fresh-green rounded-2xl',
+              'Under Execution': 'badge-purple rounded-2xl',
+              'Fresh': 'badge-blue rounded-2xl',
+              'Cancelled': 'badge-red rounded-2xl',
+              'Deleted': 'badge-red rounded-2xl',
+              'Save': 'badge-green rounded-2xl',
+              'Under Amendment': 'badge-orange rounded-2xl',
+              'Confirmed': 'badge-green rounded-2xl',
+              'Initiated': 'badge-blue rounded-2xl',
+
+              // Trip Billing Status colors
+              'Draft Bill Raised': 'badge-orange rounded-2xl',
+              'Not Eligible': 'badge-red rounded-2xl',
+              'Revenue Leakage': 'badge-red rounded-2xl',
+              'Invoice Created': 'badge-blue rounded-2xl',
+              'Invoice Approved': 'badge-fresh-green rounded-2xl'
+            };
+            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          };
+
+          return {
+            ...row,
+            status: {
+              value: row.status,
+              variant: getStatusColorLocal(row.status),
+            },
+            tripBillingStatus: {
+              value: row.tripBillingStatus,
+              variant: getStatusColorLocal(row.tripBillingStatus),
+            },
+            // Add customer data for API data as well
+            customerData: [
+              { name: "DB Cargo", id: "CUS00000123" },
+              { name: "ABC Rail Goods", id: "CUS00003214" },
+              { name: "Wave Cargo", id: "CUS00012345" },
+              { name: "Express Logistics", id: "CUS00004567" },
+              { name: "Global Freight", id: "CUS00007890" }
+            ].slice(0, parseInt(row.customer?.replace('+', '') || '3')),
+          };
+        });
+
+        console.log('Processed Data:', processedData); // Debug log
+
+        if (isMounted) {
+          gridState.setGridData(processedData);
+          gridState.setLoading(false);
+          setApiStatus('success');
+        }
       })
       .catch((error: any) => {
         console.error("Trip fetch failed:", error);
-        if (isMounted) gridState.setGridData([]);
-      })
-      .finally(() => {
-        if (isMounted) console.log('Trip finally');
+        if (isMounted) {
+          gridState.setGridData([]);
+          gridState.setLoading(false);
+          setApiStatus('error');
+        }
       });
 
     return () => {
@@ -258,8 +308,9 @@ const TripPlansSearchHub = () => {
       rightButtons: [
         {
           label: "Cancel",
-          onClick: () => console.log("Cancel clicked"),
-          // disabled: true,
+          onClick: () => {
+            console.log("Cancel clicked");
+          },
           type: 'Button'
         },
       ],
@@ -306,87 +357,6 @@ const TripPlansSearchHub = () => {
     },
   ];
 
-  const sampleNoAPIData: TripPlanData[] = [
-    {
-      id: "TRIP00000001",
-      status: "Released",
-      tripBillingStatus: "Draft Bill Raised",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    },
-    {
-      id: "TRIP00000002",
-      status: "Under Execution",
-      tripBillingStatus: "Not Eligible",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    },
-    {
-      id: "TRIP00000003",
-      status: "Initiated",
-      tripBillingStatus: "Revenue Leakage",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    },
-    {
-      id: "TRIP00000004",
-      status: "Cancelled",
-      tripBillingStatus: "Invoice Created",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    },
-    {
-      id: "TRIP00000005",
-      status: "Deleted",
-      tripBillingStatus: "Invoice Approved",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    },
-    {
-      id: "TRIP00000006",
-      status: "Confirmed",
-      tripBillingStatus: "Not Eligible",
-      plannedStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      actualStartEndDateTime:
-        "25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM",
-      departurePoint: "VLA-70",
-      arrivalPoint: "CUR-25",
-      customer: "+3",
-      draftBill: "DB/000234",
-    }
-  ];
-
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       // Status column colors
@@ -409,20 +379,6 @@ const TripPlansSearchHub = () => {
     };
     return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
   };
-
-  const processedNoAPIData = useMemo(() => {
-    return sampleNoAPIData.map((row) => ({
-      ...row,
-      status: {
-        value: row.status,
-        variant: getStatusColor(row.status),
-      },
-      tripBillingStatus: {
-        value: row.tripBillingStatus,
-        variant: getStatusColor(row.tripBillingStatus),
-      },
-    }));
-  }, []);
 
   const handleLinkClick = (value: any, row: any) => {
     console.log("Link clicked:", value, row);
@@ -541,11 +497,7 @@ const TripPlansSearchHub = () => {
               <SmartGrid
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
-                data={
-                  gridState.gridData.length > 0
-                    ? gridState.gridData
-                    : processedNoAPIData
-                }
+                data={gridState.gridData}
                 paginationMode="pagination"
                 onLinkClick={handleLinkClick}
                 onUpdate={handleUpdate}
@@ -559,11 +511,7 @@ const TripPlansSearchHub = () => {
                 configurableButtons={gridConfigurableButtons}
                 showDefaultConfigurableButton={false}
                 gridTitle="Trip Plans"
-                recordCount={
-                  gridState.gridData.length > 0
-                    ? gridState.gridData.length
-                    : processedNoAPIData.length
-                }
+                recordCount={gridState.gridData.length}
               />
               {/* SideDrawer for PlanAndActualDetails */}
               {/* <SideDrawer

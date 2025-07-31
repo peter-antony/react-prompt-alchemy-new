@@ -22,6 +22,14 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/trips/${id}`,
     APPROVE: (id: string) => `/trips/${id}/approve`,
   },
+  // Quick Order management
+  QUICK_ORDERS: {
+    LIST: '/quick-orders',
+    CREATE: '/quick-orders',
+    UPDATE: (id: string) => `/quick-orders/${id}`,
+    DELETE: (id: string) => `/quick-orders/${id}`,
+    APPROVE: (id: string) => `/quick-orders/${id}/approve`,
+  },
   // Invoice management
   INVOICES: {
     LIST: '/invoices',

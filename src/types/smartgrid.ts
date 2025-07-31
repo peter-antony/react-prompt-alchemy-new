@@ -10,6 +10,7 @@ export type GridColumnType =
   | 'DateTimeRange'        // Two date-time values in a vertical stack
   | 'TextWithTooltip'      // Text with an info icon showing a tooltip
   | 'ExpandableCount'      // "+N" style count, expandable to view details
+  | 'CustomerCountBadge'   // Customer count badge with popup details
   | 'Text'                 // Standard text cell
   | 'Date'                 // Formatted date
   | 'Dropdown'             // Selectable value from list (for edit or filter)

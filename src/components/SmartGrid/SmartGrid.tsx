@@ -992,85 +992,89 @@ export function SmartGrid({
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  paginatedData.map((row, rowIndex) => (
-                      <>
-                        <TableRow key={rowIndex}
-                          className={cn(
-                            "hover:bg-gray-50/50 transition-colors duration-150 border-b border-gray-100",
-                            rowClassName ? rowClassName(row, rowIndex) : ''
-                          )}
-                        >
-                          {/* Checkbox cell */}
-                          {showCheckboxes && (
-                            <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
-                              <input 
-                                type="checkbox" 
-                                className="rounded" 
-                                checked={currentSelectedRows.has(rowIndex)}
-                                onChange={() => {
-                                  const newSet = new Set(currentSelectedRows);
-                                  if (newSet.has(rowIndex)) {
-                                    newSet.delete(rowIndex);
-                                  } else {
-                                    newSet.add(rowIndex);
-                                  }
-                                  handleSelectionChange(newSet);
-                                }}
-                              />
-                            </TableCell>
-                          )}
-                          {orderedColumns.map((column, columnIndex) => {
-                            const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
-                            
-                            return (
-                              <TableCell 
-                                key={column.key} 
-                                className="relative px-3 py-3 border-r border-gray-50 last:border-r-0 align-middle"
-                                style={{ 
-                                  width: `${widthPercentage}%`,
-                                  minWidth: `${Math.max(80, column.width * 0.8)}px`,
-                                  maxWidth: `${column.width * 1.5}px`
-                                }}
-                              >
-                                <div className="overflow-hidden">
-                                  {renderCell(row, column, rowIndex, columnIndex)}
-                                </div>
-                              </TableCell>
-                            );
-                          })}
-                          {/* Plugin row actions */}
-                          {plugins.some(plugin => plugin.rowActions) && (
-                            <TableCell className="px-3 py-3 text-center align-top w-[100px]">
-                              <div className="flex items-center justify-center space-x-1">
-                                <PluginRowActions
-                                  plugins={plugins}
-                                  gridAPI={gridAPI}
-                                  row={row}
-                                  rowIndex={rowIndex}
-                                />
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                        {/* Nested row content */}
-                        {effectiveNestedRowRenderer && expandedRows.has(rowIndex) && (
-                          <TableRow className="bg-gray-50/30">
-                            <TableCell 
-                              colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)} 
-                              className="p-0 border-b border-gray-200"
-                            >
-                              <div className="bg-gradient-to-r from-gray-50/50 to-white border-l-4 border-blue-500">
-                                <div className="">
-                                  {effectiveNestedRowRenderer(row, rowIndex)}
-                                </div>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                                ) : (
+                  paginatedData.flatMap((row, rowIndex) => {
+                    const rows = [
+                      <TableRow key={rowIndex}
+                        className={cn(
+                          "hover:bg-gray-50/50 transition-colors duration-150 border-b border-gray-100",
+                          rowClassName ? rowClassName(row, rowIndex) : ''
                         )}
-                      </>
-                      )
-                    )
+                      >
+                        {/* Checkbox cell */}
+                        {showCheckboxes && (
+                          <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
+                            <input 
+                              type="checkbox" 
+                              className="rounded" 
+                              checked={currentSelectedRows.has(rowIndex)}
+                              onChange={() => {
+                                const newSet = new Set(currentSelectedRows);
+                                if (newSet.has(rowIndex)) {
+                                  newSet.delete(rowIndex);
+                                } else {
+                                  newSet.add(rowIndex);
+                                }
+                                handleSelectionChange(newSet);
+                              }}
+                            />
+                          </TableCell>
+                        )}
+                        {orderedColumns.map((column, columnIndex) => {
+                          const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
+                          
+                          return (
+                            <TableCell 
+                              key={column.key} 
+                              className="relative px-3 py-3 border-r border-gray-50 last:border-r-0 align-middle"
+                              style={{ 
+                                width: `${widthPercentage}%`,
+                                minWidth: `${Math.max(80, column.width * 0.8)}px`,
+                                maxWidth: `${column.width * 1.5}px`
+                              }}
+                            >
+                              <div className="overflow-hidden">
+                                {renderCell(row, column, rowIndex, columnIndex)}
+                              </div>
+                            </TableCell>
+                          );
+                        })}
+                        {/* Plugin row actions */}
+                        {plugins.some(plugin => plugin.rowActions) && (
+                          <TableCell className="px-3 py-3 text-center align-top w-[100px]">
+                            <div className="flex items-center justify-center space-x-1">
+                              <PluginRowActions
+                                plugins={plugins}
+                                gridAPI={gridAPI}
+                                row={row}
+                                rowIndex={rowIndex}
+                              />
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ];
+
+                    // Add nested row if expanded
+                    if (effectiveNestedRowRenderer && expandedRows.has(rowIndex)) {
+                      rows.push(
+                        <TableRow key={`nested-${rowIndex}`} className="bg-gray-50/30">
+                          <TableCell 
+                            colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)} 
+                            className="p-0 border-b border-gray-200"
+                          >
+                            <div className="bg-gradient-to-r from-gray-50/50 to-white border-l-4 border-blue-500">
+                              <div className="">
+                                {effectiveNestedRowRenderer(row, rowIndex)}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    return rows;
+                  })
                 )}
               </TableBody>
             </Table>

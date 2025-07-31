@@ -310,7 +310,7 @@ export function GridToolbar({
         )}
 
         {gridTitle !== 'Plan List' && (
-          <div className="h-8 w-3 flex justify-center">
+          <div className="h-8 w-1 flex justify-center">
             <div className="" style={{
               'width': '1px',
               'height': 'inherit',

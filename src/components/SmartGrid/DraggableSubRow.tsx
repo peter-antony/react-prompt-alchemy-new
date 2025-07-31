@@ -161,7 +161,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             return (
               <div className="space-y-1">
                 {/* <div className="text-xs text-gray-500">Start:</div> */}
-                <div className="font-medium text-sm">{startDateTime} & {endDateTime}</div>
+                <div className="font-normal text-sm">{startDateTime} & {endDateTime}</div>
                 {/* <div className="text-xs text-gray-500">End:</div> */}
                 {/* <div className="font-medium text-sm">{endDateTime}</div> */}
               </div>

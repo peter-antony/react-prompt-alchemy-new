@@ -16,6 +16,7 @@ import { PlanAndActualDetails } from '@/components/QuickOrderNew/PlanAndActualDe
 import jsonStore from '@/stores/jsonStore';
 import { useFooterStore } from '@/stores/footerStore';
 import CommonPopup from '@/components/Common/CommonPopup';
+import { quickOrderService } from '@/api/services';
 
 interface SampleData {
   QuickUniqueID: any;
@@ -44,6 +45,8 @@ interface SampleData {
 
 const QuickOrderManagement = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [searchFilters, setSearchFilters] = useState<Record<string, any>>({});
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { setFooter, resetFooter } = useFooterStore();
@@ -117,7 +120,7 @@ const QuickOrderManagement = () => {
           type: 'Button',
           onClick: () => {
             console.log("Cancel clicked");
-            quickOrderCancelhandler();
+            // quickOrderCancelhandler();
           },
         },
         {
@@ -125,8 +128,8 @@ const QuickOrderManagement = () => {
           type: "Button",
           // disabled: true,
           onClick: () => {
-            console.log("Confirm clicked"),
-            orderConfirmhandler();
+            console.log("Confirm clicked");
+            // orderConfirmhandler();
           },
         },
       ],
@@ -353,13 +356,83 @@ const QuickOrderManagement = () => {
   //   }
   // ];
 
-  // Initialize columns and data in the grid state
+  // Initialize columns and data
   useEffect(() => {
-    console.log('Initializing columns in QuickOrderManagement');
     gridState.setColumns(initialColumns);
-    gridState.setGridData(processedData);
-    console.log(gridState.filters);
-  }, []);
+    gridState.setLoading(true); // Set loading state
+    setApiStatus('loading');
+
+    let isMounted = true;
+
+    quickOrderService.getQuickOrders({
+      filters: searchFilters
+    })
+      .then((response: any) => {
+        if (!isMounted) return;
+
+        console.log('API Response:', response); // Debug log
+
+        // Handle paginated response structure - try different possible response formats
+        const data = response?.ResponseResult || response?.data || response?.result || response;
+        
+        if (!data || !Array.isArray(data)) {
+          console.warn('API returned invalid data format:', response);
+          console.warn('Expected array but got:', typeof data, data);
+          if (isMounted) {
+            gridState.setGridData([]);
+            gridState.setLoading(false);
+            setApiStatus('error');
+          }
+          return;
+        }
+
+        const processedData = data.map((row: any) => {
+          // Helper function for status color (defined inline to avoid hoisting issues)
+          const getStatusColorLocal = (status: string) => {
+            const statusColors: Record<string, string> = {
+              'Released': 'badge-fresh-green rounded-2xl',
+              'Under Execution': 'badge-purple rounded-2xl',
+              'Fresh': 'badge-blue rounded-2xl',
+              'Cancelled': 'badge-red rounded-2xl',
+              'Deleted': 'badge-red rounded-2xl',
+              'Save': 'badge-green rounded-2xl',
+              'Under Amendment': 'badge-orange rounded-2xl',
+              'Confirmed': 'badge-green rounded-2xl',
+              'Initiated': 'badge-blue rounded-2xl',
+            };
+            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          };
+
+          return {
+            ...row,
+            Status: {
+              value: row.Status,
+              variant: getStatusColorLocal(row.Status),
+            },
+          };
+        });
+
+        console.log('Processed Data:', processedData); // Debug log
+
+        if (isMounted) {
+          gridState.setGridData(processedData);
+          gridState.setLoading(false);
+          setApiStatus('success');
+        }
+      })
+      .catch((error: any) => {
+        console.error("Quick order fetch failed:", error);
+        if (isMounted) {
+          gridState.setGridData([]);
+          gridState.setLoading(false);
+          setApiStatus('error');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Add dependencies if needed
 
   const breadcrumbItems = [
     { label: 'Home', href: '/dashboard', active: false },
@@ -377,375 +450,28 @@ const QuickOrderManagement = () => {
 
   const { toast } = useToast();
 
-  const sampleData: SampleData[] = [
-    {
-      "QuickUniqueID": 99,
-      "QuickOrderNo": "",
-      "QuickOrderDate": "2025-03-12T00:00:00",
-      "Status": "Save",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "Hire",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 104,
-      "QuickOrderNo": "-1/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Save",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 109,
-      "QuickOrderNo": "109/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Save",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 110,
-      "QuickOrderNo": "110/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Under Amendment",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 111,
-      "QuickOrderNo": "111/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 112,
-      "QuickOrderNo": "112/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 113,
-      "QuickOrderNo": "113/BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 114,
-      "QuickOrderNo": "114-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 115,
-      "QuickOrderNo": "115-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 116,
-      "QuickOrderNo": "116-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 117,
-      "QuickOrderNo": "117-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 118,
-      "QuickOrderNo": "118-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 119,
-      "QuickOrderNo": "119-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 120,
-      "QuickOrderNo": "120-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 121,
-      "QuickOrderNo": "121-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 122,
-      "QuickOrderNo": "122-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 123,
-      "QuickOrderNo": "123-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 124,
-      "QuickOrderNo": "124-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 126,
-      "QuickOrderNo": "126-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 129,
-      "QuickOrderNo": "129-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 130,
-      "QuickOrderNo": "130-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 131,
-      "QuickOrderNo": "131-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 132,
-      "QuickOrderNo": "132-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 133,
-      "QuickOrderNo": "133-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 134,
-      "QuickOrderNo": "134-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 135,
-      "QuickOrderNo": "135-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 136,
-      "QuickOrderNo": "136-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 137,
-      "QuickOrderNo": "137-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 138,
-      "QuickOrderNo": "138-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 139,
-      "QuickOrderNo": "139-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    },
-    {
-      "QuickUniqueID": 140,
-      "QuickOrderNo": "140-BUY",
-      "QuickOrderDate": "2022-06-16T00:00:00",
-      "Status": "Fresh",
-      "CustomerOrVendor": "Oltis Group",
-      "Customer_Supplier_RefNo": "CSR/111/2024",
-      "Contract": "CON000000116",
-      "OrderType": "BUY",
-      "TotalNet": 284.52
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    const statusColors: Record<string, string> = {
-      // Status column colors
-      'Released': 'badge-fresh-green rounded-2xl',
-      'Under Execution': 'badge-purple rounded-2xl',
-      'Fresh': 'badge-blue rounded-2xl',
-      'Cancelled': 'badge-red rounded-2xl',
-      'Deleted': 'badge-red rounded-2xl',
-      'Save': 'badge-green rounded-2xl',
-      'Under Amendment': 'badge-orange rounded-2xl',
-      'Confirmed': 'badge-green rounded-2xl',
-      'Initiated': 'badge-blue rounded-2xl',
-    };
-    return statusColors[status] || 'bg-gray-100 text-gray-800 border-gray-300';
+  const handleSearchDataChange = (data: Record<string, any>) => {
+    console.log("Search data changed:", data);
   };
 
-  const processedData = useMemo(() => {
-    return sampleData.map(row => ({
-      ...row,
-      Status: {
-        value: row.Status,
-        variant: getStatusColor(row.Status)
-      }
-    }));
-  }, []);
+  const handleSearch = () => {
+    console.log("Searching with filters:", searchFilters);
+    // Trigger API call with new filters
+    setSearchFilters(searchFilters);
+    toast({
+      title: "Search",
+      description: "Search functionality would be implemented here",
+    });
+  };
+
+  const handleClear = () => {
+    setSearchFilters({});
+    toast({
+      title: "Cleared",
+      description: "Search filters have been cleared",
+    });
+  };
+
   // Navigate to the create new quick order page
   const navigate = useNavigate();
   // Configurable buttons for the grid toolbar
@@ -840,7 +566,7 @@ const QuickOrderManagement = () => {
                 key={`grid-${gridState.forceUpdate}`}
                 parentPage="quickOrder"
                 columns={gridState.columns}
-                data={gridState.gridData.length > 0 ? gridState.gridData : processedData}
+                data={gridState.gridData}
                 editableColumns={['customerSub']}
                 paginationMode="pagination"
                 onLinkClick={handleLinkClick}
@@ -855,7 +581,7 @@ const QuickOrderManagement = () => {
                 configurableButtons={configurableButtons}
                 showDefaultConfigurableButton={false}
                 gridTitle="Quick Order"
-                recordCount={gridState.gridData.length > 0 ? gridState.gridData.length : processedData.length}
+                recordCount={gridState.gridData.length}
                 showCreateButton={true}
                 searchPlaceholder="Search all columns..."
               />

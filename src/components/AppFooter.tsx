@@ -9,7 +9,7 @@ const renderButton = (config: FooterButtonConfig, index: number) => {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary:
       "bg-background text-blue-600 border border-blue-600 hover:bg-blue-50",
-    cancel: "bg-white text-red-500 hover:text-red-600 hover:bg-red-50",
+    cancel: "bg-white text-red-500 border border-red-500 hover:text-red-600 hover:bg-red-50",
   };
 
   const getButtonClass = () => {

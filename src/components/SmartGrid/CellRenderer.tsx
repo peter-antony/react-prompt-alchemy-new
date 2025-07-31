@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Info } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
+import { CustomerCountBadge } from './CustomerCountBadge';
 
 interface CellRendererProps {
   value: any;
@@ -147,7 +148,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     const [date, time] = String(value).split('\n');
     return (
       <div className="text-sm min-w-0">
-        <div className="text-gray-900 font-medium truncate">{date}</div>
+        <div className="text-gray-900 font-normal truncate">{date}</div>
         <div className="text-gray-500 text-xs truncate">{time}</div>
       </div>
     );
@@ -363,6 +364,20 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  // CustomerCountBadge renderer
+  const renderCustomerCountBadge = () => {
+    // Use customer data from row only
+    const customerData = row.customerData || [];
+    
+    return (
+      <CustomerCountBadge
+        count={String(value)}
+        customers={customerData}
+        className="text-center"
+      />
+    );
+  };
+
   // Main renderer switch
   const renderCellContent = () => {
     switch (column.type) {
@@ -376,6 +391,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderTextWithTooltip();
       case 'ExpandableCount':
         return renderExpandableCount();
+      case 'CustomerCountBadge':
+        return renderCustomerCountBadge();
       case 'EditableText':
         return renderEditableText();
       case 'Dropdown':
