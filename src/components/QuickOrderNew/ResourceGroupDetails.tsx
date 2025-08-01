@@ -41,6 +41,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Attachments from './OrderForm/Attachments';
 import CardDetails, { CardDetailsItem } from '../Common/Card-View-Details';
 import { SimpleDropDown } from "../Common/SimpleDropDown";
+import { json } from 'stream/consumers';
 // import { combineInputDropdownValue } from '@/utils/inputDropdown';
 
 interface ResourceGroupDetailsFormProps {
@@ -52,7 +53,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
   const [currentStep, setCurrentStep] = useState(1);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
-
+  const TariffList = [
+    "TAR000750 - Tariff Pending",
+    "TAR000751 - Tariff Completed",
+    "TAR000752 - Tariff Overdue",
+  ];
+  const PlaceList = [
+    "Bangalore",
+    "New Delhi",
+    "Gujarat",
+    "Surat",
+    "Mumbai",
+  ];
   const handleProceedToNext = () => {
     setCurrentStep(2);
   };
@@ -87,31 +99,41 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
-    console.log("get Form basic values ---", formValues.basicDetails);
-    console.log("get Form operation values ---", formValues.operationalDetails);
-    console.log("get Form billing values ---", formValues.billingDetails);
-    setBasicDetailsData(formValues.basicDetails);
-    setOperationalDetailsData(formValues.operationalDetails);
-    setBillingDetailsData(formValues.billingDetails);
+    if (isEditQuickOrder) {
 
-    jsonStore.setBasicDetails({
-      ...jsonStore.getJsonData().basicDetails,
-      ...formValues.basicDetails
-    });
-    jsonStore.setOperationalDetails({
-      ...jsonStore.getJsonData().operationalDetails,
-      ...formValues.operationalDetails
-    });
-    jsonStore.setBillingDetails({
-      ...jsonStore.getJsonData().billingDetails,
-      ...formValues.billingDetails
-    });
-    const fullJson = jsonStore.getJsonData();
-    console.log("FULL JSON :: ", fullJson);
+    } else {
+      setBasicDetailsData(formValues.basicDetails);
+      setOperationalDetailsData(formValues.operationalDetails);
+      setBillingDetailsData(formValues.billingDetails);
+      jsonStore.setResourceJsonData({
+         ...jsonStore.getResourceJsonData(),
+        "ModeFlag": "Insert",
+        "ResourceStatus": "Save",
+      })
+      jsonStore.setResourceBasicDetails({
+        ...jsonStore.getResourceJsonData().BasicDetails,
+        ...formValues.basicDetails
+      });
+      jsonStore.setResourceOperationalDetails({
+        ...jsonStore.getResourceJsonData().OperationalDetails,
+        ...formValues.operationalDetails
+      });
+      jsonStore.setResourceBillingDetails({
+        ...jsonStore.getResourceJsonData().BillingDetails,
+        ...formValues.billingDetails
+      });
+      const fullResourceJson = jsonStore.getResourceJsonData();
+      console.log("FULL RESOURCE JSON :: ", fullResourceJson);
+      jsonStore.pushResourceGroup(fullResourceJson);
+      console.log("FULL JSON :: ", jsonStore.getQuickOrder());
+
+    }
+
+
 
   }
 
-  
+
 
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
@@ -278,7 +300,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       visible: true,
       editable: true,
       order: 1,
-      placeholder: 'Search operational location...'
+      placeholder: 'Search operational location...',
+      searchData: PlaceList,
     },
     DepartPoint: {
       id: 'DepartPoint',
@@ -454,13 +477,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       id: 'Tariff',
       label: 'Tariff',
       fieldType: 'search',
-      value: 'TAR000750 - Tariff Description',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 6,
-      placeholder: 'Search tariff...',
+      placeholder: 'TAR000750 ',
       width: 'full',
+      searchData: TariffList, // <-- This is the local array for suggestions
     },
     TariffType: {
       id: 'TariffType',
@@ -600,7 +624,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
 
   const cardData: CardDetailsItem[] = [
     {
-      id: "1",
+      id: "R01",
       title: "R01 - Wagon Rentals",
       subtitle: "Vehicle",
       wagons: "10 Wagons",
@@ -614,8 +638,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       status: "Approved",
     },
     {
-      id: "2",
-      title: "R01 - Wagon Rentals",
+      id: "R02",
+      title: "R02 - Wagon Rentals",
       subtitle: "Vehicle",
       wagons: "10 Wagons",
       price: "€ 45595.00",
@@ -626,21 +650,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       location: "Frankfurt Station A - Frankfurt Station B",
       draftBill: "DB/000234",
       status: "Failed",
-    },
-    {
-      id: "3",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Under Amendment",
-    },
+    }
   ];
 
   const resourceGroups = [

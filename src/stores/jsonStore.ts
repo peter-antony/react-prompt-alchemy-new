@@ -1,5 +1,5 @@
 let jsonData: any = null;
-
+let resourceJsonData: any = null;
 function setJsonData(data: any) {
   jsonData = data;
 }
@@ -7,8 +7,16 @@ function setJsonData(data: any) {
 function getJsonData() {
   return jsonData;
 }
+function setResourceJsonData(data: any) {
+  resourceJsonData = data;
+}
+function getResourceJsonData() {
+  return resourceJsonData;
+}
+
 
 function getQuickOrder() {
+  console.log("getQuickOrder called",jsonData);
   if (jsonData && jsonData.ResponseResult) {
     return jsonData.ResponseResult.QuickOrder;
   }
@@ -305,6 +313,116 @@ function getAllActualDetails() {
   return [];
 }
 
+function getAllResourceGroups() {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    return jsonData.ResponseResult.QuickOrder.ResourceGroup;
+  }
+  return [];
+}
+
+function setResourceStatusByUniqueID(resourceUniqueID: string, newStatus: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const idx = groupArr.findIndex(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (idx !== -1) {
+      groupArr[idx].ResourceStatus = newStatus;
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateResourceGroupByUniqueID(resourceUniqueID: string, updatedFields: Record<string, any>) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const idx = groupArr.findIndex(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (idx !== -1) {
+      // Only update the fields provided in updatedFields
+      Object.assign(groupArr[idx], updatedFields);
+      return true;
+    }
+  }
+  return false;
+}
+
+function setResourceBasicDetails(basicDetails: any) {
+  if (
+    resourceJsonData &&
+    typeof resourceJsonData === 'object'
+  ) {
+    resourceJsonData.BasicDetails = {
+      ...(resourceJsonData.BasicDetails || {}),
+      ...basicDetails
+    };
+    console.log("RRRRR = ",getResourceJsonData())
+    return true;
+  }
+  return false;
+}
+
+function setResourceOperationalDetails(operationalDetails: any) {
+  if (
+    resourceJsonData &&
+    typeof resourceJsonData === 'object'
+  ) {
+    resourceJsonData.OperationalDetails = {
+      ...(resourceJsonData.OperationalDetails || {}),
+      ...operationalDetails
+    };
+    return true;
+  }
+  return false;
+}
+
+function setResourceBillingDetails(billingDetails: any) {
+  if (
+    resourceJsonData &&
+    typeof resourceJsonData === 'object'
+  ) {
+    resourceJsonData.BillingDetails = {
+      ...(resourceJsonData.BillingDetails || {}),
+      ...billingDetails
+    };
+    return true;
+  }
+  return false;
+}
+
+function pushResourceGroup(resourceGroupObj: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder
+  ) {
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)) {
+      jsonData.ResponseResult.QuickOrder.ResourceGroup = [];
+    }
+    jsonData.ResponseResult.QuickOrder.ResourceGroup.push(resourceGroupObj);
+    return true;
+  }
+  return false;
+}
+
+// Add to export
 const jsonStore = {
   setJsonData,
   getJsonData,
@@ -330,7 +448,16 @@ const jsonStore = {
   pushPlanDetails,
   pushActualDetails,
   getAllPlanDetails,
-  getAllActualDetails
+  getAllActualDetails,
+  getAllResourceGroups,
+  setResourceStatusByUniqueID,
+  updateResourceGroupByUniqueID,
+  setResourceJsonData,
+  getResourceJsonData,
+  setResourceBasicDetails,
+  setResourceOperationalDetails,
+  setResourceBillingDetails,
+  pushResourceGroup,
 };
 
-export default jsonStore; 
+export default jsonStore;
