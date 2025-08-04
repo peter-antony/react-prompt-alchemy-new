@@ -45,11 +45,12 @@ import { json } from 'stream/consumers';
 // import { combineInputDropdownValue } from '@/utils/inputDropdown';
 
 interface ResourceGroupDetailsFormProps {
-  isEditQuickOrder?: boolean
+  isEditQuickOrder?: boolean,
+  resourceId?: string;
 }
 
 // const ResourceGroupDetailsForm = ({ open, onClose }: ResourceGroupDetailsFormProps) => {
-export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDetailsFormProps) => {
+export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: ResourceGroupDetailsFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
@@ -100,6 +101,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder) {
+      
+      jsonStore.updateResourceGroupDetailsByUniqueID(resourceId,formValues.basicDetails,formValues.operationalDetails, formValues.billingDetails);
+      toast.success("Resource Group Updated Successfully");
+      const fullResourceJson = jsonStore.getJsonData();
+      console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
     } else {
       setBasicDetailsData(formValues.basicDetails);
@@ -109,7 +115,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
          ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Insert",
         "ResourceStatus": "Save",
+        "ResourceUniqueID": "R0"+((parseInt(localStorage.getItem('resouceCount'))+1))
       })
+      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount'))+1).toString());
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
         ...formValues.basicDetails
@@ -183,17 +191,17 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
 
   const getInitialBasicDetails = () =>
     isEditQuickOrder
-      ? normalizeBasicDetails(jsonStore.getBasicDetails() || {})
+      ? normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {})
       : {};
 
   const getInitialOperationalDetails = () =>
     isEditQuickOrder
-      ? normalizeOperationalDetails(jsonStore.getOperationalDetails() || {})
+      ? normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {})
       : {};
 
   const getInitialBillingDetails = () =>
     isEditQuickOrder
-      ? normalizeBillingDetails(jsonStore.getBillingDetails() || {})
+      ? normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {})
       : {};
 
   const [basicDetailsData, setBasicDetailsData] = useState(getInitialBasicDetails);
@@ -527,9 +535,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
   };
   useEffect(() => {
     if (isEditQuickOrder) {
-      setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetails() || {}));
-      setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetails() || {}));
-      setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetails() || {}));
+      setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
+      setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
+      setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
     } else {
       setBasicDetailsData({});
       setOperationalDetailsData({});
@@ -621,37 +629,45 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
         break;
     }
   };
-
-  const cardData: CardDetailsItem[] = [
-    {
-      id: "R01",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Approved",
-    },
-    {
-      id: "R02",
-      title: "R02 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Failed",
+  const [resourceData, setResourceData] = useState<any[]>([]); // <-- resourceData state
+    useEffect(() => {
+    if (isEditQuickOrder) {
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      setResourceData(resourceGroups);
+      console.log("Resource Groups Data:", resourceGroups);
     }
-  ];
+  }, [isEditQuickOrder]);
+  
+  // const cardData: CardDetailsItem[] = [
+  //   {
+  //     id: "R01",
+  //     title: "R01 - Wagon Rentals",
+  //     subtitle: "Vehicle",
+  //     wagons: "10 Wagons",
+  //     price: "€ 45595.00",
+  //     trainType: "Block Train Conventional",
+  //     repairType: "Repair",
+  //     date: "12-Mar-2025 to 12-Mar-2025",
+  //     rateType: "Rate Per Unit-Buy Sell",
+  //     location: "Frankfurt Station A - Frankfurt Station B",
+  //     draftBill: "DB/000234",
+  //     status: "Approved",
+  //   },
+  //   {
+  //     id: "R02",
+  //     title: "R02 - Wagon Rentals",
+  //     subtitle: "Vehicle",
+  //     wagons: "10 Wagons",
+  //     price: "€ 45595.00",
+  //     trainType: "Block Train Conventional",
+  //     repairType: "Repair",
+  //     date: "12-Mar-2025 to 12-Mar-2025",
+  //     rateType: "Rate Per Unit-Buy Sell",
+  //     location: "Frankfurt Station A - Frankfurt Station B",
+  //     draftBill: "DB/000234",
+  //     status: "Failed",
+  //   }
+  // ];
 
   const resourceGroups = [
     {
@@ -985,7 +1001,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder }: ResourceGroupDeta
             </div>
           </div>
           <div className="mt-4 mb-6">
-            <CardDetails data={cardData} isEditQuickOrder={isEditQuickOrder} />
+            <CardDetails data={resourceData} isEditQuickOrder={isEditQuickOrder} />
           </div>
         </div>
       </SideDrawer>

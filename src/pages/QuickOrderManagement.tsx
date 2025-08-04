@@ -358,6 +358,7 @@ const QuickOrderManagement = () => {
 
   // Initialize columns and data
   useEffect(() => {
+    localStorage.setItem('resouceCount', '0');
     gridState.setColumns(initialColumns);
     gridState.setLoading(true); // Set loading state
     setApiStatus('loading');

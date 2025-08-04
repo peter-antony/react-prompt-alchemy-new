@@ -58,7 +58,7 @@ const QUICK_ORDER_JSON =
 
   const Resource_Group_JSON = 
     {
-      "ResourceUniqueID": "",
+      "ResourceUniqueID": "R00",
       "ModeFlag": "Insert/Update/Delete/NoChange",
       "ResourceStatus": "Save/Confirm/UnderAmend",
       "BasicDetails": {

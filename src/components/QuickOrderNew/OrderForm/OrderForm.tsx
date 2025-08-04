@@ -278,12 +278,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
       label: 'Customer/ Supplier Ref. No.',
       fieldType: 'search',
       width: 'half',
-      value: 'CR0000001',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 7,
-      placeholder: 'Enter Ref. No.',
+      placeholder: 'CR0000001',
       searchData: customerRefIds, // <-- This is the local array for suggestions
     },
     QCUserDefined1: {

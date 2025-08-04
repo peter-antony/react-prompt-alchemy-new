@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,66 +17,52 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
   const [isBack, setIsBack] = useState(true);
+  const [resourceData, setResourceData] = useState<any[]>([]); // <-- resourceData state
+  // const cardData: CardDetailsItem[] = [
+  //   {
+  //     id: "R01",
+  //     title: "R01 - Wagon Rentals",
+  //     subtitle: "Vehicle",
+  //     wagons: "10 Wagons",
+  //     price: "€ 45595.00",
+  //     trainType: "Block Train Conventional",
+  //     repairType: "Repair",
+  //     date: "12-Mar-2025 to 12-Mar-2025",
+  //     rateType: "Rate Per Unit-Buy Sell",
+  //     location: "Frankfurt Station A - Frankfurt Station B",
+  //     draftBill: "DB/000234",
+  //     status: "Approved",
 
-  const cardData: CardDetailsItem[] = [
-    {
-      id: "1",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Approved",
-    },
-    {
-      id: "2",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Failed",
-    },
-    {
-      id: "3",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      wagons: "10 Wagons",
-      price: "€ 45595.00",
-      trainType: "Block Train Conventional",
-      repairType: "Repair",
-      date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Under Amendment",
-    },
-  ];
+      
+  //   },
+  //   {
+  //     id: "R02",
+  //     title: "R02 - Wagon Rentals",
+  //     subtitle: "Vehicle",
+  //     wagons: "10 Wagons",
+  //     price: "€ 45595.00",
+  //     trainType: "Block Train Conventional",
+  //     repairType: "Repair",
+  //     date: "12-Mar-2025 to 12-Mar-2025",
+  //     rateType: "Rate Per Unit-Buy Sell",
+  //     location: "Frankfurt Station A - Frankfurt Station B",
+  //     draftBill: "DB/000234",
+  //     status: "Failed",
+  //   }
+  // ];
 
   const openResourceGroup = () =>{
     console.log("openResourceGroup");
     setMoreInfoOpen(true);
-    // document.body.style.overflow = 'hidden';
   }
+
   useEffect(() => {
-    const rg = jsonStore.getQuickOrder();
-    console.log("ResourceGroup >> > >", rg)
     if (isEditQuickOrder) {
-      // alert("Edit Resource")
-    } else {
-      // alert("Create Resource")
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      setResourceData(resourceGroups);
     }
-  }, [])
+  }, [isEditQuickOrder]);
+
   return (
     <>
       {!isEditQuickOrder ?
@@ -123,7 +108,7 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
             </div>
           </div>
           <div className="mt-4">
-            <CardDetails data={cardData} isEditQuickOrder={isEditQuickOrder} />
+            <CardDetails data={resourceData} isEditQuickOrder={isEditQuickOrder} />
           </div>
         </div>
       }

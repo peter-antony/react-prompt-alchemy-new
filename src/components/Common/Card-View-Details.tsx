@@ -22,14 +22,14 @@ const statusMap: Record<string, CardStatus> = {
 };
 
 export interface CardDetailsItem {
-    id: string;
+    ResourceUniqueID: string;
     title: string;
     subtitle: string;
-    wagons: string;
+    BillingDetails: any;
     price: string;
-    trainType: string;
+    BasicDetails: any;
     repairType: string;
-    date: string;
+    OperationalDetails: any;
     rateType: string;
     location: string;
     draftBill: string;
@@ -70,7 +70,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {data.map((item) => (
-                <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-4 relative">
+                <div key={item.ResourceUniqueID} className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-4 relative">
                     <div className="flex items-center justify-between mb-3 border-b pb-2">
                         <div>
                             <div className="flex items-center gap-2">
@@ -78,22 +78,23 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                                     <UsersRound className="w-4 h-4 text-violet-500" />
                                 </span>
                                 <div>
-                                <div className="font-semibold text-sm"  onClick={() => setResourceGroupOpen({isResourceGroupOpen:true,ResourceUniqueID:item.id})}>{item.title}</div>
-                                    <div className="text-xs text-gray-400">{item.subtitle}</div>
+                                <div className="font-semibold text-sm"  onClick={() => setResourceGroupOpen({isResourceGroupOpen:true,ResourceUniqueID:item.ResourceUniqueID})}>title- {item.ResourceUniqueID}</div>
+                                    {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
+                                    <div className="text-xs text-gray-400">subtitle :{item.BasicDetails.Resource}</div>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 relative">
-                            <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item.status].color} ${statusMap[item.status].bg}`}>
+                            {/* <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item.status].color} ${statusMap[item.status].bg}`}>
                                 {statusMap[item.status].label}
-                            </span>
+                            </span> */}
                             <button
                                 className="p-1"
-                                onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                                onClick={() => setOpenMenuId(openMenuId === item.ResourceUniqueID ? null : item.ResourceUniqueID)}
                             >
                                 <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
                             </button>
-                            {openMenuId === item.id && (
+                            {openMenuId === item.ResourceUniqueID && (
                                 <div
                                     ref={menuRef}
                                     className="absolute right-0 top-8 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2"
@@ -121,40 +122,47 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-3">
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <FileText className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.wagons}</span>
+                            <span className="truncate">{item.BillingDetails.BillingQty} Wagons</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Banknote className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.price}</span>
+                            <span className="truncate">{item.BillingDetails.UnitPrice}</span>
+                            {/* <span className="truncate">{item.price}</span> */}
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Settings className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.trainType}</span>
+                            <span className="truncate">{item.BasicDetails.ServiceType}</span>
+                            {/* <span className="truncate">{item.trainType}</span> */}
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Wrench className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.repairType}</span>
+                            <span className="truncate">{item.BasicDetails.SubSericeType}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
                             <Calendar className="w-4 h-4 text-gray-600" />
                             <span className="truncate cursor-pointer">
-                                {item.date}
+                              {item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}
                             </span>
+                             {/* <span className="truncate cursor-pointer">
+                                {item.date}
+                            </span> */}
+                            
                             <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                                 <div className="px-3 py-2">
                                     <div className="font-semibold mb-1">From and To Date</div>
-                                    <div className="text-[11px] font-medium">{item.date}</div>
+                                    <div className="text-[11px] font-medium">{item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}</div>
+                                    {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <CirclePercent className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.rateType}</span>
+                            <span className="truncate">{item.BillingDetails.TariffType}</span>
                             <div className="relative group inline-block">
                                 <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
                                 <div className="absolute right-0 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                     <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                        Rate per Unit-Buy Sell
+                                        {item.BillingDetails.TariffType}
                                     </div>
                                     <div className="px-4 py-3">
                                         <div className="flex justify-between items-center mb-2">
@@ -176,12 +184,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs col-span-2">
                             <MapPin className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.location}</span>
+                            <span className="truncate">{item.OperationalDetails.OperationalLocation}</span>
                         </div>
                     </div>
                     <div className="flex items-center text-blue-600 text-xs font-medium mt-2">
                         <LinkIcon className="w-4 h-4 mr-1" />
-                        <span className="cursor-pointer">Draft Bill : {item.draftBill}</span>
+                        {/* <span className="cursor-pointer">Draft Bill : {item.draftBill}</span> */}
                     </div>
                 </div>
             ))}
@@ -193,7 +201,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                 isBack={isBack}
             >
                 <div className="text-sm text-gray-600">
-                    <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} />
+                    <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} resourceId={isResourceGroup.ResourceUniqueID} />
                 </div>
             </SideDrawer>
         </div>

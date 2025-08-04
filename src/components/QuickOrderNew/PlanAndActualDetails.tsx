@@ -76,6 +76,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
     useState("Billing Details");
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const PlaceList = [
+    "Bangalore",
+    "New Delhi",
+    "Gujarat",
+    "Surat",
+    "Mumbai",
+  ];
   // Mock functions for user config management
   const getUserPanelConfig = (
     userId: string,
@@ -534,6 +541,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
       editable: true,
       order: 3,
       placeholder: "Search Location",
+      searchData: PlaceList
     },
     Activity: {
       id: "Activity",

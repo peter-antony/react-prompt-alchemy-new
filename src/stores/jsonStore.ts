@@ -422,6 +422,91 @@ function pushResourceGroup(resourceGroupObj: any) {
   return false;
 }
 
+function updateResourceGroupDetailsByUniqueID(resourceUniqueID: string, basicDetails: any, operationalDetails: any, billingDetails: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const idx = groupArr.findIndex(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (idx !== -1) {
+      // Only update the fields provided, persist others
+      groupArr[idx].BasicDetails = {
+        ...(groupArr[idx].BasicDetails || {}),
+        ...basicDetails
+      };
+      groupArr[idx].OperationalDetails = {
+        ...(groupArr[idx].OperationalDetails || {}),
+        ...operationalDetails
+      };
+      groupArr[idx].BillingDetails = {
+        ...(groupArr[idx].BillingDetails || {}),
+        ...billingDetails
+      };
+      return true;
+    }
+  }
+  return false;
+}
+
+function getOperationalDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && found.OperationalDetails) {
+      return found.OperationalDetails;
+    }
+  }
+  return undefined;
+}
+
+function getBillingDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && found.BillingDetails) {
+      return found.BillingDetails;
+    }
+  }
+  return undefined;
+}
+
+function getBasicDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && found.BasicDetails) {
+      return found.BasicDetails;
+    }
+  }
+  return undefined;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -458,6 +543,10 @@ const jsonStore = {
   setResourceOperationalDetails,
   setResourceBillingDetails,
   pushResourceGroup,
+  updateResourceGroupDetailsByUniqueID,
+  getOperationalDetailsByResourceUniqueID,
+  getBillingDetailsByResourceUniqueID,
+  getBasicDetailsByResourceUniqueID,
 };
 
 export default jsonStore;
