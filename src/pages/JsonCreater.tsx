@@ -118,7 +118,7 @@ const QUICK_ORDER_JSON =
 const JsonCreater: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => {
-
+    localStorage.setItem('resouceCount', '0');
     jsonStore.setJsonData(QUICK_ORDER_JSON);
     console.log("JSON data set CREATER:", jsonStore.getQuickOrder());
     jsonStore.setResourceJsonData(Resource_Group_JSON);

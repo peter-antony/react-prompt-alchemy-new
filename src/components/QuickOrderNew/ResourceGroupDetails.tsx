@@ -100,14 +100,42 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
-    if (isEditQuickOrder) {
+    if (isEditQuickOrder && resourceId) {
       
       jsonStore.updateResourceGroupDetailsByUniqueID(resourceId,formValues.basicDetails,formValues.operationalDetails, formValues.billingDetails);
       toast.success("Resource Group Updated Successfully");
       const fullResourceJson = jsonStore.getJsonData();
       console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
-    } else {
+    }else if(isEditQuickOrder && resourceId==undefined || resourceId==""){
+      setBasicDetailsData(formValues.basicDetails);
+      setOperationalDetailsData(formValues.operationalDetails);
+      setBillingDetailsData(formValues.billingDetails);
+      jsonStore.setResourceJsonData({
+         ...jsonStore.getResourceJsonData(),
+        "ModeFlag": "Insert",
+        "ResourceStatus": "Save",
+        "ResourceUniqueID": "R0"+((parseInt(localStorage.getItem('resouceCount'))+1))
+      })
+      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount'))+1).toString());
+      jsonStore.setResourceBasicDetails({
+        ...jsonStore.getResourceJsonData().BasicDetails,
+        ...formValues.basicDetails
+      });
+      jsonStore.setResourceOperationalDetails({
+        ...jsonStore.getResourceJsonData().OperationalDetails,
+        ...formValues.operationalDetails
+      });
+      jsonStore.setResourceBillingDetails({
+        ...jsonStore.getResourceJsonData().BillingDetails,
+        ...formValues.billingDetails
+      });
+      const fullResourceJson = jsonStore.getResourceJsonData();
+      console.log("FULL RESOURCE JSON :: ", fullResourceJson);
+      jsonStore.pushResourceGroup(fullResourceJson);
+      console.log("FULL JSON :: ", jsonStore.getQuickOrder());
+
+    }else {
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);

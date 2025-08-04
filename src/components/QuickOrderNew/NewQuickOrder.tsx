@@ -16,10 +16,20 @@ interface NewCreateQuickOrderProps {
 
 const NewCreateQuickOrder = ({ isEditQuickOrder }: NewCreateQuickOrderProps) => {
   useEffect(() => {
+    if (!isEditQuickOrder) {
+      // Set ResourceGroup as empty array in jsonStore
+      const quickOrder = jsonStore.getQuickOrder();
+      if (quickOrder && quickOrder.ResourceGroup !== undefined) {
+        quickOrder.ResourceGroup = [];
+      } else if (quickOrder && quickOrder.ResponseResult && quickOrder.ResponseResult.QuickOrder) {
+        quickOrder.ResponseResult.QuickOrder.ResourceGroup = [];
+      }
+      jsonStore.setQuickOrder(quickOrder);
+    }
     const jsonData = jsonStore.getQuickOrder();
     console.log('QUICK ORDER  JSON data:', jsonData);
     // You can now use jsonData as needed (e.g., set state, prefill form, etc.)
-  }, []);
+  }, [isEditQuickOrder]);
   const handleSaveDraft = () => {
     toast.success('Order saved as draft successfully!');
     console.log('Save draft clicked');
