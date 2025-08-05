@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DynamicPanel } from '@/components/DynamicPanel';
 import { PanelVisibilityManager } from '@/components/DynamicPanel/PanelVisibilityManager';
 import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
@@ -7,12 +7,59 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
 import NewCreateQuickOrder from '@/components/QuickOrderNew/NewQuickOrder';
 import { useSearchParams } from "react-router-dom";
+import { useFooterStore } from '@/stores/footerStore';
 
 
 const CreateQuickOrder = () => {
+  const { setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditQuickOrder = !!searchParams.get("id");
   //here to store the id
+
+  useEffect(() => {
+    setFooter({
+      visible: true,
+      pageName: 'Create_Quick_Order',
+      // leftButtons: [
+      //   {
+      //     label: "CIM/CUV Report",
+      //     onClick: () => console.log("CIM/CUV Report"),
+      //     type: "Icon",
+      //     iconName: 'BookText'
+      //   },
+      // ],
+      rightButtons: [
+        {
+          label: "Cancel",
+          disabled: false,
+          type: 'Button',
+          onClick: () => {
+            console.log("Cancel clicked");
+            // quickOrderCancelhandler();
+          },
+        },
+        {
+          label: "Save Draft",
+          type: "Button",
+          disabled: false,
+          onClick: () => {
+            console.log("Save Draft clicked");
+            // orderConfirmhandler();
+          },
+        },
+        {
+          label: "Confirm",
+          type: "Button",
+          disabled: true,
+          onClick: () => {
+            console.log("Confirm clicked");
+            // orderConfirmhandler();
+          },
+        },
+      ],
+    });
+    return () => resetFooter();
+  }, []);
 
   //BreadCrumb data
   const breadcrumbItems = [
