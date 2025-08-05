@@ -33,7 +33,7 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
   //     draftBill: "DB/000234",
   //     status: "Approved",
 
-      
+
   //   },
   //   {
   //     id: "R02",
@@ -50,22 +50,33 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
   //     status: "Failed",
   //   }
   // ];
-
-  const openResourceGroup = () =>{
-    console.log("openResourceGroup");
+  const [isResourceData, setIsResourceData] = useState(false);
+  const openResourceGroup = () => {
     setMoreInfoOpen(true);
+  }
+  const closeResource = () => {
+    setMoreInfoOpen(false);
+    setIsBack(true);
+    const resourceGroups = jsonStore.getAllResourceGroups();
+     if (resourceGroups.length > 0) {
+      setIsResourceData(true);
+      setResourceData(resourceGroups);
+    }
   }
 
   useEffect(() => {
-    if (isEditQuickOrder) {
-      const resourceGroups = jsonStore.getAllResourceGroups();
+    const resourceGroups = jsonStore.getAllResourceGroups();
+    if (resourceGroups.length > 0) {
+      setIsResourceData(true);
       setResourceData(resourceGroups);
     }
-  }, [isEditQuickOrder]);
+    // if (isEditQuickOrder) {
+    // }
+  }, [isResourceData]);
 
   return (
     <>
-      {!isEditQuickOrder ?
+      {(!isEditQuickOrder && !isResourceData) ?
         <div className="rounded-lg p-8 flex flex-col items-center justify-center h-full">
           <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             {/* <Plus className="w-10 h-10 text-blue-500" /> */}
@@ -116,9 +127,9 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
 
 
 
-      <SideDrawer isOpen={isMoreInfoOpen} onClose={() => setMoreInfoOpen(false)} width="100%" title="Resource Group Details" isBack={isBack}>
+      <SideDrawer isOpen={isMoreInfoOpen} onClose={() => closeResource()} width="100%" title="Resource Group Details" isBack={isBack}>
         <div className="text-sm text-gray-600">
-          <ResourceGroupDetailsForm  isEditQuickOrder={isEditQuickOrder} />
+          <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} />
         </div>
       </SideDrawer>
 
