@@ -29,17 +29,16 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/Forwardis-dev/">
         <Routes>
           {/* <Route path="/" element={<Index />} /> */}
-          <Route path="" element={<JsonCreater />} />
           <Route path={ROUTES.HOME} element={<QuickOrderManagement />} />
-          <Route path="/quick-order" element={<QuickOrderManagement />} />
-          <Route path="/trip-plans-search-hub" element={<TripPlansSearchHub />} />
-          <Route path="/trip-search-api" element={<TripPlansSearchHubAPI />} />
-          <Route path="/create-quick-order" element={<CreateQuickOrder />} />
-          <Route path="/json-creater" element={<JsonCreater />} />
-          <Route path="/dynamic-panel-demo-clone" element={<DynamicPanelDemoClone />} />
+          <Route path="quick-order" element={<QuickOrderManagement />} />
+          <Route path="trip-plans-search-hub" element={<TripPlansSearchHub />} />
+          <Route path="trip-search-api" element={<TripPlansSearchHubAPI />} />
+          <Route path="create-quick-order" element={<CreateQuickOrder />} />
+          <Route path="json-creater" element={<JsonCreater />} />
+          <Route path="dynamic-panel-demo-clone" element={<DynamicPanelDemoClone />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

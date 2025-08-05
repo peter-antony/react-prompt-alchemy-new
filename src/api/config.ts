@@ -4,6 +4,14 @@ export const API_CONFIG = {
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
+  HEADERS: {
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'OUID': '4',
+    'Role': 'ramcorole',
+    'UserID': 'ramcouser',
+  },
 } as const;
 
 export const API_ENDPOINTS = {

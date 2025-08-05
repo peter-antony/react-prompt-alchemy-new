@@ -436,7 +436,7 @@ const QuickOrderManagement = () => {
   }, []); // Add dependencies if needed
 
   const breadcrumbItems = [
-    { label: 'Home', href: '/dashboard', active: false },
+    { label: 'Home', href: '/', active: false },
     { label: 'Quick Order Management', active: true }
     // { label: 'Trip Execution Management', active: false },
   ];

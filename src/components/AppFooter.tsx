@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { useFooterStore, FooterButtonConfig } from "../stores/footerStore";
 import CommonPopup from "@/components/Common/CommonPopup";
 
-const renderButton = (config: FooterButtonConfig, index: number) => {
+const renderButton = (config: FooterButtonConfig, index: number, showPopover: boolean, setShowPopover: (show: boolean) => void) => {
   const buttonStyles = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary:
@@ -30,6 +30,28 @@ const renderButton = (config: FooterButtonConfig, index: number) => {
   // ⛳ Apply key here to the root element
   switch (config.type) {
     case 'Icon':
+      // Special handling for CIM/CUV Report button with hover popover
+      if (config.label === "CIM/CUV Report") {
+        return (
+          <div key={`${config.iconName}-${index}`} className="relative">
+            <Button
+              variant="ghost"
+              onClick={config.onClick}
+              disabled={config.disabled || config.loading}
+              className="font-medium transition-colors border border-gray-300 px-3 py-2 text-sm rounded-lg"
+              onMouseEnter={() => setShowPopover(true)}
+              // onMouseLeave={() => setShowPopover(false)}
+            >
+              {config.loading ? "Loading..." : getIconButton()}
+            </Button>
+            {showPopover && (
+              <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-black text-white text-xs rounded-md shadow-lg z-50 whitespace-nowrap">
+                CIM/CUV Report
+              </div>
+            )}
+          </div>
+        );
+      }
       return (
         <Button
           key={`${config.iconName}-${index}`}
@@ -68,7 +90,7 @@ const renderButton = (config: FooterButtonConfig, index: number) => {
 };
 
 export const AppFooter: React.FC = () => {
-
+  const [showCimCuvPopover, setShowCimCuvPopover] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [fields, setFields] = useState([
     {
@@ -159,18 +181,18 @@ export const AppFooter: React.FC = () => {
     <footer className="h-16 bg-white border-t border-gray-200 flex items-center justify-between px-6 fixed bottom-0 left-16 right-0 z-20">
       {/* {config.pageName == "Quick_Order" && (
         <> */}
-      <div className="flex items-center space-x-4">
-        {config.leftButtons.map((config, index) => renderButton(config, index))}
-        {/* {config.leftButtons.length > 0 &&
-              <Button variant="ghost" size="icon" className='h-9 w-9 border'>
-                 <MoreHorizontal size={16} />
-                <BookText size={16}/>
-              </Button>
-            } */}
-      </div>
-      <div className="flex items-center space-x-4">
-        {config.rightButtons.map((config, index) => renderButton(config, index))}
-      </div>
+             <div className="flex items-center space-x-4">
+         {config.leftButtons.map((config, index) => renderButton(config, index, showCimCuvPopover, setShowCimCuvPopover))}
+         {/* {config.leftButtons.length > 0 &&
+               <Button variant="ghost" size="icon" className='h-9 w-9 border'>
+                  <MoreHorizontal size={16} />
+                 <BookText size={16}/>
+               </Button>
+             } */}
+       </div>
+       <div className="flex items-center space-x-4">
+         {config.rightButtons.map((config, index) => renderButton(config, index, showCimCuvPopover, setShowCimCuvPopover))}
+       </div>
       {/* </>
       )} */}
     </footer>

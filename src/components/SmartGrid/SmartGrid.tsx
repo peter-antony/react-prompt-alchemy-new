@@ -776,7 +776,7 @@ export function SmartGrid({
                 <TableRow className="hover:bg-transparent">
                   {/* Checkbox header */}
                   {showCheckboxes && (
-                    <TableHead className="bg-gray-50/80 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
+                    <TableHead className="bg-gray-200 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
                       <input 
                         type="checkbox" 
                         className="rounded" 

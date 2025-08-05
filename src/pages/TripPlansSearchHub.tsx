@@ -30,6 +30,12 @@ const TripPlansSearchHub = () => {
   const { toast } = useToast();
   const { setFooter, resetFooter } = useFooterStore();
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/", active: false },
+    { label: "Trip Execution Management", active: true },
+    // { label: 'Trip Execution Management', active: false },
+  ];
+
   // Search Panel Configuration
   const searchPanelConfig: PanelConfig = {
     tripPlanNo: {
@@ -318,67 +324,8 @@ const TripPlansSearchHub = () => {
     return () => resetFooter();
   }, [setFooter, resetFooter]);
 
-  const breadcrumbItems = [
-    { label: "Home", href: "/dashboard", active: false },
-    { label: "Trip Execution Management", active: true },
-    // { label: 'Trip Execution Management', active: false },
-  ];
-
   // Navigate to the create new quick order page
   const navigate = useNavigate();
-  // Configurable buttons for the grid toolbar
-  const configurableButtons: ConfigurableButtonConfig[] = [
-    {
-      label: "Create Trip",
-      tooltipTitle: "Create trip",
-      showDropdown: true, // Enable dropdown for future functionality
-      onClick: () => {
-        navigate("/");
-      },
-      dropdownItems: [
-        {
-          label: "Add New",
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            // setIsDrawerOpen(true);
-          },
-        },
-        {
-          label: "Bulk Upload",
-          icon: <Upload className="h-4 w-4" />,
-          onClick: () => {
-            toast({
-              title: "Bulk Upload",
-              description: "Opening bulk upload dialog...",
-            });
-          },
-        },
-      ],
-    },
-  ];
-
-  const getStatusColor = (status: string) => {
-    const statusColors: Record<string, string> = {
-      // Status column colors
-      'Released': 'badge-fresh-green rounded-2xl',
-      'Under Execution': 'badge-purple rounded-2xl',
-      'Fresh': 'badge-blue rounded-2xl',
-      'Cancelled': 'badge-red rounded-2xl',
-      'Deleted': 'badge-red rounded-2xl',
-      'Save': 'badge-green rounded-2xl',
-      'Under Amendment': 'badge-orange rounded-2xl',
-      'Confirmed': 'badge-green rounded-2xl',
-      'Initiated': 'badge-blue rounded-2xl',
-
-      // Trip Billing Status colors
-      'Draft Bill Raised': 'badge-orange rounded-2xl',
-      'Not Eligible': 'badge-red rounded-2xl',
-      'Revenue Leakage': 'badge-red rounded-2xl',
-      'Invoice Created': 'badge-blue rounded-2xl',
-      'Invoice Approved': 'badge-fresh-green rounded-2xl'
-    };
-    return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
-  };
 
   const handleLinkClick = (value: any, row: any) => {
     console.log("Link clicked:", value, row);

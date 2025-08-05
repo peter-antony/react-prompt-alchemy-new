@@ -157,7 +157,7 @@ const TripPlansSearchHubAPI = () => {
   }, [setFooter, resetFooter]);
 
   const breadcrumbItems = [
-    { label: "Home", href: "/dashboard", active: false },
+    { label: "Home", href: "/", active: false },
     { label: "Trip Execution API", active: true },
     // { label: 'Trip Execution Management', active: false },
   ];

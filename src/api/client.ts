@@ -23,12 +23,15 @@ class TokenManager {
   }
 
   private loadTokensFromStorage() {
-    // let localToken = JSON.parse(localStorage.getItem('token')); // uncommend for nly build
-    // this.accessToken = localToken.access_token; 
-    // this.refreshToken = localToken.refresh_token; 
     
-    this.accessToken = localStorage.getItem('accessToken'); // commend for nly build
-    this.refreshToken = localStorage.getItem('refreshToken');
+    let localToken = JSON.parse(localStorage.getItem('token')); // uncommend for nly build
+    if(localToken){
+      this.accessToken = localToken.access_token; 
+      this.refreshToken = localToken.refresh_token; 
+    }
+    
+    // this.accessToken = localStorage.getItem('accessToken'); // commend for nly build
+    // this.refreshToken = localStorage.getItem('refreshToken');
   }
 
   setTokens(accessToken: string, refreshToken: string) {
@@ -59,9 +62,7 @@ const createApiClient = (): AxiosInstance => {
   const client = axios.create({
     baseURL: API_CONFIG.BASE_URL,
     timeout: API_CONFIG.TIMEOUT,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: API_CONFIG.HEADERS,
   });
 
   const tokenManager = TokenManager.getInstance();
@@ -70,16 +71,16 @@ const createApiClient = (): AxiosInstance => {
   client.interceptors.request.use(
     (config) => {
       const token = tokenManager.getAccessToken();
-      const nebulaUserInfo = JSON.parse(localStorage.getItem('nebulaUserInfo'));
-      const OuId = nebulaUserInfo.data.userDefaults.ouId;
-      const LangId = nebulaUserInfo.data.userDefaults.langId;
-      const RoleName = nebulaUserInfo.data.userDefaults.roleName;
+      // const nebulaUserInfo = JSON.parse(localStorage.getItem('nebulaUserInfo'));
+      // const OuId = nebulaUserInfo.data.userDefaults.ouId;
+      // const LangId = nebulaUserInfo.data.userDefaults.langId;
+      // const RoleName = nebulaUserInfo.data.userDefaults.roleName;
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers.OuId = OuId;
-        config.headers.LangId = LangId;
-        config.headers.RoleName = RoleName;
+        // config.headers.OuId = OuId;
+        // config.headers.LangId = LangId;
+        // config.headers.RoleName = RoleName;
       }
       return config;
     },
@@ -98,10 +99,10 @@ const createApiClient = (): AxiosInstance => {
         try {
           const refreshToken = tokenManager.getRefreshToken();
 
-          const nebulaUserInfo = JSON.parse(localStorage.getItem('nebulaUserInfo'));
-          const OuId = nebulaUserInfo.data.userDefaults.ouId;
-          const LangId = nebulaUserInfo.data.userDefaults.langId;
-          const RoleName = nebulaUserInfo.data.userDefaults.roleName;
+          // const nebulaUserInfo = JSON.parse(localStorage.getItem('nebulaUserInfo'));
+          // const OuId = nebulaUserInfo.data.userDefaults.ouId;
+          // const LangId = nebulaUserInfo.data.userDefaults.langId;
+          // const RoleName = nebulaUserInfo.data.userDefaults.roleName;
 
           if (refreshToken) {
             const response = await axios.post(`${API_CONFIG.BASE_URL}/auth/refresh`, {
@@ -113,9 +114,9 @@ const createApiClient = (): AxiosInstance => {
 
             // Retry original request with new token
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            originalRequest.headers.OuId = OuId;
-            originalRequest.headers.LangId = LangId;
-            originalRequest.headers.RoleName = RoleName;
+            // originalRequest.headers.OuId = OuId;
+            // originalRequest.headers.LangId = LangId;
+            // originalRequest.headers.RoleName = RoleName;
             return client(originalRequest);
           }
         } catch (refreshError) {
