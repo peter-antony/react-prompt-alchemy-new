@@ -1,5 +1,7 @@
 let jsonData: any = null;
 let resourceJsonData: any = null;
+let planDetailsJsonData: any = null;
+let actualDetailsJsonData:any = null;
 function setJsonData(data: any) {
   jsonData = data;
 }
@@ -13,8 +15,18 @@ function setResourceJsonData(data: any) {
 function getResourceJsonData() {
   return resourceJsonData;
 }
-
-
+function setPlanDetailsJson(data: any) {
+  planDetailsJsonData = data;
+}
+function getPlanDetailsJson() {
+  return planDetailsJsonData;
+}
+function setActualDetailsJson(data: any) {
+  actualDetailsJsonData = data;
+}
+function getActualDetailsJson() {
+  return actualDetailsJsonData;
+}
 function getQuickOrder() {
   console.log("getQuickOrder called",jsonData);
   if (jsonData && jsonData.ResponseResult) {
@@ -507,6 +519,88 @@ function getBasicDetailsByResourceUniqueID(resourceUniqueID: string) {
   return undefined;
 }
 
+function pushPlanDetailsToResourceGroup(resourceUniqueID: string, planDetailsJsonData: any) {
+  console.log("PARAM DATA : ",planDetailsJsonData,"PARAM ID ",resourceUniqueID)
+  console.log("JSON DATA : ",jsonData.ResponseResult.QuickOrder )
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const idx = groupArr.findIndex(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (idx !== -1) {
+      if (!Array.isArray(groupArr[idx].PlanDetails)) {
+        groupArr[idx].PlanDetails = [];
+      }
+      groupArr[idx].PlanDetails.push(planDetailsJsonData);
+      return true;
+    }
+  }
+  return false;
+}
+
+function pushActualDetailsToResourceGroup(resourceUniqueID: string, actualDetailsJsonData: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const idx = groupArr.findIndex(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (idx !== -1) {
+      if (!Array.isArray(groupArr[idx].ActualDetails)) {
+        groupArr[idx].ActualDetails = [];
+      }
+      groupArr[idx].ActualDetails.push(actualDetailsJsonData);
+      return true;
+    }
+  }
+  return false;
+}
+
+function getAllPlanDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && Array.isArray(found.PlanDetails)) {
+      return found.PlanDetails;
+    }
+  }
+  return [];
+}
+
+function getAllActualDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && Array.isArray(found.ActualDetails)) {
+      return found.ActualDetails;
+    }
+  }
+  return [];
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -547,6 +641,14 @@ const jsonStore = {
   getOperationalDetailsByResourceUniqueID,
   getBillingDetailsByResourceUniqueID,
   getBasicDetailsByResourceUniqueID,
+  setPlanDetailsJson,
+  getPlanDetailsJson,
+  pushPlanDetailsToResourceGroup,
+  setActualDetailsJson,
+  getActualDetailsJson,
+  pushActualDetailsToResourceGroup,
+  getAllPlanDetailsByResourceUniqueID,
+  getAllActualDetailsByResourceUniqueID,
 };
 
 export default jsonStore;

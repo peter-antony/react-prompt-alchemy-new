@@ -20,6 +20,7 @@ import { SmartGrid } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { useToast } from '@/hooks/use-toast';
+import jsonStore from "@/stores/jsonStore";
 
 
 const summaryStats = [
@@ -167,14 +168,15 @@ const actualData = [
   },
 ];
 interface PlanAndActualsProps {
-  view: "grid" | "list";
+  view: string;
+  resouceId?: string; // Optional resource ID prop
 }
 
-const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view }) => {
+const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
   const [tab, setTab] = useState<"planned" | "actuals">("planned");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const { toast } = useToast();
-
+  const [planDataArry, setPlanDataArray] = useState([]);
   const steps = [
     {
       label: "Resource Group Creation",
@@ -197,6 +199,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view }) => {
     console.log('Initializing columns in QuickOrderManagement');
     gridState.setColumns(initialColumns);
     gridState.setGridData(processedData);
+    setPlanDataArray(jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId))
   }, []);
 
   // Log when columns change

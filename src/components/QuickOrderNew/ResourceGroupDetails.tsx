@@ -50,10 +50,11 @@ interface ResourceGroupDetailsFormProps {
 }
 
 // const ResourceGroupDetailsForm = ({ open, onClose }: ResourceGroupDetailsFormProps) => {
-export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: ResourceGroupDetailsFormProps) => {
+export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: ResourceGroupDetailsFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
+  const [resourceUniqueId, setResourceUniqueId] = useState(resourceId);
   const TariffList = [
     "TAR000750 - Tariff Pending",
     "TAR000751 - Tariff Completed",
@@ -67,6 +68,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
     "Mumbai",
   ];
   const handleProceedToNext = () => {
+    onSaveDetails();
     setCurrentStep(2);
   };
 
@@ -93,31 +95,31 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
   const basicDetailsRef = useRef<DynamicPanelRef>(null);
   const operationalDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
-
   const onSaveDetails = () => {
+    alert(resourceId);
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder && resourceId) {
-      
-      jsonStore.updateResourceGroupDetailsByUniqueID(resourceId,formValues.basicDetails,formValues.operationalDetails, formValues.billingDetails);
+
+      jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
       toast.success("Resource Group Updated Successfully");
       const fullResourceJson = jsonStore.getJsonData();
       console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
-    }else if(isEditQuickOrder && resourceId==undefined || resourceId==""){
+    } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);
       jsonStore.setResourceJsonData({
-         ...jsonStore.getResourceJsonData(),
-        "ModeFlag": "Insert",
+        ...jsonStore.getResourceJsonData(),
+        "ModeFlag": "Update",
         "ResourceStatus": "Save",
-        "ResourceUniqueID": "R0"+((parseInt(localStorage.getItem('resouceCount'))+1))
+        "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
-      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount'))+1).toString());
+      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
         ...formValues.basicDetails
@@ -133,19 +135,21 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
       const fullResourceJson = jsonStore.getResourceJsonData();
       console.log("FULL RESOURCE JSON :: ", fullResourceJson);
       jsonStore.pushResourceGroup(fullResourceJson);
+      setResourceUniqueId(fullResourceJson.ResourceUniqueID);
       console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
-    }else {
+    } else {
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);
       jsonStore.setResourceJsonData({
-         ...jsonStore.getResourceJsonData(),
+        ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Insert",
         "ResourceStatus": "Save",
-        "ResourceUniqueID": "R0"+((parseInt(localStorage.getItem('resouceCount'))+1))
+        "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
-      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount'))+1).toString());
+      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+      setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
         ...formValues.basicDetails
@@ -549,7 +553,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
 
   // Remove: const [billingData, setBillingData] = useState(jsonStore.getBillingDetails() || {})
 
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [view, setView] = useState("list");
 
   // Mock functions for user config management
   const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
@@ -571,8 +575,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
       setOperationalDetailsData({});
       setBillingDetailsData({});
     }
+    const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
+    const actualCount = jsonStore.getAllActualDetailsByResourceUniqueID(resourceId);
+    if( planCount.length > 0 || actualCount.length > 0) {
+         setIsPlanActualsVisible(true);
+
+    }
     const saved = localStorage.getItem('planActualsSaved');
-    setIsPlanActualsVisible(saved === 'true');
+    // setIsPlanActualsVisible(saved === 'true');
 
   }, [isEditQuickOrder]);
   const steps = [
@@ -658,14 +668,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
     }
   };
   const [resourceData, setResourceData] = useState<any[]>([]); // <-- resourceData state
-    useEffect(() => {
+  useEffect(() => {
     if (isEditQuickOrder) {
       const resourceGroups = jsonStore.getAllResourceGroups();
       setResourceData(resourceGroups);
       console.log("Resource Groups Data:", resourceGroups);
     }
   }, [isEditQuickOrder]);
-  
+
   // const cardData: CardDetailsItem[] = [
   //   {
   //     id: "R01",
@@ -950,7 +960,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
                 )}
                 {isPlanActualsVisible && (
                   <div className="">
-                    <PlanAndActuals view={view} />
+                    <PlanAndActuals view={view} resouceId={resourceId}/>
                   </div>
                 )}
               </>
@@ -979,7 +989,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder,resourceId }: Resour
       <SideDrawer isOpen={isPlanActualsOpen} onClose={() => setIsPlanActualsOpen(false)} width='85%' title="Plan and Actual Details" isBack={false}>
         <div>
           {/* <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)}></PlanAndActualDetails> */}
-          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder}></PlanAndActualDetails>
+          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} resourceId={resourceUniqueId}></PlanAndActualDetails>
 
         </div>
       </SideDrawer>

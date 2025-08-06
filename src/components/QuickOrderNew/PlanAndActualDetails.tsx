@@ -47,10 +47,11 @@ import { BulkUpdatePlanActuals } from "./BulkUpdatePlanActuals";
 import jsonStore from '@/stores/jsonStore';
 import { useEffect } from 'react';
 interface PlanAndActualsDetailsProps {
-  isEditQuickOrder?: boolean
+  isEditQuickOrder?: boolean;
+  resourceId?: string;
   onCloseDrawer()
 }
-export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAndActualsDetailsProps) => {
+export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId }: PlanAndActualsDetailsProps) => {
   let currentStep = 1;
   const [planType, setPlanType] = useState("plan");
   const [isOpen, setIsOpen] = useState(false);
@@ -76,7 +77,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
     useState("Billing Details");
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-    const PlaceList = [
+  const PlaceList = [
     "Bangalore",
     "New Delhi",
     "Gujarat",
@@ -120,15 +121,15 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
       journeyDetails: journeyDetailsRef.current?.getFormValues() || {},
       otherDetails: otherDetailsRef.current?.getFormValues() || {},
     };
-
-    console.log("ON SAVE FORM DATA: ", formValues);
     if (planType === "plan") {
       // Get the current PlanDetails from jsonStore
-      const currentPlanDetails = jsonStore.getPlanDetails() || {};
+      const currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
 
       // Prepare the updated PlanDetails by merging new form values with existing ones
       const updatedPlanDetails = {
         ...currentPlanDetails,
+        "PlanLineUniqueID": "P0" + ((parseInt(localStorage.getItem('planCount')) + 1)),
+        "ModeFlag": "Insert",
         WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
         ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
         ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
@@ -136,15 +137,21 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
         JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
         OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
       };
+      localStorage.setItem('planCount', (parseInt(localStorage.getItem('planCount'))+1).toString());
       // Set the updated ActualDetails in jsonStore
-      jsonStore.setPlanDetails(updatedPlanDetails);
+      jsonStore.setPlanDetailsJson(updatedPlanDetails);
+      jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+      console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
     } else {
-      // Get the current PlanDetails from jsonStore
+      // Get the current ActualDetails from jsonStore
       const currentActualDetails = jsonStore.getActualDetails() || {};
 
-      // Prepare the updated PlanDetails by merging new form values with existing ones
+      // Prepare the updated ActualDetails by merging new form values with existing ones
       const updatedActualDetails = {
         ...currentActualDetails,
+        "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
+        "ModeFlag": "Insert",
+
         WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
         ContainerDetails: { ...currentActualDetails.ContainerDetails, ...formValues.containerDetails },
         ProductDetails: { ...currentActualDetails.ProductDetails, ...formValues.productDetails },
@@ -152,11 +159,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
         JourneyAndSchedulingDetails: { ...currentActualDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
         OtherDetails: { ...currentActualDetails.OtherDetails, ...formValues.otherDetails },
       };
+      localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
       // Set the updated ActualDetails in jsonStore
-      jsonStore.setActualDetails(updatedActualDetails);
+      jsonStore.setActualDetailsJson(updatedActualDetails);
+      jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails)
+      console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
     }
     const fullJson = jsonStore.getJsonData();
-    console.log("FULL Plan JSON :: ", fullJson);
+    console.log("FULL Plan&Actual JSON :: ", fullJson);
   };
 
   const [billingData, setBillingData] = useState({
@@ -767,8 +777,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
 
   // Replace the static mappedPlanActualItems array with the merged array from jsonStore
   const mappedPlanActualItems = [
-    ...jsonStore.getAllPlanDetails(),
-    ...jsonStore.getAllActualDetails()
+    ...jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId),
+    ...jsonStore.getAllActualDetailsByResourceUniqueID(resourceId)
   ];
 
   // Normalization functions for each config
@@ -861,6 +871,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
   // Sync state with jsonStore on isEditQuickOrder change
   useEffect(() => {
     const planDetails = jsonStore.getPlanDetails() || {};
+    // alert("R id - " + resourceId)
     console.log("PLAN DETAILS :: ", planDetails)
     if (isEditQuickOrder) {
       setWagonDetailsData(normalizeWagonDetails(planDetails.WagonDetails || {}));
