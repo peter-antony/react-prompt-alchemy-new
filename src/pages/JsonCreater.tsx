@@ -41,15 +41,6 @@ const QUICK_ORDER_JSON =
       "Attachments": {
         "TotalAttachment": "2",
         "AttachItems": [
-          {
-            "AttachItemID": "",
-            "AttachmentType": "PDF",
-            "FileCategory": "",
-            "AttachName": "File.PDF",
-            "AttachUniqueName": "",
-            "AttachRelPath": "",
-            "ModeFlag": "Insert/Update/Delete/NoChange"
-          }
         ]
       }
     }

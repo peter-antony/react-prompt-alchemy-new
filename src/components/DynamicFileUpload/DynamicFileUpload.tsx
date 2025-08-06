@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Upload, 
@@ -24,6 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FileUploadProps, StagedFile, UploadedFile, FileFilterState, FileUploadConfig } from '@/types/fileUpload';
+import jsonStore from '@/stores/jsonStore';
+
 
 const defaultConfig: FileUploadConfig = {
   categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
@@ -34,12 +36,18 @@ const defaultConfig: FileUploadConfig = {
   filesEndpoint: '/api/files'
 };
 
+interface DynamicFileGroupProps {
+  
+}
+
+// const DynamicFileUpload = ({ isEditQuickOrder }: DynamicFileGroupProps) => ({
 const DynamicFileUpload: React.FC<FileUploadProps> = ({
   config = {},
   onUpload,
   onDelete,
   onDownload,
-  className = ''
+  className = '',
+  isEditQuickOrder,
 }) => {
   const finalConfig = { ...defaultConfig, ...config };
   const { toast } = useToast();
@@ -56,6 +64,32 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     selectedFileType: '',
     showCategoryDropdown: false
   });
+
+  const [loadedFiles, setLoadedFiles] = useState([]);
+  useEffect(() => {
+    const fullJson = jsonStore.getJsonData();
+    console.log("uploaded JSON :: ", isEditQuickOrder);
+    setLoadedFiles(jsonStore.getAttachments());    
+    console.log("loadedFiles---- :: ", loadedFiles);
+    // Simulate successful upload by moving to uploaded files
+    if(isEditQuickOrder || (loadedFiles != undefined && loadedFiles.length <= 1)){
+      if(loadedFiles != undefined){
+        const newUploadedGetFiles: UploadedFile[] = loadedFiles.map(file => ({
+          id: file.AttachItemID,
+          fileName: file.AttachName,
+          fileType: file.AttachmentType,
+          category: file.FileCategory || '',
+          remarks: file.remarks || '',
+          // uploadDate: new Date().toISOString(),
+          // fileSize: file.file.size,
+          downloadUrl: `#download-${file.AttachItemID}`
+        }));
+        console.log("get loaded files ", newUploadedGetFiles);
+        setUploadedFiles(prev => [...prev, ...newUploadedGetFiles]);
+      }
+    }
+  }, [loadedFiles]);
+
 
   const { register, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues: {
@@ -207,10 +241,11 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
         fileType: file.file.type,
         category: file.category || '',
         remarks: file.remarks,
-        uploadDate: new Date().toISOString(),
-        fileSize: file.file.size,
+        // uploadDate: new Date().toISOString(),
+        // fileSize: file.file.size,
         downloadUrl: `#download-${file.id}`
       }));
+      console.log("newUploadedFiles ", newUploadedFiles);
 
       setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
       setStagedFiles([]);
@@ -250,7 +285,9 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     }
   }, [onDelete, toast]);
 
+  console.log("uploadedFiles ", uploadedFiles);
   const filteredFiles = uploadedFiles.filter(file => {
+    console.log("uploadedFiles ", file);
     const matchesSearch = !filters.searchTerm || 
       file.fileName.toLowerCase().includes(filters.searchTerm.toLowerCase());
     const matchesCategory = !filters.selectedCategory || 
@@ -261,6 +298,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     
     return matchesSearch && matchesCategory && matchesFileType;
   });
+  console.log("filteredFiles ", filteredFiles);
 
   return (
     <div className={`flex flex-col md:flex-row gap-6 w-full h-full bg-[#f8fafd]`}>
@@ -338,12 +376,12 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
           {stagedFiles.length > 0 && (
             <div className="space-y-3">
               {stagedFiles.map(file => (
-                <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg bg-white">
-                  <div className="flex items-center space-x-3">
+                <div key={file.id} className="flex items-center justify-between px-2 py-3 border rounded-lg bg-white">
+                  <div className="flex items-center space-x-2">
                     {/* <div className="p-2 bg-red-100 rounded"> */}
                       <FileText className="w-8 h-8 text-red-500" />
                     {/* </div> */}
-                    <div className='w-48'>
+                    <div className='w-44'>
                       <p className="font-medium text-sm text-gray-900 truncate">{file.file.name}</p>
                       <p className="text-xs text-gray-500">
                         {new Date().toLocaleDateString('en-GB', { 

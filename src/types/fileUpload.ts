@@ -21,8 +21,8 @@ export interface UploadedFile {
   fileType: string;
   category: string;
   remarks?: string;
-  uploadDate: string;
-  fileSize: number;
+  // uploadDate: string;
+  // fileSize: number;
   downloadUrl: string;
 }
 
@@ -32,6 +32,7 @@ export interface FileUploadProps {
   onDelete?: (fileId: string) => Promise<void>;
   onDownload?: (file: UploadedFile) => void;
   className?: string;
+  isEditQuickOrder?: boolean;
 }
 
 export interface FileFilterState {

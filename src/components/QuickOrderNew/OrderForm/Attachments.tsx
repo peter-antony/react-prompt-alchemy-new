@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Paperclip, Trash , CircleCheck, FileText, BookPlus , FileImage , BookA , UploadCloud, Search, Filter } from "lucide-react";
 import { DynamicFileUpload } from '@/components/DynamicFileUpload';
 import { StagedFile } from '@/types/fileUpload';
+import jsonStore from '@/stores/jsonStore';
 
 const fileIcons = {
   pdf: <FileText className="text-red-500 w-6 h-6" />,
@@ -17,7 +18,12 @@ const mockAttachments = [
   { name: "Booking Request.doc", type: "doc", category: "BR Amendment" },
 ];
 
-export default function Attachments() {
+interface NewAttachmentGroupProps {
+  isEditQuickOrder?: boolean;
+}
+
+const Attachments = ({ isEditQuickOrder }: NewAttachmentGroupProps) => {
+// export default function Attachments() {
   const [fileCategory, setFileCategory] = useState("BR Ammend");
   const [remarks, setRemarks] = useState("");
   const [uploadedFile, setUploadedFile] = useState({
@@ -31,6 +37,25 @@ export default function Attachments() {
   const handleUpload = async (files: StagedFile[]) => {
     // Simulate API call
     console.log('Uploading files:', files);
+    const AttachItems = files.map((file) => {
+      // Get file type from file.file.name (extension after last dot)
+      const fileName = file.file?.name || '';
+      const fileType = fileName.split('.').pop()?.toLowerCase() || '';
+      return {
+        AttachItemID: file.id,
+        AttachmentType: fileType,
+        FileCategory: file.category,
+        AttachName: fileName,
+        AttachUniqueName: fileName,
+      };
+    });
+    console.log('AttachItems:', AttachItems);
+    jsonStore.pushAttachments(AttachItems[0]);
+    console.log('get saved List:', jsonStore.getAttachments());
+
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL Plan JSON :: ", fullJson);
+
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         console.log('Upload completed');
@@ -56,6 +81,14 @@ export default function Attachments() {
     window.open(file.downloadUrl, '_blank');
   };
 
+  const [attachmentsObj, setAttachments] = useState();
+  useEffect(() => {
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL Plan JSON :: ", fullJson);
+    setAttachments(jsonStore.getAttachments);
+    console.log("FULL attachmentsObj :: ", attachmentsObj);
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full h-full pr-6 bg-[#f8fafd]">
       {/* Left Form */}
@@ -72,8 +105,11 @@ export default function Attachments() {
         onDelete={handleDelete}
         onDownload={handleDownload}
         className="max-w-4xl mx-auto"
+        isEditQuickOrder={isEditQuickOrder}
       />
 
     </div>
   );
 }
+
+export default Attachments;

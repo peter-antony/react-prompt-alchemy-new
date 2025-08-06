@@ -172,10 +172,9 @@ function getAttachments() {
     jsonData &&
     jsonData.ResponseResult &&
     jsonData.ResponseResult.QuickOrder &&
-    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup) &&
-    jsonData.ResponseResult.QuickOrder.ResourceGroup.length > 0
+    jsonData.ResponseResult.QuickOrder.Attachments
   ) {
-    return jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments;
+    return jsonData.ResponseResult.QuickOrder.Attachments.AttachItems;
   }
   return undefined;
 }
@@ -185,10 +184,26 @@ function setAttachments(attachments: any) {
     jsonData &&
     jsonData.ResponseResult &&
     jsonData.ResponseResult.QuickOrder &&
-    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup) &&
-    jsonData.ResponseResult.QuickOrder.ResourceGroup.length > 0
+    jsonData.ResponseResult.QuickOrder.Attachments
   ) {
-    jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments = attachments;
+    jsonData.ResponseResult.QuickOrder.Attachments = attachments;
+    return true;
+  }
+  return false;
+}
+
+function pushAttachments(attachments: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    jsonData.ResponseResult.QuickOrder.Attachments
+  ) {
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments.AttachItems)) {
+      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems = [];
+    }
+    jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.push(attachments);
+    jsonData.ResponseResult.QuickOrder.Attachments.TotalAttachment = jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.length;
     return true;
   }
   return false;
@@ -619,6 +634,7 @@ const jsonStore = {
   setMoreRefDocs,
   getAttachments,
   setAttachments,
+  pushAttachments,
   getPlanDetails,
   setPlanDetails,
   getActualDetails,
