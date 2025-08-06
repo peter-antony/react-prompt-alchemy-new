@@ -68,6 +68,7 @@ export interface DynamicPanelProps {
   showPreview?: boolean;
   className?: string;
   panelSubTitle?: string;
+  onScrollPanel?: boolean;
 }
 
 export interface FieldVisibilityConfig {

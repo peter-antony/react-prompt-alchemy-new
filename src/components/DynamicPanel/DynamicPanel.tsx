@@ -35,6 +35,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   panelWidth = 'full',
   collapsible = false,
   showPreview = false,
+  onScrollPanel = false,
   className = '',
   panelSubTitle = '',
 }, ref) => {

@@ -59,6 +59,7 @@ const NewCreateQuickOrder = ({ isEditQuickOrder }: NewCreateQuickOrderProps) => 
             onConfirm={handleConfirm}
             onCancel={handleCancel}
             isEditQuickOrder={isEditQuickOrder}
+            onScroll={true}
           />
         </div>
         

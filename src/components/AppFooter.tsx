@@ -9,7 +9,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary:
       "bg-background text-blue-600 border border-blue-600 hover:bg-blue-50",
-    cancel: "bg-white text-red-500 border border-red-500 hover:text-red-600 hover:bg-red-50",
+    cancel: "bg-white text-red-300 hover:text-red-600 hover:bg-red-100",
   };
 
   const getButtonClass = () => {
@@ -83,7 +83,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
           variant="secondary"
           onClick={config.onClick}
           disabled={config.disabled || config.loading}
-          className={`${getButtonClass()} font-medium transition-colors px-4 py-2 text-sm rounded-sm`}
+          className={`${getButtonClass()} font-medium transition-colors px-4 py-2 h-8 text-sm rounded-sm`}
         >
           {config.loading ? "Loading..." : config.label}
         </Button>
@@ -180,7 +180,7 @@ export const AppFooter: React.FC = () => {
     //     submitColor={popupBGColor}
     //   />
     // </footer>
-    <footer className="h-16 bg-white border-t border-gray-200 flex items-center justify-between px-6 fixed bottom-0 left-16 right-0 z-20">
+    <footer className="h-12 bg-white border-t border-gray-200 flex items-center justify-between px-6 fixed bottom-0 left-16 right-0 z-20">
       {/* {config.pageName == "Quick_Order" && (
         <> */}
              <div className="flex items-center space-x-4">

@@ -9,6 +9,7 @@ interface SideDrawerProps {
     width?: string;
     title: string;
     isBack: boolean;
+    onScrollPanel?: boolean;
     badgeContent?: string;
     isBadgeRequired?: boolean;
     children: React.ReactNode;
@@ -20,6 +21,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
     width = "400px",
     title,
     isBack,
+    onScrollPanel,
     badgeContent,
     isBadgeRequired,
     children,
@@ -76,7 +78,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                             </button>
                         </div>
                         {/* Content */}
-                        <div className="h-full content-scroll">
+                        <div className={`h-full ${onScrollPanel ? 'content-scroll' : ''}`}>
                             {children}
                         </div>
                     </motion.div>

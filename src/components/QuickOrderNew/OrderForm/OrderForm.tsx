@@ -27,9 +27,10 @@ interface OrderFormProps {
   onConfirm: () => void;
   onCancel: () => void;
   isEditQuickOrder?: boolean;
+  onScroll?: boolean;
 }
 
-const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: OrderFormProps) => {
+const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll }: OrderFormProps) => {
   const [OrderType, setOrderType] = useState('buy');
   const [OrderDate, setOrderDate] = useState<Date>();
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -541,7 +542,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
   }
   return (
     <div className='bg-white rounded-lg border border-gray-200'>
-      <div className="orderFormScroll">
+      <div className={`${onScroll ? 'orderFormScroll' : ''}`}>
       {/* <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
         Order Details
         {isEditQuickOrder && quickOrder && (
@@ -594,7 +595,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
         }
       </div>
 
-      <SideDrawer isOpen={isMoreInfoOpen} onClose={() => setMoreInfoOpen(false)} width="35%" title="More Info" isBack={false}>
+      <SideDrawer isOpen={isMoreInfoOpen} onClose={() => setMoreInfoOpen(false)} width="35%" title="More Info" isBack={false} onScrollPanel={true}>
         <div className="">
           <div className="mt-0 text-sm text-gray-600">
             <DynamicPanel
@@ -614,23 +615,23 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder }: Order
             {/* <MoreInfo /> */}
           </div>
           <div className="flex bg-white justify-end w-full px-4 border-t border-gray-300">
-            <button type="button" className="bg-blue-600 my-2 text-white text-sm px-6 py-2 rounded font-medium" onClick={onSave}>
+            <button type="button" className="bg-blue-600 mt-2 text-white text-sm px-6 py-2 rounded font-medium" onClick={onSave}>
               Save Details
             </button>
           </div>
         </div>
       </SideDrawer>
-      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" isBadgeRequired={true}>
+      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
         <div className="">
           <div className="mt-0 text-sm text-gray-600"><Attachments /></div>
         </div>
       </SideDrawer>
-      <SideDrawer isOpen={isHistoryOpen} onClose={() => setHistoryOpen(false)} width="40%" title="Amendment History" isBack={false} badgeContent="QO/00001/2025" isBadgeRequired={true}>
+      <SideDrawer isOpen={isHistoryOpen} onClose={() => setHistoryOpen(false)} width="40%" title="Amendment History" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
         <div className="">
           <div className="mt-0 text-sm text-gray-600"><AmendmentHistory /></div>
         </div>
       </SideDrawer>
-      <SideDrawer isOpen={isLinkedOrdersOpen} onClose={() => setLinkedOrdersOpen(false)} width="80%" title="Linked Orders" isBack={false} >
+      <SideDrawer isOpen={isLinkedOrdersOpen} onClose={() => setLinkedOrdersOpen(false)} width="80%" title="Linked Orders" onScrollPanel={true} isBack={false} >
         <div className="">
           <div className="mt-0 text-sm text-gray-600"><LinkedOrders /></div>
         </div>

@@ -1385,6 +1385,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
         width="40%"
         title="Bulk Update"
         isBack={false}
+        onScrollPanel={true}
       >
         <div className="">
           <div className="mt-0 text-sm text-gray-600">
@@ -1401,11 +1402,12 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder }: PlanAn
               getUserPanelConfig={getUserPanelConfig}
               saveUserPanelConfig={saveUserPanelConfig}
               userId="current-user"
+              onScrollPanel={true}
             />
             {/* <Bulk-Update /> */}
           </div>
           <div className="flex bg-white justify-end w-full px-4 border-t border-gray-300">
-            <button type="button" className="bg-blue-600 my-2 text-white text-sm px-6 py-2 rounded font-medium" onClick={onDefaultDetailsSave}>
+            <button type="button" className="bg-blue-600 mt-2 text-white text-sm px-6 py-2 rounded font-medium" onClick={onDefaultDetailsSave}>
               Default Details
             </button>
           </div>
