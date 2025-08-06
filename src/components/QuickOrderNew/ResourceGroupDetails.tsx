@@ -96,7 +96,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
   const operationalDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
   const onSaveDetails = () => {
-    alert(resourceId);
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},

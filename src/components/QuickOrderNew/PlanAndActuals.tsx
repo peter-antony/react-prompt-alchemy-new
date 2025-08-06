@@ -1,52 +1,35 @@
-import { useState, useMemo, useEffect } from "react";
-import { Truck, HousePlug, Box,BaggageClaim  } from "lucide-react";
-
-import {
-  Plus,
-  ChevronDown,
-  List,
-  LayoutGrid,
-  MoreVertical,
-  Package,
-  AlertTriangle,
-  Camera,
-  MapPin,
-  Calendar,
-  Link as LinkIcon,
-} from "lucide-react";
-import { VerticalStepper } from "../Common/VerticalStepper";
-import React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Truck, HousePlug, Box, BaggageClaim, Package, AlertTriangle, Camera, MapPin, Calendar, Link as LinkIcon, MoreVertical } from "lucide-react";
 import { SmartGrid } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { useToast } from '@/hooks/use-toast';
 import jsonStore from "@/stores/jsonStore";
 
-
 const summaryStats = [
   {
-    icon: <Truck  className="w-5 h-5 text-blue-500"/>, // Replace with your SVG or Lucide icon
+    icon: <Truck className="w-5 h-5 text-blue-500" />,
     value: "12 Nos",
     label: "Wagon Quantity",
     bg: "bg-blue-50",
     iconColor: "text-blue-500"
   },
   {
-    icon: <HousePlug  className="w-5 h-5 text-purple-400"/>,
+    icon: <HousePlug className="w-5 h-5 text-purple-400" />,
     value: "12 Nos",
     label: "Container Quantity",
     bg: "bg-purple-50",
     iconColor: "text-purple-500"
   },
   {
-    icon: <Box  className="w-5 h-5 text-red-400"/>,
+    icon: <Box className="w-5 h-5 text-red-400" />,
     value: "23 Ton",
     label: "Product Weight",
     bg: "bg-red-50",
     iconColor: "text-red-500"
   },
   {
-    icon: <BaggageClaim  className="w-5 h-5 text-teal-400"/>,
+    icon: <BaggageClaim className="w-5 h-5 text-teal-400" />,
     value: "10 Nos",
     label: "THU Quantity",
     bg: "bg-teal-50",
@@ -54,129 +37,111 @@ const summaryStats = [
   }
 ];
 
-const plannedData = [
+const initialColumns: GridColumnConfig[] = [
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'id',
+    label: 'Wagon Id Type',
+    type: 'LinkWithText',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Habbins",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'containerID',
+    label: 'Container Id Type',
+    type: 'TextWithTwoRow',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "A type Wagon",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
-  }, {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Habbins",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'hazardousGoods',
+    label: 'Hazardous Goods',
+    type: 'Badge',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Closed Wagon",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
-  },
-];
-const actualData = [
-  {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'departureAndArrival',
+    label: 'Departure and Arrival',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'planFromToDate',
+    label: 'Plan From & To Date',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'price',
+    label: 'Price',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
   {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
-  },
-  {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
-  },
-  {
-    icon: <Package className="w-7 h-7 text-teal-500" />,
-    code: "WAG00000001",
-    name: "Zaccs",
-    warning: true,
-    amount: "€ 1395.00",
-    location: "Frankfurt Station A - Frankfurt Station B",
-    date: "12-Mar-2025 to 12-Mar-2025",
-    draftBill: "DB/0000234",
+    key: 'draftBill',
+    label: 'Draft Bill',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
   },
 ];
+
+interface PlanAndActualListData {
+  id: string;
+  containerID: string;
+  departureAndArrival: string;
+  hazardousGoods: string;
+  planFromToDate: string;
+  price: string;
+  draftBill: string;
+}
+
 interface PlanAndActualsProps {
   view: string;
-  resouceId?: string; // Optional resource ID prop
+  resouceId?: string;
 }
 
 const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
   const [tab, setTab] = useState<"planned" | "actuals">("planned");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const { toast } = useToast();
-  const [planDataArry, setPlanDataArray] = useState([]);
+  const gridState = useSmartGridState();
+  const [planAndActualListData, setPlanAndActualListData] = useState<PlanAndActualListData[]>([]);
+
+  // Fetch and map plan data when resourceId changes
+  useEffect(() => {
+    const arr = jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId);
+    const mapped = arr.map((plan: any) => ({
+      id: `${plan.WagonDetails?.WagonID || ''}-${plan.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+      containerID: `${plan.ContainerDetails?.ContainerID || ''} ${plan.ContainerDetails?.ContainerType || ''}`.trim(),
+      hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+      departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
+      planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
+      price: '$ 1395.00', // Replace with actual price if needed
+      draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+    }));
+    setPlanAndActualListData(mapped);
+    gridState.setColumns(initialColumns);
+    gridState.setGridData(mapped);
+  }, [resouceId]);
+
+  // Log when columns change
+  useEffect(() => {
+    console.log('Columns changed in QuickOrderManagement:', gridState.columns);
+    console.log('Sub-row columns:', gridState.columns.filter(col => col.subRow).map(col => col.key));
+  }, [gridState.columns, gridState.forceUpdate]);
+
   const steps = [
     {
       label: "Resource Group Creation",
@@ -186,154 +151,9 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
     },
     {
       label: "Plan and Actuals",
-      subLabel: "Total Items : 0",
+      subLabel: `Total Items : ${planAndActualListData.length}`,
       count: 2,
       completed: false,
-    },
-  ];
-
-  const gridState = useSmartGridState();
-
-  // Initialize columns and data in the grid state
-  useEffect(() => {
-    console.log('Initializing columns in QuickOrderManagement');
-    gridState.setColumns(initialColumns);
-    gridState.setGridData(processedData);
-    setPlanDataArray(jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId))
-  }, []);
-
-  // Log when columns change
-  useEffect(() => {
-    console.log('Columns changed in QuickOrderManagement:', gridState.columns);
-    console.log('Sub-row columns:', gridState.columns.filter(col => col.subRow).map(col => col.key));
-  }, [gridState.columns, gridState.forceUpdate]);
-
-  const initialColumns: GridColumnConfig[] = [
-    {
-      key: 'id',
-      label: 'Wagon Id Type',
-      type: 'LinkWithText',
-      sortable: true,
-      editable: false,
-      mandatory: true,
-      subRow: false
-    },
-    {
-      key: 'containerID',
-      label: 'Container Id Type',
-      type: 'TextWithTwoRow',
-      sortable: true,
-      editable: false,
-      subRow: false
-    },
-    {
-      key: 'hazardousGoods',
-      label: 'Hazardous Goods',
-      type: 'Badge',
-      sortable: true,
-      editable: false,
-      subRow: false
-    },
-    {
-      key: 'departureAndArrival',
-      label: 'Departure and Arrival',
-      type: 'Text',
-      sortable: true,
-      editable: false,
-      subRow: false
-    },    
-    {
-      key: 'planFromToDate',
-      label: 'Plan From & To Date',
-      type: 'Text',
-      // type: 'TextWithTooltip',
-      sortable: true,
-      editable: false,
-      subRow: false
-    },
-    {
-      key: 'price',
-      label: 'Price',
-      type: 'Text',
-      sortable: true,
-      editable: false,
-      // infoTextField: 'arrivalPointDetails',
-      subRow: false
-    },
-    {
-      key: 'draftBill',
-      label: 'Draft Bill',
-      type: 'Text',
-      sortable: true,
-      editable: false,
-      subRow: false
-    },    
-  ];
-
-  interface PlanAndActualListData {
-    id: string;
-    containerID: string;
-    departureAndArrival: string;
-    hazardousGoods: string;
-    planFromToDate: string;
-    price: string;
-    draftBill: string;    
-  }
-
-  const planAndActualListData: PlanAndActualListData[] = [
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
-    },
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
-    },
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
-    },
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
-    },
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
-    },
-    {
-      id: 'WAG00000001 Habbins',
-      containerID: 'CONT10001 Container-A',
-      hazardousGoods: '-',
-      departureAndArrival: 'Frankfurt Station A - Frankfurt Station B',
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025',
-      price: '$ 1395.00',
-      draftBill: 'DB/0000234',
     },
   ];
 
@@ -343,16 +163,12 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
 
   const handleUpdate = async (updatedRow: any) => {
     console.log('Updating row:', updatedRow);
-    // Update the grid data
-    gridState.setGridData(prev => 
-      prev.map((row, index) => 
+    gridState.setGridData(prev =>
+      prev.map((row, index) =>
         index === updatedRow.index ? { ...row, ...updatedRow } : row
       )
     );
-    
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
-    
     toast({
       title: "Success",
       description: "Trip plan updated successfully"
@@ -360,27 +176,36 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
   };
 
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
-    console.log('Selected rows changed:', selectedRowIndices);
     setSelectedRows(selectedRowIndices);
   };
 
+  // For SmartGrid processed data (add status if needed)
   const processedData = useMemo(() => {
-      return planAndActualListData.map(row => ({
-        ...row,
-        status: {
-          value: row.hazardousGoods,
-          // variant: getStatusColor(row.status)
-        }
-      }));
-    }, []);
+    return planAndActualListData.map(row => ({
+      ...row,
+      status: {
+        value: row.hazardousGoods,
+      }
+    }));
+  }, [planAndActualListData]);
+
+  // Card data for grid view
+  const plannedData = useMemo(() => planAndActualListData.map(row => ({
+    icon: <Package className="w-7 h-7 text-teal-500" />,
+    code: row.id,
+    name: "",
+    warning: true,
+    amount: row.price,
+    location: row.departureAndArrival,
+    date: row.planFromToDate,
+    draftBill: row.draftBill,
+  })), [planAndActualListData]);
 
   return (
     <div className="flex min-h-screen bg-[#f8fafd]">
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        
         {/* Tabs and Stats */}
-        <div className="">
+        <div>
           <div className="flex gap-2 mb-4">
             <div className="flex bg-gray-200 rounded-lg w-fit p-1">
               <button
@@ -403,23 +228,21 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
               </button>
             </div>
           </div>
-          <div className="">
-            <div className="bg-white rounded-xl shadow-sm flex items-center px-4  py-4 mb-2 border border-gray-100">
+          <div>
+            <div className="bg-white rounded-xl shadow-sm flex items-center px-4 py-4 mb-2 border border-gray-100">
               {summaryStats.map((stat, i) => (
-                <React.Fragment key={i}>
-                  <div className="flex items-center w-1/4 gap-4">
-                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${stat.bg}`}>
-                      <span className={stat.iconColor}>{stat.icon}</span>
+                <div key={i} className="flex items-center w-1/4 gap-4">
+                  <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${stat.bg}`}>
+                    <span className={stat.iconColor}>{stat.icon}</span>
                   </div>
-                    <div className="flex flex-col justify-center">
-                      <div className="font-bold text-gray-900 text-base leading-tight">{stat.value}</div>
-                      <div className="text-xs text-gray-400 leading-tight">{stat.label}</div>
-                  </div>
+                  <div className="flex flex-col justify-center">
+                    <div className="font-bold text-gray-900 text-base leading-tight">{stat.value}</div>
+                    <div className="text-xs text-gray-400 leading-tight">{stat.label}</div>
                   </div>
                   {i !== summaryStats.length - 1 && (
                     <div className="h-12 w-px bg-gray-200 mx-8" />
                   )}
-                </React.Fragment>
+                </div>
               ))}
             </div>
           </div>
@@ -469,7 +292,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
             <div className="w-full">
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-0 py-3 w-full">
                 <div className="overflow-x-auto w-full">
-                  <div className="min-w-[900px]"> {/* Adjust min-width as needed for your columns */}
+                  <div className="min-w-[900px]">
                     <SmartGrid
                       key={`grid-${gridState.forceUpdate}`}
                       columns={gridState.columns}
@@ -496,10 +319,9 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
-} 
+};
 
 export default PlanAndActuals;

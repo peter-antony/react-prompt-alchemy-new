@@ -36,9 +36,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showOrderNoSuggestions, setShowOrderNoSuggestions] = useState(false);
   const [showCustomerRefSuggestions, setShowCustomerRefSuggestions] = useState(false);
-  const initialOrderFormDetails = normalizeOrderFormDetails(jsonStore.getQuickOrder() || {});
 
-  const [formData, setFormData] = useState(initialOrderFormDetails);
   const [toastOpen, setToastOpen] = useState(false);
   const [errorToastOpen, setErrorToastOpen] = useState(false);
   const [quickOrder, setQuickOrder] = useState<any>(null);
@@ -173,7 +171,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [isCopyModalOpen, setCopyModalOpen] = useState(false);
 
   const [OrderFormTitle, setOrderFormTitle] = useState('Order Details');
+   const getInitialOrderDetails = () =>
+    isEditQuickOrder
+      ? normalizeOrderFormDetails(jsonStore.getQuickOrder() || {})
+      : {};
   //ORDER DETAILS FORM
+  const initialOrderFormDetails = normalizeOrderFormDetails(getInitialOrderDetails());
+  const [formData, setFormData] = useState(initialOrderFormDetails);
+
   const getOrderFormDetailsConfig = (OrderType: string): PanelConfig => ({
     // const OrderFormDetailsConfig: PanelConfig = {
 
@@ -292,7 +297,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       label: 'QC Userdefined 1',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: { dropdown: '', input: '' },
+      value: '', // <-- Set default dropdown value here
       mandatory: false,
       visible: true,
       editable: true,
@@ -330,7 +335,6 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   });
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
-    console.log("DATA : ", data)
     return {
       OrderType: data.OrderType,
       QuickOrderDate: data.QuickOrderDate,
@@ -453,7 +457,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       label: 'QC Userdefined 2',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: '',
+      value: { dropdown: 'QC', input: '' },
       mandatory: false,
       visible: true,
       editable: true,
@@ -464,8 +468,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       ]
     },
     QCUserdefined3: {
-      id: 'QCUserdefined2',
-      label: 'QC Userdefined 2',
+      id: 'QCUserdefined3',
+      label: 'QC Userdefined 3',
       fieldType: 'inputdropdown',
       width: 'half',
       value: '',

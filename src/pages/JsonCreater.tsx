@@ -235,17 +235,15 @@ const Actual_Details_JSON = {
 };
 const JsonCreater: React.FC = () => {
   const navigate = useNavigate();
-  useEffect(() => {
+  useEffect(() => { 
+    console.log("RESETTING JSON");
     localStorage.setItem('resouceCount', '0');
     localStorage.setItem('planCount', '0');
     localStorage.setItem('actualCount', '0');
     jsonStore.setJsonData(QUICK_ORDER_JSON);
-    console.log("JSON data set CREATER:", jsonStore.getQuickOrder());
     jsonStore.setResourceJsonData(Resource_Group_JSON);
-    console.log("RESOURCE data set CREATER:", jsonStore.getResourceJsonData());
     jsonStore.setPlanDetailsJson(Plan_Details_JSON);
-    console.log("PLAN DETAILS data set CREATER:", jsonStore.getPlanDetailsJson());
-
+    console.log("QUICK ORDER JSON AFTER RESET : ", jsonStore.getJsonData());
     navigate('/quick-order');
   }, [navigate]);
   return null;
