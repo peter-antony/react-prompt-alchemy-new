@@ -39,7 +39,7 @@ const QUICK_ORDER_JSON =
         }
       ],
       "Attachments": {
-        "TotalAttachment": "2",
+        "TotalAttachment": "0",
         "AttachItems": [
         ]
       }
@@ -84,17 +84,8 @@ const Resource_Group_JSON =
 
   ],
   "Attachments": {
-    "TotalAttachment": "2",
+    "TotalAttachment": "0",
     "AttachItems": [
-      {
-        "AttachItemID": "",
-        "AttachmentType": "PDF",
-        "FileCategory": "",
-        "AttachName": "File.PDF",
-        "AttachUniqueName": "",
-        "AttachRelPath": "",
-        "ModeFlag": "Insert/Update/Delete/NoChange"
-      }
     ]
   },
   "PlanDetails": [

@@ -1000,9 +1000,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
         </div>
       </SideDrawer>
 
-      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" isBadgeRequired={true}>
+      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} onScrollPanel={true} badgeContent="QO/00001/2025" isBadgeRequired={true}>
         <div className="">
-          <div className="mt-0 text-sm text-gray-600"><Attachments /></div>
+          <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={true}/></div>
         </div>
       </SideDrawer>
 

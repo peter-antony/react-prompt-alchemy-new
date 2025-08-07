@@ -20,9 +20,10 @@ const mockAttachments = [
 
 interface NewAttachmentGroupProps {
   isEditQuickOrder?: boolean;
+  isResourceGroupAttchment?: boolean;
 }
 
-const Attachments = ({ isEditQuickOrder }: NewAttachmentGroupProps) => {
+const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachmentGroupProps) => {
 // export default function Attachments() {
   const [fileCategory, setFileCategory] = useState("BR Ammend");
   const [remarks, setRemarks] = useState("");
@@ -50,7 +51,11 @@ const Attachments = ({ isEditQuickOrder }: NewAttachmentGroupProps) => {
       };
     });
     console.log('AttachItems:', AttachItems);
-    jsonStore.pushAttachments(AttachItems[0]);
+    if(isResourceGroupAttchment){
+      jsonStore.pushResourceGroupAttachments(AttachItems[0]);
+    }else{
+      jsonStore.pushAttachments(AttachItems[0]);
+    }
     console.log('get saved List:', jsonStore.getAttachments());
 
     const fullJson = jsonStore.getJsonData();
@@ -81,14 +86,6 @@ const Attachments = ({ isEditQuickOrder }: NewAttachmentGroupProps) => {
     window.open(file.downloadUrl, '_blank');
   };
 
-  const [attachmentsObj, setAttachments] = useState();
-  useEffect(() => {
-    const fullJson = jsonStore.getJsonData();
-    console.log("FULL Plan JSON :: ", fullJson);
-    setAttachments(jsonStore.getAttachments);
-    console.log("FULL attachmentsObj :: ", attachmentsObj);
-  }, []);
-
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full h-full pr-6 bg-[#f8fafd]">
       {/* Left Form */}
@@ -106,6 +103,7 @@ const Attachments = ({ isEditQuickOrder }: NewAttachmentGroupProps) => {
         onDownload={handleDownload}
         className="max-w-4xl mx-auto"
         isEditQuickOrder={isEditQuickOrder}
+        isResourceGroupAttchment={isResourceGroupAttchment}
       />
 
     </div>

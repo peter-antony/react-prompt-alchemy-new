@@ -194,16 +194,52 @@ function setAttachments(attachments: any) {
 
 function pushAttachments(attachments: any) {
   if (
+    resourceJsonData &&
+    resourceJsonData.Attachments
+  ) {
+    if (!Array.isArray(resourceJsonData.Attachments.AttachItems)) {
+      resourceJsonData.Attachments.AttachItems = [];
+    }
+    resourceJsonData.Attachments.AttachItems.push(attachments);
+    resourceJsonData.Attachments.TotalAttachment = resourceJsonData.Attachments.AttachItems.length;
+    return true;
+  }
+  return false;
+}
+
+function getResourceGroupAttachments() {
+  if (
+    resourceJsonData &&
+    resourceJsonData.Attachments
+  ) {
+    return resourceJsonData.Attachments.AttachItems;
+  }
+  return undefined;
+}
+
+function setResourceGroupAttachments(attachments: any) {
+  if (
+    resourceJsonData &&
+    resourceJsonData.Attachments
+  ) {
+    resourceJsonData.Attachments = attachments;
+    return true;
+  }
+  return false;
+}
+
+function pushResourceGroupAttachments(attachments: any) {
+  if (
     jsonData &&
     jsonData.ResponseResult &&
     jsonData.ResponseResult.QuickOrder &&
-    jsonData.ResponseResult.QuickOrder.Attachments
+    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments
   ) {
-    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments.AttachItems)) {
-      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems = [];
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems)) {
+      jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems = [];
     }
-    jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.push(attachments);
-    jsonData.ResponseResult.QuickOrder.Attachments.TotalAttachment = jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.length;
+    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems.push(attachments);
+    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.TotalAttachment = jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems.length;
     return true;
   }
   return false;
@@ -635,6 +671,9 @@ const jsonStore = {
   getAttachments,
   setAttachments,
   pushAttachments,
+  getResourceGroupAttachments,
+  setResourceGroupAttachments,
+  pushResourceGroupAttachments,
   getPlanDetails,
   setPlanDetails,
   getActualDetails,

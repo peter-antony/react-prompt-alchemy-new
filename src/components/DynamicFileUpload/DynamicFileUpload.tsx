@@ -36,10 +36,6 @@ const defaultConfig: FileUploadConfig = {
   filesEndpoint: '/api/files'
 };
 
-interface DynamicFileGroupProps {
-  
-}
-
 // const DynamicFileUpload = ({ isEditQuickOrder }: DynamicFileGroupProps) => ({
 const DynamicFileUpload: React.FC<FileUploadProps> = ({
   config = {},
@@ -48,6 +44,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   onDownload,
   className = '',
   isEditQuickOrder,
+  isResourceGroupAttchment,
 }) => {
   const finalConfig = { ...defaultConfig, ...config };
   const { toast } = useToast();
@@ -69,24 +66,28 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   useEffect(() => {
     const fullJson = jsonStore.getJsonData();
     console.log("uploaded JSON :: ", isEditQuickOrder);
-    setLoadedFiles(jsonStore.getAttachments());    
+    console.log("uploaded JSON :: ", isResourceGroupAttchment);
+    if(isResourceGroupAttchment){
+      setLoadedFiles(jsonStore.getResourceGroupAttachments());    
+    }else{
+      setLoadedFiles(jsonStore.getAttachments());  
+    }  
     console.log("loadedFiles---- :: ", loadedFiles);
     // Simulate successful upload by moving to uploaded files
-    if(isEditQuickOrder || (loadedFiles != undefined && loadedFiles.length <= 1)){
-      if(loadedFiles != undefined){
-        const newUploadedGetFiles: UploadedFile[] = loadedFiles.map(file => ({
-          id: file.AttachItemID,
-          fileName: file.AttachName,
-          fileType: file.AttachmentType,
-          category: file.FileCategory || '',
-          remarks: file.remarks || '',
-          // uploadDate: new Date().toISOString(),
-          // fileSize: file.file.size,
-          downloadUrl: `#download-${file.AttachItemID}`
-        }));
-        console.log("get loaded files ", newUploadedGetFiles);
-        setUploadedFiles(prev => [...prev, ...newUploadedGetFiles]);
-      }
+    if(loadedFiles != undefined && loadedFiles.length != 0){
+      console.log("true loadedFiles");
+      const newUploadedGetFiles: UploadedFile[] = loadedFiles.map(file => ({
+        id: file.AttachItemID,
+        fileName: file.AttachName,
+        fileType: file.AttachmentType,
+        category: file.FileCategory || '',
+        remarks: file.remarks || '',
+        // uploadDate: new Date().toISOString(),
+        // fileSize: file.file.size,
+        downloadUrl: `#download-${file.AttachItemID}`
+      }));
+      console.log("get loaded files ", newUploadedGetFiles);
+      setUploadedFiles(prev => [...prev, ...newUploadedGetFiles]);
     }
   }, [loadedFiles]);
 
