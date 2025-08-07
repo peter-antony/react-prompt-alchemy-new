@@ -40,9 +40,9 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
               variant="ghost"
               onClick={config.onClick}
               disabled={config.disabled || config.loading}
-              className="font-medium transition-colors border border-gray-300 px-3 py-2 text-sm rounded-lg"
+              className="font-medium transition-colors border border-gray-300 px-2 py-2 h-8 text-sm rounded-lg"
               onMouseEnter={() => setShowPopover(true)}
-              // onMouseLeave={() => setShowPopover(false)}
+              onMouseLeave={() => setShowPopover(false)}
             >
               {config.loading ? "Loading..." : getIconButton()}
             </Button>
@@ -60,7 +60,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
           variant="ghost"
           onClick={config.onClick}
           disabled={config.disabled || config.loading}
-          className="font-medium transition-colors border border-gray-300 px-3 py-2 text-sm rounded-lg"
+          className="font-medium transition-colors border border-gray-300 h-8 px-2 py-2 text-sm rounded-lg"
         >
           {config.loading ? "Loading..." : getIconButton()}
         </Button>

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,10 @@ import NotFound from "./pages/NotFound";
 import QuickOrderManagement from "./pages/QuickOrderManagement";
 import CreateQuickOrder from "./pages/createQuickOrder";
 import JsonCreater from "./pages/JsonCreater";
+import SignIn from "./pages/SignIn";
+import OAuthCallback from "./pages/OAuthCallback";
+import ProtectedRoute from "./components/ProtectedRoute";
+import SignOut from "./pages/SignOut";
 
 const queryClient = new QueryClient();
 
@@ -32,13 +35,49 @@ const App = () => (
       <BrowserRouter basename="/Forwardis-dev/">
         <Routes>
           {/* <Route path="/" element={<Index />} /> */}
-          <Route path={ROUTES.HOME} element={<QuickOrderManagement />} />
-          <Route path="quick-order" element={<QuickOrderManagement />} />
-          <Route path="trip-plans-search-hub" element={<TripPlansSearchHub />} />
-          <Route path="trip-search-api" element={<TripPlansSearchHubAPI />} />
-          <Route path="create-quick-order" element={<CreateQuickOrder />} />
-          <Route path="json-creater" element={<JsonCreater />} />
-          <Route path="dynamic-panel-demo-clone" element={<DynamicPanelDemoClone />} />
+          
+          {/* Protected Routes - require token */}
+          <Route path={ROUTES.HOME} element={
+            <ProtectedRoute>
+              <QuickOrderManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="quick-order" element={
+            <ProtectedRoute>
+              <QuickOrderManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="trip-plans-search-hub" element={
+            <ProtectedRoute>
+              <TripPlansSearchHub />
+            </ProtectedRoute>
+          } />
+          <Route path="trip-search-api" element={
+            <ProtectedRoute>
+              <TripPlansSearchHubAPI />
+            </ProtectedRoute>
+          } />
+          <Route path="create-quick-order" element={
+            <ProtectedRoute>
+              <CreateQuickOrder />
+            </ProtectedRoute>
+          } />
+          <Route path="json-creater" element={
+            <ProtectedRoute>
+              <JsonCreater />
+            </ProtectedRoute>
+          } />
+          <Route path="dynamic-panel-demo-clone" element={
+            <ProtectedRoute>
+              <DynamicPanelDemoClone />
+            </ProtectedRoute>
+          } />
+          
+          {/* Public Routes - no token required */}
+          <Route path={ROUTES.SIGNIN} element={<SignIn />} />
+          <Route path={ROUTES.OAUTH_CALLBACK} element={<OAuthCallback />} />
+          <Route path={ROUTES.SIGNOUT} element={<SignOut />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

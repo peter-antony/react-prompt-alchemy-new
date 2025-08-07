@@ -49,7 +49,7 @@ const QuickOrderManagement = () => {
   const [searchFilters, setSearchFilters] = useState<Record<string, any>>({});
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { setFooter, resetFooter } = useFooterStore();
+  const { config, setFooter, resetFooter } = useFooterStore();
   const [popupOpen, setPopupOpen] = useState(false);
   const [fields, setFields] = useState([
     {
@@ -562,7 +562,7 @@ const QuickOrderManagement = () => {
             </div>
 
             {/* Grid Container */}
-            <div className="rounded-lg mt-4">
+            <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
               <SmartGrid
                 key={`grid-${gridState.forceUpdate}`}
                 parentPage="quickOrder"

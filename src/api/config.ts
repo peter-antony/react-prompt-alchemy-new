@@ -1,6 +1,7 @@
+const REACT_APP_API_URL = "https://c5x9m1w2-5000.inc1.devtunnels.ms/api";
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://c5x9m1w2-3001.inc1.devtunnels.ms/api',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || REACT_APP_API_URL,
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -63,4 +64,7 @@ export const ROUTES = {
   HOME: '/',
   DASHBOARD: '/dashboard',
   TRIP_EXECUTION: '/trip-execution',
+  SIGNIN: '/signin',
+  SIGNOUT: '/signout',
+  OAUTH_CALLBACK: '/callback',
 } as const;

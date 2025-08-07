@@ -28,7 +28,7 @@ const TripPlansSearchHub = () => {
 
   const gridState = useSmartGridState();
   const { toast } = useToast();
-  const { setFooter, resetFooter } = useFooterStore();
+  const { config, setFooter, resetFooter } = useFooterStore();
 
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
@@ -440,7 +440,7 @@ const TripPlansSearchHub = () => {
             </div>
 
             {/* Grid Container */}
-            <div className="rounded-lg mt-4">
+            <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
               <SmartGrid
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
