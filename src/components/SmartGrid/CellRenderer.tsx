@@ -323,26 +323,25 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     }
 
     return (
-      <div className="flex items-center justify-center w-full">
+      <>
         {column.actionButtons.map((button, index) => {
           const isDisabled = typeof button.disabled === 'function' 
             ? button.disabled(row) 
             : button.disabled || false;
 
           const buttonElement = (
-            <Button
+            <button
               key={index}
-              variant={button.variant || 'ghost'}
-              size={button.size || 'sm'}
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 button.onClick(row);
               }}
               disabled={isDisabled}
-              className="h-8 w-8 p-0 hover:bg-gray-100 rotate-90"
+              className="h-6 w-6 p-0 bg-transparent border-none"
             >
               {button.icon}
-            </Button>
+            </button>
           );
 
           if (button.tooltip) {
@@ -360,7 +359,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
           return buttonElement;
         })}
-      </div>
+      </>
     );
   };
 
@@ -413,7 +412,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="flex items-center min-w-0 w-full">
+      <div className={`flex items-center min-w-0 w-full ${column.type === 'ActionButton' ? 'justify-center' : ''}`}>
         {renderCellContent()}
       </div>
     </TooltipProvider>

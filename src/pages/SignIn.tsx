@@ -136,22 +136,25 @@ const SignIn: React.FC = () => {
   };
 
   // Check for OAuth callback or start OAuth flow on component mount
-  useEffect(() => {
-    // const delay = setTimeout(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
-      
-      if (code) {
-        // Handle OAuth callback
-        handleOAuthCallback();
-      } else {
-        // Start OAuth flow automatically
-        startPKCEFlow();
-      }
-    // }, 2000);
 
-    // return () => clearTimeout(delay);
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      // const urlParams = new URLSearchParams(window.location.search);
+      // const code = urlParams.get("code");
+      
+      // if (code) {
+        // Handle OAuth callback
+        // handleOAuthCallback();
+      // } else {
+        // Start OAuth flow automatically
+        // startPKCEFlow();
+      // }
+      navigate(ROUTES.HOME, { replace: true });
+    }, 2000);
+
+    return () => clearTimeout(delay);
   }, []);
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white">

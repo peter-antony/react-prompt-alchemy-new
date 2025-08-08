@@ -137,6 +137,14 @@ const QuickOrderManagement = () => {
     return () => resetFooter();
   }, []);
 
+  const GitPullActionButton = () => {
+    return (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.5 1.5V10C1.5 11.4001 1.5 12.1002 1.77248 12.635C2.01217 13.1054 2.39462 13.4878 2.86502 13.7275C3.3998 14 4.09987 14 5.5 14H11.5M11.5 14C11.5 15.3807 12.6193 16.5 14 16.5C15.3807 16.5 16.5 15.3807 16.5 14C16.5 12.6193 15.3807 11.5 14 11.5C12.6193 11.5 11.5 12.6193 11.5 14ZM1.5 5.66667L11.5 5.66667M11.5 5.66667C11.5 7.04738 12.6193 8.16667 14 8.16667C15.3807 8.16667 16.5 7.04738 16.5 5.66667C16.5 4.28595 15.3807 3.16667 14 3.16667C12.6193 3.16667 11.5 4.28596 11.5 5.66667Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
   const initialColumns: GridColumnConfig[] = [
     {
       key: 'QuickOrderNo',
@@ -226,7 +234,7 @@ const QuickOrderManagement = () => {
         //   size: 'sm'
         // },
         {
-          icon: <GitPullRequest className="h-8 w-8" />,
+          icon: <GitPullActionButton />,
           tooltip: 'Order',
           onClick: (rowData) => {
             console.log('clicked for:', rowData);
@@ -358,7 +366,7 @@ const QuickOrderManagement = () => {
 
   // Initialize columns and data
   useEffect(() => {
-    
+
     gridState.setColumns(initialColumns);
     gridState.setLoading(true); // Set loading state
     setApiStatus('loading');
@@ -375,7 +383,7 @@ const QuickOrderManagement = () => {
 
         // Handle paginated response structure - try different possible response formats
         const data = response?.ResponseResult || response?.data || response?.result || response;
-        
+
         if (!data || !Array.isArray(data)) {
           console.warn('API returned invalid data format:', response);
           console.warn('Expected array but got:', typeof data, data);

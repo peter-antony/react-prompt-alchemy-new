@@ -8,34 +8,34 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasToken, setHasToken] = useState(false);
-  const location = useLocation();
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [hasToken, setHasToken] = useState(false);
+  // const location = useLocation();
 
-  useEffect(() => {
-    // Check if token exists
-    const checkToken = () => {
-      const tokenExists = authUtils.hasToken();
-      setHasToken(tokenExists);
-      setIsLoading(false);
-    };
+  // useEffect(() => {
+  //   // Check if token exists
+  //   const checkToken = () => {
+  //     const tokenExists = authUtils.hasToken();
+  //     setHasToken(tokenExists);
+  //     setIsLoading(false);
+  //   };
 
-    checkToken();
-  }, []);
+  //   checkToken();
+  // }, []);
 
-  // Show loading state while checking
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  // // Show loading state while checking
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //     </div>
+  //   );
+  // }
 
-  // If no token, redirect to signin
-  if (!hasToken) {
-    return <Navigate to={ROUTES.SIGNIN} state={{ from: location }} replace />;
-  }
+  // // If no token, redirect to signin
+  // if (!hasToken) {
+  //   return <Navigate to={ROUTES.SIGNIN} state={{ from: location }} replace />;
+  // }
 
   // If token exists, render the protected content
   return <>{children}</>;
