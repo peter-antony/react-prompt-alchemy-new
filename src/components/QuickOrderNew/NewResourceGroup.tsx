@@ -129,7 +129,10 @@ const NewResourceGroup = ({ onAddResource, isEditQuickOrder }: NewResourceGroupP
 
       <SideDrawer isOpen={isMoreInfoOpen} onClose={() => closeResource()} width="100%" title="Resource Group Details" isBack={isBack}>
         <div className="text-sm text-gray-600">
-          <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} />
+          <ResourceGroupDetailsForm
+            isEditQuickOrder={isEditQuickOrder}
+            onSaveSuccess={closeResource} // <-- Pass the close function
+          />
         </div>
       </SideDrawer>
 

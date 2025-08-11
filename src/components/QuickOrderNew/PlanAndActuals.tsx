@@ -5,7 +5,9 @@ import { GridColumnConfig } from '@/types/smartgrid';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { useToast } from '@/hooks/use-toast';
 import jsonStore from "@/stores/jsonStore";
-
+import { useNavigate } from 'react-router-dom';
+import { SideDrawer } from '../Common/SideDrawer';
+import { PlanAndActualDetails } from "./PlanAndActualDetails";
 const summaryStats = [
   {
     icon: <Truck className="w-5 h-5 text-blue-500" />,
@@ -41,7 +43,7 @@ const initialColumns: GridColumnConfig[] = [
   {
     key: 'id',
     label: 'Wagon Id Type',
-    type: 'LinkWithText',
+    type: 'Link',
     sortable: true,
     editable: false,
     mandatory: true,
@@ -105,20 +107,28 @@ interface PlanAndActualListData {
   planFromToDate: string;
   price: string;
   draftBill: string;
+  PlanLineUniqueID?: string;
 }
 
 interface PlanAndActualsProps {
   view: string;
   resouceId?: string;
+  isEditQuickOrder?: boolean;
+
 }
 
-const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
+const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEditQuickOrder }) => {
   const [tab, setTab] = useState<"planned" | "actuals">("planned");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const gridState = useSmartGridState();
   const [planAndActualListData, setPlanAndActualListData] = useState<PlanAndActualListData[]>([]);
-
+  const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
+  const [planInfo, setPlanInfo] = useState({
+    keyName: null,
+    value: null,
+    resourceId: null,
+  });
   // Fetch and map plan data when resourceId changes
   useEffect(() => {
     const arr = jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId);
@@ -130,6 +140,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
       planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
       price: '$ 1395.00', // Replace with actual price if needed
       draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+      PlanLineUniqueID: plan.PlanLineUniqueID || '',
     }));
     setPlanAndActualListData(mapped);
     gridState.setColumns(initialColumns);
@@ -156,9 +167,17 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
       completed: false,
     },
   ];
-
-  const handleLinkClick = (value: any, row: any) => {
-    console.log('Link clicked:', value, row);
+  const navigate = useNavigate();
+  const handleLinkClick = (row: any, columnKey: any) => {
+    console.log('Link clicked:', columnKey, row.PlanLineUniqueID);
+    if (columnKey === 'id' && row.PlanLineUniqueID) {
+      setPlanInfo({
+        keyName: 'PlanLineUniqueID',  
+        value: row.PlanLineUniqueID,
+        resourceId: resouceId,
+      });
+      setIsPlanActualsOpen(true);
+    }
   };
 
   const handleUpdate = async (updatedRow: any) => {
@@ -320,6 +339,15 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId }) => {
           )}
         </div>
       </div>
+      {/* SideDrawer component */}
+      isPlanActualsOpen-{isPlanActualsOpen}
+      <SideDrawer isOpen={isPlanActualsOpen} onClose={() => setIsPlanActualsOpen(false)} width='85%' title="Plan and Actual Details" isBack={false}>
+        <div>
+          {/* <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)}></PlanAndActualDetails> */}
+          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder}  PlanInfo={planInfo}></PlanAndActualDetails>
+
+        </div>
+      </SideDrawer>
     </div>
   );
 };

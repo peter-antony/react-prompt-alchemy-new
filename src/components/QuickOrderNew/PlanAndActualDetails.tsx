@@ -49,6 +49,7 @@ import { useEffect } from 'react';
 interface PlanAndActualsDetailsProps {
   isEditQuickOrder?: boolean;
   resourceId?: string;
+  PlanInfo?: {},
   onCloseDrawer()
 }
 export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId }: PlanAndActualsDetailsProps) => {

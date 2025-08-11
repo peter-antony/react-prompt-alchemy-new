@@ -47,10 +47,11 @@ import { json } from 'stream/consumers';
 interface ResourceGroupDetailsFormProps {
   isEditQuickOrder?: boolean,
   resourceId?: string;
+  onSaveSuccess?: () => void; // <-- Add this
 }
 
 // const ResourceGroupDetailsForm = ({ open, onClose }: ResourceGroupDetailsFormProps) => {
-export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: ResourceGroupDetailsFormProps) => {
+export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveSuccess }: ResourceGroupDetailsFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
@@ -68,8 +69,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
     "Mumbai",
   ];
   const handleProceedToNext = () => {
-    onSaveDetails();
     setCurrentStep(2);
+    onSaveDetails();
   };
 
   const handleFirstStep = () => {
@@ -95,6 +96,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
   const basicDetailsRef = useRef<DynamicPanelRef>(null);
   const operationalDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
+  
   const onSaveDetails = () => {
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
@@ -167,8 +169,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
     }
-
-
+    if(currentStep==1){
+      //Closing ResourceGroupDetails Modal
+      if (onSaveSuccess) onSaveSuccess();
+    }
 
   }
 
@@ -190,9 +194,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
         OperationalLocation: data.OperationalLocation,
         DepartPoint: data.DepartPoint,
         ArrivalPoint: data.ArrivalPoint,
-        FromDate: (data.FromDate ? parseDDMMYYYY(data.FromDate) : ""),
+        FromDate:  "",
         FromTime: data.FromTime,
-        ToDate: (data.ToDate ? parseDDMMYYYY(data.ToDate) : ""),
+        ToDate: "",
         ToTime: data.ToTime,
         Remarks: data.Remarks,
       };
@@ -257,7 +261,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       fieldType: 'select',
       width: 'third',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 2,
@@ -279,7 +283,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       fieldType: 'select',
       width: 'third',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 3,
@@ -380,7 +384,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       fieldType: 'date',
       width: 'third',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 4
@@ -402,7 +406,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       fieldType: 'date',
       width: 'third',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 6
@@ -486,7 +490,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       fieldType: 'inputdropdown',
       width: 'half',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 4,
@@ -505,7 +509,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       id: 'BillingQty',
       label: 'Billing Qty.',
       fieldType: 'text',
-      value: '4',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
@@ -517,7 +521,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
       label: 'Tariff',
       fieldType: 'search',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 6,
@@ -959,7 +963,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId }: Resou
                 )}
                 {isPlanActualsVisible && (
                   <div className="">
-                    <PlanAndActuals view={view} resouceId={resourceId}/>
+                    <PlanAndActuals view={view} resouceId={resourceId} isEditQuickOrder={isEditQuickOrder}/>
                   </div>
                 )}
               </>

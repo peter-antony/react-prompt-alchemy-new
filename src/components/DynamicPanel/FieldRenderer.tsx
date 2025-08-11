@@ -13,13 +13,28 @@ interface FieldRendererProps {
   control: Control<any>;
   fieldId: string;
   tabIndex?: number;
+  mandatory:boolean
 }
+
+// Add this helper above your component:
+const getFieldBorderClass = (mandatory: boolean, value: any) => {
+  if (mandatory && value && value !== '' && !(typeof value === 'object' && Object.values(value).every(v => !v))) {
+    // Value entered for mandatory field: bright green border
+    return "border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.20)]";
+  }
+  if (mandatory) {
+    // Mandatory but empty: red border
+    return "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]";
+  }
+  return "";
+};
 
 export const FieldRenderer: React.FC<FieldRendererProps> = ({
   config,
   control,
   fieldId,
-  tabIndex
+  tabIndex,
+  mandatory
 }) => {
   // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
@@ -58,7 +73,10 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     );
   }
 
-  const baseInputClasses = "h-8 text-xs border-gray-300 focus:border-blue-500";
+  // Add this class for mandatory fields
+  const mandatoryBorderClass = mandatory ? "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]" : "";
+
+  const baseInputClasses = `h-8 text-xs border-gray-300 focus:border-blue-500 ${mandatoryBorderClass}`;
 
   // --- UPDATED: search fieldType with suggestions ---
   if (fieldType === 'search') {
@@ -82,6 +100,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               )
             : [];
 
+          const borderClass = getFieldBorderClass(mandatory, inputValue);
+
           return (
             <div className="relative focus-within:z-50">
               <Input
@@ -96,7 +116,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={placeholder || 'Search...'}
-                className={`${baseInputClasses} pr-8`}
+                className={`pr-8 h-8 text-xs border-gray-300 focus:border-blue-500 rounded-md ${borderClass}`}
                 tabIndex={tabIndex}
                 autoComplete="off"
               />
@@ -138,6 +158,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -146,7 +167,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className={baseInputClasses}
+                  className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
                   tabIndex={tabIndex}
                 />
               </div>
@@ -162,6 +183,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -169,7 +191,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className="min-h-[60px] text-xs border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none"
+                  className={`min-h-[60px] text-xs border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none ${borderClass}`}
                   tabIndex={tabIndex}
                 />
               </div>
@@ -229,6 +251,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -236,7 +259,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   <select
                     {...field}
                     {...eventHandlers}
-                    className="w-full h-8 px-3 text-xs rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none"
+                    className={`w-full h-8 px-3 text-xs rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none ${borderClass}`}
                     tabIndex={tabIndex}
                   >
                     <option value="">Select...</option>
@@ -265,6 +288,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -273,7 +297,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="date"
                     {...field}
                     {...eventHandlers}
-                    className={baseInputClasses}
+                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
                     tabIndex={tabIndex}
                   />
                   {/* <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -291,6 +315,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -299,7 +324,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="time"
                     {...field}
                     {...eventHandlers}
-                    className={baseInputClasses}
+                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
                     tabIndex={tabIndex}
                   />
                   {/* <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -317,6 +342,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           control={control}
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
+            const borderClass = getFieldBorderClass(mandatory, field.value);
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -334,7 +360,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       events?.onChange?.(value, e);
                     }}
                     placeholder="0.00"
-                    className={`${baseInputClasses} pl-6`}
+                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 pl-6 ${borderClass}`}
                     step="0.01"
                     tabIndex={tabIndex}
                   />
@@ -387,6 +413,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
             const fieldValue = field.value || {};
+            const borderClass = getFieldBorderClass(mandatory, fieldValue.input || fieldValue.dropdown);
 
             return (
               <div>
@@ -406,6 +433,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   onBlur={events?.onBlur}
                   onKeyDown={events?.onKeyDown}
                   onKeyUp={events?.onKeyUp}
+                  className={borderClass}
                 />
               </div>
             );

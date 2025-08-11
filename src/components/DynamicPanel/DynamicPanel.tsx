@@ -243,7 +243,10 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
     <form name={formName}>
       <div className="grid grid-cols-12 gap-4">
         {visibleFields.map(({ fieldId, config, tabIndex }) => (
-          <div key={fieldId} className={`space-y-1 ${getFieldWidthClass(config.width)}`}>
+          <div
+            key={fieldId}
+            className={`space-y-1 ${getFieldWidthClass(config.width)}`}
+          >
             <label className="text-xs font-medium text-gray-600 block">
               {config.label}
               {config.mandatory && (
@@ -255,11 +258,12 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
               control={control}
               fieldId={fieldId}
               tabIndex={tabIndex}
+              // Pass mandatory info
+              mandatory={config.mandatory}
             />
           </div>
         ))}
       </div>
-      
       {visibleFields.length === 0 && !showPreview && (
         <div className="text-center text-gray-500 py-8 text-sm">
           No visible fields configured. Click the settings icon to configure fields.
