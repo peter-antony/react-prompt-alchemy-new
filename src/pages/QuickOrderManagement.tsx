@@ -382,7 +382,9 @@ const QuickOrderManagement = () => {
         console.log('API Response:', response); // Debug log
 
         // Handle paginated response structure - try different possible response formats
-        const data = response?.ResponseResult || response?.data || response?.result || response;
+        // const data = response?.data?.ResponseData || response?.data || response?.result || response;
+        const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+        const data = parsedResponse.ResponseResult;
 
         if (!data || !Array.isArray(data)) {
           console.warn('API returned invalid data format:', response);
