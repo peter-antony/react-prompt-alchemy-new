@@ -69,6 +69,31 @@ export const quickOrderService = {
     return response.data;
   },
 
+  // Get master common data
+  getMasterCommonData: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const stringifyData = JSON.stringify({
+        context: {
+          MessageID: "12345",
+          MessageType: params?.messageType || "",
+          UserID: "ramcouser",
+          OUID: "4",
+          Role: "ramcorole",
+        },
+        AdditionalFilter: []
+      },);
+    const requestBody = {
+      "RequestData": stringifyData
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMMON,
+      requestBody
+    );
+    return response.data;
+  },
+
   // Get single quick order
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
     const requestBody = {

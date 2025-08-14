@@ -1,5 +1,5 @@
-// const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/api";
-const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1";
+const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
+// const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1";
 
 const token: any = localStorage.getItem("token");
 
@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/quick-orders/${id}`,
     DELETE: (id: string) => `/quick-orders/${id}`,
     APPROVE: (id: string) => `/quick-orders/${id}/approve`,
+    COMMON: "/common"
   },
   // Invoice management
   INVOICES: {
