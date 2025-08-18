@@ -64,7 +64,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         render={({ field }) => (
           <div>
             {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
-            <div className="text-xs text-gray-700 bg-gray-50 p-2 rounded border min-h-[32px] flex items-center">
+            <div className="text-[13px] text-gray-700 bg-gray-50 p-2 rounded border min-h-[32px] flex items-center">
               {field.value || '-'}
             </div>
           </div>
@@ -76,7 +76,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   // Add this class for mandatory fields
   const mandatoryBorderClass = mandatory ? "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]" : "";
 
-  const baseInputClasses = `h-8 text-xs border-gray-300 focus:border-blue-500 ${mandatoryBorderClass}`;
+  const baseInputClasses = `h-8 text-[13px] border-gray-300 focus:border-blue-500 ${mandatoryBorderClass}`;
 
   // --- UPDATED: search fieldType with suggestions ---
   if (fieldType === 'search') {
@@ -116,7 +116,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={placeholder || 'Search...'}
-                className={`pr-8 h-8 text-xs border-gray-300 focus:border-blue-500 rounded-md ${borderClass}`}
+                className={`pr-8 h-8 text-[13px] border-gray-300 focus:border-blue-500 rounded-md ${borderClass}`}
                 tabIndex={tabIndex}
                 autoComplete="off"
               />
@@ -167,7 +167,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
+                  className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
                   tabIndex={tabIndex}
                 />
               </div>
@@ -191,7 +191,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className={`min-h-[60px] text-xs border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none ${borderClass}`}
+                  className={`min-h-[60px] text-[13px] border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none ${borderClass}`}
                   tabIndex={tabIndex}
                 />
               </div>
@@ -232,7 +232,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         id={`${config.id}-${option.value}`}
                         tabIndex={index === 0 ? tabIndex : -1}
                       />
-                      <Label htmlFor={`${config.id}-${option.value}`} className="text-xs">
+                      <Label htmlFor={`${config.id}-${option.value}`} className="text-[13px]">
                         {option.label}
                       </Label>
                     </div>
@@ -259,7 +259,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   <select
                     {...field}
                     {...eventHandlers}
-                    className={`w-full h-8 px-3 text-xs rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none ${borderClass}`}
+                    className={`w-full h-8 px-3 text-[13px] rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none ${borderClass}`}
                     tabIndex={tabIndex}
                   >
                     <option value="">Select...</option>
@@ -297,7 +297,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="date"
                     {...field}
                     {...eventHandlers}
-                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
                     tabIndex={tabIndex}
                   />
                   {/* <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -324,7 +324,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="time"
                     {...field}
                     {...eventHandlers}
-                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
                     tabIndex={tabIndex}
                   />
                   {/* <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -347,7 +347,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <div className="relative focus-within:z-50">
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-[13px]">
                     €
                   </span>
                   <Input
@@ -360,7 +360,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       events?.onChange?.(value, e);
                     }}
                     placeholder="0.00"
-                    className={`h-8 text-xs border-gray-300 focus:border-blue-500 pl-6 ${borderClass}`}
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-6 ${borderClass}`}
                     step="0.01"
                     tabIndex={tabIndex}
                   />

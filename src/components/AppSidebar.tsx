@@ -2,6 +2,9 @@
 import React from 'react';
 import { Home, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import MenuIcon2 from '../assets/images/Menu-2.svg';
+import MenuIcon3 from '../assets/images/Menu-3.svg';
+import MenuIcon4 from '../assets/images/Menu-4.svg';
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -20,9 +23,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
   const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
     // { icon: Package, label: 'Inventory', path: '/quick-order' },
-    { icon: Package, label: 'Inventory', path: '/json-creater' },
-    { icon: MapPinned, label: 'Route Management', path: '/trip-plans-search-hub' },
-    { icon: Truck, label: 'Fleet Management', path: '/dynamic-panel-demo-clone' },
+    { icon: MenuIcon2, label: 'Inventory', path: '/json-creater' },
+    { icon: MenuIcon3, label: 'Route Management', path: '/trip-plans-search-hub' },
+    { icon: MenuIcon4, label: 'Fleet Management', path: '/dynamic-panel-demo-clone' },
   ];
 
   return (
@@ -44,7 +47,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
             ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`
           }
         >
-          <item.icon size={20} />
+          {typeof item.icon === 'string' ? (
+            <img src={item.icon} alt={item.label} />
+          ) : (
+            <item.icon size={20} />
+          )}
         </NavLink>
       ))}
       </div>

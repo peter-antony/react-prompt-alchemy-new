@@ -31,7 +31,7 @@ body::-webkit-scrollbar-thumb {
   --badge-padding: 2px 8px 2px 8px;
 
   /* Badge blue */
-  --badge-text-blue: #0068cf;
+  --badge-text-blue: #0073E6;
   --badge-bg-blue: #eaf4ff;
   --badge-border-blue: #afd7ff;
 
@@ -91,7 +91,7 @@ body::-webkit-scrollbar-thumb {
 }
 .text-blue-500 {
   --tw-text-opacity: 1;
-  color: #0068cf;
+  color: #0073E6;
 }
 .text-gray-600 {
   color: var(--text-gray-600);

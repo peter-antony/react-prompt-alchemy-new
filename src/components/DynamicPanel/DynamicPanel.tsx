@@ -247,7 +247,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
             key={fieldId}
             className={`space-y-1 ${getFieldWidthClass(config.width)}`}
           >
-            <label className="text-xs font-medium text-gray-600 block">
+            <label className="text-[13px] font-medium text-gray-600 block">
               {config.label}
               {config.mandatory && (
                 <span className="text-red-500 ml-1">*</span>
