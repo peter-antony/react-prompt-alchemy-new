@@ -123,7 +123,7 @@ const TripPlansSearchHub = () => {
   };
   const columns: GridColumnConfig[] = [
     {
-      key: "id",
+      key: "TripPlanID",
       label: "Trip Plan No",
       type: "Link",
       sortable: true,
@@ -132,7 +132,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "status",
+      key: "Status",
       label: "Status",
       type: "Badge",
       sortable: true,
@@ -140,7 +140,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "tripBillingStatus",
+      key: "TripBillingStatus",
       label: "Trip Billing Status",
       type: "Badge",
       sortable: true,
@@ -148,7 +148,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "plannedStartEndDateTime",
+      key: "PlannedStartDateandTime",
       label: "Planned Start and End Date Time",
       type: "DateTimeRange",
       sortable: true,
@@ -156,7 +156,7 @@ const TripPlansSearchHub = () => {
       subRow: true,
     },
     {
-      key: "actualStartEndDateTime",
+      key: "ActualdateandtimeStart",
       label: "Actual Start and End Date Time",
       type: "DateTimeRange",
       sortable: true,
@@ -164,7 +164,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "departurePoint",
+      key: "From",
       label: "Departure Point",
       type: "Text",
       sortable: true,
@@ -172,7 +172,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "arrivalPoint",
+      key: "To",
       label: "Arrival Point",
       type: "Text",
       sortable: true,
@@ -180,7 +180,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "customer",
+      key: "BookingRequests",
       label: "Customer",
       type: "CustomerCountBadge",
       sortable: true,
@@ -188,7 +188,7 @@ const TripPlansSearchHub = () => {
       subRow: false,
     },
     {
-      key: "draftBill",
+      key: "DraftBillNo",
       label: "Draft Bill",
       type: "Link",
       sortable: true,
@@ -212,7 +212,7 @@ const TripPlansSearchHub = () => {
         console.log('API Response:', response); // Debug log
 
         // Handle paginated response structure
-        const data = response?.data || response;
+        const data = response?.data.ResponseData || response;
 
         if (!data || !Array.isArray(data)) {
           console.warn('API returned invalid data format:', response);

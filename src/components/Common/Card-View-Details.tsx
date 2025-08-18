@@ -13,12 +13,18 @@ interface CardStatus {
     label: string;
     color: string;
     bg: string;
+    statusColor: string;
 }
 
+// const statusMap: Record<string, CardStatus> = {
+//     Approved: { label: "Approved", color: "text-green-600", bg: "bg-green-50" },
+//     Failed: { label: "Failed", color: "text-red-600", bg: "bg-red-50" },
+//     "Under Amendment": { label: "Under Amendment", color: "text-orange-600", bg: "bg-orange-50" },
+// };
 const statusMap: Record<string, CardStatus> = {
-    Approved: { label: "Approved", color: "text-green-600", bg: "bg-green-50" },
-    Failed: { label: "Failed", color: "text-red-600", bg: "bg-red-50" },
-    "Under Amendment": { label: "Under Amendment", color: "text-orange-600", bg: "bg-orange-50" },
+    Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
+    Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
+    "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
 };
 
 export interface CardDetailsItem {
@@ -38,15 +44,16 @@ export interface CardDetailsItem {
 
 interface CardDetailsProps {
     data: CardDetailsItem[];
-    isEditQuickOrder:boolean;
+    isEditQuickOrder: boolean;
+    showMenuButton?: boolean; // New prop to control menu button visibility
 }
 
-const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
+const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showMenuButton = true }) => {
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
-    const [isResourceGroup , setResourceGroupOpen] = useState({
+    const [isResourceGroup, setResourceGroupOpen] = useState({
         isResourceGroupOpen: false,
-        ResourceUniqueID:"0"
+        ResourceUniqueID: "0"
     });
     const [isBack, setIsBack] = useState(true);
     // Close menu on outside click
@@ -78,7 +85,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                                     <UsersRound className="w-4 h-4 text-violet-500" />
                                 </span>
                                 <div>
-                                <div className="font-semibold text-sm"  onClick={() => setResourceGroupOpen({isResourceGroupOpen:true,ResourceUniqueID:item.ResourceUniqueID})}>title- {item.ResourceUniqueID}</div>
+                                    <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>title- {item.ResourceUniqueID}</div>
                                     {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
                                     <div className="text-xs text-gray-400">subtitle :{item.BasicDetails.Resource}</div>
                                 </div>
@@ -88,12 +95,14 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                             {/* <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item.status].color} ${statusMap[item.status].bg}`}>
                                 {statusMap[item.status].label}
                             </span> */}
+                            {showMenuButton && (
                             <button
                                 className="p-1"
                                 onClick={() => setOpenMenuId(openMenuId === item.ResourceUniqueID ? null : item.ResourceUniqueID)}
                             >
                                 <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
                             </button>
+                            )}
                             {openMenuId === item.ResourceUniqueID && (
                                 <div
                                     ref={menuRef}
@@ -141,12 +150,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
                         <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
                             <Calendar className="w-4 h-4 text-gray-600" />
                             <span className="truncate cursor-pointer">
-                              {item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}
+                                {item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}
                             </span>
-                             {/* <span className="truncate cursor-pointer">
+                            {/* <span className="truncate cursor-pointer">
                                 {item.date}
                             </span> */}
-                            
+
                             <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                                 <div className="px-3 py-2">
                                     <div className="font-semibold mb-1">From and To Date</div>
@@ -195,7 +204,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data,isEditQuickOrder }) => {
             ))}
             <SideDrawer
                 isOpen={isResourceGroup.isResourceGroupOpen}
-                onClose={() => setResourceGroupOpen({isResourceGroupOpen:false,ResourceUniqueID:"0"})}
+                onClose={() => setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0" })}
                 width="100%"
                 title="Resource Group Details"
                 isBack={isBack}
