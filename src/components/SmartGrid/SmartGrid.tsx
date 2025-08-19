@@ -839,7 +839,7 @@ export function SmartGrid({
                     <TableHead
                       key={column.key}
                       className={cn(
-                        "relative group bg-gray-200 backdrop-blur-sm font-semibold text-gray-900 px-1 py-3 border-r border-gray-100 last:border-r-0",
+                        "relative group bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 pl-1 py-0 pr-0 border-r border-gray-100 last:border-r-0",
                         draggedColumn === column.key && "opacity-50",
                         dragOverColumn === column.key && "bg-blue-100 border-blue-300",
                         resizingColumn === column.key && "bg-blue-50",
@@ -882,7 +882,7 @@ export function SmartGrid({
                           ) : (
                             <div
                               className={cn(
-                                "flex items-center gap-1 rounded px-1 py-0.5 -mx-1 -my-0.5 transition-colors group/header flex-1 min-w-0",
+                                "flex items-center gap-1 rounded px-1 py-0 -mx-1 -my-0.5 transition-colors group/header flex-1 min-w-0",
                                 !resizingColumn && "cursor-pointer hover:bg-gray-100/50"
                               )}
                               onClick={(e) => {
@@ -1064,7 +1064,7 @@ export function SmartGrid({
                         return (
                           <TableCell
                             key={column.key}
-                            className="relative px-3 py-3 border-r border-gray-50 last:border-r-0 align-middle"
+                            className="relative text-[13px] pl-3 py-2 border-r border-gray-50 last:border-r-0 align-middle"
                             style={{
                               width: `${widthPercentage}%`,
                               minWidth: `${Math.max(80, column.width * 0.8)}px`,

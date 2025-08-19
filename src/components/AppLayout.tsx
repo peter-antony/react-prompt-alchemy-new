@@ -23,12 +23,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <div className="min-h-screen bg-gray-50 flex">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col min-w-0 ml-16">
-          <div className="fixed top-0 right-0 left-16 z-10">
+        <div className="flex-1 flex flex-col min-w-0 ml-[60px]">
+          <div className="fixed top-0 right-0 left-[60px] z-10">
             <AppHeader />
           </div>
           
-          <main className={`flex-1 overflow-auto mt-16 ${config.visible ? 'padding-bottom-4r' : ''}`}>
+          <main className={`flex-1 overflow-auto mt-[60px] ${config.visible ? 'padding-bottom-4r' : ''}`}>
             {children}
           </main>
 

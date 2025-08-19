@@ -162,11 +162,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     setLoading(true);
     setError(null);
     try {
+      console.log("load data");
       const data = await quickOrderService.getMasterCommonData({ messageType: messageType });
       setApiData(data);
       if (messageType == "Contract Init") {
         setContracts(apiData.data.ResponseData);
-        console.log("Contracts data:", apiData.data.ResponseData);
+        console.log("Contracts data:===", apiData.data.ResponseData);
       }
       if (messageType == "Customer Init") {
         setCustomers(apiData.data.ResponseData);
