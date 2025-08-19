@@ -21,6 +21,7 @@ import { useEffect } from 'react';
 import Toast from '../../Common/Toast';
 import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
+import { quickOrderService } from '@/api/services/quickOrderService';
 
 interface OrderFormProps {
   onSaveDraft: () => void;
@@ -44,67 +45,68 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [selectedQC, setSelectedQC] = useState("QC");
   const [qcDropdown, setQcDropdown] = useState('QC');
   const [qcInput, setQcInput] = useState('');
-  // useEffect(() => {
-  //   const quickOrder = jsonStore.getQuickOrder();
-  //     console.log("Inside USE EFFECT : ",quickOrder)
-  //   if (isEditQuickOrder) {
-  //     setFormData(normalizeOrderFormDetails(quickOrder));
-  //   }
-  // }, []);
-
-
 
   //Contracts Array
-  const contracts = [
-    {
-      "id": 1,
-      "name": "DB Cargo",
-      "seqNo": 1,   // Optional
-      "default": "Y",   // Optional
-      "description": "db-cargo" // Optional
-    },
-    {
-      "id": 2,
-      "name": "Rail Freight",
-      "seqNo": 2,
-      "default": "N",
-      "description": "rail-freight"
-    },
-    {
-      "id": 3,
-      "name": "Express Logistics",
-      "seqNo": 3,
-      "default": "N",
-      "description": "express-logistics"
-    }
+  const [contracts, setContracts] = useState<any[]>([]);
+  //  = [
+  //   {
+  //     "id": 1,
+  //     "name": "DB Cargo",
+  //     "seqNo": 1,   // Optional
+  //     "default": "Y",   // Optional
+  //     "description": "db-cargo" // Optional
+  //   },
+  //   {
+  //     "id": 2,
+  //     "name": "Rail Freight",
+  //     "seqNo": 2,
+  //     "default": "N",
+  //     "description": "rail-freight"
+  //   },
+  //   {
+  //     "id": 3,
+  //     "name": "Express Logistics",
+  //     "seqNo": 3,
+  //     "default": "N",
+  //     "description": "express-logistics"
+  //   }
 
-  ]
+  // ]
   //Customers Array
-  const customers = [
-    {
-      "id": 1,
-      "name": "DB Cargo",
-      "seqNo": 1,   // Optional
-      "default": "Y",   // Optional
-      "description": "db-cargo" // Optional
-    },
-    {
-      "id": 2,
-      "name": "Global Logistics",
-      "seqNo": 2,
-      "default": "N",
-      "description": "global-logistics"
-    },
-    {
-      "id": 3,
-      "name": "Freight Solutions",
-      "seqNo": 3,
-      "default": "N",
-      "description": "freight-solutions"
-    }
+  const [customers, setCustomers] = useState<any[]>([]);
+  //  = [
+  //   {
+  //     "id": 1,
+  //     "name": "C0012",
+  //     "seqNo": 1,   // Optional
+  //     "default": "Y",   // Optional
+  //     "description": "DB-Cargo" // Optional
+  //   },
+  //   {
+  //     "id": 2,
+  //     "name": "C0013",
+  //     "seqNo": 2,
+  //     "default": "N",
+  //     "description": "Global-Logistics"
+  //   },
+  //   {
+  //     "id": 3,
+  //     "name": "C0014",
+  //     "seqNo": 3,
+  //     "default": "N",
+  //     "description": "Freight-Solutions"
+  //   },
+  //   {
+  //     "id": 4,
+  //     "name": "C0015",
+  //     "seqNo": 3,
+  //     "default": "N",
+  //     "description": "Logistic-solutions"
+  //   }
 
-  ]
+  // ]
   //QC List Array
+  const [clusters, setClusters] = useState<any[]>([]);
   const QCList = [
     {
       "id": 1,
@@ -130,8 +132,20 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
   ]
 
-
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messageTypes = [
+    "Cluster Init",
+    "Contract Init",
+    "Customer Init",
+  ];
+  const [selectedType, setSelectedType] = useState(messageTypes[0]);
   useEffect(() => {
+    fetchAll();
+  }, []);
+  useEffect(() => {
+    
     const quickOrder = jsonStore.getQuickOrder();
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
       setOrderType(quickOrder.OrderType || 'buy');
@@ -142,7 +156,37 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setFormData(normalizeOrderFormDetails({}));
       setmoreInfoData(normalizeMoreInfoDetails({}));
     }
-  }, [isEditQuickOrder]);
+  }, [isEditQuickOrder, loading, contracts, customers, clusters]);
+  //API Call for dropdown data
+  const fetchData = async (messageType) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      setApiData(data);
+      if (messageType == "Contract Init") {
+        setContracts(apiData.data.ResponseData);
+        console.log("Contracts data:", apiData.data.ResponseData);
+      }
+      if (messageType == "Customer Init") {
+        setCustomers(apiData.data.ResponseData);
+      }
+      if (messageType == "Cluster Init") {
+        setClusters(apiData.data.ResponseData);
+      }
+    } catch (err) {
+      setError(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+    for (const type of messageTypes) {
+      await fetchData(type);
+    }
+  };
   // Local array of order IDs for suggestions
   const orderIds = [
     'IO/0000000042',
@@ -171,7 +215,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [isCopyModalOpen, setCopyModalOpen] = useState(false);
 
   const [OrderFormTitle, setOrderFormTitle] = useState('Order Details');
-   const getInitialOrderDetails = () =>
+  const getInitialOrderDetails = () =>
     isEditQuickOrder
       ? normalizeOrderFormDetails(jsonStore.getQuickOrder() || {})
       : {};
@@ -197,10 +241,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 1,
       events: {
-        onChange: (val: string) =>{
+        onChange: (val: string) => {
           setOrderType(val), // To update state on change
-          getOrderFormDetailsConfig(OrderType);
-        } 
+            getOrderFormDetailsConfig(OrderType);
+        }
 
       }
     },
@@ -234,10 +278,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'half',
       value: '',
       mandatory: true,
-      visible: OrderType === 'buy',
+      visible: OrderType === 'sell',
       editable: true,
       order: 4,
-      options: customers.map(c => ({ label: c.name, value: c.name })),
+      options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
     },
     Vendor: {
       id: 'Vendor',
@@ -246,7 +290,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'half',
       value: '',
       mandatory: true,
-      visible: OrderType === 'sell',
+      visible: OrderType === 'buy',
       editable: true,
       order: 4,
       options: customers.map(c => ({ label: c.name, value: c.name })),
@@ -261,10 +305,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 5,
-      options: [
-        { label: '10000406', value: '10000406' },
-        { label: '10000407', value: '10000407' }
-      ],
+      options: clusters.map(c => ({ label: c.name, value: c.name })),
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
@@ -509,7 +550,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [moreInfoTitle, setmoreInfoTitle] = useState('More Info');
   const initialMoreInfoDetails = normalizeMoreInfoDetails(jsonStore.getQuickOrder() || {});
   const [moreInfoData, setmoreInfoData] = useState(initialMoreInfoDetails);
-    // Utility to normalize MoreInfo details from store to config field IDs
+  // Utility to normalize MoreInfo details from store to config field IDs
   function normalizeMoreInfoDetails(data) {
     return {
       PrimaryDocTypeandNo: data.PrimaryDocTypeandNo,
@@ -541,13 +582,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const handleMoreInfoDataChange = (updatedData: any) => {
     console.log("Updated form data:", updatedData.OrderType);
   };
-  const copyDetails = ()=>{
-    
+  const copyDetails = () => {
+
   }
   return (
     <div className='bg-white rounded-lg border border-gray-200'>
       <div className={`${onScroll ? 'orderFormScroll' : ''}`}>
-      {/* <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+
+        {/* <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
         Order Details
         {isEditQuickOrder && quickOrder && (
           <>
@@ -560,20 +602,22 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           </>
         )}
       </h2> */}
-      <DynamicPanel
-        ref={orderDetailsRef}
-        key={OrderType} // <-- This will force remount on orderType change
-        panelId={OrderType}
-        panelTitle="Order Details"
-        panelConfig={getOrderFormDetailsConfig(OrderType)}
-        initialData={formData}
-        onTitleChange={setOrderFormTitle}
-        getUserPanelConfig={getUserPanelConfig}
-        saveUserPanelConfig={saveUserPanelConfig}
-        userId="current-user"
-        className="my-custom-orderform-panel"
-      />
-    </div>
+        {!loading ?
+          <DynamicPanel
+            ref={orderDetailsRef}
+            key={OrderType} // <-- This will force remount on orderType change
+            panelId={OrderType}
+            panelTitle="Order Details"
+            panelConfig={getOrderFormDetailsConfig(OrderType)}
+            initialData={formData}
+            onTitleChange={setOrderFormTitle}
+            getUserPanelConfig={getUserPanelConfig}
+            saveUserPanelConfig={saveUserPanelConfig}
+            userId="current-user"
+            className="my-custom-orderform-panel"
+          /> : ''
+        }
+      </div>
 
 
 
@@ -627,7 +671,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       </SideDrawer>
       <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
         <div className="">
-          <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={false}/></div>
+          <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={false} /></div>
         </div>
       </SideDrawer>
       <SideDrawer isOpen={isHistoryOpen} onClose={() => setHistoryOpen(false)} width="40%" title="Amendment History" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
