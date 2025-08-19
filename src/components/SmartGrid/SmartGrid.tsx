@@ -356,11 +356,11 @@ export function SmartGrid({
   }, [processedData, orderedColumns, toast]);
 
   const handleResetPreferences = useCallback(async () => {
-    const defaultPreferences = {
+    const defaultPreferences: any = {
       columnOrder: currentColumns.map(col => col.key),
       hiddenColumns: [],
       columnWidths: {},
-      columnHeaders: {},
+      // columnHeaders: {},
       subRowColumns: [],
       subRowColumnOrder: [], // Reset sub-row column order
       filters: []
@@ -625,7 +625,10 @@ export function SmartGrid({
     const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnKey === column.key;
     const isEditable = isColumnEditable(column, columnIndex);
 
-    if (columnIndex === 0 && (effectiveNestedRowRenderer || hasCollapsibleColumns)) {
+    // Only show expand/collapse arrow if subRowColumns count > 0 and in first cell of first column
+    const showExpandArrow = columnIndex === 0 && hasSubRowColumns && subRowColumns.length > 0;
+
+    if (showExpandArrow) {
       const isExpanded = expandedRows.has(rowIndex);
       return (
         <div className="flex items-center space-x-1 min-w-0">
@@ -679,7 +682,7 @@ export function SmartGrid({
         />
       </div>
     );
-  }, [editingCell, isColumnEditable, effectiveNestedRowRenderer, hasCollapsibleColumns, expandedRows, toggleRowExpansion, handleCellEdit, handleEditStart, handleEditCancel, onLinkClick, loading]);
+  }, [editingCell, isColumnEditable, hasSubRowColumns, subRowColumns, expandedRows, toggleRowExpansion, handleCellEdit, handleEditStart, handleEditCancel, onLinkClick, loading]);
 
   // Update grid data when prop data changes (only if not using lazy loading)
   useEffect(() => {
@@ -694,6 +697,14 @@ export function SmartGrid({
       setColumns(columns);
     }
   }, [columns, setColumns]);
+
+  // Always sync columns and grid data from props if preferences change or are missing (fix for localStorage clear and hard refresh)
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumns(columns);
+      setGridData(data); // Ensure data is set after columns are initialized
+    }
+  }, [columns, preferences, data, setColumns, setGridData]);
 
   // Initialize plugins
   useEffect(() => {
@@ -711,6 +722,25 @@ export function SmartGrid({
       });
     };
   }, [plugins, gridAPI]);
+
+  // Auto-initialize preferences and grid data if missing on first mount
+  useEffect(() => {
+    // Only run on first mount
+    if (!preferences || !preferences.columnOrder || preferences.columnOrder.length === 0) {
+      const defaultPreferences = {
+        columnOrder: columns.map(col => col.key),
+        hiddenColumns: [],
+        columnWidths: {},
+        columnHeaders: {},
+        subRowColumns: [],
+        subRowColumnOrder: [],
+        filters: []
+      };
+      savePreferences(defaultPreferences);
+      setColumns(columns);
+      setGridData(data);
+    }
+  }, [preferences, columns, data, savePreferences, setColumns, setGridData]);
 
   // Error boundary component
   if (error) {

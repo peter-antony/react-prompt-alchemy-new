@@ -505,6 +505,15 @@ const TripPlansSearchHub = () => {
         </div>
       </AppLayout>
 
+      {/* Add a beautiful loading overlay when fetching data from API */}
+      {apiStatus === 'loading' && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
+
       {/* <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto p-6 space-y-6">
           

@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_ENDPOINTS } from "../config";
+import { API_CONFIG, API_ENDPOINTS } from "../config";
 import {
   ApiResponse,
   PaginatedResponse,
@@ -15,11 +15,11 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
-        Role: "ramcorole",
-        OUID: 4,
         MessageID: "12345",
-        MessageType: "Trip Log Hub Search",
+        MessageType: "trip_log_hub_search_sp",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
       },
       SearchCriteria: {
         Tripid: "TP/2021/00024900",
@@ -159,9 +159,11 @@ export const tripService = {
       },
     });
     const requestBody = {
-      "RequestData": requestPayload
+      "RequestData": requestPayload,
     };
-    const response = await apiClient.post("https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1/triplog/hubsearch", requestBody);
+    const response = await apiClient.post(API_ENDPOINTS.TRIPS.LIST,
+      requestBody
+    );
     return response.data;
   },
 
