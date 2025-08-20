@@ -212,7 +212,8 @@ const TripPlansSearchHub = () => {
         console.log('API Response:', response); // Debug log
 
         // Handle paginated response structure
-        const data = response?.data.ResponseData || response;
+        const parsedResponse = JSON.parse(response?.data.ResponseData || {});
+        const data = parsedResponse;
 
         if (!data || !Array.isArray(data)) {
           console.warn('API returned invalid data format:', response);

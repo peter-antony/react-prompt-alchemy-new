@@ -52,8 +52,8 @@ const MockPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await quickOrderService.getMasterCommonData({ messageType: selectedType });
-        setApiData(data);
+        const data: any = await quickOrderService.getMasterCommonData({ messageType: selectedType });
+        setApiData((data));
       } catch (err) {
         setError("Error fetching API data");
         setApiData(null);

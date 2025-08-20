@@ -360,7 +360,7 @@ export function SmartGrid({
       columnOrder: currentColumns.map(col => col.key),
       hiddenColumns: [],
       columnWidths: {},
-      // columnHeaders: {},
+      columnHeaders: {},
       subRowColumns: [],
       subRowColumnOrder: [], // Reset sub-row column order
       filters: []
