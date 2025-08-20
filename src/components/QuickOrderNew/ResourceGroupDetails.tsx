@@ -42,6 +42,7 @@ import Attachments from './OrderForm/Attachments';
 import CardDetails, { CardDetailsItem } from '../Common/Card-View-Details';
 import { SimpleDropDown } from "../Common/SimpleDropDown";
 import { json } from 'stream/consumers';
+import { quickOrderService } from '@/api/services/quickOrderService';
 // import { combineInputDropdownValue } from '@/utils/inputDropdown';
 
 interface ResourceGroupDetailsFormProps {
@@ -70,7 +71,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   ];
   const handleProceedToNext = () => {
     setCurrentStep(2);
-    onSaveDetails();
+    // onSaveDetails();
   };
 
   const handleFirstStep = () => {
@@ -96,7 +97,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const basicDetailsRef = useRef<DynamicPanelRef>(null);
   const operationalDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
-  
+
   const onSaveDetails = () => {
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
@@ -169,7 +170,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
     }
-    if(currentStep==1){
+    if (currentStep == 1) {
       //Closing ResourceGroupDetails Modal
       if (onSaveSuccess) onSaveSuccess();
     }
@@ -194,7 +195,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         OperationalLocation: data.OperationalLocation,
         DepartPoint: data.DepartPoint,
         ArrivalPoint: data.ArrivalPoint,
-        FromDate:  "",
+        FromDate: "",
         FromTime: data.FromTime,
         ToDate: "",
         ToTime: data.ToTime,
@@ -252,7 +253,100 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [basicDetailsVisible, setBasicDetailsVisible] = useState(true);
   const [operationalDetailsVisible, setOperationalDetailsVisible] = useState(true);
   const [billingDetailsVisible, setBillingDetailsVisible] = useState(true);
+  const [resourceList, setResourceList] = useState<any[]>([]);
+  const [resourceTypeList, setResourceTypeList] = useState<any[]>([]);
+  const [serviceTypeList, setServiceTypeList] = useState<any[]>([]);
+  const [subServiceTypeList, setSubServiceTypeList] = useState<any[]>([]);
+  const [departList, setDepartList] = useState<any[]>([]);
+  const [arrivalList, setArrivalList] = useState<any[]>([]);
+  const [billingTypeList, setBillingTypeList] = useState<any[]>([]);
 
+
+  // Remove: const [billingData, setBillingData] = useState(jsonStore.getBillingDetails() || {})
+
+  const [view, setView] = useState("list");
+
+  // Mock functions for user config management
+  const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
+    const stored = localStorage.getItem(`panel-config-${userId}-${panelId}`);
+    return stored ? JSON.parse(stored) : null;
+  };
+
+  const saveUserPanelConfig = (userId: string, panelId: string, settings: PanelSettings): void => {
+    localStorage.setItem(`panel-config-${userId}-${panelId}`, JSON.stringify(settings));
+    console.log(`Saved config for panel ${panelId}:`, settings);
+  };
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState("");
+
+  const messageTypes = [
+    "Service type Init",
+    "Sub Service type Init",
+    "Arrival Init",
+    "Departure Init"
+  ];
+  useEffect(() => {
+    fetchAll();
+
+  }, []);
+  useEffect(() => {
+    if (isEditQuickOrder) {
+      setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
+      setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
+      setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
+    } else {
+      setBasicDetailsData({});
+      setOperationalDetailsData({});
+      setBillingDetailsData({});
+    }
+    const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
+    const actualCount = jsonStore.getAllActualDetailsByResourceUniqueID(resourceId);
+    if (planCount.length > 0 || actualCount.length > 0) {
+      setIsPlanActualsVisible(true);
+
+    }
+    const saved = localStorage.getItem('planActualsSaved');
+    // setIsPlanActualsVisible(saved === 'true');
+
+  }, [isEditQuickOrder]);
+  //API Call for dropdown data
+  const fetchData = async (messageType) => {
+    setLoading(false);
+    setError(null);
+    try {
+      const data:any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      setApiData(data);
+      console.log("API Data:", data);
+      if (messageType == "Service type Init") {
+        setServiceTypeList(JSON.parse(data?.data?.ResponseData));
+        console.log("ServiceType data:", apiData.data.ResponseData);
+      }
+      if (messageType == "Sub Service type Init") {
+        setSubServiceTypeList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Arrival Init") {
+        setArrivalList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Departure Init") {
+        setDepartList(JSON.parse(data?.data?.ResponseData));
+      }
+    } catch (err) {
+      setError(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    } finally {
+      setLoading(true);
+    }
+  };
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+      setLoading(false);
+    for (const type of messageTypes) {
+      setSelectedType(type);
+      await fetchData(type);
+    }
+  };
   // Basic Details Panel Configuration
   const basicDetailsConfig: PanelConfig = {
     Resource: {
@@ -303,10 +397,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 4,
-      options: [
-        { label: 'Block Train Conventional', value: 'Block Train Conventional' },
-        { label: 'Block Train Convention', value: 'Block Train Convention' },
-      ]
+      options: serviceTypeList.map(c => ({ label: c.name, value: c.name })),
     },
     SubSericeType: {
       id: 'SubSericeType',
@@ -318,11 +409,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 5,
-      options: [
-        { label: 'Repair', value: 'Repair' },
-        { label: 'Maintenance', value: 'Maintenance' },
-        { label: 'Other', value: 'Other' }
-      ],
+      options: subServiceTypeList.map(c => ({ label: c.name, value: c.name })),
       // events: {
       //   onBlur: (event) => {
       //     console.log('Description blur event:', event);
@@ -356,11 +443,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 2,
-      options: [
-        { label: '10-000471', value: '10-000471' },
-        { label: '10-000481', value: '10-000481' },
-        { label: '10-000491', value: '10-000491' }
-      ]
+      options: departList.map(c => ({ label: c.name, value: c.name })),
     },
     ArrivalPoint: {
       id: 'ArrivalPoint',
@@ -372,11 +455,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 3,
-      options: [
-        { label: '10-000720', value: '10-000720' },
-        { label: '10-000721', value: '10-000721' },
-        { label: '10-000722', value: '10-000722' }
-      ]
+      options: arrivalList.map(c => ({ label: c.name, value: c.name })),
     },
     FromDate: {
       id: 'FromDate',
@@ -553,41 +632,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       width: 'full',
     }
   };
-
-  // Remove: const [billingData, setBillingData] = useState(jsonStore.getBillingDetails() || {})
-
-  const [view, setView] = useState("list");
-
-  // Mock functions for user config management
-  const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
-    const stored = localStorage.getItem(`panel-config-${userId}-${panelId}`);
-    return stored ? JSON.parse(stored) : null;
-  };
-
-  const saveUserPanelConfig = (userId: string, panelId: string, settings: PanelSettings): void => {
-    localStorage.setItem(`panel-config-${userId}-${panelId}`, JSON.stringify(settings));
-    console.log(`Saved config for panel ${panelId}:`, settings);
-  };
-  useEffect(() => {
-    if (isEditQuickOrder) {
-      setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
-      setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
-      setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
-    } else {
-      setBasicDetailsData({});
-      setOperationalDetailsData({});
-      setBillingDetailsData({});
-    }
-    const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
-    const actualCount = jsonStore.getAllActualDetailsByResourceUniqueID(resourceId);
-    if( planCount.length > 0 || actualCount.length > 0) {
-         setIsPlanActualsVisible(true);
-
-    }
-    const saved = localStorage.getItem('planActualsSaved');
-    // setIsPlanActualsVisible(saved === 'true');
-
-  }, [isEditQuickOrder]);
   const steps = [
     {
       label: "Resource Group Creation",
@@ -809,7 +853,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                       const panels = [];
 
                       // Panel 1: Basic Details
-                      if (basicDetailsVisible) {
+                      if (basicDetailsVisible && loading) {
                         const basicDetailsVisibleCount = Object.values(basicDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -835,7 +879,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                       }
 
                       // Panel 2: Operational Details
-                      if (operationalDetailsVisible) {
+                      if (operationalDetailsVisible && loading) {
                         const operationalDetailsVisibleCount = Object.values(operationalDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -963,7 +1007,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                 )}
                 {isPlanActualsVisible && (
                   <div className="">
-                    <PlanAndActuals view={view} resouceId={resourceId} isEditQuickOrder={isEditQuickOrder}/>
+                    <PlanAndActuals view={view} resouceId={resourceId} isEditQuickOrder={isEditQuickOrder} />
                   </div>
                 )}
               </>
@@ -1006,7 +1050,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
       <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} onScrollPanel={true} badgeContent="QO/00001/2025" isBadgeRequired={true}>
         <div className="">
-          <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={true}/></div>
+          <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={true} /></div>
         </div>
       </SideDrawer>
 
