@@ -107,6 +107,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   // ]
   //QC List Array
   const [clusters, setClusters] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const QCList = [
     {
       "id": 1,
@@ -139,6 +140,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     "Cluster Init",
     "Contract Init",
     "Customer Init",
+    "Supplier Init",
   ];
   const [selectedType, setSelectedType] = useState(messageTypes[0]);
   useEffect(() => {
@@ -156,7 +158,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setFormData(normalizeOrderFormDetails({}));
       setmoreInfoData(normalizeMoreInfoDetails({}));
     }
-  }, [isEditQuickOrder, loading, contracts, customers, clusters]);
+  }, [isEditQuickOrder, loading, contracts, customers, clusters, vendors]);
   //API Call for dropdown data
   const fetchData = async (messageType) => {
     setLoading(false);
@@ -176,6 +178,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       if (messageType == "Cluster Init") {
         setClusters(JSON.parse(data?.data?.ResponseData));
         // setClusters(apiData.data.ResponseData);
+      }
+      if (messageType == "Supplier Init") {
+        setVendors(JSON.parse(data?.data?.ResponseData));
       }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
@@ -298,7 +303,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'buy',
       editable: true,
       order: 4,
-      options: customers.map(c => ({ label: c.name, value: c.name })),
+      options: vendors.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
     },
     Cluster: {
       id: 'Cluster',
@@ -310,7 +315,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 5,
-      options: clusters.map(c => ({ label: c.name, value: c.name })),
+      options: clusters.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
