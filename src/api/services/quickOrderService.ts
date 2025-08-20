@@ -88,7 +88,7 @@ export const quickOrderService = {
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.QUICK_ORDERS.COMMON,
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
       requestBody
     );
     return response.data;

@@ -159,31 +159,35 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   }, [isEditQuickOrder, loading, contracts, customers, clusters]);
   //API Call for dropdown data
   const fetchData = async (messageType) => {
-    setLoading(true);
+    setLoading(false);
     setError(null);
     try {
-      console.log("load data");
-      const data = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
       setApiData(data);
+      console.log("load inside try", data);
       if (messageType == "Contract Init") {
-        setContracts(apiData.data.ResponseData);
-        console.log("Contracts data:===", apiData.data.ResponseData);
+        setContracts(JSON.parse(data?.data?.ResponseData));
+        console.log("Contracts data:===", data.data.ResponseData);
       }
       if (messageType == "Customer Init") {
-        setCustomers(apiData.data.ResponseData);
+        setCustomers(JSON.parse(data?.data?.ResponseData));
+        // setCustomers(apiData.data.ResponseData);
       }
       if (messageType == "Cluster Init") {
-        setClusters(apiData.data.ResponseData);
+        setClusters(JSON.parse(data?.data?.ResponseData));
+        // setClusters(apiData.data.ResponseData);
       }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
       // setApiData(data);
-    } finally {
-      setLoading(false);
+    } 
+    finally {
+      setLoading(true);
     }
   };
   // Iterate through all messageTypes
   const fetchAll = async () => {
+    setLoading(false);
     for (const type of messageTypes) {
       await fetchData(type);
     }
@@ -270,7 +274,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 3,
-      options: contracts.map(c => ({ label: c.name, value: c.name })),
+      options: contracts.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
     },
     Customer: {
       id: 'Customer',
@@ -603,7 +607,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           </>
         )}
       </h2> */}
-        {!loading ?
+        {loading ?
           <DynamicPanel
             ref={orderDetailsRef}
             key={OrderType} // <-- This will force remount on orderType change

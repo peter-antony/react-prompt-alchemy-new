@@ -41,7 +41,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/quick-orders/${id}`,
     DELETE: (id: string) => `/quick-orders/${id}`,
     APPROVE: (id: string) => `/quick-orders/${id}/approve`,
-    COMMON: "/common"
+    COMMON: "/common",
+    COMBO: "/common/combo",
   },
   // Invoice management
   INVOICES: {
