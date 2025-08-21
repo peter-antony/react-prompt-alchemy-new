@@ -18,7 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { SmartGridPlusProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
-import { exportToCSV } from '@/utils/gridExport';
+import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
@@ -348,9 +348,16 @@ export function SmartGridPlus({
   }, [setFilters, currentColumns, onServerFilter, toast]);
 
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
-  const handleExport = useCallback((format: 'csv') => {
+  const handleExport = useCallback((format: 'csv' | 'xlsx' | 'json') => {
     const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
-    exportToCSV(processedData, orderedColumns, filename);
+    if (format === 'xlsx') {
+      exportToExcel(processedData, orderedColumns, filename);
+    } else if (format === 'json') {
+      // JSON export functionality can be added here if needed
+      console.log('JSON export not yet implemented');
+    } else {
+      exportToCSV(processedData, orderedColumns, filename);
+    }
   }, [processedData, orderedColumns]);
 
   const handleResetPreferences = useCallback(async () => {
@@ -1073,6 +1080,8 @@ export function SmartGridPlus({
         defaultConfigurableButtonLabel={defaultConfigurableButtonLabel}
         gridTitle={gridTitle}
         recordCount={recordCount}
+        showAdvancedFilter={false}
+        onToggleAdvancedFilter={() => {}}
       />
 
        {/* Advanced Filter System */}

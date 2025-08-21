@@ -11,9 +11,11 @@ import {
   List,
   Plus,
   ChevronDown,
+  Group,
   EllipsisVertical,
   SlidersHorizontal
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { ColumnVisibilityManager } from './ColumnVisibilityManager';
 import { GridColumnConfig, GridPreferences } from '@/types/smartgrid';
@@ -50,6 +52,15 @@ interface GridToolbarProps {
   recordCount?: number;
   showCreateButton?: boolean;
   searchPlaceholder?: string;
+  clientSideSearch?: boolean;
+  // Advanced Filter props
+  showAdvancedFilter: boolean;
+  onToggleAdvancedFilter: () => void;
+  // Grouping props
+  groupByField?: string | null;
+  onGroupByChange?: (field: string | null) => void;
+  groupableColumns?: string[];
+  showGroupingDropdown?: boolean;
   createButtonLabel?: string;
   showFilterSystem?: boolean;
   setShowFilterSystem?: (show: boolean) => void;
@@ -82,7 +93,14 @@ export function GridToolbar({
   createButtonLabel = "Create",
   searchPlaceholder = "Search",
   showFilterSystem,
-  setShowFilterSystem
+  setShowFilterSystem,
+  clientSideSearch = true,
+  showAdvancedFilter,
+  onToggleAdvancedFilter,
+  groupByField,
+  onGroupByChange,
+  groupableColumns,
+  showGroupingDropdown = false
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -95,12 +113,26 @@ export function GridToolbar({
   };
 
   // Determine which buttons to show
-  const buttonsToShow = configurableButtons && configurableButtons.length > 0
-    ? configurableButtons
+  const buttonsToShow = configurableButtons && configurableButtons.length > 0 
+    ? configurableButtons 
     : (showDefaultConfigurableButton ? [defaultConfigurableButton] : []);
+  
+  // Determine which columns can be grouped
+  const availableGroupColumns = React.useMemo(() => {
+    if (groupableColumns) {
+      return columns.filter(col => groupableColumns.includes(col.key));
+    }
+    // Show all columns by default
+    return columns;
+  }, [columns, groupableColumns]);
+
+  const handleGroupByChange = (value: string) => {
+    const newGroupBy = value === 'none' ? null : value;
+    onGroupByChange?.(newGroupBy);
+  };
 
   return (
-    <div className="flex items-center justify-between w-full mb-4">
+    <div className="flex items-center justify-between w-full bg-gray-50 mb-4">
       {/* Left side - Grid Title and Count */}
       <div className="flex items-center">
         {gridTitle && (
@@ -129,7 +161,7 @@ export function GridToolbar({
 
       {/* Right side - Controls */}
       <div className="flex items-center space-x-3">
-        {/* Search box */}
+        {/* Search box - only show if clientSideSearch is enabled */}
         <div className="relative">
           <Input
             name='grid-search-input'
@@ -186,6 +218,21 @@ export function GridToolbar({
           )}
         </Button>
 
+        {/* Advanced Filter Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleAdvancedFilter}
+          disabled={loading}
+          title="Toggle Advanced Filters"
+          className={cn(
+            "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
+            showAdvancedFilter && "bg-blue-50 text-blue-600"
+          )}
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -232,10 +279,10 @@ export function GridToolbar({
             </span>
           </Button>
         )} */}
-
-        <Button
+        
+        <Button 
           variant="ghost"
-          size="sm"
+          size="sm" 
           onClick={() => setShowCheckboxes(!showCheckboxes)}
           disabled={loading}
           title="Toggle Checkboxes"
@@ -287,7 +334,7 @@ export function GridToolbar({
             onResetToDefaults={onResetToDefaults}
             onSubRowToggle={onSubRowToggle}
           />
-        )}
+       )}
 
         {gridTitle !== 'Plan List' && (
           <Button
@@ -328,7 +375,7 @@ export function GridToolbar({
         )}
 
         {/* Create Button */}
-        {showCreateButton && (
+        {/* {showCreateButton && (
           <Button
             variant="outline"
             size="sm"
@@ -338,8 +385,40 @@ export function GridToolbar({
             {createButtonLabel}
             <ChevronDown className="h-4 w-4 mr-1" />
           </Button>
-        )}
+        )} */}
 
+		{/* Group by dropdown button */}
+        {showGroupingDropdown && availableGroupColumns.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost"
+                size="sm" 
+                disabled={loading}
+                title="Group By"
+                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 p-0"
+              >
+                <Group className="h-4 w-4" />
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleGroupByChange('none')}>
+                No grouping
+              </DropdownMenuItem>
+              {availableGroupColumns.map(col => (
+                <DropdownMenuItem 
+                  key={col.key} 
+                  onClick={() => handleGroupByChange(col.key)}
+                  className={groupByField === col.key ? 'bg-blue-50 text-blue-600' : ''}
+                >
+                  {col.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        
         {gridTitle !== 'Plan List' && (
           <div className="h-8 w-1 flex justify-center">
             <div className="" style={{
@@ -358,6 +437,6 @@ export function GridToolbar({
           />
         ))}
       </div>
-    </div >
+    </div>
   );
 }

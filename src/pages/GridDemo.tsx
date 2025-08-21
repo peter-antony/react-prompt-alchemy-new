@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { SmartGrid } from '@/components/SmartGrid';
+import { SmartGridWithGrouping } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
 import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload } from 'lucide-react';
@@ -53,7 +53,7 @@ const GridDemo = () => {
       editable: false,
       mandatory: true,
       subRow: false,
-      filterMode: 'server'
+      filterMode: 'local'
     },
     {
       key: 'status',
@@ -64,7 +64,7 @@ const GridDemo = () => {
       subRow: false
     },
     {
-      key: 'status',
+      key: 'tripBillingStatus',
       label: 'Trip Billing Status',
       type: 'Badge',
       sortable: true,
@@ -337,6 +337,121 @@ const GridDemo = () => {
         { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
         { name: '20FT CT', id: '20 Feet Container', type: 'container' }
       ]
+    },
+    {
+      id: 'TRIP00000008',
+      status: 'Under Execution',
+      tripBillingStatus: 'Revenue Leakage',
+      plannedStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      actualStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      departurePoint: 'VLA-70',
+      arrivalPoint: 'CUR-25',
+      customer: '+3',
+      resources: '+3',
+      departurePointDetails: 'VQL-705\nVolla\n\nAddress\nSardar Patel Rd, Sriram Nagar, Tharamani, Chennai, Tamil Nadu 600113',
+      arrivalPointDetails: 'Currency details for CUR-25',
+      customerDetails: [
+        { name: 'DB Cargo', id: 'CUS00000123', type: 'customer' },
+        { name: 'ABC Rail Goods', id: 'CUS00003214', type: 'customer' },
+        { name: 'Wave Cargo', id: 'CUS00012345', type: 'customer' }
+      ],
+      resourceDetails: [
+        { name: 'Train ID', id: 'TR000213', type: 'train' },
+        { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
+        { name: '20FT CT', id: '20 Feet Container', type: 'container' }
+      ]
+    },
+    {
+      id: 'TRIP00000009',
+      status: 'Under Execution',
+      tripBillingStatus: 'Revenue Leakage',
+      plannedStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      actualStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      departurePoint: 'VLA-70',
+      arrivalPoint: 'CUR-25',
+      customer: '+3',
+      resources: '+3',
+      departurePointDetails: 'VQL-705\nVolla\n\nAddress\nSardar Patel Rd, Sriram Nagar, Tharamani, Chennai, Tamil Nadu 600113',
+      arrivalPointDetails: 'Currency details for CUR-25',
+      customerDetails: [
+        { name: 'DB Cargo', id: 'CUS00000123', type: 'customer' },
+        { name: 'ABC Rail Goods', id: 'CUS00003214', type: 'customer' },
+        { name: 'Wave Cargo', id: 'CUS00012345', type: 'customer' }
+      ],
+      resourceDetails: [
+        { name: 'Train ID', id: 'TR000213', type: 'train' },
+        { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
+        { name: '20FT CT', id: '20 Feet Container', type: 'container' }
+      ]
+    },
+    {
+      id: 'TRIP00000010',
+      status: 'Under Execution',
+      tripBillingStatus: 'Revenue Leakage',
+      plannedStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      actualStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      departurePoint: 'VLA-70',
+      arrivalPoint: 'CUR-25',
+      customer: '+3',
+      resources: '+3',
+      departurePointDetails: 'VQL-705\nVolla\n\nAddress\nSardar Patel Rd, Sriram Nagar, Tharamani, Chennai, Tamil Nadu 600113',
+      arrivalPointDetails: 'Currency details for CUR-25',
+      customerDetails: [
+        { name: 'DB Cargo', id: 'CUS00000123', type: 'customer' },
+        { name: 'ABC Rail Goods', id: 'CUS00003214', type: 'customer' },
+        { name: 'Wave Cargo', id: 'CUS00012345', type: 'customer' }
+      ],
+      resourceDetails: [
+        { name: 'Train ID', id: 'TR000213', type: 'train' },
+        { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
+        { name: '20FT CT', id: '20 Feet Container', type: 'container' }
+      ]
+    },
+    {
+      id: 'TRIP00000011',
+      status: 'Under Execution',
+      tripBillingStatus: 'Revenue Leakage',
+      plannedStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      actualStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      departurePoint: 'VLA-70',
+      arrivalPoint: 'CUR-25',
+      customer: '+3',
+      resources: '+3',
+      departurePointDetails: 'VQL-705\nVolla\n\nAddress\nSardar Patel Rd, Sriram Nagar, Tharamani, Chennai, Tamil Nadu 600113',
+      arrivalPointDetails: 'Currency details for CUR-25',
+      customerDetails: [
+        { name: 'DB Cargo', id: 'CUS00000123', type: 'customer' },
+        { name: 'ABC Rail Goods', id: 'CUS00003214', type: 'customer' },
+        { name: 'Wave Cargo', id: 'CUS00012345', type: 'customer' }
+      ],
+      resourceDetails: [
+        { name: 'Train ID', id: 'TR000213', type: 'train' },
+        { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
+        { name: '20FT CT', id: '20 Feet Container', type: 'container' }
+      ]
+    },
+    {
+      id: 'TRIP00000012',
+      status: 'Under Execution',
+      tripBillingStatus: 'Revenue Leakage',
+      plannedStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      actualStartEndDateTime: '25-Mar-2025 11:22:34 PM\n27-Mar-2025 11:22:34 PM',
+      departurePoint: 'VLA-70',
+      arrivalPoint: 'CUR-25',
+      customer: '+3',
+      resources: '+3',
+      departurePointDetails: 'VQL-705\nVolla\n\nAddress\nSardar Patel Rd, Sriram Nagar, Tharamani, Chennai, Tamil Nadu 600113',
+      arrivalPointDetails: 'Currency details for CUR-25',
+      customerDetails: [
+        { name: 'DB Cargo', id: 'CUS00000123', type: 'customer' },
+        { name: 'ABC Rail Goods', id: 'CUS00003214', type: 'customer' },
+        { name: 'Wave Cargo', id: 'CUS00012345', type: 'customer' }
+      ],
+      resourceDetails: [
+        { name: 'Train ID', id: 'TR000213', type: 'train' },
+        { name: 'AGN01', id: 'Agent-0000001', type: 'agent' },
+        { name: '20FT CT', id: '20 Feet Container', type: 'container' }
+      ]
     }
   ];
 
@@ -401,7 +516,10 @@ const GridDemo = () => {
             });
           }
         }
-      ]
+      ],
+      onClick: function (): void {
+        throw new Error('Function not implemented.');
+      }
     }
   ];
 
@@ -479,10 +597,12 @@ const GridDemo = () => {
               background-color: #dbeafe !important;
             }
           `}</style>
-          <SmartGrid
+          <SmartGridWithGrouping
             key={`grid-${gridState.forceUpdate}`}
             columns={gridState.columns}
             data={gridState.gridData.length > 0 ? gridState.gridData : processedData}
+            groupableColumns={['id','status', 'tripBillingStatus', 'departurePoint', 'arrivalPoint']}
+            showGroupingDropdown={true}
             editableColumns={['plannedStartEndDateTime']}
             paginationMode="pagination"
             onLinkClick={handleLinkClick}
@@ -500,6 +620,16 @@ const GridDemo = () => {
             recordCount={gridState.gridData.length > 0 ? gridState.gridData.length : processedData.length}
             showCreateButton={true}
             searchPlaceholder="Search all columns..."
+            clientSideSearch={false}
+            extraFilters={[
+              {
+                key: 'priority',
+                label: 'Priority Level',
+                type: 'select',
+                options: ['High Priority', 'Medium Priority', 'Low Priority']
+              }
+            ]}
+            showSubHeaders={false}
           />
           
           {/* Footer with action buttons matching the screenshot style */}

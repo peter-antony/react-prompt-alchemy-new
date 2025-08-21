@@ -1,6 +1,7 @@
 
 export { SmartGrid } from './SmartGrid';
 export { SmartGridPlus } from './SmartGridPlus';
+export { SmartGridWithGrouping } from './SmartGridWithGrouping';
 export { CellEditor } from './CellEditor';
 export { ColumnManager } from './ColumnManager';
 export { ColumnVisibilityManager } from './ColumnVisibilityManager';
@@ -10,9 +11,11 @@ export { DraggableSubRow } from './DraggableSubRow';
 export { GridToolbar } from './GridToolbar';
 export { PluginRenderer, PluginRowActions } from './PluginRenderer';
 export { FilterSystem } from './FilterSystem';
+export { AdvancedFilter } from './AdvancedFilter';
 export { ColumnFilterInput } from './ColumnFilterInput';
 export { FilterSetModal } from './FilterSetModal';
 export { FilterSetDropdown } from './FilterSetDropdown';
+export { FilterFieldSettings } from './FilterFieldSettings';
 export * from '@/types/smartgrid';
 export * from '@/hooks/useSmartGridData';
 export * from '@/hooks/useGridPreferences';

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { SmartGrid } from '@/components/SmartGrid';
+import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
 import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen, Edit, Trash2, Eye, Settings, GitPullRequest, Filter, Search } from 'lucide-react';
@@ -47,7 +47,7 @@ interface SampleData {
 }
 
 const QuickOrderManagement = () => {
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<any>>(new Set());
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [searchFilters, setSearchFilters] = useState<Record<string, any>>({});
   const gridState = useSmartGridState();
@@ -75,60 +75,11 @@ const QuickOrderManagement = () => {
     },
   ]);
 
-  const cardData: CardDetailsItem[] = [
-    {
-      ResourceUniqueID: "R01",
-      title: "R01 - Wagon Rentals",
-      subtitle: "Vehicle",
-      // wagons: "10 Wagons",
-      price: "€ 45595.00",
-      // trainType: "Block Train Conventional",
-      repairType: "Repair",
-      // date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Approved",
-      BillingDetails: "",
-      BasicDetails: "",
-      OperationalDetails: ""
-    },
-    {
-      ResourceUniqueID: "R02",
-      title: "R02 - Wagon Rentals",
-      subtitle: "Vehicle",
-      // wagons: "10 Wagons",
-      price: "€ 45595.00",
-      // trainType: "Block Train Conventional",
-      repairType: "Repair",
-      // date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Failed",
-      BillingDetails: "",
-      BasicDetails: "",
-      OperationalDetails: ""
-    },
-    {
-      ResourceUniqueID: "R03",
-      title: "R03 - Wagon Rentals",
-      subtitle: "Vehicle",
-      // wagons: "10 Wagons",
-      price: "€ 45595.00",
-      // trainType: "Block Train Conventional",
-      repairType: "Repair",
-      // date: "12-Mar-2025 to 12-Mar-2025",
-      rateType: "Rate Per Unit-Buy Sell",
-      location: "Frankfurt Station A - Frankfurt Station B",
-      draftBill: "DB/000234",
-      status: "Under Amendment",
-      BillingDetails: "",
-      BasicDetails: "",
-      OperationalDetails: ""
-    }
-  ];
-  const resourceGroups = [
+  // State for resourceGroups and cardData
+  const [resourceGroups, setResourceGroups] = useState<any[]>([]);
+  const [cardData, setCardData] = useState<CardDetailsItem[]>([]);
+
+  let initialResourceGroups: any = [
     {
       id: 1,
       name: "QO/00001/2025",
@@ -158,6 +109,9 @@ const QuickOrderManagement = () => {
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
   const orderConfirmhandler = () => {
+    // Access selected row data for Confirm action
+    const selectedRowData = Array.from(selectedRows).map(idx => gridState.gridData[idx]);
+    console.log('Confirm selected rows:', selectedRowData);
     setPopupOpen(true);
     setPopupTitle('Amend');
     setPopupButtonName('Amend');
@@ -175,6 +129,11 @@ const QuickOrderManagement = () => {
     setPopupTitleBgColor('bg-red-50');
   };
 
+  const getSelectedRowData = () => {
+    // Returns array of full row objects for selected rows
+    return Array.from(selectedRows);
+  };
+
   useEffect(() => {
     setFooter({
       visible: true,
@@ -190,26 +149,26 @@ const QuickOrderManagement = () => {
       rightButtons: [
         {
           label: "Cancel",
-          // disabled: true,
           type: 'Button',
           onClick: () => {
-            console.log("Cancel clicked");
+            const selectedData = getSelectedRowData();
+            console.log("Cancel clicked, selected rows:", selectedData);
             // quickOrderCancelhandler();
           },
         },
         {
           label: "Confirm",
           type: "Button",
-          // disabled: true,
           onClick: () => {
-            console.log("Confirm clicked");
+            const selectedData = getSelectedRowData();
+            console.log("Confirm clicked, selected rows:", selectedData);
             // orderConfirmhandler();
           },
         },
       ],
     });
     return () => resetFooter();
-  }, []);
+  }, [selectedRows, gridState.gridData]);
 
   const GitPullActionButton = () => {
     return (
@@ -232,7 +191,7 @@ const QuickOrderManagement = () => {
     {
       key: 'QuickOrderDate',
       label: 'Quick Order Date',
-      type: 'DateFormat',
+      type: 'Date',
       sortable: true,
       editable: false,
       subRow: false
@@ -310,10 +269,18 @@ const QuickOrderManagement = () => {
         {
           icon: <GitPullActionButton />,
           tooltip: 'Order',
-          onClick: (rowData) => {
+          onClick: async (rowData) => {
             console.log('clicked for:', rowData);
+            if(rowData.QuickUniqueID) {
+              const resourceGroupAsyncFetch: any = await quickOrderService.screenFetchQuickOrder(rowData.QuickUniqueID);
+              // console.log('Quick order Resource Group Unique Data fecth: ', resourceGroupAsyncFetch);
+              const jsonParsedData: any = JSON.parse(resourceGroupAsyncFetch?.data?.ResponseData);
+              console.log('Parsed Data:', jsonParsedData);
+              setResourceGroups(jsonParsedData?.ResponseResult[0] ? [jsonParsedData.ResponseResult[0]] : []);
+              setCardData(jsonParsedData?.ResponseResult[0]?.ResourceGroup || []);
+              setGroupLevelModalOpen(true);
+            }
             // Show confirmation dialog
-            setGroupLevelModalOpen(true);
           },
           variant: 'ghost',
           size: 'lg',
@@ -613,9 +580,9 @@ const QuickOrderManagement = () => {
     });
   };
 
-  const handleRowSelection = (selectedRowIndices: Set<number>) => {
-    console.log('Selected rows changed:', selectedRowIndices);
-    setSelectedRows(selectedRowIndices);
+  const handleRowSelection = (selectedRowObjects: Set<any>) => {
+    console.log('Selected row objects:', Array.from(selectedRowObjects));
+    setSelectedRows(selectedRowObjects);
   };
 
   const renderSubRow = (row: any, rowIndex: number) => {
@@ -648,7 +615,7 @@ const QuickOrderManagement = () => {
 
             {/* Grid Container */}
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
-              <SmartGrid
+              {/* <SmartGrid
                 key={`grid-${gridState.forceUpdate}`}
                 parentPage="quickOrder"
                 columns={gridState.columns}
@@ -669,7 +636,41 @@ const QuickOrderManagement = () => {
                 gridTitle="Quick Order"
                 recordCount={gridState.gridData.length}
                 showCreateButton={true}
-                searchPlaceholder="Search all columns..."
+                searchPlaceholder="Search"
+              /> */}
+              <SmartGridWithGrouping
+                key={`grid-${gridState.forceUpdate}`}
+                columns={gridState.columns}
+                data={gridState.gridData}
+                groupableColumns={['id', 'status', 'tripBillingStatus', 'departurePoint', 'arrivalPoint']}
+                showGroupingDropdown={true}
+                editableColumns={['plannedStartEndDateTime']}
+                paginationMode="pagination"
+                onLinkClick={handleLinkClick}
+                onUpdate={handleUpdate}
+                onSubRowToggle={gridState.handleSubRowToggle}
+                selectedRows={selectedRows}
+                onSelectionChange={handleRowSelection}
+                rowClassName={(row: any, index: number) =>
+                  selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                }
+                nestedRowRenderer={renderSubRow}
+                configurableButtons={configurableButtons}
+                showDefaultConfigurableButton={false}
+                gridTitle="Quick Order"
+                recordCount={gridState.gridData.length}
+                showCreateButton={true}
+                searchPlaceholder="Search"
+                clientSideSearch={true}
+                extraFilters={[
+                  {
+                    key: 'priority',
+                    label: 'Priority Level',
+                    type: 'select',
+                    options: ['High Priority', 'Medium Priority', 'Low Priority']
+                  }
+                ]}
+                showSubHeaders={false}
               />
               {/* SideDrawer for PlanAndActualDetails */}
               <SideDrawer
@@ -741,8 +742,8 @@ const QuickOrderManagement = () => {
             <div className="mt-3 px-4">
               <div className="w-80 mb-3">
                 <SimpleDropDown
-                  list={resourceGroups}
-                  value={resourceGroups[0].description}
+                  list={resourceGroups.map((item, idx) => ({ ...item, key: item.id || item.QuickOrderNo || idx }))}
+                  value={resourceGroups[0]?.QuickOrderNo}
                   onValueChange={(value) =>
                     handleInputChange("resourceGroup", value)
                   }
@@ -772,7 +773,6 @@ const QuickOrderManagement = () => {
                 <CardDetails data={cardData} isEditQuickOrder={false} showMenuButton={false} />
               </div>
             </div>
-
           </SideDrawer>
         </div>
       </AppLayout>

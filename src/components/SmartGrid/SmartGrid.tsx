@@ -26,9 +26,11 @@ import { PluginRenderer, PluginRowActions } from './PluginRenderer';
 import { ColumnFilter } from './ColumnFilter';
 import { DraggableSubRow } from './DraggableSubRow';
 import { FilterSystem } from './FilterSystem';
+import { AdvancedFilter } from './AdvancedFilter';
 import { mockFilterAPI } from '@/utils/mockFilterAPI';
 import { cn } from '@/lib/utils';
 
+// Add exportFilename prop to SmartGridProps
 export function SmartGrid({
   columns,
   data,
@@ -45,6 +47,7 @@ export function SmartGrid({
   onServerFilter,
   paginationMode = 'pagination',
   nestedRowRenderer,
+  onRowExpansionOverride,
   plugins = [],
   selectedRows,
   onSelectionChange,
@@ -53,8 +56,19 @@ export function SmartGrid({
   showDefaultConfigurableButton,
   defaultConfigurableButtonLabel,
   gridTitle,
-  recordCount
-}: SmartGridProps) {
+  recordCount,
+  showCreateButton,
+  searchPlaceholder,
+  extraFilters,
+  subRowFilters,
+  groupByField,
+  onGroupByChange,
+  groupableColumns,
+  showGroupingDropdown,
+  clientSideSearch = false,
+  showSubHeaders = true,
+  exportFilename = `export-${new Date().toISOString().split('T')[0]}`
+}: SmartGridProps & { exportFilename?: string }) {
   const {
     gridData,
     setGridData,
@@ -109,7 +123,7 @@ export function SmartGrid({
 
   const [pageSize] = useState(10);
   const [showFilterRow, setShowFilterRow] = useState(false);
-  const [showFilterSystem, setShowFilterSystem] = useState(false);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [filterSystemFilters, setFilterSystemFilters] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
@@ -288,9 +302,31 @@ export function SmartGrid({
 
   // Process data with sorting and filtering (only if not using lazy loading)
   const processedData = useMemo(() => {
-    return processGridData(data, globalFilter, filters, sort, currentColumns, onDataFetch);
-  }, [data, globalFilter, filters, sort, currentColumns, onDataFetch]);
+    return processGridData(data, globalFilter, filters, sort, currentColumns, onDataFetch, clientSideSearch);
+  }, [data, globalFilter, filters, sort, currentColumns, onDataFetch, clientSideSearch]);
 
+	// Handle advanced filter search
+  const handleAdvancedFilterSearch = useCallback(() => {
+    // Reset to page 1 when search is performed
+    setCurrentPage(1);
+    
+    // If we have server-side filtering, call the server
+    const serverFilters = filters.filter(filter => {
+      const column = currentColumns.find(col => col.key === filter.column);
+      return column?.filterMode === 'server';
+    });
+    
+    if (serverFilters.length > 0 && onServerFilter) {
+      onServerFilter(serverFilters).catch(error => {
+        console.error('Server-side filtering failed:', error);
+        toast({
+          title: "Error",
+          description: "Failed to apply server-side filters",
+          variant: "destructive"
+        });
+      });
+    }
+  }, [filters, currentColumns, onServerFilter, toast, setCurrentPage]);
   // Handle filter system changes
   const handleFiltersChange = useCallback((newFilters: Record<string, any>) => {
     setFilterSystemFilters(newFilters);
@@ -326,20 +362,25 @@ export function SmartGrid({
 
     // Set local filters only
     setFilters(localFilters);
+    // Reset to page 1 when filters change
     setCurrentPage(1);
   }, [setFilters, currentColumns, onServerFilter, toast, setCurrentPage]);
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
   const handleExport = useCallback((format: 'csv' | 'xlsx') => {
-    const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
+    const filename = `${exportFilename}.${format}`;
+    // Build export columns: initial columns order + any extra sub-row columns
+    const initialKeys = columns.map(col => col.key);
+    const extraSubRowColumns = subRowColumns.filter(col => !initialKeys.includes(col.key));
+    const exportColumns = [...columns, ...extraSubRowColumns];
     try {
       if (format === 'csv') {
-        exportToCSV(processedData, orderedColumns, filename);
+        exportToCSV(processedData, exportColumns, filename);
         toast({
           title: "Success",
           description: "CSV file exported successfully"
         });
       } else if (format === 'xlsx') {
-        exportToExcel(processedData, orderedColumns, filename);
+        exportToExcel(processedData, exportColumns, filename);
         toast({
           title: "Success",
           description: "Excel file exported successfully"
@@ -353,10 +394,10 @@ export function SmartGrid({
         variant: "destructive"
       });
     }
-  }, [processedData, orderedColumns, toast]);
+  }, [processedData, columns, subRowColumns, toast, exportFilename]);
 
   const handleResetPreferences = useCallback(async () => {
-    const defaultPreferences: any = {
+    const defaultPreferences = {
       columnOrder: currentColumns.map(col => col.key),
       hiddenColumns: [],
       columnWidths: {},
@@ -453,16 +494,18 @@ export function SmartGrid({
     }
   }), [data, processedData, currentSelectedRows, orderedColumns, preferences, handleExport, handleResetPreferences, handleSelectionChange]);
 
-  // Pagination
+  // Pagination with auto-reset when current page has no data
   const paginatedData = useMemo(() => {
     if (paginationMode !== 'pagination' || onDataFetch) return processedData;
+    
     const totalPages = Math.ceil(processedData.length / pageSize);
-
+    
     // Reset to page 1 if current page is beyond available data
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
       return processedData.slice(0, pageSize);
     }
+    
     const start = (currentPage - 1) * pageSize;
     return processedData.slice(start, start + pageSize);
   }, [processedData, paginationMode, currentPage, pageSize, onDataFetch, setCurrentPage]);
@@ -626,16 +669,14 @@ export function SmartGrid({
     const isEditable = isColumnEditable(column, columnIndex);
 
     // Only show expand/collapse arrow if subRowColumns count > 0 and in first cell of first column
-    const showExpandArrow = columnIndex === 0 && hasSubRowColumns && subRowColumns.length > 0;
-
-    if (showExpandArrow) {
+    if (columnIndex === 0 && (effectiveNestedRowRenderer || hasCollapsibleColumns) && !row.__isGroupHeader) {
       const isExpanded = expandedRows.has(rowIndex);
       return (
         <div className="flex items-center space-x-1 min-w-0">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => toggleRowExpansion(rowIndex)}
+            onClick={() => onRowExpansionOverride ? onRowExpansionOverride(rowIndex) : toggleRowExpansion(rowIndex)}
             className="h-5 w-5 p-0 hover:bg-gray-100 flex-shrink-0"
           >
             {isExpanded ? (
@@ -682,7 +723,7 @@ export function SmartGrid({
         />
       </div>
     );
-  }, [editingCell, isColumnEditable, hasSubRowColumns, subRowColumns, expandedRows, toggleRowExpansion, handleCellEdit, handleEditStart, handleEditCancel, onLinkClick, loading]);
+  }, [editingCell, isColumnEditable, effectiveNestedRowRenderer, hasCollapsibleColumns, expandedRows, onRowExpansionOverride, toggleRowExpansion, handleCellEdit, handleEditStart, handleEditCancel, onLinkClick, loading]);
 
   // Update grid data when prop data changes (only if not using lazy loading)
   useEffect(() => {
@@ -774,6 +815,7 @@ export function SmartGrid({
         loading={loading}
         filters={filters}
         columns={currentColumns}
+        clientSideSearch={clientSideSearch}
         preferences={preferences}
         onColumnVisibilityToggle={toggleColumnVisibility}
         onColumnHeaderChange={updateColumnHeader}
@@ -785,25 +827,46 @@ export function SmartGrid({
         defaultConfigurableButtonLabel={defaultConfigurableButtonLabel}
         gridTitle={gridTitle}
         recordCount={recordCount}
-        showFilterSystem={showFilterSystem}
-        setShowFilterSystem={setShowFilterSystem}
+        showCreateButton={showCreateButton}
+        searchPlaceholder={searchPlaceholder}
+        showAdvancedFilter={showAdvancedFilter}
+        onToggleAdvancedFilter={() => setShowAdvancedFilter(!showAdvancedFilter)}
+        groupByField={groupByField}
+        onGroupByChange={onGroupByChange}
+        groupableColumns={groupableColumns}
+        showGroupingDropdown={showGroupingDropdown}
       />
 
       {/* Advanced Filter System */}
-      {gridTitle !== "Plan List" && showFilterSystem && (
-        <div className="">
-          <FilterSystem
-            columns={orderedColumns}
-            subRowColumns={subRowColumns}
-            showFilterRow={showFilterRow}
-            onToggleFilterRow={() => setShowFilterRow(!showFilterRow)}
-            onFiltersChange={handleFiltersChange}
-            gridId="smart-grid"
-            userId="demo-user"
-            api={mockFilterAPI}
-          />
-        </div>
-      )}
+      {/* <AdvancedFilter
+        columns={orderedColumns}
+        subRowColumns={subRowColumns}
+        extraFilters={extraFilters}
+        subRowFilters={subRowFilters}
+        visible={showAdvancedFilter}
+        onToggle={() => setShowAdvancedFilter(!showAdvancedFilter)}
+        onFiltersChange={handleFiltersChange}
+        onSearch={handleAdvancedFilterSearch}
+        gridId="smart-grid"
+        userId="demo-user"
+        clientSideSearch={clientSideSearch}
+        api={mockFilterAPI}
+      /> */}
+      <AdvancedFilter
+          columns={orderedColumns}
+          subRowColumns={subRowColumns}
+          extraFilters={extraFilters}
+          subRowFilters={subRowFilters}
+          visible={showAdvancedFilter}
+          onToggle={() => setShowAdvancedFilter(!showAdvancedFilter)}
+          onFiltersChange={handleFiltersChange}
+          onSearch={handleAdvancedFilterSearch}
+          gridId="smart-grid"
+          userId="demo-user"
+          clientSideSearch={clientSideSearch}
+          api={mockFilterAPI}
+          showSubHeaders={showSubHeaders}
+        />
 
       {/* Table Container with horizontal scroll prevention */}
       <div className="bg-white rounded shadow-sm m-0">
@@ -814,10 +877,10 @@ export function SmartGrid({
               <TableRow className="hover:bg-transparent">
                 {/* Checkbox header */}
                 {showCheckboxes && (
-                  <TableHead className="bg-gray-200 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
+                  <TableHead className="bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
                     <input
                       type="checkbox"
-                      className="rounded"
+                      className="rounded cursor-pointer"
                       onChange={(e) => {
                         const target = e.target as HTMLInputElement;
                         if (target.checked) {
@@ -1044,7 +1107,7 @@ export function SmartGrid({
                         <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
                           <input
                             type="checkbox"
-                            className="rounded"
+                            className="rounded cursor-pointer"
                             checked={currentSelectedRows.has(rowIndex)}
                             onChange={() => {
                               const newSet = new Set(currentSelectedRows);

@@ -6,7 +6,8 @@ export function processGridData(
   filters: FilterConfig[],
   sort: SortConfig | undefined,
   columns: GridColumnConfig[],
-  onDataFetch?: any
+  onDataFetch?: any,
+  clientSideSearch: boolean = true
 ) {
   if (onDataFetch) {
     // For lazy loading, return data as-is (sorting/filtering handled server-side)
@@ -15,8 +16,8 @@ export function processGridData(
 
   let result = [...gridData];
 
-  // Apply global filter - now searches ALL columns including hidden ones
-  if (globalFilter) {
+  // Apply global filter only if clientSideSearch is enabled
+  if (globalFilter && clientSideSearch) {
     result = result.filter(row =>
       columns.some(col => {
         let value = row[col.key];

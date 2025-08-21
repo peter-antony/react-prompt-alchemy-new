@@ -49,17 +49,17 @@ export const quickOrderService = {
     //     : [],
     // };
     const stringifyData = JSON.stringify({
-        context: {
-          MessageID: "12345",
-          MessageType: "Quick Order Hub Search",
-          UserID: "ramcouser",
-          OUID: "4",
-          Role: "ramcorole",
-        },
-        AdditionalFilter: []
-      },);
+      context: {
+        MessageID: "12345",
+        MessageType: "Quick Order Hub Search",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
+      },
+      AdditionalFilter: [],
+    });
     const requestBody = {
-      "RequestData": stringifyData
+      RequestData: stringifyData,
     };
 
     const response = await apiClient.post(
@@ -74,17 +74,17 @@ export const quickOrderService = {
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     const stringifyData = JSON.stringify({
-        context: {
-          MessageID: "12345",
-          MessageType: params?.messageType || "",
-          UserID: "ramcouser",
-          OUID: "4",
-          Role: "ramcorole",
-        },
-        AdditionalFilter: []
-      },);
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
+      },
+      AdditionalFilter: [],
+    });
     const requestBody = {
-      "RequestData": stringifyData
+      RequestData: stringifyData,
     };
 
     const response = await apiClient.post(
@@ -232,11 +232,13 @@ export const quickOrderService = {
   },
 
   // Approve quick order
-  approveQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
-    const requestBody = {
+  screenFetchQuickOrder: async (
+    fetchId: any
+  ): Promise<ApiResponse<QuickOrder>> => {
+    const requestPayload = JSON.stringify({
       context: {
         MessageID: "12345",
-        MessageType: "Quick Order Approve",
+        MessageType: "Quick Order Get",
         UserID: "ramcouser",
         OUID: 4,
         Role: "ramcorole",
@@ -244,13 +246,17 @@ export const quickOrderService = {
       AdditionalFilter: [
         {
           FilterName: "QuickUniqueID",
-          FilterValue: id,
+          FilterValue: fetchId,
         },
       ],
+    });
+
+    const requestBody = {
+      RequestData: requestPayload,
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.QUICK_ORDERS.APPROVE(id),
+      API_ENDPOINTS.QUICK_ORDERS.SCREEN_FETCH,
       requestBody
     );
     return response.data;

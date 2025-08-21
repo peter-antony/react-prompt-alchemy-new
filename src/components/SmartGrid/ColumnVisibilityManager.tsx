@@ -10,12 +10,12 @@ import {
 import {
   Separator
 } from '@/components/ui/separator';
-import { 
-  Settings2, 
-  Eye, 
-  EyeOff, 
-  Edit2, 
-  Check, 
+import {
+  Settings2,
+  Eye,
+  EyeOff,
+  Edit2,
+  Check,
   X,
   Rows3
 } from 'lucide-react';
@@ -76,7 +76,11 @@ export function ColumnVisibilityManager({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" title="Manage Columns">
+        <Button
+          variant="ghost"
+          size="sm"
+          title="Manage Columns"
+          className='w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300'>
           <Settings2 className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -203,8 +207,8 @@ export function ColumnVisibilityManager({
                         onClick={() => onSubRowToggle(column.key)}
                         className={cn(
                           "h-7 w-7 p-0 transition-colors",
-                          isInSubRow 
-                            ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                          isInSubRow
+                            ? "bg-purple-600 hover:bg-purple-700 text-white"
                             : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
                         )}
                         title={isInSubRow ? "Remove from sub-row" : "Show in sub-row"}
@@ -219,7 +223,7 @@ export function ColumnVisibilityManager({
           </div>
 
           <Separator />
-          
+
           <div className="flex justify-between text-xs text-gray-500">
             <span>
               {columns.filter(col => isColumnVisible(col.key)).length} of {columns.length} visible

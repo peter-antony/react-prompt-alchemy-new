@@ -43,6 +43,7 @@ export const API_ENDPOINTS = {
     APPROVE: (id: string) => `/quick-orders/${id}/approve`,
     COMMON: "/common",
     COMBO: "/common/combo",
+    SCREEN_FETCH: '/quickorderhub/screenfetch',
   },
   // Invoice management
   INVOICES: {

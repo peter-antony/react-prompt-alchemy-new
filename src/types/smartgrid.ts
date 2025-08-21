@@ -15,6 +15,7 @@ export type GridColumnType =
   | 'Date'                 // Formatted date
   | 'Dropdown'             // Selectable value from list (for edit or filter)
   | 'EditableText'        // Inline editable text
+  | 'SubRow'            // Sub-row expandable content
   | 'DateFormat'
   | 'CurrencyWithSymbol'
   | 'ActionButton';        // Clickable button with SVG icon
@@ -45,6 +46,9 @@ export interface GridColumnConfig {
   
   // ExpandableCount specific properties
   renderExpandedContent?: (rowData: any) => React.ReactNode;
+  
+  // SubRow specific properties
+  subRowColumns?: GridColumnConfig[];
   
   // ActionButton specific properties
   actionButtons?: Array<{
@@ -124,6 +128,20 @@ export interface GridPlugin {
   destroy?: () => void;
 }
 
+export interface ExtraFilter {
+  key: string;
+  label: string;
+  type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean';
+  options?: string[];
+}
+
+export interface SubRowFilter {
+  key: string;
+  label: string;
+  type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean';
+  options?: string[];
+}
+
 export interface SmartGridProps {
   columns: GridColumnConfig[];
   data: any[];
@@ -140,6 +158,7 @@ export interface SmartGridProps {
   onServerFilter?(filters: FilterConfig[]): Promise<void>;
   paginationMode?: 'pagination' | 'infinite';
   nestedRowRenderer?(row: any, rowIndex: number): React.ReactNode;
+  onRowExpansionOverride?(rowIndex: number): void;
   plugins?: GridPlugin[];
   selectedRows?: Set<number>;
   onSelectionChange?(selectedRows: Set<number>): void;
@@ -151,6 +170,18 @@ export interface SmartGridProps {
   recordCount?: number;
   showCreateButton?: boolean;
   searchPlaceholder?: string;
+  // Advanced Filter props
+  extraFilters?: ExtraFilter[];
+  subRowFilters?: SubRowFilter[];
+  // Grouping props
+  groupByField?: string | null;
+  onGroupByChange?: (field: string | null) => void;
+  groupableColumns?: string[];
+  showGroupingDropdown?: boolean;
+  // Search mode props
+  clientSideSearch?: boolean;
+  // Advanced Filter sub-header props
+  showSubHeaders?: boolean;
 }
 
 // Legacy interface for backward compatibility
@@ -202,4 +233,26 @@ export interface CellEditProps {
   column: Column;
   onSave: (value: any) => void;
   onCancel: () => void;
+}
+
+// SmartGridPlus specific interfaces
+export interface SmartGridPlusProps extends SmartGridProps {
+  // Row operations
+  inlineRowAddition?: boolean;
+  inlineRowEditing?: boolean;
+  onAddRow?: (row: any) => Promise<void> | void;
+  onEditRow?: (row: any, rowIndex: number) => Promise<void> | void;
+  onDeleteRow?: (row: any, rowIndex: number) => Promise<void> | void;
+  
+  // Default values and validation
+  defaultRowValues?: Record<string, any>;
+  validationRules?: {
+    requiredFields?: string[];
+    maxLength?: Record<string, number>;
+    customValidationFn?: (values: Record<string, any>) => Record<string, string>;
+  };
+  
+  // UI configuration
+  addRowButtonLabel?: string;
+  addRowButtonPosition?: "top-left" | "top-right" | "top";
 }

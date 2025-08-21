@@ -16,7 +16,7 @@ interface ColumnFilterInputProps {
   column: GridColumnConfig;
   value: FilterValue | undefined;
   onChange: (value: FilterValue | undefined) => void;
-  onApply: () => void;
+  onApply?: () => void;
   isSubRow?: boolean;
 }
 
@@ -84,15 +84,14 @@ export function ColumnFilterInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      onApply();
-    }
+    // Remove auto-search on Enter key press
+    // Search will only happen on Search button click
   };
 
   const handleClear = () => {
     setLocalValue('');
     onChange(undefined);
-    // onApply() // will be called automatically when the parent updates filters
+    // onApply will be called automatically when the parent updates filters
   };
 
   const getAvailableOperators = () => {
@@ -177,7 +176,6 @@ export function ColumnFilterInput({
             value={localValue}
             onChange={(e) => handleValueChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            onBlur={onApply}
             placeholder={`Filter ${column.label.toLowerCase()}...`}
             className="h-7 text-xs"
           />

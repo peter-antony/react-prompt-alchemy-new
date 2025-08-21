@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { SmartGrid } from "@/components/SmartGrid";
+import { SmartGrid, SmartGridWithGrouping } from "@/components/SmartGrid";
 import { GridColumnConfig } from "@/types/smartgrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -442,7 +442,7 @@ const TripPlansSearchHub = () => {
 
             {/* Grid Container */}
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
-              <SmartGrid
+              {/* <SmartGrid
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
                 data={gridState.gridData}
@@ -460,6 +460,40 @@ const TripPlansSearchHub = () => {
                 showDefaultConfigurableButton={false}
                 gridTitle="Trip Plans"
                 recordCount={gridState.gridData.length}
+              /> */}
+              <SmartGridWithGrouping
+                key={`grid-${gridState.forceUpdate}`}
+                columns={gridState.columns}
+                data={gridState.gridData}
+                groupableColumns={['id', 'status', 'tripBillingStatus', 'departurePoint', 'arrivalPoint']}
+                showGroupingDropdown={true}
+                editableColumns={['plannedStartEndDateTime']}
+                paginationMode="pagination"
+                onLinkClick={handleLinkClick}
+                onUpdate={handleUpdate}
+                onSubRowToggle={gridState.handleSubRowToggle}
+                selectedRows={selectedRows}
+                onSelectionChange={handleRowSelection}
+                rowClassName={(row: any, index: number) =>
+                  selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                }
+                nestedRowRenderer={renderSubRow}
+                configurableButtons={gridConfigurableButtons}
+                showDefaultConfigurableButton={false}
+                gridTitle="Trip Plans"
+                recordCount={gridState.gridData.length}
+                showCreateButton={true}
+                searchPlaceholder="Search"
+                clientSideSearch={true}
+                extraFilters={[
+                  {
+                    key: 'priority',
+                    label: 'Priority Level',
+                    type: 'select',
+                    options: ['High Priority', 'Medium Priority', 'Low Priority']
+                  }
+                ]}
+                showSubHeaders={false}
               />
               {/* SideDrawer for PlanAndActualDetails */}
               {/* <SideDrawer

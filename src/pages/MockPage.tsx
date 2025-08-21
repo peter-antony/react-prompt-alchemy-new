@@ -53,6 +53,8 @@ const MockPage = () => {
       setError(null);
       try {
         const data: any = await quickOrderService.getMasterCommonData({ messageType: selectedType });
+        const quickOrderScreenFetchData = await quickOrderService.screenFetchQuickOrder(110);
+        console.log("Quick Order Screen Fetch Data:", quickOrderScreenFetchData);
         setApiData((data));
       } catch (err) {
         setError("Error fetching API data");
