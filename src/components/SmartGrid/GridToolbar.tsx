@@ -171,14 +171,14 @@ export function GridToolbar({
             className="gridSearch border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           />
-          {gridTitle !== 'Plan List' && (
+          {/* {gridTitle !== 'Plan List' && (
             <span onClick={() => setShowFilterSystem(!showFilterSystem)} 
               className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3.33333 14L3.33333 10M3.33333 10C4.06971 10 4.66667 9.40305 4.66667 8.66667C4.66667 7.93029 4.06971 7.33333 3.33333 7.33333C2.59695 7.33333 2 7.93029 2 8.66667C2 9.40305 2.59695 10 3.33333 10ZM3.33333 4.66667V2M8 14V10M8 4.66667V2M8 4.66667C7.26362 4.66667 6.66667 5.26362 6.66667 6C6.66667 6.73638 7.26362 7.33333 8 7.33333C8.73638 7.33333 9.33333 6.73638 9.33333 6C9.33333 5.26362 8.73638 4.66667 8 4.66667ZM12.6667 14V11.3333M12.6667 11.3333C13.403 11.3333 14 10.7364 14 10C14 9.26362 13.403 8.66667 12.6667 8.66667C11.9303 8.66667 11.3333 9.26362 11.3333 10C11.3333 10.7364 11.9303 11.3333 12.6667 11.3333ZM12.6667 6V2" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-          )}
+          )} */}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
             className='absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600'>
             <path d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="#475467" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -186,6 +186,21 @@ export function GridToolbar({
 
           {/* <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" /> */}
         </div>
+
+        {/* Advanced Filter Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleAdvancedFilter}
+          disabled={loading}
+          title="Toggle Advanced Filters"
+          className={cn(
+            "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
+            showAdvancedFilter && "bg-blue-50 text-blue-600"
+          )}
+        >
+          <Search className="h-4 w-4" />
+        </Button>
 
         {/* Icon buttons */}
         <Button
@@ -218,21 +233,7 @@ export function GridToolbar({
           )}
         </Button>
 
-        {/* Advanced Filter Toggle */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleAdvancedFilter}
-          disabled={loading}
-          title="Toggle Advanced Filters"
-          className={cn(
-            "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
-            showAdvancedFilter && "bg-blue-50 text-blue-600"
-          )}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-
+        {/* Export Dropdown Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

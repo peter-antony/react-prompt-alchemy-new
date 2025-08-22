@@ -70,6 +70,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       displayValue = String(value || '');
       statusColor = column.statusMap?.[displayValue] || getDefaultStatusColor(displayValue, column.key);
     }
+    // ✅ If displayValue is empty, return null (don't render Badge)
+    if (!displayValue || displayValue.trim() === "") {
+      return null;
+    }
 
     return (
       <Badge className={cn("whitespace-nowrap", statusColor)}>

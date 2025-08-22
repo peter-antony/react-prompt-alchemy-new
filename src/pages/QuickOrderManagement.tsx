@@ -139,12 +139,13 @@ const QuickOrderManagement = () => {
       visible: true,
       pageName: 'Quick_Order',
       leftButtons: [
-        {
-          label: "CIM/CUV Report",
-          onClick: () => console.log("CIM/CUV Report"),
-          type: "Icon",
-          iconName: 'BookText'
-        },
+        // {
+        //   label: "CIM/CUV Report",
+        //   onClick: () => console.log("CIM/CUV Report"),
+        //   disabled: true,
+        //   type: "Icon",
+        //   iconName: 'BookText'
+        // },
       ],
       rightButtons: [
         {

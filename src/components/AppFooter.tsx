@@ -180,7 +180,7 @@ export const AppFooter: React.FC = () => {
     //     submitColor={popupBGColor}
     //   />
     // </footer>
-    <footer className="h-12 bg-white border-t border-gray-200 flex items-center justify-between px-4 fixed bottom-0 left-[60px] right-0 z-20">
+    <footer className="h-12 bg-white border-t border-gray-200 flex items-center justify-between px-6 fixed bottom-0 left-[60px] right-0 z-20">
       {/* {config.pageName == "Quick_Order" && (
         <> */}
              <div className="flex items-center space-x-4">

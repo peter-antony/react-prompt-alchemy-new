@@ -253,13 +253,13 @@ const TripPlansSearchHub = () => {
 
           return {
             ...row,
-            status: {
-              value: row.status,
-              variant: getStatusColorLocal(row.status),
+            Status: {
+              value: row.Status,
+              variant: getStatusColorLocal(row.Status),
             },
-            tripBillingStatus: {
-              value: row.tripBillingStatus,
-              variant: getStatusColorLocal(row.tripBillingStatus),
+            TripBillingStatus: {
+              value: row.TripBillingStatus,
+              variant: getStatusColorLocal(row.TripBillingStatus),
             },
             // Add customer data for API data as well
             customerData: [
