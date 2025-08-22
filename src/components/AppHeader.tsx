@@ -26,7 +26,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
   }
 
   return (
-    <header className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-4">
+    <header className="h-[60px] bg-white border-b border-gray-200 flex items-center justify-between px-4">
       {/* Left side - Logo and Title */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">

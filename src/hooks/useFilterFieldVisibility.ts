@@ -48,7 +48,7 @@ export function useFilterFieldVisibility(
         
         // Extra filters
         extraFilters.forEach(filter => {
-          defaultFields[`extra-${filter.key}`] = true;
+          defaultFields[`${filter.key}`] = true;
         });
         
         // Sub-row columns
@@ -107,7 +107,7 @@ export function useFilterFieldVisibility(
       
       // Add any new extra filters
       extraFilters.forEach(filter => {
-        const key = `extra-${filter.key}`;
+        const key = `${filter.key}`;
         if (!(key in newFields)) {
           newFields[key] = true;
           hasNewFields = true;
@@ -164,7 +164,7 @@ export function useFilterFieldVisibility(
     });
     
     extraFilters.forEach(filter => {
-      defaultFields[`extra-${filter.key}`] = true;
+      defaultFields[`${filter.key}`] = true;
     });
     
     filterableSubRowColumns.forEach(col => {

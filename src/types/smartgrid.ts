@@ -154,6 +154,7 @@ export interface SmartGridProps {
   onDataFetch?(page: number, pageSize: number): Promise<any[]>;
   onUpdate?(row: any): Promise<void>;
   onLinkClick?(rowData: any, columnKey: string): void;
+  onFiltersChange?(filters: Record<string, any>): void;
   onSubRowToggle?(columnKey: string): void;
   onServerFilter?(filters: FilterConfig[]): Promise<void>;
   paginationMode?: 'pagination' | 'infinite';

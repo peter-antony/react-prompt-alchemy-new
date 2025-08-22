@@ -456,7 +456,7 @@ export function AdvancedFilter({
             <CollapsibleContent>
               <div className={cn("bg-green-50/30 p-3", !showSubHeaders && "border-b")}>
                 <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(extraFilters.length, 4)}, 1fr)` }}>
-                  {renderFilterInputs(extraFilters, 'extra-')}
+                  {renderFilterInputs(extraFilters, '')}
                 </div>
               </div>
             </CollapsibleContent>

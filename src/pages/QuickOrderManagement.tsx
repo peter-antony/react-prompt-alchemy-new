@@ -587,6 +587,17 @@ const QuickOrderManagement = () => {
     setSelectedRows(selectedRowObjects);
   };
 
+  const handleFiltersChange = (filters: Record<string, any>) => {
+    console.log('Advanced Filters Changed:', filters);
+    let searchData = [];
+    // Here you can access the filter keys and values when the search button is clicked
+    Object.entries(filters).forEach(([key, value]) => {
+      searchData.push({'FilterName': key, 'FilterValue': value.value})
+      console.log(`Filter - Key: ${key}, Value:`, value);
+    });
+    console.log('Search Data:', searchData);
+  };
+
   const renderSubRow = (row: any, rowIndex: number) => {
     return (
       <DraggableSubRow
@@ -604,56 +615,6 @@ const QuickOrderManagement = () => {
   };
 
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
-
-
-  // Add this function to handle advanced filter search
-  const handleAdvancedFilterSearch = (filterFields: Record<string, any>) => {
-    // Call the API with filter fields
-    setApiStatus('loading');
-    gridState.setLoading(true);
-    quickOrderService.getQuickOrders({ filters: filterFields })
-      .then((response: any) => {
-        const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
-        const data = parsedResponse.ResponseResult;
-        if (!data || !Array.isArray(data)) {
-          gridState.setGridData([]);
-          setApiStatus('error');
-          gridState.setLoading(false);
-          return;
-        }
-        const processedData = data.map((row: any) => {
-          const getStatusColorLocal = (status: string) => {
-            const statusColors: Record<string, string> = {
-              'Released': 'badge-fresh-green rounded-2xl',
-              'Under Execution': 'badge-purple rounded-2xl',
-              'Fresh': 'badge-blue rounded-2xl',
-              'Cancelled': 'badge-red rounded-2xl',
-              'Deleted': 'badge-red rounded-2xl',
-              'Save': 'badge-green rounded-2xl',
-              'Under Amendment': 'badge-orange rounded-2xl',
-              'Confirmed': 'badge-green rounded-2xl',
-              'Initiated': 'badge-blue rounded-2xl',
-            };
-            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
-          };
-          return {
-            ...row,
-            Status: {
-              value: row.Status,
-              variant: getStatusColorLocal(row.Status),
-            },
-          };
-        });
-        gridState.setGridData(processedData);
-        setApiStatus('success');
-        gridState.setLoading(false);
-      })
-      .catch(() => {
-        gridState.setGridData([]);
-        setApiStatus('error');
-        gridState.setLoading(false);
-      });
-  };
 
   return (
     <>
@@ -702,6 +663,7 @@ const QuickOrderManagement = () => {
                 onSubRowToggle={gridState.handleSubRowToggle}
                 selectedRows={selectedRows}
                 onSelectionChange={handleRowSelection}
+                onFiltersChange={handleFiltersChange}
                 rowClassName={(row: any, index: number) =>
                   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
                 }

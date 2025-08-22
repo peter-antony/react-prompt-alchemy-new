@@ -30,7 +30,7 @@ export interface QuickOrderUpdateInput extends Partial<QuickOrderCreateInput> {}
 export const quickOrderService = {
   // Get quick orders with filtering, sorting, and pagination
   getQuickOrders: async (
-    params?: QueryParams
+    params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     // Prepare the request body in the required format
     // const requestBody = {
