@@ -276,7 +276,7 @@ const QuickOrderManagement = () => {
             if (rowData.QuickUniqueID) {
               const resourceGroupAsyncFetch: any = await quickOrderService.screenFetchQuickOrder(rowData.QuickUniqueID);
               // console.log('Quick order Resource Group Unique Data fecth: ', resourceGroupAsyncFetch);
-              const jsonParsedData: any = (resourceGroupAsyncFetch?.data?.ResponseData);
+              const jsonParsedData: any = JSON.parse(resourceGroupAsyncFetch?.data?.ResponseData);
               console.log('Parsed Data:', jsonParsedData);
               setResourceGroups(jsonParsedData?.ResponseResult[0] ? [jsonParsedData.ResponseResult[0]] : []);
               setCardData(jsonParsedData?.ResponseResult[0]?.ResourceGroup || []);

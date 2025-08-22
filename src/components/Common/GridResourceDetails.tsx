@@ -152,7 +152,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
               <Calendar className="w-4 h-4 text-gray-600" />
               <span className="truncate cursor-pointer">
-                {item.OperationalDetails[0]?.FromDate}- {item?.OperationalDetails[0]?.ToDate}
+                {item.OperationalDetails[0]?.FromDate} to {item?.OperationalDetails[0]?.ToDate}
               </span>
               {/* <span className="truncate cursor-pointer">
                                 {item.date}
@@ -161,7 +161,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                 <div className="px-3 py-2">
                   <div className="font-semibold mb-1">From and To Date</div>
-                  <div className="text-[11px] font-medium">{item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}</div>
+                  <div className="text-[11px] font-medium">{item.OperationalDetails[0]?.FromDate} to {item?.OperationalDetails[0]?.ToDate}</div>
                   {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                 </div>
               </div>
