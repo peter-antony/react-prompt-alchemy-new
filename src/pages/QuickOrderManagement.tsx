@@ -18,8 +18,9 @@ import { useFooterStore } from '@/stores/footerStore';
 import CommonPopup from '@/components/Common/CommonPopup';
 import { quickOrderService } from '@/api/services';
 import { SimpleDropDown } from '@/components/Common/SimpleDropDown';
-import CardDetails, { CardDetailsItem } from '@/components/Common/Card-View-Details';
+import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDetails';
 import { Input } from '@/components/ui/input';
+import GridResourceDetails from '@/components/Common/GridResourceDetails';
 
 interface SampleData {
   QuickUniqueID: any;
@@ -272,10 +273,10 @@ const QuickOrderManagement = () => {
           tooltip: 'Order',
           onClick: async (rowData) => {
             console.log('clicked for:', rowData);
-            if(rowData.QuickUniqueID) {
+            if (rowData.QuickUniqueID) {
               const resourceGroupAsyncFetch: any = await quickOrderService.screenFetchQuickOrder(rowData.QuickUniqueID);
               // console.log('Quick order Resource Group Unique Data fecth: ', resourceGroupAsyncFetch);
-              const jsonParsedData: any = JSON.parse(resourceGroupAsyncFetch?.data?.ResponseData);
+              const jsonParsedData: any = (resourceGroupAsyncFetch?.data?.ResponseData);
               console.log('Parsed Data:', jsonParsedData);
               setResourceGroups(jsonParsedData?.ResponseResult[0] ? [jsonParsedData.ResponseResult[0]] : []);
               setCardData(jsonParsedData?.ResponseResult[0]?.ResourceGroup || []);
@@ -605,6 +606,55 @@ const QuickOrderManagement = () => {
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
 
 
+  // Add this function to handle advanced filter search
+  const handleAdvancedFilterSearch = (filterFields: Record<string, any>) => {
+    // Call the API with filter fields
+    setApiStatus('loading');
+    gridState.setLoading(true);
+    quickOrderService.getQuickOrders({ filters: filterFields })
+      .then((response: any) => {
+        const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+        const data = parsedResponse.ResponseResult;
+        if (!data || !Array.isArray(data)) {
+          gridState.setGridData([]);
+          setApiStatus('error');
+          gridState.setLoading(false);
+          return;
+        }
+        const processedData = data.map((row: any) => {
+          const getStatusColorLocal = (status: string) => {
+            const statusColors: Record<string, string> = {
+              'Released': 'badge-fresh-green rounded-2xl',
+              'Under Execution': 'badge-purple rounded-2xl',
+              'Fresh': 'badge-blue rounded-2xl',
+              'Cancelled': 'badge-red rounded-2xl',
+              'Deleted': 'badge-red rounded-2xl',
+              'Save': 'badge-green rounded-2xl',
+              'Under Amendment': 'badge-orange rounded-2xl',
+              'Confirmed': 'badge-green rounded-2xl',
+              'Initiated': 'badge-blue rounded-2xl',
+            };
+            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          };
+          return {
+            ...row,
+            Status: {
+              value: row.Status,
+              variant: getStatusColorLocal(row.Status),
+            },
+          };
+        });
+        gridState.setGridData(processedData);
+        setApiStatus('success');
+        gridState.setLoading(false);
+      })
+      .catch(() => {
+        gridState.setGridData([]);
+        setApiStatus('error');
+        gridState.setLoading(false);
+      });
+  };
+
   return (
     <>
       <AppLayout>
@@ -663,13 +713,46 @@ const QuickOrderManagement = () => {
                 showCreateButton={true}
                 searchPlaceholder="Search"
                 clientSideSearch={true}
+                // extraFilters={[
+                //   {
+                //     key: 'priority',
+                //     label: 'Priority Level',
+                //     type: 'select',
+                //     options: ['High Priority', 'Medium Priority', 'Low Priority']
+                //   }
+                // ]}
                 extraFilters={[
-                  {
-                    key: 'priority',
-                    label: 'Priority Level',
-                    type: 'select',
-                    options: ['High Priority', 'Medium Priority', 'Low Priority']
-                  }
+                  { "key": "OrderType", "label": "Order Type", "type": "text" },
+                  { "key": "Supplier", "label": "Supplier", "type": "text" },
+                  { "key": "Contract", "label": "Contract", "type": "text" },
+                  { "key": "Cluster", "label": "Cluster", "type": "text" },
+                  { "key": "Customer", "label": "Customer", "type": "text" },
+                  { "key": "CustomerSupplierRefNo", "label": "Customer Supplier Ref No", "type": "text" },
+                  { "key": "DraftBillNo", "label": "Draft Bill No", "type": "text" },
+                  { "key": "DeparturePoint", "label": "Departure Point", "type": "text" },
+                  { "key": "ArrivalPoint", "label": "Arrival Point", "type": "text" },
+                  { "key": "ServiceType", "label": "Service Type", "type": "text" },
+                  { "key": "ServiceFromDate", "label": "Service From Date", "type": "text" },
+                  { "key": "ServiceToDate", "label": "Service To Date", "type": "text" },
+                  { "key": "QuickUniqueID", "label": "Quick Unique ID", "type": "text" },
+                  { "key": "QuickOrderNo", "label": "Quick Order No", "type": "text" },
+                  { "key": "DraftBillStatus", "label": "Draft Bill Status", "type": "text" },
+                  { "key": "IsBillingFailed", "label": "Is Billing Failed", "type": "text" },
+                  { "key": "SubService", "label": "Sub Service", "type": "text" },
+                  { "key": "WBS", "label": "WBS", "type": "text" },
+                  { "key": "OperationalLocation", "label": "Operational Location", "type": "text" },
+                  { "key": "PrimaryRefDoc", "label": "Primary Ref Doc", "type": "text" },
+                  { "key": "CreatedBy", "label": "Created By", "type": "text" },
+                  { "key": "SecondaryDoc", "label": "Secondary Doc", "type": "text" },
+                  { "key": "InvoiceNo", "label": "Invoice No", "type": "text" },
+                  { "key": "InvoiceStatus", "label": "Invoice Status", "type": "text" },
+                  { "key": "ResourceType", "label": "Resource Type", "type": "text" },
+                  { "key": "Wagon", "label": "Wagon", "type": "text" },
+                  { "key": "Container", "label": "Container", "type": "text" },
+                  { "key": "FromOrderDate", "label": "From Order Date", "type": "text" },
+                  { "key": "ToOrderDate", "label": "To Order Date", "type": "text" },
+                  { "key": "CreatedFromDate", "label": "Created From Date", "type": "text" },
+                  { "key": "CreatedToDate", "label": "Created To Date", "type": "text" }
                 ]}
                 showSubHeaders={false}
               />
@@ -771,7 +854,7 @@ const QuickOrderManagement = () => {
                 </div>
               </div>
               <div className="mt-4 mb-6">
-                <CardDetails data={cardData} isEditQuickOrder={false} showMenuButton={false} />
+                <GridResourceDetails data={cardData} isEditQuickOrder={false} showMenuButton={false} />
               </div>
             </div>
           </SideDrawer>

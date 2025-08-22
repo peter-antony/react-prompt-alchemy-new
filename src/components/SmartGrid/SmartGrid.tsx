@@ -67,6 +67,9 @@ export function SmartGrid({
   showGroupingDropdown,
   clientSideSearch = false,
   showSubHeaders = true,
+  showMainRowFilters = false,
+  showExtraFilters = true,
+  showSubRowFilters = false,
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`
 }: SmartGridProps & { exportFilename?: string }) {
   const {
@@ -866,6 +869,9 @@ export function SmartGrid({
           clientSideSearch={clientSideSearch}
           api={mockFilterAPI}
           showSubHeaders={showSubHeaders}
+          showMainRowFilters={showMainRowFilters}
+          showExtraFilters={showExtraFilters}
+          showSubRowFilters={showSubRowFilters}
         />
 
       {/* Table Container with horizontal scroll prevention */}

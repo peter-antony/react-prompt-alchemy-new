@@ -40,6 +40,9 @@ interface AdvancedFilterProps {
   api?: FilterSystemAPI;
   clientSideSearch?: boolean;
   showSubHeaders?: boolean;
+  showMainRowFilters?: boolean;
+  showExtraFilters?: boolean;
+  showSubRowFilters?: boolean;
 }
 
 export function AdvancedFilter({
@@ -55,7 +58,10 @@ export function AdvancedFilter({
   userId,
   api,
   clientSideSearch = false,
-  showSubHeaders = true
+  showSubHeaders = true,
+  showMainRowFilters = true,
+  showExtraFilters = true,
+  showSubRowFilters = true
 }: AdvancedFilterProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue>>({});
   const [pendingFilters, setPendingFilters] = useState<Record<string, FilterValue>>({});
@@ -400,7 +406,7 @@ export function AdvancedFilter({
       {/* Filter Panel - Always expanded when visible */}
       <div className="bg-white border rounded shadow-sm">
         {/* Main Column Filters */}
-        {filterableColumns.length > 0 && (
+        {showMainRowFilters && filterableColumns.length > 0 && (
           <Collapsible open={isMainFiltersOpen} onOpenChange={setIsMainFiltersOpen}>
             {showSubHeaders && (
               <CollapsibleTrigger asChild>
@@ -429,7 +435,7 @@ export function AdvancedFilter({
         )}
 
         {/* Extra Filters */}
-        {extraFilters.length > 0 && (
+        {showExtraFilters && extraFilters.length > 0 && (
           <Collapsible open={isExtraFiltersOpen} onOpenChange={setIsExtraFiltersOpen}>
             {showSubHeaders && (
               <CollapsibleTrigger asChild>
@@ -458,7 +464,7 @@ export function AdvancedFilter({
         )}
 
         {/* Sub-row Filters */}
-        {(filterableSubRowColumns.length > 0 || subRowFilters.length > 0) && (
+        {showSubRowFilters && (filterableSubRowColumns.length > 0 || subRowFilters.length > 0) && (
           <Collapsible open={isSubRowFiltersOpen} onOpenChange={setIsSubRowFiltersOpen}>
             {showSubHeaders && (
               <CollapsibleTrigger asChild>
