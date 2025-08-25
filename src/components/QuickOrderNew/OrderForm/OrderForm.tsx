@@ -35,7 +35,7 @@ interface OrderFormProps {
 }
 
 const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll }: OrderFormProps) => {
-  const [OrderType, setOrderType] = useState('buy');
+  const [OrderType, setOrderType] = useState('BUY');
   const [OrderDate, setOrderDate] = useState<Date>();
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showOrderNoSuggestions, setShowOrderNoSuggestions] = useState(false);
@@ -150,14 +150,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     fetchAll();
   }, []);
   useEffect(() => {
-    
+
     const quickOrder = jsonStore.getQuickOrder();
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
-      setOrderType(quickOrder.OrderType || 'buy');
+      setOrderType(quickOrder.OrderType || 'BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
     } else if (!isEditQuickOrder) {
-      setOrderType('buy');
+      setOrderType('BUY');
       setFormData(normalizeOrderFormDetails({}));
       setmoreInfoData(normalizeMoreInfoDetails({}));
     }
@@ -188,7 +188,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
       // setApiData(data);
-    } 
+    }
     finally {
       setLoading(true);
     }
@@ -245,10 +245,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       label: '',
       fieldType: 'radio',
       width: 'full',
-      value: OrderType || 'buy',
+      value: OrderType || 'BUY',
       options: [
-        { label: 'Buy Order', value: 'buy' },
-        { label: 'Sell Order', value: 'sell' }
+        { label: 'Buy Order', value: 'BUY' },
+        { label: 'Sell Order', value: 'SELL' }
       ],
       mandatory: false,
       visible: true,
@@ -283,7 +283,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 3,
-      options: contracts.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
+      options: contracts.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     Customer: {
       id: 'Customer',
@@ -292,10 +292,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'half',
       value: '',
       mandatory: true,
-      visible: OrderType === 'sell',
+      visible: OrderType === 'SELL',
       editable: true,
       order: 4,
-      options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
+      options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     Vendor: {
       id: 'Vendor',
@@ -304,10 +304,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'half',
       value: '',
       mandatory: true,
-      visible: OrderType === 'buy',
+      visible: OrderType === 'BUY',
       editable: true,
       order: 4,
-      options: vendors.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
+      options: vendors.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     Cluster: {
       id: 'Cluster',
@@ -319,7 +319,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 5,
-      options: clusters.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id + " || " + c.name })),
+      options: clusters.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
@@ -328,7 +328,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'full',
       value: '',
       mandatory: false,
-      visible: OrderType === 'buy',
+      visible: OrderType === 'BUY',
       editable: true,
       order: 6,
       placeholder: 'IO/0000000042',
@@ -506,10 +506,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     return new Date(year, month - 1, day);
   }
 
-  
+
   const [moreInfoTitle, setmoreInfoTitle] = useState('More Info');
   const initialMoreInfoDetails = normalizeMoreInfoDetails(jsonStore.getQuickOrder() || {});
   const [moreInfoData, setmoreInfoData] = useState(initialMoreInfoDetails);
+  const [orderNo, setOrderNo] = useState('');
   // Utility to normalize MoreInfo details from store to config field IDs
   function normalizeMoreInfoDetails(data) {
     return {
@@ -562,7 +563,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     setResourceGroupOpen(false);
     setIsBack(true);
     const resourceGroups = jsonStore.getAllResourceGroups();
-     if (resourceGroups.length > 0) {
+    if (resourceGroups.length > 0) {
       setIsResourceData(true);
       setResourceData(resourceGroups);
     }
@@ -579,23 +580,43 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       ...jsonStore.getJsonData().quickOrder,
       ...formValues.QuickOrder,
       "ModeFlag": "Insert",
+      "QuickUniqueID": -1
     });
 
     const fullJson = jsonStore.getJsonData();
     console.log("FULL JSON :: ", fullJson);
 
     try {
-      const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
-      console.log(" try", data);
-      
+      //  Update resource
+      const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+      console.log("updateQuickOrderResource result:", res);
+
+      //  Get OrderNumber from response
+      const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+      console.log("OrderNumber:", OrderNumber);
+
+      //  Fetch the full quick order details
+      // const fetchRes: any = await quickOrderService.screenFetchQuickOrder(OrderNumber);
+      // console.log("screenFetchQuickOrder result:", fetchRes?.data?.ResponseData.ResponseResult);
+      quickOrderService.screenFetchQuickOrder(OrderNumber).then((fetchRes: any) => {
+        let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", parsedData?.ResponseResult);
+        jsonStore.setQuickOrder(JSON.parse(parsedData?.ResponseResult));
+        const fullJson2 = jsonStore.getJsonData();
+
+        console.log("FULL JSON :: ", fullJson2);
+      })
+      //  Update your store or state with the fetched data
+
+
     } catch (err) {
-      console.log(" catch", error);
-      setError(`Error fetching API data for`);
-    } 
+      console.log("CATCH :: ", err);
+      setError(`Error fetching API data for resource group`);
+    }
     finally {
       setResourceGroupOpen(true);
     }
-        
   }
 
   return (
@@ -743,7 +764,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           />
         </div>
       </div>
-      
+
       <div className="lg:col-span-1 w-4/6">
         {(!isEditQuickOrder && !isResourceData) ?
           <div className="rounded-lg p-8 flex flex-col items-center justify-center h-full">

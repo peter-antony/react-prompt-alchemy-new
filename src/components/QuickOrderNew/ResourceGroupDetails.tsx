@@ -99,7 +99,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const moreInfoDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
 
-  const onSaveDetails = () => {
+  const onSaveDetails = async () => {
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
@@ -151,11 +151,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Insert",
         "ResourceStatus": "Save",
-        "ResourceUniqueID": "",
+        "ResourceUniqueID": "-1",
         // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
-      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
-      setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
+      // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+      // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
         ...formValues.basicDetails
@@ -169,14 +169,29 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         ...formValues.billingDetails
       });
       const fullResourceJson = jsonStore.getResourceJsonData();
-      console.log("FULL RESOURCE JSON :: ", fullResourceJson);
+      // jsonStore.setQuickOrder({
+      //   ...jsonStore.getJsonData().quickOrder,
+      //   "ModeFlag": "Update",
+      //   "QuickUniqueID": 288
+      // });
       jsonStore.pushResourceGroup(fullResourceJson);
-      console.log("FULL JSON :: ", jsonStore.getQuickOrder());
+      const fullJson = jsonStore.getQuickOrder();
+      console.log(" BEFORE API FULL  JSON :: ", fullJson);
+      try {
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult);
+        console.log(" try", data);
+
+      } catch (err) {
+        console.log(" catch", err);
+        setError(`Error fetching API data for Update ResourceGroup`);
+      }
+      finally {
+        if (onSaveSuccess) onSaveSuccess();
+      }
 
     }
     // if (currentStep == 1) {
     //   //Closing ResourceGroupDetails Modal
-    //   if (onSaveSuccess) onSaveSuccess();
     // }
 
   }
@@ -344,7 +359,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     setLoading(false);
     setError(null);
     try {
-      const data:any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
       setApiData(data);
       console.log("API Data:", data);
       if (messageType == "Service type Init") {
@@ -369,7 +384,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   };
   // Iterate through all messageTypes
   const fetchAll = async () => {
-      setLoading(false);
+    setLoading(false);
     for (const type of messageTypes) {
       setSelectedType(type);
       await fetchData(type);
@@ -715,7 +730,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 4,
     },
-    
+
   };
 
   const steps = [

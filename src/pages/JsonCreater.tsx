@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 const QUICK_ORDER_JSON = {
   "ResponseResult": {
     "QuickOrder": {
-      "QuickUniqueID": "QO/1000034/2025",
-      "OrderType": "buy",
+      "QuickUniqueID": "",
+      "OrderType": "BUY",
       "QuickOrderNo": "",
       "QuickOrderDate": "",
       "Vendor": "",
@@ -47,7 +47,7 @@ const QUICK_ORDER_JSON = {
 }
 
 const Resource_Group_JSON = {
-  "ResourceUniqueID": "R00",
+  "ResourceUniqueID": "-1",
   "ModeFlag": "Insert/Update/Delete/NoChange",
   "ResourceStatus": "Save/Confirm/UnderAmend",
   "BasicDetails": {
