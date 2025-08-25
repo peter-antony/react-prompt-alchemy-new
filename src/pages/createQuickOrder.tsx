@@ -6,7 +6,7 @@ import { EyeOff } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
 import NewCreateQuickOrder from '@/components/QuickOrderNew/NewQuickOrder';
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useFooterStore } from '@/stores/footerStore';
 
 
@@ -14,7 +14,7 @@ const CreateQuickOrder = () => {
   const { setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditQuickOrder = !!searchParams.get("id");
-  //here to store the id
+  //here to store the id  
 
   useEffect(() => {
     setFooter({
@@ -71,7 +71,7 @@ const CreateQuickOrder = () => {
   return (
     <AppLayout>
       <div className="main-content-h bg-gray-100">
-        <div className="container mx-auto p-4 px-6 ">
+        <div className="p-4 px-6 ">
           <div className="hidden md:block">
             <Breadcrumb items={breadcrumbItems} />
           </div>

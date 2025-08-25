@@ -96,12 +96,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   // Panel refs for getting form values
   const basicDetailsRef = useRef<DynamicPanelRef>(null);
   const operationalDetailsRef = useRef<DynamicPanelRef>(null);
+  const moreInfoDetailsRef = useRef<DynamicPanelRef>(null);
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
 
   const onSaveDetails = () => {
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
       operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
+      moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder && resourceId) {
@@ -119,7 +121,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Update",
         "ResourceStatus": "Save",
-        "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
+        "ResourceUniqueID": "",
+        // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
       localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
       jsonStore.setResourceBasicDetails({
@@ -148,7 +151,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Insert",
         "ResourceStatus": "Save",
-        "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
+        "ResourceUniqueID": "",
+        // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
       localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
       setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
@@ -170,10 +174,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
     }
-    if (currentStep == 1) {
-      //Closing ResourceGroupDetails Modal
-      if (onSaveSuccess) onSaveSuccess();
-    }
+    // if (currentStep == 1) {
+    //   //Closing ResourceGroupDetails Modal
+    //   if (onSaveSuccess) onSaveSuccess();
+    // }
 
   }
 
@@ -202,6 +206,21 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         Remarks: data.Remarks,
       };
   }
+
+  function normalizeMoreInfoDetails(data) {
+    if (data)
+      return {
+        OperationalLocation: data.OperationalLocation,
+        DepartPoint: data.DepartPoint,
+        ArrivalPoint: data.ArrivalPoint,
+        FromDate: "",
+        FromTime: data.FromTime,
+        ToDate: "",
+        ToTime: data.ToTime,
+        Remarks: data.Remarks,
+      };
+  }
+
   const parseDDMMYYYY = (dateStr) => {
     // Expects dateStr in 'DD/MM/YYYY'
     const [day, month, year] = dateStr.split('/').map(Number);
@@ -235,6 +254,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       ? normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {})
       : {};
 
+  const getInitialMoreInfoDetails = () =>
+    isEditQuickOrder
+      ? normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {})
+      : {};
+
   const getInitialBillingDetails = () =>
     isEditQuickOrder
       ? normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {})
@@ -242,16 +266,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   const [basicDetailsData, setBasicDetailsData] = useState(getInitialBasicDetails);
   const [operationalDetailsData, setOperationalDetailsData] = useState(getInitialOperationalDetails);
+  const [moreInfoDetailsData, setMoreInfoDetailsData] = useState(getInitialMoreInfoDetails);
   const [billingDetailsData, setBillingDetailsData] = useState(getInitialBillingDetails);
 
   // Panel titles state
   const [basicDetailsTitle, setBasicDetailsTitle] = useState('Basic Details');
   const [operationalDetailsTitle, setOperationalDetailsTitle] = useState('Operational Details');
+  const [moreInfoTitle, setmoreInfoTitle] = useState('More Info');
   const [billingDetailsTitle, setBillingDetailsTitle] = useState('Billing Details');
 
   // Panel visibility state
   const [basicDetailsVisible, setBasicDetailsVisible] = useState(true);
   const [operationalDetailsVisible, setOperationalDetailsVisible] = useState(true);
+  const [moreInfoVisible, setMoreInfoVisible] = useState(true);
   const [billingDetailsVisible, setBillingDetailsVisible] = useState(true);
   const [resourceList, setResourceList] = useState<any[]>([]);
   const [resourceTypeList, setResourceTypeList] = useState<any[]>([]);
@@ -295,6 +322,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     if (isEditQuickOrder) {
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
+      setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
     } else {
       setBasicDetailsData({});
@@ -632,6 +660,64 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       width: 'full',
     }
   };
+
+  //MORE INFO DETAILS
+  const moreInfoPanelConfig: PanelConfig = {
+    PrimaryDocTypeandNo: {
+      id: 'PrimaryDocType',
+      label: 'Primary Doc Type and No.',
+      fieldType: 'inputdropdown',
+      width: 'full',
+      value: '',
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 1,
+      options: [
+        { label: 'IO-Hire/Rent', value: 'IO-Hire/Rent' },
+        { label: 'IO-Buy/Rent', value: 'IO-Buy/Rent' },
+      ]
+    },
+    SecondaryDocTypeandNo: {
+      id: 'SecondaryDocType',
+      label: 'Secondary Doc Type and No.',
+      fieldType: 'inputdropdown',
+      width: 'full',
+      value: '',
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 2,
+      options: [
+        { label: 'IO-Hire/Rent', value: 'IO-Hire/Rent' },
+        { label: 'IO-Buy/Rent', value: 'IO-Buy/Rent' },
+      ]
+    },
+    PrimaryDocDate: {
+      id: 'PrimaryDocDate',
+      label: 'Primary Doc Date',
+      fieldType: 'date',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+    },
+    SecondaryDocDate: {
+      id: 'SecondaryDocDate',
+      label: 'Secondary Doc Date',
+      fieldType: 'date',
+      width: 'half',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+    },
+    
+  };
+
   const steps = [
     {
       label: "Resource Group Creation",
@@ -698,6 +784,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const panels = [
     { id: 'basic-details', title: basicDetailsTitle, visible: basicDetailsVisible },
     { id: 'operational-details', title: operationalDetailsTitle, visible: operationalDetailsVisible },
+    { id: 'more-info', title: moreInfoTitle, visible: moreInfoVisible },
     { id: 'billing-details', title: billingDetailsTitle, visible: billingDetailsVisible }
   ];
 
@@ -708,6 +795,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         break;
       case 'operational-details':
         setOperationalDetailsVisible(visible);
+        break;
+      case 'more-info':
+        setMoreInfoVisible(visible);
         break;
       case 'billing-details':
         setBillingDetailsVisible(visible);
@@ -903,6 +993,32 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                         );
                         currentTabIndex += operationalDetailsVisibleCount;
                       }
+
+                      // Panel 4: More Info
+                      if (moreInfoVisible && loading) {
+                        const moreInfoVisibleCount = Object.values(moreInfoPanelConfig).filter(config => config.visible).length;
+                        panels.push(
+                          <DynamicPanel
+                            ref={moreInfoDetailsRef}
+                            key="more-info"
+                            panelId="more-info"
+                            panelOrder={4}
+                            panelIcon={<Wrench className="w-5 h-5 text-lime-500" />}
+                            startingTabIndex={currentTabIndex}
+                            panelTitle={moreInfoTitle}
+                            panelConfig={moreInfoPanelConfig}
+                            formName="basicDetailsForm"
+                            initialData={basicDetailsData}
+                            onTitleChange={setmoreInfoTitle}
+                            onWidthChange={setBasicDetailsWidth}
+                            getUserPanelConfig={getUserPanelConfig}
+                            saveUserPanelConfig={saveUserPanelConfig}
+                            userId="current-user"
+                            panelWidth={basicDetailsWidth}
+                          />
+                        );
+                        currentTabIndex += moreInfoVisibleCount;
+                      }
                       return panels;
                     })()}
                   </div>
@@ -942,7 +1058,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                 </div>
 
                 {/* Show message when all panels are hidden */}
-                {!basicDetailsVisible && !operationalDetailsVisible && !billingDetailsVisible && (
+                {!basicDetailsVisible && !operationalDetailsVisible && !moreInfoVisible && !billingDetailsVisible && (
                   <div className="bg-white p-8 rounded-lg shadow-sm text-center">
                     <EyeOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-700 mb-2">All panels are hidden</h3>

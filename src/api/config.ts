@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
     COMMON: "/common",
     COMBO: "/common/combo",
     SCREEN_FETCH: '/quickorderhub/screenfetch',
+    ORDERFORM: "/quickorderhub/update",
   },
   // Invoice management
   INVOICES: {

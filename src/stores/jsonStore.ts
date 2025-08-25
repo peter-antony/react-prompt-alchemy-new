@@ -534,6 +534,24 @@ function getOperationalDetailsByResourceUniqueID(resourceUniqueID: string) {
   return undefined;
 }
 
+function getMoreInfoDetailsByResourceUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const found = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    if (found && found.OperationalDetails) {
+      return found.OperationalDetails;
+    }
+  }
+  return undefined;
+}
+
 function getBillingDetailsByResourceUniqueID(resourceUniqueID: string) {
   if (
     jsonData &&
@@ -694,6 +712,7 @@ const jsonStore = {
   pushResourceGroup,
   updateResourceGroupDetailsByUniqueID,
   getOperationalDetailsByResourceUniqueID,
+  getMoreInfoDetailsByResourceUniqueID,
   getBillingDetailsByResourceUniqueID,
   getBasicDetailsByResourceUniqueID,
   setPlanDetailsJson,

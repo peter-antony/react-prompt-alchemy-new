@@ -261,4 +261,44 @@ export const quickOrderService = {
     );
     return response.data;
   },
+
+  // Update quick order
+  updateQuickOrderResource: async (
+    // id: string,
+    data: QuickOrderUpdateInput
+  ): Promise<ApiResponse<QuickOrder>> => {
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: "Quick Order Update",
+        UserID: "ramcouser",
+        OUID: 4,
+        Role: "ramcorole",
+      },
+      MessageContents: {
+        UniqueID: "",
+        QuickOrder: data
+      }
+    });
+    const requestBody = {
+      // context: {
+      //   MessageID: "12345",
+      //   MessageType: "Quick Order Update",
+      //   UserID: "ramcouser",
+      //   OUID: 4,
+      //   Role: "ramcorole",
+      // },
+      // MessageContents: {
+      //   UniqueID: "",
+      //   QuickOrder: data
+      // }
+      "RequestData": stringifyData
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.ORDERFORM,
+      requestBody
+    );
+    return response.data;
+  },
 };

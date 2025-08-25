@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import jsonStore from '@/stores/jsonStore';
 import { useNavigate } from 'react-router-dom';
 
-const QUICK_ORDER_JSON =
-{
+const QUICK_ORDER_JSON = {
   "ResponseResult": {
     "QuickOrder": {
       "QuickUniqueID": "QO/1000034/2025",
@@ -47,8 +46,7 @@ const QUICK_ORDER_JSON =
   }
 }
 
-const Resource_Group_JSON =
-{
+const Resource_Group_JSON = {
   "ResourceUniqueID": "R00",
   "ModeFlag": "Insert/Update/Delete/NoChange",
   "ResourceStatus": "Save/Confirm/UnderAmend",
@@ -215,6 +213,7 @@ const Actual_Details_JSON = {
   }
 
 };
+
 const JsonCreater: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => { 
@@ -226,6 +225,7 @@ const JsonCreater: React.FC = () => {
     jsonStore.setResourceJsonData(Resource_Group_JSON);
     jsonStore.setPlanDetailsJson(Plan_Details_JSON);
     console.log("QUICK ORDER JSON AFTER RESET : ", jsonStore.getJsonData());
+    // navigate('/create-quick-order');
     navigate('/quick-order');
   }, [navigate]);
   return null;
