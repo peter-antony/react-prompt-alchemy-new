@@ -51,6 +51,10 @@ const QuickOrderManagement = () => {
   const [selectedRows, setSelectedRows] = useState<Set<any>>(new Set());
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [searchFilters, setSearchFilters] = useState<Record<string, any>>({});
+  const [filterTimeout, setFilterTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isFilterApiCallInProgress, setIsFilterApiCallInProgress] = useState(false);
+  const [lastFilterCall, setLastFilterCall] = useState<number>(0);
+  const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { config, setFooter, resetFooter } = useFooterStore();
@@ -416,6 +420,7 @@ const QuickOrderManagement = () => {
     setApiStatus('loading');
 
     let isMounted = true;
+    let searchFilters = [];
 
     quickOrderService.getQuickOrders({
       filters: searchFilters
@@ -489,6 +494,15 @@ const QuickOrderManagement = () => {
     };
   }, []); // Add dependencies if needed
 
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (filterTimeout) {
+        clearTimeout(filterTimeout);
+      }
+    };
+  }, [filterTimeout]);
+
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
     { label: 'Quick Order Management', active: true }
@@ -510,17 +524,110 @@ const QuickOrderManagement = () => {
   };
 
   const handleSearch = () => {
-    console.log("Searching with filters:", searchFilters);
-    // Trigger API call with new filters
-    setSearchFilters(searchFilters);
-    toast({
-      title: "Search",
-      description: "Search functionality would be implemented here",
-    });
+    console.log("Manual search triggered with filters:", currentFilters);
+    
+    // Prevent multiple API calls if one is already in progress
+    if (isFilterApiCallInProgress) {
+      console.log('API call already in progress, skipping...');
+      return;
+    }
+
+    setIsFilterApiCallInProgress(true);
+    setLastFilterCall(Date.now());
+    
+    let searchData = [];
+    // Process filters and convert to the required format
+    // If filters are empty {}, still make the API call with empty searchData
+    if (Object.keys(currentFilters).length > 0) {
+      Object.entries(currentFilters).forEach(([key, value]) => {
+        if (value && value.value) {
+          searchData.push({'FilterName': key, 'FilterValue': value.value});
+        }
+      });
+    }
+    // If filters are empty, searchData will remain as empty array []
+    
+    console.log('Manual Search Data:', searchData);
+    
+    // Call API with current filters
+    gridState.setLoading(true);
+    setApiStatus('loading');
+
+    quickOrderService.getQuickOrders({
+      filters: searchData
+    })
+      .then((response: any) => {
+        console.log('Manual Search API Response:', response);
+
+        // Handle paginated response structure - same as in useEffect
+        const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+        const data = parsedResponse.ResponseResult;
+
+        if (!data || !Array.isArray(data)) {
+          console.warn('API returned invalid data format:', response);
+          gridState.setGridData([]);
+          gridState.setLoading(false);
+          setApiStatus('error');
+          setIsFilterApiCallInProgress(false);
+          return;
+        }
+
+        const processedData = data.map((row: any) => {
+          // Helper function for status color (same as in useEffect)
+          const getStatusColorLocal = (status: string) => {
+            const statusColors: Record<string, string> = {
+              'Released': 'badge-fresh-green rounded-2xl',
+              'Under Execution': 'badge-purple rounded-2xl',
+              'Fresh': 'badge-blue rounded-2xl',
+              'Cancelled': 'badge-red rounded-2xl',
+              'Deleted': 'badge-red rounded-2xl',
+              'Save': 'badge-green rounded-2xl',
+              'Under Amendment': 'badge-orange rounded-2xl',
+              'Confirmed': 'badge-green rounded-2xl',
+              'Initiated': 'badge-blue rounded-2xl',
+            };
+            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          };
+
+          return {
+            ...row,
+            Status: {
+              value: row.Status,
+              variant: getStatusColorLocal(row.Status),
+            },
+          };
+        });
+
+        console.log('Manual Search Processed Data:', processedData);
+
+        gridState.setGridData(processedData);
+        gridState.setLoading(false);
+        setApiStatus('success');
+        setIsFilterApiCallInProgress(false);
+        
+        toast({
+          title: "Search Complete",
+          description: `Found ${processedData.length} records`,
+        });
+      })
+      .catch((error: any) => {
+        console.error("Manual search failed:", error);
+        gridState.setGridData([]);
+        gridState.setLoading(false);
+        setApiStatus('error');
+        setIsFilterApiCallInProgress(false);
+        
+        toast({
+          title: "Search Failed",
+          description: "Failed to fetch data. Please try again.",
+          variant: "destructive"
+        });
+      });
   };
 
   const handleClear = () => {
     setSearchFilters({});
+    setCurrentFilters({});
     toast({
       title: "Cleared",
       description: "Search filters have been cleared",
@@ -589,13 +696,129 @@ const QuickOrderManagement = () => {
 
   const handleFiltersChange = (filters: Record<string, any>) => {
     console.log('Advanced Filters Changed:', filters);
-    let searchData = [];
-    // Here you can access the filter keys and values when the search button is clicked
-    Object.entries(filters).forEach(([key, value]) => {
-      searchData.push({'FilterName': key, 'FilterValue': value.value})
-      console.log(`Filter - Key: ${key}, Value:`, value);
-    });
-    console.log('Search Data:', searchData);
+    
+    // Check if filters have actually changed
+    const filtersChanged = JSON.stringify(filters) !== JSON.stringify(currentFilters);
+    if (!filtersChanged) {
+      console.log('Filters unchanged, skipping API call');
+      return;
+    }
+
+    // Prevent multiple API calls if one is already in progress
+    if (isFilterApiCallInProgress) {
+      console.log('API call already in progress, skipping...');
+      return;
+    }
+
+    // Rate limiting - prevent calls within 2 seconds of last call
+    const now = Date.now();
+    if (now - lastFilterCall < 2000) {
+      console.log('Rate limiting: too soon since last API call');
+      return;
+    }
+
+    // Clear any existing timeout
+    if (filterTimeout) {
+      clearTimeout(filterTimeout);
+    }
+
+    // Update current filters immediately to prevent duplicate calls
+    setCurrentFilters(filters);
+
+    // Set a new timeout to debounce the API call
+    const timeout = setTimeout(() => {
+      // Double-check if we're still in progress
+      if (isFilterApiCallInProgress) {
+        console.log('API call still in progress, skipping...');
+        return;
+      }
+
+      setIsFilterApiCallInProgress(true);
+      setLastFilterCall(Date.now());
+      
+      let searchData = [];
+      // Process filters and convert to the required format
+      // If filters are empty {}, still make the API call with empty searchData
+      if (Object.keys(filters).length > 0) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value && value.value) {
+            searchData.push({'FilterName': key, 'FilterValue': value.value});
+          }
+        });
+      }
+      // If filters are empty, searchData will remain as empty array []
+      
+      console.log('Search Data:', searchData);
+      
+      // Update search filters state
+      setSearchFilters(filters);
+      
+      // Call API with new filters (same as in useEffect)
+      gridState.setLoading(true);
+      setApiStatus('loading');
+
+      quickOrderService.getQuickOrders({
+        filters: searchData
+      })
+        .then((response: any) => {
+          console.log('API Response with filters:', response);
+
+          // Handle paginated response structure - same as in useEffect
+          const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+          const data = parsedResponse.ResponseResult;
+
+          if (!data || !Array.isArray(data)) {
+            console.warn('API returned invalid data format:', response);
+            gridState.setGridData([]);
+            gridState.setLoading(false);
+            setApiStatus('error');
+            setIsFilterApiCallInProgress(false);
+            return;
+          }
+
+          const processedData = data.map((row: any) => {
+            // Helper function for status color (same as in useEffect)
+            const getStatusColorLocal = (status: string) => {
+              const statusColors: Record<string, string> = {
+                'Released': 'badge-fresh-green rounded-2xl',
+                'Under Execution': 'badge-purple rounded-2xl',
+                'Fresh': 'badge-blue rounded-2xl',
+                'Cancelled': 'badge-red rounded-2xl',
+                'Deleted': 'badge-red rounded-2xl',
+                'Save': 'badge-green rounded-2xl',
+                'Under Amendment': 'badge-orange rounded-2xl',
+                'Confirmed': 'badge-green rounded-2xl',
+                'Initiated': 'badge-blue rounded-2xl',
+              };
+              return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+            };
+
+            return {
+              ...row,
+              Status: {
+                value: row.Status,
+                variant: getStatusColorLocal(row.Status),
+              },
+            };
+          });
+
+          console.log('Processed Data with filters:', processedData);
+
+          gridState.setGridData(processedData);
+          gridState.setLoading(false);
+          setApiStatus('success');
+          setIsFilterApiCallInProgress(false);
+        })
+        .catch((error: any) => {
+          console.error("Quick order fetch with filters failed:", error);
+          gridState.setGridData([]);
+          gridState.setLoading(false);
+          setApiStatus('error');
+          setIsFilterApiCallInProgress(false);
+        });
+    }, 1000); // Increased to 1000ms debounce delay
+    
+    setFilterTimeout(timeout);
   };
 
   const renderSubRow = (row: any, rowIndex: number) => {
@@ -784,8 +1007,8 @@ const QuickOrderManagement = () => {
           />
           {/* side draw for group level details on Grid actions */}
 
-          <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false}>
-            <div className="mt-3 px-4">
+          <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
+            <div className="p-6">
               <div className="w-80 mb-3">
                 <SimpleDropDown
                   list={resourceGroups.map((item, idx) => ({ ...item, key: item.id || item.QuickOrderNo || idx }))}

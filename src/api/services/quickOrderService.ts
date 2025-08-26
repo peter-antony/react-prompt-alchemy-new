@@ -56,7 +56,7 @@ export const quickOrderService = {
         OUID: "4",
         Role: "ramcorole",
       },
-      AdditionalFilter: [],
+      AdditionalFilter: params?.filters || [],
     });
     const requestBody = {
       RequestData: stringifyData,

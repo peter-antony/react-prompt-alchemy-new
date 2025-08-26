@@ -13,6 +13,7 @@ interface SideDrawerProps {
     badgeContent?: string;
     isBadgeRequired?: boolean;
     children: React.ReactNode;
+    contentBgColor?: string;
 }
 
 export const SideDrawer: React.FC<SideDrawerProps> = ({
@@ -25,6 +26,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
     badgeContent,
     isBadgeRequired,
     children,
+    contentBgColor
 }) => {
     return (
         <AnimatePresence>
@@ -78,7 +80,9 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                             </button>
                         </div>
                         {/* Content */}
-                        <div className={`h-full ${onScrollPanel ? 'content-scroll' : ''}`}>
+                        <div 
+                            className={`h-full ${onScrollPanel ? 'content-scroll' : ''}`}
+                            style={{ backgroundColor: contentBgColor }}>
                             {children}
                         </div>
                     </motion.div>

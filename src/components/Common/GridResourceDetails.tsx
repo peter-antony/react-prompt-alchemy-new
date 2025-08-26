@@ -21,10 +21,19 @@ interface CardStatus {
 //     Failed: { label: "Failed", color: "text-red-600", bg: "bg-red-50" },
 //     "Under Amendment": { label: "Under Amendment", color: "text-orange-600", bg: "bg-orange-50" },
 // };
-const statusMap: Record<string, CardStatus> = {
+const statusMap: any = {
   Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
   Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
-  "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
+  // "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
+  Released: { label: "Under Amendment", statusColor: 'badge-fresh-green rounded-2xl'},
+  'Under Execution': 'badge-purple rounded-2xl',
+  'Fresh': 'badge-blue rounded-2xl',
+  'Cancelled': 'badge-red rounded-2xl',
+  'Deleted': 'badge-red rounded-2xl',
+  'Save': 'badge-green rounded-2xl',
+  'Under Amendment': 'badge-orange rounded-2xl',
+  'Confirmed': 'badge-green rounded-2xl',
+  'Initiated': 'badge-blue rounded-2xl',
 };
 
 export interface CardDetailsItem {
@@ -39,7 +48,7 @@ export interface CardDetailsItem {
   rateType: string;
   location: string;
   draftBill: string;
-  status: keyof typeof statusMap;
+  ResourceStatus: keyof typeof statusMap;
   PlanDetails: any
 }
 
@@ -77,15 +86,15 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      {data.map((item, index) => (
-        <div key={'Resource' + index} className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-4 relative">
-          <div className="flex items-center justify-between mb-3 border-b pb-2">
+      {data.map((item: any, index) => (
+        <div key={'Resource' + index} className="bg-white rounded-lg border border-[#EAECF0] px-4 py-4 relative">
+          <div className="flex items-start justify-between mb-4 border-b border-b-[#EAECF0] pb-4">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="bg-violet-100 rounded-lg p-2">
-                  <UsersRound className="w-4 h-4 text-violet-500" />
+              <div className="flex gap-4">
+                <span className="bg-[#F4F3FF] rounded-xl p-4">
+                  <UsersRound className="w-5 h-5 text-violet-500" />
                 </span>
-                <div>
+                <div className="flex flex-col justify-evenly">
                   {/* <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.ResourceUniqueID} - {item?.BasicDetails[0]?.Resource}</div> */}
                   <div className="font-semibold text-sm">{item?.ResourceUniqueID} - {item?.BasicDetails[0]?.Resource}</div>
                   {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
@@ -94,9 +103,9 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               </div>
             </div>
             <div className="flex items-center gap-1 relative">
-              {/* <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item.status].color} ${statusMap[item.status].bg}`}>
-                                {statusMap[item.status].label}
-                            </span> */}
+              <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.ResourceStatus]}`}>
+                { item?.ResourceStatus }
+              </span>
               {showMenuButton && (
                 <button
                   className="p-1"
@@ -130,7 +139,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm mb-3">
             <div className="flex items-center gap-2 text-gray-700 text-xs">
               <FileText className="w-4 h-4 text-gray-600" />
               <span className="truncate">{item?.PlanDetails[0]?.WagonDetails[0]?.WagonQuantity} Wagons</span>
@@ -198,10 +207,10 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               <span className="truncate">{item?.OperationalDetails[0].OperationalLocation}</span>
             </div>
           </div>
-          <div className="flex items-center text-blue-600 text-xs font-medium mt-2">
-            <LinkIcon className="w-4 h-4 mr-1" />
+          <div className="flex items-center text-blue-600 text-xs font-medium mt-2 gap-2">
+            <LinkIcon className="w-4 h-4"/>
             {/* <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span> */}
-            <span className="cursor-pointer">{item?.BillingDetails[0].DraftBillNo}</span>
+            <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span>
           </div>
         </div>
       ))}
