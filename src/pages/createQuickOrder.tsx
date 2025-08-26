@@ -8,15 +8,28 @@ import { AppLayout } from '@/components/AppLayout';
 import NewCreateQuickOrder from '@/components/QuickOrderNew/NewQuickOrder';
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useFooterStore } from '@/stores/footerStore';
+import { quickOrderService } from '@/api/services/quickOrderService';
+import jsonStore from '@/stores/jsonStore';
 
 
 const CreateQuickOrder = () => {
   const { setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditQuickOrder = !!searchParams.get("id");
+  const quickOrderUniqueID=searchParams.get("id");
   //here to store the id  
 
   useEffect(() => {
+    //  Fetch the full quick order details
+      quickOrderService.screenFetchQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
+        let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", parsedData?.ResponseResult);
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        const fullJson2 = jsonStore.getJsonData();
+
+        console.log("FULL JSON 44:: ", fullJson2);
+      })
     setFooter({
       visible: true,
       pageName: 'Create_Quick_Order',
