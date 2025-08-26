@@ -21,7 +21,7 @@ const CreateQuickOrder = () => {
 
   useEffect(() => {
     //  Fetch the full quick order details
-      quickOrderService.screenFetchQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
+      quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
         console.log("Parsed result:", parsedData?.ResponseResult);
