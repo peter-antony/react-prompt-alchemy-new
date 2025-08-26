@@ -169,16 +169,15 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         ...formValues.billingDetails
       });
       const fullResourceJson = jsonStore.getResourceJsonData();
-      // jsonStore.setQuickOrder({
-      //   ...jsonStore.getJsonData().quickOrder,
-      //   "ModeFlag": "Update",
-      //   "QuickUniqueID": 288
-      // });
+      jsonStore.setQuickOrder({
+        ...jsonStore.getJsonData().quickOrder,
+        "ModeFlag": "Update",
+      });
       jsonStore.pushResourceGroup(fullResourceJson);
       const fullJson = jsonStore.getQuickOrder();
       console.log(" BEFORE API FULL  JSON :: ", fullJson);
       try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult);
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
         console.log(" try", data);
 
       } catch (err) {

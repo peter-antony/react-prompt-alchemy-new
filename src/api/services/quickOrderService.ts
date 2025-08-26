@@ -94,7 +94,7 @@ export const quickOrderService = {
     return response.data;
   },
 
-  // Get single quick order
+  // Get quick order by ID
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
     const requestBody = {
       context: {
@@ -113,7 +113,7 @@ export const quickOrderService = {
     };
 
     const response = await apiClient.post(
-      `${API_ENDPOINTS.QUICK_ORDERS.LIST}/get`,
+      API_ENDPOINTS.QUICK_ORDERS.QUICKORDER_GET,
       requestBody
     );
     return response.data;

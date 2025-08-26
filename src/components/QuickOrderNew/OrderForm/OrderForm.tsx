@@ -596,16 +596,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       console.log("OrderNumber:", OrderNumber);
 
       //  Fetch the full quick order details
-      // const fetchRes: any = await quickOrderService.screenFetchQuickOrder(OrderNumber);
-      // console.log("screenFetchQuickOrder result:", fetchRes?.data?.ResponseData.ResponseResult);
-      quickOrderService.screenFetchQuickOrder(OrderNumber).then((fetchRes: any) => {
+      quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
         console.log("Parsed result:", parsedData?.ResponseResult);
-        jsonStore.setQuickOrder(JSON.parse(parsedData?.ResponseResult));
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
         const fullJson2 = jsonStore.getJsonData();
 
-        console.log("FULL JSON :: ", fullJson2);
+        console.log("FULL JSON 33:: ", fullJson2);
       })
       //  Update your store or state with the fetched data
 
