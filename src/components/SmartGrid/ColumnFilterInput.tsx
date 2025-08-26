@@ -18,6 +18,7 @@ interface ColumnFilterInputProps {
   onChange: (value: FilterValue | undefined) => void;
   onApply?: () => void;
   isSubRow?: boolean;
+  showFilterTypeDropdown?: boolean;
 }
 
 export function ColumnFilterInput({ 
@@ -25,7 +26,8 @@ export function ColumnFilterInput({
   value, 
   onChange, 
   onApply,
-  isSubRow = false 
+  isSubRow = false,
+  showFilterTypeDropdown = true
 }: ColumnFilterInputProps) {
   const [localValue, setLocalValue] = useState<any>(value?.value || '');
   const [operator, setOperator] = useState<string>(value?.operator || getDefaultOperator());
@@ -188,34 +190,36 @@ export function ColumnFilterInput({
       "flex items-center gap-1 p-1 bg-white rounded border shadow-sm transition-all",
       isSubRow && "bg-blue-50 border-blue-200"
     )}>
-      {/* Operator symbol with dropdown - shows on hover and click */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-2 p-0 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors flex items-center justify-center"
-            title="Change filter operator"
-          >
-            <span className="text-xs font-medium">{getCurrentOperatorSymbol()}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-white border shadow-lg z-50" align="start">
-          {getAvailableOperators().map(op => (
-            <DropdownMenuItem
-              key={op.value}
-              onClick={() => handleOperatorChange(op.value)}
-              className={cn(
-                "text-xs cursor-pointer",
-                operator === op.value && "bg-blue-50 text-blue-700"
-              )}
+      {/* Operator symbol with dropdown - only show if enabled */}
+      {showFilterTypeDropdown && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-2 p-0 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors flex items-center justify-center"
+              title="Change filter operator"
             >
-              <span className="mr-2">{op.symbol}</span>
-              {op.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <span className="text-xs font-medium">{getCurrentOperatorSymbol()}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-white border shadow-lg z-50" align="start">
+            {getAvailableOperators().map(op => (
+              <DropdownMenuItem
+                key={op.value}
+                onClick={() => handleOperatorChange(op.value)}
+                className={cn(
+                  "text-xs cursor-pointer",
+                  operator === op.value && "bg-blue-50 text-blue-700"
+                )}
+              >
+                <span className="mr-2">{op.symbol}</span>
+                {op.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       <div className="flex-1">
         {renderFilterInput()}

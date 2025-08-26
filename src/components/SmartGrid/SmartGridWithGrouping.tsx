@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { SmartGrid } from './SmartGrid';
-import { SmartGridProps, GridColumnConfig } from '@/types/smartgrid';
+import { SmartGridProps, GridColumnConfig, ServerFilter } from '@/types/smartgrid';
+import { ServersideFilter } from './ServersideFilter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,12 @@ interface SmartGridWithGroupingProps extends SmartGridProps {
   onGroupByChange?: (field: string | null) => void;
   groupableColumns?: string[];
   showGroupingDropdown?: boolean;
+  // Server-side filter props
+  serverFilters?: ServerFilter[];
+  showFilterTypeDropdown?: boolean;
+  showServersideFilter?: boolean;
+  onToggleServersideFilter?: () => void;
+  hideAdvancedFilter?: boolean;
 }
 
 export function SmartGridWithGrouping({
@@ -25,6 +32,11 @@ export function SmartGridWithGrouping({
   onGroupByChange,
   groupableColumns,
   showGroupingDropdown = true,
+  serverFilters = [],
+  showFilterTypeDropdown = false,
+  showServersideFilter = false,
+  onToggleServersideFilter,
+  hideAdvancedFilter = false,
   ...props
 }: SmartGridWithGroupingProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -201,25 +213,46 @@ export function SmartGridWithGrouping({
   }, [columns, internalGroupBy, groupByField]);
 
   return (
-    <SmartGrid
-      {...props}
-      data={displayData}
-      columns={modifiedColumns}
-      rowClassName={getRowClassName}
-      onLinkClick={handleLinkClick}
-      // Override nested row renderer when grouping is active to prevent sub-row expansion
-      nestedRowRenderer={
-        (internalGroupBy || groupByField) ? undefined : props.nestedRowRenderer
-      }
-      // Override row expansion when grouping is active to force collapse
-      onRowExpansionOverride={
-        (internalGroupBy || groupByField) ? handleRowExpansionOverride : undefined
-      }
-      // Pass grouping props to toolbar
-      groupByField={internalGroupBy || groupByField}
-      onGroupByChange={handleGroupByChange}
-      groupableColumns={groupableColumns}
-      showGroupingDropdown={showGroupingDropdown}
-    />
+    <div className="space-y-2">
+      {/* Server-side Filter */}
+      {showServersideFilter && (
+        <ServersideFilter
+          serverFilters={serverFilters}
+          showFilterTypeDropdown={showFilterTypeDropdown}
+          visible={showServersideFilter}
+          onToggle={onToggleServersideFilter || (() => {})}
+          onFiltersChange={props.onFiltersChange || (() => {})}
+          onSearch={props.onSearch || (() => {})}
+          gridId={props.gridTitle || 'default'}
+          userId="user-1" // This should be passed from parent
+          api={undefined} // This should be passed from parent if needed
+        />
+      )}
+      
+      <SmartGrid
+        {...props}
+        data={displayData}
+        columns={modifiedColumns}
+        rowClassName={getRowClassName}
+        onLinkClick={handleLinkClick}
+        // Override nested row renderer when grouping is active to prevent sub-row expansion
+        nestedRowRenderer={
+          (internalGroupBy || groupByField) ? undefined : props.nestedRowRenderer
+        }
+        // Override row expansion when grouping is active to force collapse
+        onRowExpansionOverride={
+          (internalGroupBy || groupByField) ? handleRowExpansionOverride : undefined
+        }
+        // Pass grouping props to toolbar
+        groupByField={internalGroupBy || groupByField}
+        onGroupByChange={handleGroupByChange}
+        groupableColumns={groupableColumns}
+        showGroupingDropdown={showGroupingDropdown}
+        // Pass server-side filter props
+        showServersideFilter={showServersideFilter}
+        onToggleServersideFilter={onToggleServersideFilter}
+        hideAdvancedFilter={hideAdvancedFilter}
+      />
+    </div>
   );
 }

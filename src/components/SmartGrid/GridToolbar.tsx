@@ -12,6 +12,7 @@ import {
   Plus,
   ChevronDown,
   Group,
+  Zap,
   EllipsisVertical,
   SlidersHorizontal
 } from 'lucide-react';
@@ -64,6 +65,9 @@ interface GridToolbarProps {
   createButtonLabel?: string;
   showFilterSystem?: boolean;
   setShowFilterSystem?: (show: boolean) => void;
+  // Server-side filter props
+  showServersideFilter?: boolean;
+  onToggleServersideFilter?: () => void;
 }
 
 export function GridToolbar({
@@ -100,7 +104,9 @@ export function GridToolbar({
   groupByField,
   onGroupByChange,
   groupableColumns,
-  showGroupingDropdown = false
+  showGroupingDropdown = false,
+  showServersideFilter = false,
+  onToggleServersideFilter
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -188,7 +194,7 @@ export function GridToolbar({
         </div>
 
         {/* Advanced Filter Toggle */}
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           onClick={onToggleAdvancedFilter}
@@ -200,7 +206,24 @@ export function GridToolbar({
           )}
         >
           <Search className="h-4 w-4" />
-        </Button>
+        </Button> */}
+
+        {/* Server-side Filter Toggle */}
+        {onToggleServersideFilter && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleServersideFilter}
+            disabled={loading}
+            title="Toggle Server-side Filters"
+            className={cn(
+              "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
+              showServersideFilter && "bg-blue-100 text-blue-600"
+            )}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
 
         {/* Icon buttons */}
         <Button
@@ -211,7 +234,7 @@ export function GridToolbar({
           title="Toggle Column Filters"
           className={cn(
             "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
-            showColumnFilters && "bg-blue-50 text-blue-600"
+            showColumnFilters && "bg-blue-100 text-blue-600"
           )}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -289,7 +312,7 @@ export function GridToolbar({
           title="Toggle Checkboxes"
           className={cn(
             "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
-            showCheckboxes && "bg-blue-50 text-blue-600"
+            showCheckboxes && "bg-blue-100 text-blue-600"
           )}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -389,7 +412,7 @@ export function GridToolbar({
         )} */}
 
 		{/* Group by dropdown button */}
-        {showGroupingDropdown && availableGroupColumns.length > 0 && (
+        {/* {showGroupingDropdown && availableGroupColumns.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -418,7 +441,7 @@ export function GridToolbar({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        )} */}
         
         {gridTitle !== 'Plan List' && (
           <div className="h-8 w-1 flex justify-center">
