@@ -193,7 +193,8 @@ const QuickOrderManagement = () => {
       sortable: true,
       editable: false,
       mandatory: true,
-      subRow: false
+      subRow: false,
+      order: 1
     },
     {
       key: 'QuickOrderDate',
@@ -201,7 +202,8 @@ const QuickOrderManagement = () => {
       type: 'Date',
       sortable: true,
       editable: false,
-      subRow: false
+      subRow: false,
+      order: 2
     },
     {
       key: 'Status',
@@ -209,7 +211,8 @@ const QuickOrderManagement = () => {
       type: 'Badge',
       sortable: true,
       editable: false,
-      subRow: false
+      subRow: false,
+      order: 3
     },
     {
       key: 'CustomerOrVendor',
@@ -217,16 +220,8 @@ const QuickOrderManagement = () => {
       type: 'EditableText',
       sortable: true,
       editable: false,
-      subRow: false
-    },
-    {
-      key: 'Customer_Supplier_RefNo',
-      label: 'Cust/Sup. Ref. No.',
-      type: 'Text',
-      // type: 'TextWithTooltip',
-      sortable: true,
-      editable: false,
-      subRow: false
+      subRow: false,
+      order: 4
     },
     {
       key: 'Contract',
@@ -235,15 +230,29 @@ const QuickOrderManagement = () => {
       sortable: true,
       editable: false,
       // infoTextField: 'arrivalPointDetails',
-      subRow: false
+      subRow: false,
+      order: 5
     },
+    {
+      key: 'Customer_Supplier_RefNo',
+      // label: 'Cust/Sup. Ref. No.',
+      label: 'Customer/Supplier Ref. No.',
+      type: 'Text',
+      // type: 'TextWithTooltip',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 6
+    },
+    
     {
       key: 'OrderType',
       label: 'Order Type',
       type: 'Text',
       sortable: true,
       editable: false,
-      subRow: false
+      subRow: false,
+      order: 7
     },
     {
       key: 'TotalNet',
@@ -251,7 +260,8 @@ const QuickOrderManagement = () => {
       type: 'CurrencyWithSymbol',
       sortable: true,
       editable: false,
-      subRow: false
+      subRow: false,
+      order: 8
     },
     {
       key: 'actions',
