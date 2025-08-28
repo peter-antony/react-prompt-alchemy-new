@@ -283,7 +283,19 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 3,
-      options: contracts.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: contracts
+        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
+        .map(c => ({
+          label: `${c.id} || ${c.name}`,
+          value: c.id
+        })),
+      events: {
+        onChange: (val: string) => {
+          setComboDropdown(val) // To update state on change
+          // getOrderFormDetailsConfig(OrderType);
+        }
+
+      }
     },
     Customer: {
       id: 'Customer',
@@ -307,7 +319,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 4,
-      options: vendors.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: vendors
+        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
+        .map(c => ({
+          label: `${c.id} || ${c.name}`,
+          value: c.id
+        }))
     },
     Cluster: {
       id: 'Cluster',
@@ -319,7 +336,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 5,
-      options: clusters.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: clusters
+        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
+        .map(c => ({
+          label: `${c.id} || ${c.name}`,
+          value: c.id
+        }))
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
@@ -453,20 +475,57 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       width: 'full',
     }
   });
+  //setting Combo Dropdown with selected Contract
+  const setComboDropdown = async (contractId: any) => {
+    setLoading(false);
+    setError(null);
+    try {
+      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId, type: OrderType });
+      console.log("COMBO DROPDOWN DATA", data);
+      setContracts(JSON.parse(data?.data?.ResponseData));
+      const parsedData :any= JSON.parse(data?.data?.ResponseData);
+      const contract:any = parsedData;
+      console.log("CONTRACT DATA:: ", contract);
+      if (contract) {
+        jsonStore.setQuickOrderFields({ ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS });
+        setFormData(normalizeOrderFormDetails({ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
+        console.log("Contracts data:===", parsedData);
+      }else{ // hardcoded with dummy response data to avoid error
+        //data for ContractID : CON000000116
+        jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+        setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+      }
+    } catch (err) {
+      setError(`Error fetching API data for${err}`);
+      console.log("ERROR IN COMBO DROPDOWN:: ", err);
+      jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+      setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+
+      // setApiData(data);
+    }
+    finally {
+      setLoading(true);
+    }
+  };
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
     return {
-      OrderType: data.OrderType,
-      QuickOrderDate: data.QuickOrderDate,
-      Contract: data.Contract,
-      Customer: data.Customer,
-      Vendor: data.Vendor,
-      Cluster: data.Cluster,
-      CustomerQuickOrderNo: data.CustomerQuickOrderNo,
-      Customer_Supplier_RefNo: data.Customer_Supplier_RefNo,
-      QCUserDefined1: data.QCUserDefined1,
-      Remark1: data.Remark1,
-      Summary: data.Summary
+      OrderType: data.OrderType ? data.OrderType : '',
+      QuickOrderDate: data.QuickOrderDate ? data.QuickOrderDate : '',
+      Contract: data.Contract ? data.Contract : data.ContractID ? data.ContractID : '',
+      Customer: data.Customer ? data.Customer : '',
+      Vendor: data.Vendor ? data.Vendor : '',
+      Cluster: data.Cluster ? data.Cluster : '',
+      CustomerQuickOrderNo: data.CustomerQuickOrderNo ? data.CustomerQuickOrderNo : '',
+      Customer_Supplier_RefNo: data.Customer_Supplier_RefNo ? data.Customer_Supplier_RefNo : '',
+      QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1 : '',
+      Remark1: data.Remark1 ? data.Remark1 : '',
+      Summary: data.Summary ? data.Summary : '',
+      WBS: data.WBS ? data.WBS : '',
+      QCUserdefined2: data.QCUserdefined2 ? data.QCUserdefined2 : '',
+      QCUserdefined3: data.QCUserdefined3 ? data.QCUserdefined3 : '',
+      Remarks2: data.Remarks2 ? data.Remarks2 : '',
+      Remarks3: data.Remarks3 ? data.Remarks3 : ''
     };
 
   }
@@ -597,9 +656,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
       //  Fetch the full quick order details
       quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
-        let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
+        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-        console.log("Parsed result:", parsedData?.ResponseResult);
+        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
         jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
         const fullJson2 = jsonStore.getJsonData();
 

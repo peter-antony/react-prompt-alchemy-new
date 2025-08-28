@@ -44,6 +44,19 @@ function setQuickOrder(data: any) {
   return false;
 }
 
+function setQuickOrderFields(fields: {ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any }) {
+  if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
+    const quickOrder = jsonData.ResponseResult.QuickOrder;
+    if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
+    if (fields.Customer !== undefined) quickOrder.Customer = fields.Customer;
+    if (fields.Vendor !== undefined) quickOrder.Vendor = fields.Vendor;
+    if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
+    if (fields.WBS !== undefined) quickOrder.WBS = fields.WBS;
+    return true;
+  }
+  return false;
+}
+
 function getResourceGroup() {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     return jsonData.ResponseResult.QuickOrder.ResourceGroup;
@@ -723,6 +736,7 @@ const jsonStore = {
   pushActualDetailsToResourceGroup,
   getAllPlanDetailsByResourceUniqueID,
   getAllActualDetailsByResourceUniqueID,
+  setQuickOrderFields,
 };
 
 export default jsonStore;
