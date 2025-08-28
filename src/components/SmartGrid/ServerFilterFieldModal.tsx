@@ -4,13 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { GripVertical } from 'lucide-react';
-
-interface ServerFilter {
-  key: string;
-  label: string;
-  type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean';
-  options?: string[];
-}
+import { ServerFilter } from '@/types/smartgrid';
 
 interface ServerFilterFieldConfig extends ServerFilter {
   visible: boolean;

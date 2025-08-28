@@ -8,7 +8,7 @@ import {
 import Attachments from "../QuickOrderNew/OrderForm/Attachments";
 import ResourceGroupDetailsForm from "../QuickOrderNew/ResourceGroupDetails";
 import { SideDrawer } from "./SideDrawer";
-
+import { format } from 'date-fns';
 interface CardStatus {
   label: string;
   color: string;
@@ -25,7 +25,7 @@ const statusMap: any = {
   Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
   Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
   // "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
-  Released: { label: "Under Amendment", statusColor: 'badge-fresh-green rounded-2xl'},
+  Released: { label: "Under Amendment", statusColor: 'badge-fresh-green rounded-2xl' },
   'Under Execution': 'badge-purple rounded-2xl',
   'Fresh': 'badge-blue rounded-2xl',
   'Cancelled': 'badge-red rounded-2xl',
@@ -66,6 +66,16 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
     ResourceUniqueID: "0"
   });
   const [isBack, setIsBack] = useState(true);
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    return format(new Date(dateStr), "dd-MMM-yyyy");
+  };
+  const formattedAmount = (amount: any)=> {
+   return new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } 
   // Close menu on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -104,7 +114,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             </div>
             <div className="flex items-center gap-1 relative">
               <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.ResourceStatus]}`}>
-                { item?.ResourceStatus }
+                {item?.ResourceStatus}
               </span>
               {showMenuButton && (
                 <button
@@ -146,7 +156,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             </div>
             <div className="flex items-center gap-2 text-gray-700 text-xs">
               <Banknote className="w-4 h-4 text-gray-600" />
-              <span className="truncate">{item?.BillingDetails[0]?.UnitPrice}</span>
+              <span className="truncate">€ {formattedAmount(item?.BillingDetails[0]?.UnitPrice)}</span>
               {/* <span className="truncate">{item.price}</span> */}
             </div>
             <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -161,7 +171,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
               <Calendar className="w-4 h-4 text-gray-600" />
               <span className="truncate cursor-pointer">
-                {item.OperationalDetails[0]?.FromDate} to {item?.OperationalDetails[0]?.ToDate}
+                {formatDate(item.OperationalDetails[0]?.FromDate)} to {formatDate(item?.OperationalDetails[0]?.ToDate)}
               </span>
               {/* <span className="truncate cursor-pointer">
                                 {item.date}
@@ -170,7 +180,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                 <div className="px-3 py-2">
                   <div className="font-semibold mb-1">From and To Date</div>
-                  <div className="text-[11px] font-medium">{item.OperationalDetails[0]?.FromDate} to {item?.OperationalDetails[0]?.ToDate}</div>
+                  <div className="text-[11px] font-medium">{formatDate(item.OperationalDetails[0]?.FromDate)} to {formatDate(item?.OperationalDetails[0]?.ToDate)}</div>
                   {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                 </div>
               </div>
@@ -208,7 +218,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             </div>
           </div>
           <div className="flex items-center text-blue-600 text-xs font-medium mt-2 gap-2">
-            <LinkIcon className="w-4 h-4"/>
+            <LinkIcon className="w-4 h-4" />
             {/* <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span> */}
             <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span>
           </div>

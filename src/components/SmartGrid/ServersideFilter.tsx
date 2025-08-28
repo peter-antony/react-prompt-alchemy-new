@@ -5,17 +5,10 @@ import { ColumnFilterInput } from './ColumnFilterInput';
 import { FilterSetModal } from './FilterSetModal';
 import { FilterSetDropdown } from './FilterSetDropdown';
 import { ServerFilterFieldModal } from './ServerFilterFieldModal';
-import { GridColumnConfig } from '@/types/smartgrid';
+import { GridColumnConfig, ServerFilter } from '@/types/smartgrid';
 import { FilterValue, FilterSet, FilterSystemAPI } from '@/types/filterSystem';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
-interface ServerFilter {
-  key: string;
-  label: string;
-  type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean';
-  options?: string[];
-}
 
 interface ServersideFilterProps {
   serverFilters: ServerFilter[];
@@ -276,9 +269,14 @@ export function ServersideFilter({
       const columnConfig: GridColumnConfig = {
         key: filter.key,
         label: filter.label,
-        type: 'Text', // Default type, will be overridden by filter.type
+        type: filter.type === 'numberRange' ? 'NumberRange' : 
+              filter.type === 'dropdownText' ? 'DropdownText' :
+              filter.type === 'dateRange' ? 'DateRange' :
+              filter.type === 'select' ? 'Dropdown' :
+              filter.type === 'date' ? 'Date' : 'Text',
         filterable: true,
-        options: filter.options
+        options: filter.options,
+        multiSelect: filter.multiSelect // Pass multiSelect flag
       };
 
       return (
@@ -332,11 +330,18 @@ export function ServersideFilter({
               // Apply pending filters to active filters
               setActiveFilters(pendingFilters);
               
+              // Update parent component with current filters first
+              onFiltersChange(pendingFilters);
+              
               // Apply filters and trigger search
               if (api) {
                 api.applyGridFilters(pendingFilters);
               }
-              onSearch();
+              
+              // Small delay to ensure state is updated before search
+              setTimeout(() => {
+                onSearch();
+              }, 0);
             }}
             disabled={loading}
             className="bg-blue-600 hover:bg-blue-700 text-white"

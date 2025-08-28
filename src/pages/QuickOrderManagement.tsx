@@ -21,6 +21,7 @@ import { SimpleDropDown } from '@/components/Common/SimpleDropDown';
 import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDetails';
 import { Input } from '@/components/ui/input';
 import GridResourceDetails from '@/components/Common/GridResourceDetails';
+import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
 
 interface SampleData {
   QuickUniqueID: any;
@@ -244,7 +245,7 @@ const QuickOrderManagement = () => {
       subRow: false,
       order: 6
     },
-    
+
     {
       key: 'OrderType',
       label: 'Order Type',
@@ -545,35 +546,37 @@ const QuickOrderManagement = () => {
     //   { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'date' }
     // ];
     [
-      { "key": "OrderType", "label": "Order Type", "type": "text" },
-      { "key": "Supplier", "label": "Supplier", "type": "text" },
-      { "key": "Contract", "label": "Contract", "type": "text" },
-      { "key": "Cluster", "label": "Cluster", "type": "text" },
-      { "key": "Customer", "label": "Customer", "type": "text" },
+      { "key": "OrderType", "label": "Order Type", "type": "select", options: ['Both', 'Sell', 'Buy'] },
+      { "key": "Supplier", "label": "Supplier", "type": "select" },
+      { "key": "Contract", "label": "Contract", "type": "select" },
+      { "key": "Cluster", "label": "Cluster", "type": "select" },
+      { "key": "Customer", "label": "Customer", "type": "select" },
       { "key": "CustomerSupplierRefNo", "label": "Customer Supplier Ref No", "type": "text" },
       { "key": "DraftBillNo", "label": "Draft Bill No", "type": "text" },
-      { "key": "DeparturePoint", "label": "Departure Point", "type": "text" },
-      { "key": "ArrivalPoint", "label": "Arrival Point", "type": "text" },
-      { "key": "ServiceType", "label": "Service Type", "type": "text" },
-      { "key": "ServiceFromDate", "label": "Service From Date", "type": "text" },
-      { "key": "ServiceToDate", "label": "Service To Date", "type": "text" },
+      { "key": "DeparturePoint", "label": "Departure Point", "type": "select" },
+      { "key": "ArrivalPoint", "label": "Arrival Point", "type": "select" },
+      { "key": "ServiceType", "label": "Service Type", "type": "select" },
+      { "key": "ServiceDate", "label": "Service Date", "type": "dateRange" },
+      // { "key": "ServiceToDate", "label": "Service To Date", "type": "text" },
+
       { "key": "QuickUniqueID", "label": "Quick Unique ID", "type": "text" },
       { "key": "QuickOrderNo", "label": "Quick Order No", "type": "text" },
-      { "key": "DraftBillStatus", "label": "Draft Bill Status", "type": "text" },
-      { "key": "IsBillingFailed", "label": "Is Billing Failed", "type": "text" },
-      { "key": "SubService", "label": "Sub Service", "type": "text" },
+      { "key": "DraftBillStatus", "label": "Draft Bill Status", "type": "select" },
+      { "key": "IsBillingFailed", "label": "Billing Failed", "type": "select" },
+      { "key": "SubService", "label": "Sub Service", "type": "select" },
       { "key": "WBS", "label": "WBS", "type": "text" },
-      { "key": "OperationalLocation", "label": "Operational Location", "type": "text" },
-      { "key": "PrimaryRefDoc", "label": "Primary Ref Doc", "type": "text" },
+      { "key": "OperationalLocation", "label": "Operational Location", "type": "select" },
+      { "key": "PrimaryRefDoc", "label": "Primary Ref Doc", "type": "dropdownText" },
+
       { "key": "CreatedBy", "label": "Created By", "type": "text" },
       { "key": "SecondaryDoc", "label": "Secondary Doc", "type": "text" },
       { "key": "InvoiceNo", "label": "Invoice No", "type": "text" },
-      { "key": "InvoiceStatus", "label": "Invoice Status", "type": "text" },
-      { "key": "ResourceType", "label": "Resource Type", "type": "text" },
-      { "key": "Wagon", "label": "Wagon", "type": "text" },
-      { "key": "Container", "label": "Container", "type": "text" },
-      { "key": "FromOrderDate", "label": "From Order Date", "type": "text" },
-      { "key": "ToOrderDate", "label": "To Order Date", "type": "text" },
+      { "key": "InvoiceStatus", "label": "Invoice Status", "type": "select" },
+      { "key": "ResourceType", "label": "Resource Type", "type": "select" },
+      { "key": "Wagon", "label": "Wagon", "type": "select" },
+      { "key": "Container", "label": "Container", "type": "select" },
+      { "key": "FromOrderDate", "label": "Quick Order Date", "type": "dateRange" },
+      // { "key": "ToOrderDate", "label": "To Order Date", "type": "text" },
       { "key": "CreatedFromDate", "label": "Created From Date", "type": "text" },
       { "key": "CreatedToDate", "label": "Created To Date", "type": "text" }
     ];
@@ -604,7 +607,17 @@ const QuickOrderManagement = () => {
       });
       if (Object.keys(currentFilters).length > 0) {
         Object.entries(currentFilters).forEach(([key, value]) => {
-          if (value && value.value) {
+          console.log(`Key: ${key}, Value: ${value.type}`);
+          // if (value && value.value && value.type !== "dateRange") {
+          //   searchData.push({ 'FilterName': key, 'FilterValue': value.value });
+          // }
+          if (value.type === "dateRange" && value.value.from && value.value.to) {
+            // Split into two separate filter keys
+            searchData.push(
+              { FilterName: `ServiceFromDate`, FilterValue: value.value.from },
+              { FilterName: `ServiceToDate`, FilterValue: value.value.to }
+            );
+          } else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           }
         });
@@ -1133,7 +1146,7 @@ const QuickOrderManagement = () => {
           <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
             <div className="p-6">
               <div className="w-80 mb-3">
-                <SimpleDropDown
+                <SimpleDropDownSelection
                   list={resourceGroups.map((item, idx) => ({ ...item, key: item.id || item.QuickOrderNo || idx }))}
                   value={resourceGroups[0]?.QuickOrderNo}
                   onValueChange={(value) =>

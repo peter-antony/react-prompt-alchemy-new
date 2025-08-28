@@ -13,6 +13,9 @@ export type GridColumnType =
   | 'CustomerCountBadge'   // Customer count badge with popup details
   | 'Text'                 // Standard text cell
   | 'Date'                 // Formatted date
+  | 'DateRange'            // Date range picker
+  | 'NumberRange'          // Number range with from/to inputs
+  | 'DropdownText'         // Dropdown + Text combination
   | 'Dropdown'             // Selectable value from list (for edit or filter)
   | 'EditableText'        // Inline editable text
   | 'SubRow'            // Sub-row expandable content
@@ -34,6 +37,7 @@ export interface GridColumnConfig {
   order?: number;
   options?: string[];
   subRow?: boolean; // Property for sub-row display
+  multiSelect?: boolean; // Enable multi-select for dropdowns
   
   // Badge specific properties
   statusMap?: Record<string, string>;
@@ -132,8 +136,9 @@ export interface GridPlugin {
 export interface ServerFilter {
   key: string;
   label: string;
-  type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean';
+  type?: 'text' | 'select' | 'date' | 'dateRange' | 'numberRange' | 'dropdownText' | 'time' | 'number' | 'boolean';
   options?: string[];
+  multiSelect?: boolean; // Enable multi-select for dropdown/select types
 }
 
 export interface ExtraFilter {

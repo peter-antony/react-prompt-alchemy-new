@@ -314,10 +314,16 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       return <span className="truncate" title={String(value)}>{value}</span>;
     }
   };
+  const formattedAmount = (amount: any) => {
+    return new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  }
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
-    return <span className="font-semibold">&euro; {value}</span>
+    return <span className="font-semibold">&euro; {formattedAmount(value)}</span>
   }
 
   // Action button renderer
@@ -329,8 +335,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     return (
       <>
         {column.actionButtons.map((button, index) => {
-          const isDisabled = typeof button.disabled === 'function' 
-            ? button.disabled(row) 
+          const isDisabled = typeof button.disabled === 'function'
+            ? button.disabled(row)
             : button.disabled || false;
 
           const buttonElement = (
@@ -371,7 +377,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const renderCustomerCountBadge = () => {
     // Use customer data from row only
     const customerData = row.customerData || [];
-    
+
     return (
       <CustomerCountBadge
         count={String(value)}
