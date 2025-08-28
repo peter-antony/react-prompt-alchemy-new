@@ -128,8 +128,9 @@ export const quickOrderService = {
     return response.data;
   },
   // Get quick order by ID
-  getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
-    const requestBody = JSON.stringify({
+  getQuickOrder: async (id: string):
+   Promise<ApiResponse<QuickOrder>> => {
+    const requestPayload = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
@@ -144,7 +145,9 @@ export const quickOrderService = {
         },
       ],
     });
-
+    const requestBody = {
+      RequestData: requestPayload,
+    };
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.QUICKORDER_GET,
       requestBody
