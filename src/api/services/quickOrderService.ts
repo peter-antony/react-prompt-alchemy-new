@@ -93,10 +93,43 @@ export const quickOrderService = {
     );
     return response.data;
   },
+  // Get master common data
+  getCommonComboData: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
+      },
+      AdditionalFilter: [
+         {
+          FilterName: "ContractType",
+          FilterValue: params?.type
+        },
 
+        {
+          FilterName: "ContractID",
+          FilterValue: params?.contractId
+        }
+      ],
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
   // Get quick order by ID
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
-    const requestBody = {
+    const requestBody = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
@@ -110,7 +143,7 @@ export const quickOrderService = {
           FilterValue: id,
         },
       ],
-    };
+    });
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.QUICKORDER_GET,
