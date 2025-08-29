@@ -85,6 +85,7 @@ const QuickOrderManagement = () => {
   const [resourceGroups, setResourceGroups] = useState<any[]>([]);
   const [cardData, setCardData] = useState<CardDetailsItem[]>([]);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
+  const [quickResourceId, setQuickResourceId] = useState<string>('');
 
   let initialResourceGroups: any = [
     {
@@ -290,12 +291,13 @@ const QuickOrderManagement = () => {
           onClick: async (rowData) => {
             console.log('clicked for:', rowData);
             if (rowData.QuickUniqueID) {
-              const resourceGroupAsyncFetch: any = await quickOrderService.screenFetchQuickOrder(rowData.QuickUniqueID);
-              // console.log('Quick order Resource Group Unique Data fecth: ', resourceGroupAsyncFetch);
-              const jsonParsedData: any = JSON.parse(resourceGroupAsyncFetch?.data?.ResponseData);
-              console.log('Parsed Data:', jsonParsedData);
-              setResourceGroups(jsonParsedData?.ResponseResult[0] ? [jsonParsedData.ResponseResult[0]] : []);
-              setCardData(jsonParsedData?.ResponseResult[0]?.ResourceGroup || []);
+              setQuickResourceId(rowData.QuickUniqueID);
+              // const resourceGroupAsyncFetch: any = await quickOrderService.screenFetchQuickOrder(rowData.QuickUniqueID);
+              // // console.log('Quick order Resource Group Unique Data fecth: ', resourceGroupAsyncFetch);
+              // const jsonParsedData: any = JSON.parse(resourceGroupAsyncFetch?.data?.ResponseData);
+              // console.log('Parsed Data:', jsonParsedData);
+              // setResourceGroups(jsonParsedData?.ResponseResult[0] ? [jsonParsedData.ResponseResult[0]] : []);
+              // setCardData(jsonParsedData?.ResponseResult[0]?.ResourceGroup || []);
               setGroupLevelModalOpen(true);
             }
             // Show confirmation dialog
@@ -1145,37 +1147,8 @@ const QuickOrderManagement = () => {
 
           <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
             <div className="p-6">
-              <div className="w-80 mb-3">
-                <SimpleDropDownSelection
-                  list={resourceGroups.map((item, idx) => ({ ...item, key: item.id || item.QuickOrderNo || idx }))}
-                  value={resourceGroups[0]?.QuickOrderNo}
-                  onValueChange={(value) =>
-                    handleInputChange("resourceGroup", value)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  Resource Group Details
-                  {/* <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">3</span> */}
-                </h2>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Input
-                      name='grid-search-input'
-                      placeholder="Search"
-                      className="border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      style={{ width: 200 }}
-                    />
-                    <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
-                  </div>
-                  <Button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
-                    <Filter className="w-5 h-5 text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-4 mb-6">
-                <GridResourceDetails data={cardData} isEditQuickOrder={false} showMenuButton={false} />
+              <div className="mb-6">
+                <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId}/>
               </div>
             </div>
           </SideDrawer>
