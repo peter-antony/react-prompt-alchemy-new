@@ -9,7 +9,7 @@ import { Info } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
-import { formattedAmount } from '@/utils/formatter';
+import { formattedAmount, dateFormatter } from '@/utils/formatter';
 
 interface CellRendererProps {
   value: any;
@@ -294,7 +294,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     try {
       const date = new Date(value);
       const formattedDate = date.toLocaleDateString();
-      return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+      return <span className="truncate" title={formattedDate}>{dateFormatter(formattedDate)}</span>;
     } catch {
       return <span className="truncate" title={String(value)}>{value}</span>;
     }
