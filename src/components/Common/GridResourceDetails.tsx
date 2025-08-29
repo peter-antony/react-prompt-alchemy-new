@@ -9,6 +9,7 @@ import Attachments from "../QuickOrderNew/OrderForm/Attachments";
 import ResourceGroupDetailsForm from "../QuickOrderNew/ResourceGroupDetails";
 import { SideDrawer } from "./SideDrawer";
 import { format } from 'date-fns';
+import { formattedAmount } from '@/utils/formatter';
 interface CardStatus {
   label: string;
   color: string;
@@ -70,12 +71,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
     if (!dateStr) return "";
     return format(new Date(dateStr), "dd-MMM-yyyy");
   };
-  const formattedAmount = (amount: any)=> {
-   return new Intl.NumberFormat('de-DE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  } 
+
   // Close menu on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -197,7 +193,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                   <div className="px-4 py-3">
                     <div className="flex justify-between items-center mb-2">
                       <div className="font-semibold text-gray-700">{item?.BillingDetails[0]?.Tariff}</div>
-                      <div className="font-semibold text-gray-700">€ {item?.BillingDetails[0]?.UnitPrice}</div>
+                      <div className="font-semibold text-gray-700">€ {formattedAmount(item?.BillingDetails[0]?.UnitPrice)}</div>
                     </div>
                     <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
                       <div>Tariff ID</div>

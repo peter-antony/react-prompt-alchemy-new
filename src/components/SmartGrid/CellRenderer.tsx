@@ -9,6 +9,7 @@ import { Info } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
+import { formattedAmount } from '@/utils/formatter';
 
 interface CellRendererProps {
   value: any;
@@ -314,12 +315,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       return <span className="truncate" title={String(value)}>{value}</span>;
     }
   };
-  const formattedAmount = (amount: any) => {
-    return new Intl.NumberFormat('de-DE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  }
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
