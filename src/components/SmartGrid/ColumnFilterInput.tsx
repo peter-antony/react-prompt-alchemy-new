@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +20,8 @@ interface ColumnFilterInputProps {
   onApply?: () => void;
   isSubRow?: boolean;
   showFilterTypeDropdown?: boolean;
+  renderOptionLabel?: (option: any) => any;
+  renderOptionValue?: (option: any) => any;
 }
 
 export function ColumnFilterInput({ 
@@ -29,7 +30,9 @@ export function ColumnFilterInput({
   onChange, 
   onApply,
   isSubRow = false,
-  showFilterTypeDropdown = true
+  showFilterTypeDropdown = true,
+  renderOptionLabel,
+  renderOptionValue
 }: ColumnFilterInputProps) {
   const [localValue, setLocalValue] = useState<any>(value?.value || '');
   const [operator, setOperator] = useState<string>(value?.operator || getDefaultOperator());
@@ -319,18 +322,18 @@ export function ColumnFilterInput({
               </PopoverTrigger>
               <PopoverContent className="w-60 p-0 bg-white border shadow-lg z-[100]" align="start">
                 <div className="p-2 space-y-2 max-h-60 overflow-y-auto">
-                  {column.options?.map(option => (
-                    <div key={option} className="flex items-center space-x-2">
+                  {column.options?.map((option: any, index) => (
+                    <div key={(option.name || option.label || option) + '-' + index} className="flex items-center space-x-2">
                       <Checkbox
-                        id={`multi-${option}`}
-                        checked={selectedOptions.includes(option)}
-                        onCheckedChange={(checked) => handleMultiSelectChange(option, checked as boolean)}
+                        id={`multi-${option.name || option.label || option}`}
+                        checked={selectedOptions.includes(option.id)}
+                        onCheckedChange={(checked) => handleMultiSelectChange(option.id, checked as boolean)}
                       />
                       <label 
-                        htmlFor={`multi-${option}`} 
+                        htmlFor={`multi-${option.name || option.label || option}`}
                         className="text-xs cursor-pointer flex-1 select-none"
                       >
-                        {option}
+                        {option.name || option.label || option}
                       </label>
                     </div>
                   ))}
@@ -362,10 +365,15 @@ export function ColumnFilterInput({
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
                 <SelectItem value="__all__" className="text-xs">All</SelectItem>
-                {column.options?.map(option => (
-                  <SelectItem key={option} value={option} className="text-xs">
-                    {option}
-                  </SelectItem>
+                {column.options?.map((option: any, index) => (
+                  option.name ? (
+                    <SelectItem key={(option.name || option.label || option) + '-' + index}
+      value={(option.name ? option.name : option.id)}
+      className="text-xs"
+    >
+    {`${option.name} || ${option.description}`}
+  </SelectItem>
+                  ) : null
                 ))}
               </SelectContent>
             </Select>
@@ -385,7 +393,7 @@ export function ColumnFilterInput({
                 )}
               >
                 <CalendarIcon className="mr-2 h-3 w-3" />
-                {localValue ? format(new Date(localValue), "MMM dd, yyyy") : "Pick date"}
+                {localValue ? format(new Date(localValue), "dd/MM/yyyy") : "Pick date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-white border shadow-lg z-50" align="start">
@@ -417,7 +425,7 @@ export function ColumnFilterInput({
                 >
                   <CalendarIcon className="mr-2 h-3 w-3" />
                   {localValue?.from 
-                    ? format(new Date(localValue.from), "MMM dd, yyyy")
+                    ? format(new Date(localValue.from), "dd/MM/yyyy")
                     : "From date"
                   }
                 </Button>
@@ -427,7 +435,8 @@ export function ColumnFilterInput({
                   mode="single"
                   selected={localValue?.from ? new Date(localValue.from) : undefined}
                   onSelect={(date) => {
-                    handleDateRangeChange('from', date ? date.toISOString() : '');
+                    // handleDateRangeChange('from', date ? date.toISOString() : '');
+                    handleDateRangeChange('from', date ? date.toLocaleDateString('en-CA') : '');
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
@@ -446,7 +455,7 @@ export function ColumnFilterInput({
                 >
                   <CalendarIcon className="mr-2 h-3 w-3" />
                   {localValue?.to 
-                    ? format(new Date(localValue.to), "MMM dd, yyyy")
+                    ? format(new Date(localValue.to), "dd/MM/yyyy")
                     : "To date"
                   }
                 </Button>
@@ -456,7 +465,7 @@ export function ColumnFilterInput({
                   mode="single"
                   selected={localValue?.to ? new Date(localValue.to) : undefined}
                   onSelect={(date) => {
-                    handleDateRangeChange('to', date ? date.toISOString() : '');
+                    handleDateRangeChange('to', date ? date.toLocaleDateString('en-CA') : '');
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
@@ -505,10 +514,15 @@ export function ColumnFilterInput({
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
                 <SelectItem value="__all__" className="text-xs">All</SelectItem>
-                {column.options?.map(option => (
-                  <SelectItem key={option} value={option} className="text-xs">
-                    {option}
-                  </SelectItem>
+                {column.options?.map((option: any, index) => (
+                  option.name ? (
+                    <SelectItem key={(option.name || option.label || option) + '-' + index}
+    value={option.name ? option.name : option.id}
+    className="text-xs"
+  >
+    {`${option.name} || ${option.description}`}
+  </SelectItem>
+                  ) : null
                 ))}
               </SelectContent>
             </Select>

@@ -137,7 +137,7 @@ export interface ServerFilter {
   key: string;
   label: string;
   type?: 'text' | 'select' | 'date' | 'dateRange' | 'numberRange' | 'dropdownText' | 'time' | 'number' | 'boolean';
-  options?: string[];
+  options?: any[];
   multiSelect?: boolean; // Enable multi-select for dropdown/select types
 }
 

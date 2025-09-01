@@ -290,6 +290,8 @@ export function ServersideFilter({
               value={pendingFilters[filter.key]}
               onChange={(value) => handleFilterChange(filter.key, value)}
               showFilterTypeDropdown={showFilterTypeDropdown}
+              renderOptionLabel={option => option.name || option.label || option}
+              renderOptionValue={option => option.id || option.value || option}
             />
             {pendingFilters[filter.key] && (
               <Button

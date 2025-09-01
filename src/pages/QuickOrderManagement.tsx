@@ -538,50 +538,113 @@ const QuickOrderManagement = () => {
   };
 
   // Server-side filters for the new ServersideFilter component
-  const serverFilters: ServerFilter[] =
-    // [
-    //   { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
-    //   { key: 'Status', label: 'Status', type: 'select', options: ['Released', 'Under Execution', 'Fresh', 'Cancelled', 'Deleted', 'Save', 'Under Amendment', 'Confirmed', 'Initiated'] },
-    //   { key: 'CustomerOrVendor', label: 'Customer/Supplier', type: 'text' },
-    //   { key: 'Contract', label: 'Contract', type: 'text' },
-    //   { key: 'OrderType', label: 'Order Type', type: 'text' },
-    //   { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'date' }
-    // ];
-    [
-      { "key": "OrderType", "label": "Order Type", "type": "select", options: ['Both', 'Sell', 'Buy'] },
-      { "key": "Supplier", "label": "Supplier", "type": "select" },
-      { "key": "Contract", "label": "Contract", "type": "select" },
-      { "key": "Cluster", "label": "Cluster", "type": "select" },
-      { "key": "Customer", "label": "Customer", "type": "select" },
-      { "key": "CustomerSupplierRefNo", "label": "Customer Supplier Ref No", "type": "text" },
-      { "key": "DraftBillNo", "label": "Draft Bill No", "type": "text" },
-      { "key": "DeparturePoint", "label": "Departure Point", "type": "select" },
-      { "key": "ArrivalPoint", "label": "Arrival Point", "type": "select" },
-      { "key": "ServiceType", "label": "Service Type", "type": "select" },
-      { "key": "ServiceDate", "label": "Service Date", "type": "dateRange" },
-      // { "key": "ServiceToDate", "label": "Service To Date", "type": "text" },
+  const [serverFilterOptions, setServerFilterOptions] = useState<any>({});
+  const [filtersLoading, setFiltersLoading] = useState(false);
 
-      { "key": "QuickUniqueID", "label": "Quick Unique ID", "type": "text" },
-      { "key": "QuickOrderNo", "label": "Quick Order No", "type": "text" },
-      { "key": "DraftBillStatus", "label": "Draft Bill Status", "type": "select" },
-      { "key": "IsBillingFailed", "label": "Billing Failed", "type": "select" },
-      { "key": "SubService", "label": "Sub Service", "type": "select" },
-      { "key": "WBS", "label": "WBS", "type": "text" },
-      { "key": "OperationalLocation", "label": "Operational Location", "type": "select" },
-      { "key": "PrimaryRefDoc", "label": "Primary Ref Doc", "type": "dropdownText" },
+  useEffect(() => {
+    if (showServersideFilter) {
+      setApiStatus('loading');
+      async function fetchFilterOptions() {
+        try {
+          const [
+            supplierRes, 
+            contractRes, 
+            clusterRes, 
+            customerRes, 
+            departureRes, 
+            arrivalRes, 
+            serviceTypeRes, 
+            subServiceTypeRes,
+            wagonTypeRes,
+            containerTypeRes
+          ]: any = await Promise.all([
+            quickOrderService.getMasterCommonData({ messageType: 'Supplier Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Contract Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Cluster Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Customer Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Departure Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Arrival Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Service type Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Sub Service type Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Wagon type Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Container Type Init' }),
+          ]);
+          let clusterOptions = [];
+          try {
+            const rawCluster = JSON.parse(clusterRes?.data?.ResponseData || '[]');
+            clusterOptions = Array.isArray(rawCluster)
+              ? rawCluster.map((item: any) => ({ value: item.id, label: item.name }))
+              : [];
+          } catch (e) {
+            clusterOptions = [];
+          }
+          setServerFilterOptions({
+            OrderType: [
+              { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
+              { id: '2', name: 'SELL', default: "N", description: "", seqNo: 2 },
+              { id: '3', name: 'BUY', default: "N", description: "", seqNo: 3 },
+            ],
+            Supplier: JSON.parse(supplierRes?.data?.ResponseData) || [],
+            Contract: JSON.parse(contractRes?.data?.ResponseData) || [],
+            Cluster: JSON.parse(clusterRes?.data?.ResponseData) || [],
+            Customer: JSON.parse(customerRes?.data?.ResponseData) || [],
+            DeparturePoint: JSON.parse(departureRes?.data?.ResponseData) || [],
+            ArrivalPoint: JSON.parse(arrivalRes?.data?.ResponseData) || [],
+            ServiceType: JSON.parse(serviceTypeRes?.data?.ResponseData) || [],
+            isBillingFailed: [
+              { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+              { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+            ],
+            SubServiceType: JSON.parse(subServiceTypeRes?.data?.ResponseData) || [],
+            WagonType: JSON.parse(wagonTypeRes?.data?.ResponseData) || [],
+            ContainerType: JSON.parse(containerTypeRes?.data?.ResponseData) || [],
+          });
+          console.log('orderTypeRes Filter Options API Responses:', serverFilterOptions);
+        } catch (err) {
+          setServerFilterOptions({});
+        }
+        setApiStatus('success');
+      }
+      fetchFilterOptions();
+    }
+  }, [showServersideFilter]);
 
-      { "key": "CreatedBy", "label": "Created By", "type": "text" },
-      { "key": "SecondaryDoc", "label": "Secondary Doc", "type": "text" },
-      { "key": "InvoiceNo", "label": "Invoice No", "type": "text" },
-      { "key": "InvoiceStatus", "label": "Invoice Status", "type": "select" },
-      { "key": "ResourceType", "label": "Resource Type", "type": "select" },
-      { "key": "Wagon", "label": "Wagon", "type": "select" },
-      { "key": "Container", "label": "Container", "type": "select" },
-      { "key": "FromOrderDate", "label": "Quick Order Date", "type": "dateRange" },
-      // { "key": "ToOrderDate", "label": "To Order Date", "type": "text" },
-      { "key": "CreatedFromDate", "label": "Created From Date", "type": "text" },
-      { "key": "CreatedToDate", "label": "Created To Date", "type": "text" }
-    ];
+  const dynamicServerFilters: ServerFilter[] = [
+    { key: 'OrderType', label: 'Order Type', type: 'select', options: serverFilterOptions.OrderType },
+    { key: 'Supplier', label: 'Supplier', type: 'select', options: serverFilterOptions.Supplier },
+    { key: 'Contract', label: 'Supplier/Customer Contract', type: 'select', options: serverFilterOptions.Contract },
+    { key: 'Cluster', label: 'Cluster', type: 'select', options: serverFilterOptions.Cluster },
+    { key: 'Customer', label: 'Customer', type: 'select', options: serverFilterOptions.Customer },
+    { key: 'CustomerSupplierRefNo', label: 'Customer/Supplier Ref No', type: 'text' },
+    { key: 'DraftBillNo', label: 'Draft Bill No', type: 'text' },
+    { key: 'DeparturePoint', label: 'Departure Point', type: 'select', options: serverFilterOptions.DeparturePoint },
+    { key: 'ArrivalPoint', label: 'Arrival Point', type: 'select', options: serverFilterOptions.ArrivalPoint },
+    { key: 'ServiceType', label: 'Service', type: 'select', options: serverFilterOptions.ServiceType },
+    { key: 'ServiceDate', label: 'Service Date', type: 'dateRange' },
+    { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'dateRange' },
+    { key: 'TotalNetAmount', label: 'Total Net Amount', type: 'numberRange' },
+    { key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'select', options: [] },
+    { key: 'IsBillingFailed', label: 'Billing Failed', type: 'select', options: serverFilterOptions.isBillingFailed },
+    { key: 'SubService', label: 'Sub Service', type: 'select', options: serverFilterOptions.SubServiceType },
+    { key: 'WBS', label: 'WBS', type: 'text' },
+    { key: 'OperationalLocation', label: 'Operational Location', type: 'select', options: [] },
+    { key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'dropdownText' },
+    { key: 'QuickCreatedDate', label: 'Quick Order Created Date', type: 'dateRange' },
+    { key: 'CreatedBy', label: 'Quick Order Created By', type: 'select', options: [] },
+    { key: 'SecondaryDoc', label: 'Secondary Doc', type: 'dropdownText' },
+    { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },
+    { key: 'InvoiceStatus', label: 'Invoice Status', type: 'select', options: [] },
+    { key: 'ResourceType', label: 'Resource Type', type: 'select', options: [] },
+    { key: 'Wagon', label: 'Wagon', type: 'select', options: serverFilterOptions.WagonType },
+    { key: 'Container', label: 'Container', type: 'select', options: serverFilterOptions.ContainerType },
+    // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
+    // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
+    // { key: 'FromOrderDate', label: 'Quick Order Date', type: 'dateRange' },
+    // { key: 'CreatedFromDate', label: 'Created From Date', type: 'text' },
+    // { key: 'CreatedToDate', label: 'Created To Date', type: 'text' }
+  ];
+
+  console.log("dynamicServerFilters Server Filter Options: ", dynamicServerFilters);
 
   // const handleSimpleSearch = () => {
   //   // Use currentFilters for server-side search
@@ -613,11 +676,25 @@ const QuickOrderManagement = () => {
           // if (value && value.value && value.type !== "dateRange") {
           //   searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           // }
-          if (value.type === "dateRange" && value.value.from && value.value.to) {
+          if (key == 'ServiceDate' && value.type === "dateRange" && value.value.from && value.value.to) {
             // Split into two separate filter keys
             searchData.push(
               { FilterName: `ServiceFromDate`, FilterValue: value.value.from },
               { FilterName: `ServiceToDate`, FilterValue: value.value.to }
+            );
+          }
+          else if (key == 'QuickOrderDate' && value.type === "dateRange" && value.value.from && value.value.to) {
+            // Split into two separate filter keys
+            searchData.push(
+              { FilterName: `FromOrderDate`, FilterValue: value.value.from },
+              { FilterName: `ToOrderDate`, FilterValue: value.value.to }
+            );
+          }
+          else if (key == 'QuickCreatedDate' && value.type === "dateRange" && value.value.from && value.value.to) {
+            // Split into two separate filter keys
+            searchData.push(
+              { FilterName: `CreatedFromDate`, FilterValue: value.value.from },
+              { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
           } else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
@@ -1037,6 +1114,7 @@ const QuickOrderManagement = () => {
                 showCreateButton={true}
                 searchPlaceholder="Search"
               /> */}
+              {/* {!filtersLoading ? ( */}
               <SmartGridWithGrouping
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
@@ -1074,11 +1152,17 @@ const QuickOrderManagement = () => {
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
                 // Server-side filter props
-                serverFilters={serverFilters}
+                serverFilters={dynamicServerFilters}
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
               />
+              {/* ) : ( */}
+              {/* <div className="flex items-center justify-center h-96">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                  <div className="text-lg font-semibold text-blue-700">Loading filter options...</div> 
+                </div> */}
+              {/* )} */}
               {/* SideDrawer for PlanAndActualDetails */}
               <SideDrawer
                 isOpen={isDrawerOpen}
@@ -1148,7 +1232,7 @@ const QuickOrderManagement = () => {
           <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
             <div className="p-6">
               <div className="mb-6">
-                <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId}/>
+                <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId} />
               </div>
             </div>
           </SideDrawer>
