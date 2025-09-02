@@ -301,6 +301,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [departList, setDepartList] = useState<any[]>([]);
   const [arrivalList, setArrivalList] = useState<any[]>([]);
   const [billingTypeList, setBillingTypeList] = useState<any[]>([]);
+  const [customerOrderNoList, setCustomerOrderNoList] = useState<any[]>([]);
+  const [locationList, setLocationList] = useState<any[]>([]);
 
 
   // Remove: const [billingData, setBillingData] = useState(jsonStore.getBillingDetails() || {})
@@ -323,10 +325,13 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [selectedType, setSelectedType] = useState("");
 
   const messageTypes = [
+    "ResourceType Init",
     "Service type Init",
     "Sub Service type Init",
+    "DraftBillStatus Init",
     "Arrival Init",
-    "Departure Init"
+    "Departure Init",
+    "Location Init",
   ];
   useEffect(() => {
     fetchAll();
@@ -374,6 +379,21 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       if (messageType == "Departure Init") {
         setDepartList(JSON.parse(data?.data?.ResponseData));
       }
+      if (messageType == "ResourceType Init") {
+        setResourceList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "ResourceType Init") {
+        setResourceTypeList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Location Init") {
+        setLocationList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "DraftBillStatus Init") {
+        setBillingTypeList(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Ref doc type Init") {
+        setCustomerOrderNoList(JSON.parse(data?.data?.ResponseData));
+      }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
       // setApiData(data);
@@ -400,13 +420,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       mandatory: true,
       visible: true,
       editable: true,
-      order: 2,
-      options: [
-        { label: 'Vehicle', value: 'Vehicle' },
-        { label: 'Equipment', value: 'Equipment' },
-        { label: 'Material', value: 'Material' },
-        { label: 'Other', value: 'Other' }
-      ],
+      order: 1,
+      options: resourceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
           console.log('contractType changed:', value);
@@ -422,12 +437,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       mandatory: true,
       visible: true,
       editable: true,
-      order: 3,
-      options: [
-        { label: 'Truck 4.2', value: 'Truck 4.2' },
-        { label: 'Truck 4.5', value: 'Truck 4.5' },
-        { label: 'Truck 5.2', value: 'truck-5.2' },
-      ]
+      order: 2,
+      options: resourceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     ServiceType: {
       id: 'ServiceType',
@@ -438,8 +449,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       mandatory: false,
       visible: true,
       editable: true,
-      order: 4,
-      options: serviceTypeList.map(c => ({ label: c.name, value: c.name })),
+      order: 3,
+      options: serviceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     SubSericeType: {
       id: 'SubSericeType',
@@ -450,8 +461,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       mandatory: false,
       visible: true,
       editable: true,
-      order: 5,
-      options: subServiceTypeList.map(c => ({ label: c.name, value: c.name })),
+      order: 4,
+      options: subServiceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       // events: {
       //   onBlur: (event) => {
       //     console.log('Description blur event:', event);
@@ -485,7 +496,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 2,
-      options: departList.map(c => ({ label: c.name, value: c.name })),
+      options: departList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     ArrivalPoint: {
       id: 'ArrivalPoint',
@@ -497,7 +508,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 3,
-      options: arrivalList.map(c => ({ label: c.name, value: c.name })),
+      options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     FromDate: {
       id: 'FromDate',
@@ -594,11 +605,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 3,
       width: 'full',
-      options: [
-        { label: 'Wagon', value: 'Wagon' },
-        { label: 'Container', value: 'Container' },
-        { label: 'Block', value: 'Block' }
-      ],
+      options: billingTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
           console.log('contractType changed:', value);
@@ -921,9 +928,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                 <>
                   <h2 className="text-lg font-semibold">Resource Group Creation</h2>
                   <div className="flex items-center gap-4">
-                    <span onClick={() => setGroupLevelModalOpen(true)} className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100">
+                    {/* <span onClick={() => setGroupLevelModalOpen(true)} className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100">
                       <BookmarkCheck className="w-5 h-5 text-gray-500 cursor-pointer" />
-                    </span>
+                    </span> */}
                     <span onClick={() => setAttachmentsOpen(true)} className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100">
                       <FileText className="w-5 h-5 text-gray-500 cursor-pointer" />
                     </span>
