@@ -74,7 +74,8 @@ export function ColumnFilterInput({
         // DropdownText now uses simple string value
         if (value?.value) {
           // Check if it's a dropdown option or free text
-          const isDropdownOption = column.options?.includes(value.value);
+          // const isDropdownOption = column.options?.includes(value.value);
+          const isDropdownOption = column.options?.some((opt: any) => opt.name === value?.value);
           if (isDropdownOption) {
             setDropdownValue(value.value);
             setTextValue('');
@@ -371,7 +372,7 @@ export function ColumnFilterInput({
       value={(option.name ? option.name : option.id)}
       className="text-xs"
     >
-    {`${option.name} || ${option.description}`}
+    {option.description ? `${option.name} || ${option.description}` : option.name}
   </SelectItem>
                   ) : null
                 ))}
@@ -520,7 +521,7 @@ export function ColumnFilterInput({
     value={option.name ? option.name : option.id}
     className="text-xs"
   >
-    {`${option.name} || ${option.description}`}
+    {option.description ? `${option.name} || ${option.description}` : option.name}
   </SelectItem>
                   ) : null
                 ))}

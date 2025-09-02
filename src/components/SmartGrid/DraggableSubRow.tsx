@@ -5,6 +5,7 @@ import { GripVertical, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { dateFormatter } from '@/utils/formatter';
 
 interface DraggableSubRowProps {
   row: any;
@@ -171,7 +172,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
         case 'Date':
           try {
             const date = new Date(value);
-            return <div className="font-medium text-sm">{date.toLocaleDateString()}</div>;
+            return <div className="font-medium text-sm">{dateFormatter(date)}</div>;
           } catch {
             return <div className="font-medium text-sm">{String(value)}</div>;
           }
@@ -186,6 +187,9 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           } catch {
             return <span className="truncate" title={String(value)}>{String(value)}</span>;
           }
+        case 'CurrencyWithSymbol':
+          return <div className="font-medium text-sm break-words">&euro; {String(value)}</div>;
+
         default:
           return <div className="font-medium text-sm break-words">{String(value)}</div>;
       }

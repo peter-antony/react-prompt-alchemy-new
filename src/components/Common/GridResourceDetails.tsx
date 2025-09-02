@@ -15,6 +15,7 @@ import { formattedAmount } from '@/utils/formatter';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { quickOrderService } from "@/api/services/quickOrderService";
+import ResourceGroupSearch from "./ResourceGroupSearch";
 interface CardStatus {
   label: string;
   color: string;
@@ -73,8 +74,8 @@ interface GridResourceDetailsProps {
 }
 
 const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, passedQuickUniqueID }) => {
-  console.log("Data in GridResourceDetails:", data);
-  console.log("quickResourceId: ", passedQuickUniqueID);
+  // console.log("Data in GridResourceDetails:", data);
+  // console.log("quickResourceId: ", passedQuickUniqueID);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isResourceGroup, setResourceGroupOpen] = useState({
@@ -83,6 +84,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
   });
   const [isBack, setIsBack] = useState(true);
   const [resourceGroups, setResourceGroups] = useState<any[]>([]);
+  const [filteredResourceGroups, setFilteredResourceGroups] = useState<any[]>([]);
   const [selectedValue, setSelectedValue] = useState<string>(passedQuickUniqueID || "");
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -140,16 +142,23 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
         const jsonParsedData = JSON.parse(response?.data?.ResponseData || "null");
         if (jsonParsedData && Array.isArray(jsonParsedData.ResponseResult)) {
           setResourceGroups(jsonParsedData?.ResponseResult[0].ResourceGroup);
+          setFilteredResourceGroups(jsonParsedData?.ResponseResult[0].ResourceGroup);
         } else {
           setResourceGroups([]);
+          setFilteredResourceGroups([]);
         }
       } catch (error) {
         console.error("Failed to fetch resource groups:", error);
         setResourceGroups([]);
+        setFilteredResourceGroups([]);
       }
     }
     fetchResourceGroups();
   }, [passedQuickUniqueID]);
+
+  const handleResourceGroupSearch = (filteredGroups: any[]) => {
+    setFilteredResourceGroups(filteredGroups);
+  };
 
   return (
     <div>
@@ -175,22 +184,17 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
           Resource Group Details
         </h2>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Input
-              name='grid-search-input'
-              placeholder="Search"
-              className="border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={{ width: 200 }}
-            />
-            <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
-          </div>
+          <ResourceGroupSearch
+            resourceGroups={resourceGroups}
+            onSearch={handleResourceGroupSearch}
+          />
           <Button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
             <Filter className="w-5 h-5 text-gray-500" />
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {resourceGroups.map((item: any, index) => (
+        {filteredResourceGroups.map((item: any, index) => (
           <div key={'Resource' + index} className="bg-white rounded-lg border border-[#EAECF0] px-4 py-4 relative">
             <div className="flex items-start justify-between mb-4 border-b border-b-[#EAECF0] pb-4">
               <div>

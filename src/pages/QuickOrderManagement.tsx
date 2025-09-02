@@ -556,7 +556,13 @@ const QuickOrderManagement = () => {
             serviceTypeRes, 
             subServiceTypeRes,
             wagonTypeRes,
-            containerTypeRes
+            containerTypeRes,
+            createdByRes,
+            draftBillStatusRes,
+            resourceTypeRes,
+            locationRes,
+            invoiceStatusRes,
+            refDocTypeRes
           ]: any = await Promise.all([
             quickOrderService.getMasterCommonData({ messageType: 'Supplier Init' }),
             quickOrderService.getMasterCommonData({ messageType: 'Contract Init' }),
@@ -568,6 +574,12 @@ const QuickOrderManagement = () => {
             quickOrderService.getMasterCommonData({ messageType: 'Sub Service type Init' }),
             quickOrderService.getMasterCommonData({ messageType: 'Wagon type Init' }),
             quickOrderService.getMasterCommonData({ messageType: 'Container Type Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Createdby Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'DraftBillStatus Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'ResourceType Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Location Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Finance Status Init' }),
+            quickOrderService.getMasterCommonData({ messageType: 'Ref doc type Init' }),
           ]);
           let clusterOptions = [];
           try {
@@ -598,8 +610,14 @@ const QuickOrderManagement = () => {
             SubServiceType: JSON.parse(subServiceTypeRes?.data?.ResponseData) || [],
             WagonType: JSON.parse(wagonTypeRes?.data?.ResponseData) || [],
             ContainerType: JSON.parse(containerTypeRes?.data?.ResponseData) || [],
+            CreatedBy: JSON.parse(createdByRes?.data?.ResponseData) || [],
+            DraftBillStatus: JSON.parse(draftBillStatusRes?.data?.ResponseData) || [],
+            ResourceType: JSON.parse(resourceTypeRes?.data?.ResponseData) || [],
+            OperationalLocation: JSON.parse(locationRes?.data?.ResponseData) || [],
+            InvoiceStatus: JSON.parse(invoiceStatusRes?.data?.ResponseData) || [],
+            PrimaryRefDoc: JSON.parse(refDocTypeRes?.data?.ResponseData) || [],
           });
-          console.log('orderTypeRes Filter Options API Responses:', serverFilterOptions);
+          // console.log('orderTypeRes Filter Options API Responses:', serverFilterOptions);
         } catch (err) {
           setServerFilterOptions({});
         }
@@ -622,19 +640,19 @@ const QuickOrderManagement = () => {
     { key: 'ServiceType', label: 'Service', type: 'select', options: serverFilterOptions.ServiceType },
     { key: 'ServiceDate', label: 'Service Date', type: 'dateRange' },
     { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'dateRange' },
-    { key: 'TotalNetAmount', label: 'Total Net Amount', type: 'numberRange' },
-    { key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'select', options: [] },
+    { key: 'TotalNet', label: 'Total Net Amount', type: 'numberRange' },
+    { key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'select', options: serverFilterOptions.DraftBillStatus },
     { key: 'IsBillingFailed', label: 'Billing Failed', type: 'select', options: serverFilterOptions.isBillingFailed },
     { key: 'SubService', label: 'Sub Service', type: 'select', options: serverFilterOptions.SubServiceType },
     { key: 'WBS', label: 'WBS', type: 'text' },
-    { key: 'OperationalLocation', label: 'Operational Location', type: 'select', options: [] },
-    { key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'dropdownText' },
+    { key: 'OperationalLocation', label: 'Operational Location', type: 'select', options: serverFilterOptions.OperationalLocation },
+    { key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'dropdownText', options: serverFilterOptions.PrimaryRefDoc },
     { key: 'QuickCreatedDate', label: 'Quick Order Created Date', type: 'dateRange' },
-    { key: 'CreatedBy', label: 'Quick Order Created By', type: 'select', options: [] },
-    { key: 'SecondaryDoc', label: 'Secondary Doc', type: 'dropdownText' },
+    { key: 'CreatedBy', label: 'Quick Order Created By', type: 'select', options: serverFilterOptions.CreatedBy },
+    { key: 'SecondaryDoc', label: 'Secondary Doc', type: 'dropdownText', options: serverFilterOptions.PrimaryRefDoc },
     { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },
-    { key: 'InvoiceStatus', label: 'Invoice Status', type: 'select', options: [] },
-    { key: 'ResourceType', label: 'Resource Type', type: 'select', options: [] },
+    { key: 'InvoiceStatus', label: 'Invoice Status', type: 'select', options: serverFilterOptions.InvoiceStatus },
+    { key: 'ResourceType', label: 'Resource Type', type: 'select', options: serverFilterOptions.ResourceType },
     { key: 'Wagon', label: 'Wagon', type: 'select', options: serverFilterOptions.WagonType },
     { key: 'Container', label: 'Container', type: 'select', options: serverFilterOptions.ContainerType },
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
@@ -644,7 +662,7 @@ const QuickOrderManagement = () => {
     // { key: 'CreatedToDate', label: 'Created To Date', type: 'text' }
   ];
 
-  console.log("dynamicServerFilters Server Filter Options: ", dynamicServerFilters);
+  // console.log("dynamicServerFilters Server Filter Options: ", dynamicServerFilters);
 
   // const handleSimpleSearch = () => {
   //   // Use currentFilters for server-side search
@@ -696,7 +714,15 @@ const QuickOrderManagement = () => {
               { FilterName: `CreatedFromDate`, FilterValue: value.value.from },
               { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
-          } else {
+          } 
+          else if (key == 'TotalNet' && value.type === "number" && value.value.from && value.value.to) {
+            // Split into two separate filter keys
+            searchData.push(
+              { FilterName: `TotalNet`, FilterValue: value.value.from + '-' + value.value.to },
+              // { FilterName: `CreatedToDate`, FilterValue: value.value.to }
+            );
+          } 
+          else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           }
         });
@@ -708,7 +734,7 @@ const QuickOrderManagement = () => {
         filters: searchData
       });
 
-      console.log('Server-side Search API Response:', response);
+      // console.log('Server-side Search API Response:', response);
 
       const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
       const data = parsedResponse.ResponseResult;
@@ -750,7 +776,7 @@ const QuickOrderManagement = () => {
         };
       });
 
-      console.log('Processed Server-side Search Data:', processedData);
+      // console.log('Processed Server-side Search Data:', processedData);
 
       gridState.setGridData(processedData);
       gridState.setLoading(false);
