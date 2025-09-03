@@ -16,7 +16,7 @@ import { PlanAndActualDetails } from '@/components/QuickOrderNew/PlanAndActualDe
 import jsonStore from '@/stores/jsonStore';
 import { useFooterStore } from '@/stores/footerStore';
 import CommonPopup from '@/components/Common/CommonPopup';
-import { quickOrderService } from '@/api/services';
+import { filterService, quickOrderService } from '@/api/services';
 import { SimpleDropDown } from '@/components/Common/SimpleDropDown';
 import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDetails';
 import { Input } from '@/components/ui/input';
@@ -541,120 +541,119 @@ const QuickOrderManagement = () => {
   const [serverFilterOptions, setServerFilterOptions] = useState<any>({});
   const [filtersLoading, setFiltersLoading] = useState(false);
 
-  useEffect(() => {
-    if (showServersideFilter) {
-      setApiStatus('loading');
-      async function fetchFilterOptions() {
-        try {
-          const [
-            supplierRes, 
-            contractRes, 
-            clusterRes, 
-            customerRes, 
-            departureRes, 
-            arrivalRes, 
-            serviceTypeRes, 
-            subServiceTypeRes,
-            wagonTypeRes,
-            containerTypeRes,
-            createdByRes,
-            draftBillStatusRes,
-            resourceTypeRes,
-            locationRes,
-            invoiceStatusRes,
-            refDocTypeRes
-          ]: any = await Promise.all([
-            quickOrderService.getMasterCommonData({ messageType: 'Supplier Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Contract Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Cluster Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Customer Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Departure Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Arrival Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Service type Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Sub Service type Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Wagon type Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Container Type Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Createdby Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'DraftBillStatus Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'ResourceType Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Location Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Finance Status Init' }),
-            quickOrderService.getMasterCommonData({ messageType: 'Ref doc type Init' }),
-          ]);
-          let clusterOptions = [];
-          try {
-            const rawCluster = JSON.parse(clusterRes?.data?.ResponseData || '[]');
-            clusterOptions = Array.isArray(rawCluster)
-              ? rawCluster.map((item: any) => ({ value: item.id, label: item.name }))
-              : [];
-          } catch (e) {
-            clusterOptions = [];
-          }
-          setServerFilterOptions({
-            OrderType: [
-              { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
-              { id: '2', name: 'SELL', default: "N", description: "", seqNo: 2 },
-              { id: '3', name: 'BUY', default: "N", description: "", seqNo: 3 },
-            ],
-            Supplier: JSON.parse(supplierRes?.data?.ResponseData) || [],
-            Contract: JSON.parse(contractRes?.data?.ResponseData) || [],
-            Cluster: JSON.parse(clusterRes?.data?.ResponseData) || [],
-            Customer: JSON.parse(customerRes?.data?.ResponseData) || [],
-            DeparturePoint: JSON.parse(departureRes?.data?.ResponseData) || [],
-            ArrivalPoint: JSON.parse(arrivalRes?.data?.ResponseData) || [],
-            ServiceType: JSON.parse(serviceTypeRes?.data?.ResponseData) || [],
-            isBillingFailed: [
-              { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
-              { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-            ],
-            SubServiceType: JSON.parse(subServiceTypeRes?.data?.ResponseData) || [],
-            WagonType: JSON.parse(wagonTypeRes?.data?.ResponseData) || [],
-            ContainerType: JSON.parse(containerTypeRes?.data?.ResponseData) || [],
-            CreatedBy: JSON.parse(createdByRes?.data?.ResponseData) || [],
-            DraftBillStatus: JSON.parse(draftBillStatusRes?.data?.ResponseData) || [],
-            ResourceType: JSON.parse(resourceTypeRes?.data?.ResponseData) || [],
-            OperationalLocation: JSON.parse(locationRes?.data?.ResponseData) || [],
-            InvoiceStatus: JSON.parse(invoiceStatusRes?.data?.ResponseData) || [],
-            PrimaryRefDoc: JSON.parse(refDocTypeRes?.data?.ResponseData) || [],
-          });
-          // console.log('orderTypeRes Filter Options API Responses:', serverFilterOptions);
-        } catch (err) {
-          setServerFilterOptions({});
-        }
-        setApiStatus('success');
+  // utils/fetchOptionsHelper.ts
+  const makeLazyFetcher = (messageType: string) => {
+    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+      const response: any = await quickOrderService.getMasterCommonData({
+        messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      try {
+        return JSON.parse(response?.data?.ResponseData || '[]');
+      } catch (err) {
+        console.error(`Failed to parse ResponseData for ${messageType}:`, err);
+        return [];
       }
-      fetchFilterOptions();
-    }
-  }, [showServersideFilter]);
+    };
+  };
 
   const dynamicServerFilters: ServerFilter[] = [
-    { key: 'OrderType', label: 'Order Type', type: 'select', options: serverFilterOptions.OrderType },
-    { key: 'Supplier', label: 'Supplier', type: 'select', options: serverFilterOptions.Supplier },
-    { key: 'Contract', label: 'Supplier/Customer Contract', type: 'select', options: serverFilterOptions.Contract },
-    { key: 'Cluster', label: 'Cluster', type: 'select', options: serverFilterOptions.Cluster },
-    { key: 'Customer', label: 'Customer', type: 'select', options: serverFilterOptions.Customer },
+    {
+      key: 'OrderType', label: 'Order Type', type: 'select',
+      options: [
+        { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'SELL', default: "N", description: "", seqNo: 2 },
+        { id: '3', name: 'BUY', default: "N", description: "", seqNo: 3 },
+      ]
+    },
+    {
+      key: 'Supplier', label: 'Supplier', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Supplier Init")
+    },
+    {
+      key: 'Contract', label: 'Supplier/Customer Contract', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Contract Init")
+    },
+    {
+      key: 'Cluster', label: 'Cluster', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Cluster Init")
+    },
+    {
+      key: 'Customer',
+      label: 'Customer',
+      type: 'lazyselect', // lazy-loaded dropdown
+      fetchOptions: makeLazyFetcher("Customer Init")
+    },
     { key: 'CustomerSupplierRefNo', label: 'Customer/Supplier Ref No', type: 'text' },
     { key: 'DraftBillNo', label: 'Draft Bill No', type: 'text' },
-    { key: 'DeparturePoint', label: 'Departure Point', type: 'select', options: serverFilterOptions.DeparturePoint },
-    { key: 'ArrivalPoint', label: 'Arrival Point', type: 'select', options: serverFilterOptions.ArrivalPoint },
-    { key: 'ServiceType', label: 'Service', type: 'select', options: serverFilterOptions.ServiceType },
+    {
+      key: 'DeparturePoint', label: 'Departure Point', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Departure Init")
+    },
+    {
+      key: 'ArrivalPoint', label: 'Arrival Point', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Arrival Init")
+    },
+    {
+      key: 'ServiceType', label: 'Service', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Service type Init")
+    },
     { key: 'ServiceDate', label: 'Service Date', type: 'dateRange' },
     { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'dateRange' },
     { key: 'TotalNet', label: 'Total Net Amount', type: 'numberRange' },
-    { key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'select', options: serverFilterOptions.DraftBillStatus },
-    { key: 'IsBillingFailed', label: 'Billing Failed', type: 'select', options: serverFilterOptions.isBillingFailed },
-    { key: 'SubService', label: 'Sub Service', type: 'select', options: serverFilterOptions.SubServiceType },
+    {
+      key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("DraftBillStatus Init")
+    },
+    {
+      key: 'IsBillingFailed', label: 'Billing Failed', type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    },
+    {
+      key: 'SubService', label: 'Sub Service', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Sub Service type Init")
+    },
     { key: 'WBS', label: 'WBS', type: 'text' },
-    { key: 'OperationalLocation', label: 'Operational Location', type: 'select', options: serverFilterOptions.OperationalLocation },
-    { key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'dropdownText', options: serverFilterOptions.PrimaryRefDoc },
+    {
+      key: 'OperationalLocation', label: 'Operational Location', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Location Init")
+    },
+    {
+      key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'text',
+      // fetchOptions: makeLazyFetcher("Ref doc type Init")
+    },
     { key: 'QuickCreatedDate', label: 'Quick Order Created Date', type: 'dateRange' },
-    { key: 'CreatedBy', label: 'Quick Order Created By', type: 'select', options: serverFilterOptions.CreatedBy },
-    { key: 'SecondaryDoc', label: 'Secondary Doc', type: 'dropdownText', options: serverFilterOptions.PrimaryRefDoc },
+    {
+      key: 'CreatedBy', label: 'Quick Order Created By', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Createdby Init")
+    },
+    {
+      key: 'SecondaryDoc', label: 'Secondary Doc', type: 'text',
+      // fetchOptions: makeLazyFetcher("Ref doc type Init")
+    },
     { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },
-    { key: 'InvoiceStatus', label: 'Invoice Status', type: 'select', options: serverFilterOptions.InvoiceStatus },
-    { key: 'ResourceType', label: 'Resource Type', type: 'select', options: serverFilterOptions.ResourceType },
-    { key: 'Wagon', label: 'Wagon', type: 'select', options: serverFilterOptions.WagonType },
-    { key: 'Container', label: 'Container', type: 'select', options: serverFilterOptions.ContainerType },
+    {
+      key: 'InvoiceStatus', label: 'Invoice Status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Finance Status Init")
+    },
+    {
+      key: 'ResourceType', label: 'Resource Type', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("ResourceType Init")
+    },
+    {
+      key: 'Wagon', label: 'Wagon', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Wagon type Init")
+    },
+    {
+      key: 'Container', label: 'Container', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Container Type Init")
+    },
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
     // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
     // { key: 'FromOrderDate', label: 'Quick Order Date', type: 'dateRange' },
@@ -714,14 +713,14 @@ const QuickOrderManagement = () => {
               { FilterName: `CreatedFromDate`, FilterValue: value.value.from },
               { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
-          } 
+          }
           else if (key == 'TotalNet' && value.type === "number" && value.value.from && value.value.to) {
             // Split into two separate filter keys
             searchData.push(
               { FilterName: `TotalNet`, FilterValue: value.value.from + '-' + value.value.to },
               // { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
-          } 
+          }
           else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           }
@@ -1182,6 +1181,9 @@ const QuickOrderManagement = () => {
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                gridId="quick-order-management"
+                userId="current-user"
+                api={filterService}
               />
               {/* ) : ( */}
               {/* <div className="flex items-center justify-center h-96">

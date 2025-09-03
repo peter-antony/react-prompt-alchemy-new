@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { GridColumnConfig } from '@/types/smartgrid';
+import { GridColumnConfig, GridPreferences } from '@/types/smartgrid';
 import { GripVertical, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ interface DraggableSubRowProps {
   onSubRowEdit: (rowIndex: number, columnKey: string, value: any) => void;
   onSubRowEditStart: (rowIndex: number, columnKey: string) => void;
   onSubRowEditCancel: () => void;
+  preferences?: GridPreferences;
 }
 
 export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
@@ -28,7 +29,8 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
   onReorderSubRowColumns,
   onSubRowEdit,
   onSubRowEditStart,
-  onSubRowEditCancel
+  onSubRowEditCancel,
+  preferences
 }) => {
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -256,7 +258,8 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-                      {column.label}
+                      {/* {column.label} */}
+                      {preferences?.columnHeaders[column.key] || column.label}
                     </div>
                     {column.editable && (
                       <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">

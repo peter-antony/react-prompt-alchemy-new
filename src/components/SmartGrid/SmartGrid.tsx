@@ -198,10 +198,21 @@ export function SmartGrid({
     }));
   }, [currentColumns, preferences, calculateColumnWidthsCallback]);
 
-  // Get sub-row columns (columns marked with subRow: true)
+  // Get sub-row columns (columns marked with subRow: true) with preferences applied
   const subRowColumns = useMemo(() => {
-    return currentColumns.filter(col => col.subRow === true);
-  }, [currentColumns]);
+    const columnMap = new Map(currentColumns.map(col => [col.key, col]));
+    
+    // Get columns that are marked as sub-row columns AND not hidden
+    const visibleSubRowColumns = currentColumns
+      .filter(col => col.subRow === true)
+      .filter(col => !preferences.hiddenColumns.includes(col.key))
+      .map(col => ({
+        ...col,
+        label: preferences.columnHeaders[col.key] || col.label // Apply custom headers
+      }));
+    
+    return visibleSubRowColumns;
+  }, [currentColumns, preferences]);
 
   // Check if any column has subRow set to true
   const hasSubRowColumns = useMemo(() => {
@@ -297,13 +308,14 @@ export function SmartGrid({
           onSubRowEdit={handleSubRowEdit}
           onSubRowEditStart={handleSubRowEditStart}
           onSubRowEditCancel={handleSubRowEditCancel}
+          preferences={preferences}
         />
       );
     }
 
     // Fallback to collapsible content if no sub-row columns
     return renderCollapsibleContent(row);
-  }, [hasSubRowColumns, subRowColumns, preferences.subRowColumnOrder, editingCell, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent]);
+}, [hasSubRowColumns, subRowColumns, preferences, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent]);
 
   // Use sub-row renderer if we have sub-row columns, otherwise use collapsible or custom renderer
   const effectiveNestedRowRenderer = hasSubRowColumns ? renderSubRowContent : (hasCollapsibleColumns ? renderCollapsibleContent : nestedRowRenderer);

@@ -80,6 +80,9 @@ export const quickOrderService = {
         UserID: "ramcouser",
         OUID: "4",
         Role: "ramcorole",
+        searchTerm: params?.searchTerm || '',
+        offset: params?.offset,
+        limit: params?.limit,
       },
       AdditionalFilter: [],
     });

@@ -52,13 +52,13 @@ export function FilterSetModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-80 p-4 bg-white rounded-lg shadow-xl">
+      <DialogContent className="w-80 p-4 bg-background rounded-lg shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Save Filter Set</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Save current filters ({activeFilterCount} active) as a reusable set.
           </div>
           
@@ -78,7 +78,7 @@ export function FilterSetModal({
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             />
             {error && (
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-sm text-destructive">{error}</div>
             )}
           </div>
 
@@ -94,7 +94,7 @@ export function FilterSetModal({
           </div>
           
           {isDefault && (
-            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+            <div className="text-xs text-primary bg-primary/10 p-2 rounded">
               This filter set will be automatically applied when the grid loads.
             </div>
           )}

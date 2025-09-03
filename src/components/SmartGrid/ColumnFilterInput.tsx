@@ -553,7 +553,7 @@ export function ColumnFilterInput({
 
   return (
     <div className={cn(
-      "flex items-center gap-1 p-1 bg-white rounded border shadow-sm transition-all",
+      "flex items-center gap-1 p-1 bg-white rounded border shadow-sm transition-all h-9",
       isSubRow && "bg-blue-50 border-blue-200"
     )}>
       {/* Operator symbol with dropdown - only show if enabled */}

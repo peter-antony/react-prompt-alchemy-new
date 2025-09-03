@@ -136,9 +136,10 @@ export interface GridPlugin {
 export interface ServerFilter {
   key: string;
   label: string;
-  type?: 'text' | 'select' | 'date' | 'dateRange' | 'numberRange' | 'dropdownText' | 'time' | 'number' | 'boolean';
+  type?: 'text' | 'select' | 'date' | 'dateRange' | 'numberRange' | 'dropdownText' | 'time' | 'number' | 'boolean' | 'lazyselect';
   options?: any[];
   multiSelect?: boolean; // Enable multi-select for dropdown/select types
+  fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
 }
 
 export interface ExtraFilter {

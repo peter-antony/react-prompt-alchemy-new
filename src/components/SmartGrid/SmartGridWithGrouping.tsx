@@ -23,6 +23,9 @@ interface SmartGridWithGroupingProps extends SmartGridProps {
   showServersideFilter?: boolean;
   onToggleServersideFilter?: () => void;
   hideAdvancedFilter?: boolean;
+  api?: any; // FilterSystemAPI
+  gridId?: string;
+  userId?: string;
 }
 
 export function SmartGridWithGrouping({
@@ -37,6 +40,9 @@ export function SmartGridWithGrouping({
   showServersideFilter = false,
   onToggleServersideFilter,
   hideAdvancedFilter = false,
+  api,
+  gridId,
+  userId,
   ...props
 }: SmartGridWithGroupingProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -223,9 +229,9 @@ export function SmartGridWithGrouping({
           onToggle={onToggleServersideFilter || (() => {})}
           onFiltersChange={props.onFiltersChange || (() => {})}
           onSearch={props.onSearch || (() => {})}
-          gridId={props.gridTitle || 'default'}
-          userId="user-1" // This should be passed from parent
-          api={undefined} // This should be passed from parent if needed
+          gridId={gridId || props.gridTitle || 'default'}
+          userId={userId || 'default-user'}
+          api={api} // This should be passed from parent if needed
         />
       )}
       

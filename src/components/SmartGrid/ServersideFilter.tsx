@@ -9,6 +9,7 @@ import { GridColumnConfig, ServerFilter } from '@/types/smartgrid';
 import { FilterValue, FilterSet, FilterSystemAPI } from '@/types/filterSystem';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { LazySelect } from './LazySelect';
 
 interface ServersideFilterProps {
   serverFilters: ServerFilter[];
@@ -265,6 +266,46 @@ export function ServersideFilter({
         filter !== undefined && visibleFields.includes(filter.key)
       );
     return orderedVisibleFilters.map((filter) => {
+      // Handle lazyselect type specially
+      if (filter.type === 'lazyselect' && filter.fetchOptions) {
+        return (
+          <div key={filter.key} className="space-y-1">
+            <div className="text-xs font-medium text-gray-600 truncate">
+              {filter.label}
+            </div>
+            <div className="relative">
+              <LazySelect
+                fetchOptions={filter.fetchOptions}
+                value={pendingFilters[filter.key]?.value}
+                onChange={(value) => {
+                  if (value === undefined) {
+                    handleFilterChange(filter.key, undefined);
+                  } else {
+                    handleFilterChange(filter.key, {
+                      value: value,
+                      operator: 'equals',
+                      type: filter.multiSelect ? 'select' : 'text'
+                    });
+                  }
+                }}
+                multiSelect={filter.multiSelect}
+                placeholder={`Select ${filter.label.toLowerCase()}...`}
+              />
+              {pendingFilters[filter.key] && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFilterChange(filter.key, undefined)}
+                  // className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100 z-10"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        );
+      }
       // Convert ServerFilter to GridColumnConfig for compatibility with ColumnFilterInput
       const columnConfig: GridColumnConfig = {
         key: filter.key,
