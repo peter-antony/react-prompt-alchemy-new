@@ -626,7 +626,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     setResourceGroupOpen(false);
     setIsBack(true);
     const resourceGroups = jsonStore.getAllResourceGroups();
-    console.log("RESOURCE GROUPS:: ", resourceGroups);
+    console.log("RESOURCE GROUPS::::: ", resourceGroups);
+    const quickOrder = jsonStore.getQuickOrder();
+      // setOrderType('BUY');
+      setFormData(normalizeOrderFormDetails(quickOrder));
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
       setResourceData(resourceGroups);
@@ -684,7 +687,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setResourceGroupOpen(true);
     }
   }
-
+  const openUpdateResourceGroup = () => {
+    setResourceGroupOpen(true);
+  }
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -869,7 +874,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                   />
                   <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
                 </div>
-                <Button onClick={openResourceGroup} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-100 text-gray-600 p-0 border border-gray-300">
+                <Button onClick={openUpdateResourceGroup} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-100 text-gray-600 p-0 border border-gray-300">
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>

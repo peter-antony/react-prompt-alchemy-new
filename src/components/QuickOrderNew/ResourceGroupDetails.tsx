@@ -193,7 +193,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
           // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
-
+          onSaveSuccess();
           console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
         })
 
@@ -201,9 +201,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         console.log(" catch", err);
         setError(`Error fetching API data for Update ResourceGroup`);
       }
-      finally {
-        if (onSaveSuccess) onSaveSuccess();
-      }
+      // finally {
+      //   if (onSaveSuccess) onSaveSuccess();
+      // }
 
     }
     // if (currentStep == 1) {
