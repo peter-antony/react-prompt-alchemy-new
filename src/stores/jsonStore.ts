@@ -28,7 +28,7 @@ function getActualDetailsJson() {
   return actualDetailsJsonData;
 }
 function getQuickOrder() {
-  console.log("getQuickOrder called",jsonData);
+  // console.log("getQuickOrder called",jsonData);
   if (jsonData && jsonData.ResponseResult) {
     return jsonData.ResponseResult.QuickOrder;
   }
@@ -683,6 +683,18 @@ function getAllActualDetailsByResourceUniqueID(resourceUniqueID: string) {
   return [];
 }
 
+function getQuickUniqueID() {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    typeof jsonData.ResponseResult.QuickOrder.QuickUniqueID !== 'undefined'
+  ) {
+    return jsonData.ResponseResult.QuickOrder.QuickUniqueID;
+  }
+  return undefined;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -737,6 +749,7 @@ const jsonStore = {
   getAllPlanDetailsByResourceUniqueID,
   getAllActualDetailsByResourceUniqueID,
   setQuickOrderFields,
+  getQuickUniqueID,
 };
 
 export default jsonStore;

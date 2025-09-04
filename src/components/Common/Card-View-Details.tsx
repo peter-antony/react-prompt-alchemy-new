@@ -85,9 +85,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                     <UsersRound className="w-4 h-4 text-violet-500" />
                                 </span>
                                 <div>
-                                    <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>title- {item.ResourceUniqueID}</div>
+                                    <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item.ResourceUniqueID}- {item.BillingDetails[0].BillingType}</div>
                                     {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
-                                    <div className="text-xs text-gray-400">subtitle :{item.BasicDetails.Resource}</div>
+                                    <div className="text-xs text-gray-400">{item.BasicDetails[0].Resource}</div>
                                 </div>
                             </div>
                         </div>
@@ -131,26 +131,26 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-3">
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <FileText className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BillingDetails.BillingQty} Wagons</span>
+                            <span className="truncate">{item.BillingDetails[0].BillingQty} Wagons</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Banknote className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BillingDetails.UnitPrice}</span>
+                            <span className="truncate">{item.BillingDetails[0].UnitPrice}</span>
                             {/* <span className="truncate">{item.price}</span> */}
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Settings className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BasicDetails.ServiceType}</span>
+                            <span className="truncate">{item.BillingDetails[0].TariffType}</span>
                             {/* <span className="truncate">{item.trainType}</span> */}
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Wrench className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BasicDetails.SubSericeType}</span>
+                            <span className="truncate">{item.BasicDetails[0].ServiceType}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
                             <Calendar className="w-4 h-4 text-gray-600" />
                             <span className="truncate cursor-pointer">
-                                {item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}
+                                {item.OperationalDetails[0].FromDate} to {item.OperationalDetails[0].ToDate}
                             </span>
                             {/* <span className="truncate cursor-pointer">
                                 {item.date}
@@ -159,24 +159,24 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                             <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                                 <div className="px-3 py-2">
                                     <div className="font-semibold mb-1">From and To Date</div>
-                                    <div className="text-[11px] font-medium">{item.OperationalDetails.FromTime}- {item.OperationalDetails.ToTime}</div>
+                                    <div className="text-[11px] font-medium">{item.OperationalDetails[0].FromDate}- {item.OperationalDetails[0].ToDate}</div>
                                     {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <CirclePercent className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BillingDetails.TariffType}</span>
+                            <span className="truncate">{item.BillingDetails[0].TariffType}</span>
                             <div className="relative group inline-block">
                                 <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
                                 <div className="absolute right-0 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                     <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                        {item.BillingDetails.TariffType}
+                                        {item.BillingDetails[0].TariffType}
                                     </div>
                                     <div className="px-4 py-3">
                                         <div className="flex justify-between items-center mb-2">
-                                            <div className="font-semibold text-gray-700">TAR_HR_DE_22_0016</div>
-                                            <div className="font-semibold text-gray-700">€ 1595.00</div>
+                                            <div className="font-semibold text-gray-700">{item.BillingDetails[0].Tariff}</div>
+                                            <div className="font-semibold text-gray-700">€ {item.BillingDetails[0].UnitPrice}</div>
                                         </div>
                                         <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
                                             <div>Tariff ID</div>
@@ -185,7 +185,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
 
                                         <div className="text-[11px] text-gray-400 mb-1 pt-2 border-t border-gray-300">Tariff Description</div>
                                         <div className="text-xs text-gray-700 font-medium">
-                                            CR-SW (Guarding) FLAT RATE -ARMY-FRET SNCF
+                                           {item.BillingDetails[0].TariffTypeDescription}
                                         </div>
                                     </div>
                                 </div>
@@ -193,12 +193,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs col-span-2">
                             <MapPin className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.OperationalDetails.OperationalLocation}</span>
+                            <span className="truncate">{item.OperationalDetails[0].DepartPoint} - {item.OperationalDetails[0].ArrivalPoint}</span>
                         </div>
                     </div>
                     <div className="flex items-center text-blue-600 text-xs font-medium mt-2">
                         <LinkIcon className="w-4 h-4 mr-1" />
-                        {/* <span className="cursor-pointer">Draft Bill : {item.draftBill}</span> */}
+                        <span className="cursor-pointer">Draft Bill : {item.BillingDetails[0].DraftBillNo}</span>
                     </div>
                 </div>
             ))}
