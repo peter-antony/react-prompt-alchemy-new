@@ -167,7 +167,7 @@ console.log('offset: ', offset);
     return value === optionValue;
   };
 
-  console.log('LazySelect options:', options);
+  // console.log('LazySelect options:', options);
 
   const hasValue = multiSelect
     ? Array.isArray(value) && value.length > 0

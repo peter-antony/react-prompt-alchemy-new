@@ -221,7 +221,7 @@ export function SmartGridWithGrouping({
   return (
     <div className="space-y-2">
       {/* Server-side Filter */}
-      {showServersideFilter && (
+      {/* {showServersideFilter && (
         <ServersideFilter
           serverFilters={serverFilters}
           showFilterTypeDropdown={showFilterTypeDropdown}
@@ -229,11 +229,12 @@ export function SmartGridWithGrouping({
           onToggle={onToggleServersideFilter || (() => {})}
           onFiltersChange={props.onFiltersChange || (() => {})}
           onSearch={props.onSearch || (() => {})}
+          onClearAll={props.onClearAll || (() => {})}
           gridId={gridId || props.gridTitle || 'default'}
           userId={userId || 'default-user'}
           api={api} // This should be passed from parent if needed
         />
-      )}
+      )} */}
       
       <SmartGrid
         {...props}
@@ -258,6 +259,11 @@ export function SmartGridWithGrouping({
         showServersideFilter={showServersideFilter}
         onToggleServersideFilter={onToggleServersideFilter}
         hideAdvancedFilter={hideAdvancedFilter}
+        serverFilters={serverFilters}
+        showFilterTypeDropdown={showFilterTypeDropdown}
+        gridId={gridId || props.gridTitle || 'default'}
+        userId={userId || 'default-user'}
+        api={api}
       />
     </div>
   );

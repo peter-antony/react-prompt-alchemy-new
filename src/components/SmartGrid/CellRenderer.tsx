@@ -293,8 +293,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
     try {
       const date = new Date(value);
-      const formattedDate = date.toLocaleDateString();
-      return <span className="truncate" title={formattedDate}>{dateFormatter(formattedDate)}</span>;
+      const formattedDate = dateFormatter(date);
+      return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
     } catch {
       return <span className="truncate" title={String(value)}>{value}</span>;
     }

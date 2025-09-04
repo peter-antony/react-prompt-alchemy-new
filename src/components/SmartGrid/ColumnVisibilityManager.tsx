@@ -42,6 +42,10 @@ export function ColumnVisibilityManager({
   const [editingHeader, setEditingHeader] = useState<string | null>(null);
   const [tempHeaderValue, setTempHeaderValue] = useState('');
 
+  columns =  columns.filter((col: any) => {
+    return col.key !== 'actions';
+  })
+
   const handleHeaderEdit = (columnId: string, currentHeader: string) => {
     setEditingHeader(columnId);
     setTempHeaderValue(currentHeader);

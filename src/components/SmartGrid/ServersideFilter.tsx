@@ -18,6 +18,7 @@ interface ServersideFilterProps {
   onToggle: () => void;
   onFiltersChange: (filters: Record<string, FilterValue>) => void;
   onSearch: () => void;
+  // onClearAll: () => void;
   gridId: string;
   userId: string;
   api?: FilterSystemAPI;
@@ -30,6 +31,7 @@ export function ServersideFilter({
   onToggle,
   onFiltersChange,
   onSearch,
+  // onClearAll,
   gridId,
   userId,
   api
@@ -244,6 +246,12 @@ export function ServersideFilter({
     setPendingFilters({});
     setActiveFilters({});
     onFiltersChange({});
+    // console.log('active filter::::::::::', activeFilters);
+    // console.log('active filter::::::::::', pendingFilters);
+
+    // setTimeout(() => {
+    //   onClearAll();
+    // }, 0);
     
     if (api) {
       api.applyGridFilters({});
@@ -353,9 +361,9 @@ export function ServersideFilter({
   if (!visible) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="">
       {/* Filter Controls */}
-      <div className="flex items-center justify-between bg-gray-50 p-2 rounded border">
+      <div className="flex items-center justify-between bg-gray-50 p-2 rounded border mb-3">
         <div className="flex items-center space-x-2">
           <div className="text-sm font-medium text-gray-700">Search</div>
           {activeFilterCount > 0 && (
@@ -438,7 +446,7 @@ export function ServersideFilter({
       </div>
 
       {/* Filter Panel - Always expanded when visible */}
-      <div className="bg-white border rounded shadow-sm">
+      <div className="bg-white border rounded shadow-sm mb-4">
         <div className="p-3">
           <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(visibleFields.length, 4)}, 1fr)` }}>
             {renderFilterInputs(serverFilters)}

@@ -272,6 +272,7 @@ const QuickOrderManagement = () => {
       sortable: false,
       editable: false,
       subRow: false,
+      filterable: false,
       width: 80,
       actionButtons: [
         // {
@@ -801,6 +802,90 @@ const QuickOrderManagement = () => {
     }
   };
 
+  const clearAllFilters = async () => {
+    let latestFilters = filterService.applyGridFiltersSet();
+    console.log("Clearing all filters latestFilters", filterService.applyGridFiltersSet(), latestFilters);
+     try {
+      gridState.setLoading(true);
+      setApiStatus('loading');
+
+      // Convert filters to API format
+      const filterParams: Record<string, any> = {};
+      const searchData: any = [];
+      // Add any current advanced filters
+    
+      console.log('Searching with filters:', filterParams);
+
+      const response: any = await quickOrderService.getQuickOrders({
+        filters: []
+      });
+
+      // console.log('Server-side Search API Response:', response);
+
+      const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+      const data = parsedResponse.ResponseResult;
+
+      if (!data || !Array.isArray(data)) {
+        console.warn('API returned invalid data format:', response);
+        gridState.setGridData([]);
+        gridState.setLoading(false);
+        setApiStatus('error');
+        toast({
+          title: "No Results",
+          description: "No orders found matching your criteria",
+        });
+        return;
+      }
+
+      const processedData = data.map((row: any) => {
+        const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Initiated': 'badge-blue rounded-2xl',
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+        };
+
+        return {
+          ...row,
+          Status: {
+            value: row.Status,
+            variant: getStatusColorLocal(row.Status),
+          },
+        };
+      });
+
+      // console.log('Processed Server-side Search Data:', processedData);
+
+      gridState.setGridData(processedData);
+      gridState.setLoading(false);
+      setApiStatus('success');
+
+      toast({
+        title: "Success",
+        description: `Found ${processedData.length} orders`,
+      });
+
+    } catch (error) {
+      console.error('Server-side search failed:', error);
+      gridState.setGridData([]);
+      gridState.setLoading(false);
+      setApiStatus('error');
+      toast({
+        title: "Error",
+        description: "Failed to search orders. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }
+
   const handleSearch = async (filters: FilterConfig[]) => {
     try {
       gridState.setLoading(true);
@@ -1157,6 +1242,7 @@ const QuickOrderManagement = () => {
                 onSelectionChange={handleRowSelection}
                 onFiltersChange={setCurrentFilters}
                 onSearch={handleServerSideSearch}
+                // onClearAll={clearAllFilters}
                 rowClassName={(row: any, index: number) =>
                   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
                 }
@@ -1260,9 +1346,9 @@ const QuickOrderManagement = () => {
           {/* side draw for group level details on Grid actions */}
 
           <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
-            <div className="p-6 h-full">
+            <div className="p-6 h-full overflow-auto">
               {/* <div className="mb-6"> */}
-                <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId} />
+              <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId} />
               {/* </div> */}
             </div>
           </SideDrawer>

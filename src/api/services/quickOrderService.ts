@@ -84,6 +84,10 @@ export const quickOrderService = {
         // offset: params?.offset,
         // limit: params?.limit,
       },
+      SearchCriteria: {
+        id: params?.searchTerm || '',
+        name: params?.searchTerm || '',
+      },
       AdditionalFilter: [],
       Pagination: {
         PageNumber: params?.offset,

@@ -13,7 +13,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from 'lucide-react';
-import { SmartGridProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
+import { SmartGridProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI, ServerFilter  } from '@/types/smartgrid';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
@@ -28,6 +28,9 @@ import { DraggableSubRow } from './DraggableSubRow';
 import { FilterSystem } from './FilterSystem';
 import { AdvancedFilter } from './AdvancedFilter';
 import { mockFilterAPI } from '@/utils/mockFilterAPI';
+import { ServersideFilter } from './ServersideFilter';
+
+
 import { cn } from '@/lib/utils';
 
 // Add exportFilename prop to SmartGridProps
@@ -75,6 +78,12 @@ export function SmartGrid({
   showServersideFilter = false,
   onToggleServersideFilter,
   hideAdvancedFilter = false,
+  serverFilters = [],
+  showFilterTypeDropdown = false,
+  gridId,
+  userId,
+  api,
+  onSearch,
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`
 }: SmartGridProps & { exportFilename?: string }) {
   const {
@@ -861,6 +870,22 @@ export function SmartGrid({
         onToggleServersideFilter={onToggleServersideFilter}
       />
 
+      {/* Server-side Filter */}
+      {showServersideFilter && (
+        <ServersideFilter
+          serverFilters={serverFilters}
+          showFilterTypeDropdown={showFilterTypeDropdown}
+          visible={showServersideFilter}
+          onToggle={onToggleServersideFilter || (() => {})}
+          onFiltersChange={onFiltersChange || (() => {})}
+          onSearch={onSearch || (() => {})}
+          // onClearAll={onClearAll || (() => {})}
+          gridId={gridId || gridTitle || 'default'}
+          userId={userId || 'default-user'}
+          api={api}
+        />
+      )}
+
       {/* Advanced Filter System */}
       {/* <AdvancedFilter
         columns={orderedColumns}
@@ -1146,7 +1171,7 @@ export function SmartGrid({
                   const rows = [
                     <TableRow key={rowIndex}
                       className={cn(
-                        "hover:bg-gray-50/50 transition-colors duration-150 border-b border-gray-100",
+                        "hover:bg-gray-100 transition-colors duration-150 border-b border-gray-100",
                         rowClassName ? rowClassName(row, rowIndex) : ''
                       )}
                     >
