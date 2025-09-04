@@ -361,9 +361,13 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
     } else {
-      setBasicDetailsData({});
-      setOperationalDetailsData({});
-      setBillingDetailsData({});
+      console.log("resourceId == ",resourceId )
+      console.log("jsonStore.getBasicDetailsByResourceUniqueID(resourceId) == ",jsonStore.getBasicDetailsByResourceUniqueID(resourceId) )
+      setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
+      setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
+      setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
+      setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
+
     }
     const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
     const actualCount = jsonStore.getAllActualDetailsByResourceUniqueID(resourceId);

@@ -157,12 +157,22 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setFormData(normalizeOrderFormDetails(quickOrder));
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
       setResourceCount(quickOrder.ResourceGroup.length);
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      console.log("RESOURCE GROUPS::::: ", resourceGroups);
+      // setOrderType('BUY');
+      setFormData(normalizeOrderFormDetails(quickOrder));
+      if (resourceGroups.length > 0) {
+        // setIsResourceData(true);
+        setResourceData(resourceGroups);
+      }
 
     } else if (!isEditQuickOrder) {
-    const quickOrder = jsonStore.getQuickOrder();
+      const quickOrder = jsonStore.getQuickOrder();
       setOrderType('BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder));
+      setResourceCount(quickOrder.ResourceGroup.length);
+
     }
   }, [isEditQuickOrder, loading, contracts, customers, clusters, vendors]);
   //API Call for dropdown data
@@ -486,14 +496,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId, type: OrderType });
       console.log("COMBO DROPDOWN DATA", data);
       setContracts(JSON.parse(data?.data?.ResponseData));
-      const parsedData :any= JSON.parse(data?.data?.ResponseData);
-      const contract:any = parsedData;
+      const parsedData: any = JSON.parse(data?.data?.ResponseData);
+      const contract: any = parsedData;
       console.log("CONTRACT DATA:: ", contract.data.ResponseData);
       if (contract.data.ResponseData) {
         jsonStore.setQuickOrderFields({ ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS });
-        setFormData(normalizeOrderFormDetails({ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
+        setFormData(normalizeOrderFormDetails({ ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
         console.log("Contracts data:===", parsedData);
-      }else{ // hardcoded with dummy response data to avoid error
+      } else { // hardcoded with dummy response data to avoid error
         //data for ContractID : CON000000116
         jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
         setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
@@ -628,8 +638,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     const resourceGroups = jsonStore.getAllResourceGroups();
     console.log("RESOURCE GROUPS::::: ", resourceGroups);
     const quickOrder = jsonStore.getQuickOrder();
-      // setOrderType('BUY');
-      setFormData(normalizeOrderFormDetails(quickOrder));
+    // setOrderType('BUY');
+    setFormData(normalizeOrderFormDetails(quickOrder));
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
       setResourceData(resourceGroups);
@@ -649,7 +659,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       "ModeFlag": "Insert",
       "Status": "Fresh",
       "QuickUniqueID": -1,
-      "QuickOrderNo":""
+      "QuickOrderNo": ""
     });
 
     const fullJson = jsonStore.getJsonData();
@@ -867,7 +877,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Input
-                    name='grid-search-input' 
+                    name='grid-search-input'
                     placeholder="Search"
                     className="border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     style={{ width: 200 }}
