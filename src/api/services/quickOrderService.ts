@@ -73,18 +73,22 @@ export const quickOrderService = {
   getMasterCommonData: async (
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
-    const stringifyData = JSON.stringify({
+    const stringifyData: any = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
         UserID: "ramcouser",
         OUID: "4",
         Role: "ramcorole",
-        searchTerm: params?.searchTerm || '',
-        offset: params?.offset,
-        limit: params?.limit,
+        // searchTerm: params?.searchTerm || '',
+        // offset: params?.offset,
+        // limit: params?.limit,
       },
       AdditionalFilter: [],
+      Pagination: {
+        PageNumber: params?.offset,
+        PageSize: params?.limit,
+      },
     });
     const requestBody = {
       RequestData: stringifyData,
@@ -109,15 +113,15 @@ export const quickOrderService = {
         Role: "ramcorole",
       },
       AdditionalFilter: [
-         {
-          FilterName: "ContractType",
-          FilterValue: params?.type
-        },
+        {
+          FilterName: "ContractType",
+          FilterValue: params?.type,
+        },
 
-        {
-          FilterName: "ContractID",
-          FilterValue: params?.contractId
-        }
+        {
+          FilterName: "ContractID",
+          FilterValue: params?.contractId,
+        },
       ],
     });
     const requestBody = {
@@ -131,8 +135,7 @@ export const quickOrderService = {
     return response.data;
   },
   // Get quick order by ID
-  getQuickOrder: async (id: string):
-   Promise<ApiResponse<QuickOrder>> => {
+  getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
     const requestPayload = JSON.stringify({
       context: {
         MessageID: "12345",
@@ -316,8 +319,8 @@ export const quickOrderService = {
       },
       MessageContents: {
         UniqueID: "",
-        QuickOrder: data
-      }
+        QuickOrder: data,
+      },
     });
     const requestBody = {
       // context: {
@@ -331,7 +334,7 @@ export const quickOrderService = {
       //   UniqueID: "",
       //   QuickOrder: data
       // }
-      "RequestData": stringifyData
+      RequestData: stringifyData,
     };
 
     const response = await apiClient.post(

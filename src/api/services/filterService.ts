@@ -3,8 +3,10 @@ import { apiClient } from '../client';
 import { API_ENDPOINTS } from '../config';
 import { ApiResponse, FilterPreset, FilterPresetInput } from '../types';
 
+let lastAppliedFilters: Record<string, any> | null = null;
+
 export const filterService = {
-  // Get user's filter presets for a specific grid
+
   getUserFilterSets: async (userId: string, gridId: string): Promise<FilterPreset[]> => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.FILTERS.LIST(userId, gridId));
@@ -57,8 +59,20 @@ export const filterService = {
   // Apply filters to grid (this would be handled by the grid's data fetching)
   applyGridFilters: async (filters: Record<string, any>): Promise<void> => {
     // This is typically handled by the grid component's query parameters
+    lastAppliedFilters = filters;
     console.log('Applying filters:', filters);
   },
+
+  // Get the last applied filters
+  applyGridFiltersSet: () => {
+    if (!lastAppliedFilters) {
+      console.warn("⚠️ No filters applied yet!");
+      return null;
+    }
+    // return a fresh copy (avoid mutation outside)
+    return lastAppliedFilters;
+  },
+
 };
 
 // LocalStorage fallback functions

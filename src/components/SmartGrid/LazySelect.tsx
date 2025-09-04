@@ -38,7 +38,7 @@ export function LazySelect({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -76,19 +76,19 @@ export function LazySelect({
     setLoading(true);
 
     try {
-      const currentOffset = reset ? 0 : offset;
+      const currentOffset = reset ? 1 : offset;
       const newOptions = await fetchOptions({
         searchTerm: debouncedSearchTerm,
         offset: currentOffset,
         limit: ITEMS_PER_PAGE
       });
-
+console.log('offset: ', offset);
       if (reset) {
         setOptions(newOptions);
-        setOffset(ITEMS_PER_PAGE);
+        setOffset(2);
       } else {
         setOptions(prev => [...prev, ...newOptions]);
-        setOffset(prev => prev + ITEMS_PER_PAGE);
+        setOffset(prev => prev + 1);
       }
 
       setHasMore(newOptions.length === ITEMS_PER_PAGE);
@@ -108,14 +108,15 @@ export function LazySelect({
     if (open) {
       setSearchTerm('');
       setDebouncedSearchTerm('');
-      setOffset(0);
+      setOffset(1);
       setOptions([]);
       setHasMore(true);
     }
   };
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current || loading) return;
+    if (!scrollRef.current || loading || !hasMore) return;
+    // if (!scrollRef.current || loading) return;
 
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     if (scrollTop + clientHeight >= scrollHeight - 10) {

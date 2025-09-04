@@ -669,6 +669,8 @@ const QuickOrderManagement = () => {
   // };
 
   const handleServerSideSearch = async () => {
+    console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
+    let latestFilters = filterService.applyGridFiltersSet();
     try {
       gridState.setLoading(true);
       setApiStatus('loading');
@@ -682,42 +684,42 @@ const QuickOrderManagement = () => {
       //});
       const searchData: any = [];
       // Add any current advanced filters
-      Object.keys(currentFilters).forEach(key => {
-        if (currentFilters[key] !== undefined && currentFilters[key] !== null && currentFilters[key] !== '') {
-          filterParams[key] = currentFilters[key];
+      Object.keys(latestFilters).forEach(key => {
+        if (latestFilters[key] !== undefined && latestFilters[key] !== null && latestFilters[key] !== '') {
+          filterParams[key] = latestFilters[key];
         }
       });
-      if (Object.keys(currentFilters).length > 0) {
-        Object.entries(currentFilters).forEach(([key, value]) => {
+      if (Object.keys(latestFilters).length > 0) {
+        Object.entries(latestFilters).forEach(([key, value]) => {
           console.log(`Key: ${key}, Value: ${value.type}`);
           // if (value && value.value && value.type !== "dateRange") {
           //   searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           // }
-          if (key == 'ServiceDate' && value.type === "dateRange" && value.value.from && value.value.to) {
+          if (key == 'ServiceDate' && value.type === "dateRange") {
             // Split into two separate filter keys
             searchData.push(
-              { FilterName: `ServiceFromDate`, FilterValue: value.value.from },
-              { FilterName: `ServiceToDate`, FilterValue: value.value.to }
+              { FilterName: `ServiceFromDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
+              { FilterName: `ServiceToDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
             );
           }
-          else if (key == 'QuickOrderDate' && value.type === "dateRange" && value.value.from && value.value.to) {
+          else if (key == 'QuickOrderDate' && value.type === "dateRange") {
             // Split into two separate filter keys
             searchData.push(
-              { FilterName: `FromOrderDate`, FilterValue: value.value.from },
-              { FilterName: `ToOrderDate`, FilterValue: value.value.to }
+              { FilterName: `FromOrderDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
+              { FilterName: `ToOrderDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
             );
           }
-          else if (key == 'QuickCreatedDate' && value.type === "dateRange" && value.value.from && value.value.to) {
+          else if (key == 'QuickCreatedDate' && value.type === "dateRange") {
             // Split into two separate filter keys
             searchData.push(
-              { FilterName: `CreatedFromDate`, FilterValue: value.value.from },
-              { FilterName: `CreatedToDate`, FilterValue: value.value.to }
+              { FilterName: `CreatedFromDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
+              { FilterName: `CreatedToDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
             );
           }
-          else if (key == 'TotalNet' && value.type === "number" && value.value.from && value.value.to) {
+          else if (key == 'TotalNet' && value.type === "number") {
             // Split into two separate filter keys
             searchData.push(
-              { FilterName: `TotalNet`, FilterValue: value.value.from + '-' + value.value.to },
+              { FilterName: `TotalNet`, FilterValue: (value.value.from ? value.value.from : value.value.to) + '-' + (value.value.to ? value.value.to : value.value.from) },
               // { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
           }
@@ -1258,10 +1260,10 @@ const QuickOrderManagement = () => {
           {/* side draw for group level details on Grid actions */}
 
           <SideDrawer isOpen={isGroupLevelModalOpen} onClose={() => setGroupLevelModalOpen(false)} width="82%" title="Group Level Details" isBack={false} contentBgColor='#f8f9fc'>
-            <div className="p-6">
-              <div className="mb-6">
+            <div className="p-6 h-full">
+              {/* <div className="mb-6"> */}
                 <GridResourceDetails data={gridState.gridData} isEditQuickOrder={false} passedQuickUniqueID={quickResourceId} />
-              </div>
+              {/* </div> */}
             </div>
           </SideDrawer>
         </div>
