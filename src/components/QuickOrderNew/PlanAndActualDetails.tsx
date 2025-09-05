@@ -143,6 +143,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // jsonStore.setPlanDetailsJson(updatedPlanDetails);
       console.log("RESOURCE ID : ",resourceId)
       jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+      jsonStore.setQuickOrder({
+        ...jsonStore.getJsonData().quickOrder,
+        "ModeFlag": "Update",
+        "Status": "Fresh",
+      });
       const fullJson = jsonStore.getQuickOrder();
       try {
         const data: any = await quickOrderService.updateQuickOrderResource(fullJson);

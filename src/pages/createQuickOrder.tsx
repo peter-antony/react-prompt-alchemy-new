@@ -10,7 +10,7 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useFooterStore } from '@/stores/footerStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import jsonStore from '@/stores/jsonStore';
-// import { initializeJsonStore } from './JsonCreater';
+import { initializeJsonStore } from './JsonCreater';
 
 
 const CreateQuickOrder = () => {
@@ -22,7 +22,7 @@ const CreateQuickOrder = () => {
 
   useEffect(() => {
     //  Fetch the full quick order details
-    // initializeJsonStore();
+    initializeJsonStore();
     const oldQuickOrder = jsonStore.getQuickOrder();
 
     console.log("INITIALIZING CREATE : ", oldQuickOrder)
@@ -30,10 +30,12 @@ const CreateQuickOrder = () => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
         console.log("Parsed result:", parsedData?.ResponseResult);
-        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-        const fullJson2 = jsonStore.getJsonData();
+        if(parsedData?.ResponseResult != undefined){
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("FULL JSON 4444:: ", fullJson2);
+        }
 
-        console.log("FULL JSON 4444:: ", fullJson2);
       })
     setFooter({
       visible: true,

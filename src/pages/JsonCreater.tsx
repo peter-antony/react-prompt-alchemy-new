@@ -228,6 +228,15 @@ const Actual_Details_JSON = {
 
 };
 
+export function initializeJsonStore() {
+  localStorage.setItem('resouceCount', '0');
+  localStorage.setItem('planCount', '0');
+  localStorage.setItem('actualCount', '0');
+  jsonStore.setJsonData(QUICK_ORDER_JSON);
+  jsonStore.setResourceJsonData(Resource_Group_JSON);
+  jsonStore.setPlanDetailsJson(Plan_Details_JSON);
+}
+
 const JsonCreater: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => {

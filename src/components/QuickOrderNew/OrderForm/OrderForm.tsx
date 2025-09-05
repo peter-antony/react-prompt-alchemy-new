@@ -25,6 +25,7 @@ import { quickOrderService } from '@/api/services/quickOrderService';
 import AddIcon from '../../../assets/images/addIcon.png';
 import ResourceGroupDetailsForm from '../ResourceGroupDetails';
 import CardDetails, { CardDetailsItem } from '../../Common/Card-View-Details';
+import { initializeJsonStore } from '../../../pages/JsonCreater';
 
 interface OrderFormProps {
   onSaveDraft: () => void;
@@ -167,6 +168,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       }
 
     } else if (!isEditQuickOrder) {
+      initializeJsonStore();
       const quickOrder = jsonStore.getQuickOrder();
       setOrderType('BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
@@ -495,7 +497,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId, type: OrderType });
       console.log("COMBO DROPDOWN DATA", data);
-      setContracts(JSON.parse(data?.data?.ResponseData));
+      // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
       const contract: any = parsedData;
       console.log("CONTRACT DATA:: ", contract.data.ResponseData);
