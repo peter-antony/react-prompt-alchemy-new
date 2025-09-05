@@ -49,6 +49,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
         FileCategory: file.category,
         AttachName: fileName,
         AttachUniqueName: fileName,
+        AttachRelPath: "value",
+        ModeFlag: "Insert"
       };
       jsonStore.pushQuickOrderAttachment(obj)
       return obj
