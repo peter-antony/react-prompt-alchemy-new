@@ -148,23 +148,23 @@ console.log('offset: ', offset);
     if (multiSelect && Array.isArray(value)) {
       if (value.length === 0) return placeholder;
       if (value.length === 1) {
-        const option = options.find(opt => opt.value === value[0]);
-        return option?.label || value[0];
+        const option:any = options.find((opt:any) => opt.id === value[0]);
+        return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value[0];
       }
       return `${value.length} items selected`;
     } else if (typeof value === 'string') {
-      const option = options.find(opt => opt.value === value);
-      return option?.label || value;
+      const option:any = options.find((opt:any) => opt.id === value);
+      return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value;
     }
 
     return placeholder;
   };
 
-  const isSelected = (optionValue: string) => {
+  const isSelected = (optionId: string) => {
     if (multiSelect && Array.isArray(value)) {
-      return value.includes(optionValue);
+      return value.includes(optionId);
     }
-    return value === optionValue;
+    return value === optionId;
   };
 
   // console.log('LazySelect options:', options);
@@ -225,26 +225,24 @@ console.log('offset: ', offset);
             </div>
           ) : (
             options.map((option: any, index) => (
-              (option?.name && <div
-                key={option.name + '-' + index}
+              (option?.id) && <div
+                key={(option.id || option.name) + '-' + index}
                 className={cn(
                   "flex items-center space-x-2 px-2 py-2 hover:bg-gray-100 rounded-md hover:text-accent-foreground cursor-pointer",
-                  isSelected(option?.name) && "bg-accent"
+                  isSelected(option?.id) && "bg-accent"
                 )}
-                onClick={() => handleSelect(option?.name)}
+                onClick={() => handleSelect(option?.id)}
               >
                 {multiSelect && (
                   <Checkbox
-                    checked={isSelected(option?.name)}
+                    checked={isSelected(option?.id)}
                     onChange={() => { }}
                   />
                 )}
                 <span className="flex-1 truncate text-xs">
-                  {/* {option?.name} */}
-                  {option?.description ? `${option.name} || ${option.description}` : option?.name}
+                  {option?.id ? `${option.id} || ${option.name}` : (option.id)}
                 </span>
               </div>
-              )
             ))
           )}
           {loading && (

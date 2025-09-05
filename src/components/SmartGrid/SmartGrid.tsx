@@ -953,7 +953,7 @@ export function SmartGrid({
                   <TableHead className="bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
                     <input
                       type="checkbox"
-                      className="rounded cursor-pointer"
+                      className="rounded cursor-pointer w-4 h-4"
                       onChange={(e) => {
                         const target = e.target as HTMLInputElement;
                         if (target.checked) {
@@ -1180,7 +1180,7 @@ export function SmartGrid({
                         <TableCell className="px-3 py-3 border-r border-gray-50 w-[50px]">
                           <input
                             type="checkbox"
-                            className="rounded cursor-pointer"
+                            className="rounded cursor-pointer w-4 h-4"
                             checked={currentSelectedRows.has(rowIndex)}
                             onChange={() => {
                               const newSet = new Set(currentSelectedRows);

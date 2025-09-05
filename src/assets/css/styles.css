@@ -200,7 +200,7 @@ body::-webkit-scrollbar-thumb {
   font-weight: 500;
 }
 .smart-grid-row-selected {
-  background-color: #eff6ff !important;
+  background-color: #EAF4FF !important;
   border-left: 4px solid #3b82f6 !important;
 }
 .smart-grid-row-selected:hover {
