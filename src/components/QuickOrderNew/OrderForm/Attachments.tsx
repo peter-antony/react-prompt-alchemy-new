@@ -3,6 +3,7 @@ import { Paperclip, Trash , CircleCheck, FileText, BookPlus , FileImage , BookA 
 import { DynamicFileUpload } from '@/components/DynamicFileUpload';
 import { StagedFile } from '@/types/fileUpload';
 import jsonStore from '@/stores/jsonStore';
+import { quickOrderService } from "@/api/services/quickOrderService";
 
 const fileIcons = {
   pdf: <FileText className="text-red-500 w-6 h-6" />,
@@ -42,24 +43,54 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
       // Get file type from file.file.name (extension after last dot)
       const fileName = file.file?.name || '';
       const fileType = fileName.split('.').pop()?.toLowerCase() || '';
-      return {
-        AttachItemID: file.id,
+        const obj= {
+        AttachItemID: -1,
         AttachmentType: fileType,
         FileCategory: file.category,
         AttachName: fileName,
         AttachUniqueName: fileName,
       };
+      jsonStore.pushQuickOrderAttachment(obj)
+      return obj
     });
     console.log('AttachItems:', AttachItems);
-    if(isResourceGroupAttchment){
-      jsonStore.pushResourceGroupAttachments(AttachItems[0]);
-    }else{
-      jsonStore.pushAttachments(AttachItems[0]);
-    }
+    // if(isResourceGroupAttchment){
+    //   jsonStore.pushResourceGroupAttachments(AttachItems[0]);
+    // }else{
+    //   jsonStore.pushAttachments(AttachItems[0]);
+    // }
     console.log('get saved List:', jsonStore.getAttachments());
-
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      // ...formValues.QuickOrder,
+      "ModeFlag": "Update",
+      "Status": "Fresh",
+    });
     const fullJson = jsonStore.getJsonData();
     console.log("FULL Plan JSON :: ", fullJson);
+      try {
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        console.log(" try", data);
+        //  Get OrderNumber from response
+        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", resourceGroupID);
+        //  Fetch the full quick order details
+        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("ATTACHMENTS SAVE SAVE --- FULL JSON 66:: ", fullJson2);
+        })
+
+      } catch (err) {
+        console.log(" catch", err);
+        // setError(`Error fetching API data for Update ResourceGroup`);
+      }
 
     return new Promise<void>((resolve) => {
       setTimeout(() => {

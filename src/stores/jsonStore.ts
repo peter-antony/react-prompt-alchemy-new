@@ -601,7 +601,7 @@ function getBasicDetailsByResourceUniqueID(resourceUniqueID: string) {
   return undefined;
 }
 
-function pushPlanDetailsToResourceGroup(resourceUniqueID: string, planDetailsJsonData: any) {
+function pushPlanDetailsToResourceGroup(resourceUniqueID: any, planDetailsJsonData: any) {
   console.log("PARAM DATA : ",planDetailsJsonData,"PARAM ID ",resourceUniqueID)
   console.log("JSON DATA : ",jsonData.ResponseResult.QuickOrder )
   if (
@@ -695,6 +695,24 @@ function getQuickUniqueID() {
   return undefined;
 }
 
+function pushQuickOrderAttachment(attachment: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    jsonData.ResponseResult.QuickOrder.Attachments
+  ) {
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments.AttachItems)) {
+      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems = [];
+    }
+    jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.push(attachment);
+    jsonData.ResponseResult.QuickOrder.Attachments.TotalAttachment =
+      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.length.toString();
+    return true;
+  }
+  return false;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -750,6 +768,7 @@ const jsonStore = {
   getAllActualDetailsByResourceUniqueID,
   setQuickOrderFields,
   getQuickUniqueID,
+  pushQuickOrderAttachment,
 };
 
 export default jsonStore;
