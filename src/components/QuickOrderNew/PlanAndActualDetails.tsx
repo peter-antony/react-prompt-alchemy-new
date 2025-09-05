@@ -46,6 +46,7 @@ import { SideDrawer } from "../Common/SideDrawer";
 import { BulkUpdatePlanActuals } from "./BulkUpdatePlanActuals";
 import jsonStore from '@/stores/jsonStore';
 import { useEffect } from 'react';
+import { quickOrderService } from "@/api/services/quickOrderService";
 interface PlanAndActualsDetailsProps {
   isEditQuickOrder?: boolean;
   resourceId?: string;
@@ -113,7 +114,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const journeyDetailsRef = useRef<DynamicPanelRef>(null);
   const otherDetailsRef = useRef<DynamicPanelRef>(null);
 
-  const handleSavePlanActuals = () => {
+  const handleSavePlanActuals = async () => {
     const formValues = {
       wagonNewDetails: wagonDetailsRef.current?.getFormValues() || {},
       containerDetails: containerDetailsRef.current?.getFormValues() || {},
@@ -129,19 +130,43 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // Prepare the updated PlanDetails by merging new form values with existing ones
       const updatedPlanDetails = {
         ...currentPlanDetails,
-        "PlanLineUniqueID": "P0" + ((parseInt(localStorage.getItem('planCount')) + 1)),
+        "PlanLineUniqueID": -1,
         "ModeFlag": "Insert",
-        WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
-        ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
-        ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
-        THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
-        JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
-        OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
+        // WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
+        // ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
+        // ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
+        // THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
+        // JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+        // OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
       };
-      localStorage.setItem('planCount', (parseInt(localStorage.getItem('planCount'))+1).toString());
       // Set the updated ActualDetails in jsonStore
-      jsonStore.setPlanDetailsJson(updatedPlanDetails);
+      // jsonStore.setPlanDetailsJson(updatedPlanDetails);
+      console.log("RESOURCE ID : ",resourceId)
       jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+      const fullJson = jsonStore.getQuickOrder();
+      try {
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        console.log(" try", data);
+        //  Get OrderNumber from response
+        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", resourceGroupID);
+        //  Fetch the full quick order details
+        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+        })
+
+      } catch (err) {
+        console.log(" catch", err);
+        // setError(`Error fetching API data for Update ResourceGroup`);
+      }
       console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
     } else {
       // Get the current ActualDetails from jsonStore

@@ -13,7 +13,7 @@ const QUICK_ORDER_JSON = {
       "Contract": "CON000000116",
       "Customer": "",
       "Cluster": "",
-       "Currency": "EUR  ",
+      "Currency": "EUR  ",
       "CustomerQuickOrderNo": "",
       "Customer_Supplier_RefNo": "",
       "QCUserDefined1": "",
@@ -100,61 +100,70 @@ const Resource_Group_JSON = {
 };
 
 const Plan_Details_JSON = {
-  "PlanLineUniqueID": "WG0",
+  "PlanLineUniqueID": -1,
   "PlanSeqNo": "",
   "ModeFlag": "Insert/Update/Delete/NoChange",
   "WagonDetails": {
-    "WagonType": "",
-    "WagonID": "",
-    "WagonQuantity": "",
-    "WagonTareWeight": "",
-    "WagonGrossWeight": "",
-    "WagonLength": "",
-    "WagonSequence": ""
+    "WagonType": "value",
+    "WagonID": "value",
+    "WagonQuantity": 2,
+    "WagonQuantityUOM": null,
+    "WagonTareWeight": 233.4,
+    "WagonTareWeightUOM": null,
+    "WagonGrossWeight": 233.4,
+    "WagonGrossWeightUOM": null,
+    "WagonLength": "12",
+    "WagonLengthUOM": null,
+    "WagonSequence": 1
   },
   "ContainerDetails": {
-    "ContainerType": "",
-    "ContainerID": "",
-    "ContainerQuantity": "",
-    "ContainerTareWeight": "",
-    "ContainerLoadWeight": ""
+    "ContainerType": "value",
+    "ContainerID": "value",
+    "ContainerQuantity": 2,
+    "ContainerQuantityUOM": null,
+    "ContainerTareWeight": 3.444,
+    "ContainerTareWeightUOM": null,
+    "ContainerLoadWeight": 455.55,
+    "ContainerLoadWeightUOM": null
   },
   "ProductDetails": {
-    "ContainHazardousGoods": "",
-    "NHM": "",
-    "ProductID": "",
-    "ProductQuantity": "",
-    "ClassofStores": "",
-    "UNCode": "",
-    "DGClass": ""
+    "ContainHazardousGoods": "value",
+    "NHM": "value",
+    "ProductID": "value",
+    "ProductQuantity": 10,
+    "ProductQuantityUOM": null,
+    "ClassofStores": "value",
+    "UNCode": "value",
+    "DGClass": "value"
   },
   "THUDetails": {
-    "THUID": "",
-    "THUSerialNo": "",
-    "THUQuantity": "",
-    "THUWeight": ""
+    "THUID": "value",
+    "THUSerialNo": "value",
+    "THUQuantity": 12,
+    "THUQuantityUOM": null,
+    "THUWeight": 333.3,
+    "THUWeightUOM": null
   },
   "JourneyAndSchedulingDetails": {
-    "Departure": "",
-    "Arrival": "",
-    "ActivityLocation": "",
-    "Activity": "",
-    "PlannedDateTime": "",
-    "RevPlannedDateTime": "",
-    "TrainNo": "",
-    "LoadType": ""
+    "Departure": "value",
+    "Arrival": "value",
+    "ActivityLocation": "value",
+    "Activity": "value",
+    "PlannedDateTime": "2020-01-03T00:00:00",
+    "RevPlannedDateTime": "2023-04-02T00:00:00",
+    "TrainNo": "value",
   },
   "OtherDetails": {
-    "FromDate": "",
-    "FromTime": "",
-    "ToDate": "",
-    "ToTime": "",
-    "QCUserDefined1": "",
-    "QCUserDefined2": "",
-    "QCUserDefined3": "",
-    "Remarks1": "",
-    "Remarks2": "",
-    "Remarks3": ""
+    "FromDate": "2020-01-03",
+    "FromTime": "12:00:00",
+    "ToDate": "2020-01-03",
+    "ToTime": "12:00:00",
+    "QCUserDefined1": "value",
+    "QCUserDefined2": "value",
+    "QCUserDefined3": "value",
+    "Remarks1": "value",
+    "Remarks2": "value",
+    "Remarks3": "value"
   }
 
 };
@@ -221,7 +230,7 @@ const Actual_Details_JSON = {
 
 const JsonCreater: React.FC = () => {
   const navigate = useNavigate();
-  useEffect(() => { 
+  useEffect(() => {
     console.log("RESETTING JSON");
     localStorage.setItem('resouceCount', '0');
     localStorage.setItem('planCount', '0');
