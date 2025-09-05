@@ -84,6 +84,7 @@ export function SmartGrid({
   userId,
   api,
   onSearch,
+  onClearAll,
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`
 }: SmartGridProps & { exportFilename?: string }) {
   const {
@@ -879,7 +880,7 @@ export function SmartGrid({
           onToggle={onToggleServersideFilter || (() => {})}
           onFiltersChange={onFiltersChange || (() => {})}
           onSearch={onSearch || (() => {})}
-          // onClearAll={onClearAll || (() => {})}
+          onClearAll={onClearAll || (() => {})}
           gridId={gridId || gridTitle || 'default'}
           userId={userId || 'default-user'}
           api={api}
@@ -1200,7 +1201,7 @@ export function SmartGrid({
                         return (
                           <TableCell
                             key={column.key}
-                            className="relative text-[13px] pl-3 py-2 border-r border-gray-50 last:border-r-0 align-middle"
+                            className="relative text-[13px] pl-3 py-1 border-r border-gray-50 last:border-r-0 align-middle"
                             style={{
                               width: `${widthPercentage}%`,
                               minWidth: `${Math.max(80, column.width * 0.8)}px`,

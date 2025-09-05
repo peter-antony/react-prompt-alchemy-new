@@ -18,7 +18,7 @@ interface ServersideFilterProps {
   onToggle: () => void;
   onFiltersChange: (filters: Record<string, FilterValue>) => void;
   onSearch: () => void;
-  // onClearAll: () => void;
+  onClearAll: () => void;
   gridId: string;
   userId: string;
   api?: FilterSystemAPI;
@@ -31,7 +31,7 @@ export function ServersideFilter({
   onToggle,
   onFiltersChange,
   onSearch,
-  // onClearAll,
+  onClearAll,
   gridId,
   userId,
   api
@@ -249,9 +249,9 @@ export function ServersideFilter({
     // console.log('active filter::::::::::', activeFilters);
     // console.log('active filter::::::::::', pendingFilters);
 
-    // setTimeout(() => {
-    //   onClearAll();
-    // }, 0);
+    setTimeout(() => {
+      onClearAll();
+    }, 0);
     
     if (api) {
       api.applyGridFilters({});

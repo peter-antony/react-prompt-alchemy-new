@@ -210,7 +210,7 @@ export interface SmartGridProps {
   gridId?: string;
   userId?: string;
   api?: any;
-  // onClearAll?: () => void;
+  onClearAll?: () => void;
   // Control whether to show AdvancedFilter (disabled when using server-side filters)
   hideAdvancedFilter?: boolean;
 }

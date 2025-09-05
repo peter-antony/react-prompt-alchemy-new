@@ -219,7 +219,7 @@ const QuickOrderManagement = () => {
     {
       key: 'CustomerOrVendor',
       label: 'Customer/Supplier',
-      type: 'EditableText',
+      type: 'Text',
       sortable: true,
       editable: false,
       subRow: false,
@@ -649,11 +649,12 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'Wagon', label: 'Wagon', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Wagon type Init")
+      fetchOptions: makeLazyFetcher("Wagon id Init")
     },
     {
       key: 'Container', label: 'Container', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Container Type Init")
+      // fetchOptions: makeLazyFetcher("Container Type Init")
+      fetchOptions: makeLazyFetcher("Container ID Init")
     },
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
     // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
@@ -1242,7 +1243,7 @@ const QuickOrderManagement = () => {
                 onSelectionChange={handleRowSelection}
                 onFiltersChange={setCurrentFilters}
                 onSearch={handleServerSideSearch}
-                // onClearAll={clearAllFilters}
+                onClearAll={clearAllFilters}
                 rowClassName={(row: any, index: number) =>
                   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
                 }

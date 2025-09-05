@@ -148,6 +148,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  // Simple text renderer
+  const renderTextData = () => {
+    return (
+      <div className="text-sm min-w-0">
+        <div className="text-gray-900 font-normal truncate text-[13px]">{value}</div>
+        {column.key == 'Contract' && (<div className="text-gray-500 text-[11px] truncate">{row?.ContractDescription}</div>)}
+        {column.key == 'CustomerOrVendor' && (<div className="text-gray-500 text-[11px] truncate">{row?.CustomerOrVendorName}</div>)}
+      </div>
+    );
+  };
+
   // DateTimeRange renderer
   const renderDateTimeRange = () => {
     const [date, time] = String(value).split('\n');
@@ -410,8 +421,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       case 'ActionButton':
         return renderActionButton();
       case 'Text':
+        return renderTextData();
       default:
-        return <span className="text-gray-900 truncate" title={String(value)}>{value}</span>;
+        return;
     }
   };
 

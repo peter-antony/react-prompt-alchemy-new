@@ -202,9 +202,9 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
             resourceGroups={resourceGroups}
             onSearch={handleResourceGroupSearch}
           />
-          <Button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
+          {/* <Button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-50 text-gray-600 p-0 border border-gray-300">
             <Filter className="w-5 h-5 text-gray-500" />
-          </Button>
+          </Button> */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">

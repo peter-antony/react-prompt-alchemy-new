@@ -78,7 +78,7 @@ const ResourceGroupSearch: React.FC<ResourceGroupSearchProps> = ({ resourceGroup
         name='resource-group-search-input'
         placeholder="Search"
         className="border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        style={{ width: 200, paddingRight: searchTerm ? 30 : 10 }} // Adjust padding to make space for the X icon
+        style={{ width: 230, paddingRight: searchTerm ? 30 : 10 }} // Adjust padding to make space for the X icon
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
