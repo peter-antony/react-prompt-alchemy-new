@@ -73,6 +73,7 @@ export const quickOrderService = {
   getMasterCommonData: async (
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
+    console.log("params1 ---", params);
     const stringifyData: any = JSON.stringify({
       context: {
         MessageID: "12345",
@@ -88,7 +89,13 @@ export const quickOrderService = {
         id: params?.searchTerm || '',
         name: params?.searchTerm || '',
       },
-      AdditionalFilter: [],
+      // AdditionalFilter: [],
+      AdditionalFilter: params?.messageType === "Contract Init" ? [
+        {
+          FilterName: "ContractType",
+          FilterValue: params?.OrderType,
+        },
+      ] : [],
       Pagination: {
         PageNumber: params?.offset,
         PageSize: params?.limit,

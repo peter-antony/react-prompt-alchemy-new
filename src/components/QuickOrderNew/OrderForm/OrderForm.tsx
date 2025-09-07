@@ -181,8 +181,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const fetchData = async (messageType) => {
     setLoading(false);
     setError(null);
+    console.log("Loading API data Type", OrderType);
     try {
-      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      // setContracts([{"id":"","name":"","seqNo":1,"default":"Y","description":""},{"id":"20 F Container","name":"20FT Container","seqNo":2,"default":"N","description":""}]);
+      // setCustomers([{"id":"","name":"","seqNo":1,"default":"Y","description":""},{"id":"20 F Container","name":"20FT Container","seqNo":2,"default":"N","description":""}]);
+      // setClusters([{"id":"","name":"","seqNo":1,"default":"Y","description":""},{"id":"20 F Container","name":"20FT Container","seqNo":2,"default":"N","description":""}]);
+      // setVendors([{"id":"","name":"","seqNo":1,"default":"Y","description":""},{"id":"20 F Container","name":"20FT Container","seqNo":2,"default":"N","description":""}]);
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType, OrderType: OrderType });
       setApiData(data);
       console.log("load inside try", data);
       if (messageType == "Contract Init") {
@@ -315,31 +320,84 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     Customer: {
       id: 'Customer',
       label: 'Customer',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'half',
       value: '',
       mandatory: true,
       visible: OrderType === 'SELL',
       editable: true,
       order: 4,
-      options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      // options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Mock customer data
+        const allCustomers = [
+          { label: 'DB Cargo AG', value: 'db-cargo-ag' },
+          { label: 'ABC Rail Goods Ltd', value: 'abc-rail-ltd' },
+          { label: 'Wave Cargo Solutions', value: 'wave-cargo-sol' },
+          { label: 'European Transport Co', value: 'european-transport' },
+          { label: 'Global Freight Systems', value: 'global-freight' },
+          { label: 'Metro Rail Services', value: 'metro-rail' },
+          { label: 'Continental Logistics', value: 'continental-log' },
+          { label: 'Express Railway Corp', value: 'express-railway' },
+          { label: 'Prime Shipping Inc', value: 'prime-shipping' },
+          { label: 'United Cargo Group', value: 'united-cargo' },
+          { label: 'Swift Transport Ltd', value: 'swift-transport' },
+          { label: 'Rapid Rail Solutions', value: 'rapid-rail' },
+        ];
+        
+        // Filter by search term
+        const filtered = searchTerm 
+          ? allCustomers.filter(customer => 
+              customer.label.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          : allCustomers;
+        
+        // Paginate results
+        const results = filtered.slice(offset, offset + limit);
+        
+        return results;
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+          console.log('Event:', event);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     Vendor: {
       id: 'Vendor',
       label: 'Vendor',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'half',
       value: '',
       mandatory: true,
       visible: OrderType === 'BUY',
       editable: true,
       order: 4,
-      options: vendors
-        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
-        .map(c => ({
-          label: `${c.id} || ${c.name}`,
-          value: c.id
-        }))
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const res = await fetch(
+          `/api/customers?search=${searchTerm}&offset=${offset}&limit=${limit}`
+        );
+        const data = await res.json();
+        return data.items.map((item: any) => ({
+          label: item.customerName,
+          value: item.customerId
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     Cluster: {
       id: 'Cluster',
@@ -735,7 +793,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                 userId="current-user"
                 className="my-custom-orderform-panel"
               /> : ''
-            }
+            } 
           </div>
 
           {/* Form Actions */}

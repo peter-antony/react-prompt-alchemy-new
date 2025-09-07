@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Search, Calendar, Clock } from 'lucide-react';
 import { FieldConfig } from '@/types/dynamicPanel';
+import { DynamicLazySelect } from './DynamicLazySelect';
 
 interface FieldRendererProps {
   config: FieldConfig;
@@ -281,6 +282,50 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         />
       );
 
+    case 'lazyselect':
+      return (
+        <Controller
+          name={fieldId}
+          control={control}
+          render={({ field }) => {
+            const fetchOptions = config.fetchOptions;
+            if (!fetchOptions) {
+              return (
+                <div>
+                  <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded border">
+                    fetchOptions is required for lazyselect field type
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
+                <DynamicLazySelect
+                  fetchOptions={fetchOptions}
+                  value={field.value}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    if (events?.onChange) {
+                      const selectedOption = value ? { label: '', value } : null;
+                      events.onChange(selectedOption, { target: { value } } as any);
+                    }
+                  }}
+                  placeholder={placeholder || 'Select...'}
+                  className="h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  tabIndex={tabIndex}
+                  onClick={events?.onClick}
+                  onFocus={events?.onFocus}
+                  onBlur={events?.onBlur}
+                />
+              </div>
+            );
+          }}
+        />
+      );
+      
     case 'date':
       return (
         <Controller
