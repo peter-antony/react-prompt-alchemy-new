@@ -947,7 +947,7 @@ export function SmartGrid({
         <ScrollArea className="w-full">
           {/* <div className="w-9/12"> */}
           <Table className="w-full">
-            <TableHeader className="sticky top-0 bg-white shadow-sm border-b-2 border-gray-100">
+            <TableHeader className="sticky top-0 bg-white border-b-2 border-gray-100">
               <TableRow className="hover:bg-transparent">
                 {/* Checkbox header */}
                 {showCheckboxes && (
@@ -976,7 +976,7 @@ export function SmartGrid({
                     <TableHead
                       key={column.key}
                       className={cn(
-                        "relative group bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 pl-1 py-0 pr-0 border-r border-gray-100 last:border-r-0",
+                        "relative group bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 pl-1 py-0 pr-0 border-r border-gray-100 last:border-r-0 h-9",
                         draggedColumn === column.key && "opacity-50",
                         dragOverColumn === column.key && "bg-blue-100 border-blue-300",
                         resizingColumn === column.key && "bg-blue-50",

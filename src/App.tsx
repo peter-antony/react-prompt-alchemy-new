@@ -24,7 +24,7 @@ import SignIn from "./pages/SignIn";
 import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SignOut from "./pages/SignOut";
-import MockPage from "./pages/MockPage";
+// import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
 
@@ -78,7 +78,7 @@ const App = () => (
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
           <Route path={ROUTES.OAUTH_CALLBACK} element={<OAuthCallback />} />
           <Route path={ROUTES.SIGNOUT} element={<SignOut />} />
-          <Route path="mock-page" element={<MockPage />} />
+          {/* <Route path="mock-page" element={<MockPage />} /> */}
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

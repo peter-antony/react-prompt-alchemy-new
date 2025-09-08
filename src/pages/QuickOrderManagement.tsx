@@ -22,7 +22,7 @@ import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDe
 import { Input } from '@/components/ui/input';
 import GridResourceDetails from '@/components/Common/GridResourceDetails';
 import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
-
+import { dateFormatter } from '@/utils/formatter';
 interface SampleData {
   QuickUniqueID: any;
   QuickOrderNo: any;
@@ -311,122 +311,6 @@ const QuickOrderManagement = () => {
     }
   ];
 
-  // const initialColumns: GridColumnConfig[] = [
-  //   {
-  //     key: 'id',
-  //     label: 'Trip Plan No',
-  //     type: 'Link',
-  //     sortable: true,
-  //     editable: false,
-  //     mandatory: true,
-  //     subRow: false
-  //   },
-  //   {
-  //     key: 'status',
-  //     label: 'Status',
-  //     type: 'Badge',
-  //     sortable: true,
-  //     editable: false,
-  //     subRow: false
-  //   },
-  //   {
-  //     key: 'tripBillingStatus',
-  //     label: 'Trip Billing Status',
-  //     type: 'Badge',
-  //     sortable: true,
-  //     editable: false,
-  //     subRow: false
-  //   },
-  //   {
-  //     key: 'plannedStartEndDateTime',
-  //     label: 'Planned Start and End Date Time',
-  //     type: 'EditableText',
-  //     sortable: true,
-  //     editable: false,
-  //     subRow: false
-  //   },
-  //   {
-  //     key: 'actualStartEndDateTime',
-  //     label: 'Actual Start and End Date Time',
-  //     type: 'DateTimeRange',
-  //     sortable: true,
-  //     editable: false,
-  //     subRow: false
-  //   },
-  //   {
-  //     key: 'departurePoint',
-  //     label: 'Departure Point',
-  //     type: 'TextWithTooltip',
-  //     sortable: true,
-  //     editable: false,
-  //     infoTextField: 'departurePointDetails',
-  //     subRow: true
-  //   },
-  //   {
-  //     key: 'arrivalPoint',
-  //     label: 'Arrival Point',
-  //     type: 'TextWithTooltip',
-  //     sortable: true,
-  //     editable: false,
-  //     infoTextField: 'arrivalPointDetails',
-  //     subRow: true
-  //   },
-  //   {
-  //     key: 'customer',
-  //     label: 'Customer',
-  //     type: 'ExpandableCount',
-  //     sortable: true,
-  //     editable: false,
-  //     renderExpandedContent: (row: SampleData) => (
-  //       <div className="space-y-3">
-  //         <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-4">
-  //           <User className="h-4 w-4" />
-  //           Customer Details
-  //         </div>
-  //         {row.customerDetails?.map((customer, index) => (
-  //           <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-  //             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-  //               <User className="h-4 w-4 text-blue-600" />
-  //             </div>
-  //             <div>
-  //               <div className="font-medium text-gray-900">{customer.name}</div>
-  //               <div className="text-sm text-gray-500">{customer.id}</div>
-  //             </div>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     )
-  //   },
-  //   {
-  //     key: 'resources',
-  //     label: 'Resources',
-  //     type: 'ExpandableCount',
-  //     sortable: true,
-  //     editable: false,
-  //     renderExpandedContent: (row: SampleData) => (
-  //       <div className="space-y-3">
-  //         <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-4">
-  //           <Container className="h-4 w-4" />
-  //           Resource Details
-  //         </div>
-  //         {row.resourceDetails?.map((resource, index) => (
-  //           <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-  //             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-  //               {resource.type === 'train' && <Train className="h-4 w-4 text-green-600" />}
-  //               {resource.type === 'agent' && <UserCheck className="h-4 w-4 text-green-600" />}
-  //               {resource.type === 'container' && <Container className="h-4 w-4 text-green-600" />}
-  //             </div>
-  //             <div>
-  //               <div className="font-medium text-gray-900">{resource.name}</div>
-  //               <div className="text-sm text-gray-500">{resource.id}</div>
-  //             </div>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     )
-  //   }
-  // ];
-
   // Initialize columns and data
   useEffect(() => {
 
@@ -484,6 +368,7 @@ const QuickOrderManagement = () => {
               value: row.Status,
               variant: getStatusColorLocal(row.Status),
             },
+            QuickOrderDate: dateFormatter(row.QuickOrderDate)
           };
         });
 
@@ -776,6 +661,7 @@ const QuickOrderManagement = () => {
             value: row.Status,
             variant: getStatusColorLocal(row.Status),
           },
+          QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });
 
@@ -860,6 +746,7 @@ const QuickOrderManagement = () => {
             value: row.Status,
             variant: getStatusColorLocal(row.Status),
           },
+          QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });
 
@@ -1255,17 +1142,8 @@ const QuickOrderManagement = () => {
                 showCreateButton={true}
                 searchPlaceholder="Search"
                 clientSideSearch={true}
-                // extraFilters={[
-                //   {
-                //     key: 'priority',
-                //     label: 'Priority Level',
-                //     type: 'select',
-                //     options: ['High Priority', 'Medium Priority', 'Low Priority']
-                //   }
-                // ]}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
-                // Server-side filter props
                 serverFilters={dynamicServerFilters}
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}
@@ -1274,6 +1152,7 @@ const QuickOrderManagement = () => {
                 userId="current-user"
                 api={filterService}
               />
+              {/* {!filtersLoading ? ( */}
               {/* ) : ( */}
               {/* <div className="flex items-center justify-center h-96">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>

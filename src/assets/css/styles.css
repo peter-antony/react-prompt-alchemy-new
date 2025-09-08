@@ -1,5 +1,9 @@
+/* * {
+  color: var(--Gray-800);
+} */
 body {
   font-family: inter;
+  color: var(--Gray-800);
 }
 body::-webkit-scrollbar {
   width: 5px;
@@ -15,6 +19,9 @@ body::-webkit-scrollbar-thumb {
 :root {
   --body-bg: #f8f9fc;
   --gray-bg: #f2f4f7;
+  --Gray-100: #F2F4F7;
+  --Gray-200: #EAECF0;
+  --Gray-800: #1D2939;
   --font-color-100: #d0d5dd;
   --text-gray-600: #475467;
 
@@ -31,7 +38,7 @@ body::-webkit-scrollbar-thumb {
   --badge-padding: 2px 8px 2px 8px;
 
   /* Badge blue */
-  --badge-text-blue: #0073E6;
+  --badge-text-blue: #0068CF;
   --badge-bg-blue: #eaf4ff;
   --badge-border-blue: #afd7ff;
 
@@ -309,13 +316,23 @@ body::-webkit-scrollbar-thumb {
   border-radius: 8px;
 }
 
+.bg-gray-100 {
+  background-color: var(--Gray-100);
+}
+.bg-gray-200 {
+  background-color: var(--Gray-200);
+}
+.bg-gray-800 {
+  background-color: var(--Gray-800);
+}
 
+.border-b-2 {
+  border-bottom: 1px solid var(--Gray-200);
+}
 
-
-
-
-
-
+.text-xs {
+  font-size: 11px;
+}
 
 
 

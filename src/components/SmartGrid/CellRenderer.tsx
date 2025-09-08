@@ -329,7 +329,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
-    return <span className="font-semibold">&euro; {formattedAmount(value)}</span>
+    return <span className="font-bold">&euro; {formattedAmount(value)}</span>
   }
 
   // Action button renderer
