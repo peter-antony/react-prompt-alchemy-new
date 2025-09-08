@@ -140,6 +140,24 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // utils/fetchOptionsHelper.ts
+  const makeLazyFetcher = (messageType: string) => {
+    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+      const response: any = await quickOrderService.getMasterCommonData({
+        messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      try {
+        return JSON.parse(response?.data?.ResponseData || '[]');
+      } catch (err) {
+        console.error(`Failed to parse ResponseData for ${messageType}:`, err);
+        return [];
+      }
+    };
+  };
   const messageTypes = [
     "Cluster Init",
     "Contract Init",
@@ -170,7 +188,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     } else if (!isEditQuickOrder) {
       initializeJsonStore();
       const quickOrder = jsonStore.getQuickOrder();
-      setOrderType('BUY');
+      // setOrderType('BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder));
       setResourceCount(quickOrder.ResourceGroup.length);
@@ -296,19 +314,28 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     Contract: {
       id: 'Contract',
       label: 'Contract',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'half',
       value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 3,
-      options: contracts
-        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
-        .map(c => ({
-          label: `${c.id} || ${c.name}`,
-          value: c.id
-        })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Contract Init",
+          OrderType: OrderType,
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: item.id
+        }));
+      },
       events: {
         onChange: (val: string) => {
           setComboDropdown(val) // To update state on change
@@ -317,6 +344,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
       }
     },
+
     Customer: {
       id: 'Customer',
       label: 'Customer',
@@ -329,36 +357,18 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 4,
       // options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       fetchOptions: async ({ searchTerm, offset, limit }) => {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Mock customer data
-        const allCustomers = [
-          { label: 'DB Cargo AG', value: 'db-cargo-ag' },
-          { label: 'ABC Rail Goods Ltd', value: 'abc-rail-ltd' },
-          { label: 'Wave Cargo Solutions', value: 'wave-cargo-sol' },
-          { label: 'European Transport Co', value: 'european-transport' },
-          { label: 'Global Freight Systems', value: 'global-freight' },
-          { label: 'Metro Rail Services', value: 'metro-rail' },
-          { label: 'Continental Logistics', value: 'continental-log' },
-          { label: 'Express Railway Corp', value: 'express-railway' },
-          { label: 'Prime Shipping Inc', value: 'prime-shipping' },
-          { label: 'United Cargo Group', value: 'united-cargo' },
-          { label: 'Swift Transport Ltd', value: 'swift-transport' },
-          { label: 'Rapid Rail Solutions', value: 'rapid-rail' },
-        ];
-        
-        // Filter by search term
-        const filtered = searchTerm 
-          ? allCustomers.filter(customer => 
-              customer.label.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-          : allCustomers;
-        
-        // Paginate results
-        const results = filtered.slice(offset, offset + limit);
-        
-        return results;
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Customer Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: item.id
+        }));
       },
       events: {
         onChange: (selected, event) => {
@@ -381,13 +391,17 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 4,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const res = await fetch(
-          `/api/customers?search=${searchTerm}&offset=${offset}&limit=${limit}`
-        );
-        const data = await res.json();
-        return data.items.map((item: any) => ({
-          label: item.customerName,
-          value: item.customerId
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Supplier Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr:any=response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: item.id
         }));
       },
       events: {
@@ -402,19 +416,28 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     Cluster: {
       id: 'Cluster',
       label: 'Cluster',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'half',
       value: '',
       mandatory: true,
       visible: true,
       editable: true,
       order: 5,
-      options: clusters
-        .filter(c => c.id !== null && c.id !== "" && c.id !== undefined)
-        .map(c => ({
-          label: `${c.id} || ${c.name}`,
-          value: c.id
-        }))
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Cluster Init",
+          OrderType: OrderType,
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr:any=response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: item.id
+        }));
+      },
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
@@ -550,24 +573,39 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   });
   //setting Combo Dropdown with selected Contract
   const setComboDropdown = async (contractId: any) => {
+    console.log("VALUE", contractId);
+
     setLoading(false);
     setError(null);
     try {
-      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId, type: OrderType });
-      console.log("COMBO DROPDOWN DATA", data);
+      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId.value, type: OrderType });
+      console.log("COMBO DROPDOWN DATA",JSON.parse( data.data.ResponseData));
+      console.log("ORDERTYPE :", OrderType);
       // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
       const contract: any = parsedData;
-      console.log("CONTRACT DATA:: ", contract.data.ResponseData);
-      if (contract.data.ResponseData) {
-        jsonStore.setQuickOrderFields({ ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS });
-        setFormData(normalizeOrderFormDetails({ ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
-        console.log("Contracts data:===", parsedData);
-      } else { // hardcoded with dummy response data to avoid error
-        //data for ContractID : CON000000116
-        jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
-        setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+      console.log("CONTRACT DATA:: ", contract.VendorID);
+      if (contract) {
+        setOrderType(OrderType)
+        jsonStore.setQuickOrderFields({OrderType:OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS,Currency:contract.Currency });
+        jsonStore.setResourceGroupFields({ServiceType: contract.ServiceType, OperationalLocation: contract.Location});
+        const additionalInfo=contract.ContractTariff;
+        jsonStore.setResourceType({Resource:additionalInfo[0].Resource,ResourceType:additionalInfo[0].ResourceType})
+        jsonStore.setTariffFields({
+          tariff: additionalInfo[0].TariffID,
+          ContractPrice: additionalInfo[0].TariffRate?additionalInfo[0].TariffRate:"",
+          NetAmount: additionalInfo[0].TariffRate?additionalInfo[0].TariffRate:"",
+          TariffType: additionalInfo[0].TariffType?additionalInfo[0].TariffType:""
+        });
+        
+        console.log("AFTER DATA BINDING - RESOURCEGROUP  : ",jsonStore.getResourceJsonData())
+        setFormData(normalizeOrderFormDetails({OrderType:OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
       }
+      //  else { // hardcoded with dummy response data to avoid error
+      //   //data for ContractID : CON000000116
+      //   jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+      //   setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+      // }
     } catch (err) {
       setError(`Error fetching API data for${err}`);
       console.log("ERROR IN COMBO DROPDOWN:: ", err);
@@ -715,7 +753,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
     jsonStore.setQuickOrder({
       ...jsonStore.getJsonData().quickOrder,
-      // ...formValues.QuickOrder,
+      ...formValues.QuickOrder,
       "ModeFlag": "Insert",
       "Status": "Fresh",
       "QuickUniqueID": -1,
@@ -793,7 +831,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                 userId="current-user"
                 className="my-custom-orderform-panel"
               /> : ''
-            } 
+            }
           </div>
 
           {/* Form Actions */}

@@ -9,8 +9,8 @@ const QUICK_ORDER_JSON = {
       "OrderType": "BUY",
       "QuickOrderNo": "",
       "QuickOrderDate": "2022-06-16T00:00:00",
-      "Vendor": "011909",
-      "Contract": "CON000000116",
+      "Vendor": "",
+      "Contract": "",
       "Customer": "",
       "Cluster": "",
       "Currency": "EUR  ",
@@ -19,14 +19,14 @@ const QUICK_ORDER_JSON = {
       "QCUserDefined1": "",
       "Remark1": "",
       "Summary": "",
-      "WBS": "DE17BAS843",
+      "WBS": "",
       "QCUserDefined2": "",
       "QCUserDefined3": "",
       "Remarks2": "",
       "Remarks3": "",
       "Status": "Fresh",
       // "Status": "Save/Confirm/UnderAmend",
-      "ModeFlag": "Insert/Update/Delete/NoChange",
+      "ModeFlag": "Insert",
       "ResourceGroup": [
 
       ],
@@ -49,8 +49,8 @@ const QUICK_ORDER_JSON = {
 
 const Resource_Group_JSON = {
   "ResourceUniqueID": -1,
-  "ModeFlag": "Insert/Update/Delete/NoChange",
-  "ResourceStatus": "Save/Confirm/UnderAmend",
+  "ModeFlag": "Insert",
+  "ResourceStatus": "Fresh",
   "BasicDetails": {
     "Resource": "Equipment",
     "ResourceType": "20FT Container",
@@ -70,18 +70,18 @@ const Resource_Group_JSON = {
   },
   "BillingDetails": {
     "DraftBillNo": "",
-    "ContractPrice": 1200,
-    "NetAmount": 300,
+    "ContractPrice": null,
+    "NetAmount": 0,
     "BillingType": "Wagon",
     "BillingQty": "",
     "UnitPrice": 250,
     "DraftBillStatus": null,
-    "Tariff": "YP_BUY60_IO",
+    "Tariff": null,
     "TariffTypeDescription": null,
     "TariffIDDescription": null,
-    "TariffType": "Additional Labour Charges",
+    "TariffType": "",
     "BillingRemarks": "",
-    "InternalOrderNo": "INO/2021/00000350"
+    "InternalOrderNo": null
   },
   "MoreRefDocs": [
 

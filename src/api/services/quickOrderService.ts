@@ -95,6 +95,10 @@ export const quickOrderService = {
           FilterName: "ContractType",
           FilterValue: params?.OrderType,
         },
+        {
+          FilterName: "ContractID",
+          FilterValue: params?.ContractId
+        }
       ] : [],
       Pagination: {
         PageNumber: params?.offset,

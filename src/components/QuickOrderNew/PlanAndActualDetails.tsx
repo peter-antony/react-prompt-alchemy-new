@@ -202,8 +202,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
   const [billingData, setBillingData] = useState({
     billingDetail: "DB00023/42",
-    contractPrice: 1200.0,
-    netAmount: 5580.0,
+    contractPrice: '',
+    netAmount: 0,
     billingType: "Wagon",
     unitPrice: 1395.0,
     billingQty: 4,

@@ -44,14 +44,16 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any }) {
+function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
     if (fields.Customer !== undefined) quickOrder.Customer = fields.Customer;
+    if (fields.Currency !== undefined) quickOrder.Currency = fields.Currency;
     if (fields.Vendor !== undefined) quickOrder.Vendor = fields.Vendor;
     if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
     if (fields.WBS !== undefined) quickOrder.WBS = fields.WBS;
+    if (fields.OrderType !== undefined) quickOrder.OrderType = fields.OrderType;
     return true;
   }
   return false;
@@ -334,7 +336,6 @@ function pushPlanDetails(planDetail: any) {
   ) {
     const rg = jsonData.ResponseResult.QuickOrder.ResourceGroup[0];
     if (!Array.isArray(rg.PlanDetails)) {
-      alert("IF.. ")
       rg.PlanDetails = [];
     }
     rg.PlanDetails.push(planDetail);
@@ -713,6 +714,67 @@ function pushQuickOrderAttachment(attachment: any) {
   return false;
 }
 
+function setResourceGroupFields(fields: { ServiceType?: any, OperationalLocation?: any }) {
+  if (resourceJsonData) {
+    if (fields.ServiceType !== undefined) {
+      if (!resourceJsonData.BasicDetails) resourceJsonData.BasicDetails = {};
+      resourceJsonData.BasicDetails.ServiceType = fields.ServiceType;
+    }
+    if (fields.OperationalLocation !== undefined) {
+      if (!resourceJsonData.OperationalDetails) resourceJsonData.OperationalDetails = {};
+      resourceJsonData.OperationalDetails.OperationalLocation = fields.OperationalLocation;
+    }
+    return true;
+  }
+  return false;
+}
+
+function setResourceType(fields: { Resource?: any, ResourceType?: any }) {
+  if (resourceJsonData) {
+    if (!resourceJsonData.BasicDetails) resourceJsonData.BasicDetails = {};
+    if (fields.Resource !== undefined) resourceJsonData.BasicDetails.Resource = fields.Resource;
+    if (fields.ResourceType !== undefined) resourceJsonData.BasicDetails.ResourceType = fields.ResourceType;
+    return true;
+  }
+  return false;
+}
+
+function setTariffFields(fields: { tariff?: any, ContractPrice?: any, NetAmount?: any, TariffType?: any }) {
+  console.log("resourceJsonData === ^^^^", resourceJsonData)
+  if (resourceJsonData) {
+    if (!resourceJsonData.BillingDetails) {
+      resourceJsonData.BillingDetails = {};
+    }
+    if (fields.tariff !== undefined) resourceJsonData.BillingDetails.Tariff = fields.tariff;
+    if (fields.ContractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.ContractPrice;
+    if (fields.NetAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.NetAmount;
+    if (fields.TariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.TariffType;
+    return true;
+  }
+  return false;
+}
+
+function getResourceGroupBasicDetails() {
+  if (resourceJsonData && resourceJsonData.BasicDetails) {
+    return resourceJsonData.BasicDetails;
+  }
+  return undefined;
+}
+
+function getResourceGroupOperationalDetails() {
+  if (resourceJsonData && resourceJsonData.OperationalDetails) {
+    return resourceJsonData.OperationalDetails;
+  }
+  return undefined;
+}
+
+function getResourceGroupBillingDetails() {
+  if (resourceJsonData && resourceJsonData.BillingDetails) {
+    return resourceJsonData.BillingDetails;
+  }
+  return undefined;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -769,6 +831,12 @@ const jsonStore = {
   setQuickOrderFields,
   getQuickUniqueID,
   pushQuickOrderAttachment,
+  setResourceGroupFields,
+  setResourceType,
+  setTariffFields,
+  getResourceGroupBasicDetails,
+  getResourceGroupOperationalDetails,
+  getResourceGroupBillingDetails,
 };
 
 export default jsonStore;
