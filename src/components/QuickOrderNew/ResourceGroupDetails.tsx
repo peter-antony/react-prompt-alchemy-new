@@ -148,7 +148,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
-        ...formValues.basicDetails
+        ...formValues.basicDetails,
+        "Resource":"Equipment",
+        "ResourceType": "20FT Container",
       });
       jsonStore.setResourceOperationalDetails({
         ...jsonStore.getResourceJsonData().OperationalDetails,
