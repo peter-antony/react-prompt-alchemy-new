@@ -149,8 +149,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       jsonStore.setResourceBasicDetails({
         ...jsonStore.getResourceJsonData().BasicDetails,
         ...formValues.basicDetails,
-        "Resource":"Equipment",
-        "ResourceType": "20FT Container",
+        // "Resource":"Equipment",
+        // "ResourceType": "20FT Container",
       });
       jsonStore.setResourceOperationalDetails({
         ...jsonStore.getResourceJsonData().OperationalDetails,
@@ -341,13 +341,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [selectedType, setSelectedType] = useState("");
 
   const messageTypes = [
+    "Quick Order Resource Combo Init",
     "ResourceType Init",
     "Service type Init",
     "Sub Service type Init",
-    "DraftBillStatus Init",
-    "Arrival Init",
-    "Departure Init",
-    "Location Init",
+    "Quick Order Billing Type Init",
+    // "Arrival Init",
+    // "Departure Init",
+    // "Location Init",
   ];
   useEffect(() => {
     fetchAll();
@@ -394,24 +395,24 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       if (messageType == "Sub Service type Init") {
         setSubServiceTypeList(JSON.parse(data?.data?.ResponseData));
       }
-      if (messageType == "Arrival Init") {
-        setArrivalList(JSON.parse(data?.data?.ResponseData));
-      }
-      if (messageType == "Departure Init") {
-        setDepartList(JSON.parse(data?.data?.ResponseData));
-      }
-      if (messageType == "ResourceType Init") {
+      // if (messageType == "Arrival Init") {
+      //   setArrivalList(JSON.parse(data?.data?.ResponseData));
+      // }
+      // if (messageType == "Departure Init") {
+      //   setDepartList(JSON.parse(data?.data?.ResponseData));
+      // }
+      if (messageType == "Quick Order Resource Combo Init") {
         setResourceList(JSON.parse(data?.data?.ResponseData));
       }
       if (messageType == "ResourceType Init") {
         setResourceTypeList(JSON.parse(data?.data?.ResponseData));
       }
-      if (messageType == "Location Init") {
-        setLocationList(JSON.parse(data?.data?.ResponseData));
-      }
-      if (messageType == "DraftBillStatus Init") {
-        // setBillingTypeList(JSON.parse(data?.data?.ResponseData));
-        setBillingTypeList([]);
+      // if (messageType == "Location Init") {
+      //   setLocationList(JSON.parse(data?.data?.ResponseData));
+      // }
+      if (messageType == "Quick Order Billing Type Init") {
+        setBillingTypeList(JSON.parse(data?.data?.ResponseData));
+        // setBillingTypeList([]);
       }
       if (messageType == "Ref doc type Init") {
         setCustomerOrderNoList(JSON.parse(data?.data?.ResponseData));
@@ -443,7 +444,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 1,
-      options: resourceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: resourceList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
           console.log('contractType changed:', value);
@@ -498,20 +499,57 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     OperationalLocation: {
       id: 'OperationalLocation',
       label: 'Operational Location',
-      fieldType: 'search',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 1,
-      placeholder: 'Search operational location...',
-      searchData: locationList.map(c => `${c.id}`),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Location Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
+    // OperationalLocation: {
+    //   id: 'OperationalLocation',
+    //   label: 'Operational Location',
+    //   fieldType: 'search',
+    //   width: 'third',
+    //   value: '',
+    //   mandatory: false,
+    //   visible: true,
+    //   editable: true,
+    //   order: 1,
+    //   placeholder: 'Search operational location...',
+    //   searchData: locationList.map(c => `${c.id}`),
+    // },
     DepartPoint: {
       id: 'DepartPoint',
       label: 'Departure Point',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: false,
@@ -519,12 +557,37 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 2,
       // options: departList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-      options: [],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Departure Init",
+          searchTerm: searchTerm || '',
+          offset: 1,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     ArrivalPoint: {
       id: 'ArrivalPoint',
       label: 'Arrival Point',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: false,
@@ -532,14 +595,39 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 3,
       // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-      options: [],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Arrival Init",
+          searchTerm: searchTerm || '',
+          offset: 1,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     FromDate: {
       id: 'FromDate',
       label: 'From Date',
       fieldType: 'date',
       width: 'third',
-      value: '',
+      value: '2023-02-12',
       mandatory: true,
       visible: true,
       editable: true,
@@ -561,7 +649,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'To Date',
       fieldType: 'date',
       width: 'third',
-      value: '',
+      value: '2029-02-12',
       mandatory: true,
       visible: true,
       editable: true,
@@ -641,7 +729,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'Unit Price',
       fieldType: 'inputdropdown',
       width: 'half',
-      value: null,
+      value: '',
       mandatory: true,
       visible: true,
       editable: true,

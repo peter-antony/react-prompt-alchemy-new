@@ -112,6 +112,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   //QC List Array
   const [clusters, setClusters] = useState<any[]>([]);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [qcList1, setqcList1] = useState<any>();
+  const [qcList2, setqcList2] = useState<any>();
+  const [qcList3, setqcList3] = useState<any>();
   const QCList = [
     {
       "id": 1,
@@ -163,6 +166,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     "Contract Init",
     "Customer Init",
     "Supplier Init",
+    "Quick Order Header Quick Code1 Init",
+    "Quick Order Header Quick Code2 Init",
+    "Quick Order Header Quick Code3 Init",
   ];
   const [selectedType, setSelectedType] = useState(messageTypes[0]);
   useEffect(() => {
@@ -222,6 +228,18 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       }
       if (messageType == "Supplier Init") {
         setVendors(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code1 Init") {
+        setqcList1(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code2 Init") {
+        setqcList2(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code2 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code3 Init") {
+        setqcList3(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code3 Init', JSON.parse(data?.data?.ResponseData));
       }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
@@ -305,7 +323,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       label: 'Quick Order Date',
       fieldType: 'date',
       width: 'half',
-      value: '',
+      value: new Date().toISOString().split("T")[0], // today's date
       mandatory: true,
       visible: true,
       editable: true,
@@ -332,8 +350,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // response.data is already an array, so just return it directly
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          label: `${item.id} || ${item.name}`,
-          value: item.id
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
         }));
       },
       events: {
@@ -366,8 +388,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // response.data is already an array, so just return it directly
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          label: `${item.id} || ${item.name}`,
-          value: item.id
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
         }));
       },
       events: {
@@ -400,8 +426,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // response.data is already an array, so just return it directly
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          label: `${item.id} || ${item.name}`,
-          value: item.id
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
         }));
       },
       events: {
@@ -434,8 +464,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // response.data is already an array, so just return it directly
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          label: `${item.id} || ${item.name}`,
-          value: item.id
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
         }));
       },
     },
@@ -475,11 +509,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 8,
-      options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-        { label: 'Test', value: 'Test' }
-      ]
+      options: qcList1.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remark1: {
       id: 'Remark1',
@@ -527,10 +557,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 12,
-      options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-      ]
+      options: qcList2.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      // options: [
+      //   { label: 'QC', value: 'QC' },
+      //   { label: 'QA', value: 'QA' },
+      // ]
     },
     QCUserdefined3: {
       id: 'QCUserdefined3',
@@ -542,10 +573,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 13,
-      options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-      ]
+      options: qcList3.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks2: {
       id: 'Remarks2',
@@ -604,10 +632,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
           tariff: additionalInfo[0].TariffID,
-          ContractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          NetAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          TariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : ""
+          contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : ""
         });
+        // Set ValidFrom and ValidTo in jsonStore using a new set method
+        
 
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
         console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())

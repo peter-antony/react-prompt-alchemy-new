@@ -62,9 +62,9 @@ const Resource_Group_JSON = {
     "OperationalLocationDesc": "Forwardis GMBH",
     "DepartPoint": "value",
     "ArrivalPoint": "value",
-    "FromDate": "2022-01-03",
+    "FromDate": "2023-02-12",
     "FromTime": "20:00:00",
-    "ToDate": "2022-01-10",
+    "ToDate": "2029-02-12",
     "ToTime": "23:12:00",
     "Remarks": ""
   },
@@ -84,7 +84,13 @@ const Resource_Group_JSON = {
     "InternalOrderNo": null
   },
   "MoreRefDocs": [
-
+    {
+      "DocCategory": "",
+      "DocType": "",
+      "DocValue": "",
+      "DocDate": "",
+      "DocRemarks": ""
+    }
   ],
   "Attachments": {
     "TotalAttachment": "0",
