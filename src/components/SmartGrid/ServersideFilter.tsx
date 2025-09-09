@@ -8,6 +8,7 @@ import { ServerFilterFieldModal } from './ServerFilterFieldModal';
 import { GridColumnConfig, ServerFilter } from '@/types/smartgrid';
 import { FilterValue, FilterSet, FilterSystemAPI } from '@/types/filterSystem';
 import { useToast } from '@/hooks/use-toast';
+import { useFilterStore } from '@/stores/filterStore';
 import { cn } from '@/lib/utils';
 import { LazySelect } from './LazySelect';
 
@@ -36,7 +37,8 @@ export function ServersideFilter({
   userId,
   api
 }: ServersideFilterProps) {
-  const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue>>({});
+  // Use persistent filter store to maintain state across component unmount/mount
+  const { activeFilters, setActiveFilters } = useFilterStore();
   const [pendingFilters, setPendingFilters] = useState<Record<string, FilterValue>>({});
   const [filterSets, setFilterSets] = useState<FilterSet[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -47,6 +49,41 @@ export function ServersideFilter({
   
   const { toast } = useToast();
 
+  // Get current grid's active filters
+  const currentActiveFilters = activeFilters[gridId] || {};
+  
+  // Initialize pending filters from active filters OR default values when component mounts
+  useEffect(() => {
+    if (Object.keys(pendingFilters).length === 0) {
+      if (Object.keys(currentActiveFilters).length > 0) {
+        // Use existing active filters
+        setPendingFilters(currentActiveFilters);
+      } else {
+        // Initialize with default values from serverFilters
+        const defaultFilters: Record<string, FilterValue> = {};
+        serverFilters.forEach(filter => {
+          if (filter.defaultValue !== undefined && filter.defaultValue !== null && filter.defaultValue !== '') {
+            defaultFilters[filter.key] = {
+              value: filter.defaultValue,
+              operator: 'equals'
+            };
+          }
+        });
+        
+        if (Object.keys(defaultFilters).length > 0) {
+          setPendingFilters(defaultFilters);
+          setActiveFilters(gridId, defaultFilters);
+          onFiltersChange(defaultFilters);
+          
+          // Trigger initial search with default values
+          setTimeout(() => {
+            onSearch();
+          }, 100);
+        }
+      }
+    }
+  }, [currentActiveFilters, serverFilters, gridId]);
+  
   // Initialize field visibility and order
   useEffect(() => {
     if (serverFilters.length > 0 && visibleFields.length === 0) {
@@ -66,15 +103,15 @@ export function ServersideFilter({
   // Apply default filter set on load
   useEffect(() => {
     const defaultSet = filterSets.find(set => set.isDefault);
-    if (defaultSet && Object.keys(activeFilters).length === 0) {
+    if (defaultSet && Object.keys(currentActiveFilters).length === 0) {
       applyFilterSet(defaultSet);
     }
-  }, [filterSets]);
+  }, [filterSets, currentActiveFilters]);
 
   // Only notify parent of filter changes when filters are actually applied
   useEffect(() => {
-    onFiltersChange(activeFilters);
-  }, [activeFilters, onFiltersChange]);
+    onFiltersChange(currentActiveFilters);
+  }, [currentActiveFilters, onFiltersChange]);
 
   const loadFilterSets = async () => {
     if (!api) return;
@@ -151,7 +188,7 @@ export function ServersideFilter({
 
   const applyFilterSet = (filterSet: FilterSet) => {
     setPendingFilters(filterSet.filters);
-    setActiveFilters(filterSet.filters);
+    setActiveFilters(gridId, filterSet.filters);
     
     if (api) {
       api.applyGridFilters(filterSet.filters);
@@ -244,7 +281,7 @@ export function ServersideFilter({
 
   const clearAllFilters = () => {
     setPendingFilters({});
-    setActiveFilters({});
+    setActiveFilters(gridId, {});
     onFiltersChange({});
     // console.log('active filter::::::::::', activeFilters);
     // console.log('active filter::::::::::', pendingFilters);
@@ -379,7 +416,7 @@ export function ServersideFilter({
             size="sm"
             onClick={() => {
               // Apply pending filters to active filters
-              setActiveFilters(pendingFilters);
+              setActiveFilters(gridId, pendingFilters);
               
               // Update parent component with current filters first
               onFiltersChange(pendingFilters);

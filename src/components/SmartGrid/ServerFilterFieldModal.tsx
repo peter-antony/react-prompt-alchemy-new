@@ -59,7 +59,7 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
     });
     
     setFieldConfigs(orderedConfigs);
-  }, [serverFilters, visibleFields, fieldOrder]);
+  }, [serverFilters, visibleFields, fieldOrder, open]);
 
   const handleVisibilityChange = (fieldKey: string, visible: boolean) => {
     setFieldConfigs(prev => 

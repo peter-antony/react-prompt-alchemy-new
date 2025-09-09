@@ -65,6 +65,8 @@ export function exportToExcel(
 ) {
   try {
     // Prepare data for Excel
+     console.log('HEADERS: ', columns);
+  console.log('PROCESSED DATA: ', data);
     const processedData = data.map(row => {
       const processedRow: Record<string, any> = {};
       columns.forEach(col => {
@@ -99,7 +101,19 @@ export function exportToExcel(
 
     // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(processedData);
+    // const worksheet = XLSX.utils.json_to_sheet(processedData);
+     // If no data, create empty worksheet with headers only
+    let worksheet;
+    if (processedData.length === 0) {
+      // Create empty row with column headers
+      const headerRow: Record<string, any> = {};
+      columns.forEach(col => {
+        headerRow[col.label] = '';
+      });
+      worksheet = XLSX.utils.json_to_sheet([headerRow]);
+    } else {
+      worksheet = XLSX.utils.json_to_sheet(processedData);
+    }
 
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');

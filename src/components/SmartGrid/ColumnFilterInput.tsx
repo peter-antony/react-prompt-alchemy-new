@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ export function ColumnFilterInput({
   const [dropdownMode, setDropdownMode] = useState<'dropdown' | 'text'>('dropdown');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isMultiSelectOpen, setIsMultiSelectOpen] = useState(false);
+  const toNumberInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalValue(value?.value || '');
@@ -201,16 +202,29 @@ export function ColumnFilterInput({
 
   const handleRangeChange = (from: string, to: string) => {
     // Validate that to >= from if both values are provided
-    if (from && to && parseFloat(to) < parseFloat(from)) {
-      return; // Don't update if to is less than from
-    }
-    
+    // if (from && to && parseFloat(to) < parseFloat(from)) {
+    //   return; // Don't update if to is less than from
+    // }
+
+    // Always update the state to allow typing
     setRangeFrom(from);
     setRangeTo(to);
     
+    // Only validate and send onChange when both values are valid numbers
+    // or when clearing the fields
     if (from === '' && to === '') {
       onChange(undefined);
     } else {
+      // Allow partial input, only validate when both are non-empty numbers
+      const fromNum = parseFloat(from);
+      const toNum = parseFloat(to);
+      
+      // If both are valid numbers and to < from, don't send the change
+      // but still allow the user to continue typing
+      if (from && to && !isNaN(fromNum) && !isNaN(toNum) && toNum < fromNum) {
+        // Don't send onChange, but allow the UI state to update
+        return;
+      }
       onChange({
         value: { from, to },
         operator: 'between' as any,
@@ -251,13 +265,19 @@ export function ColumnFilterInput({
     }
   };
 
+
   const handleDateRangeChange = (type: 'from' | 'to', date: string) => {
+    // console.log('handleDateRangeChange called:', { type, date });
     const currentValue = localValue || { from: '', to: '' };
     const newValue = {
       ...currentValue,
       [type]: date
     };
-    
+    // console.log('Date range values:', { currentValue, newValue });
+    // Validate that to date >= from date if both are provided
+    // if (newValue.from && newValue.to && new Date(newValue.to) < new Date(newValue.from)) {
+    //   return; // Don't update if to date is less than from date
+    // }
     // Validate that to date >= from date if both are provided
     if (newValue.from && newValue.to && new Date(newValue.to) < new Date(newValue.from)) {
       return; // Don't update if to date is less than from date
@@ -265,6 +285,7 @@ export function ColumnFilterInput({
     
     if (newValue.from === '' && newValue.to === '') {
       setLocalValue(undefined);
+      // console.log('Both dates empty, clearing filter');
       onChange(undefined);
     } else {
       setLocalValue(newValue);
@@ -488,8 +509,18 @@ export function ColumnFilterInput({
             />
             <span className="text-xs text-muted-foreground">-</span>
             <Input
+              ref={toNumberInputRef}
               value={rangeTo}
               onChange={(e) => handleRangeChange(rangeFrom, e.target.value)}
+               onBlur={() => {
+                if (rangeFrom && rangeTo && parseFloat(rangeTo) < parseFloat(rangeFrom)) {
+                  setRangeTo('');
+                  handleRangeChange(rangeFrom, '');
+                  setTimeout(() => {
+                    toNumberInputRef.current?.focus();
+                  }, 0);
+                }
+              }}
               placeholder="To"
               className="h-7 text-xs flex-1"
               type="number"

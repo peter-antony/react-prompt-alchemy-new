@@ -23,6 +23,8 @@ import { Input } from '@/components/ui/input';
 import GridResourceDetails from '@/components/Common/GridResourceDetails';
 import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
 import { dateFormatter } from '@/utils/formatter';
+import { format, subDays } from 'date-fns';
+
 interface SampleData {
   QuickUniqueID: any;
   QuickOrderNo: any;
@@ -86,16 +88,13 @@ const QuickOrderManagement = () => {
   const [cardData, setCardData] = useState<CardDetailsItem[]>([]);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [quickResourceId, setQuickResourceId] = useState<string>('');
-
-  let initialResourceGroups: any = [
-    {
-      id: 1,
-      name: "QO/00001/2025",
-      seqNo: 1, // Optional
-      default: "Y", // Optional
-      description: "R01 - Wagon Rentals", // Optional
-    },
-  ];
+  const GitPullActionButton = () => {
+    return (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.5 1.5V10C1.5 11.4001 1.5 12.1002 1.77248 12.635C2.01217 13.1054 2.39462 13.4878 2.86502 13.7275C3.3998 14 4.09987 14 5.5 14H11.5M11.5 14C11.5 15.3807 12.6193 16.5 14 16.5C15.3807 16.5 16.5 15.3807 16.5 14C16.5 12.6193 15.3807 11.5 14 11.5C12.6193 11.5 11.5 12.6193 11.5 14ZM1.5 5.66667L11.5 5.66667M11.5 5.66667C11.5 7.04738 12.6193 8.16667 14 8.16667C15.3807 8.16667 16.5 7.04738 16.5 5.66667C16.5 4.28595 15.3807 3.16667 14 3.16667C12.6193 3.16667 11.5 4.28596 11.5 5.66667Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  };
 
   const handleInputChange = (field: string, value: string) => {
     // Handle input change logic here
@@ -109,8 +108,6 @@ const QuickOrderManagement = () => {
   };
 
   const [isGroupLevelModalOpen, setGroupLevelModalOpen] = useState(false);
-
-
   const [popupTitle, setPopupTitle] = useState('');
   const [popupButtonName, setPopupButtonName] = useState('');
   const [popupBGColor, setPopupBGColor] = useState('');
@@ -178,14 +175,6 @@ const QuickOrderManagement = () => {
     });
     return () => resetFooter();
   }, [selectedRows, gridState.gridData]);
-
-  const GitPullActionButton = () => {
-    return (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1.5 1.5V10C1.5 11.4001 1.5 12.1002 1.77248 12.635C2.01217 13.1054 2.39462 13.4878 2.86502 13.7275C3.3998 14 4.09987 14 5.5 14H11.5M11.5 14C11.5 15.3807 12.6193 16.5 14 16.5C15.3807 16.5 16.5 15.3807 16.5 14C16.5 12.6193 15.3807 11.5 14 11.5C12.6193 11.5 11.5 12.6193 11.5 14ZM1.5 5.66667L11.5 5.66667M11.5 5.66667C11.5 7.04738 12.6193 8.16667 14 8.16667C15.3807 8.16667 16.5 7.04738 16.5 5.66667C16.5 4.28595 15.3807 3.16667 14 3.16667C12.6193 3.16667 11.5 4.28596 11.5 5.66667Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
 
   const initialColumns: GridColumnConfig[] = [
     {
@@ -313,13 +302,22 @@ const QuickOrderManagement = () => {
 
   // Initialize columns and data
   useEffect(() => {
-
+    let latestFilters = filterService.applyGridFiltersSet();
+    console.log("useEffect Latest filters applied: ", latestFilters);
     gridState.setColumns(initialColumns);
     gridState.setLoading(true); // Set loading state
     setApiStatus('loading');
 
     let isMounted = true;
-    let searchFilters = [];
+    let dates = {
+      from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      to: format(new Date(), 'yyyy-MM-dd')
+    }
+    // default date range filter: last 30 days added.
+    let searchFilters = [
+      { FilterName: 'CreatedFromDate', FilterValue: dates.from },
+      { FilterName: 'CreatedToDate', FilterValue: dates.to }
+    ];
 
     quickOrderService.getQuickOrders({
       filters: searchFilters
@@ -514,7 +512,13 @@ const QuickOrderManagement = () => {
       key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'text',
       // fetchOptions: makeLazyFetcher("Ref doc type Init")
     },
-    { key: 'QuickCreatedDate', label: 'Quick Order Created Date', type: 'dateRange' },
+    {
+      key: 'QuickCreatedDate', label: 'Quick Order Created Date', type: 'dateRange',
+      defaultValue: {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
+    },
     {
       key: 'CreatedBy', label: 'Quick Order Created By', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Createdby Init")
@@ -556,7 +560,7 @@ const QuickOrderManagement = () => {
   // };
 
   const handleServerSideSearch = async () => {
-    console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
+    // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
     let latestFilters = filterService.applyGridFiltersSet();
     try {
       gridState.setLoading(true);
@@ -596,7 +600,7 @@ const QuickOrderManagement = () => {
               { FilterName: `ToOrderDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
             );
           }
-          else if (key == 'QuickCreatedDate' && value.type === "dateRange") {
+          else if (key == 'QuickCreatedDate') {
             // Split into two separate filter keys
             searchData.push(
               { FilterName: `CreatedFromDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
@@ -609,6 +613,11 @@ const QuickOrderManagement = () => {
               { FilterName: `TotalNet`, FilterValue: (value.value.from ? value.value.from : value.value.to) + '-' + (value.value.to ? value.value.to : value.value.from) },
               // { FilterName: `CreatedToDate`, FilterValue: value.value.to }
             );
+          } else if (key == 'IsBillingFailed') {
+            searchData.push({
+              FilterName: key,
+              FilterValue: value.value === 'Yes' ? '1' : '0'
+            })
           }
           else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
@@ -691,20 +700,27 @@ const QuickOrderManagement = () => {
 
   const clearAllFilters = async () => {
     let latestFilters = filterService.applyGridFiltersSet();
-    console.log("Clearing all filters latestFilters", filterService.applyGridFiltersSet(), latestFilters);
-     try {
+    // console.log("Clearing all filters latestFilters", filterService.applyGridFiltersSet(), latestFilters);
+    try {
       gridState.setLoading(true);
       setApiStatus('loading');
 
       // Convert filters to API format
       const filterParams: Record<string, any> = {};
-      const searchData: any = [];
+      let dates = {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
+      const searchData: any = [
+        { FilterName: 'CreatedFromDate', FilterValue: dates.from },
+        { FilterName: 'CreatedToDate', FilterValue: dates.to }
+      ];
       // Add any current advanced filters
-    
-      console.log('Searching with filters:', filterParams);
+
+      // console.log('Searching with filters:', filterParams);
 
       const response: any = await quickOrderService.getQuickOrders({
-        filters: []
+        filters: searchData
       });
 
       // console.log('Server-side Search API Response:', response);
