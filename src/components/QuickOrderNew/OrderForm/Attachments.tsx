@@ -67,6 +67,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
       // ...formValues.QuickOrder,
       "ModeFlag": "Update",
       "Status": "Fresh",
+      "QuickOrderNo": jsonStore.getQuickUniqueID()
     });
     const fullJson = jsonStore.getJsonData();
     console.log("FULL Plan JSON :: ", fullJson);

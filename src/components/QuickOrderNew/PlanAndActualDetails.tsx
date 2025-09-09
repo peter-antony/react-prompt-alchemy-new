@@ -147,6 +147,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",
         "Status": "Fresh",
+        "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       const fullJson = jsonStore.getQuickOrder();
       try {
@@ -166,6 +167,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
           console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+          onCloseDrawer();
         })
 
       } catch (err) {

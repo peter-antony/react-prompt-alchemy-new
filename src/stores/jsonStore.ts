@@ -44,11 +44,12 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any }) {
+function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
     if (fields.Customer !== undefined) quickOrder.Customer = fields.Customer;
+    if (fields.QuickOrderDate !== undefined) quickOrder.QuickOrderDate = fields.QuickOrderDate;
     if (fields.Currency !== undefined) quickOrder.Currency = fields.Currency;
     if (fields.Vendor !== undefined) quickOrder.Vendor = fields.Vendor;
     if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
