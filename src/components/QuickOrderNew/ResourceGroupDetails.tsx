@@ -561,7 +561,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Departure Init",
           searchTerm: searchTerm || '',
-          offset: 1,
+          offset,
           limit,
         });
         // response.data is already an array, so just return it directly
@@ -599,7 +599,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Arrival Init",
           searchTerm: searchTerm || '',
-          offset: 1,
+          offset,
           limit,
         });
         // response.data is already an array, so just return it directly
@@ -627,7 +627,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'From Date',
       fieldType: 'date',
       width: 'third',
-      value: '2023-02-12',
+      // Bind the value from the response (resourceJsonData.operationalDetails.FromDate if available)
+      value: jsonStore.getResourceGroupOperationalDetails()?.FromDate || '',
       mandatory: true,
       visible: true,
       editable: true,
@@ -649,7 +650,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'To Date',
       fieldType: 'date',
       width: 'third',
-      value: '2029-02-12',
+      // Bind the value from the response (resourceJsonData.operationalDetails.FromDate if available)
+      value: jsonStore.getResourceGroupOperationalDetails()?.ToDate || '',
       mandatory: true,
       visible: true,
       editable: true,
@@ -727,23 +729,13 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     UnitPrice: {
       id: 'UnitPrice',
       label: 'Unit Price',
-      fieldType: 'inputdropdown',
+      fieldType: 'text',
       width: 'half',
       value: '',
       mandatory: true,
       visible: true,
       editable: true,
       order: 4,
-      options: [
-        { label: '€', value: '€' },
-        { label: '$', value: '$' },
-        { label: '£', value: '£' }
-      ],
-      events: {
-        onChange: (value, event) => {
-          console.log('contractType changed:', value);
-        }
-      }
     },
     BillingQty: {
       id: 'BillingQty',

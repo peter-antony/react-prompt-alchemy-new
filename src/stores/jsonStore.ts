@@ -740,16 +740,29 @@ function setResourceType(fields: { Resource?: any, ResourceType?: any }) {
   return false;
 }
 
-function setTariffFields(fields: { tariff?: any, ContractPrice?: any, NetAmount?: any, TariffType?: any }) {
+function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any }) {
   console.log("resourceJsonData === ^^^^", resourceJsonData)
   if (resourceJsonData) {
     if (!resourceJsonData.BillingDetails) {
       resourceJsonData.BillingDetails = {};
     }
     if (fields.tariff !== undefined) resourceJsonData.BillingDetails.Tariff = fields.tariff;
-    if (fields.ContractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.ContractPrice;
-    if (fields.NetAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.NetAmount;
-    if (fields.TariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.TariffType;
+    if(fields.unitPrice !== undefined) resourceJsonData.BillingDetails.UnitPrice = fields.contractPrice;
+    if (fields.contractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.contractPrice;
+    // if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;
+    if (fields.tariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.tariffType;
+    return true;
+  }
+  return false;
+}
+function setTariffDateFields(fields: { fromDate?: any, toDate?: any}) {
+  console.log("resourceJsonData === ^^^^", resourceJsonData)
+  if (resourceJsonData) {
+    if (!resourceJsonData.OperationalDetails) {
+      resourceJsonData.OperationalDetails = {};
+    }
+    if (fields.fromDate !== undefined) resourceJsonData.OperationalDetails.FromDate = fields.fromDate;
+    if (fields.toDate !== undefined) resourceJsonData.OperationalDetails.ToDate = fields.toDate;
     return true;
   }
   return false;
@@ -835,6 +848,7 @@ const jsonStore = {
   setResourceGroupFields,
   setResourceType,
   setTariffFields,
+  setTariffDateFields,
   getResourceGroupBasicDetails,
   getResourceGroupOperationalDetails,
   getResourceGroupBillingDetails,

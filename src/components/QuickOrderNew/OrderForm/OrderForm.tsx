@@ -633,8 +633,21 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         jsonStore.setTariffFields({
           tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : ""
+          unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+        });
+        jsonStore.setTariffDateFields({
+          fromDate: additionalInfo[0].ContractTariffValidFrom
+            ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+            : "",
+          toDate: additionalInfo[0].ContractTariffValidTo
+            ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+            : "",
+          // fromDate: formatDate(additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : ""),
+          // toDate: formatDate(additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : ""),
+          // fromDate: additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : "",
+          // toDate: additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : "",
         });
         // Set ValidFrom and ValidTo in jsonStore using a new set method
         
@@ -655,6 +668,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setLoading(true);
     }
   };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    return new Date(dateString).toISOString().split("T")[0];
+  };
+
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
     return {
