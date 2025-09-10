@@ -634,7 +634,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
         });
         jsonStore.setTariffDateFields({
@@ -805,6 +805,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       QuickOrder: orderDetailsRef.current?.getFormValues() || {},
       // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
     };
+    console.log("FORM VALUES : ",formValues)
     setFormData(formValues.QuickOrder);
 
     jsonStore.setQuickOrder({

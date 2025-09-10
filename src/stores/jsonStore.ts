@@ -749,7 +749,7 @@ function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?
     if (fields.tariff !== undefined) resourceJsonData.BillingDetails.Tariff = fields.tariff;
     if(fields.unitPrice !== undefined) resourceJsonData.BillingDetails.UnitPrice = fields.contractPrice;
     if (fields.contractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.contractPrice;
-    // if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;
+    if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;
     if (fields.tariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.tariffType;
     return true;
   }

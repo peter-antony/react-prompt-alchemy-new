@@ -57,7 +57,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
   const [resourceUniqueId, setResourceUniqueId] = useState(resourceId);
-  const [TariffList,setTariffList] = useState([]);
+  const [TariffList, setTariffList] = useState([]);
   const PlaceList = [
     "Bangalore",
     "New Delhi",
@@ -113,7 +113,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);
-     
+
       // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
       // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
       jsonStore.setResourceBasicDetails({
@@ -152,6 +152,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         console.log("OrderNumber:", resourceGroupID);
+
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
@@ -159,8 +160,13 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+          console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+          console.log("parsedResource:",parsedResource);
+          const index=(parsedResource.length) -1;
 
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+
           const fullJson2 = jsonStore.getJsonData();
           setCurrentStep(2);
           console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
@@ -175,7 +181,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       // }
 
     }
-    
+
     // onSaveDetails();
   };
 
@@ -252,7 +258,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);
-     
+
       // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
       // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
       jsonStore.setResourceBasicDetails({
@@ -298,7 +304,12 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+          console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+          console.log("parsedResource:",parsedResource);
+          const index=(parsedResource.length) -1;
 
+          setResourceUniqueId(parsedResource[index].ResourceUniqueID);
           // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
           onSaveSuccess();
@@ -470,9 +481,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
     } else {
-      console.log("resourceId == ",resourceId )
-      console.log("jsonStore.getBasicDetailsByResourceUniqueID() == ",jsonStore.getResourceGroupBasicDetails() )
-      console.log("jsonStore.GETBILLINGDETAILS() == ",jsonStore.getResourceGroupBillingDetails() )
+      console.log("resourceId == ", resourceId)
+      console.log("jsonStore.getBasicDetailsByResourceUniqueID() == ", jsonStore.getResourceGroupBasicDetails())
+      console.log("jsonStore.GETBILLINGDETAILS() == ", jsonStore.getResourceGroupBillingDetails())
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getResourceGroupBasicDetails() || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getResourceGroupOperationalDetails() || {}));
       // setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getResourceGroup() || {}));
@@ -627,9 +638,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
-                label: `${item.id} || ${item.name}`,
-                value: item.id
-              }
+              label: `${item.id} || ${item.name}`,
+              value: item.id
+            }
             : {})
         }));
       },
@@ -678,9 +689,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
-                label: `${item.id} || ${item.name}`,
-                value: item.id
-              }
+              label: `${item.id} || ${item.name}`,
+              value: item.id
+            }
             : {})
         }));
       },
@@ -716,9 +727,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
-                label: `${item.id} || ${item.name}`,
-                value: item.id
-              }
+              label: `${item.id} || ${item.name}`,
+              value: item.id
+            }
             : {})
         }));
       },
@@ -796,7 +807,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       id: 'ContractPrice',
       label: 'Contract Price',
       fieldType: 'card',
-      value:  '',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
