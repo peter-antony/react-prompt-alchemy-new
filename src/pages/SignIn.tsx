@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authUtils } from "@/utils/auth";
-import { API_CONFIG, ROUTES } from "@/api/config";
+import { API_CONFIG, ROUTES, Config } from "@/api/config";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -10,11 +10,14 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // OAuth Configuration
-  const AUTH_URL = API_CONFIG.BASE_URL + "/connect/authorize";
-  const TOKEN_URL = API_CONFIG.BASE_URL + "/connect/token";
-  const CLIENT_ID = "com.ramco.nebula.clients";
-  const REDIRECT_URI = `${window.location.origin}/Forwardis-dev/callback`; // Must be registered
-  const SCOPE = "openid rvw_impersonate offline_access";
+  const AUTH_URL = Config?.authUrl + "/connect/authorize";
+  const TOKEN_URL = Config?.authUrl + "/connect/token";
+  const CLIENT_ID = Config?.client_id;
+  const REDIRECT_URI = Config?.redirect_uri; // Must be registered
+  const response_type = "code";
+  const SCOPE = Config?.scope;
+  const STATE = "";
+
 
   // Get the intended destination from location state
   const from = (location.state as any)?.from?.pathname || ROUTES.HOME;
@@ -61,9 +64,9 @@ const SignIn: React.FC = () => {
       localStorage.setItem("code_verifier", codeVerifier);
 
       // Build authorization URL
-      const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${encodeURIComponent(
+      const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${encodeURIComponent(
         SCOPE
-      )}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+      )}&state=&code_challenge=${codeChallenge}&code_challenge_method=S256&response_mode=query`;
 
       // Redirect to authorization server
       setTimeout(() => {
@@ -139,16 +142,16 @@ const SignIn: React.FC = () => {
 
   useEffect(() => {
     const delay = setTimeout(() => {
-      // const urlParams = new URLSearchParams(window.location.search);
-      // const code = urlParams.get("code");
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
       
-      // if (code) {
+      if (code) {
         // Handle OAuth callback
-        // handleOAuthCallback();
-      // } else {
+        handleOAuthCallback();
+      } else {
         // Start OAuth flow automatically
-        // startPKCEFlow();
-      // }
+        startPKCEFlow();
+      }
       navigate(ROUTES.HOME, { replace: true });
     }, 2000);
 

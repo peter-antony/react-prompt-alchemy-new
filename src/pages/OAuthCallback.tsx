@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authUtils } from '@/utils/auth';
-import { ROUTES } from '@/api/config';
+import { ROUTES, Config } from '@/api/config';
 import { authService } from '@/api/services/authService';
 
-const CLIENT_ID = "com.ramco.nebula.clients";
-const REDIRECT_URI = `${window.location.origin}/Forwardis-dev/callback`;
+const CLIENT_ID = Config?.client_id;
+const REDIRECT_URI = Config?.redirect_uri;
+const TOKEN_URL = Config?.authUrl + "/connect/token";
+
 
 const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -17,29 +19,44 @@ const OAuthCallback: React.FC = () => {
   const handleOAuthCallback = async () => {
     const code = searchParams.get("code");
     const scope = searchParams.get("scope");
+    const state = searchParams.get("state");
     const session_state = searchParams.get("session_state");
 
     console.log("OAuth Callback Parameters:", {
       code,
       scope,
+      state,
       session_state
     });
 
-    if (code && scope && session_state) {
+    if (true) {
       try {
         setIsLoading(true);
         setError(null);
 
         const codeVerifier = localStorage.getItem("code_verifier") || '';
-
-        // Use the service function for token exchange
-        const data = await authService.exchangeToken({
-          grant_type: "authorization_code",
+        let tokenFormData = new FormData();
+        tokenFormData.append("client_id", CLIENT_ID || '');
+        tokenFormData.append("code", code || '');
+        tokenFormData.append("redirect_uri", REDIRECT_URI || '');
+        tokenFormData.append("code_verifier", codeVerifier || '');
+        tokenFormData.append("grant_type", 'authorization_code');
+        let PayloadParams = {
           client_id: CLIENT_ID,
-          code,
+          code: code,
           redirect_uri: REDIRECT_URI,
           code_verifier: codeVerifier,
-        });
+          grant_type: "authorization_code",
+        };
+        // Use the service function for token exchange
+        const data: any = authService.getAccessToken(TOKEN_URL, tokenFormData);
+        // ({
+        //   grant_type: "authorization_code",
+        //   client_id: CLIENT_ID,
+        //   code,
+        //   redirect_uri: REDIRECT_URI,
+        //   code_verifier: codeVerifier,
+        // });
 
         console.log("Token exchange success:", data);
 
@@ -50,9 +67,9 @@ const OAuthCallback: React.FC = () => {
         localStorage.removeItem("code_verifier");
 
         // Redirect to home page
-        setTimeout(() => {
-          navigate(ROUTES.HOME, { replace: true });
-        }, 3000);
+        // setTimeout(() => {
+        //   navigate(ROUTES.HOME, { replace: true });
+        // }, 3000);
       } catch (err) {
         setError('Failed to complete authentication');
         console.error('Token exchange error:', err);

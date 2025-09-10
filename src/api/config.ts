@@ -1,5 +1,22 @@
-const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
-// const REACT_APP_API_URL = "http://192.168.2.99/v1";
+
+// appSettings will be injected during the build or runtime
+export const Config = {
+  apiUrl: window.AppSettings?.REACT_APP_API_URL,
+  baseAppUrl: window.AppSettings?.REACT_APP_BASE_APP_URL || "http://localhost:3000",
+  mockApiUrl: window.AppSettings?.REACT_APP_MOCK_API_URL || "",
+  loggingEnabled: window.AppSettings?.REACT_APP_ENABLE_LOGGING ?? false,
+  openReplayKey: window.AppSettings?.REACT_APP_OPENREPLAY_KEY || "",
+  client_id: window.AppSettings?.REACT_APP_RIDS_AUTHORIZE_CLIENT_ID,
+  redirect_uri: window.AppSettings?.REACT_APP_BASE_APP_URL + '/' + window.AppSettings?.REACT_APP_BASE_APP_NAME + '/callback',
+  response_type: 'code',
+  scope: window.AppSettings?.REACT_APP_RIDS_AUTHORIZE_SCOPE,
+  response_mode: 'query',
+  authUrl: window.AppSettings?.REACT_APP_RIDS_AUTH_URL,
+  state: '',
+
+} as const;
+// const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
+const REACT_APP_API_URL = "http://192.168.2.20/v1";
 // const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1";
 
 const token: any = localStorage.getItem("token");

@@ -20,26 +20,31 @@ function getMockApiUrl() {
 }
 
 function getGatewayUrl() {
+  // if (window.location.host.indexOf('localhost') > -1) {
+  //   return 'http://hcmwarcnv75.ramco';
+  // } else if (window.location.host.indexOf('hcmwarcnv75') > -1) {
+  //   return 'http://hcmwarcnv75.ramco';
+  // } else if (window.location.host.indexOf('hrpsaasdemo.ramcouat.com') > -1) {
+  //   if (window.location.port) {
+  //     return 'https://hrpsaasdemo.ramcouat.com' + ':' + window.location.port;
+  //   } else {
+  //     return 'https://hrpsaasdemo.ramcouat.com';
+  //   }
+  // } else if (window.location.host.indexOf('hrpmodern.ramcouat.com') > -1) {
+  //   if (window.location.port) {
+  //     return 'https://hrpmodern.ramcouat.com' + ':' + window.location.port;
+  //   } else {
+  //     return 'https://hrpmodern.ramcouat.com';
+  //   }
+  // } else {
+  //   return `${getBaseUrl()}`;
+  // }
+  // return getBaseUrl();
   if (window.location.host.indexOf('localhost') > -1) {
-    return 'http://hcmwarcnv75.ramco';
-  } else if (window.location.host.indexOf('hcmwarcnv75') > -1) {
-    return 'http://hcmwarcnv75.ramco';
-  } else if (window.location.host.indexOf('hrpsaasdemo.ramcouat.com') > -1) {
-    if (window.location.port) {
-      return 'https://hrpsaasdemo.ramcouat.com' + ':' + window.location.port;
-    } else {
-      return 'https://hrpsaasdemo.ramcouat.com';
-    }
-  } else if (window.location.host.indexOf('hrpmodern.ramcouat.com') > -1) {
-    if (window.location.port) {
-      return 'https://hrpmodern.ramcouat.com' + ':' + window.location.port;
-    } else {
-      return 'https://hrpmodern.ramcouat.com';
-    }
+    return 'http://ebswarcnv29.pearl.com';
   } else {
-    return `${getBaseUrl()}`;
+    return 'http://ebswarcnv29.pearl.com';
   }
-  return getBaseUrl();
 }
 
 const _AppSettings = {
@@ -53,4 +58,5 @@ const _AppSettings = {
   REACT_APP_OPENREPLAY_KEY: 'rEbvxU9Fowung1KtwjZk',
   REACT_APP_OPENREPLAY_INGEST_POINT: 'https://analytics.ramcouat.com/ingest',
   REACT_APP_ENABLE_LOGGING: true,
+  REACT_APP_BASE_APP_NAME: 'Forwardis-dev',
 };
