@@ -129,15 +129,15 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
       // Prepare the updated PlanDetails by merging new form values with existing ones
       const updatedPlanDetails = {
-        ...currentPlanDetails,
+        // ...currentPlanDetails,
         "PlanLineUniqueID": -1,
         "ModeFlag": "Insert",
-        // WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
-        // ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
-        // ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
-        // THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
-        // JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
-        // OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
+        WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
+        ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
+        ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
+        THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
+        JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+        OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
       };
       // Set the updated ActualDetails in jsonStore
       // jsonStore.setPlanDetailsJson(updatedPlanDetails);
@@ -150,25 +150,26 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       const fullJson = jsonStore.getQuickOrder();
+      console.log("fullJson ----", fullJson);
       try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
-        console.log(" try", data);
-        //  Get OrderNumber from response
-        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
-        console.log("OrderNumber:", resourceGroupID);
-        //  Fetch the full quick order details
-        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        // const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        // console.log(" try", data);
+        // //  Get OrderNumber from response
+        // const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        // console.log("OrderNumber:", resourceGroupID);
+        // //  Fetch the full quick order details
+        // quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+        //   let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        //   console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        //   console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        //   // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+        //   jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
 
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-          onCloseDrawer();
-        })
+        //   // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        //   const fullJson2 = jsonStore.getJsonData();
+        //   console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+        //   onCloseDrawer();
+        // })
 
       } catch (err) {
         console.log(" catch", err);
@@ -182,7 +183,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // Prepare the updated ActualDetails by merging new form values with existing ones
       const updatedActualDetails = {
         ...currentActualDetails,
-        "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
+        // "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
+        "ActualLineUniqueID": -1,
         "ModeFlag": "Insert",
 
         WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
@@ -214,32 +216,114 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     remarks: "",
   });
 
+  const messageTypes = [
+    "Quick Order Header Quick Code1 Init",
+    "Quick Order Header Quick Code2 Init",
+    "Quick Order Header Quick Code3 Init",
+  ];
+  const [qcList1, setqcList1] = useState<any>();
+  const [qcList2, setqcList2] = useState<any>();
+  const [qcList3, setqcList3] = useState<any>();
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  //API Call for dropdown data
+  const fetchData = async (messageType) => {
+    setLoading(false);
+    setError(null);
+    try {
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType});
+      setApiData(data);
+      console.log("load inside try", data);
+      if (messageType == "Quick Order Header Quick Code1 Init") {
+        setqcList1(JSON.parse(data?.data?.ResponseData) || []);
+        console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code2 Init") {
+        setqcList2(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "Quick Order Header Quick Code3 Init") {
+        setqcList3(JSON.parse(data?.data?.ResponseData) || []);
+      }
+    } catch (err) {
+      setError(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    }
+    finally {
+      setLoading(true);
+    }
+  };
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+    setLoading(false);
+    for (const type of messageTypes) {
+      await fetchData(type);
+    }
+  };
+
   // Basic Details Panel Configuration
   const wagonDetailsConfig: PanelConfig = {
     WagonType: {
       id: "WagonType",
       label: "Wagon Type",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select Type",
       order: 1,
-      options: [{ label: "Other", value: "other" }],
+      // placeholder: "Select Type",
+      // options: [{ label: "Other", value: "other" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Wagon type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     WagonID: {
       id: "WagonID",
       label: "Wagon ID",
-      fieldType: "text",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Enter ID",
       order: 2,
+      // placeholder: "Enter ID",
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Wagon id Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     wagonQWagonQuantityuantity: {
       id: "WagonQuantity",
@@ -323,27 +407,60 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     ContainerType: {
       id: "ContainerType",
       label: "Container Type",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select Type",
       order: 1,
-      options: [{ label: "Other", value: "other" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Container Type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     ContainerID: {
       id: "ContainerID",
       label: "Container ID",
-      fieldType: "text",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Enter ID",
       order: 2,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Container ID Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     ContainerQuantity: {
       id: "ContainerQuantity",
@@ -399,27 +516,60 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     NHM: {
       id: "NHM",
       label: "NHM",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select NHM",
       order: 1,
-      options: [{ label: "NHM", value: "NHM" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "NHM Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     ProductID: {
       id: "ProductID",
       label: "Product ID",
-      fieldType: "text",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Wheat Muslin",
       order: 2,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Product ID Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     ProductQuantity: {
       id: "ProductQuantity",
@@ -439,49 +589,89 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     ClassofStores: {
       id: "ClassofStores",
       label: "Container Tare Weight",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 4,
-      placeholder: "Select Class of Stores",
-      options: [
-        { label: "Truck 4.2", value: "truck-4.2" },
-        { label: "Truck 4.5", value: "truck-4.5" },
-        { label: "Truck 5.2", value: "truck-5.2" },
-      ],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Container Tare Weight UOM Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     UNCode: {
       id: "UNCode",
       label: "UN Code",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 5,
-      placeholder: "Select UN Code",
-      options: [
-        { label: "Block Train Convention", value: "Block Train Convention" },
-      ],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "UN Code Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     DGClass: {
       id: "DGClass",
       label: "DG Class",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 5,
-      placeholder: "Select Class",
-      options: [
-        { label: "Block Train Convention", value: "Block Train Convention" },
-      ],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "DG Class Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
   };
   // THU Details Panel Configuration
@@ -489,27 +679,44 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     THUID: {
       id: "THUID",
       label: "THU ID",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select THU ID",
+      // placeholder: "Select THU ID",
       order: 1,
-      options: [{ label: "THU", value: "THU" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "THU Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     THUSerialNo: {
       id: "THUSerialNo",
       label: "THU Serial No.",
-      fieldType: "select",
+      fieldType: "text",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select THU Serial No.",
       order: 2,
+      placeholder: "Enter Value"
     },
     THUQuantity: {
       id: "THUQuantity",
@@ -550,41 +757,89 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     Departure: {
       id: "Departure",
       label: "Departure",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select THU ID",
       order: 1,
-      options: [{ label: "Departure", value: "Departure" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Departure Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     Arrival: {
       id: "Arrival",
       label: "Arrival",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select THU Serial No.",
       order: 2,
-      options: [{ label: "Arrival", value: "Arrival" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Arrival Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     ActivityLocation: {
       id: "ActivityLocation",
       label: "Activity Location",
-      fieldType: "search",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 3,
-      placeholder: "Search Location",
-      searchData: PlaceList
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Location Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     Activity: {
       id: "Activity",
@@ -645,6 +900,10 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 9,
+      options: [
+        { label: "Loaded", value: "Loaded" },
+        { label: "Empty", value: "Empty" },
+      ]
     },
   };
   // other Details Panel Configuration
@@ -703,18 +962,16 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "QC Userdefined 1",
       fieldType: "inputdropdown",
       width: 'third',
-      value: { dropdown: '', input: '' },
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 5,
-      placeholder: "Select QC",
-
       options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-        { label: 'Test', value: 'Test' }
+        { label: 'Quick order User defined 1 - 1', value: 'Quick order User defined 1 - 1' },
+        { label: 'Quick order User defined 1 - 2', value: 'Quick order User defined 1 - 2' },
       ]
+      // options: qcList1.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     QCUserDefined2: {
       id: "QCUserDefined2",
@@ -728,9 +985,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       placeholder: "Select QC",
       value: { dropdown: '', input: '' },
       options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-        { label: 'Test', value: 'Test' }
+        { label: 'Quick order User defined 2 - 1', value: 'Quick order User defined 2 - 1' },
+        { label: 'Quick order User defined 2 - 2', value: 'Quick order User defined 2 - 2' },
       ]
     },
     QCUserDefined3: {
@@ -746,9 +1002,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       placeholder: "Select QC",
       value: { dropdown: '', input: '' },
       options: [
-        { label: 'QC', value: 'QC' },
-        { label: 'QA', value: 'QA' },
-        { label: 'Test', value: 'Test' }
+        { label: 'Quick order User defined 3 - 1', value: 'Quick order User defined 3 - 1' },
+        { label: 'Quick order User defined 3 - 2', value: 'Quick order User defined 3 - 2' },
       ]
     },
     Remarks1: {
@@ -788,6 +1043,9 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       placeholder: "Enter Remarks",
     },
   };
+
+
+
 
   const toggleDetails = () => {
     setIsOpen(!isOpen);

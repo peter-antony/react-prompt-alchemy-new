@@ -58,11 +58,11 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
 
     return (
       <div ref={ref} className={cn("flex focus-within:z-50 relative gap-px", className)} {...props}>
-        <div className="relative">
+        <div className="relative w-2/5">
           <select
             value={dropdownValue}
             onChange={handleDropdownChange}
-            className="h-8 px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none"
+            className="h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none"
             tabIndex={tabIndex}
             onClick={onDropdownClick}
             onFocus={onFocus}
