@@ -149,11 +149,28 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
 
   // Watch for form changes and notify parent
   useEffect(() => {
+    const parseUnitPrice = (unitPrice: any): number => {
+      if (unitPrice == null) return 0;
+      if (typeof unitPrice === 'number') return unitPrice;
+      if (typeof unitPrice === 'object' && unitPrice.input !== undefined) {
+        return parseFloat(String(unitPrice.input).replace(/[^\d.-]/g, '')) || 0;
+      }
+      return parseFloat(String(unitPrice).replace(/[^\d.-]/g, '')) || 0;
+    };
+
     const subscription = watch((data) => {
       onDataChange?.(data);
+
+      // Derive NetAmount when BillingQty or UnitPrice changes
+      const qty = parseFloat(String(data?.BillingQty ?? '')) || 0;
+      const unit = parseUnitPrice(data?.UnitPrice);
+      const computedNet = Number.isFinite(qty * unit) ? parseFloat((qty * unit).toFixed(2)) : 0;
+      if ((data?.NetAmount ?? 0) !== computedNet) {
+        setValue('NetAmount', computedNet, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
+      }
     });
     return () => subscription.unsubscribe();
-  }, [watch, onDataChange]);
+  }, [watch, onDataChange, setValue]);
 
   const handleConfigSave = async (
     updatedConfig: PanelConfig, 

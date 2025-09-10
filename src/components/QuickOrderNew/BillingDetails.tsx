@@ -100,6 +100,15 @@ export const BillingDetailsPanel: React.FC<BillingDetailsPanelProps> = ({
     setFormData(updatedData);
     onDataChange?.(updatedData);
   };
+
+  const parseUnitPrice = (unitPrice: any): number => {
+    if (unitPrice == null) return 0;
+    if (typeof unitPrice === 'number') return unitPrice;
+    if (typeof unitPrice === 'object' && unitPrice.input !== undefined) {
+      return parseFloat(String(unitPrice.input).replace(/[^\d.-]/g, '')) || 0;
+    }
+    return parseFloat(String(unitPrice).replace(/[^\d.-]/g, '')) || 0;
+  };
   const [unitDropdown, setUnitDropdown] = useState('QC');
   const [unitInput, setUnitInput] = useState('');
   const handleConfigSave = async (
@@ -218,7 +227,15 @@ export const BillingDetailsPanel: React.FC<BillingDetailsPanelProps> = ({
             <Input
               type="number"
               value={formData.BillingQty || ''}
-              onChange={e => handleFieldChange('BillingQty', e.target.value)}
+              onChange={e => {
+                const qty = parseFloat(e.target.value) || 0;
+                const unit = parseUnitPrice(formData.UnitPrice);
+                const net = Number.isFinite(qty * unit) ? parseFloat((qty * unit).toFixed(2)) : 0;
+                // Update both BillingQty and NetAmount
+                const updated = { ...formData, BillingQty: e.target.value, NetAmount: net };
+                setFormData(updated);
+                onDataChange?.(updated);
+              }}
             />
           </div>
         </div>
