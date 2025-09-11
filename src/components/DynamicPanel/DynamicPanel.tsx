@@ -71,6 +71,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       // Or keep your generic logic for all inputdropdowns
       if (config.fieldType === 'inputdropdown' && typeof defaults[fieldId] === 'string') {
         defaults[fieldId] = splitInputDropdownValue(defaults[fieldId]);
+        console.log("defaults", defaults);
       }
     });
     return defaults;
@@ -92,8 +93,12 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       // Convert all inputdropdown fields to string using the utility
       const result: Record<string, any> = { ...values };
       Object.entries(panelConfig).forEach(([fieldId, config]) => {
-        if (config.fieldType === 'inputdropdown' && result[fieldId]) {
-          result[fieldId] = combineInputDropdownValue(result[fieldId] as InputDropdownValue);
+        // if (config.fieldType === 'inputdropdown' && result[fieldId]) {
+        //   result[fieldId] = combineInputDropdownValue(result[fieldId] as InputDropdownValue);
+        // }
+        if (config.fieldType === 'inputdropdown' && typeof result[fieldId] === 'string') {
+          result[fieldId] = splitInputDropdownValue(result[fieldId]);
+          console.log("defaults", result);
         }
       });
       return result;
@@ -397,7 +402,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                      showStatus={showStatusIndicator}
                    />
                   {panelSubTitle && (
-                    <span className="text-xs text-blue-600 font-medium">DB000023/42</span>
+                    <span className="text-xs text-blue-600 font-medium">DB000023</span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -464,7 +469,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                 showStatus={showStatusIndicator}
               />
               {panelSubTitle && (
-                <span onClick={() => setSwitchModalOpen(true)} className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full cursor-pointer">DB000023/42</span>
+                <span onClick={() => setSwitchModalOpen(true)} className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full cursor-pointer">DB000023</span>
               )}
             </div>
             <SettingsButton />

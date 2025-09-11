@@ -17,13 +17,13 @@ const QUICK_ORDER_JSON = {
       "CustomerQuickOrderNo": "",
       "Customer_Supplier_RefNo": "",
       "QCUserDefined1": "",
+      "QCUserDefined1Value": "",
       "Remark1": "",
       "Summary": "",
       "WBS": "",
       "QCUserDefined2": "",
-      "QCUserDefined3": "",
-      "QCUserDefined1Value": "",
       "QCUserDefined2Value": "",
+      "QCUserDefined3": "",
       "QCUserDefined3Value": "",
       "Remarks2": "",
       "Remarks3": "",
@@ -168,8 +168,11 @@ const Plan_Details_JSON = {
     "ToDate": "",
     "ToTime": "12:00:00",
     "QCUserDefined1": "",
+    "QCUserDefined1Value": "",
     "QCUserDefined2": "",
+    "QCUserDefined2Value": "",
     "QCUserDefined3": "",
+    "QCUserDefined3Value": "",
     "Remarks1": "",
     "Remarks2": "",
     "Remarks3": ""
@@ -184,24 +187,32 @@ const Actual_Details_JSON = {
   "WagonDetails": {
     "WagonType": "",
     "WagonID": "",
-    "WagonQuantity": "",
-    "WagonTareWeight": "",
-    "WagonGrossWeight": "",
-    "WagonLength": "",
-    "WagonSequence": ""
+    "WagonQuantity": 0,
+    "WagonQuantityUOM": null,
+    "WagonTareWeight": 0,
+    "WagonTareWeightUOM": null,
+    "WagonGrossWeight": 0,
+    "WagonGrossWeightUOM": null,
+    "WagonLength": 0,
+    "WagonLengthUOM": null,
+    "WagonSequence": 0
   },
   "ContainerDetails": {
     "ContainerType": "",
     "ContainerID": "",
-    "ContainerQuantity": "",
-    "ContainerTareWeight": "",
-    "ContainerLoadWeight": ""
+    "ContainerQuantity": 0,
+    "ContainerQuantityUOM": null,
+    "ContainerTareWeight": 0,
+    "ContainerTareWeightUOM": null,
+    "ContainerLoadWeight": 0,
+    "ContainerLoadWeightUOM": null
   },
   "ProductDetails": {
     "ContainHazardousGoods": "",
     "NHM": "",
     "ProductID": "",
-    "ProductQuantity": "",
+    "ProductQuantity": 0,
+    "ProductQuantityUOM": null,
     "ClassofStores": "",
     "UNCode": "",
     "DGClass": ""
@@ -209,8 +220,10 @@ const Actual_Details_JSON = {
   "THUDetails": {
     "THUID": "",
     "THUSerialNo": "",
-    "THUQuantity": "",
-    "THUWeight": ""
+    "THUQuantity": 0,
+    "THUQuantityUOM": null,
+    "THUWeight": 0,
+    "THUWeightUOM": null
   },
   "JourneyAndSchedulingDetails": {
     "Departure": "",
@@ -220,16 +233,18 @@ const Actual_Details_JSON = {
     "PlannedDateTime": "",
     "RevPlannedDateTime": "",
     "TrainNo": "",
-    "LoadType": ""
   },
   "OtherDetails": {
     "FromDate": "",
-    "FromTime": "",
+    "FromTime": "12:00:00",
     "ToDate": "",
-    "ToTime": "",
+    "ToTime": "12:00:00",
     "QCUserDefined1": "",
+    "QCUserDefined1Value": "",
     "QCUserDefined2": "",
+    "QCUserDefined2Value": "",
     "QCUserDefined3": "",
+    "QCUserDefined3Value": "",
     "Remarks1": "",
     "Remarks2": "",
     "Remarks3": ""

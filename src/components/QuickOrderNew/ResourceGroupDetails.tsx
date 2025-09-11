@@ -13,7 +13,7 @@ import {
   MapPin,
   Link as LinkIcon,
   HousePlug, Box, BaggageClaim, Truck,
-  CloudUpload, EyeOff, Filter
+  CloudUpload, EyeOff, Filter, CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,8 @@ import { SimpleDropDown } from "../Common/SimpleDropDown";
 import { json } from 'stream/consumers';
 import { quickOrderService } from '@/api/services/quickOrderService';
 // import { combineInputDropdownValue } from '@/utils/inputDropdown';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ResourceGroupDetailsFormProps {
   isEditQuickOrder?: boolean,
@@ -58,6 +60,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
   const [resourceUniqueId, setResourceUniqueId] = useState(resourceId);
   const [TariffList, setTariffList] = useState([]);
+  const { toast } = useToast();
+  const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
   const PlaceList = [
     "Bangalore",
     "New Delhi",
@@ -73,9 +77,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder && resourceId) {
-      setCurrentStep(2);
+      // setCurrentStep(2);
       jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
-      toast.success("Resource Group Updated Successfully");
+      // toast.success("Resource Group Updated Successfully");
       const fullResourceJson = jsonStore.getJsonData();
       console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
@@ -151,7 +155,22 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         console.log(" try", data);
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
         console.log("OrderNumber:", resourceGroupID);
+        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+          toast({
+            title: "✅ Form submitted successfully",
+            description: "Your changes have been saved.",
+            variant: "default", // or "success" if you have custom variant
+          });
+          setCurrentStep(2);
+        }else{
+          toast({
+            title: "⚠️ Submission failed",
+            description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+            variant: "destructive", // or "success" if you have custom variant
+          });
+        }
 
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
@@ -175,6 +194,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       } catch (err) {
         console.log(" catch", err);
         setError(`Error fetching API data for Update ResourceGroup`);
+        toast({
+          title: "⚠️ Submission failed",
+          description: "Something went wrong while saving. Please try again.",
+          variant: "destructive", // or "error"
+        });
       }
       // finally {
       //   if (onSaveSuccess) onSaveSuccess();
@@ -211,119 +235,150 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
 
   const onSaveDetails = async () => {
-    const formValues = {
-      basicDetails: basicDetailsRef.current?.getFormValues() || {},
-      operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
-      moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
-      billingDetails: billingDetailsRef.current?.getFormValues() || {}
-    };
-    if (isEditQuickOrder && resourceId) {
+    const isValid = handleValidateAllPanels();
+    if (isValid) {
+      const formValues = {
+        basicDetails: basicDetailsRef.current?.getFormValues() || {},
+        operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
+        moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
+        billingDetails: billingDetailsRef.current?.getFormValues() || {}
+      };
+      if (isEditQuickOrder && resourceId) {
 
-      jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
-      toast.success("Resource Group Updated Successfully");
-      const fullResourceJson = jsonStore.getJsonData();
-      console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
+        jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
+        // toast.success("Resource Group Updated Successfully");
+        const fullResourceJson = jsonStore.getJsonData();
+        console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
-    } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
-      setBasicDetailsData(formValues.basicDetails);
-      setOperationalDetailsData(formValues.operationalDetails);
-      setBillingDetailsData(formValues.billingDetails);
-      jsonStore.setResourceJsonData({
-        ...jsonStore.getResourceJsonData(),
-        "ModeFlag": "Update",
-        "ResourceStatus": "Fresh",
-        "ResourceUniqueID": "",
-        // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
-      })
-      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
-      jsonStore.setResourceBasicDetails({
-        ...jsonStore.getResourceJsonData().BasicDetails,
-        ...formValues.basicDetails
-      });
-      jsonStore.setResourceOperationalDetails({
-        ...jsonStore.getResourceJsonData().OperationalDetails,
-        ...formValues.operationalDetails
-      });
-      jsonStore.setResourceBillingDetails({
-        ...jsonStore.getResourceJsonData().BillingDetails,
-        ...formValues.billingDetails
-      });
-      const fullResourceJson = jsonStore.getResourceJsonData();
-      console.log("FULL RESOURCE JSON :: ", fullResourceJson);
-      jsonStore.pushResourceGroup(fullResourceJson);
-      setResourceUniqueId(fullResourceJson.ResourceUniqueID);
-      console.log("FULL JSON :: ", jsonStore.getQuickOrder());
-
-    } else {
-      setBasicDetailsData(formValues.basicDetails);
-      setOperationalDetailsData(formValues.operationalDetails);
-      setBillingDetailsData(formValues.billingDetails);
-
-      // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
-      // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
-      jsonStore.setResourceBasicDetails({
-        ...jsonStore.getResourceJsonData().BasicDetails,
-        ...formValues.basicDetails,
-        // "Resource":"Equipment",
-        // "ResourceType": "20FT Container",
-      });
-      jsonStore.setResourceOperationalDetails({
-        ...jsonStore.getResourceJsonData().OperationalDetails,
-        ...formValues.operationalDetails
-      });
-      jsonStore.setResourceBillingDetails({
-        ...jsonStore.getResourceJsonData().BillingDetails,
-        ...formValues.billingDetails
-      });
-      jsonStore.setQuickOrder({
-        ...jsonStore.getJsonData().quickOrder,
-        "ModeFlag": "Update",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
-      });
-      jsonStore.setResourceJsonData({
-        ...jsonStore.getResourceJsonData(),
-        "ModeFlag": "Insert",
-        "ResourceStatus": "Fresh",
-        "ResourceUniqueID": -1,
-        // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
-      })
-      const fullResourceJson = jsonStore.getResourceJsonData();
-      jsonStore.pushResourceGroup(fullResourceJson);
-      const fullJson = jsonStore.getQuickOrder();
-      console.log(" BEFORE API FULL  JSON :: ", fullJson);
-      try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
-        console.log(" try", data);
-        //  Get OrderNumber from response
-        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
-        console.log("OrderNumber:", resourceGroupID);
-        //  Fetch the full quick order details
-        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
-          console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
-          console.log("parsedResource:",parsedResource);
-          const index=(parsedResource.length) -1;
-
-          setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          onSaveSuccess();
-          console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+      } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
+        setBasicDetailsData(formValues.basicDetails);
+        setOperationalDetailsData(formValues.operationalDetails);
+        setBillingDetailsData(formValues.billingDetails);
+        jsonStore.setResourceJsonData({
+          ...jsonStore.getResourceJsonData(),
+          "ModeFlag": "Update",
+          "ResourceStatus": "Fresh",
+          "ResourceUniqueID": "",
+          // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
         })
+        localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+        jsonStore.setResourceBasicDetails({
+          ...jsonStore.getResourceJsonData().BasicDetails,
+          ...formValues.basicDetails
+        });
+        jsonStore.setResourceOperationalDetails({
+          ...jsonStore.getResourceJsonData().OperationalDetails,
+          ...formValues.operationalDetails
+        });
+        jsonStore.setResourceBillingDetails({
+          ...jsonStore.getResourceJsonData().BillingDetails,
+          ...formValues.billingDetails
+        });
+        const fullResourceJson = jsonStore.getResourceJsonData();
+        console.log("FULL RESOURCE JSON :: ", fullResourceJson);
+        jsonStore.pushResourceGroup(fullResourceJson);
+        setResourceUniqueId(fullResourceJson.ResourceUniqueID);
+        console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
-      } catch (err) {
-        console.log(" catch", err);
-        setError(`Error fetching API data for Update ResourceGroup`);
+      } else {
+        setBasicDetailsData(formValues.basicDetails);
+        setOperationalDetailsData(formValues.operationalDetails);
+        setBillingDetailsData(formValues.billingDetails);
+
+        // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+        // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
+        jsonStore.setResourceBasicDetails({
+          ...jsonStore.getResourceJsonData().BasicDetails,
+          ...formValues.basicDetails,
+          // "Resource":"Equipment",
+          // "ResourceType": "20FT Container",
+        });
+        jsonStore.setResourceOperationalDetails({
+          ...jsonStore.getResourceJsonData().OperationalDetails,
+          ...formValues.operationalDetails
+        });
+        jsonStore.setResourceBillingDetails({
+          ...jsonStore.getResourceJsonData().BillingDetails,
+          ...formValues.billingDetails
+        });
+        jsonStore.setQuickOrder({
+          ...jsonStore.getJsonData().quickOrder,
+          "ModeFlag": "Update",
+          "QuickOrderNo": jsonStore.getQuickUniqueID()
+        });
+        jsonStore.setResourceJsonData({
+          ...jsonStore.getResourceJsonData(),
+          "ModeFlag": "Insert",
+          "ResourceStatus": "Fresh",
+          "ResourceUniqueID": -1,
+          // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
+        })
+        const fullResourceJson = jsonStore.getResourceJsonData();
+        jsonStore.pushResourceGroup(fullResourceJson);
+        const fullJson = jsonStore.getQuickOrder();
+        console.log(" BEFORE API FULL  JSON :: ", fullJson);
+        try {
+          const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+          console.log(" try", data);
+          //  Get OrderNumber from response
+          const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+          const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          console.log("OrderNumber:", resourceGroupID);
+          console.log("response ===", resourceStatus);
+          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+            toast({
+              title: "✅ Form submitted successfully",
+              description: "Your changes have been saved.",
+              variant: "default", // or "success" if you have custom variant
+            });
+          }else{
+            toast({
+              title: "⚠️ Submission failed",
+              description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+              variant: "destructive", // or "success" if you have custom variant
+            });
+          }
+          //  Fetch the full quick order details
+          quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+            let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+            console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+            console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+            // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+            jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+            console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+            console.log("parsedResource:",parsedResource);
+            const index=(parsedResource.length) -1;
+            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+
+            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            const fullJson2 = jsonStore.getJsonData();
+            onSaveSuccess();
+            console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+          })
+
+        } catch (err) {
+          console.log(" catch", err);
+          setError(`Error fetching API data for Update ResourceGroup`);
+          toast({
+            title: "⚠️ Submission failed",
+            description: "Something went wrong while saving. Please try again.",
+            variant: "destructive", // or "error"
+          });
+        }
+        // finally {
+        //   if (onSaveSuccess) onSaveSuccess();
+        // }
+
       }
-      // finally {
-      //   if (onSaveSuccess) onSaveSuccess();
-      // }
-
+    } else {
+      toast({
+        title: "⚠️ Required fields missing",
+        description: `Please enter required fields`,
+        variant: "destructive",
+      });
     }
     // if (currentStep == 1) {
     //   //Closing ResourceGroupDetails Modal
@@ -331,7 +386,60 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   }
 
+  const handleValidateAllPanels = () => {
+    const results: Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }> = {};
+    let overallValid = true;
+    let totalErrors = 0;
 
+    // Validate Basic Details
+    if (basicDetailsVisible && basicDetailsRef.current) {
+      const basicValidation = basicDetailsRef.current.doValidation();
+      results['basic-details'] = basicValidation;
+      if (!basicValidation.isValid) {
+        overallValid = false;
+        totalErrors += Object.keys(basicValidation.errors).length;
+      }
+    }
+
+    // Validate Operational Details
+    if (operationalDetailsVisible && operationalDetailsRef.current) {
+      const operationalValidation = operationalDetailsRef.current.doValidation();
+      results['operational-details'] = operationalValidation;
+      if (!operationalValidation.isValid) {
+        overallValid = false;
+        totalErrors += Object.keys(operationalValidation.errors).length;
+      }
+    }
+
+    // Validate Billing Details
+    if (billingDetailsVisible && billingDetailsRef.current) {
+      const billingValidation = billingDetailsRef.current.doValidation();
+      results['billing-details'] = billingValidation;
+      if (!billingValidation.isValid) {
+        overallValid = false;
+        totalErrors += Object.keys(billingValidation.errors).length;
+      }
+    }
+
+    setValidationResults(results);
+
+    // Show toast notification
+    // if (overallValid) {
+    //   toast({
+    //     title: "Validation Successful",
+    //     description: "All mandatory fields are filled and valid.",
+    //     variant: "default",
+    //   });
+    // } else {
+    //   toast({
+    //     title: "Validation Failed",
+    //     description: `${totalErrors} validation error(s) found. Please check the highlighted fields.`,
+    //     variant: "destructive",
+    //   });
+    // }
+
+    return overallValid;
+  };
 
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
@@ -461,10 +569,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [selectedType, setSelectedType] = useState("");
 
   const messageTypes = [
-    "Quick Order Resource Combo Init",
-    "ResourceType Init",
-    "Service type Init",
-    "Sub Service type Init",
+    // "Quick Order Resource Combo Init",
+    // "ResourceType Init",
+    // "Service type Init",
+    // "Sub Service type Init",
     "Quick Order Billing Type Init",
     // "Arrival Init",
     // "Departure Init",
@@ -508,25 +616,25 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
       setApiData(data);
       console.log("API Data:", data);
-      if (messageType == "Service type Init") {
-        setServiceTypeList(JSON.parse(data?.data?.ResponseData));
-        console.log("ServiceType data:", apiData.data.ResponseData);
-      }
-      if (messageType == "Sub Service type Init") {
-        setSubServiceTypeList(JSON.parse(data?.data?.ResponseData));
-      }
+      // if (messageType == "Service type Init") {
+      //   setServiceTypeList(JSON.parse(data?.data?.ResponseData));
+      //   console.log("ServiceType data:", apiData.data.ResponseData);
+      // }
+      // if (messageType == "Sub Service type Init") {
+      //   setSubServiceTypeList(JSON.parse(data?.data?.ResponseData));
+      // }
       // if (messageType == "Arrival Init") {
       //   setArrivalList(JSON.parse(data?.data?.ResponseData));
       // }
       // if (messageType == "Departure Init") {
       //   setDepartList(JSON.parse(data?.data?.ResponseData));
       // }
-      if (messageType == "Quick Order Resource Combo Init") {
-        setResourceList(JSON.parse(data?.data?.ResponseData));
-      }
-      if (messageType == "ResourceType Init") {
-        setResourceTypeList(JSON.parse(data?.data?.ResponseData));
-      }
+      // if (messageType == "Quick Order Resource Combo Init") {
+      //   setResourceList(JSON.parse(data?.data?.ResponseData));
+      // }
+      // if (messageType == "ResourceType Init") {
+      //   setResourceTypeList(JSON.parse(data?.data?.ResponseData));
+      // }
       // if (messageType == "Location Init") {
       //   setLocationList(JSON.parse(data?.data?.ResponseData));
       // }
@@ -557,55 +665,153 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     Resource: {
       id: 'Resource',
       label: 'Resource',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: true,
       visible: true,
       editable: true,
       order: 1,
-      options: resourceList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Quick Order Resource Combo Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
       events: {
-        onChange: (value, event) => {
-          console.log('contractType changed:', value);
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
         }
       }
     },
     ResourceType: {
       id: 'ResourceType',
       label: 'Resource Type',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: true,
       visible: true,
       editable: true,
       order: 2,
-      options: resourceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "ResourceType Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+      // options: resourceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     ServiceType: {
       id: 'ServiceType',
       label: 'Service Type',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 3,
-      options: serviceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Service type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+      // options: serviceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
     },
     SubSericeType: {
       id: 'SubSericeType',
       label: 'Sub-Service',
-      fieldType: 'select',
+      fieldType: 'lazyselect',
       width: 'third',
       value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 4,
-      options: subServiceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Sub Service type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+      // options: subServiceTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       // events: {
       //   onBlur: (event) => {
       //     console.log('Description blur event:', event);
@@ -914,7 +1120,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       fieldType: 'inputdropdown',
       width: 'full',
       value: '',
-      mandatory: true,
+      mandatory: false,
       visible: true,
       editable: true,
       order: 1,
@@ -929,7 +1135,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       fieldType: 'inputdropdown',
       width: 'full',
       value: '',
-      mandatory: true,
+      mandatory: false,
       visible: true,
       editable: true,
       order: 2,
@@ -1199,6 +1405,44 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             {currentStep === 1 && (
               <div className="space-y-8">
                 {/* Basic Details Section */}
+
+                {/* Validation Results */}
+                {Object.keys(validationResults).length > 0 && (
+                  <div className="space-y-3">
+                    {Object.entries(validationResults).map(([panelId, result]) => (
+                      <Alert key={panelId} variant={result.isValid ? "default" : "destructive"}>
+                        {result.isValid ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4" />
+                        )}
+                        <AlertDescription>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">
+                              {panelId === 'basic-details' && basicDetailsTitle}
+                              {panelId === 'operational-details' && operationalDetailsTitle}
+                              {panelId === 'billing-details' && billingDetailsTitle}
+                            </span>
+                            <span className={`text-sm ${result.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                              {result.isValid ? 'Valid' : `${Object.keys(result.errors).length} error(s)`}
+                            </span>
+                          </div>
+                          {!result.isValid && result.mandatoryFieldsEmpty.length > 0 && (
+                            <div className="mt-2 text-sm">
+                              <span className="font-medium">Missing mandatory fields:</span>
+                              <ul className="list-disc list-inside ml-4 mt-1">
+                                {result.mandatoryFieldsEmpty.map((field, index) => (
+                                  <li key={index}>{field}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                )}
+
                 {/* <div className="grid grid-cols-12 gap-6"> */}
                 <div className="flex gap-6">
                   <div className='w-3/5'>
