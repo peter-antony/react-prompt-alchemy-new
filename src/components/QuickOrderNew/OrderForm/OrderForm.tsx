@@ -26,6 +26,7 @@ import AddIcon from '../../../assets/images/addIcon.png';
 import ResourceGroupDetailsForm from '../ResourceGroupDetails';
 import CardDetails, { CardDetailsItem } from '../../Common/Card-View-Details';
 import { initializeJsonStore } from '../../../pages/JsonCreater';
+import { useToast } from '@/hooks/use-toast';
 
 interface OrderFormProps {
   onSaveDraft: () => void;
@@ -335,7 +336,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       fieldType: 'lazyselect',
       width: 'half',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 3,
@@ -476,15 +477,34 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
       label: 'Customer Order No.',
-      fieldType: 'search',
+      fieldType: 'lazyselect',
       width: 'full',
       value: '',
       mandatory: false,
       visible: OrderType === 'BUY',
       editable: true,
       order: 6,
-      placeholder: 'IO/0000000042',
-      searchData: orderIds, // <-- This is the local array for suggestions
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Customer Order status Init",
+          OrderType: OrderType,
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
+      // placeholder: 'IO/0000000042',
+      // searchData: orderIds, // <-- This is the local array for suggestions
     },
     Customer_Supplier_RefNo: {
       id: 'Customer_Supplier_RefNo',
@@ -800,59 +820,137 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     }
   }
 
-  const openResourceGroup = async () => {
-    const formValues = {
-      QuickOrder: orderDetailsRef.current?.getFormValues() || {},
-      // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
-    };
-    console.log("FORM VALUES : ",formValues)
-    setFormData(formValues.QuickOrder);
+   // Validation state
+  const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+  const { toast } = useToast();
 
-    jsonStore.setQuickOrder({
-      ...jsonStore.getJsonData().quickOrder,
-      ...formValues.QuickOrder,
-      "ModeFlag": "Insert",
-      "Status": "Fresh",
-      "QuickUniqueID": -1,
-      "QuickOrderNo": "",
-      "QuickOrderDate":quickOrderDate
+  // Get form values from all panels
+  const handleGetAllFormValues = () => {
+    const allFormValues: Record<string, any> = {};
+
+    if (orderDetailsRef.current) {
+      allFormValues.basicDetails = orderDetailsRef.current.getFormValues();
+    }
+    console.log('All Form Values:', allFormValues);
+    
+    toast({
+      title: "Form Values Retrieved",
+      description: "Check the console for all form values.",
+      variant: "default",
     });
 
-    const fullJson = jsonStore.getJsonData();
-    console.log("FULL JSON :: ", fullJson);
+    return allFormValues;
+  };
 
-    try {
-      //  Update resource
-      const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
-      console.log("updateQuickOrderResource result:", res);
+  const openResourceGroup = async () => {
+    const isValid = handleValidateAllPanels();
+    if (isValid) {
+      // const formValuesValidation = handleGetAllFormValues();
+      // console.log("formValuesValidation ===", formValuesValidation);
+      const formValues = {
+        QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+        // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
+      };
+      console.log("FORM VALUES : ",formValues)
+      setFormData(formValues.QuickOrder);
 
-      //  Get OrderNumber from response
-      const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
-      console.log("OrderNumber:", OrderNumber);
+      jsonStore.setQuickOrder({
+        ...jsonStore.getJsonData().quickOrder,
+        ...formValues.QuickOrder,
+        "ModeFlag": "Insert",
+        "Status": "Fresh",
+        "QuickUniqueID": -1,
+        "QuickOrderNo": "",
+        "QuickOrderDate":quickOrderDate
+      });
 
-      //  Fetch the full quick order details
-      quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
-        console.log("fetchRes:: ", fetchRes);
-        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-        const fullJson2 = jsonStore.getJsonData();
-        console.log("FULL JSON 33:: ", fullJson2);
-        console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-        setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-      })
-      //  Update your store or state with the fetched data
+      const fullJson = jsonStore.getJsonData();
+      console.log("FULL JSON :: ", fullJson);
 
+      // try {
+        //  Update resource
+        // const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+        // console.log("updateQuickOrderResource result:", res);
 
-    } catch (err) {
-      console.log("CATCH :: ", err);
-      setError(`Error fetching API data for resource group`);
-    }
-    finally {
-      setResourceGroupOpen(true);
+        // //  Get OrderNumber from response
+        // const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+        // console.log("OrderNumber:", OrderNumber);
+
+        // //  Fetch the full quick order details
+        // quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+        //   console.log("fetchRes:: ", fetchRes);
+        //   let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        //   console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        //   console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        //   jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        //   const fullJson2 = jsonStore.getJsonData();
+        //   console.log("FULL JSON 33:: ", fullJson2);
+        //   console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+        //   setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+        // })
+        //  Update your store or state with the fetched data
+
+      // } catch (err) {
+      //   console.log("CATCH :: ", err);
+      //   setError(`Error fetching API data for resource group`);
+      //   toast({
+      //     title: "⚠️ Submission failed",
+      //     description: "Something went wrong while saving. Please try again.",
+      //     variant: "destructive", // or "error"
+      //   });
+      // }
+      // finally {
+      //   toast({
+      //     title: "✅ Form submitted successfully",
+      //     description: "Your changes have been saved.",
+      //     variant: "default", // or "success" if you have custom variant
+      //   });
+      //   setResourceGroupOpen(true);
+      // }
+    } else {
+      toast({
+        title: "⚠️ Required fields missing",
+        description: `Please enter required fields`,
+        variant: "destructive",
+      });
     }
   }
+
+  const handleValidateAllPanels = () => {
+    const results: Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }> = {};
+    let overallValid = true;
+    let totalErrors = 0;
+
+    // Validate Basic Details
+    if (orderDetailsRef.current) {
+      const basicValidation = orderDetailsRef.current.doValidation();
+      results['basic-details'] = basicValidation;
+      if (!basicValidation.isValid) {
+        overallValid = false;
+        totalErrors += Object.keys(basicValidation.errors).length;
+      }
+    }
+
+    setValidationResults(results);
+
+    // Show toast notification
+    if (overallValid) {
+      toast({
+        title: "Validation Successful",
+        description: "All mandatory fields are filled and valid.",
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Validation Failed",
+        description: `${totalErrors} validation error(s) found. Please check the highlighted fields.`,
+        variant: "destructive",
+      });
+    }
+
+    return overallValid;
+  };
+
   const openUpdateResourceGroup = () => {
     setResourceGroupOpen(true);
   }

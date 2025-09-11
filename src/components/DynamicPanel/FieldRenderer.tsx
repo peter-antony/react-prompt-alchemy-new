@@ -21,11 +21,13 @@ interface FieldRendererProps {
 const getFieldBorderClass = (mandatory: boolean, value: any) => {
   if (mandatory && value && value !== '' && !(typeof value === 'object' && Object.values(value).every(v => !v))) {
     // Value entered for mandatory field: bright green border
-    return "border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.20)]";
+    return;
+    // return "border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.20)]";
   }
   if (mandatory) {
     // Mandatory but empty: red border
-    return "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]";
+    return;
+    // return "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]";
   }
   return "";
 };

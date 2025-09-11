@@ -14,6 +14,11 @@ import { combineInputDropdownValue, InputDropdownValue, splitInputDropdownValue 
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
+  doValidation: () => {
+    isValid: boolean;
+    errors: Record<string, string>;
+    mandatoryFieldsEmpty: string[];
+  };
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
@@ -77,10 +82,10 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
     mode: 'onBlur'
   });
 
-  const { control, watch, setValue, getValues } = form;
+  const { control, watch, setValue, getValues, formState: { errors }, trigger } = form;
   const [isSwitchModalOpen, setSwitchModalOpen] = useState(false);
 
-  // Expose getFormValues method via ref
+  // Expose getFormValues and doValidation methods via ref
   useImperativeHandle(ref, () => ({
     getFormValues: () => {
       const values = getValues();
@@ -92,8 +97,45 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
         }
       });
       return result;
+    },
+    doValidation: () => {
+      const values = getValues();
+      const validationErrors: Record<string, string> = {};
+      const mandatoryFieldsEmpty: string[] = [];
+      
+      // Check mandatory fields
+      Object.entries(panelConfig).forEach(([fieldId, config]) => {
+        if (config.mandatory && config.visible) {
+          const value = values[fieldId];
+          const isEmpty = value === undefined || 
+                         value === null || 
+                         value === '' || 
+                         (Array.isArray(value) && value.length === 0) ||
+                         (typeof value === 'object' && value !== null && Object.keys(value).length === 0);
+          
+          if (isEmpty) {
+            mandatoryFieldsEmpty.push(config.label || fieldId);
+            validationErrors[fieldId] = `${config.label || fieldId} is required`;
+          }
+        }
+      });
+      
+      // Check form validation errors
+      Object.entries(errors).forEach(([fieldId, error]) => {
+        if (error?.message && typeof error.message === 'string') {
+          validationErrors[fieldId] = error.message;
+        }
+      });
+      
+      const isValid = Object.keys(validationErrors).length === 0;
+      
+      return {
+        isValid,
+        errors: validationErrors,
+        mandatoryFieldsEmpty
+      };
     }
-  }), [getValues, panelConfig]);
+  }), [getValues, panelConfig, errors]);
 
   // Load user configuration on mount
   useEffect(() => {
