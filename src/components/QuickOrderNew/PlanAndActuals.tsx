@@ -134,10 +134,10 @@ interface PlanAndActualsProps {
   view: string;
   resouceId?: string;
   isEditQuickOrder?: boolean;
-
+  dataSet?: any;
 }
 
-const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEditQuickOrder }) => {
+const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEditQuickOrder, dataSet }) => {
   const [tab, setTab] = useState<"planned" | "actuals">("planned");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const { toast } = useToast();
@@ -157,7 +157,9 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   useEffect(() => {
     const arrResources = jsonStore.getResourceGroup();
     let arr:any;
-    arr = arrResources.filter((item: any) => item.ResourceUniqueID === resouceId);
+    arr = resouceId
+      ? arrResources.filter((item: any) => item.ResourceUniqueID === resouceId)
+      : arrResources;
     setPlans(arr?.[0]?.PlanDetails?.length ?? 0);
     setActuals(arr?.[0]?.ActualDetails?.length ?? 0);
     console.log('plan and actuals data--', arr);

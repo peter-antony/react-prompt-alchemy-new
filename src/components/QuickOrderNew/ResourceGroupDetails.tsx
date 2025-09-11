@@ -1332,19 +1332,20 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     console.log(`Field: ${field}, Value: ${value}`);
   };
 
+   const [planDataSets, setPlanDataSets] = useState<any[]>([]); // <-- planDataSets state
+  const [planDataVersion, setPlanDataVersion] = useState(0); // <-- version for forcing PlanAndActuals update
+
   const handlePlanActualsDataFetch = (status: boolean) => {
     console.log('Plan created and show grid data:', status);
     setIsPlanActualsVisible(status);
     if (status) {
-      // Reload resource group grid data when PlanActuals becomes visible
-      if (isEditQuickOrder) {
-        const resourceGroups = jsonStore.getAllResourceGroups();
-        setResourceData(resourceGroups);
-        console.log("Resource Groups Data (reloaded):", resourceGroups);
-      } else {
-        const resourceGroups = jsonStore.getAllResourceGroups();
-        setResourceData(resourceGroups);
-      }
+      // Always force a new array reference to trigger grid re-render
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      setResourceData(resourceGroups ? [...resourceGroups] : []);
+      setPlanDataSets(resourceGroups ? [...resourceGroups] : []);
+      setPlanDataVersion(v => v + 1); // increment version to force update
+      setResourceUniqueId(resourceId);
+      console.log("Resource Groups Data (reloaded):", resourceGroups);
     }
   }
 
@@ -1648,9 +1649,15 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                     </div>
                   </div>
                 )}
-                {isPlanActualsVisible && (
+                  {isPlanActualsVisible && (
                   // <div className="">
-                    <PlanAndActuals view={view} resouceId={resourceId} isEditQuickOrder={isEditQuickOrder} />
+                    <PlanAndActuals
+                      key={planDataVersion}
+                      view={view}
+                      resouceId={resourceId}
+                      isEditQuickOrder={isEditQuickOrder}
+                      dataSet={planDataSets}
+                    />
                   // </div>
                 )}
               </>
