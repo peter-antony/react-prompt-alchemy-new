@@ -127,7 +127,55 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     if (planType === "plan") {
       // Get the current PlanDetails from jsonStore
       const currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
-
+      // Add additional data to formValues.wagonNewDetails
+      // console.log("formValues before ====", formValues.wagonNewDetails);
+      // formValues.wagonNewDetails = {
+      //   ...formValues.wagonNewDetails,
+      //   "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
+      //   "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.input,
+      //   "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
+      //   "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.input,
+      //   "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
+      //   "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.input,
+      //   "WagonLength": formValues.wagonNewDetails?.WagonLength?.dropdown,
+      //   "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.input,
+      //   // Add more fields as needed
+      // };
+      // formValues.containerDetails = {
+      //   ...formValues.containerDetails,
+      //   "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.dropdown,
+      //   "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantityUOM?.input,
+      //   "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.dropdown,
+      //   "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeightUOM?.input,
+      //   "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
+      //   "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.input,
+      //   // Add more fields as needed
+      // };
+      // formValues.productDetails = {
+      //   ...formValues.containerDetails,
+      //   "ProductQuantity": formValues.containerDetails?.ProductQuantity?.dropdown,
+      //   "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.input,
+      //   // Add more fields as needed
+      // };
+      // formValues.thuDetails = {
+      //   ...formValues.thuDetails,
+      //   "THUQuantity": formValues.thuDetails?.THUQuantity?.dropdown,
+      //   "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.input,
+      //   "THUWeight": formValues.thuDetails?.THUWeight?.dropdown,
+      //   "THUWeightUOM": formValues.thuDetails?.THUWeight?.input,
+      //   // Add more fields as needed
+      // };
+      // formValues.otherDetails = {
+      //   ...formValues.otherDetails,
+      //   "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
+      //   "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
+      //   "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
+      //   "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
+      //   "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
+      //   "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
+      //   // Add more fields as needed
+      // };
+      // console.log("formValues after ====", formValues.wagonNewDetails);
       // Prepare the updated PlanDetails by merging new form values with existing ones
       const updatedPlanDetails = {
         // ...currentPlanDetails,
@@ -142,6 +190,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       // Set the updated ActualDetails in jsonStore
       // jsonStore.setPlanDetailsJson(updatedPlanDetails);
+      console.log("RESOURCE ID : ", updatedPlanDetails)
       console.log("RESOURCE ID : ",resourceId)
       jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
       jsonStore.setQuickOrder({
@@ -169,8 +218,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
           console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-          onCloseDrawer();
           onApiSuccess(true);
+          onCloseDrawer();
         })
 
       } catch (err) {
@@ -201,10 +250,37 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // Set the updated ActualDetails in jsonStore
       jsonStore.setActualDetailsJson(updatedActualDetails);
       jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails)
+      const fullJson = jsonStore.getJsonData();
+      console.log("FULL Plan&Actual JSON :: ", fullJson);
+      try {
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        console.log(" try", data);
+        //  Get OrderNumber from response
+        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", resourceGroupID);
+        //  Fetch the full quick order details
+        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+          onApiSuccess(true);
+          onCloseDrawer();
+        })
+
+      } catch (err) {
+        console.log(" catch", err);
+        onApiSuccess(false);
+        // setError(`Error fetching API data for Update ResourceGroup`);
+      }
       console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
     }
-    const fullJson = jsonStore.getJsonData();
-    console.log("FULL Plan&Actual JSON :: ", fullJson);
+    
   };
 
   const [billingData, setBillingData] = useState({
@@ -223,19 +299,46 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     "Quick Order Header Quick Code1 Init",
     "Quick Order Header Quick Code2 Init",
     "Quick Order Header Quick Code3 Init",
+    "Weight UOM Init",
+    "Wagon Length UOM Init",
+    "Wagon Qty UOM Init",
+    "Container Qty UOM Init",
+    "Product Qty UOM Init",
+    "THU Qty UOM Init",
   ];
-  const [qcList1, setqcList1] = useState<any>();
-  const [qcList2, setqcList2] = useState<any>();
-  const [qcList3, setqcList3] = useState<any>();
+  const [qcList1, setqcList1] = useState<any>([]);
+  const [qcList2, setqcList2] = useState<any>([]);
+  const [qcList3, setqcList3] = useState<any>([]);
+  const [weightList, setWeightList] = useState<any>([]);
+  const [wagonQty, setWagonQty] = useState<any>([]);
+  const [weightLength, setWeightLength] = useState<any>([]);
+  const [containerQty, setContainerQty] = useState<any>([]);
+  const [productQty, setProductQty] = useState<any>([]);
+  const [thuQty, setThuQty] = useState<any>([]);
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+    setLoading(false);
+    for (const type of messageTypes) {
+      await fetchData(type);
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+
+  }, []);
+
   //API Call for dropdown data
   const fetchData = async (messageType) => {
+    console.log("fetch data");
     setLoading(false);
     setError(null);
     try {
+      console.log("fetch try");
       const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType});
       setApiData(data);
       console.log("load inside try", data);
@@ -249,6 +352,24 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       if (messageType == "Quick Order Header Quick Code3 Init") {
         setqcList3(JSON.parse(data?.data?.ResponseData) || []);
       }
+      if (messageType == "Weight UOM Init") {
+        setWeightList(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "Wagon Qty UOM Init") {
+        setWagonQty(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "Wagon Length UOM Init") {
+        setWeightLength(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "Container Qty UOM Init") {
+        setContainerQty(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "Product Qty UOM Init") {
+        setProductQty(JSON.parse(data?.data?.ResponseData) || []);
+      }
+      if (messageType == "THU Qty UOM Init") {
+        setThuQty(JSON.parse(data?.data?.ResponseData) || []);
+      }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
       // setApiData(data);
@@ -257,13 +378,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       setLoading(true);
     }
   };
-  // Iterate through all messageTypes
-  const fetchAll = async () => {
-    setLoading(false);
-    for (const type of messageTypes) {
-      await fetchData(type);
-    }
-  };
+  
 
   // Basic Details Panel Configuration
   const wagonDetailsConfig: PanelConfig = {
@@ -328,7 +443,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         }));
       },
     },
-    wagonQWagonQuantityuantity: {
+    WagonQuantity: {
       id: "WagonQuantity",
       label: "Wagon Quantity",
       fieldType: "inputdropdown",
@@ -338,10 +453,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 3,
-      options: [
-        { label: "EA", value: "EA" },
-        { label: "EU", value: "EU" },
-      ],
+      options: wagonQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonTareWeight: {
       id: "WagonTareWeight",
@@ -354,11 +466,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 4,
-      options: [
-        { label: "TON", value: "TON" },
-        { label: "KG", value: "KG" },
-        { label: "ST", value: "ST" },
-      ]
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonGrossWeight: {
       id: "WagonGrossWeight",
@@ -370,11 +478,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 5,
       value: "",
-      options: [
-        { label: "TON", value: "TON" },
-        { label: "KG", value: "KG" },
-        { label: "ST", value: "ST" },
-      ]
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonLength: {
       id: "WagonLength",
@@ -385,11 +489,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 6,
-      value: { dropdown: 'Meter', input: '25' },
-      options: [
-        { label: "M", value: "Meter" },
-        { label: "Feet", value: "Feet" },
-      ]
+      value: '',
+      options: weightLength?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonSequence: {
       id: "WagonSequence",
@@ -475,10 +576,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
-      options: [
-        { label: "EA", value: "EA" },
-        { label: "EU", value: "EU" },
-      ],
+      options: containerQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerTareWeight: {
       id: "ContainerTareWeight",
@@ -490,11 +588,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 4,
       value: "",
-      options: [
-        { label: "TON", value: "TON" },
-        { label: "KG", value: "KG" },
-        { label: "ST", value: "ST" },
-      ]
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerLoadWeight: {
       id: "ContainerLoadWeight",
@@ -507,11 +601,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
-      options: [
-        { label: "TON", value: "TON" },
-        { label: "KG", value: "KG" },
-        { label: "ST", value: "ST" },
-      ]
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
   };
   // Product Details Panel Configuration
@@ -584,10 +674,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
-      options: [
-        { label: "EA", value: "EA" },
-        { label: "EU", value: "EU" },
-      ],
+      options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ClassofStores: {
       id: "ClassofStores",
@@ -731,10 +818,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
-      options: [
-        { label: "EA", value: "EA" },
-        { label: "EU", value: "EU" },
-      ],
+      options: thuQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     THUWeight: {
       id: "THUWeight",
@@ -748,11 +832,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       order: 5,
       placeholder: "Enter THU Weight",
       value: "",
-      options: [
-        { label: "TON", value: "TON" },
-        { label: "KG", value: "KG" },
-        { label: "ST", value: "ST" },
-      ]
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
   };
   // journey & scheduling Details Panel Configuration
@@ -867,7 +947,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 6,
-      placeholder: "10-Mar-2025",
+      placeholder: "DD-MM-YYYY",
     },
     RevPlannedDateTime: {
       id: "RevPlannedDateTime",
@@ -879,7 +959,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
-      placeholder: "10-Mar-2025",
+      placeholder: "DD-MM-YYYY",
     },
     TrainNo: {
       id: "TrainNo",
@@ -970,11 +1050,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
-      options: [
-        { label: 'Quick order User defined 1 - 1', value: 'Quick order User defined 1 - 1' },
-        { label: 'Quick order User defined 1 - 2', value: 'Quick order User defined 1 - 2' },
-      ]
-      // options: qcList1.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      // options: [
+      //   { label: 'Quick order User defined 1 - 1', value: 'Quick order User defined 1 - 1' },
+      //   { label: 'Quick order User defined 1 - 2', value: 'Quick order User defined 1 - 2' },
+      // ]
+      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     QCUserDefined2: {
       id: "QCUserDefined2",
@@ -987,10 +1067,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       order: 6,
       placeholder: "Select QC",
       value: { dropdown: '', input: '' },
-      options: [
-        { label: 'Quick order User defined 2 - 1', value: 'Quick order User defined 2 - 1' },
-        { label: 'Quick order User defined 2 - 2', value: 'Quick order User defined 2 - 2' },
-      ]
+      options: qcList2?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     QCUserDefined3: {
       id: "QCUserDefined3",
@@ -1004,10 +1081,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       order: 7,
       placeholder: "Select QC",
       value: { dropdown: '', input: '' },
-      options: [
-        { label: 'Quick order User defined 3 - 1', value: 'Quick order User defined 3 - 1' },
-        { label: 'Quick order User defined 3 - 2', value: 'Quick order User defined 3 - 2' },
-      ]
+      options: qcList3?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks1: {
       id: "Remarks1",
@@ -1046,9 +1120,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       placeholder: "Enter Remarks",
     },
   };
-
-
-
 
   const toggleDetails = () => {
     setIsOpen(!isOpen);
@@ -1376,13 +1447,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                   <h3 className={`text-sm font-medium`}>Resource Group</h3>
                 </div>
                 <div className="w-full">
-                  <SimpleDropDown
+                  {/* <SimpleDropDown
                     list={resourceGroups}
                     value={resourceGroups[0].description}
                     onValueChange={(value) =>
                       handleInputChange("resourceGroup", value)
                     }
-                  />
+                  /> */}
                 </div>
               </div>
               {/* <div className="h-8 w-px bg-blue-600 mt-2 ml-4"></div> */}
@@ -1514,7 +1585,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                     {(() => {
                       let currentTabIndex = 1;
                       const panels = [];
-                      if (wagonDetailsVisible) {
+                      if (wagonDetailsVisible && loading) {
                         const wagonDetailsVisibleCount = Object.values(wagonDetailsVisible).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -1539,7 +1610,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                         currentTabIndex += wagonDetailsVisibleCount;
                       }
 
-                      if (containerDetailsConfig) {
+                      if (containerDetailsConfig && loading) {
                         const containerDetailsVisibleCount = Object.values(containerDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -1562,7 +1633,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                         currentTabIndex += containerDetailsVisibleCount;
                       }
 
-                      if (productDetailsConfig) {
+                      if (productDetailsConfig && loading) {
                         const productDetailsVisibleCount = Object.values(productDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -1585,7 +1656,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                         currentTabIndex += productDetailsVisibleCount;
                       }
 
-                      if (thuDetailsConfig) {
+                      if (thuDetailsConfig && loading) {
                         const thuDetailsVisibleCount = Object.values(thuDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
@@ -1631,7 +1702,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                         currentTabIndex += journeyDetailsVisibleCount;
                       }
 
-                      if (otherDetailsConfig) {
+                      if (otherDetailsConfig && loading) {
                         const otherDetailsVisibleCount = Object.values(otherDetailsConfig).filter(config => config.visible).length;
                         panels.push(
                           <DynamicPanel
