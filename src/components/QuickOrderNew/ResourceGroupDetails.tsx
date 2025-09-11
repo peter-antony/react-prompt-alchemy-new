@@ -254,6 +254,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
+        setMoreInfoDetailsData(formValues.moreInfoDetailsRef);
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
           "ModeFlag": "Update",
@@ -274,6 +275,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...jsonStore.getResourceJsonData().BillingDetails,
           ...formValues.billingDetails
         });
+        jsonStore.setResourceMoreInfoDetails({
+          ...jsonStore.getResourceJsonData().MoreRefDocs,
+          ...formValues.moreInfoDetailsRef
+        })
+        jsonStore.setResourceJsonData({
+          ...jsonStore.getResourceJsonData(),
+          "PrimaryDocType":formValues.moreInfoDetailsRef?.PrimaryDocType?.dropdown ,
+          "PrimaryDocTypeValue":formValues.moreInfoDetailsRef?.PrimaryDocType?.input ,
+          "SecondaryDocType":formValues.moreInfoDetailsRef?.SecondaryDocType?.dropdown,
+          "SecondaryDocTypeValue":formValues.moreInfoDetailsRef?.SecondaryDocType?.input
+          // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
+        })
         const fullResourceJson = jsonStore.getResourceJsonData();
         console.log("FULL RESOURCE JSON :: ", fullResourceJson);
         jsonStore.pushResourceGroup(fullResourceJson);
@@ -284,7 +297,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
-
+        setMoreInfoDetailsData(formValues.moreInfoDetailsRef);
         // localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
         // setResourceUniqueId("R0" + localStorage.getItem('resouceCount'));
         jsonStore.setResourceBasicDetails({
@@ -301,6 +314,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...jsonStore.getResourceJsonData().BillingDetails,
           ...formValues.billingDetails
         });
+        jsonStore.setResourceMoreInfoDetails({
+          ...jsonStore.getResourceJsonData().MoreRefDocs,
+          ...formValues.moreInfoDetailsRef
+        })
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
           "ModeFlag": "Update",
@@ -311,6 +328,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "ModeFlag": "Insert",
           "ResourceStatus": "Fresh",
           "ResourceUniqueID": -1,
+          "PrimaryDocType":formValues.moreInfoDetailsRef?.PrimaryDocType?.dropdown ,
+          "PrimaryDocTypeValue":formValues.moreInfoDetailsRef?.PrimaryDocType?.input ,
+          "SecondaryDocType":formValues.moreInfoDetailsRef?.SecondaryDocType?.dropdown,
+          "SecondaryDocTypeValue":formValues.moreInfoDetailsRef?.SecondaryDocType?.input
+
           // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
         })
         const fullResourceJson = jsonStore.getResourceJsonData();
@@ -468,14 +490,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   function normalizeMoreInfoDetails(data) {
     if (data)
       return {
-        OperationalLocation: data.OperationalLocation,
-        DepartPoint: data.DepartPoint,
-        ArrivalPoint: data.ArrivalPoint,
-        FromDate: "",
-        FromTime: data.FromTime,
-        ToDate: "",
-        ToTime: data.ToTime,
-        Remarks: data.Remarks,
+      PrimaryDocTypeValue:data.PrimaryDocTypeValue,
+      SecondaryDocType:data.SecondaryDocType,
+      SecondaryDocTypeValue:data.SecondaryDocTypeValue,
+      PrimaryDocDate:data.PrimaryDocDate,
+      SecondaryDocDate:data.SecondaryDocDate
       };
   }
 
@@ -1114,7 +1133,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   //MORE INFO DETAILS
   const moreInfoPanelConfig: PanelConfig = {
-    PrimaryDocTypeandNo: {
+    PrimaryDocType: {
       id: 'PrimaryDocType',
       label: 'Primary Doc Type and No.',
       fieldType: 'inputdropdown',
@@ -1129,7 +1148,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         { label: 'IO-Buy/Rent', value: 'IO-Buy/Rent' },
       ]
     },
-    SecondaryDocTypeandNo: {
+    SecondaryDocType: {
       id: 'SecondaryDocType',
       label: 'Secondary Doc Type and No.',
       fieldType: 'inputdropdown',

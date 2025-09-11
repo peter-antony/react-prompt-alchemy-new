@@ -86,15 +86,23 @@ const Resource_Group_JSON = {
     "BillingRemarks": "",
     "InternalOrderNo": null
   },
-  "MoreRefDocs": [
+  "MoreRefDocs": 
+    // {
+    //   "DocCategory": "",
+    //   "DocType": "",
+    //   "DocValue": "",
+    //   "DocDate": "",
+    //   "DocRemarks": ""
+    // }
     {
-      "DocCategory": "",
-      "DocType": "",
-      "DocValue": "",
-      "DocDate": "",
-      "DocRemarks": ""
+      "PrimaryDocType":null,
+      "PrimaryDocTypeValue":null,
+      "SecondaryDocType":null,
+      "SecondaryDocTypeValue":null,
+      "PrimaryDocDate":null,
+      "SecondaryDocDate":null
     }
-  ],
+  ,
   "Attachments": {
     "TotalAttachment": "0",
     "AttachItems": [

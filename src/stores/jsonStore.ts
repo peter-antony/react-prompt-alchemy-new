@@ -484,6 +484,19 @@ function setResourceBillingDetails(billingDetails: any) {
   }
   return false;
 }
+function setResourceMoreInfoDetails(moreInfo: any) {
+  if (
+    resourceJsonData &&
+    typeof resourceJsonData === 'object'
+  ) {
+    resourceJsonData.MoreRefDocs = {
+      ...(resourceJsonData.MoreRefDocs || {}),
+      ...moreInfo
+    };
+    return true;
+  }
+  return false;
+}
 
 function pushResourceGroup(resourceGroupObj: any) {
   if (
@@ -789,6 +802,17 @@ function getResourceGroupBillingDetails() {
   return undefined;
 }
 
+function setResourceMoreRefDocs(moreRefDocs: any) {
+  if (
+    resourceJsonData &&
+    typeof resourceJsonData === 'object'
+  ) {
+    resourceJsonData.MoreRefDocs = moreRefDocs;
+    return true;
+  }
+  return false;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -828,6 +852,7 @@ const jsonStore = {
   setResourceBasicDetails,
   setResourceOperationalDetails,
   setResourceBillingDetails,
+  setResourceMoreInfoDetails,
   pushResourceGroup,
   updateResourceGroupDetailsByUniqueID,
   getOperationalDetailsByResourceUniqueID,
@@ -852,6 +877,7 @@ const jsonStore = {
   getResourceGroupBasicDetails,
   getResourceGroupOperationalDetails,
   getResourceGroupBillingDetails,
+  setResourceMoreRefDocs,
 };
 
 export default jsonStore;
