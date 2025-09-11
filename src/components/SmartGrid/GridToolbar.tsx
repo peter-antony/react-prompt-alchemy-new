@@ -147,7 +147,8 @@ export function GridToolbar({
   const hasActiveServersideFilters = Object.keys(currentActiveFilters).length > 0;
 
   return (
-    <div className="flex items-center justify-between w-full bg-gray-50 mb-4">
+    <div className={`flex items-center justify-between w-full
+      ${(gridTitle == 'Plan List' || gridTitle == 'Actual List') ? 'mb-0 p-4' : 'mb-4'}`}>
       {/* Left side - Grid Title and Count */}
       <div className="flex items-center">
         {gridTitle && (
@@ -155,7 +156,7 @@ export function GridToolbar({
             <span className="text-gray-900 font-semibold text-lg">
               {gridTitle}
             </span>
-            {recordCount !== undefined && gridTitle !== 'Plan List' && (
+            {recordCount !== undefined && (gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
               <span
                 className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium"
                 aria-label={`${gridTitle} count ${recordCount}`}
@@ -368,7 +369,7 @@ export function GridToolbar({
         )} */}
 
         {/* Column Visibility Manager */}
-        {gridTitle !== 'Plan List' && (
+        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List')  && (
           <ColumnVisibilityManager
             columns={columns}
             preferences={preferences}
@@ -379,7 +380,7 @@ export function GridToolbar({
           />
        )}
 
-        {gridTitle !== 'Plan List' && (
+        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
           <Button
             variant="ghost"
             size="sm"
@@ -404,7 +405,7 @@ export function GridToolbar({
         </Button> */}
         
 
-        {gridTitle === 'Plan List' && (
+        {(gridTitle === 'Plan List' || gridTitle === 'Actual List') && (
           <Button
             variant="ghost"
             size="sm"
@@ -462,7 +463,7 @@ export function GridToolbar({
           </DropdownMenu>
         )} */}
         
-        {gridTitle !== 'Plan List' && (
+        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
           <div className="h-8 w-1 flex justify-center">
             <div className="" style={{
               'width': '1px',

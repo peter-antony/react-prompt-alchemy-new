@@ -8,6 +8,10 @@ import jsonStore from "@/stores/jsonStore";
 import { useNavigate } from 'react-router-dom';
 import { SideDrawer } from '../Common/SideDrawer';
 import { PlanAndActualDetails } from "./PlanAndActualDetails";
+import { SmartGridWithGrouping } from "@/components/SmartGrid/SmartGridWithGrouping";
+import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
+import { dateFormatter } from '@/utils/formatter';
+
 const summaryStats = [
   {
     icon: <Truck className="w-5 h-5 text-blue-500" />,
@@ -39,9 +43,9 @@ const summaryStats = [
   }
 ];
 
-const initialColumns: GridColumnConfig[] = [
+const initialColumns = (tab: any): GridColumnConfig[] => [
   {
-    key: 'id',
+    key: 'WagonID',
     label: 'Wagon Id Type',
     type: 'Link',
     sortable: true,
@@ -52,7 +56,15 @@ const initialColumns: GridColumnConfig[] = [
   {
     key: 'containerID',
     label: 'Container Id Type',
-    type: 'TextWithTwoRow',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
+  },
+  {
+    key: 'ProductID',
+    label: 'Product ID',
+    type: 'Text',
     sortable: true,
     editable: false,
     subRow: false
@@ -75,7 +87,7 @@ const initialColumns: GridColumnConfig[] = [
   },
   {
     key: 'planFromToDate',
-    label: 'Plan From & To Date',
+    label: tab === 'planned' ? 'Plan From & To Date' : 'Actual From & To Date',
     type: 'Text',
     sortable: true,
     editable: false,
@@ -84,6 +96,14 @@ const initialColumns: GridColumnConfig[] = [
   {
     key: 'price',
     label: 'Price',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: false
+  },
+  {
+    key: 'activity',
+    label: 'Activity',
     type: 'Text',
     sortable: true,
     editable: false,
@@ -129,23 +149,52 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     value: null,
     resourceId: null,
   });
+  const [plans, setPlans] = useState(0);
+  const [actuals, setActuals] = useState(0);
+  const [gridTitle, setGridTitle] = useState('Plan List');
+
   // Fetch and map plan data when resourceId changes
   useEffect(() => {
-    const arr = jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId);
-    const mapped = arr.map((plan: any) => ({
-      id: `${plan.WagonDetails?.WagonID || ''}-${plan.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-      containerID: `${plan.ContainerDetails?.ContainerID || ''} ${plan.ContainerDetails?.ContainerType || ''}`.trim(),
-      hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
-      departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
-      planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
-      price: '$ 1395.00', // Replace with actual price if needed
-      draftBill: 'DB/0000234', // Replace with actual draft bill if needed
-      PlanLineUniqueID: plan.PlanLineUniqueID || '',
-    }));
+    const arr = jsonStore.getResourceGroup();
+    setPlans(arr?.[0]?.PlanDetails?.length ?? 0);
+    setActuals(arr?.[0]?.ActualDetails?.length ?? 0);
+    console.log('plan and actuals data--', arr);
+    let mapped: any = [];
+    if (tab === 'planned') {
+      setGridTitle('Plan List');
+      mapped = (arr?.[0]?.PlanDetails ?? []).map((plan: any) => ({
+        WagonID: `${plan?.WagonDetails?.[0]?.WagonID || ''}-${plan?.WagonDetails?.[0].WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        containerID: `${plan?.ContainerDetails?.[0]?.ContainerID || ''} - ${plan?.ContainerDetails?.[0]?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ProductID: plan.ProductDetails?.[0]?.ProductID || '-',
+        hazardousGoods: plan.ProductDetails?.[0]?.ContainHazardousGoods || '-',
+        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.[0]?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.[0]?.Arrival || ''}`.trim(),
+        planFromToDate: dateFormatter(plan?.OtherDetails?.[0]?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.[0]?.ToDate),
+        // '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
+        activity: plan?.JourneyAndSchedulingDetails?.[0]?.Activity,
+        price: '€ 1395.00', // Replace with actual price if needed
+        draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+        PlanLineUniqueID: plan?.PlanLineUniqueID || '',
+      }));
+    } else {
+      setGridTitle('Actual List');
+      mapped = (arr?.[0]?.ActualDetails ?? []).map((plan: any) => ({
+        WagonID: `${plan?.WagonDetails?.[0]?.WagonID || ''}-${plan?.WagonDetails?.[0].WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        containerID: `${plan?.ContainerDetails?.[0]?.ContainerID || ''} - ${plan?.ContainerDetails?.[0]?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ProductID: plan.ProductDetails?.[0]?.ProductID || '-',
+        hazardousGoods: plan.ProductDetails?.[0]?.ContainHazardousGoods || '-',
+        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.[0]?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.[0]?.Arrival || ''}`.trim(),
+        planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
+        activity: plan?.JourneyAndSchedulingDetails?.[0]?.Activity,
+        price: '€ 1395.00', // Replace with actual price if needed
+        draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+        PlanLineUniqueID: plan?.PlanLineUniqueID || '',
+      }));
+    }
     setPlanAndActualListData(mapped);
-    gridState.setColumns(initialColumns);
+    gridState.setColumns(initialColumns(tab));
+    console.log('grid--------- Data:', mapped);
     gridState.setGridData(mapped);
-  }, [resouceId]);
+  }, [resouceId, tab]);
 
   // Log when columns change
   useEffect(() => {
@@ -162,7 +211,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     },
     {
       label: "Plan and Actuals",
-      subLabel: `Total Items : ${planAndActualListData.length}`,
+      subLabel: `Total Items : ${planAndActualListData?.length}`,
       count: 2,
       completed: false,
     },
@@ -172,7 +221,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     console.log('Link clicked:', columnKey, row.PlanLineUniqueID);
     if (columnKey === 'id' && row.PlanLineUniqueID) {
       setPlanInfo({
-        keyName: 'PlanLineUniqueID',  
+        keyName: 'PlanLineUniqueID',
         value: row.PlanLineUniqueID,
         resourceId: resouceId,
       });
@@ -200,7 +249,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
 
   // For SmartGrid processed data (add status if needed)
   const processedData = useMemo(() => {
-    return planAndActualListData.map(row => ({
+    return planAndActualListData?.map(row => ({
       ...row,
       status: {
         value: row.hazardousGoods,
@@ -209,7 +258,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   }, [planAndActualListData]);
 
   // Card data for grid view
-  const plannedData = useMemo(() => planAndActualListData.map(row => ({
+  const plannedData = useMemo(() => planAndActualListData?.map(row => ({
     icon: <Package className="w-7 h-7 text-teal-500" />,
     code: row.id,
     name: "",
@@ -220,12 +269,29 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     draftBill: row.draftBill,
   })), [planAndActualListData]);
 
+  // subrow
+  const renderSubRow = (row: any, rowIndex: number) => {
+    return (
+      <DraggableSubRow
+        row={row}
+        rowIndex={rowIndex}
+        columns={gridState.columns}
+        subRowColumnOrder={gridState.subRowColumnOrder}
+        editingCell={gridState.editingCell}
+        onReorderSubRowColumns={gridState.handleReorderSubRowColumns}
+        onSubRowEdit={gridState.handleSubRowEdit}
+        onSubRowEditStart={gridState.handleSubRowEditStart}
+        onSubRowEditCancel={gridState.handleSubRowEditCancel}
+      />
+    );
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#f8fafd]">
+    <div className="flex min-h-screen">
       <div className="flex-1 flex flex-col">
         {/* Tabs and Stats */}
         <div>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2">
             <div className="flex bg-gray-200 rounded-lg w-fit p-1">
               <button
                 className={`px-3 py-1 rounded-lg flex font-medium text-sm transition-colors duration-200 ${tab === "planned"
@@ -234,7 +300,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                   }`}
                 onClick={() => setTab("planned")}
               >
-                Planned <div className={`ml-1 rounded-full w-5 h-5 ${tab === "planned" ? "bg-blue-600 text-white" : ""}`}>1</div>
+                Planned <div className={`ml-1 rounded-full w-5 h-5 ${tab === "planned" ? "bg-blue-600 text-white" : ""}`}>{plans}</div>
               </button>
               <button
                 className={`px-3 py-1 rounded-lg flex font-medium text-sm transition-colors duration-200 ${tab === "actuals"
@@ -243,11 +309,11 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                   }`}
                 onClick={() => setTab("actuals")}
               >
-                Actuals <div className={`ml-1 rounded-full w-5 h-5 ${tab === "actuals" ? "text-white bg-blue-600" : ""}`}>0</div>
+                Actuals <div className={`ml-1 rounded-full w-5 h-5 ${tab === "actuals" ? "text-white bg-blue-600" : ""}`}>{actuals}</div>
               </button>
             </div>
           </div>
-          <div>
+          {/* <div>
             <div className="bg-white rounded-xl shadow-sm flex items-center px-4 py-4 mb-2 border border-gray-100">
               {summaryStats.map((stat, i) => (
                 <div key={i} className="flex items-center w-1/4 gap-4">
@@ -264,11 +330,11 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Card/List Content */}
-        <div className="mt-4 mb-16">
+        <div className="mt-6 mb-16">
           {view === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {plannedData.map((card, idx) => (
@@ -308,11 +374,11 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
               ))}
             </div>
           ) : (
-            <div className="w-full">
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-0 py-3 w-full">
+            <div className="w-full  min-w-0">
+              <div className="bg-white rounded-t-2xl px-0 w-full min-w-0">
                 <div className="overflow-x-auto w-full">
-                  <div className="min-w-[900px]">
-                    <SmartGrid
+                  <div className="min-w-max">
+                    {/* <SmartGrid
                       key={`grid-${gridState.forceUpdate}`}
                       columns={gridState.columns}
                       data={gridState.gridData.length > 0 ? gridState.gridData : processedData}
@@ -331,6 +397,43 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                       recordCount={gridState.gridData.length > 0 ? gridState.gridData.length : processedData.length}
                       showCreateButton={true}
                       searchPlaceholder="Search"
+                    /> */}
+                    <SmartGridWithGrouping
+                      key={`grid-${gridState.forceUpdate}`}
+                      columns={gridState.columns}
+                      data={gridState.gridData}
+                      groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                      showGroupingDropdown={true}
+                      editableColumns={['plannedStartEndDateTime']}
+                      paginationMode="pagination"
+                      onLinkClick={handleLinkClick}
+                      // onUpdate={handleUpdate}
+                      onSubRowToggle={gridState.handleSubRowToggle}
+                      selectedRows={selectedRows}
+                      onSelectionChange={handleRowSelection}
+                      // onFiltersChange={setCurrentFilters}
+                      // onSearch={handleServerSideSearch}
+                      // onClearAll={clearAllFilters}
+                      rowClassName={(row: any, index: number) =>
+                        selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                      }
+                      // nestedRowRenderer={renderSubRow}
+                      // configurableButtons={}
+                      showDefaultConfigurableButton={false}
+                      gridTitle={gridTitle}
+                      recordCount={gridState.gridData?.length ?? 0}
+                      showCreateButton={true}
+                      searchPlaceholder="Search"
+                      clientSideSearch={true}
+                      showSubHeaders={false}
+                      hideAdvancedFilter={true}
+                      // serverFilters={dynamicServerFilters}
+                      showFilterTypeDropdown={false}
+                      showServersideFilter={false}
+                      // onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                      gridId="Plan-actuals-management"
+                      userId="current-user"
+                      api={undefined}
                     />
                   </div>
                 </div>
@@ -340,11 +443,11 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
         </div>
       </div>
       {/* SideDrawer component */}
-      isPlanActualsOpen-{isPlanActualsOpen}
+      {/* isPlanActualsOpen-{isPlanActualsOpen} */}
       <SideDrawer isOpen={isPlanActualsOpen} onClose={() => setIsPlanActualsOpen(false)} width='85%' title="Plan and Actual Details" isBack={false}>
         <div>
           {/* <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)}></PlanAndActualDetails> */}
-          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder}  PlanInfo={planInfo}></PlanAndActualDetails>
+          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} PlanInfo={planInfo}></PlanAndActualDetails>
 
         </div>
       </SideDrawer>

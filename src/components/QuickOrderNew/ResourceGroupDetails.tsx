@@ -73,7 +73,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder && resourceId) {
-
+      setCurrentStep(2);
       jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
       toast.success("Resource Group Updated Successfully");
       const fullResourceJson = jsonStore.getJsonData();
@@ -1171,8 +1171,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                     (<div className="flex items-center gap-2">
                       {/* Create Order Button with Dropdown */}
                       <DropdownButton config={configurableButtons[0]} />
-                      <button className={`p-2 rounded ${view === "grid" ? "bg-blue-50" : ""}`} onClick={() => setView("grid")}> <LayoutGrid className={`w-5 h-5 ${view === "grid" ? "text-blue-600" : "text-gray-400"}`} /> </button>
-                      <button className={`p-2 rounded ${view === "list" ? "bg-blue-50" : ""}`} onClick={() => setView("list")}> <List className={`w-5 h-5 ${view === "list" ? "text-blue-600" : "text-gray-400"}`} /> </button>
+                      {/* <button className={`p-2 rounded ${view === "grid" ? "bg-blue-50" : ""}`} onClick={() => setView("grid")}> <LayoutGrid className={`w-5 h-5 ${view === "grid" ? "text-blue-600" : "text-gray-400"}`} /> </button> */}
+                      {/* <button className={`p-2 rounded ${view === "list" ? "bg-blue-50" : ""}`} onClick={() => setView("list")}> <List className={`w-5 h-5 ${view === "list" ? "text-blue-600" : "text-gray-400"}`} /> </button> */}
                     </div>
                     )}
                 </>
@@ -1370,9 +1370,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                   </div>
                 )}
                 {isPlanActualsVisible && (
-                  <div className="">
+                  // <div className="">
                     <PlanAndActuals view={view} resouceId={resourceId} isEditQuickOrder={isEditQuickOrder} />
-                  </div>
+                  // </div>
                 )}
               </>
             )}
