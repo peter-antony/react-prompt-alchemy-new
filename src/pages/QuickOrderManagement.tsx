@@ -610,8 +610,8 @@ const QuickOrderManagement = () => {
           else if (key == 'TotalNet' && value.type === "number") {
             // Split into two separate filter keys
             searchData.push(
-              { FilterName: `TotalNet`, FilterValue: (value.value.from ? value.value.from : value.value.to) + '-' + (value.value.to ? value.value.to : value.value.from) },
-              // { FilterName: `CreatedToDate`, FilterValue: value.value.to }
+              { FilterName: `TotalNetFrom`, FilterValue: value.value.from },
+              { FilterName: `TotalNetTo`, FilterValue: value.value.to }
             );
           } else if (key == 'IsBillingFailed') {
             searchData.push({

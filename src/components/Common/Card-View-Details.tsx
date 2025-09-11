@@ -8,7 +8,7 @@ import {
 import Attachments from "../QuickOrderNew/OrderForm/Attachments";
 import ResourceGroupDetailsForm from "../QuickOrderNew/ResourceGroupDetails";
 import { SideDrawer } from "./SideDrawer";
-
+import { dateFormatter, formattedAmount } from "@/utils/formatter";
 interface CardStatus {
     label: string;
     color: string;
@@ -85,9 +85,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                     <UsersRound className="w-4 h-4 text-violet-500" />
                                 </span>
                                 <div>
-                                    <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item.ResourceUniqueID}- {item.BillingDetails[0].BillingType}</div>
+                                    <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item.ResourceUniqueID}- {item.BasicDetails[0].Resource}</div>
                                     {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
-                                    <div className="text-xs text-gray-400">{item.BasicDetails[0].Resource}</div>
+                                    <div className="text-xs text-gray-400">{item.BasicDetails[0].ResourceType}</div>
                                 </div>
                             </div>
                         </div>
@@ -131,11 +131,11 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-3">
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <FileText className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BillingDetails[0].BillingQty} Wagons</span>
+                            <span className="truncate">{item.BillingDetails[0].BillingQty} {item.BillingDetails[0].BillingType}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
                             <Banknote className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.BillingDetails[0].UnitPrice}</span>
+                            <span className="truncate">€ {formattedAmount(item.BillingDetails[0].UnitPrice)}</span>
                             {/* <span className="truncate">{item.price}</span> */}
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -150,7 +150,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                         <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
                             <Calendar className="w-4 h-4 text-gray-600" />
                             <span className="truncate cursor-pointer">
-                                {item.OperationalDetails[0].FromDate} to {item.OperationalDetails[0].ToDate}
+                                {dateFormatter(item.OperationalDetails[0].FromDate)} to {dateFormatter(item.OperationalDetails[0].ToDate)}
                             </span>
                             {/* <span className="truncate cursor-pointer">
                                 {item.date}
@@ -159,7 +159,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                             <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-gray-900 text-white rounded-md shadow-xl border border-gray-200 text-xs">
                                 <div className="px-3 py-2">
                                     <div className="font-semibold mb-1">From and To Date</div>
-                                    <div className="text-[11px] font-medium">{item.OperationalDetails[0].FromDate}- {item.OperationalDetails[0].ToDate}</div>
+                                    <div className="text-[11px] font-medium">{dateFormatter(item.OperationalDetails[0].FromDate)} to {dateFormatter(item.OperationalDetails[0].ToDate)}</div>
                                     {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                                 </div>
                             </div>
@@ -191,9 +191,16 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700 text-xs col-span-2">
+                        <div className="flex items-center gap-2 text-gray-700 text-xs col-span-2 text-xs relative group">
                             <MapPin className="w-4 h-4 text-gray-600" />
-                            <span className="truncate">{item.OperationalDetails[0].DepartPoint} - {item.OperationalDetails[0].ArrivalPoint}</span>
+                            <span className="truncate">{item.OperationalDetails[0].OperationalLocationDesc}</span>
+                            <div className="absolute left-0 top-4 z-30 hidden group-hover:block min-w-[180px] max-w-xs bg-[#344054] text-white rounded-lg shadow-xl border border-gray-200 text-xs">
+                                <div className="py-2 pl-[14px] pr-[14px]">
+                                {/* <div className="font-semibold mb-1">From and To Date</div> */}
+                                <div className="text-[11px] font-medium">{item.OperationalDetails?.[0]?.OperationalLocationDesc} || {item.OperationalDetails?.[0]?.OperationalLocation}</div>
+                                {/* <div className="text-[11px] font-medium">{item.date}</div> */}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div className="flex items-center text-blue-600 text-xs font-medium mt-2">

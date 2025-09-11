@@ -234,7 +234,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
               <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm mb-3">
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <FileText className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">{item?.PlanDetails?.[0]?.WagonDetails?.[0]?.WagonQuantity} Wagons</span>
+                  <span className="truncate">{item?.BillingDetails?.[0]?.BillingQty} {item.BillingDetails?.[0]?.BillingType}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Banknote className="w-4 h-4 text-gray-600" />
