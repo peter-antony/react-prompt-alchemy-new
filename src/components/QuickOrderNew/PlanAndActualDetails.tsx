@@ -51,9 +51,10 @@ interface PlanAndActualsDetailsProps {
   isEditQuickOrder?: boolean;
   resourceId?: string;
   PlanInfo?: {},
-  onCloseDrawer()
+  onCloseDrawer(),
+  onApiSuccess?: (bool: any) => boolean | void;
 }
-export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId }: PlanAndActualsDetailsProps) => {
+export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId, onApiSuccess }: PlanAndActualsDetailsProps) => {
   let currentStep = 1;
   const [planType, setPlanType] = useState("plan");
   const [isOpen, setIsOpen] = useState(false);
@@ -169,10 +170,12 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           const fullJson2 = jsonStore.getJsonData();
           console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
           onCloseDrawer();
+          onApiSuccess(true);
         })
 
       } catch (err) {
         console.log(" catch", err);
+        onApiSuccess(false);
         // setError(`Error fetching API data for Update ResourceGroup`);
       }
       console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());

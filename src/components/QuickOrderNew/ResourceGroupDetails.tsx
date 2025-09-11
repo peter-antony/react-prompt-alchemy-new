@@ -1107,6 +1107,22 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     console.log(`Field: ${field}, Value: ${value}`);
   };
 
+  const handlePlanActualsDataFetch = (status: boolean) => {
+    console.log('Plan created and show grid data:', status);
+    setIsPlanActualsVisible(status);
+    if (status) {
+      // Reload resource group grid data when PlanActuals becomes visible
+      if (isEditQuickOrder) {
+        const resourceGroups = jsonStore.getAllResourceGroups();
+        setResourceData(resourceGroups);
+        console.log("Resource Groups Data (reloaded):", resourceGroups);
+      } else {
+        const resourceGroups = jsonStore.getAllResourceGroups();
+        setResourceData(resourceGroups);
+      }
+    }
+  }
+
   return (
     <div className="">
       <div className="flex h-full">
@@ -1400,7 +1416,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       <SideDrawer isOpen={isPlanActualsOpen} onClose={() => setIsPlanActualsOpen(false)} width='85%' title="Plan and Actual Details" isBack={false}>
         <div>
           {/* <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)}></PlanAndActualDetails> */}
-          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} resourceId={resourceUniqueId}></PlanAndActualDetails>
+          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} resourceId={resourceUniqueId} onApiSuccess={handlePlanActualsDataFetch}></PlanAndActualDetails>
 
         </div>
       </SideDrawer>

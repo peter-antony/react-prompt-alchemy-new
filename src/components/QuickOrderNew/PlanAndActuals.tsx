@@ -155,7 +155,9 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
 
   // Fetch and map plan data when resourceId changes
   useEffect(() => {
-    const arr = jsonStore.getResourceGroup();
+    const arrResources = jsonStore.getResourceGroup();
+    let arr:any;
+    arr = arrResources.filter((item: any) => item.ResourceUniqueID === resouceId);
     setPlans(arr?.[0]?.PlanDetails?.length ?? 0);
     setActuals(arr?.[0]?.ActualDetails?.length ?? 0);
     console.log('plan and actuals data--', arr);
@@ -375,7 +377,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
             </div>
           ) : (
             <div className="w-full  min-w-0">
-              <div className="bg-white rounded-t-2xl px-0 w-full min-w-0">
+              <div className="bg-white rounded-t-lg px-0 w-full min-w-0">
                 <div className="overflow-x-auto w-full">
                   <div className="min-w-max">
                     {/* <SmartGrid
