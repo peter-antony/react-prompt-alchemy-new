@@ -5,7 +5,7 @@ import { GripVertical, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { dateFormatter, formattedAmount } from '@/utils/formatter';
+import { dateFormatter, dateTimeFormatter, formattedAmount } from '@/utils/formatter';
 
 interface DraggableSubRowProps {
   row: any;
@@ -158,19 +158,27 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             </Badge>
           );
         case 'DateTimeRange':
-          const dateTimeString = String(value);
-          if (dateTimeString.includes('\n')) {
-            const [startDateTime, endDateTime] = dateTimeString.split('\n');
-            return (
-              <div className="space-y-1">
-                {/* <div className="text-xs text-gray-500">Start:</div> */}
-                <div className="font-normal text-sm">{startDateTime} & {endDateTime}</div>
-                {/* <div className="text-xs text-gray-500">End:</div> */}
-                {/* <div className="font-medium text-sm">{endDateTime}</div> */}
-              </div>
-            );
-          }
-          return <div className="font-medium text-sm">{dateTimeString}</div>;
+          // const dateTimeString = String(value);
+          // if (dateTimeString.includes('\n')) {
+          //   const [startDateTime, endDateTime] = dateTimeString.split('\n');
+          //   return (
+          //     <div className="space-y-1">
+          //       {/* <div className="text-xs text-gray-500">Start:</div> */}
+          //       <div className="font-normal text-sm">{startDateTime} & {endDateTime}</div>
+          //       {/* <div className="text-xs text-gray-500">End:</div> */}
+          //       {/* <div className="font-medium text-sm">{endDateTime}</div> */}
+          //     </div>
+          //   );
+          // }
+          // return <div className="font-medium text-sm">{dateTimeString}</div>;
+          if (!value) return <div className="text-gray-400">-</div>;
+          try {
+                const date = new Date(value);
+                const formattedDate = dateTimeFormatter(date);
+                return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+              } catch {
+                return <span className="truncate" title={String(value)}>{value}</span>;
+              }
         case 'Date':
           try {
             const date = new Date(value);

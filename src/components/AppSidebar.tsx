@@ -25,7 +25,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     // { icon: Package, label: 'Inventory', path: '/quick-order' },
     // { icon: MenuIcon2, label: 'Inventory', path: '/quick-order' },
     { icon: MenuIcon2, label: 'Inventory', path: '/json-creater' },
-    { icon: MenuIcon3, label: 'Route Management', path: '/trip-plans-search-hub' },
+    { icon: MenuIcon3, label: 'Route Management', path: '/trip-hub' },
     { icon: MenuIcon4, label: 'Fleet Management', path: '/' },
   ];
 

@@ -16,7 +16,7 @@ const SignIn: React.FC = () => {
   const REDIRECT_URI = Config?.redirect_uri; // Must be registered
   const response_type = "code";
   const SCOPE = Config?.scope;
-  const STATE = "";
+  const STATE = "e4447bebda394fa6855c6de4fc1db034";
 
 
   // Get the intended destination from location state
@@ -66,7 +66,7 @@ const SignIn: React.FC = () => {
       // Build authorization URL
       const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${encodeURIComponent(
         SCOPE
-      )}&state=&code_challenge=${codeChallenge}&code_challenge_method=S256&response_mode=query`;
+      )}&state=${STATE}&code_challenge=${codeChallenge}&code_challenge_method=S256&response_mode=query`;
 
       // Redirect to authorization server
       setTimeout(() => {

@@ -15,153 +15,82 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
         MessageID: "12345",
         MessageType: "trip_log_hub_search_sp",
-        UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
       },
       SearchCriteria: {
-        Tripid: "TP/2021/00024900",
+        TripId: "",
         CustomerID: "1005",
-        CustomerOrderNumber: "BR/2025/0171",
-        Servicetype: "BLOCK TRAIN CONVENTIONAL",
-        SubServicetype: "WITHOUT  EQUIPMENT / SOC",
-        PlannedExecutionDateFrom: "2025/06/05",
-        PlannedExecutionDateTo: "2025/08/06",
-        Tripstatus: "Confirmed",
+        CustomerOrderNumber: "",
+        ServiceType: "",
+        SubServiceType: "",
+        // PlannedExecutionDateFrom: "2025/06/05",
+        // PlannedExecutionDateTo: "2025/08/06",
+        TripStatus: "Confirmed",
         TrainID: "",
         CustomerRefNo: "",
         RoundTrip: "",
-        Triptype: "",
+        TripType: "",
+        CustomerDescription: "",
+        Departurepoint: "",
+        ArrivalPoint: "",
+        Supplier: "",
+        SupplierContract: "",
+        CustomerContract: "",
+        PathNo: "",
+        IncidentStatus: "",
+        TransportMode: "",
+        ReturnTripId: "",
+        CancellationReason: "",
+        WorkshopStatus: "",
+        VendorFeedback: "",
+        VendorFeedbackReason: "",
+        WagonGroup: "",
+        ContainerGroup: "",
+        Via: "",
+        CustomerSenderRefNo: "",
+        DocumentType: "",
+        VehicleID: "",
+        DriverID: "",
+        CarrierID: "",
+        VehicleRegNo: "",
+        EquipmentRegNo: "",
+        VoyageFlightTrainNo: "",
+        VesselFlightTrainName: "",
+        THUSerialNo: "",
+        RefDocType: "",
+        ToLocation: "",
+        Cluster: "",
+        WBS: "",
+        Contract: "",
+        WagonID: "",
+        AgentID: "",
+        ScheduleID: "",
+        UserID: "",
+        ExecutiveCarrierID: "",
+        PassNo: "",
+        ContainerID: "",
+        TripBillingStatus: "",
+        Document: "",
+        BRSenderRefNo: "",
+        IncidentID: "",
+        MobileRefIncidentID: "",
+        RefDocNo: "",
+        LoadType: "",
       },
-      AdditionalFilter: [
-        {
-          FilterName: "DocumentType",
-          FilterValue: "",
-        },
-        {
-          FilterName: "VehicleID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "DriverID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "CarrierID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "VehicleRegNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "EquipmentRegNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "VoyageFlightTrainNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "VesselFlightTrainName",
-          FilterValue: "",
-        },
-        {
-          FilterName: "THUSerialNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "RefDocType",
-          FilterValue: "",
-        },
-        {
-          FilterName: "FromLocation",
-          FilterValue: "",
-        },
-        {
-          FilterName: "ToLocation",
-          FilterValue: "",
-        },
-        {
-          FilterName: "Cluster",
-          FilterValue: "",
-        },
-        {
-          FilterName: "WBS",
-          FilterValue: "",
-        },
-        {
-          FilterName: "Contract",
-          FilterValue: "",
-        },
-        {
-          FilterName: "WagonID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "AgentID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "ScheduleID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "UserID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "ExecutiveCarrierID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "PassNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "ContainerID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "TripBillingStatus",
-          FilterValue: "",
-        },
-        {
-          FilterName: "Document",
-          FilterValue: "",
-        },
-        {
-          FilterName: "BRSenderRefNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "IncidentID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "MobileRefIncidentID",
-          FilterValue: "",
-        },
-        {
-          FilterName: "RefDocNo",
-          FilterValue: "",
-        },
-        {
-          FilterName: "LoadType",
-          FilterValue: "",
-        },
-      ],
       Pagination: {
         PageNumber: 1,
         PageSize: 10,
       },
     });
     const requestBody = {
-      "RequestData": requestPayload,
+      RequestData: requestPayload,
     };
-    const response = await apiClient.post(API_ENDPOINTS.TRIPS.LIST,
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.LIST,
       requestBody
     );
     return response.data;

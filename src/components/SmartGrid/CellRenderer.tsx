@@ -9,7 +9,7 @@ import { Info } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
-import { formattedAmount, dateFormatter } from '@/utils/formatter';
+import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 
 interface CellRendererProps {
   value: any;
@@ -161,13 +161,21 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   // DateTimeRange renderer
   const renderDateTimeRange = () => {
-    const [date, time] = String(value).split('\n');
-    return (
-      <div className="text-sm min-w-0">
-        <div className="text-gray-900 font-normal truncate">{date}</div>
-        <div className="text-gray-500 text-xs truncate">{time}</div>
-      </div>
-    );
+    // const [date, time] = String(value).split('\n');
+    // return (
+    //   <div className="text-sm min-w-0">
+    //     <div className="text-gray-900 font-normal truncate">{date}</div>
+    //     <div className="text-gray-500 text-xs truncate">{time}</div>
+    //   </div>
+    // );
+    if (!value) return <div className="text-gray-400">-</div>;
+    try {
+      const date = new Date(value);
+      const formattedDate = dateTimeFormatter(date);
+      return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+    } catch {
+      return <span className="truncate" title={String(value)}>{value}</span>;
+    }
   };
 
   // TextWithTooltip renderer

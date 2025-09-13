@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ROUTES } from "./api/config";
 import Index from "./pages/Index";
 import GridDemo from "./pages/GridDemo";
-import TripPlansSearchHub from "./pages/TripPlansSearchHub";
+import { TripExecutionHub } from "./pages/TripExecutionHub";
 import TripPlansSearchHubAPI from "./pages/TripPlansSearchHubAPI";
 import DynamicPanelDemo from "./pages/DynamicPanelDemo";
 import DynamicPanelDemoClone from "./pages/DynamicPanelDemoClone";
@@ -48,9 +48,9 @@ const App = () => (
               <QuickOrderManagement />
             </ProtectedRoute>
           } />
-          <Route path="trip-plans-search-hub" element={
+          <Route path="trip-hub" element={
             <ProtectedRoute>
-              <TripPlansSearchHub />
+              <TripExecutionHub />
             </ProtectedRoute>
           } />
           <Route path="trip-search-api" element={

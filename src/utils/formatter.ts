@@ -16,5 +16,10 @@ const dateFormatter = (dateStr: any) => {
   return format(new Date(dateStr), "dd-MMM-yyyy");
 };
 
-export { formattedAmount, dateFormatter };
+const dateTimeFormatter = (value: any) => {
+  if (!value) return "";
+  return format(new Date(value), "dd-MMM-yyyy HH:mm:ss a");
+}
+
+export { formattedAmount, dateFormatter, dateTimeFormatter };
 
