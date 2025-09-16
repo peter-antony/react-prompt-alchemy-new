@@ -167,14 +167,14 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     if (tab === 'planned') {
       setGridTitle('Plan List');
       mapped = (arr?.[0]?.PlanDetails ?? []).map((plan: any) => ({
-        WagonID: `${plan?.WagonDetails?.[0]?.WagonID || ''}-${plan?.WagonDetails?.[0].WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        containerID: `${plan?.ContainerDetails?.[0]?.ContainerID || ''} - ${plan?.ContainerDetails?.[0]?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        ProductID: plan.ProductDetails?.[0]?.ProductID || '-',
-        hazardousGoods: plan.ProductDetails?.[0]?.ContainHazardousGoods || '-',
-        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.[0]?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.[0]?.Arrival || ''}`.trim(),
-        planFromToDate: dateFormatter(plan?.OtherDetails?.[0]?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.[0]?.ToDate),
+        WagonID: `${plan?.WagonDetails?.WagonID || ''}-${plan?.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        containerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ProductID: plan.ProductDetails?.ProductID || '-',
+        hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
+        planFromToDate: dateFormatter(plan?.OtherDetails?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.ToDate),
         // '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
-        activity: plan?.JourneyAndSchedulingDetails?.[0]?.Activity,
+        activity: plan?.JourneyAndSchedulingDetails?.Activity,
         price: '€ 1395.00', // Replace with actual price if needed
         draftBill: 'DB/0000234', // Replace with actual draft bill if needed
         PlanLineUniqueID: plan?.PlanLineUniqueID || '',
@@ -182,13 +182,13 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     } else {
       setGridTitle('Actual List');
       mapped = (arr?.[0]?.ActualDetails ?? []).map((plan: any) => ({
-        WagonID: `${plan?.WagonDetails?.[0]?.WagonID || ''}-${plan?.WagonDetails?.[0].WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        containerID: `${plan?.ContainerDetails?.[0]?.ContainerID || ''} - ${plan?.ContainerDetails?.[0]?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        ProductID: plan.ProductDetails?.[0]?.ProductID || '-',
-        hazardousGoods: plan.ProductDetails?.[0]?.ContainHazardousGoods || '-',
-        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.[0]?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.[0]?.Arrival || ''}`.trim(),
+        WagonID: `${plan?.WagonDetails?.WagonID || ''}-${plan?.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        containerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ProductID: plan.ProductDetails?.ProductID || '-',
+        hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
         planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
-        activity: plan?.JourneyAndSchedulingDetails?.[0]?.Activity,
+        activity: plan?.JourneyAndSchedulingDetails?.Activity,
         price: '€ 1395.00', // Replace with actual price if needed
         draftBill: 'DB/0000234', // Replace with actual draft bill if needed
         PlanLineUniqueID: plan?.PlanLineUniqueID || '',

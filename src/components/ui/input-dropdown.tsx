@@ -68,6 +68,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
             onFocus={onFocus}
             onBlur={onBlur}
           >
+            <option value="">Select...</option>
             {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

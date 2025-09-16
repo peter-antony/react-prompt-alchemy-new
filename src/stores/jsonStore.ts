@@ -753,7 +753,7 @@ function setResourceType(fields: { Resource?: any, ResourceType?: any }) {
   return false;
 }
 
-function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any }) {
+function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any, billToID?: any}) {
   console.log("resourceJsonData === ^^^^", resourceJsonData)
   if (resourceJsonData) {
     if (!resourceJsonData.BillingDetails) {
@@ -764,6 +764,7 @@ function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?
     if (fields.contractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.contractPrice;
     if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;
     if (fields.tariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.tariffType;
+    if (fields.billToID !== undefined) resourceJsonData.BillingDetails.BillToID = fields.billToID;
     return true;
   }
   return false;

@@ -46,6 +46,8 @@ export interface FieldConfig {
   labelFlag?: boolean; // Flag to indicate if label should be displayed
   color?: string; // For card field type background color
   fieldColour?: string; // For card field type color
+  allowedType?: 'number' | 'alphanumeric' | 'alpha'; // To restrict input types
+  maxLength?: number; // To restrict maximum input length
   // For lazyselect field type
   fetchOptions?: (params: {
     searchTerm: string;

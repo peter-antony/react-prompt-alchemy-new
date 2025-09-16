@@ -69,6 +69,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     "Surat",
     "Mumbai",
   ];
+
+  // const handleProceedToNext = async () => {
+  //   setCurrentStep(2);
+  // }
+
   const handleProceedToNext = async () => {
     const formValues = {
       basicDetails: basicDetailsRef.current?.getFormValues() || {},
@@ -77,43 +82,45 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       billingDetails: billingDetailsRef.current?.getFormValues() || {}
     };
     if (isEditQuickOrder && resourceId) {
-      // setCurrentStep(2);
+      setCurrentStep(2);
       jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
       // toast.success("Resource Group Updated Successfully");
       const fullResourceJson = jsonStore.getJsonData();
       console.log("AFTER UPDATE FULL RESOURCE JSON :: ", fullResourceJson);
 
-    } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
-      setBasicDetailsData(formValues.basicDetails);
-      setOperationalDetailsData(formValues.operationalDetails);
-      setBillingDetailsData(formValues.billingDetails);
-      jsonStore.setResourceJsonData({
-        ...jsonStore.getResourceJsonData(),
-        "ModeFlag": "NoChange",
-        "ResourceStatus": "Fresh",
-        "ResourceUniqueID": "",
-        // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
-      })
-      localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
-      jsonStore.setResourceBasicDetails({
-        ...jsonStore.getResourceJsonData().BasicDetails,
-        ...formValues.basicDetails
-      });
-      jsonStore.setResourceOperationalDetails({
-        ...jsonStore.getResourceJsonData().OperationalDetails,
-        ...formValues.operationalDetails
-      });
-      jsonStore.setResourceBillingDetails({
-        ...jsonStore.getResourceJsonData().BillingDetails,
-        ...formValues.billingDetails
-      });
-      const fullResourceJson = jsonStore.getResourceJsonData();
-      console.log("FULL RESOURCE JSON :: ", fullResourceJson);
-      jsonStore.pushResourceGroup(fullResourceJson);
-      setResourceUniqueId(fullResourceJson.ResourceUniqueID);
-      console.log("FULL JSON :: ", jsonStore.getQuickOrder());
+    } 
+    // else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
+    //   setBasicDetailsData(formValues.basicDetails);
+    //   setOperationalDetailsData(formValues.operationalDetails);
+    //   setBillingDetailsData(formValues.billingDetails);
+    //   jsonStore.setResourceJsonData({
+    //     ...jsonStore.getResourceJsonData(),
+    //     "ModeFlag": "NoChange",
+    //     "ResourceStatus": "Fresh",
+    //     "ResourceUniqueID": "",
+    //     // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
+    //   })
+    //   localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+    //   jsonStore.setResourceBasicDetails({
+    //     ...jsonStore.getResourceJsonData().BasicDetails,
+    //     ...formValues.basicDetails
+    //   });
+    //   jsonStore.setResourceOperationalDetails({
+    //     ...jsonStore.getResourceJsonData().OperationalDetails,
+    //     ...formValues.operationalDetails
+    //   });
+    //   jsonStore.setResourceBillingDetails({
+    //     ...jsonStore.getResourceJsonData().BillingDetails,
+    //     ...formValues.billingDetails
+    //   });
+    //   const fullResourceJson = jsonStore.getResourceJsonData();
+    //   console.log("FULL RESOURCE JSON :: ", fullResourceJson);
+    //   jsonStore.pushResourceGroup(fullResourceJson);
+    //   setResourceUniqueId(fullResourceJson.ResourceUniqueID);
+    //   console.log("FULL JSON :: ", jsonStore.getQuickOrder());
 
-    } else {
+    // } 
+    else {
       setBasicDetailsData(formValues.basicDetails);
       setOperationalDetailsData(formValues.operationalDetails);
       setBillingDetailsData(formValues.billingDetails);
@@ -374,7 +381,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             const index=(parsedResource.length) -1;
             setResourceUniqueId(parsedResource[index].ResourceUniqueID);
 
-            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+            // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
             // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
             const fullJson2 = jsonStore.getJsonData();
             onSaveSuccess();
@@ -382,7 +389,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err);
+          console.log(" catch", err.response.data.correctiveAction);
           setError(`Error fetching API data for Update ResourceGroup`);
           toast({
             title: "⚠️ Submission failed",
@@ -602,11 +609,23 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   }, []);
   useEffect(() => {
+    setLoading(false);
     if (isEditQuickOrder) {
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
       setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
+      console.log("resourceId Edit == ", resourceId);
+      jsonStore.setTariffDateFields({
+        fromDate: jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.FromDate
+          ? jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.FromDate.split("T")[0]
+          : "",
+        toDate: jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.ToDate
+          ? jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.ToDate.split("T")[0]
+          : "",
+      });
+      console.log("jsonStore.Edit == ", jsonStore.getOperationalDetailsByResourceUniqueID(resourceId));
+      setLoading(true);
     } else {
       console.log("resourceId == ", resourceId)
       console.log("jsonStore.getBasicDetailsByResourceUniqueID() == ", jsonStore.getResourceGroupBasicDetails())
@@ -615,7 +634,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getResourceGroupOperationalDetails() || {}));
       // setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getResourceGroup() || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getResourceGroupBillingDetails() || {}));
-
+      setLoading(true);
     }
     const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
     const actualCount = jsonStore.getAllActualDetailsByResourceUniqueID(resourceId);
@@ -1064,7 +1083,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 3,
       width: 'full',
-      options: billingTypeList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: billingTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
           console.log('contractType changed:', value);
@@ -1081,6 +1100,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 4,
+      inputType: 'number',
+      maxLength: 6
     },
     BillingQty: {
       id: 'BillingQty',
@@ -1092,6 +1113,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 5,
       width: 'half',
+      maxLength: 6,
+      inputType: 'number',
     },
     Tariff: {
       id: 'Tariff',
@@ -1106,7 +1129,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       width: 'full',
       searchData: TariffList, // <-- This is the local array for suggestions
     },
-    c: {
+    TariffType: {
       id: 'TariffType',
       label: 'Tariff Type',
       fieldType: 'text',
@@ -1128,6 +1151,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       order: 8,
       placeholder: 'Enter Remarks',
       width: 'full',
+      inputType: 'alphanumeric',
+      maxLength: 250
     }
   };
 
@@ -1427,7 +1452,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                 {/* Basic Details Section */}
 
                 {/* Validation Results */}
-                {Object.keys(validationResults).length > 0 && (
+                {/* {Object.keys(validationResults).length > 0 && (
                   <div className="space-y-3">
                     {Object.entries(validationResults).map(([panelId, result]) => (
                       <Alert key={panelId} variant={result.isValid ? "default" : "destructive"}>
@@ -1461,7 +1486,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                       </Alert>
                     ))}
                   </div>
-                )}
+                )} */}
 
                 {/* <div className="grid grid-cols-12 gap-6"> */}
                 <div className="flex gap-6">

@@ -11,6 +11,7 @@ import { DynamicPanelProps, PanelConfig, PanelSettings } from '@/types/dynamicPa
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ConfirmSwitch from '../../assets/images/ConfirmSwitch.png';
 import { combineInputDropdownValue, InputDropdownValue, splitInputDropdownValue } from '@/utils/inputDropdown';
+import jsonStore from '@/stores/jsonStore';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
@@ -468,8 +469,23 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                 formData={getValues() || {}}
                 showStatus={showStatusIndicator}
               />
-              {panelSubTitle && (
-                <span onClick={() => setSwitchModalOpen(true)} className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full cursor-pointer">DB000023</span>
+              {panelSubTitle == "Order Details" && (
+                <span
+                  onClick={() => setSwitchModalOpen(true)}
+                  className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
+                >
+                  {jsonStore.getQuickUniqueID?.() || ""}
+                </span>
+              )}
+              {panelSubTitle == "Billing Details" && (
+                <span
+                  onClick={() => setSwitchModalOpen(true)}
+                  className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
+                >
+                  {/* Replace with actual data source or remove if not needed */}
+                  {/* Example: jsonStore.getResourceJsonData?.().BillingDetails?.BillToID || "" */}
+                  {jsonStore.getResourceJsonData?.()?.BillingDetails?.BillToID || ""}
+                </span>
               )}
             </div>
             <SettingsButton />

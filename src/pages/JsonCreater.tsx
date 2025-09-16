@@ -2,6 +2,120 @@ import { useEffect } from 'react';
 import jsonStore from '@/stores/jsonStore';
 import { useNavigate } from 'react-router-dom';
 
+const QUICK_ORDER_BASIC_JSON = {
+  "ResponseResult": {
+    "QuickOrder": {
+      "QuickUniqueID": "",
+      "OrderType": "BUY",
+      "QuickOrderNo": "",
+      "QuickOrderDate": "",
+      "Vendor": "",
+      "Contract": "",
+      "Customer": "",
+      "Cluster": "",
+      "Currency": "EUR  ",
+      "CustomerQuickOrderNo": "",
+      "Customer_Supplier_RefNo": "",
+      "QCUserDefined1": "",
+      "QCUserDefined1Value": "",
+      "Remark1": "",
+      "Summary": "",
+      "WBS": "",
+      "QCUserDefined2": "",
+      "QCUserDefined2Value": "",
+      "QCUserDefined3": "",
+      "QCUserDefined3Value": "",
+      "Remarks2": "",
+      "Remarks3": "",
+      "Status": "Fresh",
+      // "Status": "Save/Confirm/UnderAmend",
+      "ModeFlag": "Insert",
+      "ResourceGroup": [
+
+      ],
+      "AmendmentHistory": [
+        {
+          "AmendmentNo": 1,
+          "username": "ramcouser",
+          "updTime": "2024-01-01",
+          "reasoncode": "Customer request"
+        }
+      ],
+      "Attachments": {
+        "TotalAttachment": "0",
+        "AttachItems": [
+        ]
+      }
+    }
+  }
+}
+
+const Resource_Group_BASIC_JSON = {
+  "ResourceUniqueID": -1,
+  "ModeFlag": "Insert",
+  "ResourceStatus": "Fresh",
+  "BasicDetails": {
+    "Resource": "",
+    "ResourceType": "",
+    "ServiceType": "",
+    "SubServiceType": ""
+  },
+  "OperationalDetails": {
+    "OperationalLocation": "",
+    "OperationalLocationDesc": "",
+    "DepartPoint": "",
+    "ArrivalPoint": "",
+    "FromDate": "",
+    "FromTime": "20:00:00",
+    "ToDate": "",
+    "ToTime": "23:12:00",
+    "Remarks": ""
+  },
+  "BillingDetails": {
+    "DraftBillNo": "",
+    "ContractPrice": null,
+    "NetAmount": 0,
+    "BillingType": "",
+    "BillingQty": 0,
+    "UnitPrice": 0,
+    "DraftBillStatus": null,
+    "Tariff": null,
+    "TariffTypeDescription": null,
+    "TariffIDDescription": null,
+    "TariffType": "",
+    "BillingRemarks": "",
+    "InternalOrderNo": null
+  },
+  "MoreRefDocs": 
+    // {
+    //   "DocCategory": "",
+    //   "DocType": "",
+    //   "DocValue": "",
+    //   "DocDate": "",
+    //   "DocRemarks": ""
+    // }
+    {
+      "PrimaryDocType":null,
+      "PrimaryDocTypeValue":null,
+      "SecondaryDocType":null,
+      "SecondaryDocTypeValue":null,
+      "PrimaryDocDate":null,
+      "SecondaryDocDate":null
+    }
+  ,
+  "Attachments": {
+    "TotalAttachment": "0",
+    "AttachItems": [
+    ]
+  },
+  "PlanDetails": [
+
+  ],
+  "ActualDetails": [
+
+  ]
+};
+
 const QUICK_ORDER_JSON = {
   "ResponseResult": {
     "QuickOrder": {
@@ -50,15 +164,87 @@ const QUICK_ORDER_JSON = {
   }
 }
 
+const Plan_Details_BASIC_JSON = {
+  "PlanLineUniqueID": -1,
+  "PlanSeqNo": "",
+  "ModeFlag": "Insert/Update/Delete/NoChange",
+  "WagonDetails": {
+    "WagonType": "",
+    "WagonID": "",
+    "WagonQuantity": 0,
+    "WagonQuantityUOM": "",
+    "WagonTareWeight": 0,
+    "WagonTareWeightUOM": "",
+    "WagonGrossWeight": 0,
+    "WagonGrossWeightUOM": "",
+    "WagonLength": 0,
+    "WagonLengthUOM": "",
+    "WagonSequence": ""
+  },
+  "ContainerDetails": {
+    "ContainerType": "",
+    "ContainerID": "",
+    "ContainerQuantity": 0,
+    "ContainerQuantityUOM": "",
+    "ContainerTareWeight": 0,
+    "ContainerTareWeightUOM": "",
+    "ContainerLoadWeight": 0,
+    "ContainerLoadWeightUOM": ""
+  },
+  "ProductDetails": {
+    "ContainHazardousGoods": "",
+    "NHM": "",
+    "ProductID": "",
+    "ProductQuantity": 0,
+    "ProductQuantityUOM": "",
+    "ClassofStores": "",
+    "UNCode": "",
+    "DGClass": ""
+  },
+  "THUDetails": {
+    "THUID": "",
+    "THUSerialNo": "",
+    "THUQuantity": 0,
+    "THUQuantityUOM": "",
+    "THUWeight": 0,
+    "THUWeightUOM": ""
+  },
+  "JourneyAndSchedulingDetails": {
+    "Departure": "",
+    "Arrival": "",
+    "ActivityLocation": "",
+    "Activity": "",
+    "PlannedDateTime": "",
+    "RevPlannedDateTime": "",
+    "TrainNo": "",
+  },
+  "OtherDetails": {
+    "FromDate": "",
+    "FromTime": "12:00:00",
+    "ToDate": "",
+    "ToTime": "12:00:00",
+    "QCUserDefined1": "",
+    "QCUserDefined1Value": "",
+    "QCUserDefined2": "",
+    "QCUserDefined2Value": "",
+    "QCUserDefined3": "",
+    "QCUserDefined3Value": "",
+    "Remarks1": "",
+    "Remarks2": "",
+    "Remarks3": ""
+  }
+
+};
+
 const Resource_Group_JSON = {
   "ResourceUniqueID": -1,
   "ModeFlag": "Insert",
   "ResourceStatus": "Fresh",
   "BasicDetails": {
-    "Resource": "Equipment",
-    "ResourceType": "20FT Container",
-    "ServiceType": "SINGLE CONTAINER TRANSPORT",
-    "SubSericeType": ""
+    "Resource": "",
+    "ResourceType": "",
+    "ServiceType": "",
+    "SubServiceType": ""
   },
   "OperationalDetails": {
     "OperationalLocation": "",
@@ -124,31 +310,31 @@ const Plan_Details_JSON = {
     "WagonType": "",
     "WagonID": "",
     "WagonQuantity": 0,
-    "WagonQuantityUOM": null,
+    "WagonQuantityUOM": "",
     "WagonTareWeight": 0,
-    "WagonTareWeightUOM": null,
+    "WagonTareWeightUOM": "",
     "WagonGrossWeight": 0,
-    "WagonGrossWeightUOM": null,
+    "WagonGrossWeightUOM": "",
     "WagonLength": 0,
-    "WagonLengthUOM": null,
-    "WagonSequence": 0
+    "WagonLengthUOM": "",
+    "WagonSequence": ""
   },
   "ContainerDetails": {
     "ContainerType": "",
     "ContainerID": "",
     "ContainerQuantity": 0,
-    "ContainerQuantityUOM": null,
+    "ContainerQuantityUOM": "",
     "ContainerTareWeight": 0,
-    "ContainerTareWeightUOM": null,
+    "ContainerTareWeightUOM": "",
     "ContainerLoadWeight": 0,
-    "ContainerLoadWeightUOM": null
+    "ContainerLoadWeightUOM": ""
   },
   "ProductDetails": {
     "ContainHazardousGoods": "",
     "NHM": "",
     "ProductID": "",
     "ProductQuantity": 0,
-    "ProductQuantityUOM": null,
+    "ProductQuantityUOM": "",
     "ClassofStores": "",
     "UNCode": "",
     "DGClass": ""
@@ -157,9 +343,9 @@ const Plan_Details_JSON = {
     "THUID": "",
     "THUSerialNo": "",
     "THUQuantity": 0,
-    "THUQuantityUOM": null,
+    "THUQuantityUOM": "",
     "THUWeight": 0,
-    "THUWeightUOM": null
+    "THUWeightUOM": ""
   },
   "JourneyAndSchedulingDetails": {
     "Departure": "",
@@ -264,9 +450,9 @@ export function initializeJsonStore() {
   localStorage.setItem('resouceCount', '0');
   localStorage.setItem('planCount', '0');
   localStorage.setItem('actualCount', '0');
-  jsonStore.setJsonData(QUICK_ORDER_JSON);
-  jsonStore.setResourceJsonData(Resource_Group_JSON);
-  jsonStore.setPlanDetailsJson(Plan_Details_JSON);
+  jsonStore.setJsonData(QUICK_ORDER_BASIC_JSON);
+  jsonStore.setResourceJsonData(Resource_Group_BASIC_JSON);
+  jsonStore.setPlanDetailsJson(Plan_Details_BASIC_JSON);
 }
 
 const JsonCreater: React.FC = () => {

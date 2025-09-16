@@ -603,8 +603,9 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       value: '',
       mandatory: false,
       visible: true,
-      editable: false,
+      editable: true,
       order: 14,
+      placeholder: 'Enter Remarks',
       width: 'full',
     },
     Remarks3: {
@@ -657,6 +658,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+          billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
         });
         jsonStore.setTariffDateFields({
@@ -963,8 +965,75 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     return overallValid;
   };
 
-  const openUpdateResourceGroup = () => {
-    setResourceGroupOpen(true);
+  const openUpdateResourceGroup = async () => {
+    // setResourceGroupOpen(true);
+    const formValues = {
+      QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+      // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
+    };
+    console.log("FORM VALUES : ",formValues)
+    setFormData(formValues.QuickOrder);
+    console.log("FORM VALUES : ",formValues.QuickOrder);
+    
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      ...formValues.QuickOrder,
+      "ModeFlag": "Update",
+      // "Status": "Fresh",
+      // "QuickUniqueID": -1,
+      // "QuickOrderNo": "",
+      "QCUserDefined1": formValues.QuickOrder?.QCUserDefined1?.dropdown,
+      "QCUserDefined1Value": formValues.QuickOrder?.QCUserDefined1?.input,
+      "QCUserDefined2": formValues.QuickOrder?.QCUserDefined2?.dropdown,
+      "QCUserDefined2Value": formValues.QuickOrder?.QCUserDefined2?.input,
+      "QCUserDefined3": formValues.QuickOrder?.QCUserDefined3?.dropdown,
+      "QCUserDefined3Value": formValues.QuickOrder?.QCUserDefined3?.input,
+      // "QuickOrderDate":quickOrderDate
+    });
+
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL JSON :: ", fullJson);
+
+    try {
+      //  Update resource
+      const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+      console.log("updateQuickOrderResource result:", res);
+
+      //  Get OrderNumber from response
+      const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+      console.log("OrderNumber:", OrderNumber);
+
+      //  Fetch the full quick order details
+      quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+        console.log("fetchRes:: ", fetchRes);
+        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        const fullJson2 = jsonStore.getJsonData();
+        console.log("FULL JSON 33:: ", fullJson2);
+        setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+        console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+      })
+      //  Update your store or state with the fetched data
+
+    } catch (err) {
+      console.log("CATCH :: ", err);
+      setError(`Error fetching API data for resource group`);
+      toast({
+        title: "⚠️ Submission failed",
+        description: "Something went wrong while saving. Please try again.",
+        variant: "destructive", // or "error"
+      });
+    }
+    finally {
+      toast({
+        title: "✅ Form submitted successfully",
+        description: "Your changes have been saved.",
+        variant: "default", // or "success" if you have custom variant
+      });
+      setResourceGroupOpen(true);
+    }
   }
   return (
     <>
@@ -997,6 +1066,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                 getUserPanelConfig={getUserPanelConfig}
                 saveUserPanelConfig={saveUserPanelConfig}
                 userId="current-user"
+                panelSubTitle="Order Details"
                 className="my-custom-orderform-panel"
               /> : ''
             }

@@ -128,54 +128,54 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // Get the current PlanDetails from jsonStore
       const currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
       // Add additional data to formValues.wagonNewDetails
-      // console.log("formValues before ====", formValues.wagonNewDetails);
-      // formValues.wagonNewDetails = {
-      //   ...formValues.wagonNewDetails,
-      //   "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
-      //   "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.input,
-      //   "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
-      //   "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.input,
-      //   "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
-      //   "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.input,
-      //   "WagonLength": formValues.wagonNewDetails?.WagonLength?.dropdown,
-      //   "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.input,
-      //   // Add more fields as needed
-      // };
-      // formValues.containerDetails = {
-      //   ...formValues.containerDetails,
-      //   "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.dropdown,
-      //   "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantityUOM?.input,
-      //   "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.dropdown,
-      //   "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeightUOM?.input,
-      //   "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
-      //   "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.input,
-      //   // Add more fields as needed
-      // };
-      // formValues.productDetails = {
-      //   ...formValues.containerDetails,
-      //   "ProductQuantity": formValues.containerDetails?.ProductQuantity?.dropdown,
-      //   "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.input,
-      //   // Add more fields as needed
-      // };
-      // formValues.thuDetails = {
-      //   ...formValues.thuDetails,
-      //   "THUQuantity": formValues.thuDetails?.THUQuantity?.dropdown,
-      //   "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.input,
-      //   "THUWeight": formValues.thuDetails?.THUWeight?.dropdown,
-      //   "THUWeightUOM": formValues.thuDetails?.THUWeight?.input,
-      //   // Add more fields as needed
-      // };
-      // formValues.otherDetails = {
-      //   ...formValues.otherDetails,
-      //   "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
-      //   "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
-      //   "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
-      //   "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
-      //   "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
-      //   "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
-      //   // Add more fields as needed
-      // };
-      // console.log("formValues after ====", formValues.wagonNewDetails);
+      console.log("formValues before ====", formValues.wagonNewDetails);
+      formValues.wagonNewDetails = {
+        ...formValues.wagonNewDetails,
+        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input,
+        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input,
+        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input,
+        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown,
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input,
+        // Add more fields as needed
+      };
+      formValues.containerDetails = {
+        ...formValues.containerDetails,
+        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown,
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input,
+        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown,
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input,
+        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input,
+        // Add more fields as needed
+      };
+      formValues.productDetails = {
+        ...formValues.containerDetails,
+        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown,
+        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input,
+        // Add more fields as needed
+      };
+      formValues.thuDetails = {
+        ...formValues.thuDetails,
+        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown,
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input,
+        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown,
+        "THUWeight": formValues.thuDetails?.THUWeight?.input,
+        // Add more fields as needed
+      };
+      formValues.otherDetails = {
+        ...formValues.otherDetails,
+        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
+        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
+        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
+        // Add more fields as needed
+      };
+      console.log("formValues after ====", formValues.wagonNewDetails);
       // Prepare the updated PlanDetails by merging new form values with existing ones
       const updatedPlanDetails = {
         // ...currentPlanDetails,
@@ -674,7 +674,15 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
-      options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      // options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: productQty
+        ?.filter((qc: any, index: number, self: any[]) =>
+          index === self.findIndex((t: any) => t.id === qc.id)
+        )
+        .map((qc: any) => ({
+          label: qc.name,
+          value: qc.id
+        }))
     },
     ClassofStores: {
       id: "ClassofStores",
@@ -688,7 +696,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       order: 4,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
-          messageType: "Container Tare Weight UOM Init",
+          messageType: "Weight UOM Init",
           searchTerm: searchTerm || '',
           offset,
           limit,
@@ -1002,7 +1010,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       placeholder: "Select From Date",
       order: 1,
-      options: [{ label: "Departure", value: "Departure" }],
+      // options: [{ label: "Departure", value: "Departure" }],
     },
     FromTime: {
       id: "FromTime",

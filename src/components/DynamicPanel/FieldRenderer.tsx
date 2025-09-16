@@ -14,7 +14,8 @@ interface FieldRendererProps {
   control: Control<any>;
   fieldId: string;
   tabIndex?: number;
-  mandatory:boolean
+  mandatory:boolean;
+  allowedType?: string; // To restrict input types
 }
 
 // Add this helper above your component:
@@ -37,7 +38,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   control,
   fieldId,
   tabIndex,
-  mandatory
+  mandatory,
+  allowedType
 }) => {
   // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
@@ -162,17 +164,71 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
             const borderClass = getFieldBorderClass(mandatory, field.value);
+            // ✅ Restrict input based on allowedType
+            const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+              let value = e.target.value;
+
+              switch (config.inputType) {
+                case 'number':
+                  // Allow only digits and dot
+                  value = value.replace(/[^0-9.]/g, '');
+                  // Ensure only one dot
+                  const parts = value.split('.');
+                  if (parts.length > 2) {
+                    value = parts[0] + '.' + parts.slice(1).join('');
+                  }
+                  break;
+                  // value = value.replace(/[^0-9]/g, ''); // only numbers
+                  // break;
+                case 'characters':
+                  value = value.replace(/[^a-zA-Z]/g, ''); // only alphabets
+                  break;
+                case 'alphanumeric':
+                  value = value.replace(/[^a-zA-Z0-9]/g, ''); // numbers + alphabets
+                  break;
+                case 'text':
+                default:
+                  // allow everything
+                  break;
+              }
+
+              if (config.maxLength && value.length > config.maxLength) {
+                value = value.slice(0, config.maxLength);
+              }
+
+              field.onChange(value);
+            };
             return (
               <div>
-                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
-                <Input
-                  type="text"
-                  {...field}
-                  {...eventHandlers}
-                  placeholder={placeholder}
-                  className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
-                  tabIndex={tabIndex}
-                />
+                {fieldId === "UnitPrice" ? (
+                  <div className="items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
+                    {/* Fixed currency label */}
+                    <span className="px-2 text-gray-700 font-normal font-[13px]">EUR</span>
+                    {/* Editable input */}
+                    <input
+                      type="text"
+                      {...field}
+                      {...eventHandlers}
+                      placeholder={placeholder}
+                      onChange={handleInput}
+                      maxLength={config.maxLength} // also set native maxLength for safety
+                      className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-1 ${borderClass}`}
+                      tabIndex={tabIndex}
+                      // className="flex-1 px-3 py-2 text-gray-900 bg-gray-100 focus:outline-none"
+                    />
+                  </div>
+                ) : (
+                  <Input
+                    type="text"
+                    {...field}
+                    {...eventHandlers}
+                    placeholder={placeholder}
+                    onChange={handleInput}
+                    maxLength={config.maxLength} // also set native maxLength for safety
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    tabIndex={tabIndex}
+                  />
+                )}  
               </div>
             );
           }}
