@@ -82,7 +82,7 @@ export function LazySelect({
         offset: currentOffset,
         limit: ITEMS_PER_PAGE
       });
-console.log('offset: ', offset);
+      console.log('offset: ', offset);
       if (reset) {
         setOptions(newOptions);
         setOffset(2);
@@ -148,12 +148,12 @@ console.log('offset: ', offset);
     if (multiSelect && Array.isArray(value)) {
       if (value.length === 0) return placeholder;
       if (value.length === 1) {
-        const option:any = options.find((opt:any) => opt.id === value[0]);
+        const option: any = options.find((opt: any) => opt.id === value[0]);
         return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value[0];
       }
       return `${value.length} items selected`;
     } else if (typeof value === 'string') {
-      const option:any = options.find((opt:any) => opt.id === value);
+      const option: any = options.find((opt: any) => opt.id === value);
       return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value;
     }
 
@@ -197,9 +197,9 @@ console.log('offset: ', offset);
                 onClick={handleClear}
               />
             )} */}
-            { !hasValue && (
-              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-            )}
+                {!hasValue && (
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                )}
               </div>
             </Button>
           </div>
@@ -224,26 +224,33 @@ console.log('offset: ', offset);
               {debouncedSearchTerm ? 'No results found.' : 'Start typing to search...'}
             </div>
           ) : (
-            options.map((option: any, index) => (
-              (option?.id) && <div
-                key={(option.id || option.name) + '-' + index}
-                className={cn(
-                  "flex items-center space-x-2 px-2 py-2 hover:bg-gray-100 rounded-md hover:text-accent-foreground cursor-pointer",
-                  isSelected(option?.id) && "bg-accent"
-                )}
-                onClick={() => handleSelect(option?.id)}
-              >
-                {multiSelect && (
-                  <Checkbox
-                    checked={isSelected(option?.id)}
-                    onChange={() => { }}
-                  />
-                )}
-                <span className="flex-1 truncate text-xs">
-                  {option?.id ? `${option.id} || ${option.name}` : (option.id)}
-                </span>
-              </div>
-            ))
+            options.map((option: any, index) => {
+              option.id = option.id ?? option.carrierid;
+              option.name = option.name ?? option.carrierdescription;
+
+              if (!option.id) return null;
+
+              return (
+                <div
+                  key={(option.id || option.name) + '-' + index}
+                  className={cn(
+                    "flex items-center space-x-2 px-2 py-2 hover:bg-gray-100 rounded-md hover:text-accent-foreground cursor-pointer",
+                    isSelected(option?.id) && "bg-accent"
+                  )}
+                  onClick={() => handleSelect(option?.id)}
+                >
+                  {multiSelect && (
+                    <Checkbox
+                      checked={isSelected(option?.id)}
+                      onChange={() => { }}
+                    />
+                  )}
+                  <span className="flex-1 truncate text-xs">
+                    {option?.id ? `${option.id} || ${option.name}` : (option.id)}
+                  </span>
+                </div>
+              );
+            })
           )}
           {loading && (
             <div className="flex items-center justify-center py-4">

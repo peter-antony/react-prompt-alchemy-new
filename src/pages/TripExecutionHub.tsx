@@ -24,6 +24,7 @@ import GridResourceDetails from '@/components/Common/GridResourceDetails';
 import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
 import { dateFormatter } from '@/utils/formatter';
 import { format, subDays } from 'date-fns';
+import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 
 export const TripExecutionHub = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -124,7 +125,7 @@ export const TripExecutionHub = () => {
       type: "DateTimeRange",
       sortable: true,
       editable: false,
-      subRow: false,
+      subRow: true,
       order: 9
     },
     {
@@ -363,8 +364,18 @@ export const TripExecutionHub = () => {
     setApiStatus('loading');
 
     let isMounted = true;
+    const defaultsTo: any = {
+      PlannedExecutionDate: {
+        value: {
+          from: '2025/06/05',
+          to: '2025/08/06'
+        }
+      }
+    }
 
-    tripService.getTrips()
+    const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
+    console.log('ResultSearchCriteria: ', ResultSearchCriteria);
+    tripService.getTrips({ searchCriteria: ResultSearchCriteria })
       .then((response: any) => {
         if (!isMounted) return;
 
@@ -391,7 +402,7 @@ export const TripExecutionHub = () => {
             const statusColors: Record<string, string> = {
               // Status column colors
               'Released': 'badge-fresh-green rounded-2xl',
-              'Under Execution': 'badge-purple rounded-2xl',
+              'Executed': 'badge-purple rounded-2xl',
               'Fresh': 'badge-blue rounded-2xl',
               'Cancelled': 'badge-red rounded-2xl',
               'Deleted': 'badge-red rounded-2xl',
@@ -403,7 +414,7 @@ export const TripExecutionHub = () => {
               // Trip Billing Status colors
               'Draft Bill Raised': 'badge-orange rounded-2xl',
               'Not Eligible': 'badge-red rounded-2xl',
-              'Revenue Leakage': 'badge-red rounded-2xl',
+              'Revenue leakage': 'badge-red rounded-2xl',
               'Invoice Created': 'badge-blue rounded-2xl',
               'Invoice Approved': 'badge-fresh-green rounded-2xl'
             };
@@ -590,143 +601,118 @@ export const TripExecutionHub = () => {
     );
   };
 
+  const buildSearchCriteria: any = (latestFilters: any) => {
+    const criteria: SearchCriteria = { ...defaultSearchCriteria };
+    if (Object.keys(latestFilters).length > 0) {
+      Object.entries(latestFilters).forEach(([key, value]): any => {
+        const filter: any = value; // 👈 cast to any
+        if (key === "PlannedExecutionDate") {
+          criteria.PlannedExecutionDateFrom = filter?.value?.from.replace(/-/g, "/");
+          criteria.PlannedExecutionDateTo = filter?.value?.to.replace(/-/g, "/");
+        } else {
+          // all other keys map directly
+          criteria[key] = filter.value;
+        }
+      });
+      return criteria;
+    }
+  }
+
   const handleServerSideSearch = async () => {
     // // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
-    // let latestFilters = filterService.applyGridFiltersSet();
-    // try {
-    //   gridState.setLoading(true);
-    //   setApiStatus('loading');
+    let latestFilters = filterService.applyGridFiltersSet();
+    console.log('LatestFilters Trip log: ', latestFilters);
+    console.log('buildSearchCriteria: ', buildSearchCriteria(latestFilters));
+    const plannedDate = latestFilters["PlannedExecutionDate"];
+    if (!plannedDate?.value?.from || !plannedDate?.value?.to) {
+      toast({
+        title: "Planned Execution Date Range",
+        description: "Please select a Planned Execution Date before searching.",
+        variant: "destructive", // 👈 makes it red/error style
+      });
+      return;
+    }
 
-    //   // Convert filters to API format
-    //   const filterParams: Record<string, any> = {};
-    //   //filters.forEach(filter => {
-    //   //  if (filter.value !== undefined && filter.value !== null && filter.value !== '') {
-    //   //    filterParams[filter.column] = filter.value;
-    //   //  }
-    //   //});
-    //   const searchData: any = [];
-    //   // Add any current advanced filters
-    //   Object.keys(latestFilters).forEach(key => {
-    //     if (latestFilters[key] !== undefined && latestFilters[key] !== null && latestFilters[key] !== '') {
-    //       filterParams[key] = latestFilters[key];
-    //     }
-    //   });
-    //   if (Object.keys(latestFilters).length > 0) {
-    //     Object.entries(latestFilters).forEach(([key, value]) => {
-    //       console.log(`Key: ${key}, Value: ${value.type}`);
-    //       // if (value && value.value && value.type !== "dateRange") {
-    //       //   searchData.push({ 'FilterName': key, 'FilterValue': value.value });
-    //       // }
-    //       if (key == 'ServiceDate' && value.type === "dateRange") {
-    //         // Split into two separate filter keys
-    //         searchData.push(
-    //           { FilterName: `ServiceFromDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
-    //           { FilterName: `ServiceToDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
-    //         );
-    //       }
-    //       else if (key == 'QuickOrderDate' && value.type === "dateRange") {
-    //         // Split into two separate filter keys
-    //         searchData.push(
-    //           { FilterName: `FromOrderDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
-    //           { FilterName: `ToOrderDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
-    //         );
-    //       }
-    //       else if (key == 'QuickCreatedDate') {
-    //         // Split into two separate filter keys
-    //         searchData.push(
-    //           { FilterName: `CreatedFromDate`, FilterValue: value.value.from ? value.value.from : value.value.to },
-    //           { FilterName: `CreatedToDate`, FilterValue: value.value.to ? value.value.to : value.value.from }
-    //         );
-    //       }
-    //       else if (key == 'TotalNet' && value.type === "number") {
-    //         // Split into two separate filter keys
-    //         searchData.push(
-    //           { FilterName: `TotalNetFrom`, FilterValue: value.value.from },
-    //           { FilterName: `TotalNetTo`, FilterValue: value.value.to }
-    //         );
-    //       } else if (key == 'IsBillingFailed') {
-    //         searchData.push({
-    //           FilterName: key,
-    //           FilterValue: value.value === 'Yes' ? '1' : '0'
-    //         })
-    //       }
-    //       else {
-    //         searchData.push({ 'FilterName': key, 'FilterValue': value.value });
-    //       }
-    //     });
-    //   }
+    const finalSearchCriteria = buildSearchCriteria(latestFilters);
 
-    //   console.log('Searching with filters:', filterParams);
+    try {
+      gridState.setLoading(true);
+      setApiStatus('loading');
 
-    //   const response: any = await quickOrderService.getQuickOrders({
-    //     filters: searchData
-    //   });
+      const response: any = await tripService.getTrips({
+        searchCriteria: finalSearchCriteria
+      });
 
-    //   // console.log('Server-side Search API Response:', response);
+      console.log('Server-side Search API Response:', response);
 
-    //   const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
-    //   const data = parsedResponse.ResponseResult;
+      const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+      const data = parsedResponse;
 
-    //   if (!data || !Array.isArray(data)) {
-    //     console.warn('API returned invalid data format:', response);
-    //     gridState.setGridData([]);
-    //     gridState.setLoading(false);
-    //     setApiStatus('error');
-    //     toast({
-    //       title: "No Results",
-    //       description: "No orders found matching your criteria",
-    //     });
-    //     return;
-    //   }
+      if (!data || !Array.isArray(data)) {
+        console.warn('API returned invalid data format:', response);
+        gridState.setGridData([]);
+        gridState.setLoading(false);
+        setApiStatus('error');
+        toast({
+          title: "No Results",
+          description: "No orders found matching your criteria",
+        });
+        return;
+      }
 
-    //   const processedData = data.map((row: any) => {
-    //     const getStatusColorLocal = (status: string) => {
-    //       const statusColors: Record<string, string> = {
-    //         'Released': 'badge-fresh-green rounded-2xl',
-    //         'Under Execution': 'badge-purple rounded-2xl',
-    //         'Fresh': 'badge-blue rounded-2xl',
-    //         'Cancelled': 'badge-red rounded-2xl',
-    //         'Deleted': 'badge-red rounded-2xl',
-    //         'Save': 'badge-green rounded-2xl',
-    //         'Under Amendment': 'badge-orange rounded-2xl',
-    //         'Confirmed': 'badge-green rounded-2xl',
-    //         'Initiated': 'badge-blue rounded-2xl',
-    //       };
-    //       return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
-    //     };
+      const processedData = data.map((row: any) => {
+        const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Executed': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Initiated': 'badge-blue rounded-2xl',
+            "Revenue leakage": 'badge-red rounded-2xl'
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+        };
 
-    //     return {
-    //       ...row,
-    //       Status: {
-    //         value: row.Status,
-    //         variant: getStatusColorLocal(row.Status),
-    //       },
-    //       QuickOrderDate: dateFormatter(row.QuickOrderDate)
-    //     };
-    //   });
+        return {
+          ...row,
+          Status: {
+            value: row.Status,
+            variant: getStatusColorLocal(row.Status),
+          },
+          TripBillingStatus: {
+            value: row.TripBillingStatus,
+            variant: getStatusColorLocal(row.TripBillingStatus),
+          },
+          // QuickOrderDate: dateFormatter(row.QuickOrderDate)
+        };
+      });
 
-    //   // console.log('Processed Server-side Search Data:', processedData);
+      // console.log('Processed Server-side Search Data:', processedData);
 
-    //   gridState.setGridData(processedData);
-    //   gridState.setLoading(false);
-    //   setApiStatus('success');
+      gridState.setGridData(processedData);
+      gridState.setLoading(false);
+      setApiStatus('success');
 
-    //   toast({
-    //     title: "Success",
-    //     description: `Found ${processedData.length} orders`,
-    //   });
+      toast({
+        title: "Success",
+        description: `Found ${processedData.length} orders`,
+      });
 
-    // } catch (error) {
-    //   console.error('Server-side search failed:', error);
-    //   gridState.setGridData([]);
-    //   gridState.setLoading(false);
-    //   setApiStatus('error');
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to search orders. Please try again.",
-    //     variant: "destructive",
-    //   });
-    // }
+    } catch (error) {
+      console.error('Server-side search failed:', error);
+      gridState.setGridData([]);
+      gridState.setLoading(false);
+      setApiStatus('error');
+      toast({
+        title: "Error",
+        description: "Failed to search orders. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // utils/fetchOptionsHelper.ts
@@ -738,9 +724,18 @@ export const TripExecutionHub = () => {
         offset,
         limit,
       });
+      let parsed = JSON.parse(response?.data?.ResponseData || '[]');
 
       try {
-        return JSON.parse(response?.data?.ResponseData || '[]');
+        console.log('data: ', parsed);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+        if (parsed?.error) {
+          // Error case → handle gracefully
+          console.error('API Error:', parsed.error.errorMessage);
+          return [];
+        }
       } catch (err) {
         console.error(`Failed to parse ResponseData for ${messageType}:`, err);
         return [];
@@ -750,19 +745,32 @@ export const TripExecutionHub = () => {
 
   const dynamicServerFilters: ServerFilter[] = [
     {
-      key: 'Customer',
+      key: 'CustomerID',
       label: 'Customer',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("Customer Init")
     },
     {
       key: "PlannedExecutionDate", label: "Planned Execution Date", type: 'dateRange',
+      defaultValue: {
+        from: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
     },
-    { key: 'DeparturePoint', label: 'Departure Point', type: 'lazyselect', fetchOptions: makeLazyFetcher("Departure Init")},
-    { key: 'ArrivalPoint', label: 'Arrival Point', type: 'lazyselect', fetchOptions: makeLazyFetcher("Arrival Init")},
-    { key: 'Supplier', label: 'Supplier', type: 'lazyselect', fetchOptions: makeLazyFetcher("Supplier Init")},
     {
-      key: 'Service Type', label: 'Service', type: 'lazyselect',
+      key: 'Departurepoint', label: 'Departure Point', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Departure Init")
+    },
+    {
+      key: 'ArrivalPoint', label: 'Arrival Point', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Arrival Init")
+    },
+    {
+      key: 'Supplier', label: 'Supplier', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Supplier Init")
+    },
+    {
+      key: 'ServiceType', label: 'Service', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Service type Init")
     },
     {
@@ -770,77 +778,130 @@ export const TripExecutionHub = () => {
       fetchOptions: makeLazyFetcher("Cluster Init")
     },
     {
-      key: 'Trip Load Type', label: 'Trip Load Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      key: 'LoadType', label: 'Trip Load Type', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Load type Init")
     },
     {
-      key: 'Wagon', label: 'Wagon ID', type: 'lazyselect',
+      key: 'WagonID', label: 'Wagon ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Wagon id Init")
     },
-    { key: 'Trip No', label: 'Trip No', type: 'text' },
-    { key: 'Customer Order', label: 'Customer Order', type: 'text' },
+    { key: 'TripId', label: 'Trip No', type: 'text' },
+    { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
     {
-      key: 'Trip Status', label: 'Trip Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      key: 'TripStatus', label: 'Trip Status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Trip status Init")
     },
     {
-      key: 'Trip Billing Status', label: 'Trip Billing Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      key: 'TripBillingStatus', label: 'Trip Billing Status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("DraftBillStatus Init")
     },
     {
-      key: 'User', label: 'User', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      key: 'UserID', label: 'User', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Createdby Init")
     },
     {
-      key: 'Supplier Contract', label: 'Supplier Contract', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Supplier contract no")
-    },
-    {
-      key: 'Schedule ID', label: 'Schedule ID', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
-    },
-    {
-      key: 'Customer Contract', label: 'Customer Contract', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Customer contract no")
-    },
-    {
-      key: 'Leg From', label: 'Leg From', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
-    },
-    {
-      key: 'Leg To', label: 'Leg To', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
-    },
-    {
-      key: 'Executive Carrier', label: 'Executive Carrier', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
-    },
-    {
-      key: 'Contract', label: 'Supplier/Customer Contract', type: 'lazyselect',
+      key: 'SupplierContract', label: 'Supplier Contract', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Contract Init")
     },
-    { key: 'Train No', label: 'Train No', type: 'text'},
     {
-      key: 'SubService', label: 'Sub Service Type', type: 'lazyselect',
+      key: 'ScheduleID', label: 'Schedule ID', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Schedule ID Init")
+    },
+    {
+      key: 'CustomerContract', label: 'Customer Contract', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Contract Init")
+    },
+    {
+      key: 'LegFrom', label: 'Leg From', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Leg From Init")
+    },
+    {
+      key: 'LegTo', label: 'Leg To', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Leg To Init")
+    },
+    {
+      key: 'ExecutiveCarrierID', label: 'Executive Carrier', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Executive Carrier Init")
+    },
+    { key: 'TrainID', label: 'Train No', type: 'text' },
+    {
+      key: 'SubServiceType', label: 'Sub Service Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Sub Service type Init")
     },
     { key: 'WBS', label: 'WBS', type: 'text' },
-    { key: 'Path No', label: 'Path No', type: 'text' },    
-    
-    { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },
+    { key: 'PathNo', label: 'Path No', type: 'text' },
     {
-      key: 'InvoiceStatus', label: 'Invoice Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Finance Status Init")
-    },
-    {
-      key: 'ResourceType', label: 'Resource Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("ResourceType Init")
-    },
-    {
-      key: 'Container', label: 'Container', type: 'lazyselect',
-      // fetchOptions: makeLazyFetcher("Container Type Init")
+      key: 'ContainerID', label: 'Container No', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Container ID Init")
     },
+    { key: 'RoundTrip', label: 'Round Trip', type: 'text' },
+    {
+      key: 'TripType', label: 'Trip Type', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Trip Type Init")
+    },
+    { key: 'CustomerRefNo', label: 'Customer Ref.No.', type: 'text' },
+    {
+      key: 'RefDocType', label: 'Ref. Doc. Type', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Ref Doc Type Init")
+    },
+    { key: 'RefDocNo', label: 'Ref. Doc. No.', type: 'text' },
+    { key: 'Incident No', label: 'Incident No', type: 'text' },
+    {
+      key: 'IncidentStatus', label: 'Incident status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Incident status Init")
+    },
+    {
+      key: 'TransportMode', label: 'Transport Mode', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Transport Mode Init")
+    },
+    { key: 'ReturnTripId', label: 'Return Trip ID', type: 'text' },
+    {
+      key: 'CancellationReason', label: 'Cancellation Reason', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Cancellation Reason Init")
+    },
+    {
+      key: 'WorkshopStatus', label: 'Workshop Status', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Workshop Status Init")
+    },
+    {
+      key: 'VendorFeedback', label: 'Vendor Feedback', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Vendor Feedback Init")
+    },
+    {
+      key: 'VendorFeedbackReason', label: 'Vendor Feedback Reason', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Vendor Feedback Reason Init")
+    },
+    {
+      key: 'WagonGroup', label: 'Wagon Group', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Wagon Group Init")
+    },
+    {
+      key: 'ContainerGroup', label: 'Container Group', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Container Group Init")
+    },
+    {
+      key: 'Via', label: 'VIA', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("VIA Init")
+    },
+    {
+      key: 'DocumentType', label: 'Document Type', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Document Type Init")
+    },
+    { key: 'Document', label: 'Document', type: 'text' },
+    { key: 'CustomerSenderRefNo', label: 'Customer Sender Ref no', type: 'text' },
+    {
+      key: 'VehicleID', label: 'Vehicle', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Vehicle Init")
+    },
+    {
+      key: 'DriverID', label: 'Driver', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Driver Init")
+    },
+    {
+      key: 'CarrierID', label: 'Carrier', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Carrier Init")
+    },
+
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
     // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
     // { key: 'FromOrderDate', label: 'Quick Order Date', type: 'dateRange' },
