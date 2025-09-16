@@ -386,7 +386,7 @@ export function ColumnFilterInput({
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
-                <SelectItem value="__all__" className="text-xs">All</SelectItem>
+                <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem>
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
@@ -545,7 +545,7 @@ export function ColumnFilterInput({
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
-                <SelectItem value="__all__" className="text-xs">All</SelectItem>
+                <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem>
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}

@@ -28,7 +28,7 @@ const SignIn: React.FC = () => {
   ): Promise<string> => {
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
-    const digest = await crypto.subtle.digest("SHA-256", data);
+    const digest = await window.crypto.subtle.digest("SHA-256", data);
 
     return btoa(String.fromCharCode(...new Uint8Array(digest)))
       .replace(/\+/g, "-")
@@ -152,7 +152,7 @@ const SignIn: React.FC = () => {
         // Start OAuth flow automatically
         startPKCEFlow();
       }
-      navigate(ROUTES.HOME, { replace: true });
+      // navigate(ROUTES.HOME, { replace: true });
     }, 2000);
 
     return () => clearTimeout(delay);

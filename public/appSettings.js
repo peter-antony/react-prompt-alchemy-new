@@ -41,9 +41,9 @@ function getGatewayUrl() {
   // }
   // return getBaseUrl();
   if (window.location.host.indexOf('localhost') > -1) {
-    return 'http://ebswarcnv29.pearl.com';
+    return 'https://ebswarcnv29.pearl.com';
   } else {
-    return 'http://ebswarcnv29.pearl.com';
+    return 'https://ebswarcnv29.pearl.com';
   }
 }
 

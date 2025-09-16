@@ -448,7 +448,7 @@ const QuickOrderManagement = () => {
     {
       key: 'OrderType', label: 'Order Type', type: 'select',
       options: [
-        { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
+        // { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'SELL', default: "N", description: "", seqNo: 2 },
         { id: '3', name: 'BUY', default: "N", description: "", seqNo: 3 },
       ]

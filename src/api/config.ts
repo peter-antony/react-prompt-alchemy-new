@@ -16,7 +16,7 @@ export const Config = {
 
 } as const;
 // const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
-const REACT_APP_API_URL = "http://192.168.2.20/v1";
+const REACT_APP_API_URL = "http://192.168.2.92/v1";
 // const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1";
 
 const token: any = localStorage.getItem("token");
