@@ -181,6 +181,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
       setOrderType(quickOrder.OrderType || 'BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
+      // setOriginalData(quickOrder);
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
       setResourceCount(quickOrder.ResourceGroup?.length);
       const resourceGroups = jsonStore.getAllResourceGroups();
@@ -198,7 +199,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       // setOrderType('BUY');
       setFormData(normalizeOrderFormDetails(quickOrder));
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder));
-      setResourceCount(quickOrder.ResourceGroup.length);
+      setResourceCount(quickOrder.ResourceGroup?.length);
 
     }
   }, [isEditQuickOrder, loading, contracts, customers, clusters, vendors]);
@@ -293,7 +294,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   //ORDER DETAILS FORM
   const initialOrderFormDetails = normalizeOrderFormDetails(getInitialOrderDetails());
   const [formData, setFormData] = useState(initialOrderFormDetails);
-
+  // const [originalData, setOriginalData] = useState<any>(null);
   const getOrderFormDetailsConfig = (OrderType: string): PanelConfig => ({
     // const OrderFormDetailsConfig: PanelConfig = {
 
@@ -899,8 +900,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
           console.log("FULL JSON 33:: ", fullJson2);
-          setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-          console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+          setResourceCount(fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
+          console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
         })
         //  Update your store or state with the fetched data
 
@@ -965,8 +966,44 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     return overallValid;
   };
 
+  // function markUpdatedObjects(original: any, updated: any): any {
+  //   if (!original || !updated) return updated;
+
+  //   console.log("original: ", original);
+  //   console.log("updated: ", updated);
+  //   // Clone updated object so we don’t mutate state directly
+  //   const result = JSON.parse(JSON.stringify(updated));
+
+  //   if (Array.isArray(original) && Array.isArray(updated)) {
+  //     return updated.map((item, index) => {
+  //       return markUpdatedObjects(original[index], item);
+  //     });
+  //   }
+
+  //   if (typeof original === "object" && typeof updated === "object") {
+  //     // Check if ResourceGroup (or similar object with ModeFlag)
+  //     if (updated.ResourceUniqueID && updated.ModeFlag) {
+  //       const isChanged = JSON.stringify(original) !== JSON.stringify(updated);
+  //       result.ModeFlag = isChanged ? "Update" : "NoChange";
+  //     }
+
+  //     // Recursively check children
+  //     Object.keys(updated).forEach((key) => {
+  //       if (typeof updated[key] === "object") {
+  //         result[key] = markUpdatedObjects(original[key], updated[key]);
+  //       }
+  //     });
+  //   }
+  //   console.log("result ", result);
+  //   return result;
+  // }
+
   const openUpdateResourceGroup = async () => {
     // setResourceGroupOpen(true);
+    
+    // console.log("originalData ===", originalData);
+    // const updatedPayload = markUpdatedObjects(originalData, fullJson.ResponseResult.QuickOrder);
+
     const formValues = {
       QuickOrder: orderDetailsRef.current?.getFormValues() || {},
       // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
@@ -979,6 +1016,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       ...jsonStore.getJsonData().quickOrder,
       ...formValues.QuickOrder,
       "ModeFlag": "Update",
+      "QuickOrderNo": jsonStore.getQuickUniqueID(),
       // "Status": "Fresh",
       // "QuickUniqueID": -1,
       // "QuickOrderNo": "",

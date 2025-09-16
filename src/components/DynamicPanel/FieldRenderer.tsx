@@ -201,7 +201,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             return (
               <div>
                 {fieldId === "UnitPrice" ? (
-                  <div className="items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
+                  <div className="flex items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
                     {/* Fixed currency label */}
                     <span className="px-2 text-gray-700 font-normal font-[13px]">EUR</span>
                     {/* Editable input */}

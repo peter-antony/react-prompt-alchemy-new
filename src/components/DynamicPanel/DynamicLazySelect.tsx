@@ -92,7 +92,7 @@ export function DynamicLazySelect({
 
       if (reset) {
         setOptions(newOptions);
-        setOffset(ITEMS_PER_PAGE);
+        setOffset(2);
       } else {
         setOptions(prev => [...prev, ...newOptions]);
         setOffset(prev => prev + 1);

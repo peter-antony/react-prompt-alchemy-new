@@ -710,6 +710,18 @@ function getQuickUniqueID() {
   return undefined;
 }
 
+function getQuickOrderNo() {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    typeof jsonData.ResponseResult.QuickOrder.QuickOrderNo !== 'undefined'
+  ) {
+    return jsonData.ResponseResult.QuickOrder.QuickOrderNo;
+  }
+  return undefined;
+}
+
 function pushQuickOrderAttachment(attachment: any) {
   if (
     jsonData &&
@@ -870,6 +882,7 @@ const jsonStore = {
   getAllActualDetailsByResourceUniqueID,
   setQuickOrderFields,
   getQuickUniqueID,
+  getQuickOrderNo,
   pushQuickOrderAttachment,
   setResourceGroupFields,
   setResourceType,
