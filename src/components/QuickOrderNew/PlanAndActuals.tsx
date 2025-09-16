@@ -223,7 +223,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   const navigate = useNavigate();
   const handleLinkClick = (row: any, columnKey: any) => {
     console.log('Link clicked:', columnKey, row.PlanLineUniqueID);
-    if (columnKey === 'id' && row.PlanLineUniqueID) {
+    if (columnKey === 'WagonID' && row.PlanLineUniqueID) {
       setPlanInfo({
         keyName: 'PlanLineUniqueID',
         value: row.PlanLineUniqueID,

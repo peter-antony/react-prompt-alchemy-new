@@ -18,7 +18,7 @@ import {
   Info,
   Plus,
   WandSparkles,
-  MoreVertical, Trash2, Copy
+  MoreVertical, Trash2, Copy, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ interface PlanAndActualsDetailsProps {
   onCloseDrawer(),
   onApiSuccess?: (bool: any) => boolean | void;
 }
-export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId, onApiSuccess }: PlanAndActualsDetailsProps) => {
+export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId, onApiSuccess, PlanInfo }: PlanAndActualsDetailsProps) => {
   let currentStep = 1;
   const [planType, setPlanType] = useState("plan");
   const [isOpen, setIsOpen] = useState(false);
@@ -231,7 +231,52 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     } else {
       // Get the current ActualDetails from jsonStore
       const currentActualDetails = jsonStore.getActualDetails() || {};
-
+      formValues.wagonNewDetails = {
+        ...formValues.wagonNewDetails,
+        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input,
+        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input,
+        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input,
+        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown,
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input,
+        // Add more fields as needed
+      };
+      formValues.containerDetails = {
+        ...formValues.containerDetails,
+        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown,
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input,
+        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown,
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input,
+        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input,
+        // Add more fields as needed
+      };
+      formValues.productDetails = {
+        ...formValues.containerDetails,
+        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown,
+        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input,
+        // Add more fields as needed
+      };
+      formValues.thuDetails = {
+        ...formValues.thuDetails,
+        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown,
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input,
+        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown,
+        "THUWeight": formValues.thuDetails?.THUWeight?.input,
+        // Add more fields as needed
+      };
+      formValues.otherDetails = {
+        ...formValues.otherDetails,
+        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
+        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
+        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
+        // Add more fields as needed
+      };
       // Prepare the updated ActualDetails by merging new form values with existing ones
       const updatedActualDetails = {
         ...currentActualDetails,
@@ -248,12 +293,20 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
       // Set the updated ActualDetails in jsonStore
+      console.log("RESOURCE ID : ",resourceId)
+      console.log("Updated Actual Details:", updatedActualDetails);
       jsonStore.setActualDetailsJson(updatedActualDetails);
-      jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails)
+      jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails);
+      jsonStore.setQuickOrder({
+        ...jsonStore.getJsonData().quickOrder,
+        "ModeFlag": "Update",
+        "Status": "Fresh",
+        "QuickOrderNo": jsonStore.getQuickUniqueID()
+      });
       const fullJson = jsonStore.getJsonData();
       console.log("FULL Plan&Actual JSON :: ", fullJson);
       try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
         console.log(" try", data);
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
@@ -278,7 +331,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         onApiSuccess(false);
         // setError(`Error fetching API data for Update ResourceGroup`);
       }
-      console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
+      // console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
     }
     
   };
@@ -318,6 +371,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resourceGroupArray, setResourceGroupArray] = useState<any>([]);
 
   // Iterate through all messageTypes
   const fetchAll = async () => {
@@ -1245,7 +1299,16 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   useEffect(() => {
     const planDetails = jsonStore.getPlanDetails() || {};
     // alert("R id - " + resourceId)
-    console.log("PLAN DETAILS :: ", planDetails)
+    console.log("PlanInfo :: ", PlanInfo);
+    console.log("PLAN DETAILS :: ", jsonStore.getQuickOrder());
+    // let resourceGroupArray = [];
+    const quickOrderData = jsonStore.getQuickOrder() || {};
+    const resourceGroupArray = Array.isArray(quickOrderData.ResourceGroup) ? quickOrderData.ResourceGroup : [];
+    // You can now use resourceGroupArray for dropdown binding as needed
+    console.log("RESOURCE GROUP ARRAY FOR DROPDOWN :: ", resourceGroupArray);
+    setResourceGroupArray(resourceGroupArray);
+
+    console.log("PLAN DETAILS :: ", planDetails);
     if (isEditQuickOrder) {
       setWagonDetailsData(normalizeWagonDetails(planDetails.WagonDetails || {}));
       setContainerDetailsData(normalizeContainerDetails(planDetails.ContainerDetails || {}));
@@ -1455,6 +1518,19 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                   <h3 className={`text-sm font-medium`}>Resource Group</h3>
                 </div>
                 <div className="w-full">
+                  <div className="relative flex border border-gray-300 rounded-md overflow-hidden bg-white text-sm">
+                    <select
+                      className="w-full px-3 py-2 bg-white text-gray-700 focus:outline-none appearance-none pr-8"
+                    >
+                      <option>Select Item</option>
+                      {resourceGroupArray.map((item: any) => (
+                          <option key={item.ResourceUniqueID} value={item.ResourceUniqueID}>{item.ResourceUniqueID}</option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </span>
+                  </div>
                   {/* <SimpleDropDown
                     list={resourceGroups}
                     value={resourceGroups[0].description}
