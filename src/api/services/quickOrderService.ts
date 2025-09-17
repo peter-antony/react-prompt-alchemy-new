@@ -358,4 +358,45 @@ export const quickOrderService = {
     );
     return response.data;
   },
+
+  // Get master common data
+  getLinkedOrdersData: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    console.log("params2 ---", params);
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: "QuickOrder-Show Linked Order",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
+      },
+      SearchCriteria: {
+        // QuickOrderNo: "291-SELL",
+        // OrderType: "SELL",
+        QuickOrderNo: params?.OrderNo || "",
+        OrderType: params?.OrderType || "",
+        AdditionalFilter: [
+          {
+            FilterName: "EXTRA",
+            FilterValue: ""
+          }
+        ],
+      },
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 100,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.LINKEDORDERS_GET,
+      requestBody
+    );
+    return response.data;
+  },
 };

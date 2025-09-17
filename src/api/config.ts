@@ -63,7 +63,8 @@ export const API_ENDPOINTS = {
     COMBO: "/common/combo",
     SCREEN_FETCH: '/quickorderhub/screenfetch',
     ORDERFORM: "/quickorderhub/update",
-    QUICKORDER_GET:"/quickorder/getdata"
+    QUICKORDER_GET:"/quickorder/getdata",
+    LINKEDORDERS_GET:"/quickorder/showlinked",
   },
   // Invoice management
   INVOICES: {

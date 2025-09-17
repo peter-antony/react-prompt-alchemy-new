@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { User, FileText, Calendar, Bookmark, Search, Filter, Camera } from "lucide-react";
 import { FilterDropdown } from "@/components/Common/FilterDropdown";
+import jsonStore from "@/stores/jsonStore";
+import { quickOrderService } from '@/api/services/quickOrderService';
 
 const orders = [
   {
@@ -109,14 +111,68 @@ export default function LinkedOrders() {
     throw new Error("Function not implemented.");
   }
 
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [linkedOrderArr, setLinkedOrderArray] = useState<any>([]);
+  const [totalNetAmount, setTotalNetAmount] = useState<number>(0);
+
+  useEffect(() => {
+    fetchAll();
+    console.log("LinkedOrders loaded", jsonStore.getQuickOrder());
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(false);
+    setError(null);
+    // console.log("Loading API data Type", OrderType);
+    const OrderNo = jsonStore.getQuickOrder().QuickOrderNo;
+    const OrderType = jsonStore.getQuickOrder().OrderType;
+    try {
+      const data: any = await quickOrderService.getLinkedOrdersData({ OrderType: OrderType, OrderNo: OrderNo });
+      setApiData(data);
+
+      // Parse the main response object
+      const responseObj = JSON.parse(data?.data?.ResponseData);
+      // Extract TotalNetAmount from the response object, if present
+      setTotalNetAmount(responseObj?.TotalNetAmount ?? 0);
+
+      // Find the property that is an array (the LinkedOrders array)
+      let linkedOrdersArr = [];
+      for (const key in responseObj) {
+        if (Array.isArray(responseObj[key])) {
+          linkedOrdersArr = responseObj[key];
+          break;
+        }
+      }
+
+      setLinkedOrderArray(linkedOrdersArr);
+    } catch (err) {
+      setError(`Error fetching API data`);
+      // setApiData(data);
+    }
+    finally {
+      setLoading(true);
+    }
+  };
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+    setLoading(false);
+    await fetchData();
+  };
+
   return (
     <div className="bg-[#f8fafd] min-h-screen p-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-3">
         <div>
           <span className="text-lg font-semibold text-gray-800">Total Net Amount</span>
-          <span className="ml-4 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>Customer <span className="font-bold  rounded-full bg-white">€ 45595.00</span></span>
-          <span className="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>Supplier <span className="font-bold  rounded-full bg-white">€ 45595.00</span></span>
+          <span className="ml-4 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>
+            Customer <span className="font-bold  rounded-full bg-white">€ {totalNetAmount}</span>
+          </span>
+          <span className="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>
+            Supplier <span className="font-bold  rounded-full bg-white">€ {totalNetAmount}</span>
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -149,40 +205,41 @@ export default function LinkedOrders() {
       </div>
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {orders.map((order, idx) => (
+        {linkedOrderArr.map((order, idx) => (
           <div key={idx} className="bg-white rounded-xl shadow-sm border p-3 min-h-[200px] flex flex-col gap-4">
             <div className="flex items-center justify-between gap-1">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${order.typeColor}`}>
-                {order.type}
+              {/* <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${order.typeColor}`}> */}
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-blue-100 text-blue-600`}>
+                C
               </div>
               <div className="ml-2 flex-1">
-                <span className="font-semibold text-gray-800 text-sm">{order.id}</span>
-                <div className="text-xs text-gray-400">{order.contract}</div>
+                <span className="font-semibold text-gray-800 text-sm">{order.LinkedQuickUniqueID}</span>
+                <div className="text-xs text-gray-400">{order.LinkedPartyID}</div>
               </div>
-              <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 text-xs font-medium">{order.action}</span>
+              <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 text-xs font-medium">{order.LinkedOrderType}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <User className="w-4 h-4 text-gray-400" />
-              <span>{order.company}</span>
+              <span>{order.LinkedPartyName}</span>
             </div>
             <div className="flex items-center gap-6 w-full text-sm text-gray-700">
               <div className="flex items-center gap-1 w-1/2">
                 <FileText className="w-4 h-4 text-gray-400" />
-                <span>{order.customerNo}</span>
+                <span>{order.LinkedPartyType}</span>
               </div>
               <div className="flex items-center gap-1 w-1/2">
                 <Camera className="w-4 h-4 text-gray-400" />
-                <span>{order.amount}</span>
+                <span>{order.LinkedTotalNetAmount}</span>
               </div>
             </div>
             <div className="flex items-center gap-6 w-full text-sm text-gray-700">
               <div className="flex items-center gap-1 w-1/2">
                 <Bookmark className="w-4 h-4 text-gray-400" />
-                <span>{order.orderNo}</span>
+                <span>{order.LinkedQuickUniqueID}</span>
               </div>
               <div className="flex items-center gap-1 w-1/2">
                 <Calendar className="w-4 h-4 text-gray-400" />
-                <span>{order.date}</span>
+                <span>{order.LinkedQuickOrderDate}</span>
               </div>
             </div>
           </div>
