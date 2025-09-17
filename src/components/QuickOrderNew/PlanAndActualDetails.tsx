@@ -50,7 +50,7 @@ import { quickOrderService } from "@/api/services/quickOrderService";
 interface PlanAndActualsDetailsProps {
   isEditQuickOrder?: boolean;
   resourceId?: string;
-  PlanInfo?: {},
+  PlanInfo?: any,
   onCloseDrawer(),
   onApiSuccess?: (bool: any) => boolean | void;
 }
@@ -372,6 +372,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resourceGroupArray, setResourceGroupArray] = useState<any>([]);
+  const [defaultResourceId, setDefaultResourceId] = useState(null);
 
   // Iterate through all messageTypes
   const fetchAll = async () => {
@@ -1202,11 +1203,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     console.log(`Field: ${field}, Value: ${value}`);
   };
 
+  const [mappedPlanActualItems, setMappedPlanActualItems] = useState<any[]>([]);
   // Replace the static mappedPlanActualItems array with the merged array from jsonStore
-  const mappedPlanActualItems = [
-    ...jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId),
-    ...jsonStore.getAllActualDetailsByResourceUniqueID(resourceId)
-  ];
+  useEffect(() => {
+    setMappedPlanActualItems([
+      ...jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId),
+      ...jsonStore.getAllActualDetailsByResourceUniqueID(resourceId)
+    ]);
+  }, [resourceId]);
 
   // Normalization functions for each config
   function normalizeWagonDetails(data) {
@@ -1297,9 +1301,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
   // Sync state with jsonStore on isEditQuickOrder change
   useEffect(() => {
+    setDefaultResourceId(resourceId);
+    console.log('RESOURCE ID : ', resourceId, defaultResourceId);
     const planDetails = jsonStore.getPlanDetails() || {};
     // alert("R id - " + resourceId)
     console.log("PlanInfo :: ", PlanInfo);
+    if(PlanInfo?.resourceId) {
+      setDefaultResourceId(PlanInfo?.resourceId);
+    }
     console.log("PLAN DETAILS :: ", jsonStore.getQuickOrder());
     // let resourceGroupArray = [];
     const quickOrderData = jsonStore.getQuickOrder() || {};
@@ -1505,6 +1514,20 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
   }
 
+  const onResourceValueChange = async (value: string) => {
+    console.log('Value is: ', value);
+    setDefaultResourceId(value);
+    setMappedPlanActualItems([
+      ...jsonStore.getAllPlanDetailsByResourceUniqueID(value),
+      ...jsonStore.getAllActualDetailsByResourceUniqueID(value)
+    ]);
+    console.log('mapped data: ',jsonStore.getJsonData(), mappedPlanActualItems);
+  };
+
+  const getSelectedPlanActualItem = (item: any) => {
+    console.log('getSelectedPlanActualItem: ', item);
+  }
+
   return (
     <>
       <div className="flex flex-col h-full">
@@ -1519,7 +1542,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                 </div>
                 <div className="w-full">
                   <div className="relative flex border border-gray-300 rounded-md overflow-hidden bg-white text-sm">
-                    <select
+                    {/* <select
                       className="w-full px-3 py-2 bg-white text-gray-700 focus:outline-none appearance-none pr-8"
                     >
                       <option>Select Item</option>
@@ -1529,7 +1552,24 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                     </select>
                     <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2">
                       <ChevronDown className="w-4 h-4 text-gray-400" />
-                    </span>
+                    </span> */}
+
+                    <Select
+                      value={defaultResourceId}
+                      onValueChange={onResourceValueChange}
+                    >
+                      <SelectTrigger className="w-full h-10 px-3 py-2 text-gray-700 focus:outline-none appearance-none">
+                        <SelectValue placeholder="Select Items" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border shadow-lg z-50">
+                        {/* <SelectItem value="" className="text-xs">Select Items</SelectItem> */}
+                        {resourceGroupArray?.map((item: any, index: number) => (
+                          <SelectItem key={item.ResourceUniqueID || index} value={item.ResourceUniqueID} className="text-xs">
+                            {`${item?.ResourceUniqueID} || ${item?.ResourceStatus}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   {/* <SimpleDropDown
                     list={resourceGroups}
@@ -1565,14 +1605,15 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             {/* // ...in your JSX: */}
             <div className="flex flex-col gap-4">
 
-              {isEditQuickOrder && mappedPlanActualItems.map((item) => (
+              {isEditQuickOrder && mappedPlanActualItems.map((item, index) => (
                 <div
-                  key={item.id}
-                  className="flex flex-col border rounded-lg p-3 bg-white shadow-sm relative"
+                  key={'plan-' + index}
+                  className="flex flex-col border rounded-lg p-3 bg-white shadow-sm relative cursor-pointer"
+                  onClick={() => getSelectedPlanActualItem(item)}
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-medium text-sm">{item.WagonDetails.WagonID}</div>
+                      <div className="font-medium text-sm">{(item?.PlanLineUniqueID || item?.ActualLineUniqueID)} - {item.WagonDetails.WagonID}</div>
                       <div className="text-xs text-gray-500 mt-2">
                         {item.WagonDetails.WagonType}
                       </div>
@@ -1585,13 +1626,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                       <button
                         className="p-1 rounded hover:bg-gray-100 relative"
                         onClick={() =>
-                          setOpenMenuId(openMenuId === item.PlanLineUniqueID ? null : item.PlanLineUniqueID)
+                          setOpenMenuId(openMenuId === (item.PlanLineUniqueID || item.ActualLineUniqueID) ? (item.PlanLineUniqueID || item.ActualLineUniqueID) : (item.PlanLineUniqueID || item.ActualLineUniqueID))
                         }
                       >
                         <MoreVertical className="w-5 h-5 text-gray-500" />
                       </button>
                       {/* Dropdown menu */}
-                      {openMenuId === item.id && (
+                      {openMenuId === (item.PlanLineUniqueID || item.ActualLineUniqueID) && (
                         <div className="absolute right-2 top-10 z-10 bg-white border rounded shadow-md w-40">
                           <button
                             className="flex gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
