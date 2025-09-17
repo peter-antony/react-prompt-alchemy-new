@@ -124,6 +124,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       journeyDetails: journeyDetailsRef.current?.getFormValues() || {},
       otherDetails: otherDetailsRef.current?.getFormValues() || {},
     };
+    
     if (planType === "plan") {
       // Get the current PlanDetails from jsonStore
       const currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
@@ -131,48 +132,48 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       console.log("formValues before ====", formValues.wagonNewDetails);
       formValues.wagonNewDetails = {
         ...formValues.wagonNewDetails,
-        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input,
-        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input,
-        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input,
-        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown,
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input,
+        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
         // Add more fields as needed
       };
       formValues.containerDetails = {
         ...formValues.containerDetails,
-        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown,
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input,
-        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown,
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input,
-        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input,
+        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
+        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
+        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
         // Add more fields as needed
       };
       formValues.productDetails = {
         ...formValues.containerDetails,
-        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown,
-        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input,
+        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
+        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
         // Add more fields as needed
       };
       formValues.thuDetails = {
         ...formValues.thuDetails,
-        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown,
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input,
-        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown,
-        "THUWeight": formValues.thuDetails?.THUWeight?.input,
+        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
         // Add more fields as needed
       };
       formValues.otherDetails = {
         ...formValues.otherDetails,
-        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
-        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
-        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
-        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
-        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
-        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
+        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
+        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
+        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
         // Add more fields as needed
       };
       console.log("formValues after ====", formValues.wagonNewDetails);
@@ -233,48 +234,48 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       const currentActualDetails = jsonStore.getActualDetails() || {};
       formValues.wagonNewDetails = {
         ...formValues.wagonNewDetails,
-        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown,
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input,
-        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown,
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input,
-        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown,
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input,
-        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown,
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input,
+        "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+        "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+        "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+        "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
         // Add more fields as needed
       };
       formValues.containerDetails = {
         ...formValues.containerDetails,
-        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown,
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input,
-        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown,
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input,
-        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown,
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input,
+        "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
+        "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
+        "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
         // Add more fields as needed
       };
       formValues.productDetails = {
         ...formValues.containerDetails,
-        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown,
-        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input,
+        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
+        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
         // Add more fields as needed
       };
       formValues.thuDetails = {
         ...formValues.thuDetails,
-        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown,
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input,
-        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown,
-        "THUWeight": formValues.thuDetails?.THUWeight?.input,
+        "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+        "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
         // Add more fields as needed
       };
       formValues.otherDetails = {
         ...formValues.otherDetails,
-        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown,
-        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input,
-        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown,
-        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input,
-        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown,
-        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input,
+        "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
+        "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
+        "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
         // Add more fields as needed
       };
       // Prepare the updated ActualDetails by merging new form values with existing ones

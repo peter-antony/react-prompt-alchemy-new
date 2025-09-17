@@ -74,6 +74,15 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         };
     }, [openMenuId]);
 
+    const closeResource = () => {
+        setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0" });
+        setIsBack(true);
+        // const resourceGroups = jsonStore.getAllResourceGroups();
+        // console.log("RESOURCE GROUPS::::: ", resourceGroups);
+        // const quickOrder = jsonStore.getQuickOrder();
+        // setOrderType('BUY');
+      }
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {data.map((item) => (
@@ -217,7 +226,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                 isBack={isBack}
             >
                 <div className="text-sm text-gray-600">
-                    <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} resourceId={isResourceGroup.ResourceUniqueID} />
+                    <ResourceGroupDetailsForm isEditQuickOrder={isEditQuickOrder} onSaveSuccess={closeResource} resourceId={isResourceGroup.ResourceUniqueID} />
                 </div>
             </SideDrawer>
         </div>

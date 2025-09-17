@@ -1112,9 +1112,6 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
           {/* Form Actions */}
           <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200">
-            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100">
-              <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
-            </button>
             {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setMoreInfoOpen(true)}>
               <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
             </button> */}

@@ -388,13 +388,43 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
         billingDetails: billingDetailsRef.current?.getFormValues() || {}
       };
+      console.log("resourceId Before API Call:", resourceId);
       if (isEditQuickOrder && resourceId) {
+        console.log("if");
+        setBasicDetailsData(formValues.basicDetails);
+        setOperationalDetailsData(formValues.operationalDetails);
+        setBillingDetailsData(formValues.billingDetails);
+        setMoreInfoDetailsData(formValues.moreInfoDetailsRef);
+
+        const originalData = jsonStore.getOriginalQuickOrder();
+        console.log("Original JSON :: ", originalData);
+        // const updatedPayload = markUpdatedObjects(originalData, fullJson);
+        // console.log("updatedPayload ====", updatedPayload)
 
         jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
+
+        localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
+        jsonStore.setResourceBasicDetails({
+          ...jsonStore.getResourceJsonData().BasicDetails,
+          ...formValues.basicDetails
+        });
+        jsonStore.setResourceOperationalDetails({
+          ...jsonStore.getResourceJsonData().OperationalDetails,
+          ...formValues.operationalDetails
+        });
+        jsonStore.setResourceBillingDetails({
+          ...jsonStore.getResourceJsonData().BillingDetails,
+          ...formValues.billingDetails
+        });
+        jsonStore.setResourceMoreInfoDetails({
+          ...jsonStore.getResourceJsonData().MoreRefDocs,
+          ...formValues.moreInfoDetailsRef
+        })
+
         // toast.success("Resource Group Updated Successfully");
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
-          "ModeFlag": "Update",
+          // "ModeFlag": "Update",
           "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
         jsonStore.setResourceJsonData({
@@ -461,6 +491,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
 
       } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
+        console.log("else if");
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
@@ -496,7 +527,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         })
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
-          "ModeFlag": "Update",
+          "ModeFlag": "Insert",
+          "ResourceStatus": "Fresh",
           "PrimaryDocType":formValues.moreInfoDetailsRef?.PrimaryDocType?.dropdown ,
           "PrimaryDocTypeValue":formValues.moreInfoDetailsRef?.PrimaryDocType?.input ,
           "SecondaryDocType":formValues.moreInfoDetailsRef?.SecondaryDocType?.dropdown,
@@ -508,7 +540,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.pushResourceGroup(fullResourceJson);
         setResourceUniqueId(fullResourceJson.ResourceUniqueID);
         const fullJson = jsonStore.getQuickOrder();
-        console.log(" BEFORE API FULL  JSON :: ", fullJson);
+        console.log("From Edit to add :: ", fullJson);
 
         try {
           const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
@@ -563,6 +595,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
 
       } else {
+        console.log("else");
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
@@ -589,7 +622,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         // })
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
-          "ModeFlag": "Update",
+          // "ModeFlag": "Update",
           "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
         jsonStore.setResourceJsonData({
@@ -675,6 +708,50 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     //   //Closing ResourceGroupDetails Modal
     // }
 
+  }
+
+  function markUpdatedObjects(original: any, updated: any): any {
+    if (!original || !updated) return updated;
+
+    const result = updated;
+
+    if (Array.isArray(original) && Array.isArray(updated)) {
+      return updated.map((item, index) => markUpdatedObjects(original[index], item));
+    }
+
+    if (isObject(original) && isObject(updated)) {
+      // ✅ For objects with ModeFlag
+      if (updated.ResourceUniqueID && "ModeFlag" in updated) {
+        const changed = hasChanges({ ...original, ModeFlag: undefined }, { ...updated, ModeFlag: undefined });
+        result.ModeFlag = changed ? "Update" : "NoChange";
+      }
+
+      // ✅ Recursively check children
+      Object.keys(updated).forEach((key) => {
+        if (isObject(updated[key]) || Array.isArray(updated[key])) {
+          result[key] = markUpdatedObjects(original[key], updated[key]);
+        }
+      });
+    }
+    console.log("result ===", result);
+    return result;
+  }
+
+  function isObject(val: any) {
+    return val && typeof val === "object" && !Array.isArray(val);
+  }
+
+  function hasChanges(original: any, updated: any): boolean {
+    if (original === updated) return false;
+    if (typeof original !== typeof updated) return true;
+
+    if (isObject(original) && isObject(updated)) {
+      return Object.keys({ ...original, ...updated }).some((key) =>
+        hasChanges(original[key], updated[key])
+      );
+    }
+
+    return original !== updated;
   }
 
   const handleValidateAllPanels = () => {
@@ -1129,7 +1206,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       fieldType: 'lazyselect',
       width: 'third',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 1,
