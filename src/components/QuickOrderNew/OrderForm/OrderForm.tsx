@@ -218,7 +218,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       console.log("load inside try", data);
       if (messageType == "Contract Init") {
         setContracts(JSON.parse(data?.data?.ResponseData));
-        console.log("Contracts data:===", data.data.ResponseData);
+        // console.log("Contracts data:===", data.data.ResponseData);
       }
       if (messageType == "Customer Init") {
         setCustomers(JSON.parse(data?.data?.ResponseData));

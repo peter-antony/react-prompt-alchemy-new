@@ -72,7 +72,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       // Or keep your generic logic for all inputdropdowns
       if (config.fieldType === 'inputdropdown' && typeof defaults[fieldId] === 'string') {
         defaults[fieldId] = splitInputDropdownValue(defaults[fieldId]);
-        console.log("defaults", defaults);
+        // console.log("defaults", defaults);
       }
     });
     return defaults;
@@ -99,7 +99,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
         // }
         if (config.fieldType === 'inputdropdown' && typeof result[fieldId] === 'string') {
           result[fieldId] = splitInputDropdownValue(result[fieldId]);
-          console.log("defaults", result);
+          // console.log("defaults", result);
         }
       });
       return result;
@@ -183,7 +183,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       .sort(([_, a], [__, b]) => a.order - b.order)
       .map(([fieldId, config], index) => {
         const tabIndex = startingTabIndex + index;
-        console.log(`Field ${fieldId} in panel ${panelOrder}: order=${config.order}, tabIndex=${tabIndex}`);
+        // console.log(`Field ${fieldId} in panel ${panelOrder}: order=${config.order}, tabIndex=${tabIndex}`);
         return {
           fieldId,
           config,
@@ -191,7 +191,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
         };
       });
     
-    console.log('All visible fields with tabIndex:', fields);
+    // console.log('All visible fields with tabIndex:', fields);
     return fields;
   }, [panelConfig, panelOrder]);
 
