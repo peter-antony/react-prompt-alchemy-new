@@ -219,7 +219,7 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "ReasonCode",
+      key: "CancellationReason",
       label: "Cancellation Reason",
       type: "Text",
       sortable: true,
@@ -323,7 +323,7 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "Remarks",
+      key: "Remark",
       label: "Remarks",
       type: "Text",
       sortable: true,
@@ -410,7 +410,7 @@ export const TripExecutionHub = () => {
               'Under Amendment': 'badge-orange rounded-2xl',
               'Confirmed': 'badge-green rounded-2xl',
               'Initiated': 'badge-blue rounded-2xl',
-
+              'Under Execution': 'badge-purple rounded-2xl',
               // Trip Billing Status colors
               'Draft Bill Raised': 'badge-orange rounded-2xl',
               'Not Eligible': 'badge-red rounded-2xl',
@@ -488,12 +488,13 @@ export const TripExecutionHub = () => {
           onClick: () => {
             console.log("Cancel clicked");
           },
-          type: 'Button'
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
         },
       ],
     });
     return () => resetFooter();
-  }, [setFooter, resetFooter]);
+  }, [setFooter, resetFooter, selectedRows]);
 
   // Navigate to the create new quick order page
   const navigate = useNavigate();
@@ -621,6 +622,9 @@ export const TripExecutionHub = () => {
   const handleServerSideSearch = async () => {
     // // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
     let latestFilters = filterService.applyGridFiltersSet();
+    // if (Object.keys(latestFilters).length == 0) {
+    //   return;
+    // }
     console.log('LatestFilters Trip log: ', latestFilters);
     console.log('buildSearchCriteria: ', buildSearchCriteria(latestFilters));
     const plannedDate = latestFilters["PlannedExecutionDate"];
@@ -672,7 +676,13 @@ export const TripExecutionHub = () => {
             'Under Amendment': 'badge-orange rounded-2xl',
             'Confirmed': 'badge-green rounded-2xl',
             'Initiated': 'badge-blue rounded-2xl',
-            "Revenue leakage": 'badge-red rounded-2xl'
+            "Revenue leakage": 'badge-red rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            // Trip Billing Status colors
+            'Draft Bill Raised': 'badge-orange rounded-2xl',
+            'Not Eligible': 'badge-red rounded-2xl',
+            'Invoice Created': 'badge-blue rounded-2xl',
+            'Invoice Approved': 'badge-fresh-green rounded-2xl'
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
         };
@@ -748,7 +758,8 @@ export const TripExecutionHub = () => {
       key: 'CustomerID',
       label: 'Customer',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Customer Init")
+      fetchOptions: makeLazyFetcher("Customer Init"),
+      multiSelect: true
     },
     {
       key: "PlannedExecutionDate", label: "Planned Execution Date", type: 'dateRange',
@@ -789,11 +800,13 @@ export const TripExecutionHub = () => {
     { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
     {
       key: 'TripStatus', label: 'Trip Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Trip status Init")
+      fetchOptions: makeLazyFetcher("Trip status Init"),
+      multiSelect: true,
     },
     {
       key: 'TripBillingStatus', label: 'Trip Billing Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("DraftBillStatus Init")
+      fetchOptions: makeLazyFetcher("DraftBillStatus Init"),
+      multiSelect: true
     },
     {
       key: 'UserID', label: 'User', type: 'lazyselect',
@@ -834,7 +847,12 @@ export const TripExecutionHub = () => {
       key: 'ContainerID', label: 'Container No', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Container ID Init")
     },
-    { key: 'RoundTrip', label: 'Round Trip', type: 'text' },
+    { key: 'RoundTrip', label: 'Round Trip', type: 'select', 
+      options: [
+        { id: '1', name: 'YES', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'NO', default: "N", description: "", seqNo: 2 },
+      ]
+     },
     {
       key: 'TripType', label: 'Trip Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Trip Type Init")
@@ -971,7 +989,7 @@ export const TripExecutionHub = () => {
                 onSubRowToggle={gridState.handleSubRowToggle}
                 selectedRows={selectedRows}
                 onSelectionChange={handleRowSelection}
-                onFiltersChange={setCurrentFilters}
+                // onFiltersChange={setCurrentFilters}
                 onSearch={handleServerSideSearch}
                 onClearAll={clearAllFilters}
                 rowClassName={(row: any, index: number) =>
