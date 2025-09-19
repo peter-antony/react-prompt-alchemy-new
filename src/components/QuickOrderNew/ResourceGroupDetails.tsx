@@ -97,6 +97,72 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         // "ResourceUniqueID": -1,
       })
 
+      /* ------------ compare the json data for changing the modeFlag for submitting ------------- */
+      // Get previous data for comparison
+      const prevResourceJson = jsonStore.getResourceJsonData();
+      // Prepare new data objects
+      const newBasicDetails = { ...prevResourceJson.BasicDetails, ...formValues.basicDetails };
+      const newOperationalDetails = { ...prevResourceJson.OperationalDetails, ...formValues.operationalDetails };
+      const newBillingDetails = { ...prevResourceJson.BillingDetails, ...formValues.billingDetails };
+      const newMoreInfoDetails = { ...prevResourceJson.MoreRefDocs, ...formValues.moreInfoDetailsRef };
+
+      // Helper function to do a shallow compare of two objects
+      const isDifferent = (a, b) => {
+        if (!a || !b) return true;
+        const aKeys = Object.keys(a);
+        const bKeys = Object.keys(b);
+        if (aKeys.length !== bKeys.length) return true;
+        for (let key of aKeys) {
+          if (a[key] !== b[key]) return true;
+        }
+        return false;
+      };
+
+      // Determine if any section has changed
+      const basicChanged = isDifferent(prevResourceJson.BasicDetails, newBasicDetails);
+      const operationalChanged = isDifferent(prevResourceJson.OperationalDetails, newOperationalDetails);
+      const billingChanged = isDifferent(prevResourceJson.BillingDetails, newBillingDetails);
+      const moreInfoChanged = isDifferent(prevResourceJson.MoreRefDocs, newMoreInfoDetails);
+
+      // If any section changed, set ModeFlag to "Update" in the resource group
+      let updatedResourceJson = {
+        ...prevResourceJson,
+        BasicDetails: newBasicDetails,
+        OperationalDetails: newOperationalDetails,
+        BillingDetails: newBillingDetails,
+        MoreRefDocs: newMoreInfoDetails
+      };
+
+      if (basicChanged || operationalChanged || billingChanged || moreInfoChanged) {
+        console.log("if data difference");
+        // Update ModeFlag only for the selected resource group object by resourceId
+        let resourceGroupsArr = Array.isArray(jsonStore.getQuickOrder().ResourceGroup)
+          ? [...jsonStore.getQuickOrder().ResourceGroup]
+          : [];
+        const selectedResourceId = resourceId;
+        resourceGroupsArr = resourceGroupsArr.map((rg: any) => {
+          if (rg.ResourceUniqueID === selectedResourceId) {
+            return { ...rg, ModeFlag: "Update" };
+          }
+          return rg;
+        });
+        // Also update the ResourceGroup array in the main quick order object
+        console.log("resourceGroupsArr", resourceGroupsArr);
+        jsonStore.setQuickOrder({
+          ...jsonStore.getQuickOrder(),
+          ResourceGroup: resourceGroupsArr
+        });
+      }
+
+      // Update the store with the new data
+      jsonStore.setResourceBasicDetails(newBasicDetails);
+      jsonStore.setResourceOperationalDetails(newOperationalDetails);
+      jsonStore.setResourceBillingDetails(newBillingDetails);
+      jsonStore.setResourceMoreInfoDetails(newMoreInfoDetails);
+
+      // Also update the ModeFlag in the resource group json in the store
+      /* -------- compare the json data for changing the modeFlag for submitting ------------- */
+
       const fullJson = jsonStore.getQuickOrder();
       console.log("proceed to next :: ", fullJson);
       try {
@@ -114,6 +180,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
           // setCurrentStep(2);
         }else{
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
+            const fullJsonElse = jsonStore.getQuickOrder();
+            console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
             description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -222,6 +300,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
           setCurrentStep(2);
         }else{
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+          let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+          // Filter out the resource with ResourceUniqueID: -1
+          console.log("resourceGroups ---", resourceGroups);
+          resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+          // Update the quick order in the store
+          jsonStore.setQuickOrder({
+            ...jsonStore.getQuickOrder(),
+            ResourceGroup: resourceGroups
+          });
+          const fullJsonElse = jsonStore.getQuickOrder();
+          console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
             description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -310,6 +400,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
           setCurrentStep(2);
         }else{
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+          let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+          // Filter out the resource with ResourceUniqueID: -1
+          console.log("resourceGroups ---", resourceGroups);
+          resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+          // Update the quick order in the store
+          jsonStore.setQuickOrder({
+            ...jsonStore.getQuickOrder(),
+            ResourceGroup: resourceGroups
+          });
+          const fullJsonElse = jsonStore.getQuickOrder();
+          console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
             description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -380,6 +482,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const billingDetailsRef = useRef<DynamicPanelRef>(null);
 
   const onSaveDetails = async () => {
+    console.log("isEditQuickOrder", isEditQuickOrder);
     const isValid = handleValidateAllPanels();
     if (isValid) {
       const formValues = {
@@ -396,30 +499,16 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         setBillingDetailsData(formValues.billingDetails);
         setMoreInfoDetailsData(formValues.moreInfoDetailsRef);
 
-        const originalData = jsonStore.getOriginalQuickOrder();
-        console.log("Original JSON :: ", originalData);
+        // const originalData = jsonStore.getOriginalQuickOrder();
+        // console.log("Original JSON :: ", originalData);
         // const updatedPayload = markUpdatedObjects(originalData, fullJson);
         // console.log("updatedPayload ====", updatedPayload)
 
         jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
 
+        // Compare old and new data to determine if any changes were made, and set ModeFlag accordingly
+
         localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
-        jsonStore.setResourceBasicDetails({
-          ...jsonStore.getResourceJsonData().BasicDetails,
-          ...formValues.basicDetails
-        });
-        jsonStore.setResourceOperationalDetails({
-          ...jsonStore.getResourceJsonData().OperationalDetails,
-          ...formValues.operationalDetails
-        });
-        jsonStore.setResourceBillingDetails({
-          ...jsonStore.getResourceJsonData().BillingDetails,
-          ...formValues.billingDetails
-        });
-        jsonStore.setResourceMoreInfoDetails({
-          ...jsonStore.getResourceJsonData().MoreRefDocs,
-          ...formValues.moreInfoDetailsRef
-        })
 
         // toast.success("Resource Group Updated Successfully");
         jsonStore.setQuickOrder({
@@ -434,10 +523,75 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           // "ResourceUniqueID": -1,
           // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
         })
-        // const fullResourceJson = jsonStore.getResourceJsonData();
-        // jsonStore.pushResourceGroup(fullResourceJson);
+
+        /* ------------ compare the json data for changing the modeFlag for submitting ------------- */
+        // Get previous data for comparison
+        const prevResourceJson = jsonStore.getResourceJsonData();
+        // Prepare new data objects
+        const newBasicDetails = { ...prevResourceJson.BasicDetails, ...formValues.basicDetails };
+        const newOperationalDetails = { ...prevResourceJson.OperationalDetails, ...formValues.operationalDetails };
+        const newBillingDetails = { ...prevResourceJson.BillingDetails, ...formValues.billingDetails };
+        const newMoreInfoDetails = { ...prevResourceJson.MoreRefDocs, ...formValues.moreInfoDetailsRef };
+
+        // Helper function to do a shallow compare of two objects
+        const isDifferent = (a, b) => {
+          if (!a || !b) return true;
+          const aKeys = Object.keys(a);
+          const bKeys = Object.keys(b);
+          if (aKeys.length !== bKeys.length) return true;
+          for (let key of aKeys) {
+            if (a[key] !== b[key]) return true;
+          }
+          return false;
+        };
+
+        // Determine if any section has changed
+        const basicChanged = isDifferent(prevResourceJson.BasicDetails, newBasicDetails);
+        const operationalChanged = isDifferent(prevResourceJson.OperationalDetails, newOperationalDetails);
+        const billingChanged = isDifferent(prevResourceJson.BillingDetails, newBillingDetails);
+        const moreInfoChanged = isDifferent(prevResourceJson.MoreRefDocs, newMoreInfoDetails);
+
+        // If any section changed, set ModeFlag to "Update" in the resource group
+        let updatedResourceJson = {
+          ...prevResourceJson,
+          BasicDetails: newBasicDetails,
+          OperationalDetails: newOperationalDetails,
+          BillingDetails: newBillingDetails,
+          MoreRefDocs: newMoreInfoDetails
+        };
+
+        if (basicChanged || operationalChanged || billingChanged || moreInfoChanged) {
+          console.log("if data difference");
+          // Update ModeFlag only for the selected resource group object by resourceId
+          let resourceGroupsArr = Array.isArray(jsonStore.getQuickOrder().ResourceGroup)
+            ? [...jsonStore.getQuickOrder().ResourceGroup]
+            : [];
+          const selectedResourceId = resourceId;
+          resourceGroupsArr = resourceGroupsArr.map((rg: any) => {
+            if (rg.ResourceUniqueID === selectedResourceId) {
+              return { ...rg, ModeFlag: "Update" };
+            }
+            return rg;
+          });
+          // Also update the ResourceGroup array in the main quick order object
+          console.log("resourceGroupsArr", resourceGroupsArr);
+          jsonStore.setQuickOrder({
+            ...jsonStore.getQuickOrder(),
+            ResourceGroup: resourceGroupsArr
+          });
+        }
+
+        // Update the store with the new data
+        jsonStore.setResourceBasicDetails(newBasicDetails);
+        jsonStore.setResourceOperationalDetails(newOperationalDetails);
+        jsonStore.setResourceBillingDetails(newBillingDetails);
+        jsonStore.setResourceMoreInfoDetails(newMoreInfoDetails);
+
+        // Also update the ModeFlag in the resource group json in the store
+        /* -------- compare the json data for changing the modeFlag for submitting ------------- */
+
         const fullJson = jsonStore.getQuickOrder();
-        console.log(" BEFORE API FULL  JSON :: ", fullJson);
+        console.log("BEFORE API FULL  JSON :: ", fullJson);
         try {
           const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
           console.log(" try", data);
@@ -453,6 +607,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
           }else{
+            // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
+            const fullJsonElse = jsonStore.getQuickOrder();
+            console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
               description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -557,6 +723,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
           }else{
+            // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
+            const fullJsonElse = jsonStore.getQuickOrder();
+            console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
               description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -656,6 +834,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
           }else{
+            // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
+            const fullJsonElse = jsonStore.getQuickOrder();
+            console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
               description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
@@ -692,6 +882,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             variant: "destructive", // or "error"
           });
         }
+
         // finally {
         //   if (onSaveSuccess) onSaveSuccess();
         // }
