@@ -359,6 +359,36 @@ export const quickOrderService = {
     return response.data;
   },
 
+  // Update quick order
+  UpdateStatusQuickOrderResource: async (
+    // id: string,
+    data: QuickOrderUpdateInput, messageType
+  ): Promise<ApiResponse<QuickOrder>> => {
+    console.log("messageType ", messageType);
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: messageType.messageType,
+        UserID: "ramcouser",
+        OUID: 4,
+        Role: "ramcorole",
+      },
+      MessageContents: {
+        UniqueID: "",
+        QuickOrder: data,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.ORDERFORM,
+      requestBody
+    );
+    return response.data;
+  },
+
   // Get master common data
   getLinkedOrdersData: async (
     params?: any

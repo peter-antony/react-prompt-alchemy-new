@@ -20,7 +20,7 @@ interface CommonPopupProps {
     icon?: React.ReactNode;
     fields: PopupField[];
     onFieldChange: (name: string, value: string) => void;
-    onSubmit: () => void;
+    onSubmit: (fields: PopupField[]) => void;
     submitLabel?: string;
     submitColor?: string;
 }
@@ -58,7 +58,7 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                 <form
                     onSubmit={e => {
                         e.preventDefault();
-                        onSubmit();
+                        onSubmit(fields);
                     }}
                     className="flex flex-col gap-4 pb-4 px-4"
                 >
@@ -92,9 +92,9 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                 </form>
                 <div className="border-t border-gray-300 mt-4 px-4 mb-4">
                 <button
-                    type="submit"
+                    type="button"
                     className={`mt-4 w-full ${submitColor} text-white rounded px-6 py-2 text-sm font-medium`}
-                    onClick={onClose}
+                    onClick={() => onSubmit(fields)}
                 >
                     {submitLabel}
                 </button>
