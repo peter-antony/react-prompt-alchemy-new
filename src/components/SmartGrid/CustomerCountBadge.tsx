@@ -5,48 +5,46 @@ import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
 interface Customer {
-  name: string;
-  id: string;
+  Customer: string;
+  CustomerDescription?: string;
+  id?: string;
 }
 
 interface CustomerCountBadgeProps {
-  count: string;
+  // count can be passed as number or string (we normalize it)
+  count?: number | string;
   customers?: Customer[];
   className?: string;
 }
 
 export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
-  count,
+  count, // may be number (length) or string like "+3"
   customers = [],
   className
 }) => {
+  // Hooks must always run unconditionally at top-level
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const badgeRef = useRef<HTMLDivElement>(null);
 
-  // Extract the number from the count string (e.g., "+3" -> 3)
-  const countNumber = parseInt(count.replace('+', '')) || 0;
-
-  // Only show badge if count exists and is greater than 1
-  if (!count || countNumber <= 0) {
-    return <span className="text-gray-500"></span>;
-  }
+  // Normalize count to a number. Prefer explicit prop, fall back to customers.length
+  const countNumber = Number(count ?? customers.length) || customers.length || 0;
 
   // Default customers if none provided
   const defaultCustomers: Customer[] = [
-    { name: "DB Cargo", id: "CUS00000123" },
-    { name: "ABC Rail Goods", id: "CUS00003214" },
-    { name: "Wave Cargo", id: "CUS00012345" }
+    { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
+    { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
+    { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
   ];
 
-  const displayCustomers = customers.length > 0 ? customers : defaultCustomers;
+  const displayCustomers = customers && customers.length > 0 ? customers : defaultCustomers;
 
   const calculatePosition = () => {
     if (badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
       const popoverWidth = 224; // w-56 = 224px
       const popoverHeight = Math.min(displayCustomers.length * 48 + 24, 200); // Estimate height
-      
+
       let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
       let top = rect.bottom + 6;
 
@@ -86,6 +84,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [isOpen]);
 
   // Recalculate position on window resize
@@ -103,7 +102,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   return (
     <>
       <div ref={badgeRef} className="inline-block">
-        <Badge
+        {countNumber > 0 && <Badge
           variant="outline"
           className={cn(
             "cursor-pointer transition-all duration-150 font-medium text-center",
@@ -114,8 +113,9 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
           )}
           onClick={handleClick}
         >
-          {count}
+          {String(countNumber)}
         </Badge>
+        }
       </div>
 
       {isOpen && createPortal(
@@ -128,9 +128,9 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
         >
           <div className="p-3">
             <div className="space-y-1">
-              {displayCustomers.map((customer, index) => (
+              {displayCustomers.map((customer: any, index) => (
                 <div
-                  key={customer.id}
+                  key={'Customer-' + index}
                   className="flex items-start space-x-3 p-2 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                 >
                   <div className="flex-shrink-0">
@@ -138,10 +138,10 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-normal text-gray-900 truncate">
-                      {customer.name}
+                      {customer.Customer || customer.name}
                     </div>
                     <div className="text-xs text-gray-500 truncate">
-                      {customer.id}
+                      {customer.CustomerDescription || (customer.description ?? customer.Customer)}
                     </div>
                   </div>
                 </div>

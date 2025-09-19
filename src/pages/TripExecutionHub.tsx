@@ -75,7 +75,7 @@ export const TripExecutionHub = () => {
       order: 3
     },
     {
-      key: "Customer",
+      key: "CustomerOrderDetails",
       label: "Customer",
       type: "CustomerCountBadge",
       sortable: true,

@@ -390,11 +390,12 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   // CustomerCountBadge renderer
   const renderCustomerCountBadge = () => {
     // Use customer data from row only
-    const customerData = row.customerData || [];
+    const customerData = row?.CustomerOrderDetails || [];
+    // console.log('customerData: ', customerData)
 
     return (
       <CustomerCountBadge
-        count={String(value)}
+        count={customerData?.length}
         customers={customerData}
         className="text-center"
       />
