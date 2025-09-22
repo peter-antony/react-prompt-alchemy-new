@@ -26,8 +26,18 @@ const CreateQuickOrder = () => {
   const { toast } = useToast();
   const [showAmendButton, setShowAmendButton] = useState(false);
   const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(true);
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedType, setSelectedType] = useState("");
+  const [customerOrderNoList, setCustomerOrderNoList] = useState<any[]>([]);
+
+  const messageTypes = [
+    // "Quick Order Billing Type Init",
+    "Quick Order Amend Reason Code Init",
+  ];
 
   useEffect(() => {
+    fetchAll();
     //  Fetch the full quick order details
     initializeJsonStore();
     const oldQuickOrder = jsonStore.getQuickOrder();
@@ -40,6 +50,12 @@ const CreateQuickOrder = () => {
         if(parsedData?.ResponseResult != undefined){
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           const fullJson2 = jsonStore.getJsonData();
+          // const storedConfirmStatus = localStorage.getItem('confirmOrder');
+          const storedConfirmStatus = jsonStore.getQuickOrder().Status;
+          console.log("storedConfirmStatus ===", storedConfirmStatus);
+          if (storedConfirmStatus === 'Confirmed') {
+            setShowAmendButton(true);
+          }
           console.log("FULL JSON 4444:: ", fullJson2);
           if (fullJson2.ResponseResult?.quickOrder?.ResourceGroup?.length != 0) {
             console.log("true ---");
@@ -51,11 +67,6 @@ const CreateQuickOrder = () => {
         }
 
       })
-    
-      const storedConfirmStatus = localStorage.getItem('confirmOrder');
-      if (storedConfirmStatus === 'true') {
-        setShowAmendButton(true);
-      }
 
     setFooter({
       visible: true,
@@ -113,6 +124,33 @@ const CreateQuickOrder = () => {
     });
     return () => resetFooter();
   }, [showAmendButton, isConfirmButtonDisabled]);
+
+  //API Call for dropdown data
+    const fetchData = async (messageType) => {
+      setError(null);
+      setLoading(false);
+      try {
+        const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+        setApiData(data);
+        console.log("API Data:", data);
+        if (messageType == "Quick Order Billing Type Init") {
+          setReasonCodeTypeList(JSON.parse(data?.data?.ResponseData));
+        }
+      } catch (err) {
+        setError(`Error fetching API data for ${messageType}`);
+        // setApiData(data);
+      } finally {
+        setLoading(true);
+      }
+    };
+    // Iterate through all messageTypes
+    const fetchAll = async () => {
+      setLoading(false);
+      for (const type of messageTypes) {
+        setSelectedType(type);
+        await fetchData(type);
+      }
+    };
 
   //BreadCrumb data
   const breadcrumbItems = [
@@ -207,7 +245,7 @@ const CreateQuickOrder = () => {
       //  Update resource
       const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fullJson, {messageType: messageType});
       console.log("updateQuickOrderResource result:", res);
-      localStorage.setItem("confirmOrder", 'true');
+      // localStorage.setItem("confirmOrder", 'true');
       //  Get OrderNumber from response
       const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
       console.log("OrderNumber:", OrderNumber);
@@ -254,6 +292,7 @@ const CreateQuickOrder = () => {
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
   const [popupAmendFlag, setPopupAmendFlag] = useState('');
+  const [reasonCodeTypeList, setReasonCodeTypeList] = useState<any[]>([]);
   const [fields, setFields] = useState([
     {
       type: "select",
@@ -265,6 +304,12 @@ const CreateQuickOrder = () => {
         { value: "Reason B", label: "Reason B" },
       ],
       value: "",
+      // options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      // events: {
+      //   onChange: (value, event) => {
+      //     console.log('contractType changed:', value);
+      //   }
+      // }
     },
     {
       type: "text",
@@ -373,19 +418,22 @@ const CreateQuickOrder = () => {
         </div>
       </div>
 
-      <CommonPopup
-        open={popupOpen}
-        onClose={() => setPopupOpen(false)}
-        title={popupTitle}
-        titleColor={popupTextColor}
-        titleBGColor={popupTitleBgColor}
-        icon={<NotebookPen className="w-4 h-4" />}
-        fields={fields as any}
-        onFieldChange={handleFieldChange}
-        onSubmit={submitAmendData}
-        submitLabel={popupButtonName}
-        submitColor={popupBGColor}
-      />
+      {loading ?
+        <CommonPopup
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          title={popupTitle}
+          titleColor={popupTextColor}
+          titleBGColor={popupTitleBgColor}
+          icon={<NotebookPen className="w-4 h-4" />}
+          fields={fields as any}
+          onFieldChange={handleFieldChange}
+          onSubmit={submitAmendData}
+          submitLabel={popupButtonName}
+          submitColor={popupBGColor}
+        /> : ''
+      }
+
 
     </AppLayout>
   );

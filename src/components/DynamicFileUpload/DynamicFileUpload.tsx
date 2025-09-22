@@ -45,6 +45,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   className = '',
   isEditQuickOrder,
   isResourceGroupAttchment,
+  loadAttachmentData,
 }) => {
   const finalConfig = { ...defaultConfig, ...config };
   const { toast } = useToast();
@@ -67,10 +68,11 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     const fullJson = jsonStore.getJsonData();
     console.log("uploaded JSON :: ", isEditQuickOrder);
     console.log("uploaded JSON :: ", isResourceGroupAttchment);
+    console.log("loadAttachmentData :: ", loadAttachmentData);
     if(isResourceGroupAttchment){
       setLoadedFiles(jsonStore.getResourceGroupAttachments());    
     }else{
-      setLoadedFiles(jsonStore.getAttachments());  
+      setLoadedFiles(loadAttachmentData.AttachItems);  
     }  
     console.log("loadedFiles---- :: ", loadedFiles);
     // Simulate successful upload by moving to uploaded files

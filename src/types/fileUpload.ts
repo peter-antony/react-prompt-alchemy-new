@@ -34,6 +34,7 @@ export interface FileUploadProps {
   className?: string;
   isEditQuickOrder?: boolean;
   isResourceGroupAttchment?: boolean;
+  loadAttachmentData?: any;
 }
 
 export interface FileFilterState {

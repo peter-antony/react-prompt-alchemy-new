@@ -729,12 +729,12 @@ function pushQuickOrderAttachment(attachment: any) {
     jsonData.ResponseResult.QuickOrder &&
     jsonData.ResponseResult.QuickOrder.Attachments
   ) {
-    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments.AttachItems)) {
-      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems = [];
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments[0].AttachItems)) {
+      jsonData.ResponseResult.QuickOrder.Attachments[0].AttachItems = [];
     }
-    jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.push(attachment);
-    jsonData.ResponseResult.QuickOrder.Attachments.TotalAttachment =
-      jsonData.ResponseResult.QuickOrder.Attachments.AttachItems.length.toString();
+    jsonData.ResponseResult.QuickOrder.Attachments[0].AttachItems.push(attachment);
+    jsonData.ResponseResult.QuickOrder.Attachments[0].TotalAttachment =
+      jsonData.ResponseResult.QuickOrder.Attachments[0].AttachItems.length.toString();
     return true;
   }
   return false;

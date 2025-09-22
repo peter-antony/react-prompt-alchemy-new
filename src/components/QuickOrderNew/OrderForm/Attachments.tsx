@@ -35,6 +35,16 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
     size: "1.5 Mb",
     status: "success",
   });
+  const [attachmentData, setAttachmentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(false);
+    const attachmentList = jsonStore.getQuickOrder();
+    console.log("attachment ---", attachmentList.Attachments[0]);
+    setAttachmentData(attachmentList.Attachments[0]);
+    setLoading(true);
+  }, []);
 
   const handleUpload = async (files: StagedFile[]) => {
     // Simulate API call
@@ -69,10 +79,34 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
       "Status": "Fresh",
       "QuickOrderNo": jsonStore.getQuickUniqueID()
     });
-    const fullJson = jsonStore.getJsonData();
+    const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
     console.log("FULL Plan JSON :: ", fullJson);
       try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+        // Prepare headers with attached file
+        // Assuming 'files' is available in this scope (from handleUpload argument)
+        // We'll send the first file as an example; adapt as needed for multiple files
+        // let fileToSend = files && files.length > 0 ? files[0].file : null;
+        // let headers: any = {};
+        
+        // console.log("files ===", fileToSend);
+        // if (fileToSend) {
+        //   // Read file as base64 or blob if needed, here we use the File object directly
+        //   // You can also use fileToSend.name, fileToSend.type, etc.
+        //   headers['X_Attachment_Name'] = fileToSend.name;
+        //   headers['X_Attachment_Type'] = fileToSend.type;
+        //   // headers['X-File-Category'] = fileToSend.category;
+        //   // If you want to send the file content in header (not recommended for large files), you can use FileReader
+        //   // But usually, you send metadata in headers and the file in the body/form-data
+        // }
+
+        // If your API expects the file in headers (not recommended), you can encode it as base64:
+        // But beware of header size limits!
+        // const fileContent = await fileToSend.text();
+        // headers['X-Attachment-Content'] = btoa(fileContent);
+
+        // Pass headers to the API call
+        // const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson, { headers });
+        const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson);
         console.log(" try", data);
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
@@ -125,20 +159,23 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
       {/* Left Form */}
       
       {/* Main Component */}
-      <DynamicFileUpload
-        config={{
-          categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
-          maxFiles: 10,
-          maxFileSizeMB: 2,
-          allowedTypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'xls', 'xlsx', 'doc', 'docx']
-        }}
-        onUpload={handleUpload}
-        onDelete={handleDelete}
-        onDownload={handleDownload}
-        className="max-w-4xl mx-auto"
-        isEditQuickOrder={isEditQuickOrder}
-        isResourceGroupAttchment={isResourceGroupAttchment}
-      />
+      {loading ? 
+        <DynamicFileUpload
+          config={{
+            categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
+            maxFiles: 10,
+            maxFileSizeMB: 2,
+            allowedTypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'xls', 'xlsx', 'doc', 'docx']
+          }}
+          onUpload={handleUpload}
+          onDelete={handleDelete}
+          onDownload={handleDownload}
+          className="max-w-4xl mx-auto"
+          isEditQuickOrder={isEditQuickOrder}
+          isResourceGroupAttchment={isResourceGroupAttchment}
+          loadAttachmentData = {attachmentData}
+        /> : ''
+      }
 
     </div>
   );

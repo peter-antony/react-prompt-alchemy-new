@@ -389,6 +389,52 @@ export const quickOrderService = {
     return response.data;
   },
 
+  // Update quick order
+  updateAttachmentQuickOrderResource: async (
+    // id: string,
+    // data: QuickOrderUpdateInput, headers
+    data: QuickOrderUpdateInput
+  ): Promise<ApiResponse<QuickOrder>> => {
+    // Here we are getting the file uploaded details and want to send the data to API headers
+    console.log("Upload Doc---", data);
+    // console.log("Upload Doc---", headers);
+
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: "Quick Order Update",
+        UserID: "ramcouser",
+        OUID: 4,
+        Role: "ramcorole",
+      },
+      MessageContents: {
+        UniqueID: "",
+        QuickOrder: data,
+      },
+    });
+
+    const requestBody = {
+      RequestData: stringifyData,
+      // headers: {
+      //   "Content-Type": headers.headers.X_Attachment_Type,          // e.g. application/pdf
+      //   "X-File-Name": headers.headers.X_Attachment_Name,           // custom header with file name
+      //   // "X-File-Category": "BR Amendment",  // your extra metadata
+      //   // Authorization: `Bearer ${localStorage.getItem("token")}`
+      // },
+    };
+
+    // Pass the headers to the API call by returning them along with the requestBody
+    // The actual usage of headers will be in the apiClient.post call outside this selection
+    // return { requestBody, headers };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.ORDERFORM,
+      requestBody
+    );
+    // return response.data, headers;
+    return response.data;
+  },
+
   // Get master common data
   getLinkedOrdersData: async (
     params?: any
