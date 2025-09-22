@@ -841,18 +841,22 @@ export const TripExecutionHub = () => {
       key: 'SubServiceType', label: 'Sub Service Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Sub Service type Init")
     },
-    { key: 'WBS', label: 'WBS', type: 'text' },
+    {
+      key: 'WBS', label: 'WBS', type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("WBS Init")
+    },
     { key: 'PathNo', label: 'Path No', type: 'text' },
     {
       key: 'ContainerID', label: 'Container No', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Container ID Init")
     },
-    { key: 'RoundTrip', label: 'Round Trip', type: 'select', 
+    {
+      key: 'RoundTrip', label: 'Round Trip', type: 'select',
       options: [
         { id: '1', name: 'YES', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'NO', default: "N", description: "", seqNo: 2 },
       ]
-     },
+    },
     {
       key: 'TripType', label: 'Trip Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Trip Type Init")

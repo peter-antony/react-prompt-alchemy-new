@@ -225,8 +225,8 @@ export function LazySelect({
             </div>
           ) : (
             options.map((option: any, index) => {
-              option.id = option.id ?? option.carrierid;
-              option.name = option.name ?? option.carrierdescription;
+              option.id = option.id ?? option.carrierid ?? option.wbscostcenter;
+              option.name = option.name ?? option.carrierdescription ?? option.wbscostcenterdesc;
 
               if (!option.id) return null;
 
