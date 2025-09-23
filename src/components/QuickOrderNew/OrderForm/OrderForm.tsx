@@ -176,7 +176,6 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     fetchAll();
   }, []);
   useEffect(() => {
-
     const quickOrder = jsonStore.getQuickOrder();
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
       setOrderType(quickOrder.OrderType || 'BUY');
@@ -810,8 +809,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setIsResourceData(true);
       setResourceData(resourceGroups);
     }
-    // if (isEditQuickOrder) {
-    // }
+    if (isEditQuickOrder) {
+      setTimeout(() => {
+        openResourceGroupGetID();
+      }, 3000)
+    }
   }, [isResourceData]);
 
   const closeResource = () => {
@@ -998,9 +1000,66 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   //   return result;
   // }
 
+  const openResourceGroupGetID = async () => {
+    setLoading(false);
+    console.log("OrderType ---", OrderType);
+    console.log("contractId ---", jsonStore.getQuickOrder());
+    try {
+      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: jsonStore.getQuickOrder().Contract, type: OrderType });
+      console.log("COMBO DROPDOWN DATA", JSON.parse(data.data.ResponseData));
+      console.log("ORDERTYPE :", OrderType);
+      // setContracts(JSON.parse(data?.data?.ResponseData));
+      const parsedData: any = JSON.parse(data?.data?.ResponseData);
+      const contract: any = parsedData;
+      console.log("CONTRACT DATA:: ", contract.VendorID);
+      if (contract) {
+        setOrderType(OrderType)
+        // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
+        setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+        jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+        jsonStore.setResourceGroupFields({ ServiceType: contract.ServiceType, OperationalLocation: contract.Location });
+        const additionalInfo = contract.ContractTariff;
+        jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
+        jsonStore.setTariffFields({
+          tariff: additionalInfo[0].TariffID,
+          contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+          billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+          // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+        });
+        jsonStore.setTariffDateFields({
+          fromDate: additionalInfo[0].ContractTariffValidFrom
+            ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+            : "",
+          toDate: additionalInfo[0].ContractTariffValidTo
+            ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+            : "",
+        });
+        // Set ValidFrom and ValidTo in jsonStore using a new set method
+        
+        console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
+        console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
+        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
+        
+      }
+    } catch (err) {
+      setError(`Error fetching API data for${err}`);
+      console.log("ERROR IN COMBO DROPDOWN:: ", err);
+      jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+      setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+
+      // setApiData(data);
+    }
+    finally {
+      setLoading(true);
+    }
+  }
+
   const openUpdateResourceGroup = async () => {
     // setResourceGroupOpen(true);
-    
+    // setLoading(false);
     // console.log("originalData ===", originalData);
     // const updatedPayload = markUpdatedObjects(originalData, fullJson.ResponseResult.QuickOrder);
 
@@ -1070,9 +1129,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         description: "Your changes have been saved.",
         variant: "default", // or "success" if you have custom variant
       });
+      // openResourceGroupGetID();
       setResourceGroupOpen(true);
     }
   }
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">

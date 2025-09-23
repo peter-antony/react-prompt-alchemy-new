@@ -1141,7 +1141,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }, []);
   useEffect(() => {
     setLoading(false);
-    if (isEditQuickOrder) {
+    console.log("load isEditQuickOrder ", isEditQuickOrder);
+    console.log("load resourceId == ", resourceId)
+    if (isEditQuickOrder && resourceId) {
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
       setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
@@ -1832,6 +1834,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   };
   const [resourceData, setResourceData] = useState<any[]>([]); // <-- resourceData state
   useEffect(() => {
+    console.log("load 123 resourceId == ", resourceId);
     if (isEditQuickOrder) {
       const resourceGroups = jsonStore.getAllResourceGroups();
       setResourceData(resourceGroups);
