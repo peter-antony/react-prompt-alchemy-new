@@ -337,6 +337,121 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     
   };
 
+  const handleConvertPlanActuals = async () => {
+    const formValues = {
+      wagonNewDetails: wagonDetailsRef.current?.getFormValues() || {},
+      containerDetails: containerDetailsRef.current?.getFormValues() || {},
+      productDetails: productDetailsRef.current?.getFormValues() || {},
+      thuDetails: thuDetailsRef.current?.getFormValues() || {},
+      journeyDetails: journeyDetailsRef.current?.getFormValues() || {},
+      otherDetails: otherDetailsRef.current?.getFormValues() || {},
+    };
+    console.log("convert plan ===", formValues);
+    // Get the current ActualDetails from jsonStore
+    const currentActualDetails = jsonStore.getActualDetails() || {};
+    formValues.wagonNewDetails = {
+      ...formValues.wagonNewDetails,
+      "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
+      "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+      "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
+      "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+      "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
+      "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+      "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
+      "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
+      // Add more fields as needed
+    };
+    formValues.containerDetails = {
+      ...formValues.containerDetails,
+      "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
+      "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
+      "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
+      "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
+      "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
+      "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
+      // Add more fields as needed
+    };
+    formValues.productDetails = {
+      ...formValues.containerDetails,
+      "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
+      "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
+      // Add more fields as needed
+    };
+    formValues.thuDetails = {
+      ...formValues.thuDetails,
+      "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
+      "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+      "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
+      "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
+      // Add more fields as needed
+    };
+    formValues.otherDetails = {
+      ...formValues.otherDetails,
+      "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
+      "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
+      "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
+      "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
+      "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
+      "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
+      // Add more fields as needed
+    };
+    // Prepare the updated ActualDetails by merging new form values with existing ones
+    const updatedActualDetails = {
+      // ...currentActualDetails,
+      // "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
+      "ActualLineUniqueID": -1,
+      "ModeFlag": "Insert",
+      WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
+      ContainerDetails: { ...currentActualDetails.ContainerDetails, ...formValues.containerDetails },
+      ProductDetails: { ...currentActualDetails.ProductDetails, ...formValues.productDetails },
+      THUDetails: { ...currentActualDetails.THUDetails, ...formValues.thuDetails },
+      JourneyAndSchedulingDetails: { ...currentActualDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+      OtherDetails: { ...currentActualDetails.OtherDetails, ...formValues.otherDetails },
+    };
+    localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
+    // Set the updated ActualDetails in jsonStore
+    console.log("RESOURCE ID : ",resourceId)
+    console.log("Updated Actual Details:", updatedActualDetails);
+    jsonStore.setActualDetailsJson(updatedActualDetails);
+    console.log("==========", jsonStore.getActualDetails());
+    jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails);
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      // "ModeFlag": "Update",
+      // "Status": "Fresh",
+      "QuickOrderNo": jsonStore.getQuickUniqueID(),
+    });
+    
+    const fullJson = jsonStore.getJsonData();
+    console.log("FULL Plan&Actual JSON :: ", fullJson);
+    try {
+      const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+      console.log(" try", data);
+      //  Get OrderNumber from response
+      const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+      console.log("OrderNumber:", resourceGroupID);
+      //  Fetch the full quick order details
+      quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+        // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        const fullJson2 = jsonStore.getJsonData();
+        console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+        onApiSuccess(true);
+        onCloseDrawer();
+      })
+    } catch (err) {
+      console.log(" catch", err);
+      onApiSuccess(false);
+      // setError(`Error fetching API data for Update ResourceGroup`);
+    }
+    
+  };
+
   const [billingData, setBillingData] = useState({
     billingDetail: "DB00023/42",
     contractPrice: '',
@@ -374,6 +489,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [error, setError] = useState<string | null>(null);
   const [resourceGroupArray, setResourceGroupArray] = useState<any>([]);
   const [defaultResourceId, setDefaultResourceId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   // Iterate through all messageTypes
   const fetchAll = async () => {
@@ -991,15 +1107,31 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     Activity: {
       id: "Activity",
       label: "Activity",
-      fieldType: "select",
+      fieldType: "lazyselect",
       width: 'third',
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 5,
-      placeholder: "Select Activity",
-      options: [{ label: "Loading", value: "Loading" }],
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Activity Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: item.id
+              }
+            : {})
+        }));
+      },
     },
     PlannedDateTime: {
       id: "PlannedDateTime",
@@ -1215,8 +1347,10 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
   // Normalization functions for each config
   function normalizeWagonDetails(data) {
+    console.log("data ", data.WagonType);
+    if (!data || typeof data !== 'object') return {};
     return {
-      WagonType: data.WagonType || '',
+      WagonType: data.WagonType ?? '',
       WagonID: data.WagonID || '',
       WagonQuantity: data.WagonQuantity || { dropdown: '', input: '' },
       WagonTareWeight: data.WagonTareWeight || { dropdown: '', input: '' },
@@ -1303,6 +1437,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   // Sync state with jsonStore on isEditQuickOrder change
   useEffect(() => {
     setDefaultResourceId(resourceId);
+    console.log('wagonDetailsData load : ', wagonDetailsData);
     console.log('RESOURCE ID : ', resourceId, defaultResourceId);
     const planDetails = jsonStore.getPlanDetails() || {};
     // alert("R id - " + resourceId)
@@ -1319,21 +1454,21 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     setResourceGroupArray(resourceGroupArray);
 
     console.log("PLAN DETAILS :: ", planDetails);
-    if (isEditQuickOrder) {
-      setWagonDetailsData(normalizeWagonDetails(planDetails.WagonDetails || {}));
-      setContainerDetailsData(normalizeContainerDetails(planDetails.ContainerDetails || {}));
-      setProductDetailsData(normalizeProductDetails(planDetails.ProductDetails || {}));
-      setTHUDetailsData(normalizeTHUDetails(planDetails.THUDetails || {}));
-      setJourneyDetailsData(normalizeJourneyDetails(planDetails.JourneyAndSchedulingDetails || {}));
-      setOtherDetailsData(normalizeOtherDetails(planDetails.OtherDetails || {}));
-    } else {
-      setWagonDetailsData({});
-      setContainerDetailsData({});
-      setProductDetailsData({});
-      setTHUDetailsData({});
-      setJourneyDetailsData({});
-      setOtherDetailsData({});
-    }
+    // if (isEditQuickOrder) {
+    //   setWagonDetailsData(normalizeWagonDetails(planDetails.WagonDetails || {}));
+    //   setContainerDetailsData(normalizeContainerDetails(planDetails.ContainerDetails || {}));
+    //   setProductDetailsData(normalizeProductDetails(planDetails.ProductDetails || {}));
+    //   setTHUDetailsData(normalizeTHUDetails(planDetails.THUDetails || {}));
+    //   setJourneyDetailsData(normalizeJourneyDetails(planDetails.JourneyAndSchedulingDetails || {}));
+    //   setOtherDetailsData(normalizeOtherDetails(planDetails.OtherDetails || {}));
+    // } else {
+    //   setWagonDetailsData({});
+    //   setContainerDetailsData({});
+    //   setProductDetailsData({});
+    //   setTHUDetailsData({});
+    //   setJourneyDetailsData({});
+    //   setOtherDetailsData({});
+    // }
   }, [isEditQuickOrder]);
 
   // Update jsonStore on saveUserPanelConfig
@@ -1526,8 +1661,158 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   };
 
   const getSelectedPlanActualItem = (item: any) => {
-    console.log('getSelectedPlanActualItem: ', item);
+    setLoading(false);
+    console.log("getSelectedPlanActualItem --", item);
+    console.log("getSelectedPlanActualItem --", jsonStore.getPlanDetails());
+
+    if (item) {
+      // Set the raw data to state (if you still need it)
+      setWagonDetailsData(item.WagonDetails);
+      setContainerDetailsData(item.ContainerDetails);
+      setProductDetailsData(item.ProductDetails);
+      setTHUDetailsData(item.THUDetails);
+      setJourneyDetailsData(item.JourneyAndSchedulingDetails);
+      setOtherDetailsData(item.OtherDetails);
+
+      // Bind the values to the form fields using refs to DynamicPanel
+      if (wagonDetailsRef && wagonDetailsRef.current && "setFormValues" in wagonDetailsRef.current && typeof wagonDetailsRef.current.setFormValues === "function") {
+        console.log("wagon");
+        wagonDetailsRef.current.setFormValues(item.WagonDetails || {});
+        // Map WagonQuantity and WagonQuantityUOM to the inputdropdown field structure expected by DynamicPanel
+        if (item.WagonDetails && wagonDetailsConfig && wagonDetailsConfig.WagonQuantity && wagonDetailsConfig.WagonQuantity.fieldType === "inputdropdown") {
+          const wagonQuantityInputDropdown = {
+            input: item.WagonDetails.WagonQuantity ?? "",
+            dropdown: item.WagonDetails.WagonQuantityUOM ?? ""
+          };
+          const wagonGrossWeightInputDropdown = {
+            input: item.WagonDetails.WagonGrossWeight ?? "",
+            dropdown: item.WagonDetails.WagonGrossWeightUOM ?? ""
+          };
+          const wagonLengthInputDropdown = {
+            input: item.WagonDetails.WagonLength ?? "",
+            dropdown: item.WagonDetails.WagonLengthUOM ?? ""
+          };
+          const wagonTareWeightInputDropdown = {
+            input: item.WagonDetails.WagonTareWeight ?? "",
+            dropdown: item.WagonDetails.WagonTareWeightUOM ?? ""
+          };
+          wagonDetailsRef.current.setFormValues({
+            ...item.WagonDetails,
+            WagonQuantity: wagonQuantityInputDropdown,
+            WagonGrossWeight: wagonGrossWeightInputDropdown,
+            WagonLength: wagonLengthInputDropdown,
+            WagonTareWeight: wagonTareWeightInputDropdown,
+          });
+        } else {
+          wagonDetailsRef.current.setFormValues(item.WagonDetails || {});
+        }
+      }
+      if (containerDetailsRef && containerDetailsRef.current && "setFormValues" in containerDetailsRef.current && typeof containerDetailsRef.current.setFormValues === "function") {
+        console.log("container");
+        containerDetailsRef.current.setFormValues(item.ContainerDetails || {});
+        // Map WagonQuantity and WagonQuantityUOM to the inputdropdown field structure expected by DynamicPanel
+        if (item.ContainerDetails && containerDetailsConfig && containerDetailsConfig.ContainerQuantity && containerDetailsConfig.ContainerQuantity.fieldType === "inputdropdown") {
+          const ContainerQuantityInputDropdown = {
+            input: item.ContainerDetails.ContainerQuantity ?? "",
+            dropdown: item.ContainerDetails.ContainerQuantityUOM ?? ""
+          };
+          const ContainerTareWeightInputDropdown = {
+            input: item.ContainerDetails.ContainerTareWeight ?? "",
+            dropdown: item.ContainerDetails.ContainerTareWeightUOM ?? ""
+          };
+          const ContainerLoadWeightInputDropdown = {
+            input: item.ContainerDetails.ContainerLoadWeight ?? "",
+            dropdown: item.ContainerDetails.ContainerLoadWeightUOM ?? ""
+          };
+          containerDetailsRef.current.setFormValues({
+            ...item.ContainerDetails,
+            ContainerQuantity: ContainerQuantityInputDropdown,
+            ContainerTareWeight: ContainerTareWeightInputDropdown,
+            ContainerLoadWeight: ContainerLoadWeightInputDropdown,
+          });
+        } else {
+          containerDetailsRef.current.setFormValues(item.ContainerDetails || {});
+        }
+      }
+      if (productDetailsRef && productDetailsRef.current && "setFormValues" in productDetailsRef.current && typeof productDetailsRef.current.setFormValues === "function") {
+        productDetailsRef.current.setFormValues(item.ProductDetails || {});
+        if (item.ProductDetails && productDetailsConfig && productDetailsConfig.ProductQuantity && productDetailsConfig.ProductQuantity.fieldType === "inputdropdown") {
+          const ProductQuantityInputDropdown = {
+            input: item.ProductDetails.ProductQuantity ?? "",
+            dropdown: item.ProductDetails.ProductQuantityUOM ?? ""
+          };
+          productDetailsRef.current.setFormValues({
+            ...item.ProductDetails,
+            ProductQuantity: ProductQuantityInputDropdown,
+          });
+        } else {
+          productDetailsRef.current.setFormValues(item.ProductDetails || {});
+        }
+      }
+      if (thuDetailsRef && thuDetailsRef.current && "setFormValues" in thuDetailsRef.current && typeof thuDetailsRef.current.setFormValues === "function") {
+        thuDetailsRef.current.setFormValues(item.THUDetails || {});
+        if (item.THUDetails && thuDetailsConfig && thuDetailsConfig.THUQuantity && thuDetailsConfig.THUQuantity.fieldType === "inputdropdown") {
+          const THUQuantityInputDropdown = {
+            input: item.THUDetails.THUQuantity ?? "",
+            dropdown: item.THUDetails.THUQuantityUOM ?? ""
+          };
+          const THUWeightInputDropdown = {
+            input: item.THUDetails.THUWeight ?? "",
+            dropdown: item.THUDetails.THUWeightUOM ?? ""
+          };
+          thuDetailsRef.current.setFormValues({
+            ...item.THUDetails,
+            THUQuantity: THUQuantityInputDropdown,
+            THUWeight: THUWeightInputDropdown
+          });
+        } else {
+          thuDetailsRef.current.setFormValues(item.THUDetails || {});
+        }
+      }
+      if (journeyDetailsRef && journeyDetailsRef.current && "setFormValues" in journeyDetailsRef.current && typeof journeyDetailsRef.current.setFormValues === "function") {
+        journeyDetailsRef.current.setFormValues(item.JourneyAndSchedulingDetails || {});
+      }
+      if (otherDetailsRef && otherDetailsRef.current && "setFormValues" in otherDetailsRef.current && typeof otherDetailsRef.current.setFormValues === "function") {
+        otherDetailsRef.current.setFormValues(item.OtherDetails || {});
+        if (item.OtherDetails && otherDetailsConfig && otherDetailsConfig.QCUserDefined1 && otherDetailsConfig.QCUserDefined1.fieldType === "inputdropdown") {
+          const QCUserDefined1InputDropdown = {
+            input: item.OtherDetails.QCUserDefined1 ?? "",
+            dropdown: item.OtherDetails.QCUserDefined1Value ?? ""
+          };
+          const QCUserDefined2InputDropdown = {
+            input: item.OtherDetails.QCUserDefined2 ?? "",
+            dropdown: item.OtherDetails.QCUserDefined2Value ?? ""
+          };
+          const QCUserDefined3InputDropdown = {
+            input: item.OtherDetails.QCUserDefined3 ?? "",
+            dropdown: item.OtherDetails.QCUserDefined3Value ?? ""
+          };
+          otherDetailsRef.current.setFormValues({
+            ...item.OtherDetails,
+            QCUserDefined1: QCUserDefined1InputDropdown,
+            QCUserDefined2: QCUserDefined2InputDropdown,
+            QCUserDefined3: QCUserDefined3InputDropdown,
+          });
+        } else {
+          otherDetailsRef.current.setFormValues(item.OtherDetails || {});
+        }
+      }
+      // setLoading(true);
+    }
+    // Force update the DynamicPanel forms by triggering a re-render
+    // forceUpdate does not exist on DynamicPanelRef, so trigger a re-render by updating a dummy state
+    setWagonDetailsData(prev => ({ ...prev }));
+    setContainerDetailsData(prev => ({ ...prev }));
+    setProductDetailsData(prev => ({ ...prev }));
+    setTHUDetailsData(prev => ({ ...prev }));
+    setJourneyDetailsData(prev => ({ ...prev }));
+    setOtherDetailsData(prev => ({ ...prev }));
+
+    console.log("wagonDetailsData ====", wagonDetailsData);
+    setSelectedItemId(item.PlanLineUniqueID || item.ActualLineUniqueID);
+    setLoading(true);
   }
+  
 
   return (
     <>
@@ -1609,7 +1894,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
               {isEditQuickOrder && mappedPlanActualItems.map((item, index) => (
                 <div
                   key={'plan-' + index}
-                  className="flex flex-col border rounded-lg p-3 bg-white shadow-sm relative cursor-pointer"
+                  className={`flex flex-col border rounded-lg p-3 bg-white shadow-sm relative cursor-pointer ${selectedItemId === (item.PlanLineUniqueID || item.ActualLineUniqueID) ? 'border-blue-500 ring-2 ring-blue-200' : ''}`}
                   onClick={() => getSelectedPlanActualItem(item)}
                 >
                   <div className="flex items-start justify-between">
@@ -1866,6 +2151,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           {planType === "plan" && (
             <Button
               variant="outline"
+              onClick={handleConvertPlanActuals}
               className="h-8 my-2 rounded border-blue-600 text-blue-600 hover:bg-blue-50"
             >
               Convert Plan to Actuals

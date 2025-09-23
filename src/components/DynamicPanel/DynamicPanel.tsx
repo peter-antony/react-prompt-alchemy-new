@@ -104,6 +104,21 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
       });
       return result;
     },
+    setFormValues: (data: Record<string, any>) => {
+      if (!data) return;
+      Object.entries(data).forEach(([fieldId, value]) => {
+        // If the field is inputdropdown and value is a string, split it
+        if (
+          panelConfig[fieldId] &&
+          panelConfig[fieldId].fieldType === 'inputdropdown' &&
+          typeof value === 'string'
+        ) {
+          setValue(fieldId, splitInputDropdownValue(value));
+        } else {
+          setValue(fieldId, value);
+        }
+      });
+    },
     doValidation: () => {
       const values = getValues();
       const validationErrors: Record<string, string> = {};
