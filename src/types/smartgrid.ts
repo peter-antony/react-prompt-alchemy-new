@@ -12,6 +12,7 @@ export type GridColumnType =
   | 'ExpandableCount'      // "+N" style count, expandable to view details
   | 'CustomerCountBadge'   // Customer count badge with popup details
   | 'Text'                 // Standard text cell
+  | 'TextCustom'           // Standard text cell with custom rendering
   | 'Date'                 // Formatted date
   | 'DateRange'            // Date range picker
   | 'NumberRange'          // Number range with from/to inputs

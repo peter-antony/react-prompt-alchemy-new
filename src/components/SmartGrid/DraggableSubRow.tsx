@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { dateFormatter, dateTimeFormatter, formattedAmount } from '@/utils/formatter';
+import { CustomerCountBadge } from './CustomerCountBadge';
 
 interface DraggableSubRowProps {
   row: any;
@@ -135,7 +136,50 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
     }
 
     if (value === null || value === undefined) {
+      if (column.type === "TextCustom") {
+        const firstCustomer = row?.CustomerOrderDetails?.[0]; // only first element
+
+        if (column.key === "CustomerTransportMode") {
+          return (
+            <div className="text-gray-900 font-normal truncate text-[13px]">
+              {firstCustomer?.TransportMode}
+            </div>
+          );
+        } else if (column.key === "CustomerService") {
+          return (
+            <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
+              {firstCustomer?.Service}
+            </div>
+          );
+        } else if (column.key === "CustomerSubService") {
+          return (
+            <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
+              {firstCustomer?.SubService}
+            </div>
+          );
+        } else if (column.key === "CustomerOrders") {
+          return (
+            <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
+              <a>{firstCustomer?.CustomerOrder}</a>
+            </div>
+          );
+        }
+      }
+      // None of the above matched, so
       return <span className="text-gray-400">-</span>;
+    } else if(typeof value === 'object' && value !== null) {
+      // Handle object values (excluding Badge type)
+      if (column.type === 'CustomerCountBadge') {
+        const customerData = row?.CustomerOrderDetails || [];
+        return (
+              <CustomerCountBadge
+                count={customerData?.length}
+                customers={customerData}
+                className="text-center"
+              />
+            );
+      }
+
     }
 
     const displayContent = (() => {
@@ -173,12 +217,12 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           // return <div className="font-medium text-sm">{dateTimeString}</div>;
           if (!value) return <div className="text-gray-400">-</div>;
           try {
-                const date = new Date(value);
-                const formattedDate = dateTimeFormatter(date);
-                return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
-              } catch {
-                return <span className="truncate" title={String(value)}>{value}</span>;
-              }
+            const date = new Date(value);
+            const formattedDate = dateTimeFormatter(date);
+            return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
+          } catch {
+            return <span className="truncate" title={String(value)}>{value}</span>;
+          }
         case 'Date':
           try {
             const date = new Date(value);

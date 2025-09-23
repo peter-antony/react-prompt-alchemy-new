@@ -8,6 +8,8 @@ interface Customer {
   Customer: string;
   CustomerDescription?: string;
   id?: string;
+  name?: string;
+  description?: string;
 }
 
 interface CustomerCountBadgeProps {
@@ -32,9 +34,9 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
 
   // Default customers if none provided
   const defaultCustomers: Customer[] = [
-    { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
-    { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
-    { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
+    // { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
+    // { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
+    // { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
   ];
 
   const displayCustomers = customers && customers.length > 0 ? customers : defaultCustomers;
@@ -102,20 +104,37 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   return (
     <>
       <div ref={badgeRef} className="inline-block">
-        {countNumber > 0 && <Badge
-          variant="outline"
-          className={cn(
-            "cursor-pointer transition-all duration-150 font-medium text-center",
-            "hover:border-gray-400 hover:bg-gray-50",
-            "px-2 py-0.5 text-xs font-medium rounded-2xl",
-            "flex items-center justify-center min-w-[2rem] h-6 badge-gray",
-            className
-          )}
-          onClick={handleClick}
-        >
-          {String(countNumber)}
-        </Badge>
-        }
+        {countNumber > 1 && (
+          <Badge
+            variant="outline"
+            className={cn(
+              "cursor-pointer transition-all duration-150 font-medium text-center",
+              "hover:border-gray-400 hover:bg-gray-50",
+              "px-2 py-0.5 text-xs font-medium rounded-2xl",
+              "flex items-center justify-center min-w-[2rem] h-6 badge-gray",
+              className
+            )}
+            onClick={handleClick}
+          >
+            {String(countNumber)}
+          </Badge>
+        )}
+
+        {countNumber === 1 && (
+          // When there's exactly one customer, show the customer's name inline
+          <div
+            className={cn(
+              "text-sm font-medium text-gray-600 truncate",
+              "px-2 py-0.5 rounded",
+              className
+            )}
+            title={displayCustomers[0]?.CustomerDescription}
+          >
+            {displayCustomers && displayCustomers.length > 0
+              ? (displayCustomers[0]?.Customer || displayCustomers[0]?.name || String(countNumber))
+              : String(countNumber)}
+          </div>
+        )}
       </div>
 
       {isOpen && createPortal(

@@ -163,9 +163,9 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "BookingRequests[0].TransportMode",
+      key: "CustomerTransportMode",
       label: "Transport Mode",
-      type: "Text",
+      type: "TextCustom",
       sortable: true,
       editable: false,
       subRow: true,
@@ -181,7 +181,7 @@ export const TripExecutionHub = () => {
     {
       key: "Currency",
       label: "Currency",
-      type: "CurrencyWithSymbol",
+      type: "Text",
       sortable: true,
       editable: false,
       subRow: true,
@@ -195,17 +195,17 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "BookingRequests[0].Service",
+      key: "CustomerService",
       label: "Service",
-      type: "Text",
+      type: "TextCustom",
       sortable: true,
       editable: false,
       subRow: true,
     },
     {
-      key: "BookingRequests[0].SubService",
+      key: "CustomerSubService",
       label: "Sub Service",
-      type: "Text",
+      type: "TextCustom",
       sortable: true,
       editable: false,
       subRow: true,
@@ -347,9 +347,9 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "CustomerOrder",
+      key: "CustomerOrders",
       label: "Customer Order",
-      type: "Link",
+      type: "TextCustom",
       sortable: true,
       editable: false,
       subRow: true,
@@ -432,13 +432,13 @@ export const TripExecutionHub = () => {
               variant: getStatusColorLocal(row.TripBillingStatus),
             },
             // Add customer data for API data as well
-            customerData: [
-              { name: "DB Cargo", id: "CUS00000123" },
-              { name: "ABC Rail Goods", id: "CUS00003214" },
-              { name: "Wave Cargo", id: "CUS00012345" },
-              { name: "Express Logistics", id: "CUS00004567" },
-              { name: "Global Freight", id: "CUS00007890" }
-            ].slice(0, parseInt(row.customer?.replace('+', '') || '3')),
+            // customerData: [
+            //   { name: "DB Cargo", id: "CUS00000123" },
+            //   { name: "ABC Rail Goods", id: "CUS00003214" },
+            //   { name: "Wave Cargo", id: "CUS00012345" },
+            //   { name: "Express Logistics", id: "CUS00004567" },
+            //   { name: "Global Freight", id: "CUS00007890" }
+            // ].slice(0, parseInt(row.customer?.replace('+', '') || '3')),
           };
         });
 
@@ -726,14 +726,18 @@ export const TripExecutionHub = () => {
   };
 
   // utils/fetchOptionsHelper.ts
-  const makeLazyFetcher = (messageType: string) => {
+  const makeLazyFetcher = (messageType: string, extraParams?: Record<string, any>) => {
     return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-      const response: any = await quickOrderService.getMasterCommonData({
+      // Merge standard params with any additional params supplied by caller
+      const payload = {
         messageType,
         searchTerm: searchTerm || '',
         offset,
         limit,
-      });
+        ...(extraParams || {}),
+      };
+
+      const response: any = await quickOrderService.getMasterCommonData(payload);
       let parsed = JSON.parse(response?.data?.ResponseData || '[]');
 
       try {
@@ -814,7 +818,8 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'SupplierContract', label: 'Supplier Contract', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Contract Init")
+      // Pass OrderType: 'SELL' when fetching Supplier Contract options
+      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'SELL' })
     },
     {
       key: 'ScheduleID', label: 'Schedule ID', type: 'lazyselect',
@@ -822,7 +827,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'CustomerContract', label: 'Customer Contract', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Contract Init")
+      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'BUY' })
     },
     {
       key: 'LegFrom', label: 'Leg From', type: 'lazyselect',
@@ -853,8 +858,8 @@ export const TripExecutionHub = () => {
     {
       key: 'RoundTrip', label: 'Round Trip', type: 'select',
       options: [
-        { id: '1', name: 'YES', default: "N", description: "", seqNo: 1 },
-        { id: '2', name: 'NO', default: "N", description: "", seqNo: 2 },
+        { id: 'One Way', name: 'One Way', default: "N", description: "", seqNo: 1 },
+        { id: 'Round Trip', name: 'Round Trip', default: "N", description: "", seqNo: 2 },
       ]
     },
     {

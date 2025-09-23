@@ -159,6 +159,45 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  const renderTextCustomised = () => {
+    if (column.type === "TextCustom") {
+      const firstCustomer = row?.CustomerOrderDetails?.[0]; // only first element
+
+      if (column.key === "CustomerTransportMode") {
+        return (
+          <div className="text-gray-900 font-normal truncate text-[13px]">
+            {firstCustomer?.TransportMode}
+          </div>
+        );
+      } else if (column.key === "CustomerService") {
+        return (
+          <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
+            {firstCustomer?.Service}
+          </div>
+        );
+      } else if (column.key === "CustomerSubService") {
+        return (
+          <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
+            {firstCustomer?.SubService}
+          </div>
+        );
+      } else if (column.key === "CustomerOrders") {
+        return (
+          <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
+            <a>{firstCustomer?.CustomerOrder}</a>
+          </div>
+        );
+      }
+    }
+
+    return (
+      <span className="truncate" title={String(value)}>
+        {value}
+      </span>
+    )
+
+  }
+
   // DateTimeRange renderer
   const renderDateTimeRange = () => {
     // const [date, time] = String(value).split('\n');
@@ -431,6 +470,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderActionButton();
       case 'Text':
         return renderTextData();
+      case 'TextCustom':
+        // Custom text rendering logic can be added here
+        return renderTextCustomised();
       default:
         return;
     }
