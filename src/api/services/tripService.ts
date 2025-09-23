@@ -38,8 +38,28 @@ export const tripService = {
   },
 
   // Get single trip
-  getTrip: async (id: string): Promise<ApiResponse<Trip>> => {
-    const response = await apiClient.get(`${API_ENDPOINTS.TRIPS.LIST}/${id}`);
+  getTripById: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog GetTripID",
+      },
+      SearchCriteria: {
+        TripID: params?.id,
+      },
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+        TotalRecords: 200,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(`${API_ENDPOINTS.TRIPS.TRIP_GET}`, requestBody);
     return response.data;
   },
 

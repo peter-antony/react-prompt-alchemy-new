@@ -26,6 +26,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
   const getIconButton = () => {
     if (config.iconName === "BookText") return <BookText size={24} strokeWidth={1.5} />;
     if (config.iconName === "EllipsisVertical") return <EllipsisVertical size={24} />;
+    if (config.iconName === "Printer") return <Printer size={24} />;
     return null; // fallback if icon not found
   };
 

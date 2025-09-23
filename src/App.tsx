@@ -24,6 +24,7 @@ import SignIn from "./pages/SignIn";
 import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SignOut from "./pages/SignOut";
+import CreateTrip from "./pages/CreateTrip";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
               <DynamicPanelDemoClone />
             </ProtectedRoute>
           } />
+          <Route path="create-trip" element={<CreateTrip/>} />
           
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />

@@ -3,7 +3,7 @@ import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { tripService } from "@/api/services";
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
-import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen, Edit, Trash2, Eye, Settings, GitPullRequest, Filter, Search } from 'lucide-react';
+import { Plus, Search, CloudUpload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -499,8 +499,11 @@ export const TripExecutionHub = () => {
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
-  const handleLinkClick = (value: any, row: any) => {
-    console.log("Link clicked:", value, row);
+  const handleLinkClick = (value: any, columnKey: any) => {
+    console.log("Link clicked:", value, columnKey);
+    if(columnKey === 'TripPlanID') {
+      navigate(`/create-trip?id=${value.TripPlanID}`);
+    }
   };
 
   const handleUpdate = async (updatedRow: any) => {
@@ -568,21 +571,24 @@ export const TripExecutionHub = () => {
       tooltipTitle: "Create a new trip or upload in bulk",
       showDropdown: true,
       tooltipPosition: "top" as const,
+      onClick: () => {
+        console.log('nav create-trip');
+        navigate('/create-trip');
+      },
       dropdownItems: [
         {
           label: "Create Trip",
           icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreateTrip,
+          onClick: () => {
+            navigate('/create-trip');
+          },
         },
         {
           label: "Bulk Upload",
-          icon: <Upload className="h-4 w-4" />,
+          icon: <CloudUpload className="h-4 w-4" />,
           onClick: handleBulkUpload,
         },
       ],
-      onClick: function (): void {
-        console.log("Function not implemented.");
-      },
     },
   ];
 

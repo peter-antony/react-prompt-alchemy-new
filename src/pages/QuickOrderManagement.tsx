@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
 import { Button } from '@/components/ui/button';
-import { Printer, MoreHorizontal, User, Train, UserCheck, Container, Plus, Upload, NotebookPen, Edit, Trash2, Eye, Settings, GitPullRequest, Filter, Search } from 'lucide-react';
+import { Printer, MoreHorizontal, CloudUpload, Plus, NotebookPen, Edit, Trash2, Eye, Settings, GitPullRequest, Filter, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -904,15 +904,16 @@ const QuickOrderManagement = () => {
       },
       dropdownItems: [
         {
-          label: "Add New",
+          label: "Create Order",
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
-            setIsDrawerOpen(true);
+            // setIsDrawerOpen(true);
+            navigate('/create-quick-order');
           }
         },
         {
           label: "Bulk Upload",
-          icon: <Upload className="h-4 w-4" />,
+          icon: <CloudUpload className="h-4 w-4" />,
           onClick: () => {
             setMoreInfoOpen(true);
           }
