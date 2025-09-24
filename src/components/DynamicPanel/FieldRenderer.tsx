@@ -14,6 +14,7 @@ interface FieldRendererProps {
   control: Control<any>;
   fieldId: string;
   tabIndex?: number;
+  validationErrors?: Record<string, string>;
   mandatory:boolean;
   allowedType?: string; // To restrict input types
 }
@@ -38,6 +39,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   control,
   fieldId,
   tabIndex,
+  validationErrors = {},
   mandatory,
   allowedType
 }) => {
@@ -78,10 +80,16 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
     );
   }
 
+  const hasError = validationErrors[fieldId];
+  const baseInputClasses = `h-8 text-xs focus:ring-1 focus:z-50 focus:relative focus:outline-none ${
+    hasError 
+      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+  }`;
   // Add this class for mandatory fields
-  const mandatoryBorderClass = mandatory ? "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]" : "";
+  //const mandatoryBorderClass = mandatory ? "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]" : "";
 
-  const baseInputClasses = `h-8 text-[13px] border-gray-300 focus:border-blue-500 ${mandatoryBorderClass}`;
+  //const baseInputClasses = `h-8 text-[13px] border-gray-300 focus:border-blue-500 ${mandatoryBorderClass}`;
 
   // --- UPDATED: search fieldType with suggestions ---
   if (fieldType === 'search') {
@@ -121,7 +129,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={placeholder || 'Search...'}
-                className={`pr-8 h-8 text-[13px] border-gray-300 focus:border-blue-500 rounded-md ${borderClass}`}
+                className={`pr-8 h-8 text-[13px] rounded-md ${
+                  hasError 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-gray-300 focus:border-blue-500'
+                }`}
                 tabIndex={tabIndex}
                 autoComplete="off"
               />
@@ -212,7 +224,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       placeholder={placeholder}
                       onChange={handleInput}
                       maxLength={config.maxLength} // also set native maxLength for safety
-                      className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-1 ${borderClass}`}
+                      className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-1 ${baseInputClasses}`}
                       tabIndex={tabIndex}
                       // className="flex-1 px-3 py-2 text-gray-900 bg-gray-100 focus:outline-none"
                     />
@@ -225,7 +237,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     placeholder={placeholder}
                     onChange={handleInput}
                     maxLength={config.maxLength} // also set native maxLength for safety
-                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${baseInputClasses}`}
                     tabIndex={tabIndex}
                   />
                 )}  
@@ -250,7 +262,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className={`min-h-[60px] text-[13px] border-gray-300 focus:border-blue-500 focus:z-50 focus:relative focus:outline-none ${borderClass}`}
+                  className={`min-h-[60px] text-[13px] focus:ring-1 focus:z-50 focus:relative focus:outline-none ${
+                    hasError 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                   tabIndex={tabIndex}
                 />
               </div>
@@ -318,7 +334,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   <select
                     {...field}
                     {...eventHandlers}
-                    className={`w-full h-8 px-3 text-[13px] rounded-md border border-gray-300 bg-white focus:border-blue-500 focus:z-50 focus:relative focus:outline-none appearance-none ${borderClass}`}
+                    className={`w-full h-8 px-3 text-[13px] rounded-md border bg-white focus:ring-1 focus:z-50 focus:relative focus:outline-none appearance-none ${
+                      hasError 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                     tabIndex={tabIndex}
                   >
                     <option value="">Select...</option>
@@ -372,7 +392,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     }
                   }}
                   placeholder={placeholder || 'Select...'}
-                  className="h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className={`h-8 text-[13px] focus:ring-1 ${
+                    hasError 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                   tabIndex={tabIndex}
                   onClick={events?.onClick}
                   onFocus={events?.onFocus}
@@ -400,7 +424,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="date"
                     {...field}
                     {...eventHandlers}
-                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    className={baseInputClasses}
                     tabIndex={tabIndex}
                   />
                   {/* <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -427,7 +451,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     type="time"
                     {...field}
                     {...eventHandlers}
-                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${borderClass}`}
+                    className={baseInputClasses}
                     tabIndex={tabIndex}
                   />
                   {/* <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" /> */}
@@ -463,7 +487,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       events?.onChange?.(value, e);
                     }}
                     placeholder="0.00"
-                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-6 ${borderClass}`}
+                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-6 ${baseInputClasses}`}
                     step="0.01"
                     tabIndex={tabIndex}
                   />

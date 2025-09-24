@@ -44,6 +44,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   onScrollPanel = false,
   className = '',
   panelSubTitle = '',
+  validationErrors = {}
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -338,6 +339,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
               control={control}
               fieldId={fieldId}
               tabIndex={tabIndex}
+              validationErrors={validationErrors}
               // Pass mandatory info
               mandatory={config.mandatory}
             />

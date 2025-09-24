@@ -2050,6 +2050,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             saveUserPanelConfig={saveUserPanelConfig}
                             userId="current-user"
                             panelWidth={basicDetailsWidth}
+                            validationErrors={validationResults['basic-details']?.errors || {}}
                           />
                         );
                         currentTabIndex += basicDetailsVisibleCount;
@@ -2076,6 +2077,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             saveUserPanelConfig={saveUserPanelConfig}
                             userId="current-user"
                             panelWidth={operationalDetailsWidth}
+                            validationErrors={validationResults['operational-details']?.errors || {}}
                           />
                         );
                         currentTabIndex += operationalDetailsVisibleCount;
@@ -2135,6 +2137,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             userId="current-user"
                             panelWidth={billingDetailsWidth}
                             panelSubTitle={billingDetailsTitle}
+                            validationErrors={validationResults['billing-details']?.errors || {}}
                           />
                         );
                       }

@@ -108,6 +108,7 @@ export interface DynamicPanelProps {
   className?: string;
   panelSubTitle?: string;
   onScrollPanel?: boolean;
+  validationErrors?: Record<string, string>;
 }
 
 export interface FieldVisibilityConfig {

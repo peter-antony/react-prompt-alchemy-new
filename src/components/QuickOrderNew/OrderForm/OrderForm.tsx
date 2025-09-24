@@ -831,7 +831,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   }
 
    // Validation state
-  // const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+  const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
   const { toast } = useToast();
 
   // Get form values from all panels
@@ -940,15 +940,15 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
     // Validate Basic Details
     if (orderDetailsRef.current) {
-      const basicValidation = orderDetailsRef.current.doValidation();
-      results['basic-details'] = basicValidation;
-      if (!basicValidation.isValid) {
+      const orderFormValidation = orderDetailsRef.current.doValidation();
+      results['Order Details'] = orderFormValidation;
+      if (!orderFormValidation.isValid) {
         overallValid = false;
-        totalErrors += Object.keys(basicValidation.errors).length;
+        totalErrors += Object.keys(orderFormValidation.errors).length;
       }
     }
-
-    // setValidationResults(results);
+    console.log("validation data");
+    setValidationResults(results);
 
     // Show toast notification
     // if (overallValid) {
@@ -1167,6 +1167,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                 userId="current-user"
                 panelSubTitle="Order Details"
                 className="my-custom-orderform-panel"
+                validationErrors={validationResults['Order Details']?.errors || {}}
               /> : ''
             }
           </div>
