@@ -41,15 +41,15 @@ const summaryCardsData = [
     ],
     iconColor: 'text-orange-600'
   },
-  {
-    title: 'Jobs',
-    icon: Briefcase,
-    values: [
-      { label: 'Total Jobs', value: '5' },
-      { label: 'Completed Jobs', value: '3' }
-    ],
-    iconColor: 'text-blue-600'
-  },
+  // {
+  //   title: 'Jobs',
+  //   icon: Briefcase,
+  //   values: [
+  //     { label: 'Total Jobs', value: '5' },
+  //     { label: 'Completed Jobs', value: '3' }
+  //   ],
+  //   iconColor: 'text-blue-600'
+  // },
   {
     title: 'Supplier Billing',
     icon: CreditCard,

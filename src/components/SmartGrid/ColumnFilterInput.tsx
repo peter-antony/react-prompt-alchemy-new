@@ -436,7 +436,7 @@ export function ColumnFilterInput({
       case 'DateRange':
         return (
           <div className="flex items-center gap-1">
-            <Popover>
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -459,6 +459,7 @@ export function ColumnFilterInput({
                   onSelect={(date) => {
                     // handleDateRangeChange('from', date ? date.toISOString() : '');
                     handleDateRangeChange('from', date ? date.toLocaleDateString('en-CA') : '');
+                    setShowDatePicker(false);
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
@@ -488,6 +489,7 @@ export function ColumnFilterInput({
                   selected={localValue?.to ? new Date(localValue.to) : undefined}
                   onSelect={(date) => {
                     handleDateRangeChange('to', date ? date.toLocaleDateString('en-CA') : '');
+                    setShowDatePicker(false);
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}

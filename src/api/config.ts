@@ -48,7 +48,11 @@ export const API_ENDPOINTS = {
   TRIPS: {
     LIST: "/triplog/hubsearch",
     CREATE: "/trips",
-    TRIP_GET: "/triplog/getdata",
+    GET_TRIP: "/transportexecution/gettrip",
+    SAVE_TRIP: "/transportexecution/savetrip",
+    CONFIRM_TRIP: "/transportexecution/confirmtrip",
+    CANCEL_TRIP: "/transportexecution/canceltrip",
+    AMEND_TRIP: "/transportexecution/amendtrip",
     UPDATE: (id: string) => `/trips/${id}`,
     DELETE: (id: string) => `/trips/${id}`,
     APPROVE: (id: string) => `/trips/${id}/approve`,

@@ -59,34 +59,120 @@ export const tripService = {
     const requestBody = {
       RequestData: requestPayload,
     };
-    const response = await apiClient.post(`${API_ENDPOINTS.TRIPS.TRIP_GET}`, requestBody);
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.GET_TRIP}`,
+      requestBody
+    );
     return response.data;
   },
 
-  // Create new trip
-  createTrip: async (data: TripCreateInput): Promise<ApiResponse<Trip>> => {
-    const response = await apiClient.post(API_ENDPOINTS.TRIPS.CREATE, data);
+  // save trip service call
+  saveTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog SaveTrip",
+      },
+      SearchCriteria: {},
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+        TotalRecords: 200,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_TRIP}`,
+      requestBody
+    );
     return response.data;
   },
 
-  // Update trip
-  updateTrip: async (
-    id: string,
-    data: TripUpdateInput
-  ): Promise<ApiResponse<Trip>> => {
-    const response = await apiClient.put(API_ENDPOINTS.TRIPS.UPDATE(id), data);
+  // confirm trip service call
+  confirmTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog ConfirmTrip",
+      },
+      SearchCriteria: {},
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+        TotalRecords: 200,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.CONFIRM_TRIP}`,
+      requestBody
+    );
     return response.data;
   },
 
-  // Delete trip
-  deleteTrip: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.delete(API_ENDPOINTS.TRIPS.DELETE(id));
+  // cancel trip service call
+  cancelTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog CancelTrip",
+      },
+      SearchCriteria: {},
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+        TotalRecords: 200,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.CANCEL_TRIP}`,
+      requestBody
+    );
     return response.data;
   },
 
-  // Approve trip
-  approveTrip: async (id: string): Promise<ApiResponse<Trip>> => {
-    const response = await apiClient.post(API_ENDPOINTS.TRIPS.APPROVE(id));
+  // amend trip service call
+  amendTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog AmendTrip",
+      },
+      SearchCriteria: {
+        TripID: params?.id,
+      },
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+        TotalRecords: 200,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.AMEND_TRIP}`,
+      requestBody
+    );
     return response.data;
-  },
-};
+  }
+}

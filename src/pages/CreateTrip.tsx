@@ -25,11 +25,34 @@ const CreateTrip = () => {
 
   useEffect(() => {
     if (isEditTrip && tripUniqueID) {
-      // Fetch the trip details using the tripUniqueID
       const fetchTripDetails = async () => {
-        const response: any = await tripService.getTripById({id: tripUniqueID});
-        console.log("Trip Details:", response);
+        try {
+          const response: any = await tripService.getTripById({ id: tripUniqueID });
+          console.log("Raw API Response:", response);
+
+          // Step 1: check if the data exists
+          if (response?.data?.ResponseData) {
+            let parsedData;
+
+            try {
+              // Step 2: parse the stringified JSON
+              parsedData = JSON.parse(response.data.ResponseData);
+              console.log("Parsed Trip Data:", parsedData);
+
+              // Step 3: if valid, set it into Zustand store
+              // useTripStore.getState().setTripData(parsedData);
+              // useTripStore.getState().setMode("edit");
+            } catch (err) {
+              console.error("Failed to parse trip response:", err);
+            }
+          } else {
+            console.warn("No ResponseData found in API response");
+          }
+        } catch (error) {
+          console.error("Error fetching trip:", error);
+        }
       };
+
       fetchTripDetails();
     }
   }, [isEditTrip, tripUniqueID]);
