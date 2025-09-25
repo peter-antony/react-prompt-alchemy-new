@@ -176,7 +176,7 @@ export function LazySelect({
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <div className='flex items-center gap-1 p-1 bg-white rounded border shadow-sm transition-all h-9'>
+        <div className='flex items-center gap-1 transition-all h-9'>
           <div className='flex-1'>
             <Button
               variant="outline"

@@ -342,7 +342,7 @@ export function ServersideFilter({
                   size="sm"
                   onClick={() => handleFilterChange(filter.key, undefined)}
                   // className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100 z-10"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -384,7 +384,7 @@ export function ServersideFilter({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleFilterChange(filter.key, undefined)}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100"
               >
                 <X className="h-3 w-3" />
               </Button>

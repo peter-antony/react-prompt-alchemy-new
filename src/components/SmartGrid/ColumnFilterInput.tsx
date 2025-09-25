@@ -586,7 +586,7 @@ export function ColumnFilterInput({
 
   return (
     <div className={cn(
-      "flex items-center gap-1 p-1 bg-white rounded border shadow-sm transition-all h-9",
+      "flex items-center gap-1 transition-all h-9 relative",
       isSubRow && "bg-blue-50 border-blue-200"
     )}>
       {/* Operator symbol with dropdown - only show if enabled */}
@@ -629,9 +629,9 @@ export function ColumnFilterInput({
           variant="ghost"
           size="sm"
           onClick={handleClear}
-          className="h-6 w-6 p-0 hover:bg-red-100"
+          className="h-5 w-5 p-0 hover:bg-red-100 absolute right-0"
         >
-          <X className="h-3 w-3 text-red-500" />
+          {/* <X className="h-3 w-3 text-red-500" /> */}
         </Button>
       )}
     </div>
