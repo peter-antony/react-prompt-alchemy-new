@@ -195,12 +195,12 @@ export const EnhancedFieldVisibilityModal: React.FC<EnhancedFieldVisibilityModal
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+        {/* <DialogHeader>
           <DialogTitle>Panel Configuration</DialogTitle>
-        </DialogHeader>
+        </DialogHeader> */}
         
         <Accordion type="single" collapsible defaultValue="panel-settings" className="w-full">
-          <AccordionItem value="panel-settings">
+          {/* <AccordionItem value="panel-settings">
             <AccordionTrigger>Panel Settings</AccordionTrigger>
             <AccordionContent className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -268,7 +268,7 @@ export const EnhancedFieldVisibilityModal: React.FC<EnhancedFieldVisibilityModal
                 <Label htmlFor="show-header">Show header section</Label>
               </div>
             </AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
 
           <AccordionItem value="field-visibility">
             <AccordionTrigger>Field Visibility & Configuration</AccordionTrigger>

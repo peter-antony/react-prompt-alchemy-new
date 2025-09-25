@@ -340,6 +340,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 3,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Contract Init",
@@ -378,6 +380,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'SELL',
       editable: true,
       order: 4,
+      hideSearch: true,
+      disableLazyLoading: false,
       // options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
@@ -417,6 +421,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 4,
+      hideSearch: true,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Supplier Init",
@@ -454,6 +460,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 5,
+      hideSearch: true,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Cluster Init",
@@ -484,6 +492,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 6,
+      hideSearch: true,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Customer Order status Init",
@@ -1224,7 +1234,16 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
               <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={false} /></div>
             </div>
           </SideDrawer>
-          <SideDrawer isOpen={isHistoryOpen} onClose={() => setHistoryOpen(false)} width="40%" title="Amendment History" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
+          <SideDrawer
+            isOpen={isHistoryOpen}
+            onClose={() => setHistoryOpen(false)}
+            width="40%"
+            title="Amendment History"
+            isBack={false}
+            badgeContent={jsonStore.getQuickOrderNo?.() || ""}
+            onScrollPanel={true}
+            isBadgeRequired={true}
+          >
             <div className="">
               <div className="mt-0 text-sm text-gray-600"><AmendmentHistory /></div>
             </div>

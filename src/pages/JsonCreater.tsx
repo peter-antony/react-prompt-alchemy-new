@@ -27,7 +27,7 @@ const QUICK_ORDER_BASIC_JSON = {
       "QCUserDefined3Value": "",
       "Remarks2": "",
       "Remarks3": "",
-      "Status": "Fresh",
+      "Status": "",
       // "Status": "Save/Confirm/UnderAmend",
       "ModeFlag": "Insert",
       "ResourceGroup": [
@@ -86,23 +86,15 @@ const Resource_Group_BASIC_JSON = {
     "BillingRemarks": "",
     "InternalOrderNo": null
   },
-  "MoreRefDocs": 
-    // {
-    //   "DocCategory": "",
-    //   "DocType": "",
-    //   "DocValue": "",
-    //   "DocDate": "",
-    //   "DocRemarks": ""
-    // }
-    {
-      "PrimaryDocType":null,
-      "PrimaryDocTypeValue":null,
-      "SecondaryDocType":null,
-      "SecondaryDocTypeValue":null,
-      "PrimaryDocDate":null,
-      "SecondaryDocDate":null
-    }
-  ,
+  "MoreRefDocs": {
+    "PrimaryDocType": null,
+    "PrimaryDocNo": null,
+    "PrimaryDocDate": null,
+    "SecondaryDocType": null,
+    "SecondaryDocNo": null,
+    "SecondaryDocDate": null,
+    "AddtionalMoreRefDocs": []
+  },
   "Attachments": {
     "TotalAttachment": "0",
     "AttachItems": [
@@ -141,7 +133,7 @@ const QUICK_ORDER_JSON = {
       "QCUserDefined3Value": "",
       "Remarks2": "",
       "Remarks3": "",
-      "Status": "Fresh",
+      "Status": "",
       // "Status": "Save/Confirm/UnderAmend",
       "ModeFlag": "Insert",
       "ResourceGroup": [
@@ -272,23 +264,15 @@ const Resource_Group_JSON = {
     "BillingRemarks": "",
     "InternalOrderNo": null
   },
-  "MoreRefDocs": 
-    // {
-    //   "DocCategory": "",
-    //   "DocType": "",
-    //   "DocValue": "",
-    //   "DocDate": "",
-    //   "DocRemarks": ""
-    // }
-    {
-      "PrimaryDocType":null,
-      "PrimaryDocTypeValue":null,
-      "SecondaryDocType":null,
-      "SecondaryDocTypeValue":null,
-      "PrimaryDocDate":null,
-      "SecondaryDocDate":null
-    }
-  ,
+  "MoreRefDocs": {
+    "PrimaryDocType": null,
+    "PrimaryDocNo": null,
+    "PrimaryDocDate": null,
+    "SecondaryDocType": null,
+    "SecondaryDocNo": null,
+    "SecondaryDocDate": null,
+    "AddtionalMoreRefDocs": []
+  },
   "Attachments": {
     "TotalAttachment": "0",
     "AttachItems": [

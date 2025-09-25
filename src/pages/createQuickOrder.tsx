@@ -82,7 +82,7 @@ const CreateQuickOrder = () => {
       rightButtons: [
         {
           label: "Cancel",
-          disabled: false,
+          disabled: isConfirmButtonDisabled,
           type: 'Button' as const,
           onClick: () => {
             // console.log("Cancel clicked");
@@ -93,7 +93,7 @@ const CreateQuickOrder = () => {
         {
           label: "Save Draft",
           type: "Button" as const,
-          disabled: false,
+          disabled: isConfirmButtonDisabled,
           onClick: () => {
             console.log("Save Draft clicked");
             quickOrderSaveDraftHandler();
@@ -133,7 +133,7 @@ const CreateQuickOrder = () => {
         const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
         setApiData(data);
         console.log("API Data:", data);
-        if (messageType == "Quick Order Billing Type Init") {
+        if (messageType == "Quick Order Amend Reason Code Init") {
           setReasonCodeTypeList(JSON.parse(data?.data?.ResponseData));
         }
       } catch (err) {
@@ -214,6 +214,14 @@ const CreateQuickOrder = () => {
       //  Get OrderNumber from response
       const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
       console.log("OrderNumber:", OrderNumber);
+      const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+      if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+        toast({
+          title: "✅ Form submitted successfully",
+          description: "Your changes have been saved.",
+          variant: "default", // or "success" if you have custom variant
+        });
+      }
 
     } catch (err) {
       console.log("CATCH :: ", err);
@@ -225,11 +233,7 @@ const CreateQuickOrder = () => {
       });
     }
     finally {
-      toast({
-        title: "✅ Form submitted successfully",
-        description: "Your changes have been saved.",
-        variant: "default", // or "success" if you have custom variant
-      });
+      
     }
   }
   

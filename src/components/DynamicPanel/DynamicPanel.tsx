@@ -486,15 +486,20 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                 formData={getValues() || {}}
                 showStatus={showStatusIndicator}
               />
-              {panelSubTitle == "Order Details" && (
+              {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
                 <span
                   className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
                 >
-                  {jsonStore.getQuickOrderNo?.() || ""}
+                  {jsonStore.getQuickOrderNo()}
                 </span>
               )}
               {panelSubTitle == "Order Details" && (() => {
-                const status = jsonStore.getQuickOrder()?.Status || "";
+                console.log("jsonStore.getQuickOrder()?.Status", jsonStore.getQuickOrder()?.Status);
+                const status = jsonStore.getQuickOrder()?.Status;
+                if (!status) {
+                  return null;
+                }
+                // const status = jsonStore.getQuickOrder()?.Status || "";
                 let statusClass = "bg-gray-100 text-gray-600 border border-gray-300";
                 let label = status;
                 if (status.toLowerCase() === "confirmed") {

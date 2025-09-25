@@ -46,6 +46,7 @@ export interface FieldConfig {
   labelFlag?: boolean; // Flag to indicate if label should be displayed
   color?: string; // For card field type background color
   fieldColour?: string; // For card field type color
+  dateFormat?: string; // For date field type - format string for date-fns
   allowedType?: 'number' | 'alphanumeric' | 'alpha'; // To restrict input types
   maxLength?: number; // To restrict maximum input length
   // For lazyselect field type
@@ -54,6 +55,8 @@ export interface FieldConfig {
     offset: number;
     limit: number;
   }) => Promise<{ label: string; value: string }[]>;
+  hideSearch?: boolean; // Hide search box in lazyselect
+  disableLazyLoading?: boolean; // Disable lazy loading on scroll in lazyselect
   // Event handlers for field interactions
   events?: {
     onClick?: (event: React.MouseEvent, value: any) => void;
