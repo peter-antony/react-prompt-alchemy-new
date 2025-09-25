@@ -78,6 +78,7 @@ export function SmartGrid({
   showServersideFilter = false,
   onToggleServersideFilter,
   hideAdvancedFilter = false,
+  hideCheckboxToggle = false,
   serverFilters = [],
   showFilterTypeDropdown = false,
   gridId,
@@ -869,6 +870,7 @@ export function SmartGrid({
         // Server-side filter props
         showServersideFilter={showServersideFilter}
         onToggleServersideFilter={onToggleServersideFilter}
+        hideCheckboxToggle={hideCheckboxToggle}
         gridId={gridId}
       />
 

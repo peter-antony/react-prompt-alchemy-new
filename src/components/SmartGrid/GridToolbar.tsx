@@ -73,6 +73,7 @@ interface GridToolbarProps {
   showServersideFilter?: boolean;
   onToggleServersideFilter?: () => void;
   gridId?: string;
+  hideCheckboxToggle?: boolean
 }
 
 export function GridToolbar({
@@ -112,7 +113,8 @@ export function GridToolbar({
   showGroupingDropdown = false,
   showServersideFilter = false,
   onToggleServersideFilter,
-  gridId
+  gridId,
+  hideCheckboxToggle = false
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -331,29 +333,30 @@ export function GridToolbar({
           </Button>
         )} */}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowCheckboxes(!showCheckboxes)}
-          disabled={loading}
-          title="Toggle Checkboxes"
-          className={cn(
-            "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
-            showCheckboxes && "bg-blue-100 text-blue-600"
-          )}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g clipPath="url(#clip0_34673_19673)">
-              <path d="M5.99996 7.33328L7.99994 9.33327L14.6666 2.66666M10.6666 2H5.19997C4.07988 2 3.51983 2 3.09201 2.21798C2.71569 2.40973 2.40973 2.71569 2.21798 3.09201C2 3.51983 2 4.07988 2 5.19997V10.7999C2 11.92 2 12.4801 2.21798 12.9079C2.40973 13.2842 2.71569 13.5902 3.09201 13.7819C3.51983 13.9999 4.07988 13.9999 5.19997 13.9999H10.7999C11.92 13.9999 12.4801 13.9999 12.9079 13.7819C13.2842 13.5902 13.5902 13.2842 13.7819 12.9079C13.9999 12.4801 13.9999 11.92 13.9999 10.7999V7.99994" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </g>
-            <defs>
-              <clipPath id="clip0_34673_19673">
-                <rect width="15.9999" height="15.9999" fill="white" />
-              </clipPath>
-            </defs>
-          </svg>
-          {/* <CheckSquare className="h-4 w-4 text-gray-600" /> */}
-        </Button>
+        { !hideCheckboxToggle && (<Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCheckboxes(!showCheckboxes)}
+            disabled={loading}
+            title="Toggle Checkboxes"
+            className={cn(
+              "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
+              showCheckboxes && "bg-blue-100 text-blue-600"
+            )}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clipPath="url(#clip0_34673_19673)">
+                <path d="M5.99996 7.33328L7.99994 9.33327L14.6666 2.66666M10.6666 2H5.19997C4.07988 2 3.51983 2 3.09201 2.21798C2.71569 2.40973 2.40973 2.71569 2.21798 3.09201C2 3.51983 2 4.07988 2 5.19997V10.7999C2 11.92 2 12.4801 2.21798 12.9079C2.40973 13.2842 2.71569 13.5902 3.09201 13.7819C3.51983 13.9999 4.07988 13.9999 5.19997 13.9999H10.7999C11.92 13.9999 12.4801 13.9999 12.9079 13.7819C13.2842 13.5902 13.5902 13.2842 13.7819 12.9079C13.9999 12.4801 13.9999 11.92 13.9999 10.7999V7.99994" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
+              <defs>
+                <clipPath id="clip0_34673_19673">
+                  <rect width="15.9999" height="15.9999" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+            {/* <CheckSquare className="h-4 w-4 text-gray-600" /> */}
+          </Button>
+        )}
 
         {/* {gridTitle !== 'Plan List' && (
           <Button 

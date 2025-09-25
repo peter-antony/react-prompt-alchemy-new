@@ -142,6 +142,8 @@ export interface ServerFilter {
   multiSelect?: boolean; // Enable multi-select for dropdown/select types
   fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
   defaultValue?: any; // Default value for the filter field
+  hideSearch?: boolean; // Hide search box in lazy select
+  disableLazyLoading?: boolean; // Disable infinite scroll in lazy select
 }
 
 export interface ExtraFilter {
@@ -215,6 +217,8 @@ export interface SmartGridProps {
   onClearAll?: () => void;
   // Control whether to show AdvancedFilter (disabled when using server-side filters)
   hideAdvancedFilter?: boolean;
+  // Control whether to show the checkbox toggle button in toolbar
+  hideCheckboxToggle?: boolean;
 }
 
 // Legacy interface for backward compatibility

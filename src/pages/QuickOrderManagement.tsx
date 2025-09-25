@@ -463,13 +463,17 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'Cluster', label: 'Cluster', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Cluster Init")
+      fetchOptions: makeLazyFetcher("Cluster Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'Customer',
       label: 'Customer',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Customer Init")
+      fetchOptions: makeLazyFetcher("Customer Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'CustomerSupplierRefNo', label: 'Customer/Supplier Ref No', type: 'text' },
     { key: 'DraftBillNo', label: 'Draft Bill No', type: 'text' },
@@ -483,7 +487,9 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'ServiceType', label: 'Service', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Service type Init")
+      fetchOptions: makeLazyFetcher("Service type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'ServiceDate', label: 'Service Date', type: 'dateRange' },
     { key: 'QuickOrderDate', label: 'Quick Order Date', type: 'dateRange' },
@@ -501,7 +507,9 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'SubService', label: 'Sub Service', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Sub Service type Init")
+      fetchOptions: makeLazyFetcher("Sub Service type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'WBS', label: 'WBS', type: 'text' },
     {
@@ -521,7 +529,9 @@ const QuickOrderManagement = () => {
     },
     {
       key: 'CreatedBy', label: 'Quick Order Created By', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Createdby Init")
+      fetchOptions: makeLazyFetcher("Createdby Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'SecondaryDoc', label: 'Secondary Doc', type: 'text',
@@ -530,20 +540,28 @@ const QuickOrderManagement = () => {
     { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },
     {
       key: 'InvoiceStatus', label: 'Invoice Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Finance Status Init")
+      fetchOptions: makeLazyFetcher("Finance Status Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'ResourceType', label: 'Resource Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("ResourceType Init")
+      fetchOptions: makeLazyFetcher("ResourceType Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'Wagon', label: 'Wagon', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Wagon id Init")
+      fetchOptions: makeLazyFetcher("Wagon id Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'Container', label: 'Container', type: 'lazyselect',
       // fetchOptions: makeLazyFetcher("Container Type Init")
-      fetchOptions: makeLazyFetcher("Container ID Init")
+      fetchOptions: makeLazyFetcher("Container ID Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
     // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },
@@ -1161,6 +1179,7 @@ const QuickOrderManagement = () => {
                 clientSideSearch={true}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
+                hideCheckboxToggle={true}
                 serverFilters={dynamicServerFilters}
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}

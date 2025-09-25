@@ -20,6 +20,8 @@ interface LazySelectProps {
   multiSelect?: boolean;
   disabled?: boolean;
   className?: string;
+  hideSearch?: boolean;
+  disableLazyLoading?: boolean;
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -31,7 +33,9 @@ export function LazySelect({
   placeholder = "Select an option...",
   multiSelect = false,
   disabled = false,
-  className
+  className,
+  hideSearch = false,
+  disableLazyLoading = false
 }: LazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<LazySelectOption[]>([]);
@@ -115,14 +119,15 @@ export function LazySelect({
   };
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current || loading || !hasMore) return;
+    // if (!scrollRef.current || loading || !hasMore) return;
+    if (!scrollRef.current || loading || !hasMore || disableLazyLoading) return;
     // if (!scrollRef.current || loading) return;
 
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     if (scrollTop + clientHeight >= scrollHeight - 10) {
       loadOptions(false);
     }
-  }, [loading, hasMore, loadOptions]);
+  }, [loading, hasMore, loadOptions, disableLazyLoading]);
 
   const handleSelect = (selectedValue: string) => {
     if (multiSelect) {
@@ -206,14 +211,16 @@ export function LazySelect({
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <div className="p-2 border-b">
-          <Input
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8"
-          />
-        </div>
+        {!hideSearch && (
+          <div className="p-2 border-b">
+            <Input
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8"
+            />
+          </div>
+        )}
         <div
           ref={scrollRef}
           className="max-h-60 overflow-y-auto"
@@ -221,7 +228,8 @@ export function LazySelect({
         >
           {options.length === 0 && !loading ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              {debouncedSearchTerm ? 'No results found.' : 'Start typing to search...'}
+              {/* {debouncedSearchTerm ? 'No results found.' : 'Start typing to search...'} */}
+               {hideSearch ? 'No options available.' : (debouncedSearchTerm ? 'No results found.' : 'Start typing to search...')}
             </div>
           ) : (
             options.map((option: any, index) => {
