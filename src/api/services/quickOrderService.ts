@@ -332,10 +332,10 @@ export const quickOrderService = {
         OUID: 4,
         Role: "ramcorole",
       },
-      MessageContents: {
-        UniqueID: "",
+      MessageContents: [{
+        UniqueID: "123455",
         QuickOrder: data,
-      },
+      }]
     });
     const requestBody = {
       // context: {
@@ -373,10 +373,10 @@ export const quickOrderService = {
         OUID: 4,
         Role: "ramcorole",
       },
-      MessageContents: {
-        UniqueID: "",
+      MessageContents: [{
+        UniqueID: "123455",
         QuickOrder: data,
-      },
+      }]
     });
     const requestBody = {
       RequestData: stringifyData,
@@ -407,10 +407,10 @@ export const quickOrderService = {
         OUID: 4,
         Role: "ramcorole",
       },
-      MessageContents: {
-        UniqueID: "",
+      MessageContents: [{
+        UniqueID: "123455",
         QuickOrder: data,
-      },
+      }]
     });
 
     const requestBody = {
