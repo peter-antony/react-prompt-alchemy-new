@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import GridResourceDetails from '@/components/Common/GridResourceDetails';
 import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
 import { dateFormatter } from '@/utils/formatter';
-import { format, subDays } from 'date-fns';
+import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 
 export const TripExecutionHub = () => {
@@ -41,7 +41,7 @@ export const TripExecutionHub = () => {
 
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
-    { label: "Trip Execution Management", active: true },
+    { label: "Transport Execution Management", active: true },
     // { label: 'Trip Execution Management', active: false },
   ];
 
@@ -367,8 +367,8 @@ export const TripExecutionHub = () => {
     const defaultsTo: any = {
       PlannedExecutionDate: {
         value: {
-          from: '2025/06/05',
-          to: '2025/08/06'
+          from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
+        to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
         }
       }
     }
@@ -573,14 +573,16 @@ export const TripExecutionHub = () => {
       tooltipPosition: "top" as const,
       onClick: () => {
         console.log('nav create-trip');
-        navigate('/create-trip');
+        // No redirection here right now.
+        // navigate('/create-trip');
       },
       dropdownItems: [
         {
           label: "Create Trip",
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
-            navigate('/create-trip');
+            // No redirection here right now.
+            // navigate('/create-trip');
           },
         },
         {
@@ -774,8 +776,10 @@ export const TripExecutionHub = () => {
     {
       key: "PlannedExecutionDate", label: "Planned Execution Date", type: 'dateRange',
       defaultValue: {
-        from: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
-        to: format(new Date(), 'yyyy-MM-dd')
+        // from: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
+        // to: format(new Date(), 'yyyy-MM-dd')
+        from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
+        to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
       }
     },
     {
@@ -792,15 +796,21 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'ServiceType', label: 'Service', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Service type Init")
+      fetchOptions: makeLazyFetcher("Service type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'Cluster', label: 'Cluster', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Cluster Init")
+      fetchOptions: makeLazyFetcher("Cluster Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'LoadType', label: 'Trip Load Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Load type Init")
+      fetchOptions: makeLazyFetcher("Load type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'WagonID', label: 'Wagon ID', type: 'lazyselect',
@@ -812,15 +822,21 @@ export const TripExecutionHub = () => {
       key: 'TripStatus', label: 'Trip Status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Trip status Init"),
       multiSelect: true,
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'TripBillingStatus', label: 'Trip Billing Status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("DraftBillStatus Init"),
-      multiSelect: true
+      multiSelect: true,
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'UserID', label: 'User', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Createdby Init")
+      fetchOptions: makeLazyFetcher("Createdby Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'SupplierContract', label: 'Supplier Contract', type: 'lazyselect',
@@ -829,7 +845,9 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'ScheduleID', label: 'Schedule ID', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Schedule ID Init")
+      fetchOptions: makeLazyFetcher("Schedule ID Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'CustomerContract', label: 'Customer Contract', type: 'lazyselect',
@@ -845,21 +863,29 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'ExecutiveCarrierID', label: 'Executive Carrier', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Executive Carrier Init")
+      fetchOptions: makeLazyFetcher("Executive Carrier Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'TrainID', label: 'Train No', type: 'text' },
     {
       key: 'SubServiceType', label: 'Sub Service Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Sub Service type Init")
+      fetchOptions: makeLazyFetcher("Sub Service type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'WBS', label: 'WBS', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("WBS Init")
+      fetchOptions: makeLazyFetcher("WBS Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'PathNo', label: 'Path No', type: 'text' },
     {
       key: 'ContainerID', label: 'Container No', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Container ID Init")
+      fetchOptions: makeLazyFetcher("Container ID Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'RoundTrip', label: 'Round Trip', type: 'select',
@@ -870,47 +896,67 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'TripType', label: 'Trip Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Trip Type Init")
+      fetchOptions: makeLazyFetcher("Trip Type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'CustomerRefNo', label: 'Customer Ref.No.', type: 'text' },
     {
       key: 'RefDocType', label: 'Ref. Doc. Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Ref Doc Type Init")
+      fetchOptions: makeLazyFetcher("Ref Doc Type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'RefDocNo', label: 'Ref. Doc. No.', type: 'text' },
     { key: 'Incident No', label: 'Incident No', type: 'text' },
     {
       key: 'IncidentStatus', label: 'Incident status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Incident status Init")
+      fetchOptions: makeLazyFetcher("Incident status Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'TransportMode', label: 'Transport Mode', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Transport Mode Init")
+      fetchOptions: makeLazyFetcher("Transport Mode Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'ReturnTripId', label: 'Return Trip ID', type: 'text' },
     {
       key: 'CancellationReason', label: 'Cancellation Reason', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Cancellation Reason Init")
+      fetchOptions: makeLazyFetcher("Cancellation Reason Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'WorkshopStatus', label: 'Workshop Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Workshop Status Init")
+      fetchOptions: makeLazyFetcher("Workshop Status Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'VendorFeedback', label: 'Vendor Feedback', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Vendor Feedback Init")
+      fetchOptions: makeLazyFetcher("Vendor Feedback Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'VendorFeedbackReason', label: 'Vendor Feedback Reason', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Vendor Feedback Reason Init")
+      fetchOptions: makeLazyFetcher("Vendor Feedback Reason Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'WagonGroup', label: 'Wagon Group', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Wagon Group Init")
+      fetchOptions: makeLazyFetcher("Wagon Group Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'ContainerGroup', label: 'Container Group', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Container Group Init")
+      fetchOptions: makeLazyFetcher("Container Group Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'Via', label: 'VIA', type: 'lazyselect',
@@ -918,7 +964,9 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'DocumentType', label: 'Document Type', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Document Type Init")
+      fetchOptions: makeLazyFetcher("Document Type Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     { key: 'Document', label: 'Document', type: 'text' },
     { key: 'CustomerSenderRefNo', label: 'Customer Sender Ref no', type: 'text' },
@@ -928,11 +976,15 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'DriverID', label: 'Driver', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Driver Init")
+      fetchOptions: makeLazyFetcher("Driver Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'CarrierID', label: 'Carrier', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Carrier Init")
+      fetchOptions: makeLazyFetcher("Carrier Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
 
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },

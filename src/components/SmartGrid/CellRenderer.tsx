@@ -153,11 +153,33 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     return (
       <div className="text-sm min-w-0">
         <div className="text-gray-900 font-normal truncate text-[13px]">{value}</div>
-        {column.key == 'Contract' && (<div className="text-gray-500 text-[11px] truncate">{row?.ContractDescription}</div>)}
-        {column.key == 'CustomerOrVendor' && (<div className="text-gray-500 text-[11px] truncate">{row?.CustomerOrVendorName}</div>)}
+        {/* {column.key == 'Contract' && (<div className="text-gray-500 text-[11px] truncate">{row?.ContractDescription}</div>)}
+        {column.key == 'CustomerOrVendor' && (<div className="text-gray-500 text-[11px] truncate">{row?.CustomerOrVendorName}</div>)} */}
       </div>
     );
   };
+
+  const renderTextPipedData = () => {
+    return (
+      <div className="text-sm min-w-0">
+        {column.key === "Contract" && (
+          <div className="text-gray-900 font-normal truncate text-[13px]">
+            {row?.ContractDescription && row?.Contract
+              ? `${row.ContractDescription} || ${row.Contract}`
+              : row?.ContractDescription || row?.Contract}
+          </div>
+        )}
+
+        {column.key === "CustomerOrVendor" && (
+          <div className="text-gray-900 font-normal truncate text-[13px]">
+            {row?.CustomerOrVendorName && row?.CustomerOrVendor
+              ? `${row.CustomerOrVendorName} || ${row.CustomerOrVendor}`
+              : row?.CustomerOrVendorName || row?.CustomerOrVendor}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const renderTextCustomised = () => {
     if (column.type === "TextCustom") {
@@ -470,6 +492,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderActionButton();
       case 'Text':
         return renderTextData();
+      case 'TextPipedData':
+        return renderTextPipedData();
       case 'TextCustom':
         // Custom text rendering logic can be added here
         return renderTextCustomised();

@@ -13,6 +13,7 @@ export type GridColumnType =
   | 'CustomerCountBadge'   // Customer count badge with popup details
   | 'Text'                 // Standard text cell
   | 'TextCustom'           // Standard text cell with custom rendering
+  | 'TextPipedData'        // Text with piped data rendering
   | 'Date'                 // Formatted date
   | 'DateRange'            // Date range picker
   | 'NumberRange'          // Number range with from/to inputs

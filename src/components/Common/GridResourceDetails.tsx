@@ -225,11 +225,12 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 relative">
+                {/* Resource Status is not applicable to show in UI */}
+                {/* <div className="flex items-center gap-1 relative">
                   <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.ResourceStatus]}`}>
                     {item?.ResourceStatus}
                   </span>
-                </div>
+                </div> */}
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm mb-3">
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -238,7 +239,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Banknote className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">€ {formattedAmount(item?.BillingDetails?.UnitPrice)}</span>
+                  <span className="truncate">€ {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
                   {/* <span className="truncate">{item.price}</span> */}
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">

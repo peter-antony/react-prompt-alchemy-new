@@ -208,7 +208,7 @@ const QuickOrderManagement = () => {
     {
       key: 'CustomerOrVendor',
       label: 'Customer/Supplier',
-      type: 'Text',
+      type: 'TextPipedData',
       sortable: true,
       editable: false,
       subRow: false,
@@ -217,7 +217,7 @@ const QuickOrderManagement = () => {
     {
       key: 'Contract',
       label: 'Contract',
-      type: 'Text',
+      type: 'TextPipedData',
       sortable: true,
       editable: false,
       // infoTextField: 'arrivalPointDetails',
@@ -496,7 +496,9 @@ const QuickOrderManagement = () => {
     { key: 'TotalNet', label: 'Total Net Amount', type: 'numberRange' },
     {
       key: 'DraftBillStatus', label: 'Draft Bill Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("DraftBillStatus Init")
+      fetchOptions: makeLazyFetcher("DraftBillStatus Init"),
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
       key: 'IsBillingFailed', label: 'Billing Failed', type: 'select',
@@ -517,7 +519,11 @@ const QuickOrderManagement = () => {
       fetchOptions: makeLazyFetcher("Location Init")
     },
     {
-      key: 'PrimaryRefDoc', label: 'Primary Ref Doc type and no.', type: 'text',
+      key: 'PrimaryRefDoc', label: 'Primary Ref. Doc. Type & No.', type: 'dropdownText',
+      options: [
+        { id: '1', name: 'Select', default: "Y", description: "", seqNo: 1 },
+        { id: '2', name: 'Sales Order', default: "N", description: "", seqNo: 2 }
+      ],
       // fetchOptions: makeLazyFetcher("Ref doc type Init")
     },
     {
@@ -534,7 +540,7 @@ const QuickOrderManagement = () => {
       disableLazyLoading: true
     },
     {
-      key: 'SecondaryDoc', label: 'Secondary Doc', type: 'text',
+      key: 'SecondaryDoc', label: 'Secondary Ref. Doc. Type & No.', type: 'text',
       // fetchOptions: makeLazyFetcher("Ref doc type Init")
     },
     { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },

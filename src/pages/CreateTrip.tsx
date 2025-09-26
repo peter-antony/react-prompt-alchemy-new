@@ -155,8 +155,8 @@ const CreateTrip = () => {
   //BreadCrumb data
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
-    { label: 'Trip Execution Management', href: '/trip-hub', active: false }, // Updated breadcrumb
-    { label: 'Trip Execution', active: true } // Updated breadcrumb
+    { label: 'Transport Execution Management', href: '/trip-hub', active: false }, // Updated breadcrumb
+    { label: 'Transport Execution', active: true } // Updated breadcrumb
   ];
 
   const tripSaveDraftHandler = async () => {

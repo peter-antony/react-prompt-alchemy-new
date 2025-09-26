@@ -130,9 +130,12 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
             )}
             title={displayCustomers[0]?.CustomerDescription}
           >
-            {displayCustomers && displayCustomers.length > 0
+            {/* {displayCustomers && displayCustomers.length > 0
               ? (displayCustomers[0]?.Customer || displayCustomers[0]?.name || String(countNumber))
-              : String(countNumber)}
+              : String(countNumber)} */}
+            { displayCustomers?.[0]?.Customer && displayCustomers[0]?.CustomerDescription
+              ? `${displayCustomers[0]?.CustomerDescription} || ${displayCustomers?.[0]?.Customer}`
+              : displayCustomers?.[0]?.CustomerDescription || displayCustomers?.[0]?.Customer}
           </div>
         )}
       </div>
@@ -157,10 +160,10 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-normal text-gray-900 truncate">
-                      {customer.Customer || customer.name}
+                      {customer.CustomerDescription || customer.name}
                     </div>
                     <div className="text-xs text-gray-500 truncate">
-                      {customer.CustomerDescription || (customer.description ?? customer.Customer)}
+                      {customer.Customer || (customer.description ?? customer.Customer)}
                     </div>
                   </div>
                 </div>

@@ -24,10 +24,10 @@ interface ColumnFilterInputProps {
   renderOptionValue?: (option: any) => any;
 }
 
-export function ColumnFilterInput({ 
-  column, 
-  value, 
-  onChange, 
+export function ColumnFilterInput({
+  column,
+  value,
+  onChange,
   onApply,
   isSubRow = false,
   showFilterTypeDropdown = true,
@@ -37,6 +37,8 @@ export function ColumnFilterInput({
   const [localValue, setLocalValue] = useState<any>(value?.value || '');
   const [operator, setOperator] = useState<string>(value?.operator || getDefaultOperator());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showFromPicker, setShowFromPicker] = useState(false);
+  const [showToPicker, setShowToPicker] = useState(false);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [rangeFrom, setRangeFrom] = useState<string>('');
   const [rangeTo, setRangeTo] = useState<string>('');
@@ -50,7 +52,7 @@ export function ColumnFilterInput({
   useEffect(() => {
     setLocalValue(value?.value || '');
     setOperator(value?.operator || getDefaultOperator());
-    
+
     // Initialize multi-select values
     if (column.multiSelect && column.type === 'Dropdown') {
       if (value?.value && Array.isArray(value.value)) {
@@ -59,7 +61,7 @@ export function ColumnFilterInput({
         setSelectedOptions([]);
       }
     }
-    
+
     // Initialize complex field values
     if (value?.value && typeof value.value === 'object') {
       if (column.type === 'NumberRange') {
@@ -112,7 +114,7 @@ export function ColumnFilterInput({
 
   const handleValueChange = (newValue: any) => {
     setLocalValue(newValue);
-    
+
     if (newValue === '' || newValue == null) {
       onChange(undefined);
     } else {
@@ -209,7 +211,7 @@ export function ColumnFilterInput({
     // Always update the state to allow typing
     setRangeFrom(from);
     setRangeTo(to);
-    
+
     // Only validate and send onChange when both values are valid numbers
     // or when clearing the fields
     if (from === '' && to === '') {
@@ -218,7 +220,7 @@ export function ColumnFilterInput({
       // Allow partial input, only validate when both are non-empty numbers
       const fromNum = parseFloat(from);
       const toNum = parseFloat(to);
-      
+
       // If both are valid numbers and to < from, don't send the change
       // but still allow the user to continue typing
       if (from && to && !isNaN(fromNum) && !isNaN(toNum) && toNum < fromNum) {
@@ -238,7 +240,7 @@ export function ColumnFilterInput({
       setDropdownValue(dropdown);
       setTextValue(''); // Clear text when using dropdown
       setDropdownMode('dropdown');
-      
+
       if (dropdown === '') {
         onChange(undefined);
       } else {
@@ -252,7 +254,7 @@ export function ColumnFilterInput({
       setTextValue(text);
       setDropdownValue(''); // Clear dropdown when using text
       setDropdownMode('text');
-      
+
       if (text === '') {
         onChange(undefined);
       } else {
@@ -269,32 +271,31 @@ export function ColumnFilterInput({
   const handleDateRangeChange = (type: 'from' | 'to', date: string) => {
     // console.log('handleDateRangeChange called:', { type, date });
     const currentValue = localValue || { from: '', to: '' };
-    const newValue = {
-      ...currentValue,
-      [type]: date
-    };
-    // console.log('Date range values:', { currentValue, newValue });
-    // Validate that to date >= from date if both are provided
-    // if (newValue.from && newValue.to && new Date(newValue.to) < new Date(newValue.from)) {
-    //   return; // Don't update if to date is less than from date
-    // }
-    // Validate that to date >= from date if both are provided
-    if (newValue.from && newValue.to && new Date(newValue.to) < new Date(newValue.from)) {
-      return; // Don't update if to date is less than from date
+    const newValue = { ...currentValue, [type]: date };
+
+    // validation: both dates must be chronological
+    if (newValue.from && newValue.to) {
+      const fromDate = new Date(newValue.from);
+      const toDate = new Date(newValue.to);
+
+      if (fromDate > toDate) {
+        return false; // invalid range, don't update or close
+      }
     }
-    
-    if (newValue.from === '' && newValue.to === '') {
+
+    if (!newValue.from && !newValue.to) {
       setLocalValue(undefined);
-      // console.log('Both dates empty, clearing filter');
       onChange(undefined);
     } else {
       setLocalValue(newValue);
       onChange({
         value: newValue,
-        operator: 'between' as any,
-        type: 'dateRange'
+        operator: 'between',
+        type: 'dateRange',
       });
     }
+
+    return true; // valid update
   };
 
   const renderFilterInput = () => {
@@ -309,9 +310,9 @@ export function ColumnFilterInput({
             } else {
               newSelected = selectedOptions.filter(item => item !== option);
             }
-            
+
             setSelectedOptions(newSelected);
-            
+
             if (newSelected.length === 0) {
               onChange(undefined);
             } else {
@@ -334,8 +335,8 @@ export function ColumnFilterInput({
                   )}
                 >
                   <span className="truncate">
-                    {selectedOptions.length === 0 
-                      ? "Select options..." 
+                    {selectedOptions.length === 0
+                      ? "Select options..."
                       : `${selectedOptions.length} selected`
                     }
                   </span>
@@ -351,7 +352,7 @@ export function ColumnFilterInput({
                         checked={selectedOptions.includes(option.id)}
                         onCheckedChange={(checked) => handleMultiSelectChange(option.id, checked as boolean)}
                       />
-                      <label 
+                      <label
                         htmlFor={`multi-${option.name || option.label || option}`}
                         className="text-xs cursor-pointer flex-1 select-none"
                       >
@@ -390,11 +391,11 @@ export function ColumnFilterInput({
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
-      value={(option.name ? option.name : option.id)}
-      className="text-xs"
-    >
-    {option.description ? `${option.name} || ${option.description}` : option.name}
-  </SelectItem>
+                      value={(option.name ? option.name : option.id)}
+                      className="text-xs"
+                    >
+                      {option.description ? `${option.name} || ${option.description}` : option.name}
+                    </SelectItem>
                   ) : null
                 ))}
               </SelectContent>
@@ -436,7 +437,7 @@ export function ColumnFilterInput({
       case 'DateRange':
         return (
           <div className="flex items-center gap-1">
-            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+            <Popover open={showFromPicker} onOpenChange={setShowFromPicker}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -446,7 +447,7 @@ export function ColumnFilterInput({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-3 w-3" />
-                  {localValue?.from 
+                  {localValue?.from
                     ? format(new Date(localValue.from), "dd/MM/yyyy")
                     : "From date"
                   }
@@ -457,9 +458,14 @@ export function ColumnFilterInput({
                   mode="single"
                   selected={localValue?.from ? new Date(localValue.from) : undefined}
                   onSelect={(date) => {
-                    // handleDateRangeChange('from', date ? date.toISOString() : '');
-                    handleDateRangeChange('from', date ? date.toLocaleDateString('en-CA') : '');
-                    setShowDatePicker(false);
+                    // // handleDateRangeChange('from', date ? date.toISOString() : '');
+                    // handleDateRangeChange('from', date ? date.toLocaleDateString('en-CA') : '');
+                    // setShowFromPicker(false);
+                    const newDate = date ? date.toLocaleDateString('en-CA') : '';
+                    const updated = handleDateRangeChange('from', newDate);
+                    if (updated) {
+                      setShowFromPicker(false); // close only when accepted
+                    }
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
@@ -467,7 +473,7 @@ export function ColumnFilterInput({
               </PopoverContent>
             </Popover>
             <span className="text-xs text-muted-foreground">to</span>
-            <Popover>
+            <Popover open={showToPicker} onOpenChange={setShowToPicker}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -477,7 +483,7 @@ export function ColumnFilterInput({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-3 w-3" />
-                  {localValue?.to 
+                  {localValue?.to
                     ? format(new Date(localValue.to), "dd/MM/yyyy")
                     : "To date"
                   }
@@ -488,8 +494,11 @@ export function ColumnFilterInput({
                   mode="single"
                   selected={localValue?.to ? new Date(localValue.to) : undefined}
                   onSelect={(date) => {
-                    handleDateRangeChange('to', date ? date.toLocaleDateString('en-CA') : '');
-                    setShowDatePicker(false);
+                    // handleDateRangeChange('to', date ? date.toLocaleDateString('en-CA') : '');
+                    // setShowToPicker(false);
+                    const newDate = date ? date.toLocaleDateString('en-CA') : '';
+                    const updated = handleDateRangeChange('to', newDate);
+                    if (updated) setShowToPicker(false); // close only if valid
                   }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
@@ -514,7 +523,7 @@ export function ColumnFilterInput({
               ref={toNumberInputRef}
               value={rangeTo}
               onChange={(e) => handleRangeChange(rangeFrom, e.target.value)}
-               onBlur={() => {
+              onBlur={() => {
                 if (rangeFrom && rangeTo && parseFloat(rangeTo) < parseFloat(rangeFrom)) {
                   setRangeTo('');
                   handleRangeChange(rangeFrom, '');
@@ -533,14 +542,14 @@ export function ColumnFilterInput({
       case 'DropdownText':
         return (
           <div className="flex items-center gap-1">
-            <Select 
-              value={dropdownValue || "__all__"} 
+            <Select
+              value={dropdownValue || "__all__"}
               onValueChange={(value) => {
                 const newValue = value === "__all__" ? "" : value;
                 handleDropdownTextChange(newValue, '', 'dropdown');
               }}
             >
-              <SelectTrigger 
+              <SelectTrigger
                 className="h-7 text-xs flex-1"
                 onFocus={() => setDropdownMode('dropdown')}
               >
@@ -551,11 +560,11 @@ export function ColumnFilterInput({
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
-    value={option.name ? option.name : option.id}
-    className="text-xs"
-  >
-    {option.description ? `${option.name} || ${option.description}` : option.name}
-  </SelectItem>
+                      value={option.name ? option.name : option.id}
+                      className="text-xs"
+                    >
+                      {option.description ? `${option.name} || ${option.description}` : option.name}
+                    </SelectItem>
                   ) : null
                 ))}
               </SelectContent>
@@ -623,7 +632,7 @@ export function ColumnFilterInput({
       <div className="flex-1">
         {renderFilterInput()}
       </div>
-      
+
       {((localValue !== '' && localValue != null) || rangeFrom !== '' || rangeTo !== '' || dropdownValue !== '' || textValue !== '' || (localValue?.from || localValue?.to) || selectedOptions.length > 0) && (
         <Button
           variant="ghost"
