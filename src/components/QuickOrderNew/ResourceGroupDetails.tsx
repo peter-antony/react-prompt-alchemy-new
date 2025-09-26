@@ -1508,7 +1508,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 1,
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
@@ -1560,7 +1560,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 2,
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: false,
       // options: departList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1600,7 +1600,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 3,
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: false,
       // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1647,7 +1647,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'From Time',
       fieldType: 'time',
       width: 'third',
-      value: '',
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1670,7 +1670,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       label: 'To Time',
       fieldType: 'time',
       width: 'third',
-      value: '',
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1688,7 +1688,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       order: 8
     },
   };
-
+  
   // Billing Details Panel Configuration
   const billingDetailsConfig: PanelConfig = {
     ContractPrice: {
@@ -1763,15 +1763,52 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     Tariff: {
       id: 'Tariff',
       label: 'Tariff',
-      fieldType: 'search',
+      fieldType: 'lazyselect',
       value: '',
       mandatory: true,
       visible: true,
       editable: true,
       order: 6,
-      placeholder: 'TAR000750 ',
       width: 'full',
-      searchData: TariffList, // <-- This is the local array for suggestions
+      hideSearch: true,
+      disableLazyLoading: true,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        console.log("load tariff data ----", jsonStore.getContractTariffList());
+        const rr: any = jsonStore.getContractTariffList();
+        return (rr || []).map((item: any) => ({
+          ...(item.TariffID !== undefined && item.TariffID !== '' && item.TariffDescription !== undefined && item.TariffDescription !== ''
+            ? {
+              label: `${item.TariffID} || ${item.TariffDescription}`,
+              value: item.TariffID
+            }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          // When the Tariff dropdown changes, update the TariffType field in the same form
+          const selectedTariffId = selected?.value;
+          const contractTariffList = jsonStore.getContractTariffList() || [];
+          const matchedTariff = contractTariffList.find((item: any) => item.TariffID === selectedTariffId);
+          console.log('Tariff changed:', selected);
+          console.log('Matched Tariff Object:', matchedTariff);
+          
+          // Optionally update resource type and other fields in the store if needed
+          if (matchedTariff) {
+            jsonStore.setResourceType({ Resource: matchedTariff.Resource, ResourceType: matchedTariff.ResourceType });
+            jsonStore.setTariffFields({
+              contractPrice: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
+              unitPrice: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
+              netAmount: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
+              tariffType: matchedTariff.TariffTypeDescription ? matchedTariff.TariffTypeDescription : "",
+            });
+          }
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+      // searchData: TariffList, // <-- This is the local array for suggestions
     },
     TariffType: {
       id: 'TariffType',
@@ -1799,6 +1836,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       maxLength: 250
     }
   };
+
+  // const [formData, setFormData] = useState(jsonStore.getResourceGroupBillingDetails());
 
   //MORE INFO DETAILS
   const moreInfoPanelConfig: PanelConfig = {

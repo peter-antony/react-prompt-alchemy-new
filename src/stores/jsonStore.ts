@@ -815,6 +815,17 @@ function getResourceGroupBillingDetails() {
   return undefined;
 }
 
+// ContractTariffList storage
+let contractTariffList: any[] = [];
+
+function setContractTariffList(list: any[]) {
+  contractTariffList = Array.isArray(list) ? list : [];
+}
+
+function getContractTariffList() {
+  return contractTariffList;
+}
+
 function setResourceMoreRefDocs(moreRefDocs: any) {
   if (
     resourceJsonData &&
@@ -892,6 +903,8 @@ const jsonStore = {
   getResourceGroupOperationalDetails,
   getResourceGroupBillingDetails,
   setResourceMoreRefDocs,
+  setContractTariffList,
+  getContractTariffList,
 };
 
 export default jsonStore;

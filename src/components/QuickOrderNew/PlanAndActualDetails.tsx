@@ -564,6 +564,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 1,
+      hideSearch: false,
+      disableLazyLoading: false,
       // placeholder: "Select Type",
       // options: [{ label: "Other", value: "other" }],
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -595,6 +597,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 2,
+      hideSearch: false,
+      disableLazyLoading: false,
       // placeholder: "Enter ID",
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
@@ -690,6 +694,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 1,
+      hideSearch: false,
+      disableLazyLoading: true,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Container Type Init",
@@ -711,7 +717,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     },
     ContainerID: {
       id: "ContainerID",
-      label: "Container ID",
+      label: "Container",
       fieldType: "lazyselect",
       width: 'third',
       value: "",
@@ -719,6 +725,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 2,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Container ID Init",
@@ -788,6 +796,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 1,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "NHM Init",
@@ -809,7 +819,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     },
     ProductID: {
       id: "ProductID",
-      label: "Product ID",
+      label: "Product",
       fieldType: "lazyselect",
       width: 'third',
       value: "",
@@ -817,6 +827,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 2,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Product ID Init",
@@ -856,34 +868,17 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           value: qc.id
         }))
     },
-    ClassofStores: {
-      id: "ClassofStores",
+    ContainerTareWeight: {
+      id: "ContainerTareWeight",
       label: "Container Tare Weight",
-      fieldType: "lazyselect",
+      fieldType: "inputdropdown",
       width: 'third',
-      value: "",
       mandatory: false,
       visible: true,
       editable: true,
       order: 4,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Weight UOM Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        // response.data is already an array, so just return it directly
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-                label: `${item.id} || ${item.name}`,
-                value: item.id
-              }
-            : {})
-        }));
-      },
+      value: "",
+      options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     UNCode: {
       id: "UNCode",
@@ -895,6 +890,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "UN Code Init",
@@ -924,6 +921,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
+      hideSearch: false,
+      disableLazyLoading: true,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "DG Class Init",
@@ -957,6 +956,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       // placeholder: "Select THU ID",
       order: 1,
+      hideSearch: true,
+      disableLazyLoading: true,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "THU Init",
@@ -1027,6 +1028,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 1,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Departure Init",
@@ -1056,6 +1059,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 2,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Arrival Init",
@@ -1085,6 +1090,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 3,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Location Init",
@@ -1114,6 +1121,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
+      hideSearch: true,
+      disableLazyLoading: true,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Activity Init",
@@ -1192,7 +1201,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "From Date",
       fieldType: "date",
       width: 'third',
-      value: "12-Mar-2025",
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1205,7 +1214,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "From Time",
       fieldType: "time",
       width: 'third',
-      value: "08:00:00",
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1217,7 +1226,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "To Date",
       fieldType: "date",
       width: 'third',
-      value: "12-Mar-2025",
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1229,7 +1238,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "To Time",
       fieldType: "time",
       width: 'third',
-      value: "08:00:00",
+      value: "",
       mandatory: false,
       visible: true,
       editable: true,
@@ -1373,7 +1382,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       NHM: data.NHM || '',
       ProductID: data.ProductID || '',
       ProductQuantity: data.ProductQuantity || { dropdown: '', input: '' },
-      ClassofStores: data.ClassofStores || '',
+      ContainerTareWeight: data.ContainerTareWeight || { dropdown: '', input: '' },
       UNCode: data.UNCode || '',
       DGClass: data.DGClass || '',
     };

@@ -485,35 +485,35 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
       label: 'Customer Order No.',
-      fieldType: 'lazyselect',
+      fieldType: 'text',
       width: 'full',
       value: '',
       mandatory: false,
       visible: OrderType === 'BUY',
       editable: true,
       order: 6,
-      hideSearch: true,
-      disableLazyLoading: false,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Customer Order status Init",
-          OrderType: OrderType,
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        // response.data is already an array, so just return it directly
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-                label: `${item.id} || ${item.name}`,
-                value: item.id
-              }
-            : {})
-        }));
-      },
-      // placeholder: 'IO/0000000042',
+      // hideSearch: true,
+      // disableLazyLoading: false,
+      // fetchOptions: async ({ searchTerm, offset, limit }) => {
+      //   const response = await quickOrderService.getMasterCommonData({
+      //     messageType: "Customer Order status Init",
+      //     OrderType: OrderType,
+      //     searchTerm: searchTerm || '',
+      //     offset,
+      //     limit,
+      //   });
+      //   // response.data is already an array, so just return it directly
+      //   const rr: any = response.data
+      //   return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+      //     ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+      //       ? {
+      //           label: `${item.id} || ${item.name}`,
+      //           value: item.id
+      //         }
+      //       : {})
+      //   }));
+      // },
+      placeholder: 'IO/0000000042',
       // searchData: orderIds, // <-- This is the local array for suggestions
     },
     Customer_Supplier_RefNo: {
@@ -648,8 +648,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     setError(null);
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId.value, type: OrderType });
-      console.log("COMBO DROPDOWN DATA", JSON.parse(data.data.ResponseData));
-      console.log("ORDERTYPE :", OrderType);
+      const parsedResponse = JSON.parse(data.data.ResponseData);
+      console.log("COMBO DROPDOWN DATA", parsedResponse);
+      // Set ContractTariff array in jsonStore for global access
+      if (parsedResponse && parsedResponse.ContractTariff) {
+        jsonStore.setContractTariffList(parsedResponse.ContractTariff);
+      }
+      console.log("ORDERTYPE :", jsonStore.getContractTariffList());
       // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
       const contract: any = parsedData;
@@ -657,32 +662,32 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       if (contract) {
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
-        setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+        // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
         jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ ServiceType: contract.ServiceType, OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          tariff: additionalInfo[0].TariffID,
+          // tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
-          billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+          tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+          // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
         });
-        jsonStore.setTariffDateFields({
-          fromDate: additionalInfo[0].ContractTariffValidFrom
-            ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
-            : "",
-          toDate: additionalInfo[0].ContractTariffValidTo
-            ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
-            : "",
-          // fromDate: formatDate(additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : ""),
-          // toDate: formatDate(additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : ""),
-          // fromDate: additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : "",
-          // toDate: additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : "",
-        });
+        // jsonStore.setTariffDateFields({
+        //   fromDate: additionalInfo[0].ContractTariffValidFrom
+        //     ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+        //     : "",
+        //   toDate: additionalInfo[0].ContractTariffValidTo
+        //     ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+        //     : "",
+        //   // fromDate: formatDate(additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : ""),
+        //   // toDate: formatDate(additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : ""),
+        //   // fromDate: additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : "",
+        //   // toDate: additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : "",
+        // });
         // Set ValidFrom and ValidTo in jsonStore using a new set method
         
 
@@ -1021,32 +1026,36 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
       const contract: any = parsedData;
+      // Set ContractTariff array in jsonStore for global access
+      if (parsedData && parsedData.ContractTariff) {
+        jsonStore.setContractTariffList(parsedData.ContractTariff);
+      }
       console.log("CONTRACT DATA:: ", contract.VendorID);
       if (contract) {
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
-        setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+        // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
         jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ ServiceType: contract.ServiceType, OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          tariff: additionalInfo[0].TariffID,
+          // tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
-          billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+          tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+          // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
         });
-        jsonStore.setTariffDateFields({
-          fromDate: additionalInfo[0].ContractTariffValidFrom
-            ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
-            : "",
-          toDate: additionalInfo[0].ContractTariffValidTo
-            ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
-            : "",
-        });
+        // jsonStore.setTariffDateFields({
+        //   fromDate: additionalInfo[0].ContractTariffValidFrom
+        //     ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+        //     : "",
+        //   toDate: additionalInfo[0].ContractTariffValidTo
+        //     ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+        //     : "",
+        // });
         // Set ValidFrom and ValidTo in jsonStore using a new set method
         
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
