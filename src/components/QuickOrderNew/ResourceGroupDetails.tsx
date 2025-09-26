@@ -88,7 +88,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         // "ModeFlag": "Update",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       jsonStore.setResourceJsonData({
         ...jsonStore.getResourceJsonData(),
@@ -221,9 +221,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       } catch (err) {
         console.log(" catch", err);
         setError(`Error fetching API data for Update ResourceGroup`);
+        // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+          let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+          // Filter out the resource with ResourceUniqueID: -1
+          console.log("resourceGroups ---", resourceGroups);
+          resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+          // Update the quick order in the store
+          jsonStore.setQuickOrder({
+            ...jsonStore.getQuickOrder(),
+            ResourceGroup: resourceGroups
+          });
         toast({
           title: "⚠️ Submission failed",
-          description: "Something went wrong while saving. Please try again.",
+          description: err.response.data.correctiveAction,
           variant: "destructive", // or "error"
         });
       }
@@ -268,14 +278,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       jsonStore.setResourceJsonData({
         ...jsonStore.getResourceJsonData(),
         "ModeFlag": "Insert",
         "ResourceStatus": "Fresh",
         "ResourceUniqueID": "-1",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
         // "ResourceUniqueID": "R0" + ((parseInt(localStorage.getItem('resouceCount')) + 1))
       })
       const fullResourceJson = jsonStore.getResourceJsonData();
@@ -341,9 +351,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       } catch (err) {
         console.log(" catch", err);
         setError(`Error fetching API data for Update ResourceGroup`);
+        // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+        let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+        // Filter out the resource with ResourceUniqueID: -1
+        console.log("resourceGroups ---", resourceGroups);
+        resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+        // Update the quick order in the store
+        jsonStore.setQuickOrder({
+          ...jsonStore.getQuickOrder(),
+          ResourceGroup: resourceGroups
+        });
         toast({
           title: "⚠️ Submission failed",
-          description: "Something went wrong while saving. Please try again.",
+          description: err.response.data.correctiveAction,
           variant: "destructive", // or "error"
         });
       }
@@ -372,7 +392,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       jsonStore.setResourceJsonData({
         ...jsonStore.getResourceJsonData(),
@@ -441,9 +461,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       } catch (err) {
         console.log(" catch", err);
         setError(`Error fetching API data for Update ResourceGroup`);
+        // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+        let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+        // Filter out the resource with ResourceUniqueID: -1
+        console.log("resourceGroups ---", resourceGroups);
+        resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+        // Update the quick order in the store
+        jsonStore.setQuickOrder({
+          ...jsonStore.getQuickOrder(),
+          ResourceGroup: resourceGroups
+        });
         toast({
           title: "⚠️ Submission failed",
-          description: "Something went wrong while saving. Please try again.",
+          description: err.response.data.correctiveAction,
           variant: "destructive", // or "error"
         });
       }
@@ -526,7 +556,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
           // "ModeFlag": "Update",
-          "QuickOrderNo": jsonStore.getQuickUniqueID()
+          // "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
@@ -695,9 +725,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         } catch (err) {
           console.log(" catch", err.response.data.correctiveAction);
           setError(`Error fetching API data for Update ResourceGroup`);
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
           toast({
             title: "⚠️ Submission failed",
-            description: "Something went wrong while saving. Please try again.",
+            description: err.response.data.correctiveAction,
             variant: "destructive", // or "error"
           });
         }
@@ -722,7 +762,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
           // "ModeFlag": "Update",
-          "QuickOrderNo": jsonStore.getQuickUniqueID()
+          // "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
         // jsonStore.setResourceJsonData({
         //   ...jsonStore.getResourceJsonData(),
@@ -834,9 +874,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         } catch (err) {
           console.log(" catch", err.response.data.correctiveAction);
           setError(`Error fetching API data for Update ResourceGroup`);
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
           toast({
             title: "⚠️ Submission failed",
-            description: "Something went wrong while saving. Please try again.",
+            description: err.response.data.correctiveAction,
             variant: "destructive", // or "error"
           });
         }
@@ -881,7 +931,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
           // "ModeFlag": "Update",
-          "QuickOrderNo": jsonStore.getQuickUniqueID()
+          // "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
@@ -967,9 +1017,19 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         } catch (err) {
           console.log(" catch", err.response.data.correctiveAction);
           setError(`Error fetching API data for Update ResourceGroup`);
+          // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
           toast({
             title: "⚠️ Submission failed",
-            description: "Something went wrong while saving. Please try again.",
+            description: err.response.data.correctiveAction,
             variant: "destructive", // or "error"
           });
         }
@@ -1197,7 +1257,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [departList, setDepartList] = useState<any[]>([]);
   const [arrivalList, setArrivalList] = useState<any[]>([]);
   const [billingTypeList, setBillingTypeList] = useState<any[]>([]);
-  const [customerOrderNoList, setCustomerOrderNoList] = useState<any[]>([]);
+  const [primaryRefDocType, setPrimaryRefDocType] = useState<any[]>([]);
+  const [secondaryRefDocType, setSecondaryRefDocType] = useState<any[]>([]);
   const [locationList, setLocationList] = useState<any[]>([]);
 
 
@@ -1227,7 +1288,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     // "Service type Init",
     // "Sub Service type Init",
     "Quick Order Billing Type Init",
-    "Ref doc type Init",
+    "ResourceGroup PrimaryRefDocType",
+    "ResourceGroup SecondaryRefDocType",
     // "Arrival Init",
     // "Departure Init",
     // "Location Init",
@@ -1310,8 +1372,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         setBillingTypeList(JSON.parse(data?.data?.ResponseData));
         // setBillingTypeList([]);
       }
-      if (messageType == "Ref doc type Init") {
-        setCustomerOrderNoList(JSON.parse(data?.data?.ResponseData));
+      if (messageType == "ResourceGroup PrimaryRefDocType") {
+        setPrimaryRefDocType(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "ResourceGroup SecondaryRefDocType") {
+        setSecondaryRefDocType(JSON.parse(data?.data?.ResponseData));
       }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
@@ -1851,7 +1916,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 1,
-      options: customerOrderNoList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: primaryRefDocType?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'IO-Hire/Rent', value: 'IO-Hire/Rent' },
       //   { label: 'IO-Buy/Rent', value: 'IO-Buy/Rent' },
@@ -1867,7 +1932,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 2,
-      options: customerOrderNoList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: secondaryRefDocType?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     PrimaryDocDate: {
       id: 'PrimaryDocDate',
