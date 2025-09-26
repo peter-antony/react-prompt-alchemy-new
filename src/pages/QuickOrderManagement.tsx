@@ -86,6 +86,8 @@ const QuickOrderManagement = () => {
   // State for resourceGroups and cardData
   const [resourceGroups, setResourceGroups] = useState<any[]>([]);
   const [cardData, setCardData] = useState<CardDetailsItem[]>([]);
+  const [primaryDocOptions, setPrimaryDocOptions] = useState<any[]>([]);
+  const [secondaryDocOptions, setSecondaryDocOptions] = useState<any[]>([]);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [quickResourceId, setQuickResourceId] = useState<string>('');
   const GitPullActionButton = () => {
@@ -427,7 +429,7 @@ const QuickOrderManagement = () => {
 
   // utils/fetchOptionsHelper.ts
   const makeLazyFetcher = (messageType: string) => {
-    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    return async ({ searchTerm, offset, limit }: { searchTerm?: string; offset?: number; limit?: number }) => {
       const response: any = await quickOrderService.getMasterCommonData({
         messageType,
         searchTerm: searchTerm || '',
@@ -443,6 +445,35 @@ const QuickOrderManagement = () => {
       }
     };
   };
+
+  // Reusable helper to fetch RefDoc options for a given messageType
+  // Load Primary and Secondary ref doc options using makeLazyFetcher (preload by invoking the lazy fetcher)
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const primaryFetcher = makeLazyFetcher('ResourceGroup PrimaryRefDocType');
+        const secondaryFetcher = makeLazyFetcher('ResourceGroup SecondaryRefDocType');
+
+        const [primaryRaw, secondaryRaw] = await Promise.all([
+          primaryFetcher({}),
+          secondaryFetcher({})
+        ]);
+
+        if (!mounted) return;
+
+        const mapFn = (o: any) => ({ id: o.id ?? o.value ?? o.ID ?? o.Id ?? String(o), name: o.name ?? o.label ?? o.description ?? o.value ?? String(o) });
+
+        setPrimaryDocOptions(Array.isArray(primaryRaw) ? primaryRaw : []);
+        setSecondaryDocOptions(Array.isArray(secondaryRaw) ? secondaryRaw : []);
+      } catch (err) {
+        console.error('Failed to preload ref doc options:', err);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const dynamicServerFilters: ServerFilter[] = [
     {
@@ -521,8 +552,10 @@ const QuickOrderManagement = () => {
     {
       key: 'PrimaryRefDoc', label: 'Primary Ref. Doc. Type & No.', type: 'dropdownText',
       options: [
-        { id: '1', name: 'Select', default: "Y", description: "", seqNo: 1 },
-        { id: '2', name: 'Sales Order', default: "N", description: "", seqNo: 2 }
+        // { id: '1', name: 'Primary doc 1', default: "Y", description: "", seqNo: 1 },
+        // { id: '2', name: 'Primary doc 2', default: "N", description: "", seqNo: 2 },
+        // append API loaded options
+        ...primaryDocOptions
       ],
       // fetchOptions: makeLazyFetcher("Ref doc type Init")
     },
@@ -540,7 +573,12 @@ const QuickOrderManagement = () => {
       disableLazyLoading: true
     },
     {
-      key: 'SecondaryDoc', label: 'Secondary Ref. Doc. Type & No.', type: 'text',
+      key: 'SecondaryDoc', label: 'Secondary Ref. Doc. Type & No.', type: 'dropdownText',
+      options: [
+        // { id: '1', name: 'Primary doc 1', default: "Y", description: "", seqNo: 1 },
+        // { id: '2', name: 'Primary doc 2', default: "N", description: "", seqNo: 2 },
+        ...secondaryDocOptions
+      ],
       // fetchOptions: makeLazyFetcher("Ref doc type Init")
     },
     { key: 'InvoiceNo', label: 'Invoice No', type: 'text' },

@@ -62,31 +62,36 @@ export function ColumnFilterInput({
       }
     }
 
-    // Initialize complex field values
-    if (value?.value && typeof value.value === 'object') {
-      if (column.type === 'NumberRange') {
-        setRangeFrom(value.value.from || '');
-        setRangeTo(value.value.to || '');
-      } else if (column.type === 'DateRange') {
-        // Date range uses object with from/to
-        setLocalValue(value.value);
-      }
+    // Initialize complex field values for specific types
+    if (column.type === 'NumberRange' && value?.value && typeof value.value === 'object') {
+      setRangeFrom(value.value.from || '');
+      setRangeTo(value.value.to || '');
+    } else if (column.type === 'DateRange' && value?.value && typeof value.value === 'object') {
+      // Date range uses object with from/to
+      setLocalValue(value.value);
     } else {
       // For simple values (text, dropdown, dropdownText)
       if (column.type === 'DropdownText') {
-        // DropdownText now uses simple string value
+        // DropdownText may be a simple string OR an object containing both dropdown and text values
         if (value?.value) {
-          // Check if it's a dropdown option or free text
-          // const isDropdownOption = column.options?.includes(value.value);
-          const isDropdownOption = column.options?.some((opt: any) => opt.name === value?.value);
-          if (isDropdownOption) {
-            setDropdownValue(value.value);
-            setTextValue('');
-            setDropdownMode('dropdown');
+          if (typeof value.value === 'object') {
+            const dv = value.value.dropdown || '';
+            const tv = value.value.text || '';
+            setDropdownValue(dv);
+            setTextValue(tv);
+            setDropdownMode(dv ? 'dropdown' : (tv ? 'text' : 'dropdown'));
           } else {
-            setDropdownValue('');
-            setTextValue(value.value);
-            setDropdownMode('text');
+            // string value: determine if it matches a dropdown option or is free text
+            const isDropdownOption = column.options?.some((opt: any) => opt.name === value?.value || opt.id === value?.value);
+            if (isDropdownOption) {
+              setDropdownValue(value.value);
+              setTextValue('');
+              setDropdownMode('dropdown');
+            } else {
+              setDropdownValue('');
+              setTextValue(value.value);
+              setDropdownMode('text');
+            }
           }
         } else {
           setDropdownValue('');
@@ -235,31 +240,33 @@ export function ColumnFilterInput({
     }
   };
 
-  const handleDropdownTextChange = (dropdown: string, text: string, mode?: 'dropdown' | 'text') => {
+  const handleDropdownTextChange = (dropdown: string, text: string, mode?: 'dropdown' | 'text', column?: any) => {
+    // Preserve the other field when updating one so both can be sent (AND semantics)
+    console.log('column: ', column);
     if (mode === 'dropdown') {
       setDropdownValue(dropdown);
-      setTextValue(''); // Clear text when using dropdown
       setDropdownMode('dropdown');
-
-      if (dropdown === '') {
+      const currentText = textValue;
+      // If both empty -> clear filter
+      if (!dropdown && !currentText) {
         onChange(undefined);
       } else {
+        // Always emit an object so upstream can manipulate both values
         onChange({
-          value: dropdown,
+          value: { dropdown: dropdown || '', text: currentText || '' },
           operator: 'contains' as any,
           type: 'text'
         });
       }
     } else if (mode === 'text') {
       setTextValue(text);
-      setDropdownValue(''); // Clear dropdown when using text
       setDropdownMode('text');
-
-      if (text === '') {
+      const currentDropdown = dropdownValue;
+      if (!text && !currentDropdown) {
         onChange(undefined);
       } else {
         onChange({
-          value: text,
+          value: { dropdown: currentDropdown || '', text: text || '' },
           operator: 'contains' as any,
           type: 'text'
         });
@@ -546,7 +553,7 @@ export function ColumnFilterInput({
               value={dropdownValue || "__all__"}
               onValueChange={(value) => {
                 const newValue = value === "__all__" ? "" : value;
-                handleDropdownTextChange(newValue, '', 'dropdown');
+                handleDropdownTextChange(newValue, '', 'dropdown', column);
               }}
             >
               <SelectTrigger
@@ -563,13 +570,13 @@ export function ColumnFilterInput({
                       value={option.name ? option.name : option.id}
                       className="text-xs"
                     >
-                      {option.description ? `${option.name} || ${option.description}` : option.name}
+                      { (option.id && option.name) ? `${option.id} || ${option.name}` : (option.id || option.name) }
                     </SelectItem>
                   ) : null
                 ))}
               </SelectContent>
             </Select>
-            <div className="text-xs text-muted-foreground">OR</div>
+            <div className="text-xs text-muted-foreground"></div>
             <Input
               value={textValue}
               onChange={(e) => handleDropdownTextChange('', e.target.value, 'text')}
