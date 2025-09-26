@@ -443,7 +443,10 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                         onFocus={events?.onFocus}
                         onBlur={events?.onBlur}
                       >
-                        {dateValue ? format(dateValue, dateFormat) : <span>{placeholder || "Pick a date"}</span>}
+                        {dateValue 
+                          ? format(dateValue, "dd/MM/yyyy") 
+                          : <span>{placeholder || "Pick a date"}</span>
+                        }
                         <CalendarIcon className="mr-2 h-3 w-3 absolute right-2" />
                       </Button>
                     </PopoverTrigger>

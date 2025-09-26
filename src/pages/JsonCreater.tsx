@@ -66,9 +66,9 @@ const Resource_Group_BASIC_JSON = {
     "DepartPoint": "",
     "ArrivalPoint": "",
     "FromDate": "",
-    "FromTime": "20:00:00",
+    "FromTime": "",
     "ToDate": "",
-    "ToTime": "23:12:00",
+    "ToTime": "",
     "Remarks": ""
   },
   "BillingDetails": {
@@ -244,9 +244,9 @@ const Resource_Group_JSON = {
     "DepartPoint": "",
     "ArrivalPoint": "",
     "FromDate": "",
-    "FromTime": "20:00:00",
+    "FromTime": "",
     "ToDate": "",
-    "ToTime": "23:12:00",
+    "ToTime": "",
     "Remarks": ""
   },
   "BillingDetails": {
