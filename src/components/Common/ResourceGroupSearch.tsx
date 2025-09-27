@@ -26,44 +26,45 @@ const ResourceGroupSearch: React.FC<ResourceGroupSearchProps> = ({ resourceGroup
         );
         if (matchesTopLevel) return true;
 
-        // Check BasicDetails (if available)
-        if (group.BasicDetails && Array.isArray(group.BasicDetails)) {
-          const matchesBasicDetails = group.BasicDetails.some((detail: any) =>
-            Object.values(detail).some(detailValue =>
-              String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
-            )
+        // Check BasicDetails (object)
+        if (group.BasicDetails && typeof group.BasicDetails === 'object') {
+          const matchesBasicDetails = Object.values(group.BasicDetails).some(detailValue =>
+            String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
           );
           if (matchesBasicDetails) return true;
         }
+        
+        // Check OperationalDetails (object)
+        if (group.OperationalDetails && typeof group.OperationalDetails === 'object') {
+          const matchesOperationalDetails = Object.values(group.OperationalDetails).some(detailValue =>
+            String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
+          );
+          if (matchesOperationalDetails) return true;
+        }
 
-        // Check PlanDetails (if available)
+        // Check BillingDetails (object)
+        if (group.BillingDetails && typeof group.BillingDetails === 'object') {
+          const matchesBillingDetails = Object.values(group.BillingDetails).some(detailValue =>
+            String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
+          );
+          if (matchesBillingDetails) return true;
+        }
+        // Check MoreRefDocs (object)
+        if (group.MoreRefDocs && typeof group.MoreRefDocs === 'object') {
+          const matchesMoreRefDocs = Object.values(group.MoreRefDocs).some(detailValue =>
+            String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
+          );
+          if (matchesMoreRefDocs) return true;
+        }
+
+        // Check PlanDetails (array of objects)
         if (group.PlanDetails && Array.isArray(group.PlanDetails)) {
-          const matchesPlanDetails = group.PlanDetails.some((detail: any) =>
+          const matchesPlanDetails = group.PlanDetails.some(detail =>
             Object.values(detail).some(detailValue =>
               String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
             )
           );
           if (matchesPlanDetails) return true;
-        }
-
-        // Check BillingDetails (if available)
-        if (group.BillingDetails && Array.isArray(group.BillingDetails)) {
-          const matchesBillingDetails = group.BillingDetails.some((detail: any) =>
-            Object.values(detail).some(detailValue =>
-              String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
-            )
-          );
-          if (matchesBillingDetails) return true;
-        }
-
-        // Check OperationalDetails (if available)
-        if (group.OperationalDetails && Array.isArray(group.OperationalDetails)) {
-          const matchesOperationalDetails = group.OperationalDetails.some((detail: any) =>
-            Object.values(detail).some(detailValue =>
-              String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
-            )
-          );
-          if (matchesOperationalDetails) return true;
         }
 
         return false;

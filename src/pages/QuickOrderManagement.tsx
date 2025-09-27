@@ -597,15 +597,15 @@ const QuickOrderManagement = () => {
     {
       key: 'Wagon', label: 'Wagon', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Wagon id Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'Container', label: 'Container', type: 'lazyselect',
       // fetchOptions: makeLazyFetcher("Container Type Init")
       fetchOptions: makeLazyFetcher("Container ID Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },
     // { key: 'QuickOrderNo', label: 'Quick Order No', type: 'text' },

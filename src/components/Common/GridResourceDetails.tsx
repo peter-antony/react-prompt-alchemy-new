@@ -4,7 +4,7 @@ import {
   Wrench, BadgeCheck, AlertCircle, UsersRound, FileText, Banknote,
   Settings, CirclePercent, Repeat1,
   Copy, Trash2,
-  Filter,
+  Filter, PlaneLanding, PlaneTakeoff, Files, File
 } from "lucide-react";
 import { ChevronDown, Search } from "lucide-react";
 import Attachments from "../QuickOrderNew/OrderForm/Attachments";
@@ -244,7 +244,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Settings className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">{item?.BasicDetails?.ServiceType}</span>
+                  <span className="truncate">{item?.BasicDetails?.ServiceTypeDescription}</span>
                   {/* <span className="truncate">{item.trainType}</span> */}
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -252,7 +252,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                   <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3.99984 3.99935L7.74984 7.74935M3.99984 3.99935H1.49984L0.666504 1.49935L1.49984 0.666016L3.99984 1.49935V3.99935ZM15.049 1.28353L12.8593 3.47321C12.5293 3.80322 12.3643 3.96823 12.3025 4.1585C12.2481 4.32587 12.2481 4.50616 12.3025 4.67353C12.3643 4.8638 12.5293 5.02881 12.8593 5.35882L13.057 5.55654C13.387 5.88655 13.552 6.05156 13.7423 6.11338C13.9097 6.16777 14.09 6.16777 14.2574 6.11338C14.4476 6.05156 14.6126 5.88655 14.9426 5.55654L16.9909 3.50828C17.2115 4.04509 17.3332 4.63301 17.3332 5.24935C17.3332 7.78065 15.2811 9.83268 12.7498 9.83268C12.4447 9.83268 12.1465 9.80286 11.858 9.74596C11.4528 9.66606 11.2503 9.62611 11.1275 9.63835C10.9969 9.65136 10.9326 9.67093 10.8169 9.73283C10.7081 9.79106 10.599 9.9002 10.3807 10.1185L4.4165 16.0827C3.72615 16.773 2.60686 16.773 1.91651 16.0827C1.22615 15.3923 1.22615 14.273 1.91651 13.5827L7.88069 7.61849C8.09898 7.4002 8.20813 7.29106 8.26635 7.18226C8.32825 7.06658 8.34783 7.00224 8.36084 6.87169C8.37307 6.74889 8.33312 6.54633 8.25323 6.14122C8.19633 5.85273 8.1665 5.55452 8.1665 5.24935C8.1665 2.71804 10.2185 0.666016 12.7498 0.666016C13.5878 0.666016 14.3732 0.890868 15.049 1.28353ZM8.99988 11.4993L13.5832 16.0826C14.2735 16.7729 15.3928 16.7729 16.0832 16.0826C16.7735 15.3922 16.7735 14.2729 16.0832 13.5826L12.3126 9.8121C12.0457 9.78684 11.7854 9.73868 11.5338 9.66963C11.2096 9.58064 10.854 9.64523 10.6162 9.88296L8.99988 11.4993Z" stroke="#475467" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span className="truncate">{item?.BasicDetails?.SubServiceType}</span>
+                  <span className="truncate">{item?.BasicDetails?.SubServiceTypeDescription}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs relative group">
                   <Calendar className="w-4 h-4 text-gray-600" />
@@ -308,6 +308,22 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                       {/* <div className="text-[11px] font-medium">{item.date}</div> */}
                     </div>
                   </div>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <PlaneLanding className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{item?.OperationalDetails?.ArrivalPoint}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <PlaneTakeoff className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{item?.OperationalDetails?.DepartPoint}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <File className="w-4 h-4 text-gray-600" />
+                  <span className="truncate" title={item?.MoreRefDocs?.PrimaryDocType || item?.MoreRefDocs?.PrimaryDocNo}>{item?.MoreRefDocs?.PrimaryDocType}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <Files className="w-4 h-4 text-gray-600" />
+                  <span className="truncate" title={item?.MoreRefDocs?.SecondaryDocType || item?.MoreRefDocs?.SecondaryDocNo}>{item?.MoreRefDocs?.SecondaryDocType}</span>
                 </div>
               </div>
               <div className="flex items-center text-blue-600 text-xs font-medium mt-2 gap-2">
