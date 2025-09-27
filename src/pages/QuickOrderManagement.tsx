@@ -573,7 +573,7 @@ const QuickOrderManagement = () => {
       disableLazyLoading: true
     },
     {
-      key: 'SecondaryDoc', label: 'Secondary Ref. Doc. Type & No.', type: 'dropdownText',
+      key: 'SecondaryRefDoc', label: 'Secondary Ref. Doc. Type & No.', type: 'dropdownText',
       options: [
         // { id: '1', name: 'Primary doc 1', default: "Y", description: "", seqNo: 1 },
         // { id: '2', name: 'Primary doc 2', default: "N", description: "", seqNo: 2 },
@@ -680,8 +680,33 @@ const QuickOrderManagement = () => {
               FilterName: key,
               FilterValue: value.value === 'Yes' ? '1' : '0'
             })
-          }
-          else {
+          } else if (key == 'PrimaryRefDoc') {
+            const { dropdown, text } = value?.value || {};
+
+            if (dropdown && text) {
+              searchData.push(
+                { FilterName: 'PrimaryRefDocType', FilterValue: dropdown },
+                { FilterName: 'PrimaryRefDoc', FilterValue: text }
+              );
+            } else if (dropdown) {
+              searchData.push({ FilterName: 'PrimaryRefDocType', FilterValue: dropdown });
+            } else if (text) {
+              searchData.push({ FilterName: 'PrimaryRefDoc', FilterValue: text });
+            }
+          } else if (key == 'SecondaryRefDoc') {
+            const { dropdown, text } = value?.value || {};
+
+            if (dropdown && text) {
+              searchData.push(
+                { FilterName: 'SecondaryRefDocType', FilterValue: dropdown },
+                { FilterName: 'SecondaryDoc', FilterValue: text }
+              );
+            } else if (dropdown) {
+              searchData.push({ FilterName: 'SecondaryRefDocType', FilterValue: dropdown });
+            } else if (text) {
+              searchData.push({ FilterName: 'SecondaryDoc', FilterValue: text });
+            }
+          } else {
             searchData.push({ 'FilterName': key, 'FilterValue': value.value });
           }
         });
@@ -742,10 +767,10 @@ const QuickOrderManagement = () => {
       gridState.setLoading(false);
       setApiStatus('success');
 
-      toast({
-        title: "Success",
-        description: `Found ${processedData.length} orders`,
-      });
+      // toast({
+      //   title: "Success",
+      //   description: `Found ${processedData.length} orders`,
+      // });
 
     } catch (error) {
       console.error('Server-side search failed:', error);
@@ -834,10 +859,10 @@ const QuickOrderManagement = () => {
       gridState.setLoading(false);
       setApiStatus('success');
 
-      toast({
-        title: "Success",
-        description: `Found ${processedData.length} orders`,
-      });
+      // toast({
+      //   title: "Success",
+      //   description: `Found ${processedData.length} orders`,
+      // });
 
     } catch (error) {
       console.error('Server-side search failed:', error);
@@ -926,10 +951,10 @@ const QuickOrderManagement = () => {
       gridState.setLoading(false);
       setApiStatus('success');
 
-      toast({
-        title: "Success",
-        description: `Found ${processedData.length} orders`,
-      });
+      // toast({
+      //   title: "Success",
+      //   description: `Found ${processedData.length} orders`,
+      // });
 
     } catch (error) {
       console.error('Search failed:', error);
