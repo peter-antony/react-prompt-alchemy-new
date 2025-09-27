@@ -198,7 +198,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",
         "Status": "Fresh",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       const fullJson = jsonStore.getQuickOrder();
       console.log("fullJson ----", fullJson);
@@ -302,7 +302,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",
         "Status": "Fresh",
-        "QuickOrderNo": jsonStore.getQuickUniqueID()
+        // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       const fullJson = jsonStore.getJsonData();
       console.log("FULL Plan&Actual JSON :: ", fullJson);
@@ -419,7 +419,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       ...jsonStore.getJsonData().quickOrder,
       // "ModeFlag": "Update",
       // "Status": "Fresh",
-      "QuickOrderNo": jsonStore.getQuickUniqueID(),
+      // "QuickOrderNo": jsonStore.getQuickUniqueID(),
     });
     
     const fullJson = jsonStore.getJsonData();

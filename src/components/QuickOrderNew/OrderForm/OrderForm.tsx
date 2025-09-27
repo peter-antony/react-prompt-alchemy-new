@@ -186,7 +186,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       const resourceGroups = jsonStore.getAllResourceGroups();
       console.log("RESOURCE GROUPS::::: ", resourceGroups);
       // setOrderType('BUY');
-      setFormData(normalizeOrderFormDetails(quickOrder));
+      // setFormData(normalizeOrderFormDetails(quickOrder));
       if (resourceGroups.length > 0) {
         // setIsResourceData(true);
         setResourceData(resourceGroups);
@@ -1059,10 +1059,66 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // Set ValidFrom and ValidTo in jsonStore using a new set method
         
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
-        console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
-        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
+        console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())       
         
       }
+      const quickOrderData = jsonStore.getQuickOrder();
+      console.log("quickOrderData :", quickOrderData);
+      jsonStore.setQuickOrderFields({ 
+        OrderType: quickOrderData.OrderType, 
+        ContractID: quickOrderData.ContractID, 
+        Customer: quickOrderData.CustomerID, 
+        Vendor: quickOrderData.VendorID, 
+        Cluster: quickOrderData.ClusterLocation, 
+        WBS: quickOrderData.WBS, 
+        Currency: quickOrderData.Currency, 
+        QuickOrderDate: formatDateToYYYYMMDD(quickOrderData.ValidFrom),
+        Summary: quickOrderData.Summary, 
+        Remark1: quickOrderData.Remark1, 
+        Remarks2: quickOrderData.Remarks2,
+        Remarks3: quickOrderData.Remarks3,
+        // For inputdropdown fields, bind as { input, dropdown }
+        QCUserDefined1: { 
+          input: quickOrderData.QCUserDefined1Value ?? "", 
+          dropdown: quickOrderData.QCUserDefined1 ?? "" 
+        },
+        QCUserDefined2: { 
+          input: quickOrderData.QCUserDefined2Value ?? "", 
+          dropdown: quickOrderData.QCUserDefined2 ?? "" 
+        },
+        QCUserDefined3: { 
+          input: quickOrderData.QCUserDefined3Value ?? "", 
+          dropdown: quickOrderData.QCUserDefined3 ?? "" 
+        }
+      });
+      // setFormData(normalizeOrderFormDetails({
+      //   OrderType: quickOrderData.OrderType, 
+      //   ContractID: quickOrderData.ContractID, 
+      //   Customer: quickOrderData.CustomerID, 
+      //   Vendor: quickOrderData.VendorID, 
+      //   Cluster: quickOrderData.ClusterLocation, 
+      //   WBS: quickOrderData.WBS, 
+      //   Currency: quickOrderData.Currency, 
+      //   QuickOrderDate: formatDateToYYYYMMDD(quickOrderData.ValidFrom),
+      //   Summary: quickOrderData.Summary, 
+      //   Remark1: quickOrderData.Remark1, 
+      //   Remarks2: quickOrderData.Remarks2,
+      //   Remarks3: quickOrderData.Remarks3,
+      //   // For inputdropdown fields, bind as { input, dropdown }
+      //   QCUserDefined1: { 
+      //     input: quickOrderData.QCUserDefined1Value ?? "", 
+      //     dropdown: quickOrderData.QCUserDefined1 ?? "" 
+      //   },
+      //   QCUserDefined2: { 
+      //     input: quickOrderData.QCUserDefined2Value ?? "", 
+      //     dropdown: quickOrderData.QCUserDefined2 ?? "" 
+      //   },
+      //   QCUserDefined3: { 
+      //     input: quickOrderData.QCUserDefined3Value ?? "", 
+      //     dropdown: quickOrderData.QCUserDefined3 ?? "" 
+      //   }
+      // }));
+      setLoading(true);
     } catch (err) {
       setError(`Error fetching API data for${err}`);
       console.log("ERROR IN COMBO DROPDOWN:: ", err);
@@ -1072,7 +1128,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       // setApiData(data);
     }
     finally {
-      setLoading(true);
+      // setLoading(true);
     }
   }
 
@@ -1094,7 +1150,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       ...jsonStore.getJsonData().quickOrder,
       ...formValues.QuickOrder,
       "ModeFlag": "Update",
-      "QuickOrderNo": jsonStore.getQuickUniqueID(),
+      // "QuickOrderNo": jsonStore.getQuickUniqueID(),
       // "Status": "Fresh",
       // "QuickUniqueID": -1,
       // "QuickOrderNo": "",

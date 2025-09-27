@@ -44,7 +44,7 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any }) {
+function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
@@ -55,6 +55,13 @@ function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?:
     if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
     if (fields.WBS !== undefined) quickOrder.WBS = fields.WBS;
     if (fields.OrderType !== undefined) quickOrder.OrderType = fields.OrderType;
+    if (fields.Summary !== undefined) quickOrder.Summary = fields.Summary;
+    if (fields.Remark1 !== undefined) quickOrder.Remark1 = fields.Remark1;
+    if (fields.Remarks2 !== undefined) quickOrder.Remarks2 = fields.Remarks2;
+    if (fields.Remarks3 !== undefined) quickOrder.Remarks3 = fields.Remarks3;
+    if (fields.QCUserDefined1 !== undefined) quickOrder.QCUserDefined1 = fields.QCUserDefined1;
+    if (fields.QCUserDefined2 !== undefined) quickOrder.QCUserDefined2 = fields.QCUserDefined2;
+    if (fields.QCUserDefined3 !== undefined) quickOrder.QCUserDefined3 = fields.QCUserDefined3;
     return true;
   }
   return false;
