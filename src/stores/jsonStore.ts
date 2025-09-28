@@ -844,6 +844,85 @@ function setResourceMoreRefDocs(moreRefDocs: any) {
   return false;
 }
 
+function updatePlanDetailsByResourceAndPlanLineID(resourceUniqueID: string, planLineUniqueID: string, updatedFields: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.PlanDetails)) {
+      const planDetails = resourceGroup.PlanDetails;
+      const planIndex = planDetails.findIndex(
+        (plan: any) => plan.PlanLineUniqueID === planLineUniqueID
+      );
+      
+      if (planIndex !== -1) {
+        // Update only the provided fields, preserve others
+        planDetails[planIndex] = {
+          ...planDetails[planIndex],
+          ...updatedFields
+        };
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getPlanDetailsByResourceAndPlanLineID(resourceUniqueID: string, planLineUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.PlanDetails)) {
+      const planDetails = resourceGroup.PlanDetails;
+      const foundPlan = planDetails.find(
+        (plan: any) => plan.PlanLineUniqueID === planLineUniqueID
+      );
+      
+      return foundPlan;
+    }
+  }
+  return undefined;
+}
+
+function getActualDetailsByResourceAndActualLineID(resourceUniqueID: string, actualLineUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.ActualDetails)) {
+      const actualDetails = resourceGroup.ActualDetails;
+      const foundActual = actualDetails.find(
+        (actual: any) => actual.ActualLineUniqueID === actualLineUniqueID
+      );
+      
+      return foundActual;
+    }
+  }
+  return undefined;
+}
+
 // Add to export
 const jsonStore = {
   setJsonData,
@@ -912,6 +991,9 @@ const jsonStore = {
   setResourceMoreRefDocs,
   setContractTariffList,
   getContractTariffList,
+  updatePlanDetailsByResourceAndPlanLineID,
+  getPlanDetailsByResourceAndPlanLineID,
+  getActualDetailsByResourceAndActualLineID,
 };
 
 export default jsonStore;

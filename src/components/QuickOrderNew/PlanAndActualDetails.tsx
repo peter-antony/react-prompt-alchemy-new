@@ -126,8 +126,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
     
     if (planType === "plan") {
-      // Get the current PlanDetails from jsonStore
-      const currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
       // Add additional data to formValues.wagonNewDetails
       console.log("formValues before ====", formValues.wagonNewDetails);
       formValues.wagonNewDetails = {
@@ -178,10 +176,30 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       console.log("formValues after ====", formValues.wagonNewDetails);
       // Prepare the updated PlanDetails by merging new form values with existing ones
+      console.log("RESOURCE ID : ",resourceId)
+      console.log("isEditQuickOrder: ",isEditQuickOrder)
+      console.log("selectedPlan: ",selectedPlan);
+      let  currentPlanDetails;
+      if(selectedPlan)
+        currentPlanDetails = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+      else
+        currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
+
+      console.log("currentPlanDetails: ",currentPlanDetails)
+
+      let setPlanId:any;
+      if(isEditQuickOrder && resourceId && selectedPlan){
+        console.log("Plan EXIST")
+        setPlanId=selectedPlan;
+      }else{
+        console.log("Plan NOT EXIST")
+
+        setPlanId=-1;
+      }
       const updatedPlanDetails = {
         // ...currentPlanDetails,
-        "PlanLineUniqueID": -1,
-        "ModeFlag": "Insert",
+        "PlanLineUniqueID": setPlanId,
+        "ModeFlag": selectedPlan?"Update": "Insert",
         WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
         ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
         ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
@@ -191,9 +209,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       // Set the updated ActualDetails in jsonStore
       // jsonStore.setPlanDetailsJson(updatedPlanDetails);
-      console.log("RESOURCE ID : ", updatedPlanDetails)
-      console.log("RESOURCE ID : ",resourceId)
-      jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+      console.log("updatedPlanDetails: ", updatedPlanDetails)
+      if(setPlanId==-1)
+        jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+      else
+        jsonStore.updatePlanDetailsByResourceAndPlanLineID(resourceId,setPlanId,updatedPlanDetails);
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",
@@ -201,7 +221,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
       const fullJson = jsonStore.getQuickOrder();
-      console.log("fullJson ----", fullJson);
+      console.log("FULL JSON AFTER PLAN UPDATE ----", fullJson);
       try {
         const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
         console.log(" try", data);
@@ -278,12 +298,34 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
         // Add more fields as needed
       };
+      console.log("RESOURCE ID : ",resourceId)
+      console.log("isEditQuickOrder: ",isEditQuickOrder)
+      console.log("selectedPlan: ",selectedPlan);
+      let  currentActualDetail;
+      if(selectedPlan && planType=='Actual')
+        currentActualDetail = jsonStore.getActualDetailsByResourceAndActualLineID(resourceId,selectedPlan);
+      else if(selectedPlan && planType=='Plan')
+        currentActualDetail = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+      else if(!selectedPlan)
+        currentActualDetail = jsonStore.getActualDetails() || {};
+
+      console.log("currentActualDetails: ",currentActualDetail)
+
+      let setActualId:any;
+      if(isEditQuickOrder && resourceId && selectedPlan){
+        console.log("Actual EXIST")
+        setActualId=selectedPlan;
+      }else{
+        console.log("Actual NOT EXIST")
+
+        setActualId=-1;
+      }
       // Prepare the updated ActualDetails by merging new form values with existing ones
       const updatedActualDetails = {
         ...currentActualDetails,
         // "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
-        "ActualLineUniqueID": -1,
-        "ModeFlag": "Insert",
+        "ActualLineUniqueID": setActualId,
+        "ModeFlag": selectedPlan?"Update": "Insert",
 
         WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
         ContainerDetails: { ...currentActualDetails.ContainerDetails, ...formValues.containerDetails },
@@ -1442,7 +1484,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [thuDetailsData, setTHUDetailsData] = useState(getInitialTHUDetails);
   const [journeyDetailsData, setJourneyDetailsData] = useState(getInitialJourneyDetails);
   const [otherDetailsData, setOtherDetailsData] = useState(getInitialOtherDetails);
-
+  const [isEditPlan, setIsEditPlan] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState();
   // Sync state with jsonStore on isEditQuickOrder change
   useEffect(() => {
     setDefaultResourceId(resourceId);
@@ -1675,6 +1718,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     console.log("getSelectedPlanActualItem --", jsonStore.getPlanDetails());
 
     if (item) {
+      setIsEditPlan(true);
+      setSelectedPlan(item.PlanLineUniqueID)
       // Set the raw data to state (if you still need it)
       setWagonDetailsData(item.WagonDetails);
       setContainerDetailsData(item.ContainerDetails);
