@@ -15,6 +15,7 @@ import jsonStore from '@/stores/jsonStore';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
+  setFormValues: (data: Record<string, any>) => void;
   doValidation: () => {
     isValid: boolean;
     errors: Record<string, string>;

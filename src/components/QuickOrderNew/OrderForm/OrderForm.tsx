@@ -484,7 +484,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     },
     CustomerQuickOrderNo: {
       id: 'CustomerQuickOrderNo',
-      label: 'Customer Order No.',
+      label: 'Customer Quick Order No.',
       fieldType: 'text',
       width: 'full',
       value: '',
@@ -513,7 +513,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       //       : {})
       //   }));
       // },
-      placeholder: 'IO/0000000042',
+      placeholder: '',
       // searchData: orderIds, // <-- This is the local array for suggestions
     },
     Customer_Supplier_RefNo: {
@@ -526,7 +526,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 7,
-      placeholder: 'Enter Value',
+      placeholder: '',
       // searchData: customerRefIds, // <-- This is the local array for suggestions
     },
     QCUserDefined1: {
@@ -552,7 +552,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 9,
-      placeholder: 'Enter Remarks'
+      placeholder: ''
     },
     Summary: {
       id: 'Summary',
@@ -564,7 +564,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 10,
-      placeholder: 'Enter Summary'
+      placeholder: ''
     },
     WBS: {
       id: 'WBS',
@@ -615,7 +615,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 14,
-      placeholder: 'Enter Remarks',
+      placeholder: '',
       width: 'full',
     },
     Remarks3: {
@@ -627,7 +627,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 15,
-      placeholder: 'Enter Remarks',
+      placeholder: '',
       width: 'full',
     }
   });
@@ -664,11 +664,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
         jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
-        jsonStore.setResourceGroupFields({ ServiceType: contract.ServiceType, OperationalLocation: contract.Location });
+        jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          // tariff: additionalInfo[0].TariffID,
+          tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
@@ -715,6 +715,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
+    console.log("data 11111", data);
     return {
       OrderType: data.OrderType ? data.OrderType : '',
       QuickOrderDate: data.QuickOrderDate ? data.QuickOrderDate : '',
@@ -724,15 +725,18 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       Cluster: data.Cluster ? data.Cluster : '',
       CustomerQuickOrderNo: data.CustomerQuickOrderNo ? data.CustomerQuickOrderNo : '',
       Customer_Supplier_RefNo: data.Customer_Supplier_RefNo ? data.Customer_Supplier_RefNo : '',
-      QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1 : '',
       Remark1: data.Remark1 ? data.Remark1 : '',
       Summary: data.Summary ? data.Summary : '',
       WBS: data.WBS ? data.WBS : '',
-      QCUserDefined2: data.QCUserDefined2 ? data.QCUserDefined2 : '',
-      QCUserDefined3: data.QCUserDefined3 ? data.QCUserDefined3 : '',
-      QCUserDefined1Value: data.QCUserDefined1Value ? data.QCUserDefined1Value : '',
-      QCUserDefined2Value: data.QCUserDefined2Value ? data.QCUserDefined2Value : '',
-      QCUserDefined3Value: data.QCUserDefined3Value ? data.QCUserDefined3Value : '',
+      // QCUserDefined1: data.QCUserDefined1 || { dropdown: '', input: '' },
+      // QCUserDefined2: data.QCUserDefined2 || { dropdown: '', input: '' },
+      // QCUserDefined3: data.QCUserDefined3 || { dropdown: '', input: '' },
+      QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1.dropdown : '',
+      QCUserDefined2: data.QCUserDefined2 ? data.QCUserDefined2.dropdown : '',
+      QCUserDefined3: data.QCUserDefined3 ? data.QCUserDefined3.dropdown : '',
+      QCUserDefined1Value: data.QCUserDefined1Value ? data.QCUserDefined1Value.input : '',
+      QCUserDefined2Value: data.QCUserDefined2Value ? data.QCUserDefined2Value.input : '',
+      QCUserDefined3Value: data.QCUserDefined3Value ? data.QCUserDefined3Value.input : '',
       Remarks2: data.Remarks2 ? data.Remarks2 : '',
       Remarks3: data.Remarks3 ? data.Remarks3 : ''
     };
@@ -1021,7 +1025,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     console.log("contractId ---", jsonStore.getQuickOrder());
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: jsonStore.getQuickOrder().Contract, type: OrderType });
-      console.log("COMBO DROPDOWN DATA", JSON.parse(data.data.ResponseData));
+      console.log("COMBO DROPDOWN DATA", JSON.parse(data?.data?.ResponseData));
       console.log("ORDERTYPE :", OrderType);
       // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
@@ -1036,11 +1040,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
         jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
-        jsonStore.setResourceGroupFields({ ServiceType: contract.ServiceType, OperationalLocation: contract.Location });
+        jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          // tariff: additionalInfo[0].TariffID,
+          tariff: additionalInfo[0].TariffID,
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
@@ -1065,59 +1069,57 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       const quickOrderData = jsonStore.getQuickOrder();
       console.log("quickOrderData :", quickOrderData);
       jsonStore.setQuickOrderFields({ 
-        OrderType: quickOrderData.OrderType, 
-        ContractID: quickOrderData.ContractID, 
-        Customer: quickOrderData.CustomerID, 
-        Vendor: quickOrderData.VendorID, 
-        Cluster: quickOrderData.ClusterLocation, 
-        WBS: quickOrderData.WBS, 
-        Currency: quickOrderData.Currency, 
-        QuickOrderDate: formatDateToYYYYMMDD(quickOrderData.ValidFrom),
-        Summary: quickOrderData.Summary, 
-        Remark1: quickOrderData.Remark1, 
-        Remarks2: quickOrderData.Remarks2,
-        Remarks3: quickOrderData.Remarks3,
-        // For inputdropdown fields, bind as { input, dropdown }
-        QCUserDefined1: { 
-          input: quickOrderData.QCUserDefined1Value ?? "", 
-          dropdown: quickOrderData.QCUserDefined1 ?? "" 
-        },
-        QCUserDefined2: { 
-          input: quickOrderData.QCUserDefined2Value ?? "", 
-          dropdown: quickOrderData.QCUserDefined2 ?? "" 
-        },
-        QCUserDefined3: { 
-          input: quickOrderData.QCUserDefined3Value ?? "", 
-          dropdown: quickOrderData.QCUserDefined3 ?? "" 
-        }
+        OrderType: quickOrderData.OrderType ?? "",
+        ContractID: quickOrderData.ContractID ?? "",
+        Customer: quickOrderData.CustomerID ?? quickOrderData.Customer ?? "",
+        Vendor: quickOrderData.VendorID ?? quickOrderData.Vendor ?? "",
+        Cluster: quickOrderData.ClusterLocation ?? quickOrderData.Cluster ?? "",
+        WBS: quickOrderData.WBS ?? "",
+        Currency: quickOrderData.Currency ?? "",
+        QuickOrderDate: quickOrderData.ValidFrom ? formatDateToYYYYMMDD(quickOrderData.ValidFrom) : "",
+        Summary: quickOrderData.Summary ?? "",
+        Remark1: quickOrderData.Remark1 ?? "",
+        Remarks2: quickOrderData.Remarks2 ?? "",
+        Remarks3: quickOrderData.Remarks3 ?? "",
+        QCUserDefined1: (() => {
+          if (quickOrderData.QCUserDefined1 && typeof quickOrderData.QCUserDefined1 === "object") {
+            // For proper binding like in plan/actuals (wagonDetails/containerDetails), prefer value/label structure
+            return {
+              input: quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1.value ?? quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
+              dropdown: quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1.label ?? quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
+            dropdown: quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
+          };
+        })(),
+        QCUserDefined2: (() => {
+          if (quickOrderData.QCUserDefined2 && typeof quickOrderData.QCUserDefined2 === "object") {
+            return {
+              input: quickOrderData.QCUserDefined2.input ?? quickOrderData.QCUserDefined2Value ?? "",
+              dropdown: quickOrderData.QCUserDefined2.dropdown ?? quickOrderData.QCUserDefined2 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined2Value ?? "",
+            dropdown: quickOrderData.QCUserDefined2 ?? ""
+          };
+        })(),
+        QCUserDefined3: (() => {
+          if (quickOrderData.QCUserDefined3 && typeof quickOrderData.QCUserDefined3 === "object") {
+            return {
+              input: quickOrderData.QCUserDefined3.input ?? quickOrderData.QCUserDefined3Value ?? "",
+              dropdown: quickOrderData.QCUserDefined3.dropdown ?? quickOrderData.QCUserDefined3 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined3Value ?? "",
+            dropdown: quickOrderData.QCUserDefined3 ?? ""
+          };
+        })(),
+        
       });
-      // setFormData(normalizeOrderFormDetails({
-      //   OrderType: quickOrderData.OrderType, 
-      //   ContractID: quickOrderData.ContractID, 
-      //   Customer: quickOrderData.CustomerID, 
-      //   Vendor: quickOrderData.VendorID, 
-      //   Cluster: quickOrderData.ClusterLocation, 
-      //   WBS: quickOrderData.WBS, 
-      //   Currency: quickOrderData.Currency, 
-      //   QuickOrderDate: formatDateToYYYYMMDD(quickOrderData.ValidFrom),
-      //   Summary: quickOrderData.Summary, 
-      //   Remark1: quickOrderData.Remark1, 
-      //   Remarks2: quickOrderData.Remarks2,
-      //   Remarks3: quickOrderData.Remarks3,
-      //   // For inputdropdown fields, bind as { input, dropdown }
-      //   QCUserDefined1: { 
-      //     input: quickOrderData.QCUserDefined1Value ?? "", 
-      //     dropdown: quickOrderData.QCUserDefined1 ?? "" 
-      //   },
-      //   QCUserDefined2: { 
-      //     input: quickOrderData.QCUserDefined2Value ?? "", 
-      //     dropdown: quickOrderData.QCUserDefined2 ?? "" 
-      //   },
-      //   QCUserDefined3: { 
-      //     input: quickOrderData.QCUserDefined3Value ?? "", 
-      //     dropdown: quickOrderData.QCUserDefined3 ?? "" 
-      //   }
-      // }));
       setLoading(true);
     } catch (err) {
       setError(`Error fetching API data for${err}`);

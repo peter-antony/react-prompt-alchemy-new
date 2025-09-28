@@ -32,7 +32,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     value = { dropdown: '', input: '' }, 
     onChange, 
     options = [], 
-    placeholder = 'Enter Value',
+    placeholder = '',
     className,
     tabIndex,
     onDropdownClick,
