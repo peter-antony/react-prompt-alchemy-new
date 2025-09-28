@@ -515,12 +515,50 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     console.log("isEditQuickOrder", isEditQuickOrder);
     const isValid = handleValidateAllPanels();
     if (isValid) {
+      // Helper function to truncate at pipe symbol
+      const truncateAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          return value.split("||")[0].trim();
+        }
+        return value;
+      };
+
+      // Helper to recursively truncate all dropdown fields in an object
+      const truncateDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, truncate it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: truncateAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, truncate if it has a pipe
+            newObj[key] = truncateAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = truncateDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        return newObj;
+      };
+
       console.log("getForm ---", moreInfoDetailsRef.current?.getFormValues());
       const formValues = {
-        basicDetails: basicDetailsRef.current?.getFormValues() || {},
-        operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
-        moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
-        billingDetails: billingDetailsRef.current?.getFormValues() || {}
+        basicDetails: truncateDropdowns(basicDetailsRef.current?.getFormValues() || {}),
+        operationalDetails: truncateDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
+        moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
+        billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
       };
       console.log("resourceId Before API Call:", resourceId);
       if (isEditQuickOrder && resourceId) {
@@ -1159,19 +1197,26 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
     return {
-      Resource: data.Resource,
-      ResourceType: data.ResourceType,
-      ServiceType: data.ServiceType,
-      SubServiceType: data.SubServiceType, // fix typo if needed
+      Resource: (data.Resource ? data.Resource : '') + (data.ResourceDescription ? ' || ' + data.ResourceDescription : ''),
+      ResourceType: (data.ResourceType ? data.ResourceType : '') + (data.ResourceTypeDescription ? ' || ' + data.ResourceTypeDescription : ''),
+      ServiceType: (data.ServiceType ? data.ServiceType : '') + (data.ServiceTypeDescription ? ' || ' + data.ServiceTypeDescription : ''),
+      SubServiceType: (data.SubServiceType ? data.SubServiceType : '') + (data.SubServiceTypeDescription ? ' || ' + data.SubServiceTypeDescription : ''),
+      // Resource: data.Resource,
+      // ResourceType: data.ResourceType,
+      // ServiceType: data.ServiceType,
+      // SubServiceType: data.SubServiceType, // fix typo if needed
     };
   }
 
   function normalizeOperationalDetails(data) {
     if (data)
       return {
-        OperationalLocation: data.OperationalLocation,
-        DepartPoint: data.DepartPoint,
-        ArrivalPoint: data.ArrivalPoint,
+        // OperationalLocation: data.OperationalLocation,
+        OperationalLocation: (data.OperationalLocation ? data.OperationalLocation : '') + (data.OperationalLocationDesc ? ' || ' + data.OperationalLocationDesc : ''),
+        DepartPoint: (data.DepartPoint ? data.DepartPoint : '') + (data.DepartPointDescription ? ' || ' + data.DepartPointDescription : ''),
+        ArrivalPoint: (data.ArrivalPoint ? data.ArrivalPoint : '') + (data.ArrivalPointDescription ? ' || ' + data.ArrivalPointDescription : ''),
+        // DepartPoint: data.DepartPoint,
+        // ArrivalPoint: data.ArrivalPoint,
         FromDate: "",
         FromTime: data.FromTime,
         ToDate: "",
@@ -1208,8 +1253,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       BillingType: data.BillingType ?? '',
       UnitPrice: data.UnitPrice ?? 0,
       BillingQty: data.BillingQty ?? 0,
-      Tariff: data.Tariff ?? '',
-      TariffType: data.TariffType ?? '',
+      // Tariff: data.Tariff ?? '',
+      Tariff: (data.Tariff ? data.Tariff : '') + (data.TariffDescription ? ' || ' + data.TariffDescription : ''),
+      TariffType: (data.TariffType ? data.TariffType : '') + (data.TariffTypeDescription ? ' || ' + data.TariffTypeDescription : ''),
       Remarks: data.Remarks ?? '',
     };
   }
@@ -1420,7 +1466,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1459,7 +1505,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1499,7 +1545,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1539,7 +1585,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1588,7 +1634,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
               label: `${item.id} || ${item.name}`,
-              value: item.id
+              value: `${item.id} || ${item.name}`,
             }
             : {})
         }));
@@ -1641,7 +1687,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
               label: `${item.id} || ${item.name}`,
-              value: item.id
+              value: `${item.id} || ${item.name}`,
             }
             : {})
         }));
@@ -1681,7 +1727,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
               label: `${item.id} || ${item.name}`,
-              value: item.id
+              value: `${item.id} || ${item.name}`,
             }
             : {})
         }));
@@ -1844,7 +1890,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...(item.TariffID !== undefined && item.TariffID !== '' && item.TariffDescription !== undefined && item.TariffDescription !== ''
             ? {
               label: `${item.TariffID} || ${item.TariffDescription}`,
-              value: item.TariffID
+              value: `${item.TariffID} || ${item.TariffDescription}`,
+              // value: item.TariffID
             }
             : {})
         }));

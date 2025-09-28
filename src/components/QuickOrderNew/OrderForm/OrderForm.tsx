@@ -356,7 +356,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
+                // value: item.id
               }
             : {})
         }));
@@ -396,7 +397,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -436,7 +437,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -476,7 +477,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -643,11 +644,17 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   //setting Combo Dropdown with selected Contract
   const setComboDropdown = async (contractId: any) => {
     console.log("VALUE", contractId);
+    // If contractId.value contains '||', truncate everything after '||'
+    let contractIdValue = contractId.value;
+    if (typeof contractIdValue === 'string' && contractIdValue.includes('||')) {
+      contractIdValue = contractIdValue.split('||')[0].trim();
+    }
+    console.log("VALUE", contractIdValue);
 
     setLoading(false);
     setError(null);
     try {
-      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractId.value, type: OrderType });
+      const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractIdValue, type: OrderType });
       const parsedResponse = JSON.parse(data.data.ResponseData);
       console.log("COMBO DROPDOWN DATA", parsedResponse);
       // Set ContractTariff array in jsonStore for global access
@@ -668,7 +675,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          tariff: additionalInfo[0].TariffID,
+          // tariff: additionalInfo[0].TariffID,
+          tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
@@ -719,24 +727,25 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     return {
       OrderType: data.OrderType ? data.OrderType : '',
       QuickOrderDate: data.QuickOrderDate ? data.QuickOrderDate : '',
-      Contract: data.Contract ? data.Contract : data.ContractID ? data.ContractID : '',
-      Customer: data.Customer ? data.Customer : '',
-      Vendor: data.Vendor ? data.Vendor : '',
-      Cluster: data.Cluster ? data.Cluster : '',
+      Contract: (data.Contract ? data.Contract : (data.ContractID ? data.ContractID : '')) + 
+        ((data.Contract || data.ContractID) && data.ContractDescription ? ' || ' + data.ContractDescription : ''),
+      Customer: (data.Customer ? data.Customer : '') + (data.CustomerName ? ' || ' + data.CustomerName : ''),
+      Vendor: (data.Vendor ? data.Vendor : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
+      Cluster: (data.Cluster ? data.Cluster : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
       CustomerQuickOrderNo: data.CustomerQuickOrderNo ? data.CustomerQuickOrderNo : '',
       Customer_Supplier_RefNo: data.Customer_Supplier_RefNo ? data.Customer_Supplier_RefNo : '',
       Remark1: data.Remark1 ? data.Remark1 : '',
       Summary: data.Summary ? data.Summary : '',
       WBS: data.WBS ? data.WBS : '',
-      // QCUserDefined1: data.QCUserDefined1 || { dropdown: '', input: '' },
-      // QCUserDefined2: data.QCUserDefined2 || { dropdown: '', input: '' },
-      // QCUserDefined3: data.QCUserDefined3 || { dropdown: '', input: '' },
-      QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1.dropdown : '',
-      QCUserDefined2: data.QCUserDefined2 ? data.QCUserDefined2.dropdown : '',
-      QCUserDefined3: data.QCUserDefined3 ? data.QCUserDefined3.dropdown : '',
-      QCUserDefined1Value: data.QCUserDefined1Value ? data.QCUserDefined1Value.input : '',
-      QCUserDefined2Value: data.QCUserDefined2Value ? data.QCUserDefined2Value.input : '',
-      QCUserDefined3Value: data.QCUserDefined3Value ? data.QCUserDefined3Value.input : '',
+      QCUserDefined1: data.QCUserDefined1 || { dropdown: '', input: '' },
+      QCUserDefined2: data.QCUserDefined2 || { dropdown: '', input: '' },
+      QCUserDefined3: data.QCUserDefined3 || { dropdown: '', input: '' },
+      // QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1.dropdown : '',
+      // QCUserDefined2: data.QCUserDefined2 ? data.QCUserDefined2.dropdown : '',
+      // QCUserDefined3: data.QCUserDefined3 ? data.QCUserDefined3.dropdown : '',
+      // QCUserDefined1Value: data.QCUserDefined1Value ? data.QCUserDefined1Value.input : '',
+      // QCUserDefined2Value: data.QCUserDefined2Value ? data.QCUserDefined2Value.input : '',
+      // QCUserDefined3Value: data.QCUserDefined3Value ? data.QCUserDefined3Value.input : '',
       Remarks2: data.Remarks2 ? data.Remarks2 : '',
       Remarks3: data.Remarks3 ? data.Remarks3 : ''
     };
@@ -875,14 +884,42 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     const isValid = handleValidateAllPanels();
     if (isValid) {
       // const formValuesValidation = handleGetAllFormValues();
-      // console.log("formValuesValidation ===", formValuesValidation);
+      console.log("formValuesValidation ===", orderDetailsRef.current?.getFormValues());
+      const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
+
+      // Helper function to truncate at '||'
+      const truncateAtPipe = (val: any) => {
+        if (typeof val === 'string' && val.includes('||')) {
+          return val.split('||')[0].trim();
+        }
+        return val;
+      };
+
+      // List of fields to truncate
+      const fieldsToTruncate = [
+        "Contract",
+        "Customer",
+        "Vendor",
+        "Cluster"
+      ];
+
+      // Create a new object with truncated values
       const formValues = {
-        QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+        QuickOrder: {
+          ...formValuesRaw,
+          ...fieldsToTruncate.reduce((acc, key) => {
+            if (formValuesRaw[key]) {
+              acc[key] = truncateAtPipe(formValuesRaw[key]);
+            }
+            return acc;
+          }, {} as Record<string, any>)
+        },
         // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
       };
-      console.log("FORM VALUES : ",formValues)
+
+      console.log("FORM VALUES : ", formValues);
       setFormData(formValues.QuickOrder);
-      console.log("FORM VALUES : ",formValues.QuickOrder);
+      console.log("FORM VALUES : ", formValues.QuickOrder);
       
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
@@ -907,6 +944,33 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         //  Update resource
         const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
         console.log("updateQuickOrderResource result:", res);
+        const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+          console.log("response ===", resourceStatus);
+          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+            toast({
+              title: "✅ Form submitted successfully",
+              description: "Your changes have been saved.",
+              variant: "default", // or "success" if you have custom variant
+            });
+          }else{
+            // Remove the latest added resource group with ResourceUniqueID: -1 on API error
+            let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
+            // Filter out the resource with ResourceUniqueID: -1
+            console.log("resourceGroups ---", resourceGroups);
+            resourceGroups = resourceGroups.filter((rg: any) => rg.ResourceUniqueID !== -1);
+            // Update the quick order in the store
+            jsonStore.setQuickOrder({
+              ...jsonStore.getQuickOrder(),
+              ResourceGroup: resourceGroups
+            });
+            const fullJsonElse = jsonStore.getQuickOrder();
+            console.log("Else error :: ", fullJsonElse);
+            toast({
+              title: "⚠️ Submission failed",
+              description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
+              variant: "destructive", // or "success" if you have custom variant
+            });
+          }
 
         //  Get OrderNumber from response
         const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
@@ -931,16 +995,16 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         setError(`Error fetching API data for resource group`);
         toast({
           title: "⚠️ Submission failed",
-          description: "Something went wrong while saving. Please try again.",
+          description: err.response.data.correctiveAction,
           variant: "destructive", // or "error"
         });
       }
       finally {
-        toast({
-          title: "✅ Form submitted successfully",
-          description: "Your changes have been saved.",
-          variant: "default", // or "success" if you have custom variant
-        });
+        // toast({
+        //   title: "✅ Form submitted successfully",
+        //   description: "Your changes have been saved.",
+        //   variant: "default", // or "success" if you have custom variant
+        // });
         setResourceGroupOpen(true);
       }
     } else {
@@ -1044,7 +1108,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
         jsonStore.setTariffFields({
-          tariff: additionalInfo[0].TariffID,
+          // tariff: additionalInfo[0].TariffID,
+          tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
@@ -1081,45 +1146,77 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         Remark1: quickOrderData.Remark1 ?? "",
         Remarks2: quickOrderData.Remarks2 ?? "",
         Remarks3: quickOrderData.Remarks3 ?? "",
-        QCUserDefined1: (() => {
-          if (quickOrderData.QCUserDefined1 && typeof quickOrderData.QCUserDefined1 === "object") {
-            // For proper binding like in plan/actuals (wagonDetails/containerDetails), prefer value/label structure
-            return {
-              input: quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1.value ?? quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
-              dropdown: quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1.label ?? quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
-            };
-          }
-          return {
-            input: quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
-            dropdown: quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
-          };
-        })(),
-        QCUserDefined2: (() => {
-          if (quickOrderData.QCUserDefined2 && typeof quickOrderData.QCUserDefined2 === "object") {
-            return {
-              input: quickOrderData.QCUserDefined2.input ?? quickOrderData.QCUserDefined2Value ?? "",
-              dropdown: quickOrderData.QCUserDefined2.dropdown ?? quickOrderData.QCUserDefined2 ?? ""
-            };
-          }
-          return {
-            input: quickOrderData.QCUserDefined2Value ?? "",
-            dropdown: quickOrderData.QCUserDefined2 ?? ""
-          };
-        })(),
-        QCUserDefined3: (() => {
-          if (quickOrderData.QCUserDefined3 && typeof quickOrderData.QCUserDefined3 === "object") {
-            return {
-              input: quickOrderData.QCUserDefined3.input ?? quickOrderData.QCUserDefined3Value ?? "",
-              dropdown: quickOrderData.QCUserDefined3.dropdown ?? quickOrderData.QCUserDefined3 ?? ""
-            };
-          }
-          return {
-            input: quickOrderData.QCUserDefined3Value ?? "",
-            dropdown: quickOrderData.QCUserDefined3 ?? ""
-          };
-        })(),
+        
+        // QCUserDefined1: (() => {
+        //   if (quickOrderData.QCUserDefined1 && typeof quickOrderData.QCUserDefined1 === "object") {
+        //     // For proper binding like in plan/actuals (wagonDetails/containerDetails), prefer value/label structure
+        //     return {
+        //       input: quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
+        //       dropdown: quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
+        //     };
+        //   }
+        //   return {
+        //     input: quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
+        //     dropdown: quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
+        //   };
+        // })(),
+        // QCUserDefined2: (() => {
+        //   if (quickOrderData.QCUserDefined2 && typeof quickOrderData.QCUserDefined2 === "object") {
+        //     return {
+        //       input: quickOrderData.QCUserDefined2.input ?? quickOrderData.QCUserDefined2Value ?? "",
+        //       dropdown: quickOrderData.QCUserDefined2.dropdown ?? quickOrderData.QCUserDefined2 ?? ""
+        //     };
+        //   }
+        //   return {
+        //     input: quickOrderData.QCUserDefined2Value ?? "",
+        //     dropdown: quickOrderData.QCUserDefined2 ?? ""
+        //   };
+        // })(),
+        // QCUserDefined3: (() => {
+        //   if (quickOrderData.QCUserDefined3 && typeof quickOrderData.QCUserDefined3 === "object") {
+        //     return {
+        //       input: quickOrderData.QCUserDefined3.input ?? quickOrderData.QCUserDefined3Value ?? "",
+        //       dropdown: quickOrderData.QCUserDefined3.dropdown ?? quickOrderData.QCUserDefined3 ?? ""
+        //     };
+        //   }
+        //   return {
+        //     input: quickOrderData.QCUserDefined3Value ?? "",
+        //     dropdown: quickOrderData.QCUserDefined3 ?? ""
+        //   };
+        // })(),
         
       });
+
+      // console.log("wagon", orderDetailsRef);
+      // // if (orderDetailsRef && orderDetailsRef.current && "setFormValues" in orderDetailsRef.current && typeof orderDetailsRef.current.setFormValues === "function") {
+      //   orderDetailsRef.current.setFormValues(quickOrderData || {});
+      //   // Map WagonQuantity and WagonQuantityUOM to the inputdropdown field structure expected by DynamicPanel
+      //   console.log("wagon", orderDetailsRef);
+      //   // if (quickOrderData && getOrderFormDetailsConfig && getOrderFormDetailsConfig.QCUserDefined1 && getOrderFormDetailsConfig.QCUserDefined1.fieldType === "inputdropdown") {
+      //     const wagonQuantityInputDropdown = {
+      //       input: quickOrderData.QCUserDefined1Value ?? "",
+      //       dropdown: quickOrderData.QCUserDefined1 ?? ""
+      //     };
+      //     const wagonGrossWeightInputDropdown = {
+      //       input: quickOrderData.QCUserDefined2Value ?? "",
+      //       dropdown: quickOrderData.QCUserDefined2 ?? ""
+      //     };
+      //     const wagonLengthInputDropdown = {
+      //       input: quickOrderData.QCUserDefined3Value ?? "",
+      //       dropdown: quickOrderData.QCUserDefined3 ?? ""
+      //     };
+      //     orderDetailsRef.current.setFormValues({
+      //       ...quickOrderData,
+      //       QCUserDefined1: wagonQuantityInputDropdown,
+      //       QCUserDefined2: wagonGrossWeightInputDropdown,
+      //       QCUserDefined3: wagonLengthInputDropdown,
+      //     });
+      //     console.log("orderDetailsRef", orderDetailsRef.current?.getFormValues());
+      //   // } else {
+      //   //   orderDetailsRef.current.setFormValues(quickOrderData || {});
+      //   // }
+      // // }
+      
       setLoading(true);
     } catch (err) {
       setError(`Error fetching API data for${err}`);
@@ -1140,10 +1237,42 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     // console.log("originalData ===", originalData);
     // const updatedPayload = markUpdatedObjects(originalData, fullJson.ResponseResult.QuickOrder);
 
+    // const formValues = {
+    //   QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+    //   // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
+    // };
+    const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
+
+    // Helper function to truncate at '||'
+    const truncateAtPipe = (val: any) => {
+      if (typeof val === 'string' && val.includes('||')) {
+        return val.split('||')[0].trim();
+      }
+      return val;
+    };
+
+    // List of fields to truncate
+    const fieldsToTruncate = [
+      "Contract",
+      "Customer",
+      "Vendor",
+      "Cluster"
+    ];
+
+    // Create a new object with truncated values
     const formValues = {
-      QuickOrder: orderDetailsRef.current?.getFormValues() || {},
+      QuickOrder: {
+        ...formValuesRaw,
+        ...fieldsToTruncate.reduce((acc, key) => {
+          if (formValuesRaw[key]) {
+            acc[key] = truncateAtPipe(formValuesRaw[key]);
+          }
+          return acc;
+        }, {} as Record<string, any>)
+      },
       // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
     };
+
     console.log("FORM VALUES : ",formValues)
     setFormData(formValues.QuickOrder);
     console.log("FORM VALUES : ",formValues.QuickOrder);
@@ -1172,6 +1301,20 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       //  Update resource
       const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
       console.log("updateQuickOrderResource result:", res);
+      const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+      if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+            toast({
+              title: "✅ Form submitted successfully",
+              description: "Your changes have been saved.",
+              variant: "default", // or "success" if you have custom variant
+            });
+          }else{
+            toast({
+              title: "⚠️ Submission failed",
+              description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
+              variant: "destructive", // or "success" if you have custom variant
+            });
+          }
 
       //  Get OrderNumber from response
       const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
@@ -1196,16 +1339,16 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: "Something went wrong while saving. Please try again.",
+        description: err.response.data.correctiveAction,
         variant: "destructive", // or "error"
       });
     }
     finally {
-      toast({
-        title: "✅ Form submitted successfully",
-        description: "Your changes have been saved.",
-        variant: "default", // or "success" if you have custom variant
-      });
+      // toast({
+      //   title: "✅ Form submitted successfully",
+      //   description: "Your changes have been saved.",
+      //   variant: "default", // or "success" if you have custom variant
+      // });
       // openResourceGroupGetID();
       setResourceGroupOpen(true);
     }
