@@ -4,7 +4,7 @@ import {
   Wrench, BadgeCheck, AlertCircle, UsersRound, FileText, Banknote,
   Settings, CirclePercent, Repeat1,
   Copy, Trash2,
-  Filter, PlaneLanding, PlaneTakeoff, Files, File
+  Filter, PlaneLanding, PlaneTakeoff, Files, File, Wallet
 } from "lucide-react";
 import { ChevronDown, Search } from "lucide-react";
 import Attachments from "../QuickOrderNew/OrderForm/Attachments";
@@ -30,18 +30,20 @@ interface CardStatus {
 //     "Under Amendment": { label: "Under Amendment", color: "text-orange-600", bg: "bg-orange-50" },
 // };
 const statusMap: any = {
-  Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
+  // Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
   Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
   // "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
   Released: { label: "Under Amendment", statusColor: 'badge-fresh-green rounded-2xl' },
   'Under Execution': 'badge-purple rounded-2xl',
-  'Fresh': 'badge-blue rounded-2xl',
+  'Open': 'badge-blue rounded-2xl',
   'Cancelled': 'badge-red rounded-2xl',
   'Deleted': 'badge-red rounded-2xl',
   'Save': 'badge-green rounded-2xl',
-  'Under Amendment': 'badge-orange rounded-2xl',
+  'Hold': 'badge-orange rounded-2xl',
   'Confirmed': 'badge-green rounded-2xl',
   'Initiated': 'badge-blue rounded-2xl',
+  'Approved': 'badge-green rounded-2xl',
+  'Rerun Triggered': 'badge-purple rounded-2xl'
 };
 
 export interface CardDetailsItem {
@@ -219,16 +221,16 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                     </span>
                     <div className="flex flex-col justify-evenly">
                       {/* <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.ResourceUniqueID} - {item?.BasicDetails[0]?.Resource}</div> */}
-                      <div className="font-semibold text-sm">{item?.ResourceUniqueID} - {item?.BasicDetails?.Resource}</div>
+                      <div className="font-semibold text-sm">{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
                       {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
-                      <div className="text-xs text-gray-400">{item?.BasicDetails?.ResourceType}</div>
+                      <div className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</div>
                     </div>
                   </div>
                 </div>
                 {/* Resource Status is not applicable to show in UI */}
                 {/* <div className="flex items-center gap-1 relative">
-                  <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.ResourceStatus]}`}>
-                    {item?.ResourceStatus}
+                  <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.BillingDetails?.DraftBillStatus]}`}>
+                    {item?.BillingDetails?.DraftBillStatus}
                   </span>
                 </div> */}
               </div>
@@ -244,7 +246,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Settings className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">{item?.BasicDetails?.ServiceTypeDescription}</span>
+                  <span className="truncate">{item?.BasicDetails?.ServiceTypeDescription || item?.BasicDetails?.ServiceType}</span>
                   {/* <span className="truncate">{item.trainType}</span> */}
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -311,25 +313,41 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <PlaneLanding className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">{item?.OperationalDetails?.ArrivalPoint}</span>
+                  <span className="truncate" title={item?.OperationalDetails?.ArrivalPointDescription + ' || ' + item?.OperationalDetails?.ArrivalPoint}>{item?.OperationalDetails?.ArrivalPointDescription} || {item?.OperationalDetails?.ArrivalPoint}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <PlaneTakeoff className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">{item?.OperationalDetails?.DepartPoint}</span>
+                  <span className="truncate" title={item?.OperationalDetails?.DepartPointDescription + ' || ' + item?.OperationalDetails?.DepartPoint}>{item?.OperationalDetails?.DepartPointDescription} || {item?.OperationalDetails?.DepartPoint}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <File className="w-4 h-4 text-gray-600" />
-                  <span className="truncate" title={item?.MoreRefDocs?.PrimaryDocType || item?.MoreRefDocs?.PrimaryDocNo}>{item?.MoreRefDocs?.PrimaryDocType}</span>
+                  <span className="truncate" title={item?.MoreRefDocs?.PrimaryDocTypeDescription || item?.MoreRefDocs?.PrimaryDocNo}>{item?.MoreRefDocs?.PrimaryDocTypeDescription} - {item?.MoreRefDocs?.PrimaryDocNo}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Files className="w-4 h-4 text-gray-600" />
-                  <span className="truncate" title={item?.MoreRefDocs?.SecondaryDocType || item?.MoreRefDocs?.SecondaryDocNo}>{item?.MoreRefDocs?.SecondaryDocType}</span>
+                  <span className="truncate" title={item?.MoreRefDocs?.SecondaryDocTypeDescription || item?.MoreRefDocs?.SecondaryDocNo}>{item?.MoreRefDocs?.SecondaryDocTypeDescription} - {item?.MoreRefDocs?.SecondaryDocNo}</span>
+                </div>
+                <div className="flex items-center gap-2 text-blue-600 text-xs font-medium">
+                  <LinkIcon className="w-4 h-4" />
+                  {/* <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span> */}
+                  <span className="cursor-pointer">Draft Bill : {item?.BillingDetails?.DraftBillNo}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.BillingDetails?.DraftBillStatus]}`}>
+                    {item?.BillingDetails?.DraftBillStatus}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center text-blue-600 text-xs font-medium mt-2 gap-2">
-                <LinkIcon className="w-4 h-4" />
-                {/* <span className="cursor-pointer">Draft Bill : {item?.BillingDetails[0].DraftBillNo}</span> */}
-                <span className="cursor-pointer">Draft Bill : {item?.BillingDetails?.DraftBillNo}</span>
+              
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm mb-3">
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <Wallet className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{item?.BillingDetails?.InvoiceNo}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700 text-xs">
+                  <Wallet className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{item?.BillingDetails?.InvoiceStatus}</span>
+                </div>
               </div>
             </div>
           ))

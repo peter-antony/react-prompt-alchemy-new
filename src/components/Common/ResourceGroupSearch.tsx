@@ -10,8 +10,46 @@ interface ResourceGroupSearchProps {
 const ResourceGroupSearch: React.FC<ResourceGroupSearchProps> = ({ resourceGroups, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  const formatDateVariants = (dateStr: string): string[] => {
+    if (!dateStr) return [];
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return [];
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+
+    const shortMonth = d.toLocaleString('en-US', { month: 'short' });  // Sep
+    const longMonth = d.toLocaleString('en-US', { month: 'long' });    // September
+
+    return [
+      `${day}-${month}-${year}`,        // 23-09-2025
+      `${day}-${shortMonth}-${year}`,   // 23-Sep-2025
+      `${day}-${longMonth}-${year}`,    // 23-September-2025
+      `${month}-${year}`,               // 09-2025
+      `${shortMonth}-${year}`,          // Sep-2025
+      `${longMonth}-${year}`,           // September-2025
+    ];
+  };
+
+  const matchesSearch = (value: any, search: string): boolean => {
+    if (value == null) return false;
+    const strValue = String(value).toLowerCase();
+
+    // ✅ plain string match (covers codes, ids, etc.)
+    if (strValue.includes(search)) return true;
+
+    // ✅ if value looks like a date, check multiple formats
+    if (/^\d{4}-\d{2}-\d{2}/.test(strValue)) {
+      const variants = formatDateVariants(strValue);
+      return variants.some(v => v.toLowerCase().includes(search));
+    }
+
+    return false;
+  };
+
   useEffect(() => {
-    if (searchTerm.length >= 3 || searchTerm === '') {
+    if (searchTerm.length >= 1 || searchTerm === '') {
       if (searchTerm === '') {
         onSearch(resourceGroups);
         return;
@@ -33,11 +71,18 @@ const ResourceGroupSearch: React.FC<ResourceGroupSearchProps> = ({ resourceGroup
           );
           if (matchesBasicDetails) return true;
         }
-        
+
         // Check OperationalDetails (object)
+        // if (group.OperationalDetails && typeof group.OperationalDetails === 'object') {
+        //   const matchesOperationalDetails = Object.values(group.OperationalDetails).some(detailValue =>
+        //     String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
+        //   );
+        //   if (matchesOperationalDetails) return true;
+        // }
+
         if (group.OperationalDetails && typeof group.OperationalDetails === 'object') {
           const matchesOperationalDetails = Object.values(group.OperationalDetails).some(detailValue =>
-            String(detailValue).toLowerCase().includes(lowerCaseSearchTerm)
+            matchesSearch(detailValue, lowerCaseSearchTerm)
           );
           if (matchesOperationalDetails) return true;
         }

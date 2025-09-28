@@ -354,6 +354,14 @@ export const TripExecutionHub = () => {
       editable: false,
       subRow: true,
     },
+    {
+      key: "DraftbilTotalAmount",
+      label: "Draft Bill Total Amount",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
 
   ];
 
@@ -816,7 +824,7 @@ export const TripExecutionHub = () => {
       key: 'WagonID', label: 'Wagon ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Wagon id Init")
     },
-    { key: 'TripId', label: 'Trip No', type: 'text' },
+    { key: 'TripId', label: 'Trip No.', type: 'text' },
     { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
     {
       key: 'TripStatus', label: 'Trip Status', type: 'lazyselect',
@@ -867,7 +875,7 @@ export const TripExecutionHub = () => {
       hideSearch: true,
       disableLazyLoading: true
     },
-    { key: 'TrainID', label: 'Train No', type: 'text' },
+    { key: 'TrainID', label: 'Train No.', type: 'text' },
     {
       key: 'SubServiceType', label: 'Sub Service Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Sub Service type Init"),
@@ -880,9 +888,9 @@ export const TripExecutionHub = () => {
       hideSearch: true,
       disableLazyLoading: true
     },
-    { key: 'PathNo', label: 'Path No', type: 'text' },
+    { key: 'PathNo', label: 'Path No.', type: 'text' },
     {
-      key: 'ContainerID', label: 'Container No', type: 'lazyselect',
+      key: 'ContainerID', label: 'Container No.', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Container ID Init"),
       hideSearch: true,
       disableLazyLoading: true
@@ -900,7 +908,7 @@ export const TripExecutionHub = () => {
       hideSearch: true,
       disableLazyLoading: true
     },
-    { key: 'CustomerRefNo', label: 'Customer Ref.No.', type: 'text' },
+    { key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'text' },
     {
       key: 'RefDocType', label: 'Ref. Doc. Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Ref Doc Type Init"),
@@ -908,7 +916,7 @@ export const TripExecutionHub = () => {
       disableLazyLoading: true
     },
     { key: 'RefDocNo', label: 'Ref. Doc. No.', type: 'text' },
-    { key: 'Incident No', label: 'Incident No', type: 'text' },
+    { key: 'Incident No', label: 'Incident No.', type: 'text' },
     {
       key: 'IncidentStatus', label: 'Incident status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Incident status Init"),
