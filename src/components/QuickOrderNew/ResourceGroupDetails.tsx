@@ -1235,11 +1235,27 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
+    // Generic helper to format a field with its name, fallback to '--' if name is empty/null
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
+
     return {
-      Resource: (data.Resource ? data.Resource : '') + (data.ResourceDescription ? ' || ' + data.ResourceDescription : ''),
-      ResourceType: (data.ResourceType ? data.ResourceType : '') + (data.ResourceTypeDescription ? ' || ' + data.ResourceTypeDescription : ''),
-      ServiceType: (data.ServiceType ? data.ServiceType : '') + (data.ServiceTypeDescription ? ' || ' + data.ServiceTypeDescription : ''),
-      SubServiceType: (data.SubServiceType ? data.SubServiceType : '') + (data.SubServiceTypeDescription ? ' || ' + data.SubServiceTypeDescription : ''),
+      Resource: formatFieldWithName(data.Resource, data.ResourceDescription),
+      ResourceType: formatFieldWithName(data.ResourceType, data.ResourceTypeDescription),
+      ServiceType: formatFieldWithName(data.ServiceType, data.ServiceTypeDescription),
+      SubServiceType: formatFieldWithName(data.SubServiceType, data.SubServiceTypeDescription),
+      // Resource: (data.Resource ? data.Resource : '') + (data.ResourceDescription ? ' || ' + data.ResourceDescription : ''),
+      // ResourceType: (data.ResourceType ? data.ResourceType : '') + (data.ResourceTypeDescription ? ' || ' + data.ResourceTypeDescription : ''),
+      // ServiceType: (data.ServiceType ? data.ServiceType : '') + (data.ServiceTypeDescription ? ' || ' + data.ServiceTypeDescription : ''),
+      // SubServiceType: (data.SubServiceType ? data.SubServiceType : '') + (data.SubServiceTypeDescription ? ' || ' + data.SubServiceTypeDescription : ''),
       // Resource: data.Resource,
       // ResourceType: data.ResourceType,
       // ServiceType: data.ServiceType,
@@ -1248,12 +1264,24 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }
 
   function normalizeOperationalDetails(data) {
+    console.log("data ....", data);
+    // Generic helper to format a field with its name, fallback to '--' if name is empty/null
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     if (data)
       return {
         // OperationalLocation: data.OperationalLocation,
-        OperationalLocation: (data.OperationalLocation ? data.OperationalLocation : '') + (data.OperationalLocationDesc ? ' || ' + data.OperationalLocationDesc : ''),
-        DepartPoint: (data.DepartPoint ? data.DepartPoint : '') + (data.DepartPointDescription ? ' || ' + data.DepartPointDescription : ''),
-        ArrivalPoint: (data.ArrivalPoint ? data.ArrivalPoint : '') + (data.ArrivalPointDescription ? ' || ' + data.ArrivalPointDescription : ''),
+        OperationalLocation: formatFieldWithName(data.OperationalLocation, data.OperationalLocationDesc),
+        DepartPoint: formatFieldWithName(data.DepartPoint, data.DepartPointDescription),
+        ArrivalPoint: formatFieldWithName(data.ArrivalPoint, data.ArrivalPointDescription),
         // DepartPoint: data.DepartPoint,
         // ArrivalPoint: data.ArrivalPoint,
         FromDate: "",
@@ -1290,6 +1318,18 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }
 
   function normalizeBillingDetails(data) {
+    console.log("data ....", data);
+    // Generic helper to format a field with its name, fallback to '--' if name is empty/null
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     // This function normalizes billing details data so it can be used as initial values for billingDetailsForm.
     // It ensures the form fields are pre-filled with the correct values from the store.
     if (!data || typeof data !== 'object') return {};
@@ -1300,8 +1340,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       UnitPrice: data.UnitPrice ?? 0,
       BillingQty: data.BillingQty ?? 0,
       // Tariff: data.Tariff ?? '',
-      Tariff: (data.Tariff ? data.Tariff : '') + (data.TariffDescription ? ' || ' + data.TariffDescription : ''),
-      TariffType: (data.TariffType ? data.TariffType : '') + (data.TariffTypeDescription ? ' || ' + data.TariffTypeDescription : ''),
+      Tariff: formatFieldWithName(data.Tariff, data.TariffDescription),
+      TariffType: formatFieldWithName(data.TariffType, data.TariffTypeDescription),
       Remarks: data.Remarks ?? '',
     };
   }

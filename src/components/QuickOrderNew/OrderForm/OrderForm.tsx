@@ -671,7 +671,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-        jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, ContractDesc: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+        jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
@@ -702,7 +702,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
         console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
-        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterClusterLocation, WBS: contract.WBS }));
+        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS }));
       }
     } catch (err) {
       setError(`Error fetching API data for${err}`);
@@ -725,13 +725,14 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
     console.log("data 11111", data);
-    // Helper to format Vendor field with '--' if VendorName is empty/null
-    function formatVendor(vendor, vendorName) {
-      if (vendor) {
-        if (vendorName && vendorName.trim() !== '') {
-          return vendor + ' || ' + vendorName;
+
+    // Generic helper to format a field with its name, fallback to '--' if name is empty/null
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
         } else {
-          return vendor + ' || --';
+          return id + ' || --';
         }
       }
       return '';
@@ -740,11 +741,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     return {
       OrderType: data.OrderType ? data.OrderType : '',
       QuickOrderDate: data.QuickOrderDate ? data.QuickOrderDate : '',
-      Contract: (data.Contract ? data.Contract : (data.ContractID ? data.ContractID : '')) + 
-        ((data.Contract || data.ContractID) && data.ContractDescription ? ' || ' + data.ContractDescription : ''),
-      Customer: (data.Customer ? data.Customer : '') + (data.CustomerName ? ' || ' + data.CustomerName : ''),
-      Vendor: formatVendor(data.Vendor, data.VendorName),
-      Cluster: (data.Cluster ? data.Cluster : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
+      // Contract: (data.Contract ? data.Contract : (data.ContractID ? data.ContractID : '')) + 
+      //   ((data.Contract || data.ContractID) && data.ContractDescription ? ' || ' + data.ContractDescription : ''),
+      Contract: formatFieldWithName(data.Contract, data.ContractDescription),
+      Customer: formatFieldWithName(data.Customer, data.CustomerName),
+      Vendor: formatFieldWithName(data.Vendor, data.VendorName),
+      Cluster: formatFieldWithName(data.Cluster, data.ClusterLocationDesc),
+      // Cluster: (data.Cluster ? data.Cluster : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
       CustomerQuickOrderNo: data.CustomerQuickOrderNo ? data.CustomerQuickOrderNo : '',
       Customer_Supplier_RefNo: data.Customer_Supplier_RefNo ? data.Customer_Supplier_RefNo : '',
       Remark1: data.Remark1 ? data.Remark1 : '',
@@ -1120,7 +1123,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           setOrderType(OrderType)
           // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
           // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-          jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, ContractDesc: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+          jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
           jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
           const additionalInfo = contract.ContractTariff;
           jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
@@ -1153,10 +1156,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       console.log("quickOrderData :", quickOrderData);
       jsonStore.setQuickOrderFields({ 
         OrderType: quickOrderData.OrderType ?? "",
-        ContractID: quickOrderData.ContractID ?? "",
-        ContractDesc: quickOrderData.ContractDesc ?? "",
+        Contract: quickOrderData.ContractID ?? "",
+        ContractDescription: quickOrderData.ContractDesc ?? "",
         Customer: quickOrderData.CustomerID ?? quickOrderData.Customer ?? "",
         Vendor: quickOrderData.VendorID ?? quickOrderData.Vendor ?? "",
+        VendorName: quickOrderData.VendorName ?? quickOrderData.VendorName ?? "",
         Cluster: quickOrderData.ClusterLocation ?? quickOrderData.Cluster ?? "",
         WBS: quickOrderData.WBS ?? "",
         Currency: quickOrderData.Currency ?? "",

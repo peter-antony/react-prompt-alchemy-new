@@ -44,16 +44,17 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, ContractDesc?: any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
+function setQuickOrderFields(fields: {OrderType?:any,Contract?:any, ContractDescription?: any, Customer?: any, Vendor?: any, VendorName?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     console.log("quickOrder111111111", quickOrder);
-    if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
-    if (fields.ContractDesc !== undefined) quickOrder.ContractDesc = fields.ContractDesc;
+    if (fields.Contract !== undefined) quickOrder.Contract = fields.Contract;
+    if (fields.ContractDescription !== undefined) quickOrder.ContractDesc = fields.ContractDescription;
     if (fields.Customer !== undefined) quickOrder.Customer = fields.Customer;
     if (fields.QuickOrderDate !== undefined) quickOrder.QuickOrderDate = fields.QuickOrderDate;
     if (fields.Currency !== undefined) quickOrder.Currency = fields.Currency;
     if (fields.Vendor !== undefined) quickOrder.Vendor = fields.Vendor;
+    if (fields.VendorName !== undefined) quickOrder.VendorName = fields.VendorName;
     if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
     if (fields.WBS !== undefined) quickOrder.WBS = fields.WBS;
     if (fields.OrderType !== undefined) quickOrder.OrderType = fields.OrderType;
