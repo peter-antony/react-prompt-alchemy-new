@@ -270,7 +270,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.correctiveAction,
+          description: err.response.data.description,
           variant: "destructive", // or "error"
         });
       }
@@ -400,7 +400,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.correctiveAction,
+          description: err.response.data.description,
           variant: "destructive", // or "error"
         });
       }
@@ -510,7 +510,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.correctiveAction,
+          description: err.response.data.description,
           variant: "destructive", // or "error"
         });
       }
@@ -800,7 +800,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.correctiveAction);
+          console.log(" catch", err.response.data.description);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -814,7 +814,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.correctiveAction,
+            description: err.response.data.description,
             variant: "destructive", // or "error"
           });
         }
@@ -949,7 +949,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.correctiveAction);
+          console.log(" catch", err.response.data.description);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -963,7 +963,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.correctiveAction,
+            description: err.response.data.description,
             variant: "destructive", // or "error"
           });
         }
@@ -1092,7 +1092,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.correctiveAction);
+          console.log(" catch", err.response.data.description);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1106,7 +1106,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.correctiveAction,
+            description: err.response.data.description,
             variant: "destructive", // or "error"
           });
         }
@@ -1878,7 +1878,55 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   };
   
   // Billing Details Panel Configuration
+  // const [billingDetailsConfig, setBillingDetailsConfig] = useState<PanelConfig>({
   const billingDetailsConfig: PanelConfig = {
+    // billingType: {
+    //   id: 'billingType',
+    //   label: 'Billing Type',
+    //   fieldType: 'select',
+    //   value: '',
+    //   mandatory: false,
+    //   visible: true,
+    //   editable: true,
+    //   order: 1,
+    //   width: 'full',
+    //   options: [
+    //     { value: 'standard', label: 'Standard Billing' },
+    //     { value: 'premium', label: 'Premium Billing' },
+    //     { value: 'enterprise', label: 'Enterprise Billing' }
+    //   ],
+    //   events: {
+    //     onChange: (value: string) => {
+    //       handleBillingTypeChange(value);
+    //     }
+    //   }
+    // },
+    // contractPrice: {
+    //   id: 'contractPrice',
+    //   label: 'Contract Price',
+    //   fieldType: 'card',
+    //   value: '€ 1200.00',
+    //   mandatory: false,
+    //   visible: true,
+    //   editable: true,
+    //   order: 2,
+    //   width: 'half',
+    //   color: '#10b981', // Emerald green background
+    //   fieldColour: '#047857' // Dark emerald text
+    // },
+    // netAmount: {
+    //   id: 'netAmount',
+    //   label: 'Net Amount',
+    //   fieldType: 'card',
+    //   value: '€ 5580.00',
+    //   mandatory: false,
+    //   visible: true,
+    //   editable: true,
+    //   order: 3,
+    //   width: 'half',
+    //   color: '#8b5cf6', // Purple background
+    //   fieldColour: '#6d28d9' // Dark purple text
+    // },
     ContractPrice: {
       id: 'ContractPrice',
       label: 'Contract Price',
@@ -1976,12 +2024,23 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       events: {
         onChange: (selected, event) => {
           // When the Tariff dropdown changes, update the TariffType field in the same form
-          const selectedTariffId = selected?.value;
+          const selectedTariffIdRaw = selected?.value;
+          console.log('Tariff id (raw):', selectedTariffIdRaw);
+          // Split the selectedTariffId at '||' and trim spaces
+          const selectedTariffId = selectedTariffIdRaw ? selectedTariffIdRaw.split('||')[0].trim() : '';
+          console.log('Tariff id (split):', selectedTariffId);
           const contractTariffList = jsonStore.getContractTariffList() || [];
           const matchedTariff = contractTariffList.find((item: any) => item.TariffID === selectedTariffId);
           console.log('Tariff changed:', selected);
           console.log('Matched Tariff Object:', matchedTariff);
-          
+          // When the Tariff changes, update the ContractPrice and NetAmount fields in the billingDetails form
+          if (matchedTariff && billingDetailsRef && billingDetailsRef.current && typeof billingDetailsRef.current.setFormValues === "function") {
+            const tariffRate = matchedTariff.TariffRate ? matchedTariff.TariffRate : "";
+            billingDetailsRef.current.setFormValues({
+              ContractPrice: tariffRate,
+              NetAmount: tariffRate,
+            });
+          }
           // Optionally update resource type and other fields in the store if needed
           if (matchedTariff) {
             jsonStore.setResourceType({ Resource: matchedTariff.Resource, ResourceType: matchedTariff.ResourceType });
@@ -2097,6 +2156,66 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       completed: false,
     },
   ];
+
+  // const handleBillingTypeChange = (billingType: string) => {
+  //   console.log('Billing type changed to:', billingType);
+  //   let contractPrice = '€ 1200.00';
+  //   let netAmount = '€ 5580.00';
+  //   let contractColor = '#10b981';
+  //   let contractTextColor = '#047857';
+  //   let netColor = '#8b5cf6';
+  //   let netTextColor = '#6d28d9';
+
+  //   switch (billingType) {
+  //     case 'standard':
+  //       contractPrice = '€ 1000.00';
+  //       netAmount = '€ 3720.00';
+  //       contractColor = '#10b981';
+  //       contractTextColor = '#047857';
+  //       netColor = '#8b5cf6';
+  //       netTextColor = '#6d28d9';
+  //       break;
+  //     case 'premium':
+  //       contractPrice = '€ 2000.00';
+  //       netAmount = '€ 6975.00';
+  //       contractColor = '#f59e0b';
+  //       contractTextColor = '#d97706';
+  //       netColor = '#ef4444';
+  //       netTextColor = '#dc2626';
+  //       break;
+  //     case 'enterprise':
+  //       contractPrice = '€ 3000.00';
+  //       netAmount = '€ 11625.00';
+  //       contractColor = '#6366f1';
+  //       contractTextColor = '#4f46e5';
+  //       netColor = '#ec4899';
+  //       netTextColor = '#db2777';
+  //       break;
+  //     default:
+  //       break;
+  //   }
+
+  //   console.log('Updating prices:', { contractPrice, netAmount });
+  //   setBillingDetailsConfig(prev => {
+  //     const newConfig = {
+  //       ...prev,
+  //       contractPrice: {
+  //         ...prev.contractPrice,
+  //         value: contractPrice,
+  //         color: contractColor,
+  //         fieldColour: contractTextColor
+  //       },
+  //       netAmount: {
+  //         ...prev.netAmount,
+  //         value: netAmount,
+  //         color: netColor,
+  //         fieldColour: netTextColor
+  //       }
+  //     };
+  //     console.log('New snippet config:', newConfig);
+  //     return newConfig;
+  //   });
+  // };
 
   const setCurrentStepIndex = () => {
     setCurrentStep(1);

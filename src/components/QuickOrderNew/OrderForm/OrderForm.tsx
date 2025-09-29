@@ -671,7 +671,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-        jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+        jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, ContractDesc: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
@@ -725,13 +725,25 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
     console.log("data 11111", data);
+    // Helper to format Vendor field with '--' if VendorName is empty/null
+    function formatVendor(vendor, vendorName) {
+      if (vendor) {
+        if (vendorName && vendorName.trim() !== '') {
+          return vendor + ' || ' + vendorName;
+        } else {
+          return vendor + ' || --';
+        }
+      }
+      return '';
+    }
+
     return {
       OrderType: data.OrderType ? data.OrderType : '',
       QuickOrderDate: data.QuickOrderDate ? data.QuickOrderDate : '',
       Contract: (data.Contract ? data.Contract : (data.ContractID ? data.ContractID : '')) + 
         ((data.Contract || data.ContractID) && data.ContractDescription ? ' || ' + data.ContractDescription : ''),
       Customer: (data.Customer ? data.Customer : '') + (data.CustomerName ? ' || ' + data.CustomerName : ''),
-      Vendor: (data.Vendor ? data.Vendor : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
+      Vendor: formatVendor(data.Vendor, data.VendorName),
       Cluster: (data.Cluster ? data.Cluster : '') + (data.VendorName ? ' || ' + data.VendorName : ''),
       CustomerQuickOrderNo: data.CustomerQuickOrderNo ? data.CustomerQuickOrderNo : '',
       Customer_Supplier_RefNo: data.Customer_Supplier_RefNo ? data.Customer_Supplier_RefNo : '',
@@ -996,7 +1008,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         setError(`Error fetching API data for resource group`);
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.correctiveAction,
+          description: err.response.data.description,
           variant: "destructive", // or "error"
         });
       }
@@ -1108,7 +1120,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           setOrderType(OrderType)
           // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
           // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-          jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+          jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, ContractDesc: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
           jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
           const additionalInfo = contract.ContractTariff;
           jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
@@ -1142,6 +1154,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       jsonStore.setQuickOrderFields({ 
         OrderType: quickOrderData.OrderType ?? "",
         ContractID: quickOrderData.ContractID ?? "",
+        ContractDesc: quickOrderData.ContractDesc ?? "",
         Customer: quickOrderData.CustomerID ?? quickOrderData.Customer ?? "",
         Vendor: quickOrderData.VendorID ?? quickOrderData.Vendor ?? "",
         Cluster: quickOrderData.ClusterLocation ?? quickOrderData.Cluster ?? "",
@@ -1345,7 +1358,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: err.response.data.correctiveAction,
+        description: err.response.data.description,
         variant: "destructive", // or "error"
       });
     }

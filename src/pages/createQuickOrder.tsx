@@ -228,7 +228,7 @@ const CreateQuickOrder = () => {
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: "Something went wrong while saving. Please try again.",
+        description: err.response.data.description,
         variant: "destructive", // or "error"
       });
     }
@@ -283,7 +283,7 @@ const CreateQuickOrder = () => {
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: "Something went wrong while saving. Please try again.",
+        description: err.response.data.description,
         variant: "destructive", // or "error"
       });
     }
@@ -401,7 +401,7 @@ const CreateQuickOrder = () => {
       setError(`Error submitting amend data`);
       toast({
         title: "⚠️ Submission failed",
-        description: "Something went wrong while submitting amendments. Please try again.",
+        description: err.response.data.description,
         variant: "destructive",
       });
     }

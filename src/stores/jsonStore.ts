@@ -44,11 +44,12 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
+function setQuickOrderFields(fields: {OrderType?:any,ContractID?:any, ContractDesc?: any, Customer?: any, Vendor?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     console.log("quickOrder111111111", quickOrder);
     if (fields.ContractID !== undefined) quickOrder.Contract = fields.ContractID;
+    if (fields.ContractDesc !== undefined) quickOrder.ContractDesc = fields.ContractDesc;
     if (fields.Customer !== undefined) quickOrder.Customer = fields.Customer;
     if (fields.QuickOrderDate !== undefined) quickOrder.QuickOrderDate = fields.QuickOrderDate;
     if (fields.Currency !== undefined) quickOrder.Currency = fields.Currency;
