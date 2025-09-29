@@ -176,6 +176,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     fetchAll();
   }, []);
   useEffect(() => {
+    console.log("load data=== ", jsonStore.getQuickOrder());
     const quickOrder = jsonStore.getQuickOrder();
     if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
       setOrderType(quickOrder.OrderType || 'BUY');
@@ -541,7 +542,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 8,
-      options: qcList1.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: qcList1?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remark1: {
       id: 'Remark1',
@@ -589,7 +590,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 12,
-      options: qcList2.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: qcList2?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'QC', value: 'QC' },
       //   { label: 'QA', value: 'QA' },
@@ -605,7 +606,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 13,
-      options: qcList3.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      options: qcList3?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks2: {
       id: 'Remarks2',
@@ -706,7 +707,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     } catch (err) {
       setError(`Error fetching API data for${err}`);
       console.log("ERROR IN COMBO DROPDOWN:: ", err);
-      jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+      // jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
       setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
 
       // setApiData(data);
@@ -1089,47 +1090,52 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     console.log("contractId ---", jsonStore.getQuickOrder());
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: jsonStore.getQuickOrder().Contract, type: OrderType });
-      console.log("COMBO DROPDOWN DATA", JSON.parse(data?.data?.ResponseData));
+      console.log("COMBO DROPDOWN DATA", data);
       console.log("ORDERTYPE :", OrderType);
       // setContracts(JSON.parse(data?.data?.ResponseData));
-      const parsedData: any = JSON.parse(data?.data?.ResponseData);
-      const contract: any = parsedData;
-      // Set ContractTariff array in jsonStore for global access
-      if (parsedData && parsedData.ContractTariff) {
-        jsonStore.setContractTariffList(parsedData.ContractTariff);
-      }
-      console.log("CONTRACT DATA:: ", contract.VendorID);
-      if (contract) {
-        setOrderType(OrderType)
-        // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
-        // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-        jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
-        jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
-        const additionalInfo = contract.ContractTariff;
-        jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
-        jsonStore.setTariffFields({
-          // tariff: additionalInfo[0].TariffID,
-          tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
-          contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
-          // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
-          // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
-        });
-        // jsonStore.setTariffDateFields({
-        //   fromDate: additionalInfo[0].ContractTariffValidFrom
-        //     ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
-        //     : "",
-        //   toDate: additionalInfo[0].ContractTariffValidTo
-        //     ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
-        //     : "",
-        // });
-        // Set ValidFrom and ValidTo in jsonStore using a new set method
-        
-        console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
-        console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())       
-        
+      let parsedData: any = {};
+      let contract: any = {};
+      if(data?.data?.ResponseData){
+        parsedData = JSON.parse(data?.data?.ResponseData);
+        contract = parsedData;
+        // Set ContractTariff array in jsonStore for global access
+        if (parsedData && parsedData.ContractTariff) {
+          jsonStore.setContractTariffList(parsedData.ContractTariff);
+        }
+      
+        console.log("CONTRACT DATA:: ", contract.VendorID);
+        if (contract) {
+          setOrderType(OrderType)
+          // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
+          // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+          jsonStore.setQuickOrderFields({ OrderType: OrderType, ContractID: contract.ContractID, Customer: contract.CustomerID, Vendor: contract.VendorID, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+          jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
+          const additionalInfo = contract.ContractTariff;
+          jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
+          jsonStore.setTariffFields({
+            // tariff: additionalInfo[0].TariffID,
+            tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
+            contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+            unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+            netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+            tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+            // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+            // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+          });
+          // jsonStore.setTariffDateFields({
+          //   fromDate: additionalInfo[0].ContractTariffValidFrom
+          //     ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+          //     : "",
+          //   toDate: additionalInfo[0].ContractTariffValidTo
+          //     ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+          //     : "",
+          // });
+          // Set ValidFrom and ValidTo in jsonStore using a new set method
+          
+          console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
+          console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())       
+          
+        }
       }
       const quickOrderData = jsonStore.getQuickOrder();
       console.log("quickOrderData :", quickOrderData);
@@ -1221,7 +1227,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     } catch (err) {
       setError(`Error fetching API data for${err}`);
       console.log("ERROR IN COMBO DROPDOWN:: ", err);
-      jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
+      // jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
       setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
 
       // setApiData(data);

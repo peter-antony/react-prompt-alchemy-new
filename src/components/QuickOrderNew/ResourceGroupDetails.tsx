@@ -71,11 +71,48 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   ];
 
   const handleProceedToNext = async () => {
+    // Helper function to truncate at pipe symbol
+    const truncateAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        return value.split("||")[0].trim();
+      }
+      return value;
+    };
+
+    // Helper to recursively truncate all dropdown fields in an object
+    const truncateDropdowns = (obj: any) => {
+      if (!obj || typeof obj !== "object") return obj;
+      const newObj: any = Array.isArray(obj) ? [] : {};
+      for (const key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+        const val = obj[key];
+        // If value is an object with a dropdown property, truncate it
+        if (val && typeof val === "object" && "dropdown" in val) {
+          newObj[key] = {
+            ...val,
+            dropdown: truncateAtPipe(val.dropdown)
+          };
+          // If input property exists, keep as is
+          if ("input" in val) {
+            newObj[key].input = val.input;
+          }
+        } else if (typeof val === "string") {
+          // If value is a string, truncate if it has a pipe
+          newObj[key] = truncateAtPipe(val);
+        } else if (typeof val === "object" && val !== null) {
+          // Recursively process nested objects
+          newObj[key] = truncateDropdowns(val);
+        } else {
+          newObj[key] = val;
+        }
+      }
+      return newObj;
+    };
     const formValues = {
-      basicDetails: basicDetailsRef.current?.getFormValues() || {},
-      operationalDetails: operationalDetailsRef.current?.getFormValues() || {},
-      moreInfoDetailsRef: moreInfoDetailsRef.current?.getFormValues() || {},
-      billingDetails: billingDetailsRef.current?.getFormValues() || {}
+      basicDetails: truncateDropdowns(basicDetailsRef.current?.getFormValues() || {}),
+      operationalDetails: truncateDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
+      moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
+      billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
     };
     console.log("resourceId edit next :: ", resourceId);
     if (isEditQuickOrder && resourceId) {
@@ -596,6 +633,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           // "ModeFlag": "Update",
           // "QuickOrderNo": jsonStore.getQuickUniqueID()
         });
+        console.log("111111111111", jsonStore.getQuickOrder());
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
           "ModeFlag": "Update",
@@ -660,6 +698,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             ResourceGroup: resourceGroupsArr
           });
         }
+        console.log("22222222222", jsonStore.getQuickOrder());
         console.log("newMoreInfoDetails", newMoreInfoDetails);
         let fullResourceJson = newMoreInfoDetails;
         if (fullResourceJson) {
@@ -695,7 +734,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           ...quickOrder,
           ResourceGroup: resourceGroupsArr
         });
-
+        console.log("33333333333333", jsonStore.getQuickOrder());
         jsonStore.setResourceJsonData({
           ...jsonStore.getResourceJsonData(),
           MoreRefDocs: newMoreInfoDetails
@@ -1226,6 +1265,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }
 
   function normalizeMoreInfoDetails(data) {
+    console.log("data ====", data);
     if (data)
       return {
       PrimaryDocTypeValue:data.PrimaryDocTypeValue,
@@ -1346,12 +1386,43 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }, []);
   useEffect(() => {
     setLoading(false);
+    console.log("load data=== ", jsonStore.getQuickUniqueID());
+    console.log("load data=== ", jsonStore.getQuickOrder());
     console.log("load isEditQuickOrder ", isEditQuickOrder);
+    quickOrderService.getQuickOrder(jsonStore.getQuickUniqueID()).then((fetchRes: any) => {
+      console.log("fetchRes:: ", fetchRes);
+      let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+      console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+      console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+      jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+      const fullJson2 = jsonStore.getJsonData();
+      console.log("FULL JSON 33:: ", fullJson2);
+    })
     console.log("load resourceId == ", resourceId)
     if (isEditQuickOrder && resourceId) {
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getBasicDetailsByResourceUniqueID(resourceId) || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getOperationalDetailsByResourceUniqueID(resourceId) || {}));
-      setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {}));
+      // Get the raw MoreInfo details from the store
+      const rawMoreInfo = jsonStore.getMoreInfoDetailsByResourceUniqueID(resourceId) || {};
+      console.log("rawMoreInfo ====", rawMoreInfo);
+      // Helper to normalize dropdown+input fields (inputDropdown) and date fields
+      const normalizeMoreInfoDetailsWithInputDropdown = (data) => {
+        return {
+          PrimaryDocType: {
+            dropdown: data.PrimaryDocType || "",
+            input: data.PrimaryDocNo || ""
+          },
+          SecondaryDocType: {
+            dropdown: data.SecondaryDocType || "",
+            input: data.SecondaryDocNo || ""
+          },
+          PrimaryDocDate: data.PrimaryDocDate || "",
+          SecondaryDocDate: data.SecondaryDocDate || "",
+          // Add more fields as needed, following the same pattern
+        };
+      };
+      console.log("rawMoreInfo ===", rawMoreInfo);
+      setMoreInfoDetailsData(normalizeMoreInfoDetailsWithInputDropdown(rawMoreInfo));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
       console.log("resourceId Edit == ", resourceId);
       jsonStore.setTariffDateFields({
@@ -1370,7 +1441,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       console.log("jsonStore.GETBILLINGDETAILS() == ", jsonStore.getResourceGroupBillingDetails())
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getResourceGroupBasicDetails() || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getResourceGroupOperationalDetails() || {}));
-      // setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getResourceGroup() || {}));
+      setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getResourceGroupMoreRefDocs() || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getResourceGroupBillingDetails() || {}));
       setLoading(true);
     }
@@ -2356,8 +2427,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             startingTabIndex={currentTabIndex}
                             panelTitle={moreInfoTitle}
                             panelConfig={moreInfoPanelConfig}
-                            formName="basicDetailsForm"
-                            initialData={basicDetailsData}
+                            formName="moreInfoDetailsForm"
+                            initialData={moreInfoDetailsData}
                             onTitleChange={setmoreInfoTitle}
                             onWidthChange={setBasicDetailsWidth}
                             getUserPanelConfig={getUserPanelConfig}
