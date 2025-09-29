@@ -382,7 +382,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'SELL',
       editable: true,
       order: 4,
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: false,
       // options: customers.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -423,7 +423,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 4,
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
@@ -494,6 +494,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 6,
+      maxLength: 40,
       // hideSearch: true,
       // disableLazyLoading: false,
       // fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -529,6 +530,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 7,
       placeholder: '',
+      maxLength: 40,
       // searchData: customerRefIds, // <-- This is the local array for suggestions
     },
     QCUserDefined1: {
@@ -542,6 +544,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 8,
+      maxLength: 40,
       options: qcList1?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remark1: {
@@ -554,7 +557,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 9,
-      placeholder: ''
+      placeholder: '',
+      maxLength: 40,
     },
     Summary: {
       id: 'Summary',
@@ -566,7 +570,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 10,
-      placeholder: ''
+      placeholder: '',
+      maxLength: 250,
     },
     WBS: {
       id: 'WBS',
@@ -578,7 +583,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 11,
-      placeholder: ''
+      placeholder: '',
+      maxLength: 40
     },
     QCUserDefined2: {
       id: 'QCUserDefined2',
@@ -590,6 +596,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 12,
+      maxLength: 40,
       options: qcList2?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'QC', value: 'QC' },
@@ -606,6 +613,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 13,
+      maxLength: 40,
       options: qcList3?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks2: {
@@ -619,6 +627,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 14,
       placeholder: '',
       width: 'full',
+      maxLength: 40,
     },
     Remarks3: {
       id: 'Remarks3',
@@ -631,6 +640,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 15,
       placeholder: '',
       width: 'full',
+      maxLength: 40,
     }
   });
   //convert date time object to date value to bind in datepicker
@@ -680,7 +690,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
           // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
@@ -1132,7 +1142,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
             tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
             contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-            netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+            // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
             // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
             // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",

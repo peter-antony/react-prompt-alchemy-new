@@ -25,6 +25,7 @@ interface DynamicLazySelectProps {
   onBlur?: (e: React.FocusEvent) => void;
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
+  tooltip?: any;
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -42,7 +43,8 @@ export function DynamicLazySelect({
   onFocus,
   onBlur,
   hideSearch = false,
-  disableLazyLoading = false
+  disableLazyLoading = false,
+  tooltip,
 }: DynamicLazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<LazySelectOption[]>([]);
@@ -208,15 +210,16 @@ export function DynamicLazySelect({
           onClick={handleButtonClick}
           onFocus={onFocus}
           onBlur={onBlur}
+          title= {getDisplayValue()}
         >
           <span className="truncate">{getDisplayValue()}</span>
           <div className="flex items-center gap-1">
-            {hasValue && (
+            {/* {hasValue && (
               <X
                 className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
                 onClick={handleClear}
               />
-            )}
+            )} */}
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>
         </Button>

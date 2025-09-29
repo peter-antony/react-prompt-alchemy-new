@@ -25,6 +25,7 @@ export interface InputDropdownProps {
   onBlur?: (e: React.FocusEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onKeyUp?: (e: React.KeyboardEvent) => void;
+  title?: any;
 }
 
 const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
@@ -35,6 +36,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     placeholder = '',
     className,
     tabIndex,
+    title,
     onDropdownClick,
     onInputClick,
     onFocus,

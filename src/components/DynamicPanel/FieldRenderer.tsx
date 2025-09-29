@@ -22,6 +22,7 @@ interface FieldRendererProps {
   validationErrors?: Record<string, string>;
   mandatory:boolean;
   allowedType?: string; // To restrict input types
+  tooltip?: string;
 }
 
 // Add this helper above your component:
@@ -46,7 +47,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   tabIndex,
   validationErrors = {},
   mandatory,
-  allowedType
+  allowedType,
+  tooltip
 }) => {
   // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
@@ -408,6 +410,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   onBlur={events?.onBlur}
                   hideSearch={config.hideSearch}
                   disableLazyLoading={config.disableLazyLoading}
+                  tooltip={tooltip}
                 />
               </div>
             );
@@ -597,6 +600,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   onKeyDown={events?.onKeyDown}
                   onKeyUp={events?.onKeyUp}
                   className={borderClass}
+                  title={tooltip}
                 />
               </div>
             );
