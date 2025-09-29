@@ -1268,11 +1268,17 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     console.log("data ====", data);
     if (data)
       return {
-      PrimaryDocTypeValue:data.PrimaryDocTypeValue,
-      SecondaryDocType:data.SecondaryDocType,
-      SecondaryDocTypeValue:data.SecondaryDocTypeValue,
-      PrimaryDocDate:data.PrimaryDocDate,
-      SecondaryDocDate:data.SecondaryDocDate
+      PrimaryDocType: data.PrimaryDocType,
+      PrimaryDocNo: data.PrimaryDocNo,
+      PrimaryDocDate: data.PrimaryDocDate,
+      SecondaryDocType: data.SecondaryDocType,
+      SecondaryDocNo: data.SecondaryDocNo,
+      SecondaryDocDate: data.SecondaryDocDate,
+      // PrimaryDocTypeValue:data.PrimaryDocTypeValue,
+      // SecondaryDocType:data.SecondaryDocType,
+      // SecondaryDocTypeValue:data.SecondaryDocTypeValue,
+      // PrimaryDocDate:data.PrimaryDocDate,
+      // SecondaryDocDate:data.SecondaryDocDate
       };
   }
 

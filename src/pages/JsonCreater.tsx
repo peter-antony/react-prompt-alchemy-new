@@ -56,15 +56,21 @@ const Resource_Group_BASIC_JSON = {
   "ResourceStatus": "Fresh",
   "BasicDetails": {
     "Resource": "",
+    "ResourceDescription": "",
     "ResourceType": "",
+    "ResourceTypeDescription": "",
     "ServiceType": "",
-    "SubServiceType": ""
+    "ServiceTypeDescription": "",
+    "SubServiceType": "",
+    "SubServiceTypeDescription": ""
   },
   "OperationalDetails": {
     "OperationalLocation": "",
     "OperationalLocationDesc": "",
     "DepartPoint": "",
+    "DepartPointDescription": "",
     "ArrivalPoint": "",
+    "ArrivalPointDescription": "",
     "FromDate": "",
     "FromTime": "",
     "ToDate": "",
@@ -80,9 +86,9 @@ const Resource_Group_BASIC_JSON = {
     "UnitPrice": '',
     "DraftBillStatus": null,
     "Tariff": null,
-    "TariffTypeDescription": null,
     "TariffIDDescription": null,
     "TariffType": "",
+    "TariffTypeDescription": null,
     "BillingRemarks": "",
     "InternalOrderNo": null
   },
@@ -234,15 +240,21 @@ const Resource_Group_JSON = {
   "ResourceStatus": "Fresh",
   "BasicDetails": {
     "Resource": "",
+    "ResourceDescription": "",
     "ResourceType": "",
+    "ResourceTypeDescription": "",
     "ServiceType": "",
-    "SubServiceType": ""
+    "ServiceTypeDescription": "",
+    "SubServiceType": "",
+    "SubServiceTypeDescription": ""
   },
   "OperationalDetails": {
     "OperationalLocation": "",
     "OperationalLocationDesc": "",
     "DepartPoint": "",
+    "DepartPointDescription": "",
     "ArrivalPoint": "",
+    "ArrivalPointDescription": "",
     "FromDate": "",
     "FromTime": "",
     "ToDate": "",
@@ -258,9 +270,9 @@ const Resource_Group_JSON = {
     "UnitPrice": '',
     "DraftBillStatus": null,
     "Tariff": null,
-    "TariffTypeDescription": null,
     "TariffIDDescription": null,
     "TariffType": "",
+    "TariffTypeDescription": null,
     "BillingRemarks": "",
     "InternalOrderNo": null
   },
