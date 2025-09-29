@@ -250,6 +250,7 @@ export function DynamicLazySelect({
                   isSelected(option.value) && "bg-accent"
                 )}
                 onClick={() => handleSelect(option.value)}
+                title={option.value}
               >
                 {multiSelect && (
                   <Checkbox
