@@ -84,7 +84,7 @@ export const TripExecutionHub = () => {
       order: 4
     },
     {
-      key: "From",
+      key: "DeparturePointDescription",
       label: "Departure Point",
       type: "Text",
       sortable: true,
@@ -111,7 +111,7 @@ export const TripExecutionHub = () => {
       order: 7
     },
     {
-      key: "To",
+      key: "ArrivalPointDescription",
       label: "Arrival Point",
       type: "Text",
       sortable: true,
@@ -938,7 +938,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'WorkshopStatus', label: 'Workshop Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Workshop Status Init"),
+      fetchOptions: makeLazyFetcher("Work order status"),
       hideSearch: true,
       disableLazyLoading: true
     },
