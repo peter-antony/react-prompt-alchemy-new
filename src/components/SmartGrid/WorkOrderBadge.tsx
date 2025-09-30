@@ -142,7 +142,7 @@ export const WorkOrderBadge: React.FC<WorkOrderBadgeProps> = ({
 
       {isOpen && createPortal(
         <div
-          className="fixed z-[9999] w-56 p-0 border border-gray-200 shadow-lg rounded-lg bg-white max-h-48 overflow-y-auto"
+          className="fixed z-[9999] max-w-md p-0 border border-gray-200 shadow-lg rounded-lg bg-white max-h-48 overflow-y-auto"
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,

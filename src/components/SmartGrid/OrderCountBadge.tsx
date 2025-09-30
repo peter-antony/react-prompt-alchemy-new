@@ -4,24 +4,16 @@ import { UsersRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
-interface Customer {
-  Customer: string;
-  CustomerDescription?: string;
-  id?: string;
-  name?: string;
-  description?: string;
-}
-
-interface CustomerCountBadgeProps {
+interface OrdersBadgeProps {
   // count can be passed as number or string (we normalize it)
   count?: number | string;
-  customers?: Customer[];
+  COrderaData?: any[];
   className?: string;
 }
 
-export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
+export const OrderCountBadge: React.FC<OrdersBadgeProps> = ({
   count, // may be number (length) or string like "+3"
-  customers = [],
+  COrderaData = [],
   className
 }) => {
   // Hooks must always run unconditionally at top-level
@@ -30,22 +22,22 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   const badgeRef = useRef<HTMLDivElement>(null);
 
   // Normalize count to a number. Prefer explicit prop, fall back to customers.length
-  const countNumber = Number(count ?? customers.length) || customers.length || 0;
+  const countNumber = Number(count ?? COrderaData.length) || COrderaData.length || 0;
 
-  // Default customers if none provided
-  const defaultCustomers: Customer[] = [
-    // { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
-    // { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
-    // { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
+  // Default customer orders if none provided
+  const defaultCustomerOrders: any[] = [
+    // { CustomerOrder: "CO00000123" },
+    // { CustomerOrder: "CO00003214" },
+    // { CustomerOrder: "CO00012345" }
   ];
 
-  const displayCustomers = customers && customers.length > 0 ? customers : defaultCustomers;
+  const displayOrders = COrderaData && COrderaData.length > 0 ? COrderaData : defaultCustomerOrders;
 
   const calculatePosition = () => {
     if (badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
       const popoverWidth = 224; // w-56 = 224px
-      const popoverHeight = Math.min(displayCustomers.length * 48 + 24, 200); // Estimate height
+      const popoverHeight = Math.min(displayOrders.length * 48 + 24, 200); // Estimate height
 
       let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
       let top = rect.bottom + 6;
@@ -103,7 +95,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
 
   return (
     <>
-      <div ref={badgeRef} className="inline-block">
+      <div ref={badgeRef} className="inline-block OrderListBadge">
         {countNumber > 1 && (
           <Badge
             variant="outline"
@@ -124,18 +116,16 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
           // When there's exactly one customer, show the customer's name inline
           <div
             className={cn(
-              "text-sm font-medium text-gray-600 truncate",
+              "text-sm font-medium text-blue-600 truncate",
               "px-2 py-0.5 rounded",
               className
             )}
-            title={displayCustomers[0]?.CustomerDescription}
+            title={displayOrders[0]?.CustomerOrder}
           >
             {/* {displayCustomers && displayCustomers.length > 0
-              ? (displayCustomers[0]?.Customer || displayCustomers[0]?.name || String(countNumber))
+              ? (displayWorkOrders[0]?.WorkorderNo || displayWorkOrders[0]?.Workorderstatus || String(countNumber))
               : String(countNumber)} */}
-            { displayCustomers?.[0]?.Customer && displayCustomers[0]?.CustomerDescription
-              ? `${displayCustomers[0]?.CustomerDescription} || ${displayCustomers?.[0]?.Customer}`
-              : displayCustomers?.[0]?.CustomerDescription || displayCustomers?.[0]?.Customer}
+            {displayOrders?.[0]?.CustomerOrder}
           </div>
         )}
       </div>
@@ -150,20 +140,17 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
         >
           <div className="p-3">
             <div className="space-y-1">
-              {displayCustomers.map((customer: any, index) => (
+              {displayOrders.map((customerOrder: any, index) => (
                 <div
-                  key={'Customer-' + index}
+                  key={'CustomerOrder-' + index}
                   className="flex items-start space-x-3 p-2 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                 >
                   <div className="flex-shrink-0">
                     <UsersRound className="h-4 w-4 text-gray-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-normal text-gray-900 truncate">
-                      {customer.CustomerDescription || customer.name}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      {customer.Customer || (customer.description ?? customer.Customer)}
+                    <div className="text-sm font-normal text-gray-900 truncate text-blue-600">
+                      {customerOrder.CustomerOrder}
                     </div>
                   </div>
                 </div>

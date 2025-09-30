@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { dateFormatter, dateTimeFormatter, formattedAmount } from '@/utils/formatter';
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { WorkOrderBadge } from './WorkOrderBadge';
+import { OrderCountBadge } from './OrderCountBadge';
 
 interface DraggableSubRowProps {
   row: any;
@@ -159,10 +160,33 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             </div>
           );
         } else if (column.key === "CustomerOrders") {
+          // return (
+          //   <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
+          //     <a>{firstCustomer?.CustomerOrder}</a>
+          //   </div>
+          // );
+          const customerOrders = row?.CustomerOrderDetails || [];
           return (
-            <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
-              <a>{firstCustomer?.CustomerOrder}</a>
-            </div>
+            <>
+              {customerOrders.length > 0 ? (
+                <div className="font-normal text-[13px] text-blue-600">
+                  {customerOrders.map((customer: any, index: number) => (
+                    <span key={index} className="hover:underline cursor-pointer text-blue-600" title={customer.CustomerOrder}>
+                      {/* <a
+                        href="#"
+                        className="hover:underline cursor-pointer text-blue-600"
+                        title={customer.CustomerOrder}
+                      > */}
+                        {customer.CustomerOrder}
+                      {/* </a> */}
+                      {index < customerOrders.length - 1 && ", "}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-400 text-[13px]"></div>
+              )}
+            </>
           );
         }
       }
@@ -191,8 +215,17 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           />
         );
       }
-
     }
+    // else if (column.key == "OrderDetailsList" && column.type === 'CustomerCountBadge') {
+    //   let OrderData = row?.CustomerOrderDetails || [];
+    //   return (
+    //     <OrderCountBadge
+    //       count={OrderData?.length}
+    //       COrderaData={OrderData}
+    //       className="text-center"
+    //     />
+    //   );
+    // }
 
     const displayContent = (() => {
       switch (column.type) {

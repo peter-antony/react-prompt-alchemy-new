@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { WorkOrderBadge } from './WorkOrderBadge';
+import { OrderCountBadge } from './OrderCountBadge';
 
 interface CellRendererProps {
   value: any;
@@ -178,6 +179,21 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
               : row?.CustomerOrVendorName || row?.CustomerOrVendor}
           </div>
         )}
+
+        {column.key === "DeparturePointDescription" && (
+          <div className="text-gray-900 font-normal truncate text-[13px]">
+            {row?.DeparturePointDescription && row?.DeparturePoint
+              ? `${row.DeparturePointDescription} || ${row.DeparturePoint}`
+              : row?.DeparturePointDescription || row?.DeparturePoint}
+          </div>
+        )}
+        {column.key === "ArrivalPointDescription" && (
+          <div className="text-gray-900 font-normal truncate text-[13px]">
+            {row?.ArrivalPointDescription && row?.ArrivalPoint
+              ? `${row.ArrivalPointDescription} || ${row.ArrivalPoint}`
+              : row?.ArrivalPointDescription || row?.ArrivalPoint}
+          </div>
+        )}
       </div>
     );
   }
@@ -204,11 +220,40 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
             {firstCustomer?.SubServiceDescription}
           </div>
         );
-      } else if (column.key === "CustomerOrders") {
+      } 
+      // else if (column.key === "CustomerOrders") {
+      //   return (
+      //     <>
+      //     <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
+      //       <a>{firstCustomer?.CustomerOrder}</a>
+      //     </div>
+      //     </>
+      //   );
+      // }
+      else if (column.key === "CustomerOrders") {
+        const customerOrders = row?.CustomerOrderDetails || [];
+
         return (
-          <div className="font-normal truncate text-[13px] text-blue-600" title={firstCustomer?.CustomerOrder}>
-            <a>{firstCustomer?.CustomerOrder}</a>
-          </div>
+          <>
+            {customerOrders.length > 0 ? (
+              <div className="font-normal text-[13px] text-blue-600">
+                {customerOrders.map((customer: any, index: number) => (
+                  <span key={index} className="hover:underline cursor-pointer text-blue-600" title={customer.CustomerOrder}>
+                    {/* <a
+                      href="#"
+                      className="hover:underline cursor-pointer text-blue-600"
+                      title={customer.CustomerOrder}
+                    > */}
+                      {customer.CustomerOrder}
+                    {/* </a> */}
+                    {index < customerOrders.length - 1 && ", "}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-400 text-[13px]"></div>
+            )}
+          </>
         );
       }
     }
@@ -474,6 +519,18 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         />
       );
     }
+
+    // if(column.key == "OrderDetailsList") {
+    //   const customerOrdersListData = row?.CustomerOrderDetails || [];
+    //   return (
+    //     <OrderCountBadge
+    //       count={customerOrdersListData?.length}
+    //       COrderaData={customerOrdersListData}
+    //       className="text-center"
+    //     />
+    //   )
+
+    // }
 
     return null; // Fallback
   };

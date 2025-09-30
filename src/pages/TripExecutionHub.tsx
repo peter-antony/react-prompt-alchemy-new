@@ -86,7 +86,7 @@ export const TripExecutionHub = () => {
     {
       key: "DeparturePointDescription",
       label: "Departure Point",
-      type: "Text",
+      type: "TextPipedData",
       sortable: true,
       editable: false,
       subRow: false,
@@ -113,7 +113,7 @@ export const TripExecutionHub = () => {
     {
       key: "ArrivalPointDescription",
       label: "Arrival Point",
-      type: "Text",
+      type: "TextPipedData",
       sortable: true,
       editable: false,
       subRow: false,
@@ -845,8 +845,8 @@ export const TripExecutionHub = () => {
     {
       key: 'UserID', label: 'User', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Createdby Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'SupplierContract', label: 'Supplier Contract', type: 'lazyselect',
@@ -856,8 +856,8 @@ export const TripExecutionHub = () => {
     {
       key: 'ScheduleID', label: 'Schedule ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Schedule ID Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'CustomerContract', label: 'Customer Contract', type: 'lazyselect',
