@@ -99,6 +99,11 @@ export const quickOrderService = {
           FilterName: "ContractID",
           FilterValue: params?.ContractId
         }
+      ] : params?.messageType === "Equipment ID Init" ? [
+        {
+          FilterName: "EquipmentType",
+          FilterValue: params?.EquipmentType,
+        }
       ] : [],
       Pagination: {
         PageNumber: params?.offset,

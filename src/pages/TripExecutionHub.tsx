@@ -22,7 +22,7 @@ import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDe
 import { Input } from '@/components/ui/input';
 import GridResourceDetails from '@/components/Common/GridResourceDetails';
 import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
-import { dateFormatter } from '@/utils/formatter';
+import { dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 
@@ -235,7 +235,7 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "Invoicestatus",
+      key: "InvoiceStatusDescription",
       label: "Invoice Status",
       type: "Badge",
       sortable: true,
@@ -307,21 +307,21 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "WorkOrderNo",
-      label: "Work Order No",
-      type: "Text",
+      key: "WorkOrderDetails",
+      label: "Work Order Details",
+      type: "CustomerCountBadge",
       sortable: true,
       editable: false,
       subRow: true,
     },
-    {
-      key: "WorkOrderStatus",
-      label: "Work Order Status",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
+    // {
+    //   key: "WorkOrderStatus",
+    //   label: "Work Order Status",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: true,
+    // },
     {
       key: "Remark",
       label: "Remarks",
@@ -439,6 +439,8 @@ export const TripExecutionHub = () => {
               value: row.TripBillingStatus,
               variant: getStatusColorLocal(row.TripBillingStatus),
             },
+            // PlannedStartDateandTime: row.PlannedStartDateandTime ? dateTimeFormatter(row.PlannedStartDateandTime) : '',
+            // PlannedEndDateandTime: row.PlannedEndDateandTime ? dateTimeFormatter(row.PlannedEndDateandTime) : '',
             // Add customer data for API data as well
             // customerData: [
             //   { name: "DB Cargo", id: "CUS00000123" },
@@ -822,7 +824,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'WagonID', label: 'Wagon ID', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Wagon id Init")
+      fetchOptions: makeLazyFetcher("Equipment ID Init", {EquipmentType: 'Wagon'})
     },
     { key: 'TripId', label: 'Trip No.', type: 'text' },
     { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
@@ -891,9 +893,9 @@ export const TripExecutionHub = () => {
     { key: 'PathNo', label: 'Path No.', type: 'text' },
     {
       key: 'ContainerID', label: 'Container No.', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Container ID Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      fetchOptions: makeLazyFetcher("Equipment ID Init", {EquipmentType: 'Container'}),
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'RoundTrip', label: 'Round Trip', type: 'select',

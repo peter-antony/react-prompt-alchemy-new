@@ -10,6 +10,7 @@ import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
+import { WorkOrderBadge } from './WorkOrderBadge';
 
 interface CellRendererProps {
   value: any;
@@ -451,16 +452,30 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   // CustomerCountBadge renderer
   const renderCustomerCountBadge = () => {
     // Use customer data from row only
-    const customerData = row?.CustomerOrderDetails || [];
-    // console.log('customerData: ', customerData)
+    if (column.key == "CustomerOrderDetails") {
+      const customerData = row?.CustomerOrderDetails || [];
+      // console.log('customerData: ', customerData)
+      return (
+        <CustomerCountBadge
+          count={customerData?.length}
+          customers={customerData}
+          className="text-center"
+        />
+      );
+    }
+    if (column.key == "WorkOrderDetails") {
+      const WorkOrderDetailsData = row?.WorkOrderDetails || [];
+      // console.log('WorkOrderDetailsData: ', WorkOrderDetailsData)
+      return (
+        <WorkOrderBadge
+          count={WorkOrderDetailsData?.length}
+          workOrders={WorkOrderDetailsData}
+          className="text-center"
+        />
+      );
+    }
 
-    return (
-      <CustomerCountBadge
-        count={customerData?.length}
-        customers={customerData}
-        className="text-center"
-      />
-    );
+    return null; // Fallback
   };
 
   // Main renderer switch

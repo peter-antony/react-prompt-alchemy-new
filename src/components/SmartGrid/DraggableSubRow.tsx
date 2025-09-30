@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { dateFormatter, dateTimeFormatter, formattedAmount } from '@/utils/formatter';
 import { CustomerCountBadge } from './CustomerCountBadge';
+import { WorkOrderBadge } from './WorkOrderBadge';
 
 interface DraggableSubRowProps {
   row: any;
@@ -167,17 +168,28 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
       }
       // None of the above matched, so
       return <span className="text-gray-400">-</span>;
-    } else if(typeof value === 'object' && value !== null) {
+    } else if (typeof value === 'object' && value !== null) {
       // Handle object values (excluding Badge type)
-      if (column.type === 'CustomerCountBadge') {
+      if (column.key == "CustomerOrderDetails" && column.type === 'CustomerCountBadge') {
         const customerData = row?.CustomerOrderDetails || [];
         return (
-              <CustomerCountBadge
-                count={customerData?.length}
-                customers={customerData}
-                className="text-center"
-              />
-            );
+          <CustomerCountBadge
+            count={customerData?.length}
+            customers={customerData}
+            className="text-center"
+          />
+        );
+      }
+      if (column.key == "WorkOrderDetails" && column.type === 'CustomerCountBadge') {
+        const WorkOrderDetailsData = row?.WorkOrderDetails || [];
+        // console.log('WorkOrderDetailsData: ', WorkOrderDetailsData)
+        return (
+          <WorkOrderBadge
+            count={WorkOrderDetailsData?.length}
+            workOrders={WorkOrderDetailsData}
+            className="text-center"
+          />
+        );
       }
 
     }
