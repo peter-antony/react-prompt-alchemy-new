@@ -766,11 +766,13 @@ function setResourceGroupFields(fields: { ServiceType?: any, OperationalLocation
   return false;
 }
 
-function setResourceType(fields: { Resource?: any, ResourceType?: any }) {
+function setResourceType(fields: { Resource?: any, ResourceDescription?: any, ResourceType?: any, ResourceTypeDescription?: any }) {
   if (resourceJsonData) {
     if (!resourceJsonData.BasicDetails) resourceJsonData.BasicDetails = {};
     if (fields.Resource !== undefined) resourceJsonData.BasicDetails.Resource = fields.Resource;
+    if (fields.ResourceDescription !== undefined) resourceJsonData.BasicDetails.ResourceDescription = fields.ResourceDescription;
     if (fields.ResourceType !== undefined) resourceJsonData.BasicDetails.ResourceType = fields.ResourceType;
+    if (fields.ResourceTypeDescription !== undefined) resourceJsonData.BasicDetails.ResourceTypeDescription = fields.ResourceTypeDescription;
     return true;
   }
   return false;

@@ -684,7 +684,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
-        jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
+        jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
         jsonStore.setTariffFields({
           // tariff: additionalInfo[0].TariffID,
           tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
@@ -766,12 +766,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       QCUserDefined1: data.QCUserDefined1 || { dropdown: '', input: '' },
       QCUserDefined2: data.QCUserDefined2 || { dropdown: '', input: '' },
       QCUserDefined3: data.QCUserDefined3 || { dropdown: '', input: '' },
-      // QCUserDefined1: data.QCUserDefined1 ? data.QCUserDefined1.dropdown : '',
-      // QCUserDefined2: data.QCUserDefined2 ? data.QCUserDefined2.dropdown : '',
-      // QCUserDefined3: data.QCUserDefined3 ? data.QCUserDefined3.dropdown : '',
-      // QCUserDefined1Value: data.QCUserDefined1Value ? data.QCUserDefined1Value.input : '',
-      // QCUserDefined2Value: data.QCUserDefined2Value ? data.QCUserDefined2Value.input : '',
-      // QCUserDefined3Value: data.QCUserDefined3Value ? data.QCUserDefined3Value.input : '',
+      // QCUserDefined1: data.QCUserDefined1,
+      // QCUserDefined2: data.QCUserDefined2,
+      // QCUserDefined3: data.QCUserDefined3,
+      // QCUserDefined1Value: data.QCUserDefined1Value,
+      // QCUserDefined2Value: data.QCUserDefined2Value,
+      // QCUserDefined3Value: data.QCUserDefined3Value,
       Remarks2: data.Remarks2 ? data.Remarks2 : '',
       Remarks3: data.Remarks3 ? data.Remarks3 : ''
     };
@@ -1136,7 +1136,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
           jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
           const additionalInfo = contract.ContractTariff;
-          jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceType: additionalInfo[0].ResourceType })
+          jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
           jsonStore.setTariffFields({
             // tariff: additionalInfo[0].TariffID,
             tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
