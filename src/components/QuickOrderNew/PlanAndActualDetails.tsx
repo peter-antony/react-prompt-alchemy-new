@@ -116,13 +116,51 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const otherDetailsRef = useRef<DynamicPanelRef>(null);
 
   const handleSavePlanActuals = async () => {
+    // Helper function to truncate at pipe symbol
+      const truncateAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          return value.split("||")[0].trim();
+        }
+        return value;
+      };
+
+      // Helper to recursively truncate all dropdown fields in an object
+      const truncateDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, truncate it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: truncateAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, truncate if it has a pipe
+            newObj[key] = truncateAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = truncateDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        return newObj;
+      };
+
     const formValues = {
-      wagonNewDetails: wagonDetailsRef.current?.getFormValues() || {},
-      containerDetails: containerDetailsRef.current?.getFormValues() || {},
-      productDetails: productDetailsRef.current?.getFormValues() || {},
-      thuDetails: thuDetailsRef.current?.getFormValues() || {},
-      journeyDetails: journeyDetailsRef.current?.getFormValues() || {},
-      otherDetails: otherDetailsRef.current?.getFormValues() || {},
+      wagonNewDetails: truncateDropdowns(wagonDetailsRef.current?.getFormValues() || {}),
+      containerDetails: truncateDropdowns(containerDetailsRef.current?.getFormValues() || {}),
+      productDetails: truncateDropdowns(productDetailsRef.current?.getFormValues() || {}),
+      thuDetails: truncateDropdowns(thuDetailsRef.current?.getFormValues() || {}),
+      journeyDetails: truncateDropdowns(journeyDetailsRef.current?.getFormValues() || {}),
+      otherDetails: truncateDropdowns(otherDetailsRef.current?.getFormValues() || {}),
     };
     
     if (planType === "plan") {
@@ -623,7 +661,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -655,7 +693,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -678,7 +716,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "Wagon Tare Weight",
       fieldType: "inputdropdown",
       width: 'third',
-      placeholder: "Enter value",
       value: "",
       mandatory: false,
       visible: true,
@@ -720,7 +757,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
-      placeholder: "Enter Wagon Sequence",
     },
   };
 
@@ -751,7 +787,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -782,7 +818,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -853,7 +889,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -884,7 +920,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -947,7 +983,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -978,7 +1014,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -996,7 +1032,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      // placeholder: "Select THU ID",
       order: 1,
       hideSearch: true,
       disableLazyLoading: true,
@@ -1013,7 +1048,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1029,7 +1064,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 2,
-      placeholder: "Enter Value"
     },
     THUQuantity: {
       id: "THUQuantity",
@@ -1053,7 +1087,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
-      placeholder: "Enter THU Weight",
       value: "",
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
@@ -1085,7 +1118,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1116,7 +1149,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1147,7 +1180,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1178,7 +1211,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
                 label: `${item.id} || ${item.name}`,
-                value: item.id
+                value: `${item.id} || ${item.name}`,
               }
             : {})
         }));
@@ -1194,7 +1227,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 6,
-      placeholder: "DD-MM-YYYY",
+      // placeholder: "DD-MM-YYYY",
     },
     RevPlannedDateTime: {
       id: "RevPlannedDateTime",
@@ -1206,7 +1239,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
-      placeholder: "DD-MM-YYYY",
+      // placeholder: "DD-MM-YYYY",
     },
     TrainNo: {
       id: "TrainNo",
@@ -1218,7 +1251,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 8,
-      placeholder: "Enter Train No.",
+      maxLength: 18,
     },
     LoadType: {
       id: "LoadType",
@@ -1247,7 +1280,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select From Date",
       order: 1,
       // options: [{ label: "Departure", value: "Departure" }],
     },
@@ -1260,7 +1292,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select From Time",
       order: 2,
     },
     ToDate: {
@@ -1273,7 +1304,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 3,
-      placeholder: "Select To Date",
     },
     ToTime: {
       id: "ToTime",
@@ -1284,7 +1314,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      placeholder: "Select To Time",
       order: 4,
     },
     QCUserDefined1: {
@@ -1297,6 +1326,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
+      maxLength: 299,
       // options: [
       //   { label: 'Quick order User defined 1 - 1', value: 'Quick order User defined 1 - 1' },
       //   { label: 'Quick order User defined 1 - 2', value: 'Quick order User defined 1 - 2' },
@@ -1312,7 +1342,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 6,
-      placeholder: "Select QC",
+      maxLength: 299,
       value: { dropdown: '', input: '' },
       options: qcList2?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
@@ -1326,7 +1356,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
-      placeholder: "Select QC",
+      maxLength: 299,
       value: { dropdown: '', input: '' },
       options: qcList3?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
@@ -1340,7 +1370,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 8,
-      placeholder: "Enter Remarks",
+      maxLength: 499,
     },
     Remarks2: {
       id: "Remarks2",
@@ -1352,7 +1382,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 9,
-      placeholder: "Enter Remarks",
+      maxLength: 499,
     },
     Remarks3: {
       id: "Remarks3",
@@ -1364,7 +1394,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 10,
-      placeholder: "Enter Remarks",
+      maxLength: 499,
     },
   };
 
@@ -1594,7 +1624,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
-      placeholder: 'Search location...'
     },
     WagonGroup: {
       id: 'WagonGroup',
@@ -1681,7 +1710,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 9,
-      placeholder: 'Enter Wagon',
       width: 'half',
     },
     Container: {
@@ -1693,7 +1721,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 10,
-      placeholder: 'Enter Wagon',
       width: 'half',
     }
   };
@@ -1719,7 +1746,18 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
     if (item) {
       setIsEditPlan(true);
-      setSelectedPlan(item.PlanLineUniqueID)
+      setSelectedPlan(
+        item.PlanLineUniqueID
+          ? item.PlanLineUniqueID
+          : item.ActualLineUniqueID
+            ? item.ActualLineUniqueID
+            : undefined
+      );
+      if(item.PlanLineUniqueID){
+        setPlanType('plan');
+      }else{
+        setPlanType('actual');
+      }
       // Set the raw data to state (if you still need it)
       setWagonDetailsData(item.WagonDetails);
       setContainerDetailsData(item.ContainerDetails);

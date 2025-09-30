@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ConfirmSwitch from '../../assets/images/ConfirmSwitch.png';
 import { combineInputDropdownValue, InputDropdownValue, splitInputDropdownValue } from '@/utils/inputDropdown';
 import jsonStore from '@/stores/jsonStore';
+import { EditableBadge } from '@/components/ui/editable-badge';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
@@ -23,7 +24,12 @@ export interface DynamicPanelRef {
   };
 }
 
-export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
+interface DynamicPanelPropsExtended extends DynamicPanelProps {
+  badgeValue?: string;
+  onBadgeChange?: (fieldId: string, newValue: string) => void;
+}
+
+export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({
   panelId,
   panelOrder = 1,
   startingTabIndex = 1,
@@ -45,7 +51,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   onScrollPanel = false,
   className = '',
   panelSubTitle = '',
-  validationErrors = {}
+  validationErrors = {},
+  badgeValue = '',
+  onBadgeChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -58,6 +66,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
   const [isOpen, setIsOpen] = useState(true);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentBadgeValue, setCurrentBadgeValue] = useState(badgeValue);
 
   // Create default values from panel config
   const createDefaultValues = useMemo(() => {
@@ -287,6 +296,14 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
     }
   };
 
+  const handleBadgeChange = (newValue: string) => {
+    setCurrentBadgeValue(newValue);
+    if (typeof onBadgeChange === 'function') {
+      onBadgeChange(panelId, newValue); // Pass panelId as fieldId
+    }
+    console.log("handleBadgeChange", newValue);
+  }
+  
   // Determine panel width class based on 12-column grid system
   const getWidthClass = () => {
     if (typeof currentPanelWidth === 'number') {
@@ -488,14 +505,21 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelProps>(({
                 showStatus={showStatusIndicator}
               />
               {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
+                <EditableBadge
+                  // value={currentBadgeValue}
+                  value= {jsonStore.getQuickOrderNo()}
+                  onSave={handleBadgeChange}
+                />
+              )}
+              {/* {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
                 <span
                   className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
                 >
                   {jsonStore.getQuickOrderNo()}
                 </span>
-              )}
+              )} */}
               {panelSubTitle == "Order Details" && (() => {
-                console.log("jsonStore.getQuickOrder()?.Status", jsonStore.getQuickOrder()?.Status);
+                // console.log("jsonStore.getQuickOrder()?.Status", jsonStore.getQuickOrder()?.Status);
                 const status = jsonStore.getQuickOrder()?.Status;
                 if (!status) {
                   return null;

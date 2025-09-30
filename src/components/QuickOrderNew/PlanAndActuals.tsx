@@ -94,8 +94,8 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     subRow: false
   },
   {
-    key: 'price',
-    label: 'Price',
+    key: 'nhm',
+    label: 'NHM',
     type: 'Text',
     sortable: true,
     editable: false,
@@ -110,8 +110,8 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     subRow: false
   },
   {
-    key: 'draftBill',
-    label: 'Draft Bill',
+    key: 'product',
+    label: 'Product',
     type: 'Text',
     sortable: true,
     editable: false,
@@ -125,8 +125,8 @@ interface PlanAndActualListData {
   departureAndArrival: string;
   hazardousGoods: string;
   planFromToDate: string;
-  price: string;
-  draftBill: string;
+  nhm: string;
+  product: string;
   PlanLineUniqueID?: string;
 }
 
@@ -152,6 +152,11 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   const [plans, setPlans] = useState(0);
   const [actuals, setActuals] = useState(0);
   const [gridTitle, setGridTitle] = useState('Plan List');
+  const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
+  const [resourceData, setResourceData] = useState<any[]>([]);
+  const [planDataSets, setPlanDataSets] = useState<any[]>([]); // <-- planDataSets state
+  const [planDataVersion, setPlanDataVersion] = useState(0);
+  const [resourceUniqueId, setResourceUniqueId] = useState(resouceId);
 
   // Fetch and map plan data when resourceId changes
   useEffect(() => {
@@ -175,8 +180,8 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
         planFromToDate: dateFormatter(plan?.OtherDetails?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.ToDate),
         // '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
         activity: plan?.JourneyAndSchedulingDetails?.Activity,
-        price: '€ 1395.00', // Replace with actual price if needed
-        draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+        nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
+        product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
         PlanLineUniqueID: plan?.PlanLineUniqueID || '',
       }));
     } else {
@@ -187,10 +192,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
         ProductID: plan.ProductDetails?.ProductID || '-',
         hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
         departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
-        planFromToDate: '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
+        planFromToDate: plan?.JourneyAndSchedulingDetails?.PlannedDateTime - plan?.JourneyAndSchedulingDetails?.PlannedDateTime, // Replace with actual date logic if needed
         activity: plan?.JourneyAndSchedulingDetails?.Activity,
-        price: '€ 1395.00', // Replace with actual price if needed
-        draftBill: 'DB/0000234', // Replace with actual draft bill if needed
+        nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
+        product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
         PlanLineUniqueID: plan?.PlanLineUniqueID || '',
       }));
     }
@@ -267,10 +272,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     code: row.id,
     name: "",
     warning: true,
-    amount: row.price,
+    // amount: row.price,
     location: row.departureAndArrival,
     date: row.planFromToDate,
-    draftBill: row.draftBill,
+    // draftBill: row.draftBill,
   })), [planAndActualListData]);
 
   // subrow
@@ -289,6 +294,33 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
       />
     );
   };
+
+  useEffect(() => {
+    console.log("load 123 resourceId == ", isEditQuickOrder);
+    console.log("load 123 resourceId == ", resouceId);
+    // if (isEditQuickOrder) {
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      setResourceData(resourceGroups);
+      console.log("Resource Groups Data:", resourceGroups);
+    // } else {
+    //   const resourceGroups = jsonStore.getAllResourceGroups();
+    //   setResourceData(resourceGroups);
+    // }
+  }, [isEditQuickOrder]);
+
+  const handlePlanActualsDataFetch = (status: boolean) => {
+    console.log('Plan created and show grid data:', status);
+    setIsPlanActualsVisible(status);
+    if (status) {
+      // Always force a new array reference to trigger grid re-render
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      setResourceData(resourceGroups ? [...resourceGroups] : []);
+      setPlanDataSets(resourceGroups ? [...resourceGroups] : []);
+      setPlanDataVersion(v => v + 1); // increment version to force update
+      setResourceUniqueId(resouceId);
+      console.log("Resource Groups Data (reloaded):", resourceGroups);
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -358,10 +390,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                       <MoreVertical className="w-5 h-5 text-gray-400" />
                     </div>
                   </div>
-                  <div className="flex items-center text-gray-700 text-sm font-medium mb-2">
+                  {/* <div className="flex items-center text-gray-700 text-sm font-medium mb-2">
                     <Camera className="w-5 h-5 text-gray-400 mr-2" />
                     {card.amount}
-                  </div>
+                  </div> */}
                   <div className="flex items-center text-gray-700 text-sm font-medium mb-2">
                     <MapPin className="w-5 h-5 text-gray-400 mr-2" />
                     {card.location}
@@ -370,10 +402,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                     <Calendar className="w-5 h-5 text-gray-400 mr-2" />
                     {card.date}
                   </div>
-                  <div className="flex items-center text-blue-600 text-sm font-medium">
+                  {/* <div className="flex items-center text-blue-600 text-sm font-medium">
                     <LinkIcon className="w-5 h-5 text-blue-400 mr-2" />
                     <span className="underline cursor-pointer">Draft Bill : {card.draftBill}</span>
-                  </div>
+                  </div> */}
                 </div>
               ))}
             </div>
@@ -451,7 +483,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
       <SideDrawer isOpen={isPlanActualsOpen} onClose={() => setIsPlanActualsOpen(false)} width='85%' title="Plan and Actual Details" isBack={false}>
         <div>
           {/* <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)}></PlanAndActualDetails> */}
-          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} PlanInfo={planInfo} resourceId={resouceId}></PlanAndActualDetails>
+          <PlanAndActualDetails onCloseDrawer={() => setIsPlanActualsOpen(false)} isEditQuickOrder={isEditQuickOrder} PlanInfo={planInfo} resourceId={resouceId} onApiSuccess={handlePlanActualsDataFetch}></PlanAndActualDetails>
 
         </div>
       </SideDrawer>

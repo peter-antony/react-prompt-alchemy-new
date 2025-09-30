@@ -734,8 +734,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
-    console.log("data 11111", data);
-
+    console.log("data 11111 OrderForm", data);
     // Generic helper to format a field with its name, fallback to '--' if name is empty/null
     function formatFieldWithName(id, name) {
       if (id) {
@@ -1387,6 +1386,31 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     }
   }
 
+  const onBadgeChange = async (fieldId: string, newValue: string) => {
+    console.log(`onBadgeChange in OrderForm - Field: ${fieldId}, Value: ${newValue}`);
+    // Implement logic to update state/store based on fieldId and newValue
+    // if (fieldId === "Order Details") { // Assuming "Order Details" is the panelId for the QuickOrderNo badge
+    //   // Here you would update the QuickOrderNo in your formData or jsonStore
+    //   // For example:
+    //   jsonStore.setQuickOrder({ QuickOrderNo: newValue });
+    //   setFormData(prev => ({ ...prev, QuickOrderNo: newValue }));
+    // }
+    //  Fetch the full quick order details
+    quickOrderService.getQuickOrder(newValue).then((fetchRes: any) => {
+      console.log("fetchRes:: ", fetchRes);
+      let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+      console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+      console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+      jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+      const fullJson2 = jsonStore.getJsonData();
+      console.log("FULL JSON 33:: ", fullJson2);
+      setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+      console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+    })
+    console.log("onBadgeChange ===");
+    // You might also want to trigger a save or update other parts of the form
+  }
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -1420,6 +1444,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
                 userId="current-user"
                 panelSubTitle="Order Details"
                 className="my-custom-orderform-panel"
+                onBadgeChange={onBadgeChange}
                 validationErrors={validationResults['Order Details']?.errors || {}}
               /> : ''
             }
