@@ -494,7 +494,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: OrderType === 'BUY',
       editable: true,
       order: 6,
-      maxLength: 40,
+      maxLength: 18,
       // hideSearch: true,
       // disableLazyLoading: false,
       // fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -544,7 +544,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 8,
-      maxLength: 40,
+      maxLength: 299,
       options: qcList1?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remark1: {
@@ -558,7 +558,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 9,
       placeholder: '',
-      maxLength: 40,
+      maxLength: 499,
     },
     Summary: {
       id: 'Summary',
@@ -571,7 +571,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 10,
       placeholder: '',
-      maxLength: 250,
+      maxLength: 499,
     },
     WBS: {
       id: 'WBS',
@@ -596,7 +596,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 12,
-      maxLength: 40,
+      maxLength: 299,
       options: qcList2?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'QC', value: 'QC' },
@@ -613,7 +613,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 13,
-      maxLength: 40,
+      maxLength: 299,
       options: qcList3?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks2: {
@@ -627,7 +627,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 14,
       placeholder: '',
       width: 'full',
-      maxLength: 40,
+      maxLength: 499,
     },
     Remarks3: {
       id: 'Remarks3',
@@ -640,7 +640,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 15,
       placeholder: '',
       width: 'full',
-      maxLength: 40,
+      maxLength: 499,
     }
   });
   //convert date time object to date value to bind in datepicker

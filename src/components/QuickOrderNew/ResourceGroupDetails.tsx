@@ -1914,7 +1914,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 8,
-      maxLength: 40,
+      maxLength: 499,
     },
   };
   
@@ -1974,7 +1974,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 4,
       inputType: 'number',
-      maxLength: 6
+      maxLength: 28
     },
     BillingQty: {
       id: 'BillingQty',
@@ -1986,7 +1986,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 5,
       width: 'half',
-      maxLength: 6,
+      maxLength: 28,
       inputType: 'number',
     },
     Tariff: {
@@ -2074,7 +2074,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       placeholder: 'Enter Remarks',
       width: 'full',
       inputType: 'alphanumeric',
-      maxLength: 250
+      maxLength: 499
     }
   };
 
@@ -2092,7 +2092,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 1,
-      maxLength: 40,
+      maxLength: 18,
       options: primaryRefDocType?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'IO-Hire/Rent', value: 'IO-Hire/Rent' },
@@ -2109,7 +2109,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 2,
-      maxLength: 40,
+      maxLength: 18,
       options: secondaryRefDocType?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     PrimaryDocDate: {
