@@ -148,13 +148,13 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
         } else if (column.key === "CustomerService") {
           return (
             <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
-              {firstCustomer?.Service}
+              {firstCustomer?.ServiceDescription}
             </div>
           );
         } else if (column.key === "CustomerSubService") {
           return (
             <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
-              {firstCustomer?.SubService}
+              {firstCustomer?.SubServiceDescription}
             </div>
           );
         } else if (column.key === "CustomerOrders") {

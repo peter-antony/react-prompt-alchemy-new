@@ -835,7 +835,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'TripBillingStatus', label: 'Trip Billing Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("DraftBillStatus Init"),
+      fetchOptions: makeLazyFetcher("Trip Billing Status Init"),
       multiSelect: true,
       hideSearch: true,
       disableLazyLoading: true
@@ -849,7 +849,7 @@ export const TripExecutionHub = () => {
     {
       key: 'SupplierContract', label: 'Supplier Contract', type: 'lazyselect',
       // Pass OrderType: 'SELL' when fetching Supplier Contract options
-      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'SELL' })
+      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'BUY' })
     },
     {
       key: 'ScheduleID', label: 'Schedule ID', type: 'lazyselect',
@@ -859,7 +859,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'CustomerContract', label: 'Customer Contract', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'BUY' })
+      fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'SELL' })
     },
     {
       key: 'LegFrom', label: 'Leg From', type: 'lazyselect',
@@ -872,8 +872,8 @@ export const TripExecutionHub = () => {
     {
       key: 'ExecutiveCarrierID', label: 'Executive Carrier', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Executive Carrier Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     { key: 'TrainID', label: 'Train No.', type: 'text' },
     {
@@ -885,8 +885,8 @@ export const TripExecutionHub = () => {
     {
       key: 'WBS', label: 'WBS', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("WBS Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     { key: 'PathNo', label: 'Path No.', type: 'text' },
     {

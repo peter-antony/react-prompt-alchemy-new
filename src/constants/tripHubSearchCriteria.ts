@@ -58,6 +58,8 @@ export interface SearchCriteria {
   MobileRefIncidentID: string;
   RefDocNo: string;
   LoadType: string;
+  LegFrom: string;
+  LegTo: string;
 }
 
 // Default object (all empty strings)
@@ -120,4 +122,6 @@ export const defaultSearchCriteria: SearchCriteria = {
   MobileRefIncidentID: "",
   RefDocNo: "",
   LoadType: "",
+  LegFrom: "",
+  LegTo: ""
 };
