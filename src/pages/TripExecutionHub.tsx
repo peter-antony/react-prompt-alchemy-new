@@ -219,7 +219,7 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "CancellationReason",
+      key: "CancellationReasonDescription",
       label: "Cancellation Reason",
       type: "Text",
       sortable: true,
@@ -357,7 +357,7 @@ export const TripExecutionHub = () => {
     {
       key: "DraftbilTotalAmount",
       label: "Draft Bill Total Amount",
-      type: "Text",
+      type: "CurrencyWithSymbol",
       sortable: true,
       editable: false,
       subRow: true,
@@ -916,7 +916,7 @@ export const TripExecutionHub = () => {
       disableLazyLoading: true
     },
     { key: 'RefDocNo', label: 'Ref. Doc. No.', type: 'text' },
-    { key: 'Incident No', label: 'Incident No.', type: 'text' },
+    { key: 'IncidentID', label: 'Incident No.', type: 'text' },
     {
       key: 'IncidentStatus', label: 'Incident status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Incident status Init"),
@@ -929,7 +929,7 @@ export const TripExecutionHub = () => {
       hideSearch: true,
       disableLazyLoading: true
     },
-    { key: 'ReturnTripId', label: 'Return Trip ID', type: 'text' },
+    { key: 'ReturnTripID', label: 'Return Trip ID', type: 'text' },
     {
       key: 'CancellationReason', label: 'Cancellation Reason', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Cancellation Reason Init"),
@@ -985,14 +985,14 @@ export const TripExecutionHub = () => {
     {
       key: 'DriverID', label: 'Driver', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Driver Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'CarrierID', label: 'Carrier', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Carrier Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
 
     // { key: 'QuickUniqueID', label: 'Quick Unique ID', type: 'text' },

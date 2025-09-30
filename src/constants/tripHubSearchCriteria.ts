@@ -21,7 +21,7 @@ export interface SearchCriteria {
   PathNo: string;
   IncidentStatus: string;
   TransportMode: string;
-  ReturnTripId: string;
+  ReturnTripID: string;
   CancellationReason: string;
   WorkshopStatus: string;
   VendorFeedback: string;
@@ -85,7 +85,7 @@ export const defaultSearchCriteria: SearchCriteria = {
   PathNo: "",
   IncidentStatus: "",
   TransportMode: "",
-  ReturnTripId: "",
+  ReturnTripID: "",
   CancellationReason: "",
   WorkshopStatus: "",
   VendorFeedback: "",
