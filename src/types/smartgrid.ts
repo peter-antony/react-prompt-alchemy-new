@@ -182,6 +182,7 @@ export interface SmartGridProps {
   plugins?: GridPlugin[];
   selectedRows?: Set<number>;
   onSelectionChange?(selectedRows: Set<number>): void;
+  onRowClick?(row: any, index: number): void;
   rowClassName?: (row: any, index: number) => string;
   configurableButtons?: ConfigurableButtonConfig[];
   showDefaultConfigurableButton?: boolean;

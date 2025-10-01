@@ -37,6 +37,27 @@ export const tripService = {
     return response.data;
   },
 
+  bulkCancelTrip: async (params: any) => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "Trip Log Bulk Cancel",
+      },
+      MessageContents: params
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.BULK_CANCEL}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   // Get single trip
   getTripById: async (params?: any): Promise<ApiResponse<Trip>> => {
     const requestPayload = JSON.stringify({
@@ -174,5 +195,5 @@ export const tripService = {
       requestBody
     );
     return response.data;
-  }
-}
+  },
+};

@@ -13,7 +13,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from 'lucide-react';
-import { SmartGridProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI, ServerFilter  } from '@/types/smartgrid';
+import { SmartGridProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI, ServerFilter } from '@/types/smartgrid';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
@@ -55,6 +55,7 @@ export function SmartGrid({
   plugins = [],
   selectedRows,
   onSelectionChange,
+  onRowClick,
   rowClassName,
   configurableButtons,
   showDefaultConfigurableButton,
@@ -212,7 +213,7 @@ export function SmartGrid({
   // Get sub-row columns (columns marked with subRow: true) with preferences applied
   const subRowColumns = useMemo(() => {
     const columnMap = new Map(currentColumns.map(col => [col.key, col]));
-    
+
     // Get columns that are marked as sub-row columns AND not hidden
     const visibleSubRowColumns = currentColumns
       .filter(col => col.subRow === true)
@@ -221,7 +222,7 @@ export function SmartGrid({
         ...col,
         label: preferences.columnHeaders[col.key] || col.label // Apply custom headers
       }));
-    
+
     return visibleSubRowColumns;
   }, [currentColumns, preferences]);
 
@@ -326,7 +327,7 @@ export function SmartGrid({
 
     // Fallback to collapsible content if no sub-row columns
     return renderCollapsibleContent(row);
-}, [hasSubRowColumns, subRowColumns, preferences, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent]);
+  }, [hasSubRowColumns, subRowColumns, preferences, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent]);
 
   // Use sub-row renderer if we have sub-row columns, otherwise use collapsible or custom renderer
   const effectiveNestedRowRenderer = hasSubRowColumns ? renderSubRowContent : (hasCollapsibleColumns ? renderCollapsibleContent : nestedRowRenderer);
@@ -336,17 +337,17 @@ export function SmartGrid({
     return processGridData(data, globalFilter, filters, sort, currentColumns, onDataFetch, clientSideSearch);
   }, [data, globalFilter, filters, sort, currentColumns, onDataFetch, clientSideSearch]);
 
-	// Handle advanced filter search
+  // Handle advanced filter search
   const handleAdvancedFilterSearch = useCallback(() => {
     // Reset to page 1 when search is performed
     setCurrentPage(1);
-    
+
     // If we have server-side filtering, call the server
     const serverFilters = filters.filter(filter => {
       const column = currentColumns.find(col => col.key === filter.column);
       return column?.filterMode === 'server';
     });
-    
+
     if (serverFilters.length > 0 && onServerFilter) {
       onServerFilter(serverFilters).catch(error => {
         console.error('Server-side filtering failed:', error);
@@ -394,8 +395,10 @@ export function SmartGrid({
 
     // Set local filters only
     setFilters(localFilters);
-    // Reset to page 1 when filters change
-    setCurrentPage(1);
+    // Only reset to page 1 when actual filters change (not just row selections)
+    if (legacyFilters.length > 0) {
+      setCurrentPage(1);
+    }
   }, [onFiltersChange, setFilters, currentColumns, onServerFilter, toast, setCurrentPage]);
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
   const handleExport = useCallback((format: 'csv' | 'xlsx') => {
@@ -529,15 +532,15 @@ export function SmartGrid({
   // Pagination with auto-reset when current page has no data
   const paginatedData = useMemo(() => {
     if (paginationMode !== 'pagination' || onDataFetch) return processedData;
-    
+
     const totalPages = Math.ceil(processedData.length / pageSize);
-    
+
     // Reset to page 1 if current page is beyond available data
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
       return processedData.slice(0, pageSize);
     }
-    
+
     const start = (currentPage - 1) * pageSize;
     return processedData.slice(start, start + pageSize);
   }, [processedData, paginationMode, currentPage, pageSize, onDataFetch, setCurrentPage]);
@@ -880,10 +883,10 @@ export function SmartGrid({
           serverFilters={serverFilters}
           showFilterTypeDropdown={showFilterTypeDropdown}
           visible={showServersideFilter}
-          onToggle={onToggleServersideFilter || (() => {})}
-          onFiltersChange={onFiltersChange || (() => {})}
-          onSearch={onSearch || (() => {})}
-          onClearAll={onClearAll || (() => {})}
+          onToggle={onToggleServersideFilter || (() => { })}
+          onFiltersChange={onFiltersChange || (() => { })}
+          onSearch={onSearch || (() => { })}
+          onClearAll={onClearAll || (() => { })}
           gridId={gridId || gridTitle || 'default'}
           userId={userId || 'default-user'}
           api={api}
@@ -923,27 +926,27 @@ export function SmartGrid({
           showExtraFilters={showExtraFilters}
           showSubRowFilters={showSubRowFilters}
         /> */}
-       {/* Advanced Filter System - Only show when not using server-side filters */}
-        {!hideAdvancedFilter && (
-          <AdvancedFilter
-            columns={orderedColumns}
-            subRowColumns={subRowColumns}
-            extraFilters={extraFilters}
-            subRowFilters={subRowFilters}
-            visible={showAdvancedFilter}
-            onToggle={() => setShowAdvancedFilter(!showAdvancedFilter)}
-            onFiltersChange={handleFiltersChange}
-            onSearch={handleAdvancedFilterSearch}
-            gridId="smart-grid"
-            userId="demo-user"
-            clientSideSearch={clientSideSearch}
-            api={mockFilterAPI}
-            showSubHeaders={showSubHeaders}
-            showMainRowFilters={showMainRowFilters}
-            showExtraFilters={showExtraFilters}
-            showSubRowFilters={showSubRowFilters}
-          />
-        )}
+      {/* Advanced Filter System - Only show when not using server-side filters */}
+      {!hideAdvancedFilter && (
+        <AdvancedFilter
+          columns={orderedColumns}
+          subRowColumns={subRowColumns}
+          extraFilters={extraFilters}
+          subRowFilters={subRowFilters}
+          visible={showAdvancedFilter}
+          onToggle={() => setShowAdvancedFilter(!showAdvancedFilter)}
+          onFiltersChange={handleFiltersChange}
+          onSearch={handleAdvancedFilterSearch}
+          gridId="smart-grid"
+          userId="demo-user"
+          clientSideSearch={clientSideSearch}
+          api={mockFilterAPI}
+          showSubHeaders={showSubHeaders}
+          showMainRowFilters={showMainRowFilters}
+          showExtraFilters={showExtraFilters}
+          showSubRowFilters={showSubRowFilters}
+        />
+      )}
 
       {/* Table Container with horizontal scroll prevention */}
       <div className="bg-white rounded shadow-sm m-0">
@@ -1174,10 +1177,21 @@ export function SmartGrid({
                 paginatedData.flatMap((row, rowIndex) => {
                   const rows = [
                     <TableRow key={rowIndex}
+                      data-row-id={ (gridTitle == 'Trip Plans' ?  row.TripPlanID : rowIndex) || rowIndex}
                       className={cn(
-                        "hover:bg-gray-100 transition-colors duration-150 border-b border-gray-100",
+                        "hover:bg-gray-100 transition-colors duration-150 border-b border-gray-100 cursor-pointer",
                         rowClassName ? rowClassName(row, rowIndex) : ''
                       )}
+                      onClick={(e) => {
+                        // Don't trigger row click if checkbox or button elements are clicked
+                        if (e.target instanceof HTMLElement &&
+                          ((e.target as HTMLInputElement).type === 'checkbox' ||
+                            e.target.closest('button') ||
+                            e.target.closest('input'))) {
+                          return;
+                        }
+                        onRowClick?.(row, rowIndex);
+                      }}
                     >
                       {/* Checkbox cell */}
                       {showCheckboxes && (

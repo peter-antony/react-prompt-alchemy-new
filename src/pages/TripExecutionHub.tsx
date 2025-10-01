@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
-import { PanelConfig } from "@/types/dynamicPanel";
 import { tripService } from "@/api/services";
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
-import { Plus, Search, CloudUpload } from 'lucide-react';
+import { Plus, Search, CloudUpload, NotebookPen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -11,23 +10,16 @@ import { ConfigurableButtonConfig } from '@/components/ui/configurable-button';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
 import { useNavigate } from 'react-router-dom';
-import { SideDrawer } from '@/components/Common/SideDrawer';
-import BulkUpload from '@/components/QuickOrderNew/BulkUpload';
-import { PlanAndActualDetails } from '@/components/QuickOrderNew/PlanAndActualDetails';
 import { useFooterStore } from '@/stores/footerStore';
-import CommonPopup from '@/components/Common/CommonPopup';
 import { filterService, quickOrderService } from '@/api/services';
-import { SimpleDropDown } from '@/components/Common/SimpleDropDown';
-import CardDetails, { CardDetailsItem } from '@/components/Common/GridResourceDetails';
-import { Input } from '@/components/ui/input';
-import GridResourceDetails from '@/components/Common/GridResourceDetails';
-import { SimpleDropDownSelection } from '@/components/Common/SimpleDropDownSelection';
-import { dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
+import TripBulkCancelModal from "@/components/TripNew/TripBulkCancelModal";
 
 export const TripExecutionHub = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
   const [searchData, setSearchData] = useState<Record<string, any>>({});
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -36,6 +28,129 @@ export const TripExecutionHub = () => {
   const { config, setFooter, resetFooter } = useFooterStore();
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupTitle, setPopupTitle] = useState('Cancel Trip');
+  const [popupButtonName, setPopupButtonName] = useState('Cancel');
+  const [popupBGColor, setPopupBGColor] = useState('');
+  const [popupTextColor, setPopupTextColor] = useState('');
+  const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const [fields, setFields] = useState([
+    {
+      type: "date",
+      label: "Requested Date and Time",
+      name: "date",
+      placeholder: "Select Requested Date and Time",
+      value: "",
+      required: true,
+      mappedName: 'Canceldatetime'
+    },
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'ReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'Remarks'
+    },
+  ]);
+
+  const handleFieldChange = (name, value) => {
+    console.log('Field changed:', name, value);
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const handleTripsCancelSubmit = async (formFields: any) => {
+    console.log(formFields);
+    let mappedObj = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for API:', mappedObj);
+    console.log('rowTripId --------------- ', rowTripId);
+    let tripPayload = [];
+    rowTripId.forEach((tripId:any, index) => {
+      tripPayload.push({
+        'TripID': tripId,
+        'UniqueID': `Trip${index + 1}`,
+        ...mappedObj})
+    });
+    console.log('tripPayload', tripPayload);
+    if(tripPayload.length > 0) {
+      try {
+      gridState.setLoading(true);
+      setApiStatus('loading');
+
+      const response: any = await tripService.bulkCancelTrip(tripPayload);
+
+      console.log('Server-side Search API Response:', response);
+
+      const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+      const data = parsedResponse;
+      setApiStatus('success');
+      setPopupOpen(false);
+
+      if (!data || !Array.isArray(data)) {
+        console.warn('API returned invalid data format:', response);
+        gridState.setGridData([]);
+        gridState.setLoading(false);
+        setApiStatus('error');
+        toast({
+          title: "No Results",
+          description: "No orders found matching your criteria",
+        });
+        return;
+      } else {
+        const successCount = data.filter(item => item.Status === "SUCCESS").length;
+        const failCount = data.filter(item => item.Status === "FAILED").length;
+        if (successCount > 0) {
+          toast({
+            title: "Trips Cancelled",
+            description: `${successCount} trip${successCount > 1 ? "s" : ""} were cancelled successfully.`,
+            variant: "default", // success style,
+            duration: 5000,
+          });
+        }
+
+        if (failCount > 0) {
+          toast({
+            title: "Trips Failed",
+            description: `${failCount} trip${failCount > 1 ? "s" : ""} has already been cancelled.`,
+            variant: "destructive", // error style,
+            duration: 5000,
+          });
+        }
+      }
+     
+
+      // toast({
+      //   title: "Success",
+      //   description: `Found ${processedData.length} orders`,
+      // });
+
+    } catch (error) {
+      console.error('Server-side search failed:', error);
+      setApiStatus('error');
+      toast({
+        title: "Error",
+        description: "Failed to search orders. Please try again.",
+        variant: "destructive",
+      });
+    }
+    }
+  };
 
 
 
@@ -227,7 +342,7 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "InvoiceNo",
+      key: "Invoiceno",
       label: "Invoice No",
       type: "Text",
       sortable: true,
@@ -376,7 +491,7 @@ export const TripExecutionHub = () => {
       PlannedExecutionDate: {
         value: {
           from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
-        to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
+          to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
         }
       }
     }
@@ -474,6 +589,47 @@ export const TripExecutionHub = () => {
     };
   }, []); // Add dependencies if needed
 
+  // Initialize columns and processed data in the grid state
+  // useEffect(() => {
+  //   console.log('Initializing columns and data in GridDemo');
+  //   gridState.setColumns(initialColumns);
+  //   gridState.setGridData(processedData);
+  // }, [processedData]);
+  const processedData = useMemo(() => {
+    return gridState.gridData.map(row => ({
+      ...row,
+      status: {
+        value: row.status,
+        // variant: getStatusColor(row.status)
+      },
+      tripBillingStatus: {
+        value: row.tripBillingStatus,
+        // variant: getStatusColor(row.tripBillingStatus)
+      }
+    }));
+  }, []);
+
+  // Update selected row indices based on current page data to maintain selection state
+  useEffect(() => {
+    const currentData = gridState.gridData.length > 0 ? gridState.gridData : processedData;
+    const newSelectedIndices = new Set<number>();
+
+    // Find indices of currently selected row IDs in the current page data
+    currentData.forEach((row: any, index: number) => {
+      if (selectedRowIds.has(row.TripPlanID)) {
+        newSelectedIndices.add(index);
+      }
+    });
+
+    // Only update if there's a difference to avoid infinite loops
+    // Also prevent updates that might trigger unwanted side effects
+    if (newSelectedIndices.size !== selectedRows.size ||
+      !Array.from(newSelectedIndices).every(index => selectedRows.has(index))) {
+      console.log('Updating selected row indices without affecting pagination');
+      setSelectedRows(newSelectedIndices);
+    }
+  }, [gridState.gridData, processedData, selectedRowIds]);
+
   useEffect(() => {
     setFooter({
       visible: true,
@@ -497,6 +653,7 @@ export const TripExecutionHub = () => {
           label: "Cancel",
           onClick: () => {
             console.log("Cancel clicked");
+            setPopupOpen(true);
           },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
@@ -511,7 +668,7 @@ export const TripExecutionHub = () => {
 
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
-    if(columnKey === 'TripPlanID') {
+    if (columnKey === 'TripPlanID') {
       navigate(`/create-trip?id=${value.TripPlanID}`);
     }
   };
@@ -533,8 +690,82 @@ export const TripExecutionHub = () => {
   };
 
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
+    console.log('Selected rows changed via checkbox:', selectedRowIndices);
     setSelectedRows(selectedRowIndices);
+    // Update selected row objects and IDs using unique row identification
+
+    const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
+    const selectedObjects = Array.from(selectedRowIndices)
+      .map(index => currentData[index])
+      .filter(Boolean);
+
+    // Create a new Set of unique row IDs
+    const newSelectedRowIds = new Set(selectedObjects.map(row => row.TripPlanID));
+
+    // Update selected row objects to ensure uniqueness by ID
+    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
+      self.findIndex(r => r.id === row.TripPlanID) === index
+    );
+
+    setSelectedRowIds(newSelectedRowIds);
+    setSelectedRowObjects(uniqueSelectedObjects);
+    console.log('Selected row objects:', uniqueSelectedObjects);
+    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
   };
+
+  const [rowTripId, setRowTripId] = useState<any>([]); 
+  const handleRowClick = (row: any, index: number) => {
+    console.log('Row clicked:', row, index);
+
+    // Toggle row selection
+    const newSelectedRows = new Set(selectedRows);
+    // if (newSelectedRows.has(index)) {
+    const newSelectedRowIds = new Set(selectedRowIds);
+    const newSelectedRowObjects = [...selectedRowObjects];
+
+    // Check if this row is already selected by ID (not index)
+    const isRowSelected = newSelectedRowIds.has(row.TripPlanID);
+
+    if (isRowSelected) {
+      // Remove row: remove from all tracking sets/arrays
+      newSelectedRows.delete(index);
+      newSelectedRowIds.delete(row.TripPlanID);
+      const objectIndex = newSelectedRowObjects.findIndex(obj => obj.TripPlanID === row.TripPlanID);
+      if (objectIndex > -1) {
+        newSelectedRowObjects.splice(objectIndex, 1);
+      }
+      console.log('Removed row:', row.TripPlanID);
+    }
+    else {
+      // Add row: add to all tracking sets/arrays (ensure uniqueness)
+      newSelectedRows.add(index);
+      newSelectedRowIds.add(row.TripPlanID);
+      // Only add if not already in objects array (double-check uniqueness)
+      if (!newSelectedRowObjects.some(obj => obj.TripPlanID === row.TripPlanID)) {
+        newSelectedRowObjects.push(row);
+      }
+      console.log('Added row:', row.TripPlanID);
+    }
+
+    // Update all state
+    setSelectedRows(newSelectedRows);
+    setSelectedRowIds(newSelectedRowIds);
+    setSelectedRowObjects(newSelectedRowObjects);
+
+    // Update selected row objects
+    // const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
+    // const selectedObjects = Array.from(newSelectedRows).map(idx => currentData[idx]).filter(Boolean);
+    // setSelectedRowObjects(selectedObjects);
+    // console.log('Selected row objects after click:', selectedObjects);
+    console.log('Selected row objects after click:', newSelectedRowObjects);
+    setRowTripId(Array.from(newSelectedRowIds));
+    console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
+    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+  };
+
+  useEffect(() => {
+    console.log("rowTripId updated:", rowTripId);
+  }, [rowTripId]);
 
   const handleSearchDataChange = (data: Record<string, any>) => {
     setSearchData(data);
@@ -824,7 +1055,7 @@ export const TripExecutionHub = () => {
     },
     {
       key: 'WagonID', label: 'Wagon ID', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Equipment ID Init", {EquipmentType: 'Wagon'})
+      fetchOptions: makeLazyFetcher("Equipment ID Init", { EquipmentType: 'Wagon' })
     },
     { key: 'TripId', label: 'Trip No.', type: 'text' },
     { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
@@ -893,7 +1124,7 @@ export const TripExecutionHub = () => {
     { key: 'PathNo', label: 'Path No.', type: 'text' },
     {
       key: 'ContainerID', label: 'Container No.', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Equipment ID Init", {EquipmentType: 'Container'}),
+      fetchOptions: makeLazyFetcher("Equipment ID Init", { EquipmentType: 'Container' }),
       // hideSearch: true,
       // disableLazyLoading: true
     },
@@ -1019,6 +1250,31 @@ export const TripExecutionHub = () => {
 
             {/* Grid Container */}
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
+              {/* Selected rows indicator */}
+              {selectedRowObjects.length > 0 && (
+                <div className="px-6 py-3 bg-blue-50 border-b border-blue-200">
+                  <div className="text-sm text-blue-700">
+                    <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
+                    <span className="ml-2 text-xs">
+                      ({selectedRowObjects.map(row => row.TripPlanID).join(', ')})
+                    </span>
+                  </div>
+                </div>
+              )}
+              <style>{`
+            
+             ${Array.from(selectedRowIds).map((rowId) => {
+                return `
+                tr[data-row-id="${rowId}"] {
+                  background-color: #eff6ff !important;
+                  border-left: 4px solid #3b82f6 !important;
+                }
+                tr[data-row-id="${rowId}"]:hover {
+                  background-color: #dbeafe !important;
+                }
+              `;
+              }).join('\n')}
+          `}</style>
               {/* <SmartGridWithGrouping
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
@@ -1066,12 +1322,16 @@ export const TripExecutionHub = () => {
                 onSubRowToggle={gridState.handleSubRowToggle}
                 selectedRows={selectedRows}
                 onSelectionChange={handleRowSelection}
+                onRowClick={handleRowClick}
                 // onFiltersChange={setCurrentFilters}
                 onSearch={handleServerSideSearch}
                 onClearAll={clearAllFilters}
-                rowClassName={(row: any, index: number) =>
-                  selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-                }
+                // rowClassName={(row: any, index: number) =>
+                //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                // }
+                rowClassName={(row: any, index: number) => {
+                  return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                }}
                 nestedRowRenderer={renderSubRow}
                 configurableButtons={gridConfigurableButtons}
                 showDefaultConfigurableButton={false}
@@ -1094,6 +1354,20 @@ export const TripExecutionHub = () => {
           </div>
         </div>
       </AppLayout>
+
+      <TripBulkCancelModal
+        open={popupOpen}
+        onClose={() => setPopupOpen(false)}
+        title={popupTitle}
+        // titleColor={popupTextColor}
+        // titleBGColor={popupTitleBgColor}
+        icon={<NotebookPen className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleTripsCancelSubmit}
+        submitLabel={popupButtonName}
+      // submitColor={popupBGColor}
+      />
 
       {/* Add a beautiful loading overlay when fetching data from API */}
       {apiStatus === 'loading' && (
