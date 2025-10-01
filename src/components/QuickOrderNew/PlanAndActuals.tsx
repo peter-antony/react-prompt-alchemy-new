@@ -159,9 +159,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   const [resourceUniqueId, setResourceUniqueId] = useState(resouceId);
 
   // Fetch and map plan data when resourceId changes
-  useEffect(() => {
+  // Refactored: moved logic to a separate function and call it from useEffect
+  const loadGridData = () => {
     const arrResources = jsonStore.getResourceGroup();
-    let arr:any;
+    let arr: any;
     arr = resouceId
       ? arrResources.filter((item: any) => item.ResourceUniqueID === resouceId)
       : arrResources;
@@ -203,6 +204,10 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     gridState.setColumns(initialColumns(tab));
     console.log('grid--------- Data:', mapped);
     gridState.setGridData(mapped);
+  };
+
+  useEffect(() => {
+    loadGridData();
   }, [resouceId, tab]);
 
   // Log when columns change
@@ -309,6 +314,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   }, [isEditQuickOrder]);
 
   const handlePlanActualsDataFetch = (status: boolean) => {
+    console.log('Plan and Actuals:');
     console.log('Plan created and show grid data:', status);
     setIsPlanActualsVisible(status);
     if (status) {
@@ -319,6 +325,21 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
       setPlanDataVersion(v => v + 1); // increment version to force update
       setResourceUniqueId(resouceId);
       console.log("Resource Groups Data (reloaded):", resourceGroups);
+
+      // Reload plan and actuals list data for the grid
+      const planList = jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId) || [];
+      const actualList = jsonStore.getAllActualDetailsByResourceUniqueID(resouceId) || [];
+      setPlanAndActualListData(tab === "planned" ? planList : actualList);
+      console.log("PlanAndActuals grid data reloaded:", tab === "planned" ? planList : actualList);
+      loadGridData();
+      // const planList = jsonStore.getAllPlanDetailsByResourceUniqueID(resouceId) || [];
+      // const actualList = jsonStore.getAllActualDetailsByResourceUniqueID(resouceId) || [];
+      // const newData = tab === "planned" ? planList : actualList;
+      // setPlanAndActualListData([...newData]); // force new array reference
+      // gridState.setGridData([...newData]); // force SmartGrid to re-render with new data
+      // gridState.setColumns(initialColumns(tab)); // (optional) re-initialize columns if needed
+      // setPlanDataVersion(v => v + 1); // force re-render if grid uses key={planDataVersion}
+      // console.log("PlanAndActuals grid data reloaded:", newData);
     }
   }
 
