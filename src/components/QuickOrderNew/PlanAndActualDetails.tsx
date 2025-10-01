@@ -1429,10 +1429,20 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   // Normalization functions for each config
   function normalizeWagonDetails(data) {
     console.log("data ", data.WagonType);
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     if (!data || typeof data !== 'object') return {};
     return {
-      WagonType: data.WagonType ?? '',
-      WagonID: data.WagonID || '',
+      WagonType: formatFieldWithName(data.WagonType, data.WagonTypeDescription),
+      WagonID: formatFieldWithName(data.WagonID, data.WagonIDDescription),
       WagonQuantity: data.WagonQuantity || { dropdown: '', input: '' },
       WagonTareWeight: data.WagonTareWeight || { dropdown: '', input: '' },
       WagonGrossWeight: data.WagonGrossWeight || { dropdown: '', input: '' },
@@ -1441,38 +1451,78 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
   }
   function normalizeContainerDetails(data) {
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     return {
-      ContainerType: data.ContainerType || '',
-      ContainerID: data.ContainerID || '',
+      ContainerType: formatFieldWithName(data.ContainerType, data.ContainerTypeDescription),
+      ContainerID: formatFieldWithName(data.ContainerID, data.ContainerIDDescription),
       ContainerQuantity: data.ContainerQuantity || { dropdown: '', input: '' },
       ContainerTareWeight: data.ContainerTareWeight || { dropdown: '', input: '' },
       ContainerLoadWeight: data.ContainerLoadWeight || { dropdown: '', input: '' },
     };
   }
   function normalizeProductDetails(data) {
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     return {
-      NHM: data.NHM || '',
-      ProductID: data.ProductID || '',
+      NHM: formatFieldWithName(data.NHM, data.NHMDescription),
+      ProductID: formatFieldWithName(data.ProductID, data.ProductIDDescription),
       ProductQuantity: data.ProductQuantity || { dropdown: '', input: '' },
       ContainerTareWeight: data.ContainerTareWeight || { dropdown: '', input: '' },
-      UNCode: data.UNCode || '',
-      DGClass: data.DGClass || '',
+      UNCode: formatFieldWithName(data.UNCode, data.UNCodeDescription),
+      DGClass: formatFieldWithName(data.DGClass, data.DGClassDescription),
     };
   }
   function normalizeTHUDetails(data) {
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     return {
-      THUID: data.THUID || '',
+      THUID: formatFieldWithName(data.THUID, data.THUIDDescription),
       THUSerialNo: data.THUSerialNo || '',
       THUQuantity: data.THUQuantity || { dropdown: '', input: '' },
       THUWeight: data.THUWeight || { dropdown: '', input: '' },
     };
   }
   function normalizeJourneyDetails(data) {
+    function formatFieldWithName(id, name) {
+      if (id) {
+        if (name && name.trim() !== '') {
+          return id + ' || ' + name;
+        } else {
+          return id + ' || --';
+        }
+      }
+      return '';
+    }
     return {
-      Departure: data.Departure || '',
-      Arrival: data.Arrival || '',
-      ActivityLocation: data.ActivityLocation || '',
-      Activity: data.Activity || '',
+      Departure: formatFieldWithName(data.Departure, data.DepartureDescription),
+      Arrival: formatFieldWithName(data.Arrival, data.ArrivalDescription),
+      ActivityLocation: formatFieldWithName(data.ActivityLocation, data.ActivityLocationDescription),
+      Activity: formatFieldWithName(data.Activity, data.ActivityDescription),
       PlannedDateTime: data.PlannedDateTime || '',
       RevPlannedDateTime: data.RevPlannedDateTime || '',
       TrainNo: data.TrainNo || '',
