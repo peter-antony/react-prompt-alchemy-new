@@ -92,6 +92,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           tabIndex={tabIndex ? tabIndex + 1 : undefined}
           onClick={onInputClick}
           onFocus={onFocus}
+          maxLength={299}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
