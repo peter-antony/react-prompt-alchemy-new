@@ -504,20 +504,20 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 formData={getValues() || {}}
                 showStatus={showStatusIndicator}
               />
-              {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
+              {/* {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
                 <EditableBadge
                   // value={currentBadgeValue}
                   value= {jsonStore.getQuickOrderNo()}
                   onSave={handleBadgeChange}
                 />
-              )}
-              {/* {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
+              )} */}
+              {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
                 <span
                   className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
                 >
                   {jsonStore.getQuickOrderNo()}
                 </span>
-              )} */}
+              )}
               {panelSubTitle == "Order Details" && (() => {
                 // console.log("jsonStore.getQuickOrder()?.Status", jsonStore.getQuickOrder()?.Status);
                 const status = jsonStore.getQuickOrder()?.Status;
