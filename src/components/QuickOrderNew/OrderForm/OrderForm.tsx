@@ -558,7 +558,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 9,
       placeholder: '',
-      maxLength: 499,
+      maxLength: 255,
     },
     Summary: {
       id: 'Summary',
@@ -571,7 +571,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 10,
       placeholder: '',
-      maxLength: 499,
+      maxLength: 255,
     },
     WBS: {
       id: 'WBS',
@@ -627,7 +627,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 14,
       placeholder: '',
       width: 'full',
-      maxLength: 499,
+      maxLength: 255,
     },
     Remarks3: {
       id: 'Remarks3',
@@ -640,7 +640,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 15,
       placeholder: '',
       width: 'full',
-      maxLength: 499,
+      maxLength: 255,
     }
   });
   //convert date time object to date value to bind in datepicker
@@ -970,13 +970,32 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
         console.log("updateQuickOrderResource result:", res);
         const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
           console.log("response ===", resourceStatus);
+          //  Get OrderNumber from response
+        const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", OrderNumber);
+
+        //  Fetch the full quick order details
+          quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+            console.log("fetchRes:: ", fetchRes);
+            let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+            console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+            console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+            jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            const fullJson2 = jsonStore.getJsonData();
+            console.log("FULL JSON 33:: ", fullJson2);
+            setResourceCount(fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
+            console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
+          })
+          //  Update your store or state with the fetched data
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
             toast({
               title: "✅ Form submitted successfully",
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
+            setResourceGroupOpen(true);
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -990,39 +1009,22 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
             });
             const fullJsonElse = jsonStore.getQuickOrder();
             console.log("Else error :: ", fullJsonElse);
-            console.log("---------------", JSON.parse(res?.data));
+            // console.log("---------------", JSON.parse(res?.data));
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(res?.data?.Message),
+              // description: JSON.parse(res?.data?.Message),
+              description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
               // description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
               variant: "destructive", // or "success" if you have custom variant
             });
           }
-
-        //  Get OrderNumber from response
-        const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
-        console.log("OrderNumber:", OrderNumber);
-
-        //  Fetch the full quick order details
-        quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
-          console.log("fetchRes:: ", fetchRes);
-          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("FULL JSON 33:: ", fullJson2);
-          setResourceCount(fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
-          console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
-        })
-        //  Update your store or state with the fetched data
 
       } catch (err) {
         console.log("CATCH :: ", err);
         setError(`Error fetching API data for resource group`);
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.Message,
+          description: JSON.parse(err?.data?.Message),
           // description: err.response.data.description,
           variant: "destructive", // or "error"
         });
@@ -1033,7 +1035,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         //   description: "Your changes have been saved.",
         //   variant: "default", // or "success" if you have custom variant
         // });
-        setResourceGroupOpen(true);
+        
       }
     } else {
       toast({
@@ -1337,6 +1339,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
       console.log("updateQuickOrderResource result:", res);
       const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+      const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
       if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
             toast({
               title: "✅ Form submitted successfully",
@@ -1346,7 +1349,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           }else{
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(res?.data?.Message),
+              description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -1374,7 +1377,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: err.response.data.Message,
+        description: JSON.parse(err?.data?.Message),
         variant: "destructive", // or "error"
       });
     }

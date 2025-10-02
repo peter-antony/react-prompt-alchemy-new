@@ -208,6 +208,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
         console.log("OrderNumber:", resourceGroupID);
         if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
           toast({
@@ -231,7 +232,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.Message),
+            description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -270,7 +271,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.Message,
+          description: JSON.parse(err?.data?.Message),
           variant: "destructive", // or "error"
         });
       }
@@ -338,6 +339,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
         console.log("OrderNumber:", resourceGroupID);
         if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
           toast({
@@ -361,7 +363,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.Message),
+            description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -400,7 +402,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.Message,
+          description: JSON.parse(err?.data?.Message),
           variant: "destructive", // or "error"
         });
       }
@@ -448,6 +450,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
         console.log("OrderNumber:", resourceGroupID);
         if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
           toast({
@@ -471,7 +474,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.Message),
+            description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -510,7 +513,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.Message,
+          description: JSON.parse(err?.data?.Message),
           variant: "destructive", // or "error"
         });
       }
@@ -751,6 +754,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           //  Get OrderNumber from response
           const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
           const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           console.log("OrderNumber:", resourceGroupID);
           console.log("response ===", resourceStatus);
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
@@ -774,7 +778,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.Message),
+              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -814,7 +818,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.Message,
+            description: JSON.parse(err?.data?.Message),
             variant: "destructive", // or "error"
           });
         }
@@ -900,6 +904,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           //  Get OrderNumber from response
           const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
           const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           console.log("OrderNumber:", resourceGroupID);
           console.log("response ===", resourceStatus);
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
@@ -923,7 +928,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.Message),
+              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -963,7 +968,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.Message,
+            description: JSON.parse(err?.data?.Message),
             variant: "destructive", // or "error"
           });
         }
@@ -1043,6 +1048,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           //  Get OrderNumber from response
           const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
           const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           console.log("OrderNumber:", resourceGroupID);
           console.log("response ===", resourceStatus);
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
@@ -1066,7 +1072,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.Message),
+              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+              // description: data?.Message,
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -1092,7 +1099,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.description);
+          console.log(" catch", err);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1106,7 +1113,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.Message,
+            description: JSON.parse(err?.data?.Message),
             variant: "destructive", // or "error"
           });
         }
@@ -1914,7 +1921,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 8,
-      maxLength: 499,
+      maxLength: 255,
     },
   };
   
@@ -2072,7 +2079,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 8,
       width: 'full',
-      maxLength: 499
+      maxLength: 255
     }
   };
 
