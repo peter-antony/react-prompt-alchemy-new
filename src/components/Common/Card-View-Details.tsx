@@ -101,7 +101,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <UsersRound className="w-4 h-4 text-violet-500" />
                                     </span>
                                     <div>
-                                        <div className="font-semibold text-sm" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
+                                        <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
                                         {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
                                         <div className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</div>
                                     </div>

@@ -778,13 +778,14 @@ function setResourceType(fields: { Resource?: any, ResourceDescription?: any, Re
   return false;
 }
 
-function setTariffFields(fields: { tariff?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any, billToID?: any}) {
+function setTariffFields(fields: { tariff?: any, tariffDescription?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any, billToID?: any}) {
   console.log("resourceJsonData === ^^^^", resourceJsonData)
   if (resourceJsonData) {
     if (!resourceJsonData.BillingDetails) {
       resourceJsonData.BillingDetails = {};
     }
     if (fields.tariff !== undefined) resourceJsonData.BillingDetails.Tariff = fields.tariff;
+    if (fields.tariffDescription !== undefined) resourceJsonData.BillingDetails.TariffIDDescription = fields.tariffDescription;
     if(fields.unitPrice !== undefined) resourceJsonData.BillingDetails.UnitPrice = fields.contractPrice;
     if (fields.contractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.contractPrice;
     if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;

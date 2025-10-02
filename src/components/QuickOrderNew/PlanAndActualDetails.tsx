@@ -47,6 +47,7 @@ import { BulkUpdatePlanActuals } from "./BulkUpdatePlanActuals";
 import jsonStore from '@/stores/jsonStore';
 import { useEffect } from 'react';
 import { quickOrderService } from "@/api/services/quickOrderService";
+import { useToast } from '@/hooks/use-toast';
 interface PlanAndActualsDetailsProps {
   isEditQuickOrder?: boolean;
   resourceId?: string;
@@ -114,6 +115,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const thuDetailsRef = useRef<DynamicPanelRef>(null);
   const journeyDetailsRef = useRef<DynamicPanelRef>(null);
   const otherDetailsRef = useRef<DynamicPanelRef>(null);
+  const { toast } = useToast();
 
   const handleSavePlanActuals = async () => {
     // Helper function to truncate at pipe symbol
@@ -271,18 +273,39 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-          onApiSuccess(true);
-          onCloseDrawer();
+          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+            toast({
+              title: "✅ Form submitted successfully",
+              description: "Your changes have been saved.",
+              variant: "default", // or "success" if you have custom variant
+            });
+            // setCurrentStep(2);
+            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            const fullJson2 = jsonStore.getJsonData();
+            console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+            onApiSuccess(true);
+            onCloseDrawer();
+          }
+          else{
+            toast({
+              title: "⚠️ Submission failed",
+              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+              variant: "destructive", // or "success" if you have custom variant
+            });
+          }
         })
 
       } catch (err) {
         console.log(" catch", err);
+        toast({
+          title: "⚠️ Submission failed",
+          description: JSON.parse(err?.data?.Message),
+          variant: "destructive", // or "error"
+        });
         onApiSuccess(false);
         // setError(`Error fetching API data for Update ResourceGroup`);
       }
@@ -391,6 +414,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         console.log(" try", data);
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
         console.log("OrderNumber:", resourceGroupID);
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
@@ -399,16 +424,33 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-          onApiSuccess(true);
-          onCloseDrawer();
+          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+            toast({
+              title: "✅ Form submitted successfully",
+              description: "Your changes have been saved.",
+              variant: "default", // or "success" if you have custom variant
+            });
+            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+            const fullJson2 = jsonStore.getJsonData();
+            console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+            onApiSuccess(true);
+            onCloseDrawer();
+          }else{
+            toast({
+              title: "⚠️ Submission failed",
+              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+              variant: "destructive", // or "success" if you have custom variant
+            });
+          }
         })
 
       } catch (err) {
         console.log(" catch", err);
+        toast({
+          title: "⚠️ Submission failed",
+          description: JSON.parse(err?.data?.Message),
+          variant: "destructive", // or "error"
+        });
         onApiSuccess(false);
         // setError(`Error fetching API data for Update ResourceGroup`);
       }

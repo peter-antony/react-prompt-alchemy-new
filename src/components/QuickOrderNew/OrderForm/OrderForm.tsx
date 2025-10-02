@@ -686,8 +686,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
         jsonStore.setTariffFields({
-          // tariff: additionalInfo[0].TariffID,
-          tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
+          tariff: additionalInfo[0].TariffID,
+          tariffDescription: additionalInfo[0].TariffDescription,
+          // tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
+          // tariff: additionalInfo[0].TariffID && additionalInfo[0].TariffDescription
+          //     ? `${additionalInfo[0].TariffID} || ${additionalInfo[0].TariffDescription}`
+          //     : (additionalInfo[0].TariffID || additionalInfo[0].TariffDescription || ""),
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
@@ -1142,8 +1146,12 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           const additionalInfo = contract.ContractTariff;
           jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
           jsonStore.setTariffFields({
-            // tariff: additionalInfo[0].TariffID,
-            tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
+            tariff: additionalInfo[0].TariffID,
+            tariffDescription: additionalInfo[0].TariffDescription,
+            // For dropdown binding as "id || description"
+            // tariff: additionalInfo[0].TariffID && additionalInfo[0].TariffDescription
+            //   ? `${additionalInfo[0].TariffID} || ${additionalInfo[0].TariffDescription}`
+            //   : (additionalInfo[0].TariffID || additionalInfo[0].TariffDescription || ""),
             contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
