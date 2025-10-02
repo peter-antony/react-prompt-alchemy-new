@@ -275,6 +275,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
                   tabIndex={tabIndex}
+                  maxLength={config.maxLength}
                 />
               </div>
             );

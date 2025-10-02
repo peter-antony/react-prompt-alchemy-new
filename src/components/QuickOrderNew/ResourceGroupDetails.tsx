@@ -2062,8 +2062,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       order: 7,
       width: 'full',
     },
-    BillingRemarks: {
-      id: 'BillingRemarks',
+    Remarks: {
+      id: 'Remarks',
       label: 'Remarks',
       fieldType: 'text',
       value: '',
@@ -2071,9 +2071,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       visible: true,
       editable: true,
       order: 8,
-      placeholder: 'Enter Remarks',
       width: 'full',
-      inputType: 'alphanumeric',
       maxLength: 499
     }
   };

@@ -987,7 +987,14 @@ const QuickOrderManagement = () => {
       tooltipTitle: "Create new quick order",
       showDropdown: true, // Enable dropdown for future functionality
       onClick: () => {
-        navigate('/create-quick-order');
+        console.log("click create ", jsonStore.getQuickOrder());
+        // navigate('/create-quick-order');
+        // Dynamically get the base path from the current URL
+        const { pathname } = window.location;
+        // Find the base path (e.g., "/Forwardis-dev" or "/")
+        const basePathMatch = pathname.match(/^\/[^/]+/);
+        const basePath = basePathMatch ? basePathMatch[0] : "";
+        window.location.href = `${basePath}/create-quick-order`;
       },
       dropdownItems: [
         {
@@ -995,7 +1002,13 @@ const QuickOrderManagement = () => {
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             // setIsDrawerOpen(true);
-            navigate('/create-quick-order');
+            // navigate('/create-quick-order');
+            // Dynamically get the base path from the current URL
+            const { pathname } = window.location;
+            // Find the base path (e.g., "/Forwardis-dev" or "/")
+            const basePathMatch = pathname.match(/^\/[^/]+/);
+            const basePath = basePathMatch ? basePathMatch[0] : "";
+            window.location.href = `${basePath}/create-quick-order`;
           }
         },
         {

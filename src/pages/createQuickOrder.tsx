@@ -241,7 +241,7 @@ const CreateQuickOrder = () => {
     console.log("quickOrderCancelhandler ---", jsonStore.getQuickOrder());
     jsonStore.setQuickOrder({
       ...jsonStore.getJsonData().quickOrder,
-      "QuickOrderNo": jsonStore.getQuickUniqueID()
+      // "QuickOrderNo": jsonStore.getQuickUniqueID()
     });
     const fullJson = jsonStore.getQuickOrder();
     const messageType = "Quick Order Confirm";
@@ -358,7 +358,7 @@ const CreateQuickOrder = () => {
     if(popupAmendFlag == "Amend"){
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
-        "QuickOrderNo": jsonStore.getQuickUniqueID(),
+        // "QuickOrderNo": jsonStore.getQuickUniqueID(),
         "AmendReasonCode": fields[0].value,
         "AmendReasonDescription": fields[1].value,
         "ModeFlag": "Update" // Set ModeFlag to "Amend"
@@ -366,7 +366,7 @@ const CreateQuickOrder = () => {
     }else{
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
-        "QuickOrderNo": jsonStore.getQuickUniqueID(),
+        // "QuickOrderNo": jsonStore.getQuickUniqueID(),
         "CanceReasonCode": fields[0].value,
         "CanceReasonDescription": fields[1].value,
         "ModeFlag": "Update" // Set ModeFlag to "Amend"
