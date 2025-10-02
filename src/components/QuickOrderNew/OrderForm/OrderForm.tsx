@@ -990,9 +990,11 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
             });
             const fullJsonElse = jsonStore.getQuickOrder();
             console.log("Else error :: ", fullJsonElse);
+            console.log("---------------", JSON.parse(res?.data));
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
+              description: JSON.parse(res?.data?.Message),
+              // description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -1020,7 +1022,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         setError(`Error fetching API data for resource group`);
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.description,
+          description: err.response.data.Message,
+          // description: err.response.data.description,
           variant: "destructive", // or "error"
         });
       }
@@ -1343,7 +1346,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           }else{
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(res?.data?.ResponseData)[0].Error_msg,
+              description: JSON.parse(res?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -1371,7 +1374,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setError(`Error fetching API data for resource group`);
       toast({
         title: "⚠️ Submission failed",
-        description: err.response.data.description,
+        description: err.response.data.Message,
         variant: "destructive", // or "error"
       });
     }

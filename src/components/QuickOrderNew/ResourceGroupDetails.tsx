@@ -231,7 +231,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+            description: JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -270,7 +270,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.description,
+          description: err.response.data.Message,
           variant: "destructive", // or "error"
         });
       }
@@ -361,7 +361,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+            description: JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -400,7 +400,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.description,
+          description: err.response.data.Message,
           variant: "destructive", // or "error"
         });
       }
@@ -471,7 +471,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log("Else error :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
-            description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+            description: JSON.parse(data?.data?.Message),
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -510,7 +510,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         toast({
           title: "⚠️ Submission failed",
-          description: err.response.data.description,
+          description: err.response.data.Message,
           variant: "destructive", // or "error"
         });
       }
@@ -774,7 +774,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+              description: JSON.parse(data?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -814,7 +814,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.description,
+            description: err.response.data.Message,
             variant: "destructive", // or "error"
           });
         }
@@ -923,7 +923,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+              description: JSON.parse(data?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -963,7 +963,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.description,
+            description: err.response.data.Message,
             variant: "destructive", // or "error"
           });
         }
@@ -1066,7 +1066,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("Else error :: ", fullJsonElse);
             toast({
               title: "⚠️ Submission failed",
-              description: JSON.parse(data?.data?.ResponseData)[0].Error_msg,
+              description: JSON.parse(data?.data?.Message),
               variant: "destructive", // or "success" if you have custom variant
             });
           }
@@ -1106,7 +1106,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             });
           toast({
             title: "⚠️ Submission failed",
-            description: err.response.data.description,
+            description: err.response.data.Message,
             variant: "destructive", // or "error"
           });
         }
@@ -1340,7 +1340,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       UnitPrice: data.UnitPrice ?? 0,
       BillingQty: data.BillingQty ?? 0,
       // Tariff: data.Tariff ?? '',
-      Tariff: formatFieldWithName(data.Tariff, data.TariffDescription),
+      Tariff: formatFieldWithName(data.Tariff, data.TariffIDDescription),
       TariffType: formatFieldWithName(data.TariffType, data.TariffTypeDescription),
       Remarks: data.Remarks ?? '',
     };
