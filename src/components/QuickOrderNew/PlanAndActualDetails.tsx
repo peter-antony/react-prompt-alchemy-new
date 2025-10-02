@@ -1426,19 +1426,20 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     ]);
   }, [resourceId]);
 
+  function formatFieldWithName(id, name) {
+    if (id) {
+      if (name && name.trim() !== '') {
+        return id + ' || ' + name;
+      } else {
+        return id + ' || --';
+      }
+    }
+    return '';
+  }
+
   // Normalization functions for each config
   function normalizeWagonDetails(data) {
     console.log("data ", data.WagonType);
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     if (!data || typeof data !== 'object') return {};
     return {
       WagonType: formatFieldWithName(data.WagonType, data.WagonTypeDescription),
@@ -1451,16 +1452,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
   }
   function normalizeContainerDetails(data) {
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     return {
       ContainerType: formatFieldWithName(data.ContainerType, data.ContainerTypeDescription),
       ContainerID: formatFieldWithName(data.ContainerID, data.ContainerIDDescription),
@@ -1470,16 +1461,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
   }
   function normalizeProductDetails(data) {
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     return {
       NHM: formatFieldWithName(data.NHM, data.NHMDescription),
       ProductID: formatFieldWithName(data.ProductID, data.ProductIDDescription),
@@ -1490,16 +1471,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
   }
   function normalizeTHUDetails(data) {
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     return {
       THUID: formatFieldWithName(data.THUID, data.THUIDDescription),
       THUSerialNo: data.THUSerialNo || '',
@@ -1508,16 +1479,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
   }
   function normalizeJourneyDetails(data) {
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     return {
       Departure: formatFieldWithName(data.Departure, data.DepartureDescription),
       Arrival: formatFieldWithName(data.Arrival, data.ArrivalDescription),
@@ -1840,6 +1801,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           };
           wagonDetailsRef.current.setFormValues({
             ...item.WagonDetails,
+            WagonType: formatFieldWithName(item.WagonDetails.WagonType, item.WagonDetails.WagonTypeDescription),
+            WagonID: formatFieldWithName(item.WagonDetails.WagonID, item.WagonDetails.WagonIDDescription),
             WagonQuantity: wagonQuantityInputDropdown,
             WagonGrossWeight: wagonGrossWeightInputDropdown,
             WagonLength: wagonLengthInputDropdown,
@@ -1868,6 +1831,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           };
           containerDetailsRef.current.setFormValues({
             ...item.ContainerDetails,
+            ContainerType: formatFieldWithName(item.ContainerDetails.ContainerType, item.ContainerDetails.ContainerTypeDescription),
+            ContainerID: formatFieldWithName(item.ContainerDetails.ContainerID, item.ContainerDetails.ContainerIDDescription),
             ContainerQuantity: ContainerQuantityInputDropdown,
             ContainerTareWeight: ContainerTareWeightInputDropdown,
             ContainerLoadWeight: ContainerLoadWeightInputDropdown,
@@ -1885,6 +1850,10 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           };
           productDetailsRef.current.setFormValues({
             ...item.ProductDetails,
+            NHM: formatFieldWithName(item.ProductDetails.NHM, item.ProductDetails.NHMDescription),
+            ProductID: formatFieldWithName(item.ProductDetails.ProductID, item.ProductDetails.ProductIDDescription),
+            UNCode: formatFieldWithName(item.ProductDetails.UNCode, item.ProductDetails.UNCodeDescription),
+            DGClass: formatFieldWithName(item.ProductDetails.DGClass, item.ProductDetails.DGClassDescription),
             ProductQuantity: ProductQuantityInputDropdown,
           });
         } else {
@@ -1904,6 +1873,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           };
           thuDetailsRef.current.setFormValues({
             ...item.THUDetails,
+            THUID: formatFieldWithName(item.THUDetails.THUID, item.THUDetails.THUIDDescription),
             THUQuantity: THUQuantityInputDropdown,
             THUWeight: THUWeightInputDropdown
           });
@@ -1913,6 +1883,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       }
       if (journeyDetailsRef && journeyDetailsRef.current && "setFormValues" in journeyDetailsRef.current && typeof journeyDetailsRef.current.setFormValues === "function") {
         journeyDetailsRef.current.setFormValues(item.JourneyAndSchedulingDetails || {});
+        journeyDetailsRef.current.setFormValues({
+          ...item.JourneyAndSchedulingDetails,
+          Departure: formatFieldWithName(item.JourneyAndSchedulingDetails.Departure, item.JourneyAndSchedulingDetails.DepartureDescription),
+          Arrival: formatFieldWithName(item.JourneyAndSchedulingDetails.Arrival, item.JourneyAndSchedulingDetails.ArrivalDescription),
+          ActivityLocation: formatFieldWithName(item.JourneyAndSchedulingDetails.ActivityLocation, item.JourneyAndSchedulingDetails.ActivityLocationDescription),
+          Activity: formatFieldWithName(item.JourneyAndSchedulingDetails.Activity, item.JourneyAndSchedulingDetails.ActivityDescription),
+        });
       }
       if (otherDetailsRef && otherDetailsRef.current && "setFormValues" in otherDetailsRef.current && typeof otherDetailsRef.current.setFormValues === "function") {
         otherDetailsRef.current.setFormValues(item.OtherDetails || {});
