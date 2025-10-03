@@ -602,6 +602,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   onKeyUp={events?.onKeyUp}
                   className={borderClass}
                   title={tooltip}
+                  maxLength={config.maxLength}
                 />
               </div>
             );

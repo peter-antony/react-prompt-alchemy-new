@@ -544,16 +544,16 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   </span>
                 );
               })()}
-              {panelSubTitle == "Billing Details" && (
+              {/* {panelSubTitle == "Billing Details" && (
                 <span
                   onClick={() => setSwitchModalOpen(true)}
                   className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
-                >
+                > */}
                   {/* Replace with actual data source or remove if not needed */}
                   {/* Example: jsonStore.getResourceJsonData?.().BillingDetails?.BillToID || "" */}
-                  {jsonStore.getResourceJsonData?.()?.BillingDetails?.BillToID || ""}
+                  {/* {jsonStore.getResourceJsonData?.()?.BillingDetails?.BillToID || ""}
                 </span>
-              )}
+              )} */}
             </div>
             <SettingsButton />
           </CardHeader>

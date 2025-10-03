@@ -19,6 +19,7 @@ export interface InputDropdownProps {
   placeholder?: string;
   className?: string;
   tabIndex?: number;
+  maxLength?: number;
   onDropdownClick?: (e: React.MouseEvent) => void;
   onInputClick?: (e: React.MouseEvent) => void;
   onFocus?: (e: React.FocusEvent) => void;
@@ -36,6 +37,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     placeholder = '',
     className,
     tabIndex,
+    maxLength,
     title,
     onDropdownClick,
     onInputClick,
@@ -54,7 +56,14 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = { ...value, input: e.target.value };
+      let inputValue = e.target.value;
+      
+      // Apply maxLength constraint if specified
+      if (maxLength && inputValue.length > maxLength) {
+        inputValue = inputValue.slice(0, maxLength);
+      }
+      
+      const newValue = { ...value, input: inputValue };
       onChange?.(newValue);
     };
 
@@ -92,7 +101,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           tabIndex={tabIndex ? tabIndex + 1 : undefined}
           onClick={onInputClick}
           onFocus={onFocus}
-          maxLength={299}
+          maxLength={maxLength || 299}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
