@@ -751,6 +751,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 3,
+      inputType: 'number',
       options: wagonQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonTareWeight: {
@@ -763,6 +764,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 4,
+      inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonGrossWeight: {
@@ -775,6 +777,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 5,
       value: "",
+      inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonLength: {
@@ -787,6 +790,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 6,
       value: '',
+      inputType: 'number',
       options: weightLength?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonSequence: {
@@ -799,6 +803,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
+      inputType: 'number',
     },
   };
 
@@ -876,6 +881,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
+      inputType: 'number',
       options: containerQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerTareWeight: {
@@ -888,6 +894,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 4,
       value: "",
+      inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerLoadWeight: {
@@ -978,6 +985,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
+      inputType: 'number',
       // options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       options: productQty
         ?.filter((qc: any, index: number, self: any[]) =>
@@ -998,6 +1006,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 4,
       value: "",
+      inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     UNCode: {
@@ -1117,6 +1126,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 3,
       value: "",
+      inputType: 'number',
       options: thuQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     THUWeight: {
@@ -1124,12 +1134,12 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "THU Weight",
       fieldType: "inputdropdown",
       width: 'third',
-      inputType: "number",
       mandatory: false,
       visible: true,
       editable: true,
       order: 5,
       value: "",
+      inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
   };

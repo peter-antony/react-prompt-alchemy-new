@@ -15,7 +15,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
   const getButtonClass = () => {
     if (config.label.toLowerCase() === "cancel") {
       return buttonStyles.cancel;
-    }else if(config.label.toLowerCase() === "save draft"){
+    }else if(config.label.toLowerCase() === "save"){
       return buttonStyles.secondary;
     }
     return config.type === "Button"

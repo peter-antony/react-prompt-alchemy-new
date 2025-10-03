@@ -588,8 +588,59 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 <InputDropdown
                   value={fieldValue}
                   onChange={(newValue) => {
-                    field.onChange(newValue);
-                    events?.onChange?.(newValue, { target: { value: newValue } } as any);
+                    // If inputType is 'number', allow only numbers in the input field
+                    if (config.inputType === 'number') {
+                      // If newValue is an object (InputDropdown usually has {input, dropdown})
+                      if (typeof newValue === 'object' && newValue !== null) {
+                        // Only allow numbers in the input part
+                        const filteredInput = newValue.input
+                          ? newValue.input.replace(/[^0-9.]/g, '')
+                          : '';
+                        field.onChange({ ...newValue, input: filteredInput });
+                        events?.onChange?.(
+                          { ...newValue, input: filteredInput },
+                          { target: { value: { ...newValue, input: filteredInput } } } as any
+                        );
+                      } else if (typeof newValue === 'string') {
+                        // If for some reason it's a string, filter it
+                        const filteredInput = (newValue as string).replace(/[^0-9.]/g, '');
+                        field.onChange(filteredInput);
+                        events?.onChange?.(
+                          filteredInput,
+                          { target: { value: filteredInput } } as any
+                        );
+                        
+                      } else {
+                        field.onChange(newValue);
+                        events?.onChange?.(newValue, { target: { value: newValue } } as any);
+                      }
+                    } else if (config.inputType === 'characters') {
+                      // Only allow alphabetic characters in the input part
+                      if (typeof newValue === 'object' && newValue !== null) {
+                        const filteredInput = newValue.input
+                          ? newValue.input.replace(/[^a-zA-Z\s]/g, '')
+                          : '';
+                        field.onChange({ ...newValue, input: filteredInput });
+                        events?.onChange?.(
+                          { ...newValue, input: filteredInput },
+                          { target: { value: { ...newValue, input: filteredInput } } } as any
+                        );
+                      } else if (typeof newValue === 'string') {
+                        const filteredInput = (newValue as string).replace(/[^a-zA-Z\s]/g, '');
+                        field.onChange(filteredInput);
+                        events?.onChange?.(
+                          filteredInput,
+                          { target: { value: filteredInput } } as any
+                        );
+                      } else {
+                        field.onChange(newValue);
+                        events?.onChange?.(newValue, { target: { value: newValue } } as any);
+                      }
+                    } else {
+                      // Default: no filtering
+                      field.onChange(newValue);
+                      events?.onChange?.(newValue, { target: { value: newValue } } as any);
+                    }
                   }}
                   options={options}
                   placeholder={placeholder}
