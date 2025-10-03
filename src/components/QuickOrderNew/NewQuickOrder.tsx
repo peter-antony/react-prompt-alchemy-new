@@ -12,9 +12,10 @@ import jsonStore from '@/stores/jsonStore';
 
 interface NewCreateQuickOrderProps {
   isEditQuickOrder?: boolean;
+  onOrderCreated?: () => void;
 }
 
-const NewCreateQuickOrder = ({ isEditQuickOrder }: NewCreateQuickOrderProps) => {
+const NewCreateQuickOrder = ({ isEditQuickOrder, onOrderCreated }: NewCreateQuickOrderProps) => {
   useEffect(() => {
     if (!isEditQuickOrder) {
       // Set ResourceGroup as empty array in jsonStore
@@ -59,6 +60,7 @@ const NewCreateQuickOrder = ({ isEditQuickOrder }: NewCreateQuickOrderProps) => 
             onConfirm={handleConfirm}
             onCancel={handleCancel}
             isEditQuickOrder={isEditQuickOrder}
+            onOrderCreated={onOrderCreated}
             onScroll={true}
           />
         {/* </div> */}
