@@ -39,23 +39,22 @@ const CreateQuickOrder = () => {
   ];
 
   useEffect(() => {
-    console.log("INITIALIZING CREATE : ")
+    fetchAll();
+    //  Fetch the full quick order details
+    initializeJsonStore();
+    const oldQuickOrder = jsonStore.getQuickOrder();
+
+    console.log("INITIALIZING CREATE : ", oldQuickOrder)
       quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-        console.log("Parsed result:", parsedData?.ResponseResult[0]);
-        // To access parsedData?.ResponseResult[0] in quickOrderSaveDraftHandler,
-        // store it in a state variable when you fetch it here.
-        if (parsedData?.ResponseResult !== undefined) {
-          const quickOrderData = parsedData.ResponseResult[0];
-          jsonStore.setQuickOrder(quickOrderData);
-
-          // Store quickOrderData in a state variable for later use
-          setFetchedQuickOrderData(quickOrderData);
-
+        console.log("Parsed result:", parsedData?.ResponseResult);
+        if(parsedData?.ResponseResult != undefined){
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
+          console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
           const fullJson2 = jsonStore.getJsonData();
           // const storedConfirmStatus = localStorage.getItem('confirmOrder');
-          console.log("jsonStore.getQuickOrder() ===", jsonStore.getQuickOrder());
           const storedConfirmStatus = jsonStore.getQuickOrder().Status;
           console.log("storedConfirmStatus ===", storedConfirmStatus);
           if (storedConfirmStatus === 'Confirmed') {
@@ -72,10 +71,7 @@ const CreateQuickOrder = () => {
         }
 
       })
-  }, []);
 
-  useEffect(() => {
-    fetchAll();
     setFooter({
       visible: true,
       pageName: 'Create_Quick_Order',
@@ -101,10 +97,9 @@ const CreateQuickOrder = () => {
         {
           label: "Save",
           type: "Button" as const,
-          // disabled: !jsonStore.getQuickOrder,
           disabled: isSaveButtonDisabled,
           onClick: () => {
-            console.log("Save Draft clicked 123");
+            console.log("Save Draft clicked");
             quickOrderSaveDraftHandler();
           },
         },
@@ -150,32 +145,6 @@ const CreateQuickOrder = () => {
         // setApiData(data);
       } finally {
         setLoading(true);
-        setFields([
-          {
-          type: "select",
-          label: "Reason Code",
-          name: "reasonCode",
-          placeholder: "Select Reason Code",
-          options: [
-            { value: "Reason A", label: "Reason A" },
-            { value: "Reason B", label: "Reason B" },
-          ],
-          value: "",
-          // options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-          // events: {
-          //   onChange: (value, event) => {
-          //     console.log('contractType changed:', value);
-          //   }
-          // }
-        },
-        {
-          type: "text",
-          label: "Reason Code Desc.",
-          name: "reasonDesc",
-          placeholder: "Enter Reason Code Description",
-          value: "",
-        },
-        ]);
       }
     };
     // Iterate through all messageTypes
@@ -238,13 +207,13 @@ const CreateQuickOrder = () => {
   // }
 
   const quickOrderSaveDraftHandler = async () => {
-    console.log("fetchedQuickOrderData ---", fetchedQuickOrderData);
+    console.log("setFetchedQuickOrderData ---", fetchedQuickOrderData);
     console.log("quickOrderCancelhandler ---", jsonStore.getQuickOrder());
     const fullJson = jsonStore.getQuickOrder();
     // const messageType = "Quick Order Cancel";
     try {
       //  Update resource
-      const res: any = await quickOrderService.updateQuickOrderResource(fullJson);
+      const res: any = await quickOrderService.updateQuickOrderResource(fetchedQuickOrderData || fullJson);
       console.log("updateQuickOrderResource result:", res);
 
       //  Get OrderNumber from response
@@ -344,8 +313,32 @@ const CreateQuickOrder = () => {
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
   const [popupAmendFlag, setPopupAmendFlag] = useState('');
   const [reasonCodeTypeList, setReasonCodeTypeList] = useState<any[]>([]);
-  const [fields, setFields] = useState([]);
-
+  const [fields, setFields] = useState([
+    {
+      type: "select",
+      label: "Reason Code",
+      name: "reasonCode",
+      placeholder: "Select Reason Code",
+      options: [
+        { value: "Reason A", label: "Reason A" },
+        { value: "Reason B", label: "Reason B" },
+      ],
+      value: "",
+      // options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      // events: {
+      //   onChange: (value, event) => {
+      //     console.log('contractType changed:', value);
+      //   }
+      // }
+    },
+    {
+      type: "text",
+      label: "Reason Code Desc.",
+      name: "reasonDesc",
+      placeholder: "Enter Reason Code Description",
+      value: "",
+    },
+  ]);
   const quickOrderAmendHandler = () => {
     // Access selected row data for Confirm action
     // const selectedRowData = Array.from(selectedRows).map(idx => gridState.gridData[idx]);
