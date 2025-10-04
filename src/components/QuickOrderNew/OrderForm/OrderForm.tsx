@@ -1279,8 +1279,8 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   }
 
   const openUpdateResourceGroup = async () => {
-    const isValid = handleValidateAllPanels();
-    if (isValid) {
+    // const isValid = handleValidateAllPanels();
+    // if (isValid) {
       const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
 
       // Helper function to truncate at '||'
@@ -1394,13 +1394,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       //   // openResourceGroupGetID();
         
       // }
-    } else {
-      toast({
-        title: "⚠️ Required fields missing",
-        description: `Please enter required fields`,
-        variant: "destructive",
-      });
-    }
+    // } else {
+    //   toast({
+    //     title: "⚠️ Required fields missing",
+    //     description: `Please enter required fields`,
+    //     variant: "destructive",
+    //   });
+    // }
   }
 
   const onBadgeChange = async (fieldId: string, newValue: string) => {

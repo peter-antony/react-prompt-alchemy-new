@@ -311,6 +311,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       }
       console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
     } else {
+      console.log("Actuals else ===");
       // Get the current ActualDetails from jsonStore
       const currentActualDetails = jsonStore.getActualDetails() || {};
       formValues.wagonNewDetails = {
@@ -399,8 +400,12 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // Set the updated ActualDetails in jsonStore
       console.log("RESOURCE ID : ",resourceId)
       console.log("Updated Actual Details:", updatedActualDetails);
-      jsonStore.setActualDetailsJson(updatedActualDetails);
-      jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails);
+      // jsonStore.setActualDetailsJson(updatedActualDetails);
+      // jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails);
+      if(setActualId==-1)
+        jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails)
+      else
+        jsonStore.updateActualDetailsByResourceAndPlanLineID(resourceId,setActualId,updatedActualDetails);
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         "ModeFlag": "Update",

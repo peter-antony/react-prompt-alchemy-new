@@ -81,6 +81,49 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         return value;
       };
 
+      // We'll create a helper that, if a string contains "||", returns an object with both parts.
+      const splitAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          const [first, ...rest] = value.split("||");
+          return {
+            value: first.trim(),
+            label: rest.join("||").trim()
+          };
+        }
+        return value;
+      };
+
+      // Helper to recursively process all dropdown fields in an object, splitting at "||"
+      const splitDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, split it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: splitAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, split if it has a pipe
+            newObj[key] = splitAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = splitDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        console.log("splitDropdowns ===", newObj);
+        return newObj;
+      };
+
       // Helper to recursively truncate all dropdown fields in an object
       const truncateDropdowns = (obj: any) => {
         if (!obj || typeof obj !== "object") return obj;
@@ -111,14 +154,36 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         return newObj;
       };
       const formValues = {
-        basicDetails: truncateDropdowns(basicDetailsRef.current?.getFormValues() || {}),
-        operationalDetails: truncateDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
+        basicDetails: splitDropdowns(basicDetailsRef.current?.getFormValues() || {}),
+        operationalDetails: splitDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
         moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
         billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
       };
       console.log("resourceId edit next :: ", resourceId);
       if (isEditQuickOrder && resourceId) {
         // setCurrentStep(2);
+        formValues.basicDetails = {
+          ...formValues.basicDetails,
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
+        }
+
+        formValues.operationalDetails = {
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
+        }
+        
         jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
         // toast.success("Resource Group Updated Successfully");
         // const fullResourceJson = jsonStore.getJsonData();
@@ -288,11 +353,25 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
         jsonStore.setResourceBasicDetails({
           ...jsonStore.getResourceJsonData().BasicDetails,
-          ...formValues.basicDetails
+          ...formValues.basicDetails,
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
         });
         jsonStore.setResourceOperationalDetails({
           ...jsonStore.getResourceJsonData().OperationalDetails,
-          ...formValues.operationalDetails
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
@@ -420,12 +499,24 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.setResourceBasicDetails({
           ...jsonStore.getResourceJsonData().BasicDetails,
           ...formValues.basicDetails,
-          // "Resource":"Equipment",
-          // "ResourceType": "20FT Container",
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
         });
         jsonStore.setResourceOperationalDetails({
           ...jsonStore.getResourceJsonData().OperationalDetails,
-          ...formValues.operationalDetails
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
@@ -571,6 +662,49 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
         return value;
       };
+      // Instead of truncating at the "||" symbol, we want to preserve both values.
+      // We'll create a helper that, if a string contains "||", returns an object with both parts.
+      const splitAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          const [first, ...rest] = value.split("||");
+          return {
+            value: first.trim(),
+            label: rest.join("||").trim()
+          };
+        }
+        return value;
+      };
+
+      // Helper to recursively process all dropdown fields in an object, splitting at "||"
+      const splitDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, split it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: splitAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, split if it has a pipe
+            newObj[key] = splitAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = splitDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        console.log("splitDropdowns ===", newObj);
+        return newObj;
+      };
 
       // Helper to recursively truncate all dropdown fields in an object
       const truncateDropdowns = (obj: any) => {
@@ -599,13 +733,15 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             newObj[key] = val;
           }
         }
+        console.log("newObj ---", newObj);
         return newObj;
       };
 
+      console.log("getForm ---", basicDetailsRef.current?.getFormValues());
       console.log("getForm ---", operationalDetailsRef.current?.getFormValues());
       const formValues = {
-        basicDetails: truncateDropdowns(basicDetailsRef.current?.getFormValues() || {}),
-        operationalDetails: truncateDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
+        basicDetails: splitDropdowns(basicDetailsRef.current?.getFormValues() || {}),
+        operationalDetails: splitDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
         moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
         billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
       };
@@ -623,6 +759,28 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           // Add more fields as needed
         };
 
+        formValues.basicDetails = {
+          ...formValues.basicDetails,
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
+        }
+
+        formValues.operationalDetails = {
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
+        }
+
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
@@ -631,7 +789,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         // const originalData = jsonStore.getOriginalQuickOrder();
         // console.log("Original JSON :: ", originalData);
         // const updatedPayload = markUpdatedObjects(originalData, fullJson);
-        // console.log("updatedPayload ====", updatedPayload)
+        console.log("updatedPayload ====", formValues.basicDetails)
+        console.log("updatedPayload ====", formValues.operationalDetails)
 
         jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
 
@@ -844,7 +1003,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "SecondaryDocDate": formValues.moreInfoDetailsRef?.SecondaryDocDate || null,
           // Add more fields as needed
         };
-
+        console.log("formValues :: ", formValues.basicDetails);
+        console.log("formValues :: ", formValues.operationalDetails);
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
@@ -864,11 +1024,25 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         localStorage.setItem('resouceCount', (parseInt(localStorage.getItem('resouceCount')) + 1).toString());
         jsonStore.setResourceBasicDetails({
           ...jsonStore.getResourceJsonData().BasicDetails,
-          ...formValues.basicDetails
+          ...formValues.basicDetails,
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
         });
         jsonStore.setResourceOperationalDetails({
           ...jsonStore.getResourceJsonData().OperationalDetails,
-          ...formValues.operationalDetails
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
@@ -995,6 +1169,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "SecondaryDocDate": formValues.moreInfoDetailsRef?.SecondaryDocDate || null,
           // Add more fields as needed
         };
+        console.log("formValues :: ", formValues.basicDetails);
+        console.log("formValues :: ", formValues.operationalDetails);
 
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
@@ -1005,12 +1181,25 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         jsonStore.setResourceBasicDetails({
           ...jsonStore.getResourceJsonData().BasicDetails,
           ...formValues.basicDetails,
-          // "Resource":"Equipment",
+          "Resource": formValues.basicDetails?.Resource?.value || '',
+          "ResourceDescription": formValues.basicDetails?.Resource?.label || '',
+          "ResourceType": formValues.basicDetails?.ResourceType?.value || '',
+          "ResourceTypeDescription": formValues.basicDetails?.ResourceType?.label || '',
+          "ServiceType": formValues.basicDetails?.ServiceType?.value || '',
+          "ServiceTypeDescription": formValues.basicDetails?.ServiceType?.label || '',
+          "SubServiceType": formValues.basicDetails?.SubServiceType?.value || '',
+          "SubServiceTypeDescription": formValues.basicDetails?.SubServiceType?.label || '',
           // "ResourceType": "20FT Container",
         });
         jsonStore.setResourceOperationalDetails({
           ...jsonStore.getResourceJsonData().OperationalDetails,
-          ...formValues.operationalDetails
+          ...formValues.operationalDetails,
+          "OperationalLocation": formValues.operationalDetails?.OperationalLocation?.value || '',
+          "OperationalLocationDesc": formValues.operationalDetails?.OperationalLocation?.label || '',
+          "DepartPoint": formValues.operationalDetails?.DepartPoint?.value || '',
+          "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
+          "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
+          "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
@@ -1129,9 +1318,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           });
         }
 
-        // finally {
-        //   if (onSaveSuccess) onSaveSuccess();
-        // }
+        finally {
+          // if (onSaveSuccess) onSaveSuccess();
+        }
 
       }
     } else {
@@ -1251,20 +1440,20 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     return overallValid;
   };
 
+  function formatFieldWithName(id, name) {
+    if (id) {
+      if (name && name.trim() !== '') {
+        return id + ' || ' + name;
+      } else {
+        return id + ' || --';
+      }
+    }
+    return '';
+  }
+
   // Utility to normalize keys from store to config field IDs
   function normalizeBasicDetails(data) {
     // Generic helper to format a field with its name, fallback to '--' if name is empty/null
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
-
     return {
       Resource: formatFieldWithName(data.Resource, data.ResourceDescription),
       ResourceType: formatFieldWithName(data.ResourceType, data.ResourceTypeDescription),
@@ -1282,18 +1471,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }
 
   function normalizeOperationalDetails(data) {
-    console.log("data ....", data);
+    console.log("data .... operational", data);
     // Generic helper to format a field with its name, fallback to '--' if name is empty/null
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
     if (data)
       return {
         // OperationalLocation: data.OperationalLocation,
@@ -1337,17 +1516,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   function normalizeBillingDetails(data) {
     console.log("data ....", data);
-    // Generic helper to format a field with its name, fallback to '--' if name is empty/null
-    function formatFieldWithName(id, name) {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
-      }
-      return '';
-    }
+    // Generic helper to format a field with its name, fallback to '--' if name is empty/nul
     // This function normalizes billing details data so it can be used as initial values for billingDetailsForm.
     // It ensures the form fields are pre-filled with the correct values from the store.
     if (!data || typeof data !== 'object') return {};

@@ -889,6 +889,37 @@ function updatePlanDetailsByResourceAndPlanLineID(resourceUniqueID: string, plan
   return false;
 }
 
+function updateActualDetailsByResourceAndPlanLineID(resourceUniqueID: string, ActualLineUniqueID: string, updatedFields: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.ActualDetails)) {
+      const actualDetails = resourceGroup.ActualDetails;
+      const planIndex = actualDetails.findIndex(
+        (plan: any) => plan.ActualLineUniqueID === ActualLineUniqueID
+      );
+      
+      if (planIndex !== -1) {
+        // Update only the provided fields, preserve others
+        actualDetails[planIndex] = {
+          ...actualDetails[planIndex],
+          ...updatedFields
+        };
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function getPlanDetailsByResourceAndPlanLineID(resourceUniqueID: string, planLineUniqueID: string) {
   if (
     jsonData &&
@@ -1007,6 +1038,7 @@ const jsonStore = {
   setContractTariffList,
   getContractTariffList,
   updatePlanDetailsByResourceAndPlanLineID,
+  updateActualDetailsByResourceAndPlanLineID,
   getPlanDetailsByResourceAndPlanLineID,
   getActualDetailsByResourceAndActualLineID,
 };
