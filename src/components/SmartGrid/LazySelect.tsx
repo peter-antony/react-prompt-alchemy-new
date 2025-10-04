@@ -194,7 +194,7 @@ export function LazySelect({
               )}
               disabled={disabled}
             >
-              <span className="truncate text-xs">{getDisplayValue()}</span>
+              <span className="truncate text-[13px]">{getDisplayValue()}</span>
               <div className="flex items-center gap-1">
                 {/* {hasValue && (
               <X

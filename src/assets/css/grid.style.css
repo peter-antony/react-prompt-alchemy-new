@@ -1,0 +1,48 @@
+/* Grid screen styles here */
+.text-Primary-500 {
+  color: #0073e6;
+}
+
+.text-Gray-400 {
+  color: #98A2B3;
+}
+
+.text-Gray-500 {
+  color: #667085;
+}
+
+.text-Gray-600 {
+  color: #475467;
+}
+
+.text-Gray-700 {
+  color: #344054;
+}
+
+.text-Gray-800 {
+  color: #1D2939;
+}
+
+.font-Regular-12 {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.font-Medium-13 {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.font-Semibold-14 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.font-Semibold-16 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.Error-700 {
+  color: #B42318;
+}

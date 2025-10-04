@@ -61,7 +61,9 @@ export const OrderCountBadge: React.FC<OrdersBadgeProps> = ({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     calculatePosition();
     setIsOpen(true);
   };
@@ -116,7 +118,7 @@ export const OrderCountBadge: React.FC<OrdersBadgeProps> = ({
           // When there's exactly one customer, show the customer's name inline
           <div
             className={cn(
-              "text-sm font-medium text-blue-600 truncate",
+              "text-[13px] font-medium text-Primary-500 truncate",
               "px-2 py-0.5 rounded",
               className
             )}

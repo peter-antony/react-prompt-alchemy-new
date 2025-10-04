@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { tripService } from "@/api/services";
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
-import { Plus, Search, CloudUpload, NotebookPen } from 'lucide-react';
+import { Plus, Search, CloudUpload, NotebookPen, X, Ban } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -15,8 +15,12 @@ import { filterService, quickOrderService } from '@/api/services';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 import TripBulkCancelModal from "@/components/TripNew/TripBulkCancelModal";
+import { useFilterStore } from "@/stores/filterStore";
 
 export const TripExecutionHub = () => {
+  const gridId = "trip-hub"; // same id you pass to SmartGridWithGrouping
+  const { activeFilters, setActiveFilters } = useFilterStore();
+  const filtersForThisGrid = activeFilters[gridId] || {};
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
@@ -63,7 +67,7 @@ export const TripExecutionHub = () => {
       mappedName: 'Remarks'
     },
   ]);
-
+  console.log('filtersForThisGrid: ', filtersForThisGrid);
   const handleFieldChange = (name, value) => {
     console.log('Field changed:', name, value);
     setFields(fields =>
@@ -81,74 +85,79 @@ export const TripExecutionHub = () => {
     console.log('Mapped Object for API:', mappedObj);
     console.log('rowTripId --------------- ', rowTripId);
     let tripPayload = [];
-    rowTripId.forEach((tripId:any, index) => {
+    rowTripId.forEach((tripId: any, index) => {
       tripPayload.push({
         'TripID': tripId,
-        'UniqueID': `Trip${index + 1}`,
-        ...mappedObj})
+        'UniqueID': tripId,
+        ...mappedObj
+      })
     });
     console.log('tripPayload', tripPayload);
-    if(tripPayload.length > 0) {
+    if (tripPayload.length > 0) {
       try {
-      gridState.setLoading(true);
-      setApiStatus('loading');
+        gridState.setLoading(true);
+        setApiStatus('loading');
 
-      const response: any = await tripService.bulkCancelTrip(tripPayload);
+        const response: any = await tripService.bulkCancelTrip(tripPayload);
 
-      console.log('Server-side Search API Response:', response);
+        console.log('Server-side Search API Response:', response);
 
-      const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
-      const data = parsedResponse;
-      setApiStatus('success');
-      setPopupOpen(false);
+        const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
+        const data = parsedResponse;
+        setApiStatus('success');
+        setPopupOpen(false);
 
-      if (!data || !Array.isArray(data)) {
-        console.warn('API returned invalid data format:', response);
-        gridState.setGridData([]);
-        gridState.setLoading(false);
-        setApiStatus('error');
-        toast({
-          title: "No Results",
-          description: "No orders found matching your criteria",
-        });
-        return;
-      } else {
+        if (!data || !Array.isArray(data)) {
+          console.warn('API returned invalid data format:', response);
+          gridState.setGridData([]);
+          gridState.setLoading(false);
+          setApiStatus('error');
+          toast({
+            title: "No Results",
+            description: "No orders found matching your criteria",
+          });
+          return;
+        }
         const successCount = data.filter(item => item.Status === "SUCCESS").length;
         const failCount = data.filter(item => item.Status === "FAILED").length;
-        if (successCount > 0) {
+        if (successCount > 0 || failCount > 0) {
+          const descriptionParts: string[] = [];
+          if (successCount > 0) {
+            descriptionParts.push(`${successCount} trip${successCount > 1 ? "s" : ""} cancelled successfully`);
+          }
+          if (failCount > 0) {
+            descriptionParts.push(`${failCount} trip${failCount > 1 ? "s" : ""} already cancelled`);
+          }
           toast({
-            title: "Trips Cancelled",
-            description: `${successCount} trip${successCount > 1 ? "s" : ""} were cancelled successfully.`,
-            variant: "default", // success style,
+            title: "Trip Cancellation Summary",
+            description: descriptionParts.join(" • "), // join with a separator
+            variant: failCount > 0 ? "destructive" : "default", // red if any failure, green otherwise
             duration: 5000,
           });
         }
 
-        if (failCount > 0) {
-          toast({
-            title: "Trips Failed",
-            description: `${failCount} trip${failCount > 1 ? "s" : ""} has already been cancelled.`,
-            variant: "destructive", // error style,
-            duration: 5000,
-          });
-        }
+        // ✅ 1. Clear selected rows
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
+
+        // ✅ 2. Re-fetch grid data fresh
+        await fetchTripsAgain();
+        // toast({
+        //   title: "Success",
+        //   description: `Found ${processedData.length} orders`,
+        // });
+
+      } catch (error) {
+        console.error('Server-side search failed:', error);
+        setApiStatus('error');
+        toast({
+          title: "Error",
+          description: "Failed to search orders. Please try again.",
+          variant: "destructive",
+        });
       }
-     
-
-      // toast({
-      //   title: "Success",
-      //   description: `Found ${processedData.length} orders`,
-      // });
-
-    } catch (error) {
-      console.error('Server-side search failed:', error);
-      setApiStatus('error');
-      toast({
-        title: "Error",
-        description: "Failed to search orders. Please try again.",
-        variant: "destructive",
-      });
-    }
     }
   };
 
@@ -208,17 +217,17 @@ export const TripExecutionHub = () => {
       order: 5
     },
     {
-      key: "PlannedStartDateandTime",
-      label: "Planned Start Date and Time",
-      type: "DateTimeRange",
+      key: "ArrivalPointDescription",
+      label: "Arrival Point",
+      type: "TextPipedData",
       sortable: true,
       editable: false,
       subRow: false,
       order: 6
     },
     {
-      key: "ActualdateandtimeStart",
-      label: "Actual Start Date and Time",
+      key: "PlannedStartDateandTime",
+      label: "Planned Start Date and Time",
       type: "DateTimeRange",
       sortable: true,
       editable: false,
@@ -226,13 +235,22 @@ export const TripExecutionHub = () => {
       order: 7
     },
     {
-      key: "ArrivalPointDescription",
-      label: "Arrival Point",
-      type: "TextPipedData",
+      key: "DraftBillNo",
+      label: "Draft Bill",
+      type: "Link",
       sortable: true,
       editable: false,
       subRow: false,
       order: 8
+    },
+    {
+      key: "ActualdateandtimeStart",
+      label: "Actual Start Date and Time",
+      type: "DateTimeRange",
+      sortable: true,
+      editable: false,
+      subRow: true,
+      order: 9
     },
     {
       key: "PlannedEndDateandTime",
@@ -241,21 +259,12 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 9
+      order: 10
     },
     {
       key: "ActualdateandtimeTo",
       label: "Actual End Date and Time",
       type: "DateTimeRange",
-      sortable: true,
-      editable: false,
-      subRow: true,
-      order: 10
-    },
-    {
-      key: "DraftBillNo",
-      label: "Draft Bill",
-      type: "Link",
       sortable: true,
       editable: false,
       subRow: true,
@@ -382,21 +391,21 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
-      key: "Incidents",
-      label: "Incident ID",
-      type: "Text",
+      key: "IncidentDetails",
+      label: "Incident Details",
+      type: "CustomerCountBadge",
       sortable: true,
       editable: false,
       subRow: true,
     },
-    {
-      key: "IncidentStatus",
-      label: "Incident Status",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
+    // {
+    //   key: "IncidentStatus",
+    //   label: "Incident Status",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: true,
+    // },
     {
       key: "TripType",
       label: "Trip Type",
@@ -480,113 +489,89 @@ export const TripExecutionHub = () => {
 
   ];
 
-  // Initialize columns and data
-  useEffect(() => {
+  const fetchTripsAgain = async () => {
     gridState.setColumns(initialColumns);
-    gridState.setLoading(true); // Set loading state
-    setApiStatus('loading');
+    gridState.setLoading(true);
+    setApiStatus("loading");
 
-    let isMounted = true;
-    const defaultsTo: any = {
-      PlannedExecutionDate: {
-        value: {
-          from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
-          to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
-        }
-      }
-    }
-
-    const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
-    console.log('ResultSearchCriteria: ', ResultSearchCriteria);
-    tripService.getTrips({ searchCriteria: ResultSearchCriteria })
-      .then((response: any) => {
-        if (!isMounted) return;
-
-        console.log('API Response:', response); // Debug log
-
-        // Handle paginated response structure
-        const parsedResponse = JSON.parse(response?.data.ResponseData || {});
-        const data = parsedResponse;
-
-        if (!data || !Array.isArray(data)) {
-          console.warn('API returned invalid data format:', response);
-          console.warn('Expected array but got:', typeof data, data);
-          if (isMounted) {
-            gridState.setGridData([]);
-            gridState.setLoading(false);
-            setApiStatus('error');
+    try {
+      let searchCriteria;
+      if (Object.keys(filtersForThisGrid).length > 0) {
+        // ✅ Build criteria from store filters
+        searchCriteria = buildSearchCriteria(filtersForThisGrid);
+      } else {
+        // ✅ Fallback defaults
+        searchCriteria = buildSearchCriteria({
+          PlannedExecutionDate: {
+            value: {
+              from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
+              to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
+            }
           }
-          return;
-        }
-
-        const processedData = data.map((row: any) => {
-          // Helper function for status color (defined inline to avoid hoisting issues)
-          const getStatusColorLocal = (status: string) => {
-            const statusColors: Record<string, string> = {
-              // Status column colors
-              'Released': 'badge-fresh-green rounded-2xl',
-              'Executed': 'badge-purple rounded-2xl',
-              'Fresh': 'badge-blue rounded-2xl',
-              'Cancelled': 'badge-red rounded-2xl',
-              'Deleted': 'badge-red rounded-2xl',
-              'Save': 'badge-green rounded-2xl',
-              'Under Amendment': 'badge-orange rounded-2xl',
-              'Confirmed': 'badge-green rounded-2xl',
-              'Initiated': 'badge-blue rounded-2xl',
-              'Under Execution': 'badge-purple rounded-2xl',
-              // Trip Billing Status colors
-              'Draft Bill Raised': 'badge-orange rounded-2xl',
-              'Not Eligible': 'badge-red rounded-2xl',
-              'Revenue leakage': 'badge-red rounded-2xl',
-              'Invoice Created': 'badge-blue rounded-2xl',
-              'Invoice Approved': 'badge-fresh-green rounded-2xl'
-            };
-            return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
-          };
-
-          return {
-            ...row,
-            Status: {
-              value: row.Status,
-              variant: getStatusColorLocal(row.Status),
-            },
-            TripBillingStatus: {
-              value: row.TripBillingStatus,
-              variant: getStatusColorLocal(row.TripBillingStatus),
-            },
-            // PlannedStartDateandTime: row.PlannedStartDateandTime ? dateTimeFormatter(row.PlannedStartDateandTime) : '',
-            // PlannedEndDateandTime: row.PlannedEndDateandTime ? dateTimeFormatter(row.PlannedEndDateandTime) : '',
-            // Add customer data for API data as well
-            // customerData: [
-            //   { name: "DB Cargo", id: "CUS00000123" },
-            //   { name: "ABC Rail Goods", id: "CUS00003214" },
-            //   { name: "Wave Cargo", id: "CUS00012345" },
-            //   { name: "Express Logistics", id: "CUS00004567" },
-            //   { name: "Global Freight", id: "CUS00007890" }
-            // ].slice(0, parseInt(row.customer?.replace('+', '') || '3')),
-          };
         });
+      }
 
-        console.log('Processed Data:', processedData); // Debug log
+      // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
+      const response: any = await tripService.getTrips({ searchCriteria });
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      const data = parsedResponse;
 
-        if (isMounted) {
-          gridState.setGridData(processedData);
-          gridState.setLoading(false);
-          setApiStatus('success');
-        }
-      })
-      .catch((error: any) => {
-        console.error("Trip fetch failed:", error);
-        if (isMounted) {
-          gridState.setGridData([]);
-          gridState.setLoading(false);
-          setApiStatus('error');
+      if (!data || !Array.isArray(data)) {
+        gridState.setGridData([]);
+        setApiStatus("error");
+        return;
+      }
+
+      const processedData = data.map((row: any) => {
+        const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            // Status column colors
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Executed': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Initiated': 'badge-blue rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            // Trip Billing Status colors
+            'Draft Bill Raised': 'badge-orange rounded-2xl',
+            'Not Eligible': 'badge-red rounded-2xl',
+            'Revenue leakage': 'badge-red rounded-2xl',
+            'Invoice Created': 'badge-blue rounded-2xl',
+            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+        };
+        return {
+          ...row,
+          Status: {
+            value: row.Status,
+            variant: getStatusColorLocal(row.Status),
+          },
+          TripBillingStatus: {
+            value: row.TripBillingStatus,
+            variant: getStatusColorLocal(row.TripBillingStatus),
+          },
         }
       });
 
-    return () => {
-      isMounted = false;
-    };
+      gridState.setGridData(processedData);
+      setApiStatus("success");
+    } catch (error) {
+      console.error("Fetch trips failed:", error);
+      gridState.setGridData([]);
+      setApiStatus("error");
+    } finally {
+      gridState.setLoading(false);
+    }
+  };
+
+  // Initialize columns and data
+  useEffect(() => {
+    fetchTripsAgain();
   }, []); // Add dependencies if needed
 
   // Initialize columns and processed data in the grid state
@@ -713,7 +698,7 @@ export const TripExecutionHub = () => {
     console.log('Selected row IDs:', Array.from(newSelectedRowIds));
   };
 
-  const [rowTripId, setRowTripId] = useState<any>([]); 
+  const [rowTripId, setRowTripId] = useState<any>([]);
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
 
@@ -1252,14 +1237,30 @@ export const TripExecutionHub = () => {
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
               {/* Selected rows indicator */}
               {selectedRowObjects.length > 0 && (
-                <div className="px-6 py-3 bg-blue-50 border-b border-blue-200">
+                <div className="flex items-center justify-between px-6 py-3 bg-blue-50 border-b border-blue-200 mb-2">
                   <div className="text-sm text-blue-700">
                     <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
                     <span className="ml-2 text-xs">
                       ({selectedRowObjects.map(row => row.TripPlanID).join(', ')})
                     </span>
                   </div>
+                  {/* Right section - clear icon */}
+                  {/* <button
+                    onClick={() => {
+                      setSelectedRows(new Set());
+                      setSelectedRowIds(new Set());
+                      setSelectedRowObjects([]);
+                      setRowTripId([]);
+                      // If you also want to clear filters from Zustand:
+                      // clearAllFilters("trip-hub");
+                    }}
+                    className="text-blue-700 hover:text-blue-900 transition-colors"
+                    title="Clear selection"
+                  >
+                    <X className="w-4 h-4" />
+                  </button> */}
                 </div>
+
               )}
               <style>{`
             
@@ -1346,7 +1347,7 @@ export const TripExecutionHub = () => {
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                gridId="trip-hub"
+                gridId={gridId}
                 userId="current-user"
                 api={filterService}
               />
@@ -1361,7 +1362,7 @@ export const TripExecutionHub = () => {
         title={popupTitle}
         // titleColor={popupTextColor}
         // titleBGColor={popupTitleBgColor}
-        icon={<NotebookPen className="w-4 h-4" />}
+        icon={<Ban className="w-4 h-4 Error-700" />}
         fields={fields as any}
         onFieldChange={handleFieldChange}
         onSubmit={handleTripsCancelSubmit}

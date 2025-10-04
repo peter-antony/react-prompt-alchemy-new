@@ -122,10 +122,10 @@ const TripBulkCancelModal: React.FC<TripBulkCancelModalProps> = ({
         <DialogTitle>
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-100 text-red-500">
+              <div className="p-[10px] rounded-full flex items-center justify-center bg-red-100">
                 {icon}
               </div>
-              <span className="font-semibold text-base text-gray-700">
+              <span className="font-semibold text-[14px] text-Gray-700">
                 {title}
               </span>
             </div>
@@ -151,7 +151,7 @@ const TripBulkCancelModal: React.FC<TripBulkCancelModalProps> = ({
         >
           {fields.map((field) => (
             <div key={field.name} className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+              <label className="text-xs font-medium text-Gray-600 flex items-center gap-1">
                 {field.label}
                 {field.required && <span className="text-red-500">*</span>}
               </label>
@@ -225,7 +225,7 @@ const TripBulkCancelModal: React.FC<TripBulkCancelModalProps> = ({
           <div className="border-t pt-4">
             <button
               type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md px-6 py-2 text-sm font-medium"
+              className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md px-6 py-2 text-[13px] font-medium"
             >
               {submitLabel}
             </button>

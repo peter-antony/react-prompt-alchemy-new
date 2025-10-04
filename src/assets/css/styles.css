@@ -330,9 +330,9 @@ body::-webkit-scrollbar-thumb {
   border-bottom: 1px solid var(--Gray-200);
 }
 
-.text-xs {
+/* .text-xs {
   font-size: 11px;
-}
+} */
 
 
 

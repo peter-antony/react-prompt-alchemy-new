@@ -12,6 +12,7 @@ import { CustomerCountBadge } from './CustomerCountBadge';
 import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
+import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
 
 interface CellRendererProps {
   value: any;
@@ -141,7 +142,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     return (
       <button
         onClick={handleClick}
-        className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate max-w-full"
+        className="text-Primary-500 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate max-w-full"
         disabled={loading}
         title={String(value)}
       >
@@ -154,7 +155,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const renderTextData = () => {
     return (
       <div className="text-sm min-w-0">
-        <div className="text-gray-900 font-normal truncate text-[13px]">{value}</div>
+        <div className="text-Gray-800 font-normal truncate text-[13px]">{value}</div>
         {/* {column.key == 'Contract' && (<div className="text-gray-500 text-[11px] truncate">{row?.ContractDescription}</div>)}
         {column.key == 'CustomerOrVendor' && (<div className="text-gray-500 text-[11px] truncate">{row?.CustomerOrVendorName}</div>)} */}
       </div>
@@ -165,7 +166,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     return (
       <div className="text-sm min-w-0">
         {column.key === "Contract" && (
-          <div className="text-gray-900 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
             {row?.ContractDescription && row?.Contract
               ? `${row.ContractDescription} || ${row.Contract}`
               : row?.ContractDescription || row?.Contract}
@@ -173,7 +174,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         )}
 
         {column.key === "CustomerOrVendor" && (
-          <div className="text-gray-900 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
             {row?.CustomerOrVendorName && row?.CustomerOrVendor
               ? `${row.CustomerOrVendorName} || ${row.CustomerOrVendor}`
               : row?.CustomerOrVendorName || row?.CustomerOrVendor}
@@ -181,14 +182,14 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         )}
 
         {column.key === "DeparturePointDescription" && (
-          <div className="text-gray-900 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
             {row?.DeparturePointDescription && row?.DeparturePoint
               ? `${row.DeparturePointDescription} || ${row.DeparturePoint}`
               : row?.DeparturePointDescription || row?.DeparturePoint}
           </div>
         )}
         {column.key === "ArrivalPointDescription" && (
-          <div className="text-gray-900 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
             {row?.ArrivalPointDescription && row?.ArrivalPoint
               ? `${row.ArrivalPointDescription} || ${row.ArrivalPoint}`
               : row?.ArrivalPointDescription || row?.ArrivalPoint}
@@ -204,19 +205,19 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
       if (column.key === "CustomerTransportMode") {
         return (
-          <div className="text-gray-900 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
             {firstCustomer?.TransportMode}
           </div>
         );
       } else if (column.key === "CustomerService") {
         return (
-          <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
             {firstCustomer?.ServiceDescription}
           </div>
         );
       } else if (column.key === "CustomerSubService") {
         return (
-          <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
             {firstCustomer?.SubServiceDescription}
           </div>
         );
@@ -271,7 +272,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     // const [date, time] = String(value).split('\n');
     // return (
     //   <div className="text-sm min-w-0">
-    //     <div className="text-gray-900 font-normal truncate">{date}</div>
+    //     <div className="text-Gray-800 font-normal truncate">{date}</div>
     //     <div className="text-gray-500 text-xs truncate">{time}</div>
     //   </div>
     // );
@@ -291,7 +292,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
     return (
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-gray-900 font-medium truncate flex-1" title={String(value)}>
+        <span className="text-Gray-800 font-medium truncate flex-1" title={String(value)}>
           {value}
         </span>
         <TooltipProvider>
@@ -325,7 +326,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-gray-900 font-medium hover:bg-blue-50 hover:border-blue-300 transition-colors duration-150 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="text-Gray-800 font-medium hover:bg-blue-50 hover:border-blue-300 transition-colors duration-150 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             disabled={loading}
             aria-label={`View ${value} details`}
           >
@@ -334,7 +335,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white">
           <DialogHeader className="pb-4 border-b border-gray-200">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
+            <DialogTitle className="text-lg font-semibold text-Gray-800">
               Details
             </DialogTitle>
           </DialogHeader>
@@ -515,6 +516,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         <WorkOrderBadge
           count={WorkOrderDetailsData?.length}
           workOrders={WorkOrderDetailsData}
+          className="text-center"
+        />
+      );
+    }
+    if (column.key == "IncidentDetails") {
+      const IncidentData = row?.IncidentDetails || [];
+      // console.log('WorkOrderDetailsData: ', WorkOrderDetailsData)
+      return (
+        <IncidentBadgeComponent
+          count={IncidentData?.length}
+          Incidents={IncidentData}
           className="text-center"
         />
       );

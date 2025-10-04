@@ -69,7 +69,9 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     calculatePosition();
     setIsOpen(true);
   };
@@ -110,7 +112,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
             className={cn(
               "cursor-pointer transition-all duration-150 font-medium text-center",
               "hover:border-gray-400 hover:bg-gray-50",
-              "px-2 py-0.5 text-xs font-medium rounded-2xl",
+              "px-2 py-0.5 text-[12px] font-medium rounded-2xl",
               "flex items-center justify-center min-w-[2rem] h-6 badge-gray",
               className
             )}
@@ -124,7 +126,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
           // When there's exactly one customer, show the customer's name inline
           <div
             className={cn(
-              "text-sm font-medium text-gray-600 truncate",
+              "text-[13px] font-normal text-Gray-800 truncate",
               "px-2 py-0.5 rounded",
               className
             )}
@@ -159,10 +161,10 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
                     <UsersRound className="h-4 w-4 text-gray-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-normal text-gray-900 truncate">
+                    <div className="text-[13px] font-normal text-Gray-800 truncate">
                       {customer.CustomerDescription || customer.name}
                     </div>
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-[13px] text-Gray-800 truncate">
                       {customer.Customer || (customer.description ?? customer.Customer)}
                     </div>
                   </div>

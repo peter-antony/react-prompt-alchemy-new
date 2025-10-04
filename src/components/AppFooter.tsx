@@ -84,7 +84,7 @@ const renderButton = (config: FooterButtonConfig, index: number, showPopover: bo
           variant="secondary"
           onClick={config.onClick}
           disabled={config.disabled || config.loading}
-          className={`${getButtonClass()} font-medium transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`}
+          className={`${getButtonClass()} font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`}
         >
           {config.loading ? "Loading..." : config.label}
         </Button>

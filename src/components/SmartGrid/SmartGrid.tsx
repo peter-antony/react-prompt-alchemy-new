@@ -982,7 +982,7 @@ export function SmartGrid({
                     <TableHead
                       key={column.key}
                       className={cn(
-                        "relative group bg-gray-100 backdrop-blur-sm font-semibold text-gray-900 pl-1 py-0 pr-0 border-r border-gray-100 last:border-r-0 h-9",
+                        "relative group bg-gray-100 backdrop-blur-sm font-semibold text-Gray-800 pl-1 py-0 pr-0 border-r border-gray-100 last:border-r-0 h-9",
                         draggedColumn === column.key && "opacity-50",
                         dragOverColumn === column.key && "bg-blue-100 border-blue-300",
                         resizingColumn === column.key && "bg-blue-50",
@@ -1277,7 +1277,7 @@ export function SmartGrid({
       {/* Pagination */}
       {paginationMode === 'pagination' && totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white px-4 py-2 m-0 border-t shadow-sm">
-          <div className="text-sm text-gray-600 order-2 sm:order-1 w-full">
+          <div className="text-sm text-Gray-800 order-2 sm:order-1 w-full">
             Showing {(currentPage - 1) * pageSize + 1} to{' '}
             {Math.min(currentPage * pageSize, processedData.length)} of{' '}
             {processedData.length} entries

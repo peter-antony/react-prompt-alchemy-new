@@ -369,7 +369,7 @@ export function ServersideFilter({
 
       return (
         <div key={filter.key} className="space-y-1">
-          <div className="text-xs font-medium text-gray-600 truncate">
+          <div className="text-xs font-medium text-Gray-600 truncate">
             {filter.label}
           </div>
           <div className="relative">

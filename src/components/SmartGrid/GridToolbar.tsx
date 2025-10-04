@@ -157,7 +157,7 @@ export function GridToolbar({
       <div className="flex items-center">
         {gridTitle && (
           <div className="flex items-center">
-            <span className="text-gray-900 font-semibold text-lg flex items-center">
+            <span className="text-Gray-800 font-semibold text-lg flex items-center">
               {gridTitle === "Trip Execution Create" && (
                 <span className='p-3 rounded-xl bg-blue-50 mr-4'>
                   <Calendar color="#0058AF" strokeWidth={1.2} />

@@ -4,24 +4,24 @@ import { UsersRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
-interface WorkOrder {
-  WorkOrderIncidentID: string;
-  WorkOrderIncidentIDStatus?: string;
+interface Incident {
+  Customer: string;
+  CustomerDescription?: string;
   id?: string;
-  WorkorderNo?: string;
-  Workorderstatus?: string;
+  name?: string;
+  description?: string;
 }
 
-interface WorkOrderBadgeProps {
+interface IncidentBadgeProps {
   // count can be passed as number or string (we normalize it)
   count?: number | string;
-  workOrders?: WorkOrder[];
+  Incidents?: Incident[];
   className?: string;
 }
 
-export const WorkOrderBadge: React.FC<WorkOrderBadgeProps> = ({
+export const IncidentBadgeComponent: React.FC<IncidentBadgeProps> = ({
   count, // may be number (length) or string like "+3"
-  workOrders = [],
+  Incidents = [],
   className
 }) => {
   // Hooks must always run unconditionally at top-level
@@ -30,22 +30,22 @@ export const WorkOrderBadge: React.FC<WorkOrderBadgeProps> = ({
   const badgeRef = useRef<HTMLDivElement>(null);
 
   // Normalize count to a number. Prefer explicit prop, fall back to customers.length
-  const countNumber = Number(count ?? workOrders.length) || workOrders.length || 0;
+  const countNumber = Number(count ?? Incidents.length) || Incidents.length || 0;
 
-  // Default work orders if none provided
-  const defaultWorkOrders: WorkOrder[] = [
-    // { WorkOrderIncidentID: "WO00000123", WorkOrderIncidentIDStatus: "Open", WorkorderNo: "WO123", Workorderstatus: "In Progress" },
-    // { WorkOrderIncidentID: "WO00003214", WorkOrderIncidentIDStatus: "Closed", WorkorderNo: "WO456", Workorderstatus: "Completed" },
-    // { WorkOrderIncidentID: "WO00012345", WorkOrderIncidentIDStatus: "Pending", WorkorderNo: "WO789", Workorderstatus: "On Hold" }
+  // Default customers if none provided
+  const defaultIncidents: any[] = [
+    // { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
+    // { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
+    // { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
   ];
 
-  const displayWorkOrders = workOrders && workOrders.length > 0 ? workOrders : defaultWorkOrders;
+  const displayIncidents = Incidents && Incidents.length > 0 ? Incidents : defaultIncidents;
 
   const calculatePosition = () => {
     if (badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
       const popoverWidth = 224; // w-56 = 224px
-      const popoverHeight = Math.min(displayWorkOrders.length * 48 + 24, 200); // Estimate height
+      const popoverHeight = Math.min(displayIncidents.length * 48 + 24, 200); // Estimate height
 
       let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
       let top = rect.bottom + 6;
@@ -130,14 +130,16 @@ export const WorkOrderBadge: React.FC<WorkOrderBadgeProps> = ({
               "px-2 py-0.5 rounded",
               className
             )}
-            title={displayWorkOrders[0]?.WorkorderNo}
+            title={displayIncidents?.[0]?.IncidentID && displayIncidents[0]?.IncidentStatus
+              ? `${displayIncidents[0]?.IncidentID} || ${displayIncidents?.[0]?.IncidentStatus}`
+              : displayIncidents?.[0]?.IncidentID || displayIncidents?.[0]?.IncidentStatus}
           >
             {/* {displayCustomers && displayCustomers.length > 0
-              ? (displayWorkOrders[0]?.WorkorderNo || displayWorkOrders[0]?.Workorderstatus || String(countNumber))
+              ? (displayCustomers[0]?.Customer || displayCustomers[0]?.name || String(countNumber))
               : String(countNumber)} */}
-            { displayWorkOrders?.[0]?.WorkorderNo && displayWorkOrders[0]?.Workorderstatus
-              ? `${displayWorkOrders[0]?.WorkorderNo} || ${displayWorkOrders?.[0]?.Workorderstatus}`
-              : displayWorkOrders?.[0]?.WorkorderNo || displayWorkOrders?.[0]?.Workorderstatus || String(countNumber)}
+            { displayIncidents?.[0]?.IncidentID && displayIncidents[0]?.IncidentStatus
+              ? `${displayIncidents[0]?.IncidentID} || ${displayIncidents?.[0]?.IncidentStatus}`
+              : displayIncidents?.[0]?.IncidentID || displayIncidents?.[0]?.IncidentStatus}
           </div>
         )}
       </div>
@@ -152,20 +154,20 @@ export const WorkOrderBadge: React.FC<WorkOrderBadgeProps> = ({
         >
           <div className="p-3">
             <div className="space-y-1">
-              {displayWorkOrders.map((workOrder: any, index) => (
+              {displayIncidents.map((incident: any, index) => (
                 <div
-                  key={'WorkOrder-' + index}
+                  key={'Incident-' + index}
                   className="flex items-start space-x-3 p-2 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                 >
-                  <div className="flex-shrink-0">
+                  {/* <div className="flex-shrink-0">
                     <UsersRound className="h-4 w-4 text-gray-500" />
-                  </div>
+                  </div> */}
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-normal text-Gray-800 truncate">
-                      {workOrder.WorkorderNo || workOrder.name}
+                     IncidentID: {incident.IncidentID}
                     </div>
                     <div className="text-xs text-Gray-500 truncate">
-                      {workOrder.Workorderstatus || (workOrder.description ?? workOrder.Workorderstatus)}
+                     Incident Status: {incident.IncidentStatus}
                     </div>
                   </div>
                 </div>

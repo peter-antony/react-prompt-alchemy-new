@@ -9,6 +9,7 @@ import { dateFormatter, dateTimeFormatter, formattedAmount } from '@/utils/forma
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
+import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
 
 interface DraggableSubRowProps {
   row: any;
@@ -143,19 +144,19 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
 
         if (column.key === "CustomerTransportMode") {
           return (
-            <div className="text-gray-900 font-normal truncate text-[13px]">
+            <div className="text-Gray-800 font-normal truncate text-[13px]">
               {firstCustomer?.TransportMode}
             </div>
           );
         } else if (column.key === "CustomerService") {
           return (
-            <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
+            <div className="text-Gray-800 font-normal truncate text-[13px]" title={firstCustomer?.ServiceDescription}>
               {firstCustomer?.ServiceDescription}
             </div>
           );
         } else if (column.key === "CustomerSubService") {
           return (
-            <div className="text-gray-900 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
+            <div className="text-Gray-800 font-normal truncate text-[13px]" title={firstCustomer?.SubServiceDescription}>
               {firstCustomer?.SubServiceDescription}
             </div>
           );
@@ -169,9 +170,9 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           return (
             <>
               {customerOrders.length > 0 ? (
-                <div className="font-normal text-[13px] text-blue-600">
+                <div className="font-medium text-[13px] text-Primary-500">
                   {customerOrders.map((customer: any, index: number) => (
-                    <span key={index} className="hover:underline cursor-pointer text-blue-600" title={customer.CustomerOrder}>
+                    <span key={index} className="hover:underline cursor-pointer text-Primary-500 font-medium" title={customer.CustomerOrder}>
                       {/* <a
                         href="#"
                         className="hover:underline cursor-pointer text-blue-600"
@@ -211,6 +212,17 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
           <WorkOrderBadge
             count={WorkOrderDetailsData?.length}
             workOrders={WorkOrderDetailsData}
+            className="text-center"
+          />
+        );
+      }
+      if (column.key == "IncidentDetails" && column.type === 'CustomerCountBadge') {
+        const IncidentData = row?.IncidentDetails || [];
+        // console.log('WorkOrderDetailsData: ', WorkOrderDetailsData)
+        return (
+          <IncidentBadgeComponent
+            count={IncidentData?.length}
+            Incidents={IncidentData}
             className="text-center"
           />
         );
@@ -271,9 +283,9 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
         case 'Date':
           try {
             const date = new Date(value);
-            return <div className="font-medium text-sm">{dateFormatter(date)}</div>;
+            return <div className="font-normal text-[13px]">{dateFormatter(date)}</div>;
           } catch {
-            return <div className="font-medium text-sm">{String(value)}</div>;
+            return <div className="font-normal text-[13px]">{String(value)}</div>;
           }
         case 'DateFormat':
           try {
@@ -287,10 +299,10 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             return <span className="truncate" title={String(value)}>{String(value)}</span>;
           }
         case 'CurrencyWithSymbol':
-          return <div className="font-medium text-sm break-words">&euro; {formattedAmount(value)}</div>;
+          return <div className="font-normal text-[13px] break-words">&euro; {formattedAmount(value)}</div>;
 
         default:
-          return <div className="font-medium text-sm break-words">{String(value)}</div>;
+          return <div className="font-normal text-[13px] break-words">{String(value)}</div>;
       }
     })();
 
@@ -364,7 +376,7 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="text-sm text-gray-900">
+                  <div className="text-[13px] font-normal text-Gray-800">
                     {renderSubRowCellValue(value, column)}
                   </div>
                 </div>

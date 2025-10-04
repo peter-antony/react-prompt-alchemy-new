@@ -28,15 +28,15 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
               {item.label}
             </a> */}
             <Link to={item.href} className={
-              item.active ? 'text-foreground' : 'text-blue-600 cursor-pointer'
+              item.active ? 'text-foreground' : 'text-Primary-500 font-Medium-13 cursor-pointer'
             }>
               {item.label}
             </Link>
               </>
           ) : (
-            <span className="cursor-default text-foreground">{item.label}</span>
+            <span className="cursor-default font-Medium-13 text-Gray-600">{item.label}</span>
           )}
-          {index < items.length - 1 && <span><ChevronRight size={16} className="text-gray-400" /></span>}
+          {index < items.length - 1 && <span><ChevronRight size={16} className="text-Gray-400" /></span>}
         </div>
         // <React.Fragment key={index}>
         //   {item.label == 'Home' && <Home size={16} />}
