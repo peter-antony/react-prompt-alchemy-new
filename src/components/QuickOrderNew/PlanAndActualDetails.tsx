@@ -1383,7 +1383,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 5,
-      maxLength: 299,
+      maxLength: 255,
       // options: [
       //   { label: 'Quick order User defined 1 - 1', value: 'Quick order User defined 1 - 1' },
       //   { label: 'Quick order User defined 1 - 2', value: 'Quick order User defined 1 - 2' },
@@ -1399,7 +1399,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 6,
-      maxLength: 299,
+      maxLength: 255,
       value: { dropdown: '', input: '' },
       options: qcList2?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
@@ -1413,7 +1413,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 7,
-      maxLength: 299,
+      maxLength: 255,
       value: { dropdown: '', input: '' },
       options: qcList3?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
@@ -1427,7 +1427,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 8,
-      maxLength: 499,
+      maxLength: 500,
     },
     Remarks2: {
       id: "Remarks2",
@@ -1439,7 +1439,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 9,
-      maxLength: 499,
+      maxLength: 500,
     },
     Remarks3: {
       id: "Remarks3",
@@ -1451,7 +1451,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 10,
-      maxLength: 499,
+      maxLength: 500,
     },
   };
 

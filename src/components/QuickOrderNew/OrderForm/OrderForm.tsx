@@ -186,7 +186,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
       setResourceCount(quickOrder.ResourceGroup?.length);
       const resourceGroups = jsonStore.getAllResourceGroups();
-      console.log("RESOURCE GROUPS::::: ", resourceGroups);
+      console.log("+++111 GROUPS::::: ", resourceGroups);
       // setOrderType('BUY');
       // setFormData(normalizeOrderFormDetails(quickOrder));
       if (resourceGroups.length > 0) {
@@ -545,7 +545,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 8,
-      maxLength: 299,
+      maxLength: 255,
       options: qcList1?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remark1: {
@@ -559,7 +559,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 9,
       placeholder: '',
-      maxLength: 255,
+      maxLength: 500,
     },
     Summary: {
       id: 'Summary',
@@ -572,7 +572,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       editable: true,
       order: 10,
       placeholder: '',
-      maxLength: 255,
+      maxLength: 500,
     },
     WBS: {
       id: 'WBS',
@@ -597,7 +597,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       visible: true,
       editable: true,
       order: 12,
-      maxLength: 299,
+      maxLength: 255,
       options: qcList2?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       // options: [
       //   { label: 'QC', value: 'QC' },
@@ -628,7 +628,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 14,
       placeholder: '',
       width: 'full',
-      maxLength: 255,
+      maxLength: 500,
     },
     Remarks3: {
       id: 'Remarks3',
@@ -641,7 +641,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       order: 15,
       placeholder: '',
       width: 'full',
-      maxLength: 255,
+      maxLength: 500,
     }
   });
   //convert date time object to date value to bind in datepicker
@@ -663,7 +663,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     }
     console.log("VALUE", contractIdValue);
 
-    setLoading(false);
+    // setLoading(false);
     setError(null);
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractIdValue, type: OrderType });
@@ -677,12 +677,23 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       // setContracts(JSON.parse(data?.data?.ResponseData));
       const parsedData: any = JSON.parse(data?.data?.ResponseData);
       const contract: any = parsedData;
-      console.log("CONTRACT DATA:: ", contract.VendorID);
+      console.log("CONTRACT DATA:: ", contract);
       if (contract) {
+        orderDetailsRef.current.setFormValues({
+          Contract: contract.ContractID + ' || ' + contract.ContractDesc,
+          ContractDescription: contract.ContractDesc,
+          Vendor: contract.VendorID + ' || ' + contract.VendorName, 
+          VendorName: contract.VendorName, 
+          Cluster: contract.ClusterLocation + ' || ' + contract.ClusterLocationDesc, 
+          ClusterLocationDesc: contract.ClusterLocationDesc,
+          WBS: contract.WBS, 
+          Currency: contract.Currency,
+        });
+
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-        jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+        jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
@@ -728,7 +739,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       // setApiData(data);
     }
     finally {
-      setLoading(true);
+      // setLoading(true);
     }
   };
 
@@ -863,6 +874,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   const [ResourceCount, setResourceCount] = useState(0);
   useEffect(() => {
     const resourceGroups = jsonStore.getAllResourceGroups();
+    console.log("+++111 2GROUPS::::: ", resourceGroups);
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
       setResourceData(resourceGroups);
@@ -881,6 +893,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     console.log("RESOURCE GROUPS::::: ", resourceGroups);
     const quickOrder = jsonStore.getQuickOrder();
     // setOrderType('BUY');
+    console.log("+++111 3GROUPS::::: ", resourceGroups);
     setFormData(normalizeOrderFormDetails(quickOrder));
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
@@ -1143,7 +1156,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           setOrderType(OrderType)
           // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
           // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-          jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+          jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
           jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
           const additionalInfo = contract.ContractTariff;
           jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
@@ -1186,6 +1199,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
         Vendor: quickOrderData.VendorID ?? quickOrderData.Vendor ?? "",
         VendorName: quickOrderData.VendorName ?? quickOrderData.VendorName ?? "",
         Cluster: quickOrderData.ClusterLocation ?? quickOrderData.Cluster ?? "",
+        ClusterLocationDesc: quickOrderData.ClusterLocationDesc ?? quickOrderData.ClusterLocationDesc ?? "",
         WBS: quickOrderData.WBS ?? "",
         Currency: quickOrderData.Currency ?? "",
         QuickOrderDate: quickOrderData.ValidFrom ? formatDateToYYYYMMDD(quickOrderData.ValidFrom) : "",
@@ -1428,6 +1442,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
     // You might also want to trigger a save or update other parts of the form
   }
 
+  const loadResourceGroupData = async() => {
+    const resourceGroups = jsonStore.getAllResourceGroups();
+    console.log("loadResourceGroupData GROUPS::::: ", resourceGroups);
+    const quickOrder = jsonStore.getQuickOrder();
+    console.log("loadResourceGroupData ::::: ", quickOrder);
+  }
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -1637,6 +1658,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
             <ResourceGroupDetailsForm
               isEditQuickOrder={isEditQuickOrder}
               onSaveSuccess={closeResource} // <-- Pass the close function
+              onResourceCreated={loadResourceGroupData}
             />
           </div>
         </SideDrawer>

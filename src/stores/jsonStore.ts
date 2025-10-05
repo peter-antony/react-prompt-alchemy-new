@@ -44,7 +44,7 @@ function setQuickOrder(data: any) {
   return false;
 }
 
-function setQuickOrderFields(fields: {OrderType?:any,Contract?:any, ContractDescription?: any, Customer?: any, Vendor?: any, VendorName?: any, Cluster?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
+function setQuickOrderFields(fields: {OrderType?:any,Contract?:any, ContractDescription?: any, Customer?: any, Vendor?: any, VendorName?: any, Cluster?: any, ClusterLocationDesc?: any, WBS?: any,Currency?:any,QuickOrderDate?:any, Summary?:any,Remark1?: any,Remarks2?:any,Remarks3?:any,QCUserDefined1?: any,QCUserDefined2?:any,QCUserDefined3?:any, }) {
   if (jsonData && jsonData.ResponseResult && jsonData.ResponseResult.QuickOrder) {
     const quickOrder = jsonData.ResponseResult.QuickOrder;
     console.log("quickOrder111111111", quickOrder);
@@ -56,6 +56,7 @@ function setQuickOrderFields(fields: {OrderType?:any,Contract?:any, ContractDesc
     if (fields.Vendor !== undefined) quickOrder.Vendor = fields.Vendor;
     if (fields.VendorName !== undefined) quickOrder.VendorName = fields.VendorName;
     if (fields.Cluster !== undefined) quickOrder.Cluster = fields.Cluster;
+    if (fields.ClusterLocationDesc !== undefined) quickOrder.ClusterLocationDesc = fields.ClusterLocationDesc;
     if (fields.WBS !== undefined) quickOrder.WBS = fields.WBS;
     if (fields.OrderType !== undefined) quickOrder.OrderType = fields.OrderType;
     if (fields.Summary !== undefined) quickOrder.Summary = fields.Summary;
