@@ -51,10 +51,11 @@ interface ResourceGroupDetailsFormProps {
   isEditQuickOrder?: boolean,
   resourceId?: string;
   onSaveSuccess?: () => void; // <-- Add this
+  onResourceCreated?: () => void;
 }
 
 // const ResourceGroupDetailsForm = ({ open, onClose }: ResourceGroupDetailsFormProps) => {
-export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveSuccess }: ResourceGroupDetailsFormProps) => {
+export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveSuccess, onResourceCreated }: ResourceGroupDetailsFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
@@ -182,6 +183,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
           "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
           "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
+        }
+
+        formValues.billingDetails = {
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         }
         
         jsonStore.updateResourceGroupDetailsByUniqueID(resourceId, formValues.basicDetails, formValues.operationalDetails, formValues.billingDetails);
@@ -375,7 +384,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
-          ...formValues.billingDetails
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         });
 
         // Ensure BillingDetails numeric fields are numbers, not strings
@@ -520,7 +533,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
-          ...formValues.billingDetails
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         });
         jsonStore.setQuickOrder({
           ...jsonStore.getJsonData().quickOrder,
@@ -743,7 +760,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         basicDetails: splitDropdowns(basicDetailsRef.current?.getFormValues() || {}),
         operationalDetails: splitDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
         moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
-        billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
+        billingDetails: splitDropdowns(billingDetailsRef.current?.getFormValues() || {})
       };
       console.log("resourceId Before API Call:", resourceId);
       if (isEditQuickOrder && resourceId) {
@@ -779,6 +796,14 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "DepartPointDescription": formValues.operationalDetails?.DepartPoint?.label || '',
           "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
           "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
+        }
+        
+        formValues.billingDetails = {
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         }
 
         setBasicDetailsData(formValues.basicDetails);
@@ -932,6 +957,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
             onSaveSuccess();
+            onResourceCreated?.();
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -972,7 +998,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.description);
+          console.log(" catch", err);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1046,7 +1072,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
-          ...formValues.billingDetails
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         });
         jsonStore.setResourceMoreInfoDetails({
           ...jsonStore.getResourceJsonData().MoreRefDocs,
@@ -1097,6 +1127,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
             onSaveSuccess();
+            onResourceCreated?.();
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1138,7 +1169,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           })
 
         } catch (err) {
-          console.log(" catch", err.response.data.description);
+          console.log(" catch", err);
           setError(`Error fetching API data for Update ResourceGroup`);
           // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1203,7 +1234,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         });
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
-          ...formValues.billingDetails
+          ...formValues.billingDetails,
+          "Tariff": formValues.billingDetails?.Tariff?.value || '',
+          "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
+          "TariffType": formValues.billingDetails?.TariffType?.value || '',
+          "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         });
         jsonStore.setResourceMoreInfoDetails({
           ...jsonStore.getResourceJsonData().MoreRefDocs,
@@ -1257,6 +1292,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "default", // or "success" if you have custom variant
             });
             onSaveSuccess();
+            onResourceCreated?.();              
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1627,9 +1663,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
       console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
       console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+      console.log("Parsed id:", (parsedData?.ResponseResult)[0]);
       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
       const fullJson2 = jsonStore.getJsonData();
-      console.log("FULL JSON 33:: ", fullJson2);
+      console.log("FULL JSON 33:: ", fullJson2?.ResourceGroup);
     })
     console.log("load resourceId == ", resourceId)
     if (isEditQuickOrder && resourceId) {
@@ -1668,7 +1705,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       });
       console.log("jsonStore.Edit == ", jsonStore.getBasicDetailsByResourceUniqueID(resourceId));
       setLoading(true);
-    } else {
+    } 
+    else {
       console.log("resourceId == ", resourceId)
       console.log("jsonStore.getBasicDetailsByResourceUniqueID() == ", jsonStore.getResourceGroupBasicDetails())
       console.log("jsonStore.GETBILLINGDETAILS() == ", jsonStore.getResourceGroupBillingDetails())
@@ -2218,6 +2256,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             const tariffRate = matchedTariff.TariffRate ? matchedTariff.TariffRate : "";
             billingDetailsRef.current.setFormValues({
               ContractPrice: tariffRate,
+              UnitPrice: tariffRate,
               TariffType: matchedTariff.TariffType + '||' + matchedTariff.TariffTypeDescription
             });
           }
