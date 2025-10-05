@@ -14,6 +14,7 @@ import { initializeJsonStore } from './JsonCreater';
 import { useToast } from '@/hooks/use-toast';
 import CommonPopup from '@/components/Common/CommonPopup';
 import { NotebookPen} from 'lucide-react';
+import { json } from 'stream/consumers';
 
 const CreateQuickOrder = () => {
   const { setFooter, resetFooter } = useFooterStore();
@@ -44,7 +45,7 @@ const CreateQuickOrder = () => {
     initializeJsonStore();
     const oldQuickOrder = jsonStore.getQuickOrder();
 
-    console.log("INITIALIZING CREATE : ", oldQuickOrder)
+    console.log("INITIALIZING CREATE : ", isEditQuickOrder)
       quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
         console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
@@ -64,9 +65,11 @@ const CreateQuickOrder = () => {
           if (fullJson2.ResponseResult?.quickOrder?.ResourceGroup?.length != 0) {
             console.log("true ---");
             setIsConfirmButtonDisabled(false);
+            setIsSaveButtonDisabled(false);
           } else {
             console.log("else ---");
             setIsConfirmButtonDisabled(true);
+            setIsSaveButtonDisabled(true);
           }
         }
 
@@ -86,7 +89,7 @@ const CreateQuickOrder = () => {
       rightButtons: [
         {
           label: "Cancel",
-          disabled: isConfirmButtonDisabled,
+          disabled: isSaveButtonDisabled,
           type: 'Button' as const,
           onClick: () => {
             // console.log("Cancel clicked");
@@ -107,7 +110,7 @@ const CreateQuickOrder = () => {
         {
           label: "Confirm",
           type: "Button" as const,
-          disabled: isConfirmButtonDisabled,
+          disabled: isSaveButtonDisabled, //isConfirmButtonDisabled,
           onClick: () => {
             console.log("Confirm clicked");
             quickOrderConfirmHandler();
@@ -261,7 +264,7 @@ const CreateQuickOrder = () => {
     const messageType = "Quick Order Confirm";
     try {
       //  Update resource
-      const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fullJson, {messageType: messageType});
+      const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fetchedQuickOrderData, {messageType: messageType});
       console.log("updateQuickOrderResource result:", res);
       // localStorage.setItem("confirmOrder", 'true');
       //  Get OrderNumber from response
@@ -313,36 +316,37 @@ const CreateQuickOrder = () => {
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
   const [popupAmendFlag, setPopupAmendFlag] = useState('');
   const [reasonCodeTypeList, setReasonCodeTypeList] = useState<any[]>([]);
-  const [fields, setFields] = useState([
-    {
-      type: "select",
-      label: "Reason Code",
-      name: "reasonCode",
-      placeholder: "Select Reason Code",
-      options: [
-        { value: "Reason A", label: "Reason A" },
-        { value: "Reason B", label: "Reason B" },
-      ],
-      value: "",
-      // options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-      // events: {
-      //   onChange: (value, event) => {
-      //     console.log('contractType changed:', value);
-      //   }
-      // }
-    },
-    {
-      type: "text",
-      label: "Reason Code Desc.",
-      name: "reasonDesc",
-      placeholder: "Enter Reason Code Description",
-      value: "",
-    },
-  ]);
+  const [fields, setFields] = useState([]);
   const quickOrderAmendHandler = () => {
     // Access selected row data for Confirm action
     // const selectedRowData = Array.from(selectedRows).map(idx => gridState.gridData[idx]);
-    // console.log('Confirm selected rows:', selectedRowData);
+    console.log('amendmend data rows:', reasonCodeTypeList);
+    setFields([
+      {
+        type: "select",
+        label: "Reason Code",
+        name: "reasonCode",
+        placeholder: "Select Reason Code",
+        // options: [
+        //   { value: "Reason AB", label: "Reason AB" },
+        //   { value: "Reason B", label: "Reason B" },
+        // ],
+        value: "",
+        options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        // events: {
+        //   onChange: (value, event) => {
+        //     console.log('contractType changed:', value);
+        //   }
+        // }
+      },
+      {
+        type: "text",
+        label: "Reason Code Desc.",
+        name: "reasonDesc",
+        placeholder: "Enter Reason Code Description",
+        value: "",
+      },
+    ]);
     setPopupAmendFlag('Amend');
     setPopupOpen(true);
     setPopupTitle('Amend');
@@ -371,7 +375,13 @@ const CreateQuickOrder = () => {
   const submitAmendData = async (fields: any) => {
     console.log("Amend Fields:", fields[0].value);
     console.log("Amend Fields:", fields[1].value);
+    console.log("Amend old:", jsonStore.getQuickOrder());
+    console.log("Amend json:", fetchedQuickOrderData);
+    jsonStore.setQuickOrder(fetchedQuickOrderData);
+    console.log("Amend json:", jsonStore.getQuickOrder());
+    let messageType = "";
     if(popupAmendFlag == "Amend"){
+      messageType = "Quick Order Amend"; // Or appropriate message type
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         // "QuickOrderNo": jsonStore.getQuickUniqueID(),
@@ -380,6 +390,7 @@ const CreateQuickOrder = () => {
         "ModeFlag": "Update" // Set ModeFlag to "Amend"
       });
     }else{
+      messageType = "Quick Order Cancel"; // Or appropriate message type
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         // "QuickOrderNo": jsonStore.getQuickUniqueID(),
@@ -389,7 +400,6 @@ const CreateQuickOrder = () => {
       });
     }
     const fullJson = jsonStore.getQuickOrder();
-    const messageType = "Quick Order Amend"; // Or appropriate message type
     console.log("fullJson === amend", fullJson);
     try {
       // Call your API to submit the amended data
@@ -397,7 +407,7 @@ const CreateQuickOrder = () => {
       console.log("Amend API result:", res);
 
       const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
-
+      const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
       if (resourceStatus === "Success" || resourceStatus === "SUCCESS") {
         toast({
           title: "✅ submitted successfully",
@@ -408,7 +418,7 @@ const CreateQuickOrder = () => {
       } else {
         toast({
           title: "⚠️ submission failed",
-          description: JSON.parse(res?.data?.data?.ResponseData)[0].Error_msg,
+          description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
           variant: "destructive",
         });
       }

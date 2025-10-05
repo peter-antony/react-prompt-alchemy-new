@@ -48,9 +48,9 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                             <span className={`${titleColor} ${titleBGColor} w-8 h-8 py-2 justify-items-center rounded-full`}>{icon}</span>
                             <span className={`font-semibold text-lg text-gray-600`}>{title}</span>
                         </div>
-                        <button onClick={onClose} className="p-0.5 rounded-full border border-gray-600 hover:bg-gray-100">
+                        {/* <button onClick={onClose} className="p-0.5 rounded-full border border-gray-600 hover:bg-gray-100">
                             <X className="w-3 h-3 text-gray-600" />
-                        </button>
+                        </button> */}
                     </div>
                 </DialogTitle>
                 <DialogDescription></DialogDescription>
@@ -67,7 +67,7 @@ const CommonPopup: React.FC<CommonPopupProps> = ({
                             <label className="text-sm font-medium text-gray-600">{field.label}</label>
                             {field.type === "select" ? (
                                 <select
-                                    className="border rounded px-3 py-2 text-sm text-gray-600"
+                                    className="border rounded px-3 py-2 text-sm text-gray-600 w-full"
                                     value={field.value}
                                     onChange={e => onFieldChange(field.name, e.target.value)}
                                 >
