@@ -314,6 +314,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       console.log("Actuals else ===");
       // Get the current ActualDetails from jsonStore
       const currentActualDetails = jsonStore.getActualDetails() || {};
+      console.log("currentActualDetails: ",currentActualDetails)
+      // if(selectedPlan)
+      //   currentActualDetails = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+      // else
+      // currentActualDetails = jsonStore.getPlanDetailsJson() || {};
       formValues.wagonNewDetails = {
         ...formValues.wagonNewDetails,
         "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
@@ -363,15 +368,25 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       console.log("RESOURCE ID : ",resourceId)
       console.log("isEditQuickOrder: ",isEditQuickOrder)
       console.log("selectedPlan: ",selectedPlan);
+      console.log("planType: ",planType);
       let  currentActualDetail;
-      if(selectedPlan && planType=='Actual')
+      if(selectedPlan && planType=='actual' && isEditQuickOrder && resourceId && selectedPlan){
+        console.log("Inside ** selectedPlan && planType=='Actual'")
         currentActualDetail = jsonStore.getActualDetailsByResourceAndActualLineID(resourceId,selectedPlan);
-      else if(selectedPlan && planType=='Plan')
-        currentActualDetail = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
-      else if(!selectedPlan)
-        currentActualDetail = jsonStore.getActualDetails() || {};
+      }
+      else if(selectedPlan && planType=='plan' && isEditQuickOrder && resourceId && selectedPlan){
+        console.log("Inside ** selectedPlan && planType=='Plan'")
 
-      console.log("currentActualDetails: ",currentActualDetail)
+        currentActualDetail = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+      }
+      else if(!selectedPlan){
+        console.log("Inside ** !selectedPlan")
+
+        currentActualDetail = jsonStore.getPlanDetailsJson() || {};
+      }
+        // currentActualDetail = jsonStore.getActualDetails() || {};
+
+      console.log("currentActualDetail: ",currentActualDetail)
 
       let setActualId:any;
       if(isEditQuickOrder && resourceId && selectedPlan){
@@ -384,19 +399,19 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       }
       // Prepare the updated ActualDetails by merging new form values with existing ones
       const updatedActualDetails = {
-        ...currentActualDetails,
+        ... currentActualDetail,
         // "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
         "ActualLineUniqueID": setActualId,
         "ModeFlag": selectedPlan?"Update": "Insert",
 
-        WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
-        ContainerDetails: { ...currentActualDetails.ContainerDetails, ...formValues.containerDetails },
-        ProductDetails: { ...currentActualDetails.ProductDetails, ...formValues.productDetails },
-        THUDetails: { ...currentActualDetails.THUDetails, ...formValues.thuDetails },
-        JourneyAndSchedulingDetails: { ...currentActualDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
-        OtherDetails: { ...currentActualDetails.OtherDetails, ...formValues.otherDetails },
+        WagonDetails: { ...currentActualDetail.WagonDetails, ...formValues.wagonNewDetails },
+        ContainerDetails: { ...currentActualDetail.ContainerDetails, ...formValues.containerDetails },
+        ProductDetails: { ...currentActualDetail.ProductDetails, ...formValues.productDetails },
+        THUDetails: { ...currentActualDetail.THUDetails, ...formValues.thuDetails },
+        JourneyAndSchedulingDetails: { ...currentActualDetail.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+        OtherDetails: { ...currentActualDetail.OtherDetails, ...formValues.otherDetails },
       };
-      localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
+      // localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
       // Set the updated ActualDetails in jsonStore
       console.log("RESOURCE ID : ",resourceId)
       console.log("Updated Actual Details:", updatedActualDetails);
@@ -412,21 +427,21 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "Status": "Fresh",
         // "QuickOrderNo": jsonStore.getQuickUniqueID()
       });
-      const fullJson = jsonStore.getJsonData();
-      console.log("FULL Plan&Actual JSON :: ", fullJson);
+      const fullJson = jsonStore.getQuickOrder();
+      console.log("FULL JSON AFTER ACTUAL UPDATE ----", fullJson);
       try {
-        const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+        const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
         console.log(" try", data);
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
-        const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
-        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
         console.log("OrderNumber:", resourceGroupID);
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
@@ -435,12 +450,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
+            // setCurrentStep(2);
             // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
             const fullJson2 = jsonStore.getJsonData();
             console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
             onApiSuccess(true);
             onCloseDrawer();
-          }else{
+          }
+          else{
             toast({
               title: "⚠️ Submission failed",
               description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
@@ -459,6 +476,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         onApiSuccess(false);
         // setError(`Error fetching API data for Update ResourceGroup`);
       }
+      console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
       // console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
     }
     
@@ -474,8 +492,15 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       otherDetails: otherDetailsRef.current?.getFormValues() || {},
     };
     console.log("convert plan ===", formValues);
+    //Get the current Plan from jsonStore
+    let currentPlanDetails;
+    if(selectedPlan)
+        currentPlanDetails = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+      else
+        currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
+
     // Get the current ActualDetails from jsonStore
-    const currentActualDetails = jsonStore.getActualDetails() || {};
+    const currentActualDetails = jsonStore.getActualDetailsByResourceAndActualLineID(resourceId,selectedPlan) || {};
     formValues.wagonNewDetails = {
       ...formValues.wagonNewDetails,
       "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
@@ -1988,7 +2013,38 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     setSelectedItemId(item.PlanLineUniqueID || item.ActualLineUniqueID);
     setLoading(true);
   }
-  
+  const  addPlanActualItem= () => {
+     // Helper to build blank values based on panel config
+     const makeBlankValues = (config) => {
+       const blank = {};
+       Object.entries(config || {}).forEach(([fieldId, cfg]: any) => {
+         if (!cfg || cfg.visible === false) return;
+         if (cfg.fieldType === 'inputdropdown') {
+           blank[fieldId] = { dropdown: '', input: '' };
+         } else {
+           blank[fieldId] = '';
+         }
+       });
+       return blank;
+     };
+
+     // Reset each DynamicPanel via ref with blank values
+     try { wagonDetailsRef.current?.setFormValues(makeBlankValues(wagonDetailsConfig)); } catch {}
+     try { containerDetailsRef.current?.setFormValues(makeBlankValues(containerDetailsConfig)); } catch {}
+     try { productDetailsRef.current?.setFormValues(makeBlankValues(productDetailsConfig)); } catch {}
+     try { thuDetailsRef.current?.setFormValues(makeBlankValues(thuDetailsConfig)); } catch {}
+     try { journeyDetailsRef.current?.setFormValues(makeBlankValues(journeyDetailsConfig)); } catch {}
+     try { otherDetailsRef.current?.setFormValues(makeBlankValues(otherDetailsConfig)); } catch {}
+
+     // Also clear any local raw state mirrors
+     setWagonDetailsData({});
+     setContainerDetailsData({});
+     setProductDetailsData({});
+     setTHUDetailsData({});
+     setJourneyDetailsData({});
+     setOtherDetailsData({});
+     setSelectedItemId(undefined);
+  }
 
   return (
     <>
@@ -2056,7 +2112,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                 >
                   <WandSparkles className="w-5 h-5 text-gray-500" />
                 </button>
-                <button className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100">
+                <button className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100" onClick={() => addPlanActualItem()}>
                   <Plus className="w-5 h-5 text-gray-500 cursor-pointer" />
                 </button>
               </div>
