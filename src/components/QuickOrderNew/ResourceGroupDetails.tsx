@@ -158,7 +158,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         basicDetails: splitDropdowns(basicDetailsRef.current?.getFormValues() || {}),
         operationalDetails: splitDropdowns(operationalDetailsRef.current?.getFormValues() || {}),
         moreInfoDetailsRef: truncateDropdowns(moreInfoDetailsRef.current?.getFormValues() || {}),
-        billingDetails: truncateDropdowns(billingDetailsRef.current?.getFormValues() || {})
+        billingDetails: splitDropdowns(billingDetailsRef.current?.getFormValues() || {})
       };
       console.log("resourceId edit next :: ", resourceId);
       if (isEditQuickOrder && resourceId) {
@@ -1781,7 +1781,43 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       await fetchData(type);
     }
   };
+
+  
+  const [resourceSelected, setResourceSelected] = useState(null);
+  const [resourceSelectedID, setResourceSelectedID] = useState('');
   // Basic Details Panel Configuration
+  useEffect(() => {
+    // When resourceSelected changes, update dependent fields (e.g., ResourceType)
+    localStorage.setItem('resourceId', '');
+    if (resourceSelected) {
+      console.log('selectedResource updated:', resourceSelected);
+
+      // Example: If resourceSelected is a string like "id || name", extract the id
+      let resourceId = resourceSelected;
+      if (typeof resourceSelected === "string" && resourceSelected.includes("||")) {
+        resourceId = resourceSelected.split("||")[0].trim();
+      } else if (resourceSelected?.value) {
+        // If using an object with value/label
+        if (typeof resourceSelected.value === "string" && resourceSelected.value.includes("||")) {
+          resourceId = resourceSelected.value.split("||")[0].trim();
+        } else {
+          resourceId = resourceSelected.value;
+        }
+      }
+      setResourceSelectedID(resourceId);
+      // Set resourceId to localStorage
+      if (resourceId) {
+        localStorage.setItem('resourceId', resourceId);
+      }
+      console.log("resourceId ....", resourceId);
+
+      // Or, if you want to trigger a fetch for ResourceType options based on resourceId, do it here
+      // fetchResourceTypeOptions(resourceId);
+
+      // Make sure your ResourceType dropdown uses this value/state as needed
+    }
+  }, [resourceSelected]);
+
   const basicDetailsConfig: PanelConfig = {
     Resource: {
       id: 'Resource',
@@ -1802,8 +1838,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           offset,
           limit,
         });
-        // response.data is already an array, so just return it directly
-        const rr: any = response.data
+        const rr: any = response.data;
+        // Map the options as before
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {
@@ -1816,6 +1852,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       events: {
         onChange: (selected, event) => {
           console.log('Customer changed:', selected);
+          setResourceSelected(selected);
         },
         onClick: (event, value) => {
           console.log('Customer dropdown clicked:', { event, value });
@@ -1835,14 +1872,22 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       hideSearch: true,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
+        // Use the latest selected value from the resource dropdown, not the possibly stale resourceSelectedID
+        // 'selected' is expected to be passed by the lazyselect component on fetchOptions call
+        // Fallback to resourceSelectedID if 'selected' is not provided (for backward compatibility)
+        // const latestResourceId = selected || resourceSelectedID;
+        const latestResourceId = localStorage.getItem('resourceId');
+        console.log("ResourceType fetchOptions - latestResourceId:", localStorage.getItem('resourceId'));
+
         const response = await quickOrderService.getMasterCommonData({
           messageType: "ResourceType Init",
           searchTerm: searchTerm || '',
           offset,
           limit,
+          ResourceId: latestResourceId, // Pass the latest selected resource id to the API
         });
-        // response.data is already an array, so just return it directly
-        const rr: any = response.data
+
+        const rr: any = response.data;
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
           ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
             ? {

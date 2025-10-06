@@ -104,7 +104,12 @@ export const quickOrderService = {
           FilterName: "EquipmentType",
           FilterValue: params?.EquipmentType,
         }
-      ] : [],
+      ] : params?.messageType === "ResourceType Init" ? [
+        {
+          FilterName: "Resource",
+          FilterValue: params?.ResourceId,
+        }
+       ]: [],
       Pagination: {
         PageNumber: params?.offset,
         PageSize: params?.limit,
