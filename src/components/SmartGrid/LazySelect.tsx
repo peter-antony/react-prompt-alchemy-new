@@ -22,6 +22,7 @@ interface LazySelectProps {
   className?: string;
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
+  returnType?: string; // 👈 NEW PROP
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -35,7 +36,9 @@ export function LazySelect({
   disabled = false,
   className,
   hideSearch = false,
-  disableLazyLoading = false
+  disableLazyLoading = false,
+  returnType = 'id', // default keeps existing behavior
+
 }: LazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<LazySelectOption[]>([]);
@@ -129,15 +132,36 @@ export function LazySelect({
     }
   }, [loading, hasMore, loadOptions, disableLazyLoading]);
 
+  // const handleSelect = (selectedValue: string) => {
+  //   if (multiSelect) {
+  //     const currentValues = Array.isArray(value) ? value : [];
+  //     const newValues = currentValues.includes(selectedValue)
+  //       ? currentValues.filter(v => v !== selectedValue)
+  //       : [...currentValues, selectedValue];
+  //     onChange(newValues.length > 0 ? newValues : undefined);
+  //   } else {
+  //     onChange(selectedValue);
+  //     setIsOpen(false);
+  //   }
+  // };
+
   const handleSelect = (selectedValue: string) => {
+    // Find the selected option object for lookup
+    const selectedOption: any = options.find((opt: any) => opt.id === selectedValue);
+
+    // Decide what to return based on the prop
+    const returnValue = returnType === 'name'
+      ? selectedOption?.name || selectedValue
+      : selectedOption?.id || selectedValue;
+
     if (multiSelect) {
       const currentValues = Array.isArray(value) ? value : [];
-      const newValues = currentValues.includes(selectedValue)
-        ? currentValues.filter(v => v !== selectedValue)
-        : [...currentValues, selectedValue];
+      const newValues = currentValues.includes(returnValue)
+        ? currentValues.filter(v => v !== returnValue)
+        : [...currentValues, returnValue];
       onChange(newValues.length > 0 ? newValues : undefined);
     } else {
-      onChange(selectedValue);
+      onChange(returnValue);
       setIsOpen(false);
     }
   };
@@ -165,11 +189,18 @@ export function LazySelect({
     return placeholder;
   };
 
-  const isSelected = (optionId: string) => {
+  // const isSelected = (optionId: string) => {
+  //   if (multiSelect && Array.isArray(value)) {
+  //     return value.includes(optionId);
+  //   }
+  //   return value === optionId;
+  // };
+
+  const isSelected = (optionId: string, optionName?: string) => {
     if (multiSelect && Array.isArray(value)) {
-      return value.includes(optionId);
+      return value.includes(returnType === 'name' ? optionName : optionId);
     }
-    return value === optionId;
+    return value === (returnType === 'name' ? optionName : optionId);
   };
 
   // console.log('LazySelect options:', options);
@@ -229,7 +260,7 @@ export function LazySelect({
           {options.length === 0 && !loading ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
               {/* {debouncedSearchTerm ? 'No results found.' : 'Start typing to search...'} */}
-               {hideSearch ? 'No options available.' : (debouncedSearchTerm ? 'No results found.' : 'Start typing to search...')}
+              {hideSearch ? 'No options available.' : (debouncedSearchTerm ? 'No results found.' : 'Start typing to search...')}
             </div>
           ) : (
             options.map((option: any, index) => {
@@ -243,13 +274,13 @@ export function LazySelect({
                   key={(option.id || option.name) + '-' + index}
                   className={cn(
                     "flex items-center space-x-2 px-2 py-2 hover:bg-gray-100 rounded-md hover:text-accent-foreground cursor-pointer",
-                    isSelected(option?.id) && "bg-accent"
+                    isSelected(option?.id, option?.name) && "bg-accent"
                   )}
                   onClick={() => handleSelect(option?.id)}
                 >
                   {multiSelect && (
                     <Checkbox
-                      checked={isSelected(option?.id)}
+                      checked={isSelected(option?.id, option?.name)}
                       onChange={() => { }}
                     />
                   )}

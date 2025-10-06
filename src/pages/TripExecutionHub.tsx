@@ -16,6 +16,7 @@ import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 import TripBulkCancelModal from "@/components/TripNew/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
+import { Button } from "@/components/ui/button";
 
 export const TripExecutionHub = () => {
   const gridId = "trip-hub"; // same id you pass to SmartGridWithGrouping
@@ -1237,7 +1238,7 @@ export const TripExecutionHub = () => {
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
               {/* Selected rows indicator */}
               {selectedRowObjects.length > 0 && (
-                <div className="flex items-center justify-between px-6 py-3 bg-blue-50 border-b border-blue-200 mb-2">
+                <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
                   <div className="text-sm text-blue-700">
                     <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
                     <span className="ml-2 text-xs">
@@ -1254,11 +1255,27 @@ export const TripExecutionHub = () => {
                       // If you also want to clear filters from Zustand:
                       // clearAllFilters("trip-hub");
                     }}
-                    className="text-blue-700 hover:text-blue-900 transition-colors"
+                    className="transform -translate-y-1/2 h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100"
                     title="Clear selection"
                   >
                     <X className="w-4 h-4" />
                   </button> */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRows(new Set());
+                      setSelectedRowIds(new Set());
+                      setSelectedRowObjects([]);
+                      setRowTripId([]);
+                      // If you also want to clear filters from Zustand:
+                      // clearAllFilters("trip-hub");
+                    }}
+                    title="Clear row selection"
+                    className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
                 </div>
 
               )}
@@ -1343,6 +1360,7 @@ export const TripExecutionHub = () => {
                 clientSideSearch={true}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
+                hideCheckboxToggle={true}
                 serverFilters={dynamicServerFilters}
                 showFilterTypeDropdown={false}
                 showServersideFilter={showServersideFilter}

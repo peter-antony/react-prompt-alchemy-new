@@ -145,6 +145,7 @@ export interface ServerFilter {
   defaultValue?: any; // Default value for the filter field
   hideSearch?: boolean; // Hide search box in lazy select
   disableLazyLoading?: boolean; // Disable infinite scroll in lazy select
+  returnType?: string; // return value from the laztselect 
 }
 
 export interface ExtraFilter {

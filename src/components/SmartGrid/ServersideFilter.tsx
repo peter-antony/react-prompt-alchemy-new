@@ -337,6 +337,7 @@ export function ServersideFilter({
                 placeholder={`Select ${filter.label.toLowerCase()}...`}
                 hideSearch={filter.hideSearch}
                 disableLazyLoading={filter.disableLazyLoading}
+                returnType={filter.returnType} // 👈 Pass from config to LazySelect
               />
               {pendingFilters[filter.key] && (
                 <Button

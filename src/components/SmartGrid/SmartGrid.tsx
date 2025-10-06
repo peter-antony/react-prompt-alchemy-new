@@ -529,6 +529,11 @@ export function SmartGrid({
     }
   }), [data, processedData, currentSelectedRows, orderedColumns, preferences, handleExport, handleResetPreferences, handleSelectionChange]);
 
+  // Clear selection handler
+  const handleClearSelection = useCallback(() => {
+    handleSelectionChange(new Set());
+  }, [handleSelectionChange]);
+
   // Pagination with auto-reset when current page has no data
   const paginatedData = useMemo(() => {
     if (paginationMode !== 'pagination' || onDataFetch) return processedData;
@@ -875,6 +880,9 @@ export function SmartGrid({
         onToggleServersideFilter={onToggleServersideFilter}
         hideCheckboxToggle={hideCheckboxToggle}
         gridId={gridId}
+         // Selection props
+        selectedRowsCount={currentSelectedRows.size}
+        onClearSelection={handleClearSelection}
       />
 
       {/* Server-side Filter */}
