@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { CalendarIcon, Search, CircleArrowOutUpRight, Plus, Paperclip, BookX, Link, Copy, CircleX, CheckCircle, AlertCircle, X } from 'lucide-react'; import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,8 @@ import CardDetails, { CardDetailsItem } from '../../Common/Card-View-Details';
 import { initializeJsonStore } from '../../../pages/JsonCreater';
 import { useToast } from '@/hooks/use-toast';
 
+export type OrderFormHandle = { getOrderValues: () => any };
+
 interface OrderFormProps {
   onSaveDraft: () => void;
   onConfirm: () => void;
@@ -37,7 +39,7 @@ interface OrderFormProps {
   onOrderCreated?: () => void;
 }
 
-const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps) => {
+const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps, ref) => {
   const [OrderType, setOrderType] = useState('BUY');
   const [OrderDate, setOrderDate] = useState<Date>();
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -796,6 +798,10 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
   }
 
   const orderDetailsRef = useRef<DynamicPanelRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    getOrderValues: () => orderDetailsRef.current?.getFormValues() || {},
+  }));
   // const onSaveDetails = () => {
   //   const formValues = {
   //     QuickOrder: orderDetailsRef.current?.getFormValues() || {},
@@ -1666,6 +1672,6 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       </div>
     </>
   );
-};
+});
 
 export default OrderForm;

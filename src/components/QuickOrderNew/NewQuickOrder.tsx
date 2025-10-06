@@ -1,11 +1,11 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState,useEffect, forwardRef, useImperativeHandle } from 'react';
 import { DynamicPanel } from '@/components/DynamicPanel';
 import { PanelVisibilityManager } from '@/components/DynamicPanel/PanelVisibilityManager';
 import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { EyeOff } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
-import OrderForm from '@/components/QuickOrderNew/OrderForm/OrderForm';
+import OrderForm, { OrderFormHandle } from '@/components/QuickOrderNew/OrderForm/OrderForm';
 import NewResourceGroup from '@/components/QuickOrderNew/NewResourceGroup';
 import { toast } from 'sonner';
 import jsonStore from '@/stores/jsonStore';
@@ -15,7 +15,9 @@ interface NewCreateQuickOrderProps {
   onOrderCreated?: () => void;
 }
 
-const NewCreateQuickOrder = ({ isEditQuickOrder, onOrderCreated }: NewCreateQuickOrderProps) => {
+export type NewQuickOrderHandle = { getOrderValues: () => any };
+
+const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated }, ref) => {
   useEffect(() => {
     if (!isEditQuickOrder) {
       // Set ResourceGroup as empty array in jsonStore
@@ -51,11 +53,20 @@ const NewCreateQuickOrder = ({ isEditQuickOrder, onOrderCreated }: NewCreateQuic
     console.log('Add resource group clicked');
   };
 
+  // expose child OrderForm getter through this component
+  let orderFormGetter: (() => any) | null = null;
+  useImperativeHandle(ref, () => ({
+    getOrderValues: () => orderFormGetter?.() || {},
+  }));
+
   return (
     <div className="flex gap-6">
         {/* Left Column - Order Form */}
         {/* <div className="lg:col-span-1 w-2/6"> */}
           <OrderForm
+            ref={(r: OrderFormHandle | null) => {
+              orderFormGetter = r?.getOrderValues || null;
+            }}
             onSaveDraft={handleSaveDraft}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
@@ -71,6 +82,6 @@ const NewCreateQuickOrder = ({ isEditQuickOrder, onOrderCreated }: NewCreateQuic
         </div> */}
     </div>
   );
-};
+});
 
 export default NewCreateQuickOrder;

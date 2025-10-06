@@ -5,7 +5,7 @@ import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { EyeOff } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
-import NewCreateQuickOrder from '@/components/QuickOrderNew/NewQuickOrder';
+import NewCreateQuickOrder, { NewQuickOrderHandle } from '@/components/QuickOrderNew/NewQuickOrder';
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useFooterStore } from '@/stores/footerStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
@@ -38,6 +38,8 @@ const CreateQuickOrder = () => {
     // "Quick Order Billing Type Init",
     "Quick Order Amend Reason Code Init",
   ];
+
+  const newQuickOrderRef = React.useRef<NewQuickOrderHandle>(null);
 
   useEffect(() => {
     fetchAll();
@@ -210,13 +212,21 @@ const CreateQuickOrder = () => {
   // }
 
   const quickOrderSaveDraftHandler = async () => {
+    // Pull current OrderForm values via forwarded ref
+    const orderFormValues = newQuickOrderRef.current?.getOrderValues() || {};
+    console.log('OrderForm current values:', orderFormValues);
     console.log("setFetchedQuickOrderData ---", fetchedQuickOrderData);
-    console.log("quickOrderCancelhandler ---", jsonStore.getQuickOrder());
+    jsonStore.setQuickOrder({
+      ...jsonStore.getJsonData().quickOrder,
+      ...orderFormValues,
+      "ModeFlag": "Update",
+    });
+    console.log("Handler FULL JSON ---", jsonStore.getQuickOrder());
     const fullJson = jsonStore.getQuickOrder();
     // const messageType = "Quick Order Cancel";
     try {
       //  Update resource
-      const res: any = await quickOrderService.updateQuickOrderResource(fetchedQuickOrderData || fullJson);
+      const res: any = await quickOrderService.updateQuickOrderResource(fullJson);
       console.log("updateQuickOrderResource result:", res);
 
       //  Get OrderNumber from response
@@ -442,7 +452,7 @@ const CreateQuickOrder = () => {
           </div>
 
           <div className="">
-            <NewCreateQuickOrder isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} />
+          <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} />
           </div>
 
         </div>
