@@ -680,11 +680,13 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
       console.log("CONTRACT DATA:: ", contract);
       if (contract) {
         orderDetailsRef.current.setFormValues({
-          Contract: contract.ContractID + ' || ' + contract.ContractDesc,
+          Contract: (contract.ContractID ? contract.ContractID : '') + ' || ' + (contract.ContractDesc ? contract.ContractDesc : ''),
           ContractDescription: contract.ContractDesc,
-          Vendor: contract.VendorID + ' || ' + contract.VendorName, 
+          Vendor: (contract.VendorID ? contract.VendorID : '') + ' || ' + (contract.VendorName ? contract.VendorName : ''), 
           VendorName: contract.VendorName, 
-          Cluster: contract.ClusterLocation + ' || ' + contract.ClusterLocationDesc, 
+          Cluster: 
+            (contract.ClusterLocation ? contract.ClusterLocation : '') + 
+            (contract.ClusterLocationDesc ? ' || ' + contract.ClusterLocationDesc : ''),
           ClusterLocationDesc: contract.ClusterLocationDesc,
           WBS: contract.WBS, 
           Currency: contract.Currency,
@@ -728,7 +730,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
         console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
-        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS }));
+        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) }));
       }
     } catch (err) {
       setError(`Error fetching API data for${err}`);
@@ -1151,7 +1153,7 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
           jsonStore.setContractTariffList(parsedData.ContractTariff);
         }
       
-        console.log("CONTRACT DATA:: ", contract.VendorID);
+        console.log("CONTRACT DATA:: ", contract);
         if (contract) {
           setOrderType(OrderType)
           // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
@@ -1350,64 +1352,64 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
 
       const fullJson = jsonStore.getJsonData();
       console.log("FULL JSON :: ", fullJson);
-      setResourceGroupOpen(true);
-      // try {
-      //   //  Update resource
-      //   const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
-      //   console.log("updateQuickOrderResource result:", res);
-      //   const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
-      //   const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
-      //   if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-      //     toast({
-      //       title: "✅ Form submitted successfully",
-      //       description: "Your changes have been saved.",
-      //       variant: "default", // or "success" if you have custom variant
-      //     });
-      //     setResourceGroupOpen(true);
-      //   }else{
-      //     toast({
-      //       title: "⚠️ Submission failed",
-      //       description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
-      //       variant: "destructive", // or "success" if you have custom variant
-      //     });
-      //   }
+      // setResourceGroupOpen(true);
+      try {
+        //  Update resource
+        const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+        console.log("updateQuickOrderResource result:", res);
+        const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
+        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+          toast({
+            title: "✅ Form submitted successfully",
+            description: "Your changes have been saved.",
+            variant: "default", // or "success" if you have custom variant
+          });
+          setResourceGroupOpen(true);
+        }else{
+          toast({
+            title: "⚠️ Submission failed",
+            description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
+            variant: "destructive", // or "success" if you have custom variant
+          });
+        }
 
-      //   //  Get OrderNumber from response
-      //   const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
-      //   console.log("OrderNumber:", OrderNumber);
+        //  Get OrderNumber from response
+        const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", OrderNumber);
 
-      //   //  Fetch the full quick order details
-      //   quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
-      //     console.log("fetchRes:: ", fetchRes);
-      //     let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-      //     console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-      //     console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-      //     jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-      //     const fullJson2 = jsonStore.getJsonData();
-      //     console.log("FULL JSON 33:: ", fullJson2);
-      //     setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-      //     console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-      //   })
-      //   //  Update your store or state with the fetched data
+        //  Fetch the full quick order details
+        quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+          console.log("fetchRes:: ", fetchRes);
+          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("FULL JSON 33:: ", fullJson2);
+          setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+          console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+        })
+        //  Update your store or state with the fetched data
 
-      // } catch (err) {
-      //   console.log("CATCH :: ", err);
-      //   setError(`Error fetching API data for resource group`);
-      //   toast({
-      //     title: "⚠️ Submission failed",
-      //     description: JSON.parse(err?.data?.Message),
-      //     variant: "destructive", // or "error"
-      //   });
-      // }
-      // finally {
-      //   // toast({
-      //   //   title: "✅ Form submitted successfully",
-      //   //   description: "Your changes have been saved.",
-      //   //   variant: "default", // or "success" if you have custom variant
-      //   // });
-      //   // openResourceGroupGetID();
+      } catch (err) {
+        console.log("CATCH :: ", err);
+        setError(`Error fetching API data for resource group`);
+        toast({
+          title: "⚠️ Submission failed",
+          description: JSON.parse(err?.data?.Message),
+          variant: "destructive", // or "error"
+        });
+      }
+      finally {
+        // toast({
+        //   title: "✅ Form submitted successfully",
+        //   description: "Your changes have been saved.",
+        //   variant: "default", // or "success" if you have custom variant
+        // });
+        // openResourceGroupGetID();
         
-      // }
+      }
     // } else {
     //   toast({
     //     title: "⚠️ Required fields missing",
@@ -1658,7 +1660,6 @@ const OrderForm = ({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScrol
             <ResourceGroupDetailsForm
               isEditQuickOrder={isEditQuickOrder}
               onSaveSuccess={closeResource} // <-- Pass the close function
-              onResourceCreated={loadResourceGroupData}
             />
           </div>
         </SideDrawer>

@@ -1433,7 +1433,6 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       label: "QC Userdefined 3",
       fieldType: "inputdropdown",
       width: 'third',
-      inputType: "number",
       mandatory: false,
       visible: true,
       editable: true,
