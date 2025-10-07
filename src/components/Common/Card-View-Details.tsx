@@ -10,6 +10,7 @@ import ResourceGroupDetailsForm from "../QuickOrderNew/ResourceGroupDetails";
 import { SideDrawer } from "./SideDrawer";
 import { dateFormatter, formattedAmount } from "@/utils/formatter";
 import { format } from 'date-fns';
+import jsonStore from '@/stores/jsonStore';
 interface CardStatus {
     label: string;
     color: string;
@@ -57,6 +58,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         isResourceGroupOpen: false,
         ResourceUniqueID: "0"
     });
+    const [items, setItems] = useState<any[]>(data || []);
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
         return format(new Date(dateStr), "dd-MMM-yyyy");
@@ -83,15 +85,22 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
     const closeResource = () => {
         setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0" });
         setIsBack(true);
-        // const resourceGroups = jsonStore.getAllResourceGroups();
+        const resourceGroups = jsonStore.getAllResourceGroups();
+        setItems(resourceGroups || []);
         // console.log("RESOURCE GROUPS::::: ", resourceGroups);
         // const quickOrder = jsonStore.getQuickOrder();
         // setOrderType('BUY');
       }
+      useEffect(()=>{
+        console.log("Inside USEEFFECT CARD-VIEW")
+        const resourceGroups = jsonStore.getAllResourceGroups();
+        setItems(resourceGroups || []);
+        console.log("resourceGroups = ",resourceGroups)
+      }, [isResourceGroup,isBack,isEditQuickOrder])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {data.map((item) => (
+            {items.map((item) => (
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-4 relative">
                     <div key={item.ResourceUniqueID} className="">
                         <div className="flex items-center justify-between mb-3 border-b pb-2">

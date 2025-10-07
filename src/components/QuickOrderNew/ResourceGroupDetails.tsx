@@ -354,7 +354,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
       } 
       else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
-        console.log("else If");
         setBasicDetailsData(formValues.basicDetails);
         setOperationalDetailsData(formValues.operationalDetails);
         setBillingDetailsData(formValues.billingDetails);
@@ -956,8 +955,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
-            onSaveSuccess();
-            onResourceCreated?.();
+            // onSaveSuccess();
+            // onResourceCreated?.();
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -990,11 +989,12 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             console.log("parsedResource:",parsedResource);
             const index=(parsedResource.length) -1;
             setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-
+            
             // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
             // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
             const fullJson2 = jsonStore.getJsonData();
             console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+            onSaveSuccess();
           })
 
         } catch (err) {
@@ -1018,7 +1018,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
 
       } else if (isEditQuickOrder && resourceId == undefined || resourceId == "") {
-        console.log("else if");
         formValues.moreInfoDetailsRef = {
           ...formValues.moreInfoDetailsRef,
           "PrimaryDocType": formValues.moreInfoDetailsRef?.PrimaryDocType?.dropdown || null,
@@ -1126,7 +1125,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
-            onSaveSuccess();
+            // onSaveSuccess();
             onResourceCreated?.();
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
@@ -1166,6 +1165,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             const fullJson2 = jsonStore.getJsonData();
             
             console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+            onSaveSuccess();
+
           })
 
         } catch (err) {
@@ -1189,7 +1190,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         }
 
       } else {
-        console.log("else");
         formValues.moreInfoDetailsRef = {
           ...formValues.moreInfoDetailsRef,
           "PrimaryDocType": formValues.moreInfoDetailsRef?.PrimaryDocType?.dropdown || null,
@@ -1291,7 +1291,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
-            onSaveSuccess();
+            // onSaveSuccess();
             onResourceCreated?.();              
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
@@ -1332,6 +1332,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             const fullJson2 = jsonStore.getJsonData();
             
             console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+            onSaveSuccess();
+
           })
 
         } catch (err) {

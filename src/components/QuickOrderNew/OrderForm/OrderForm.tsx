@@ -53,6 +53,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   const [selectedQC, setSelectedQC] = useState("QC");
   const [qcDropdown, setQcDropdown] = useState('QC');
   const [qcInput, setQcInput] = useState('');
+  const [items, setItems] = useState<any[]>([]);
 
   //Contracts Array
   const [contracts, setContracts] = useState<any[]>([]);
@@ -178,34 +179,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   useEffect(() => {
     fetchAll();
   }, []);
-  useEffect(() => {
-    console.log("load data=== ", jsonStore.getQuickOrder());
-    const quickOrder = jsonStore.getQuickOrder();
-    if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
-      setOrderType(quickOrder.OrderType || 'BUY');
-      setFormData(normalizeOrderFormDetails(quickOrder));
-      // setOriginalData(quickOrder);
-      setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
-      setResourceCount(quickOrder.ResourceGroup?.length);
-      const resourceGroups = jsonStore.getAllResourceGroups();
-      console.log("+++111 GROUPS::::: ", resourceGroups);
-      // setOrderType('BUY');
-      // setFormData(normalizeOrderFormDetails(quickOrder));
-      if (resourceGroups.length > 0) {
-        // setIsResourceData(true);
-        setResourceData(resourceGroups);
-      }
+  
 
-    } else if (!isEditQuickOrder) {
-      initializeJsonStore();
-      const quickOrder = jsonStore.getQuickOrder();
-      // setOrderType('BUY');
-      setFormData(normalizeOrderFormDetails(quickOrder));
-      setmoreInfoData(normalizeMoreInfoDetails(quickOrder));
-      setResourceCount(quickOrder.ResourceGroup?.length);
-
-    }
-  }, [isEditQuickOrder, loading, contracts, customers, clusters, vendors]);
   //API Call for dropdown data
   const fetchData = async (messageType) => {
     setLoading(false);
@@ -281,7 +256,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     'CR345678930',
     'CR345678940',
   ];
-  const [isResourceGroupOpen, setResourceGroupOpen] = useState(false);
+  // const [isResourceGroupOpen, setResourceGroupOpen] = useState(false);
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
   const [isBack, setIsBack] = useState(true);
   const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
@@ -880,7 +855,44 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   const [isResourceData, setIsResourceData] = useState(false);
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [ResourceCount, setResourceCount] = useState(0);
+  const [isResourceGroupOpen, setResourceGroupOpen] = useState(false);
+  useEffect(()=>{
+    console.log("Inside USEEFFECT ORDERFORM")
+    const resourceGroups = jsonStore.getAllResourceGroups();
+    setItems(resourceGroups || []);
+    setResourceData(resourceGroups)
+    console.log("resourceGroups = ",resourceGroups)
+  }, [isResourceGroupOpen,isBack,isEditQuickOrder])
   useEffect(() => {
+    console.log("INSIDE ORDER-FORM- USE Effect ", jsonStore.getQuickOrder());
+    const quickOrder = jsonStore.getQuickOrder();
+    if (isEditQuickOrder && quickOrder && Object.keys(quickOrder).length > 0) {
+      setOrderType(quickOrder.OrderType || 'BUY');
+      setFormData(normalizeOrderFormDetails(quickOrder));
+      // setOriginalData(quickOrder);
+      setmoreInfoData(normalizeMoreInfoDetails(quickOrder)); // <-- This sets moreInfoData with store value
+      setResourceCount(quickOrder.ResourceGroup?.length);
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      console.log("+++111 GROUPS::::: ", resourceGroups);
+      // setOrderType('BUY');
+      // setFormData(normalizeOrderFormDetails(quickOrder));
+      if (resourceGroups.length > 0) {
+        // setIsResourceData(true);
+        setResourceData(resourceGroups);
+      }
+
+    } else if (!isEditQuickOrder) {
+      initializeJsonStore();
+      const quickOrder = jsonStore.getQuickOrder();
+      // setOrderType('BUY');
+      setFormData(normalizeOrderFormDetails(quickOrder));
+      setmoreInfoData(normalizeMoreInfoDetails(quickOrder));
+      setResourceCount(quickOrder.ResourceGroup?.length);
+
+    }
+  }, [ loading]);
+  useEffect(() => {
+
     const resourceGroups = jsonStore.getAllResourceGroups();
     console.log("+++111 2GROUPS::::: ", resourceGroups);
     if (resourceGroups.length > 0) {
@@ -892,16 +904,16 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
         openResourceGroupGetID();
       }, 3000)
     }
-  }, [isResourceData]);
+  }, [isResourceData,isResourceGroupOpen]);
 
   const closeResource = () => {
     setResourceGroupOpen(false);
     setIsBack(true);
     const resourceGroups = jsonStore.getAllResourceGroups();
-    console.log("RESOURCE GROUPS::::: ", resourceGroups);
+    console.log("ORDER FORM--RESOURCE GROUPS::::: ", resourceGroups);
     const quickOrder = jsonStore.getQuickOrder();
     // setOrderType('BUY');
-    console.log("+++111 3GROUPS::::: ", resourceGroups);
+    // console.log("+++111 3GROUPS::::: ", resourceGroups);
     setFormData(normalizeOrderFormDetails(quickOrder));
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
@@ -1302,120 +1314,120 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
 
   const openUpdateResourceGroup = async () => {
     // const isValid = handleValidateAllPanels();
-    // if (isValid) {
-      const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
+    // // if (isValid) {
+    //   const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
 
-      // Helper function to truncate at '||'
-      const truncateAtPipe = (val: any) => {
-        if (typeof val === 'string' && val.includes('||')) {
-          return val.split('||')[0].trim();
-        }
-        return val;
-      };
+    //   // Helper function to truncate at '||'
+    //   const truncateAtPipe = (val: any) => {
+    //     if (typeof val === 'string' && val.includes('||')) {
+    //       return val.split('||')[0].trim();
+    //     }
+    //     return val;
+    //   };
 
-      // List of fields to truncate
-      const fieldsToTruncate = [
-        "Contract",
-        "Customer",
-        "Vendor",
-        "Cluster"
-      ];
+    //   // List of fields to truncate
+    //   const fieldsToTruncate = [
+    //     "Contract",
+    //     "Customer",
+    //     "Vendor",
+    //     "Cluster"
+    //   ];
 
-      // Create a new object with truncated values
-      const formValues = {
-        QuickOrder: {
-          ...formValuesRaw,
-          ...fieldsToTruncate.reduce((acc, key) => {
-            if (formValuesRaw[key]) {
-              acc[key] = truncateAtPipe(formValuesRaw[key]);
-            }
-            return acc;
-          }, {} as Record<string, any>)
-        },
-        // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
-      };
+    //   // Create a new object with truncated values
+    //   const formValues = {
+    //     QuickOrder: {
+    //       ...formValuesRaw,
+    //       ...fieldsToTruncate.reduce((acc, key) => {
+    //         if (formValuesRaw[key]) {
+    //           acc[key] = truncateAtPipe(formValuesRaw[key]);
+    //         }
+    //         return acc;
+    //       }, {} as Record<string, any>)
+    //     },
+    //     // operationalDetails: moreInfoDetailsRef.current?.getFormValues() || {},
+    //   };
 
-      console.log("FORM VALUES : ",formValues)
-      setFormData(formValues.QuickOrder);
-      console.log("FORM VALUES : ",formValues.QuickOrder);
+    //   console.log("FORM VALUES : ",formValues)
+    //   setFormData(formValues.QuickOrder);
+    //   console.log("FORM VALUES : ",formValues.QuickOrder);
       
-      jsonStore.setQuickOrder({
-        ...jsonStore.getJsonData().quickOrder,
-        ...formValues.QuickOrder,
-        "ModeFlag": "Update",
-        // "QuickOrderNo": jsonStore.getQuickUniqueID(),
-        // "Status": "Fresh",
-        // "QuickUniqueID": -1,
-        // "QuickOrderNo": "",
-        "QCUserDefined1": formValues.QuickOrder?.QCUserDefined1?.dropdown,
-        "QCUserDefined1Value": formValues.QuickOrder?.QCUserDefined1?.input,
-        "QCUserDefined2": formValues.QuickOrder?.QCUserDefined2?.dropdown,
-        "QCUserDefined2Value": formValues.QuickOrder?.QCUserDefined2?.input,
-        "QCUserDefined3": formValues.QuickOrder?.QCUserDefined3?.dropdown,
-        "QCUserDefined3Value": formValues.QuickOrder?.QCUserDefined3?.input,
-        // "QuickOrderDate":quickOrderDate
-      });
+    //   jsonStore.setQuickOrder({
+    //     ...jsonStore.getJsonData().quickOrder,
+    //     ...formValues.QuickOrder,
+    //     "ModeFlag": "Update",
+    //     // "QuickOrderNo": jsonStore.getQuickUniqueID(),
+    //     // "Status": "Fresh",
+    //     // "QuickUniqueID": -1,
+    //     // "QuickOrderNo": "",
+    //     "QCUserDefined1": formValues.QuickOrder?.QCUserDefined1?.dropdown,
+    //     "QCUserDefined1Value": formValues.QuickOrder?.QCUserDefined1?.input,
+    //     "QCUserDefined2": formValues.QuickOrder?.QCUserDefined2?.dropdown,
+    //     "QCUserDefined2Value": formValues.QuickOrder?.QCUserDefined2?.input,
+    //     "QCUserDefined3": formValues.QuickOrder?.QCUserDefined3?.dropdown,
+    //     "QCUserDefined3Value": formValues.QuickOrder?.QCUserDefined3?.input,
+    //     // "QuickOrderDate":quickOrderDate
+    //   });
 
-      const fullJson = jsonStore.getJsonData();
-      console.log("FULL JSON :: ", fullJson);
-      // setResourceGroupOpen(true);
-      try {
-        //  Update resource
-        const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
-        console.log("updateQuickOrderResource result:", res);
-        const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
-        const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
-        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-          toast({
-            title: "✅ Form submitted successfully",
-            description: "Your changes have been saved.",
-            variant: "default", // or "success" if you have custom variant
-          });
-          setResourceGroupOpen(true);
-        }else{
-          toast({
-            title: "⚠️ Submission failed",
-            description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
-            variant: "destructive", // or "success" if you have custom variant
-          });
-        }
+    //   const fullJson = jsonStore.getJsonData();
+    //   console.log("FULL JSON :: ", fullJson);
+      setResourceGroupOpen(true);
+      // try {
+      //   //  Update resource
+      //   const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
+      //   console.log("updateQuickOrderResource result:", res);
+      //   const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+      //   const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
+      //   if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+      //     toast({
+      //       title: "✅ Form submitted successfully",
+      //       description: "Your changes have been saved.",
+      //       variant: "default", // or "success" if you have custom variant
+      //     });
+      //     setResourceGroupOpen(true);
+      //   }else{
+      //     toast({
+      //       title: "⚠️ Submission failed",
+      //       description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
+      //       variant: "destructive", // or "success" if you have custom variant
+      //     });
+      //   }
 
-        //  Get OrderNumber from response
-        const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
-        console.log("OrderNumber:", OrderNumber);
+      //   //  Get OrderNumber from response
+      //   const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+      //   console.log("OrderNumber:", OrderNumber);
 
-        //  Fetch the full quick order details
-        quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
-          console.log("fetchRes:: ", fetchRes);
-          let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-          console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("FULL JSON 33:: ", fullJson2);
-          setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-          console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-        })
-        //  Update your store or state with the fetched data
+      //   //  Fetch the full quick order details
+      //   quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+      //     console.log("fetchRes:: ", fetchRes);
+      //     let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+      //     console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+      //     console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+      //     jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+      //     const fullJson2 = jsonStore.getJsonData();
+      //     console.log("FULL JSON 33:: ", fullJson2);
+      //     setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+      //     console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+      //   })
+      //   //  Update your store or state with the fetched data
 
-      } catch (err) {
-        console.log("CATCH :: ", err);
-        setError(`Error fetching API data for resource group`);
-        toast({
-          title: "⚠️ Submission failed",
-          description: JSON.parse(err?.data?.Message),
-          variant: "destructive", // or "error"
-        });
-      }
-      finally {
-        // toast({
-        //   title: "✅ Form submitted successfully",
-        //   description: "Your changes have been saved.",
-        //   variant: "default", // or "success" if you have custom variant
-        // });
-        // openResourceGroupGetID();
+      // } catch (err) {
+      //   console.log("CATCH :: ", err);
+      //   setError(`Error fetching API data for resource group`);
+      //   toast({
+      //     title: "⚠️ Submission failed",
+      //     description: JSON.parse(err?.data?.Message),
+      //     variant: "destructive", // or "error"
+      //   });
+      // }
+      // finally {
+      //   // toast({
+      //   //   title: "✅ Form submitted successfully",
+      //   //   description: "Your changes have been saved.",
+      //   //   variant: "default", // or "success" if you have custom variant
+      //   // });
+      //   // openResourceGroupGetID();
         
-      }
+      // }
     // } else {
     //   toast({
     //     title: "⚠️ Required fields missing",
@@ -1425,30 +1437,30 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     // }
   }
 
-  const onBadgeChange = async (fieldId: string, newValue: string) => {
-    console.log(`onBadgeChange in OrderForm - Field: ${fieldId}, Value: ${newValue}`);
-    // Implement logic to update state/store based on fieldId and newValue
-    // if (fieldId === "Order Details") { // Assuming "Order Details" is the panelId for the QuickOrderNo badge
-    //   // Here you would update the QuickOrderNo in your formData or jsonStore
-    //   // For example:
-    //   jsonStore.setQuickOrder({ QuickOrderNo: newValue });
-    //   setFormData(prev => ({ ...prev, QuickOrderNo: newValue }));
-    // }
-    //  Fetch the full quick order details
-    quickOrderService.getQuickOrder(newValue).then((fetchRes: any) => {
-      console.log("fetchRes:: ", fetchRes);
-      let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-      console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-      console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-      jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-      const fullJson2 = jsonStore.getJsonData();
-      console.log("FULL JSON 33:: ", fullJson2);
-      setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-      console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
-    })
-    console.log("onBadgeChange ===");
-    // You might also want to trigger a save or update other parts of the form
-  }
+  // const onBadgeChange = async (fieldId: string, newValue: string) => {
+  //   console.log(`onBadgeChange in OrderForm - Field: ${fieldId}, Value: ${newValue}`);
+  //   // Implement logic to update state/store based on fieldId and newValue
+  //   // if (fieldId === "Order Details") { // Assuming "Order Details" is the panelId for the QuickOrderNo badge
+  //   //   // Here you would update the QuickOrderNo in your formData or jsonStore
+  //   //   // For example:
+  //   //   jsonStore.setQuickOrder({ QuickOrderNo: newValue });
+  //   //   setFormData(prev => ({ ...prev, QuickOrderNo: newValue }));
+  //   // }
+  //   //  Fetch the full quick order details
+  //   quickOrderService.getQuickOrder(newValue).then((fetchRes: any) => {
+  //     console.log("fetchRes:: ", fetchRes);
+  //     let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+  //     console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+  //     console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+  //     jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+  //     const fullJson2 = jsonStore.getJsonData();
+  //     console.log("FULL JSON 33:: ", fullJson2);
+  //     setResourceCount(fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+  //     console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult.QuickOrder.ResourceGroup.length);
+  //   })
+  //   console.log("onBadgeChange ===");
+  //   // You might also want to trigger a save or update other parts of the form
+  // }
 
   const loadResourceGroupData = async() => {
     const resourceGroups = jsonStore.getAllResourceGroups();
@@ -1490,7 +1502,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                 userId="current-user"
                 panelSubTitle="Order Details"
                 className="my-custom-orderform-panel"
-                onBadgeChange={onBadgeChange}
+                // onBadgeChange={onBadgeChange}
                 validationErrors={validationResults['Order Details']?.errors || {}}
               /> : ''
             }
@@ -1655,9 +1667,11 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                 </Button>
               </div>
             </div>
-            <div className="mt-4">
-              <CardDetails data={resourceData} isEditQuickOrder={isEditQuickOrder} />
-            </div>
+            {Array.isArray(resourceData) && resourceData.length > 0 && (
+              <div className="mt-4">
+                <CardDetails data={resourceData} isEditQuickOrder={isEditQuickOrder} />
+              </div>
+            )}
           </div>
         }
 

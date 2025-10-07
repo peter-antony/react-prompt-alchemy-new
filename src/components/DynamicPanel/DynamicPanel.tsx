@@ -26,7 +26,7 @@ export interface DynamicPanelRef {
 
 interface DynamicPanelPropsExtended extends DynamicPanelProps {
   badgeValue?: string;
-  onBadgeChange?: (fieldId: string, newValue: string) => void;
+  // onBadgeChange?: (fieldId: string, newValue: string) => void;
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({
@@ -53,7 +53,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   panelSubTitle = '',
   validationErrors = {},
   badgeValue = '',
-  onBadgeChange
+  // onBadgeChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -296,13 +296,13 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     }
   };
 
-  const handleBadgeChange = (newValue: string) => {
-    setCurrentBadgeValue(newValue);
-    if (typeof onBadgeChange === 'function') {
-      onBadgeChange(panelId, newValue); // Pass panelId as fieldId
-    }
-    console.log("handleBadgeChange", newValue);
-  }
+  // const handleBadgeChange = (newValue: string) => {
+  //   setCurrentBadgeValue(newValue);
+  //   if (typeof onBadgeChange === 'function') {
+  //     onBadgeChange(panelId, newValue); // Pass panelId as fieldId
+  //   }
+  //   console.log("handleBadgeChange", newValue);
+  // }
   
   // Determine panel width class based on 12-column grid system
   const getWidthClass = () => {
