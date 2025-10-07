@@ -169,24 +169,24 @@ const Plan_Details_BASIC_JSON = {
   "WagonDetails": {
     "WagonType": "",
     "WagonID": "",
-    "WagonQuantity": "",
+    "WagonQuantity": null,
     "WagonQuantityUOM": "",
-    "WagonTareWeight": "",
+    "WagonTareWeight": null,
     "WagonTareWeightUOM": "",
-    "WagonGrossWeight": "",
+    "WagonGrossWeight": null,
     "WagonGrossWeightUOM": "",
-    "WagonLength": "",
+    "WagonLength": null,
     "WagonLengthUOM": "",
-    "WagonSequence": ""
+    "WagonSequence": null,
   },
   "ContainerDetails": {
     "ContainerType": "",
     "ContainerID": "",
-    "ContainerQuantity": "",
+    "ContainerQuantity": null,
     "ContainerQuantityUOM": "",
-    "ContainerTareWeight": "",
+    "ContainerTareWeight": null,
     "ContainerTareWeightUOM": "",
-    "ContainerLoadWeight": "",
+    "ContainerLoadWeight": null,
     "ContainerLoadWeightUOM": ""
   },
   "ProductDetails": {
@@ -195,9 +195,9 @@ const Plan_Details_BASIC_JSON = {
     "NHMDescription": "",
     "ProductID": "",
     "ProductIDDescription": "",
-    "ProductQuantity": "",
+    "ProductQuantity": null,
     "ProductQuantityUOM": "",
-    "ContainerTareWeight": "",
+    "ContainerTareWeight": null,
     "ContainerTareWeightUOM": "",
     "UNCode": "",
     "UNCodeDescription": "",
@@ -207,9 +207,9 @@ const Plan_Details_BASIC_JSON = {
   "THUDetails": {
     "THUID": "",
     "THUSerialNo": "",
-    "THUQuantity": "",
+    "THUQuantity": null,
     "THUQuantityUOM": "",
-    "THUWeight": "",
+    "THUWeight": null,
     "THUWeightUOM": ""
   },
   "JourneyAndSchedulingDetails": {
@@ -310,24 +310,24 @@ const Plan_Details_JSON = {
   "WagonDetails": {
     "WagonType": "",
     "WagonID": "",
-    "WagonQuantity": "",
+    "WagonQuantity": null,
     "WagonQuantityUOM": "",
-    "WagonTareWeight": "",
+    "WagonTareWeight": null,
     "WagonTareWeightUOM": "",
-    "WagonGrossWeight": "",
+    "WagonGrossWeight": null,
     "WagonGrossWeightUOM": "",
-    "WagonLength": "",
+    "WagonLength": null,
     "WagonLengthUOM": "",
-    "WagonSequence": ""
+    "WagonSequence": null,
   },
   "ContainerDetails": {
     "ContainerType": "",
     "ContainerID": "",
-    "ContainerQuantity": "",
+    "ContainerQuantity": null,
     "ContainerQuantityUOM": "",
-    "ContainerTareWeight": "",
+    "ContainerTareWeight": null,
     "ContainerTareWeightUOM": "",
-    "ContainerLoadWeight": "",
+    "ContainerLoadWeight": null,
     "ContainerLoadWeightUOM": ""
   },
   "ProductDetails": {
@@ -336,9 +336,9 @@ const Plan_Details_JSON = {
     "NHMDescription": "",
     "ProductID": "",
     "ProductIDDescription": "",
-    "ProductQuantity": "",
+    "ProductQuantity": null,
     "ProductQuantityUOM": "",
-    "ContainerTareWeight": "",
+    "ContainerTareWeight": null,
     "ContainerTareWeightUOM": "",
     "UNCode": "",
     "UNCodeDescription": "",
@@ -348,9 +348,9 @@ const Plan_Details_JSON = {
   "THUDetails": {
     "THUID": "",
     "THUSerialNo": "",
-    "THUQuantity": "",
+    "THUQuantity": null,
     "THUQuantityUOM": "",
-    "THUWeight": "",
+    "THUWeight": null,
     "THUWeightUOM": ""
   },
   "JourneyAndSchedulingDetails": {

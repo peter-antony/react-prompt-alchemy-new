@@ -218,13 +218,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "WagonID": formValues.wagonNewDetails?.WagonID?.value || "",
         "WagonIDDescription": formValues.wagonNewDetails?.WagonID?.label || "",
         "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
         "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
         "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
         "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
         // Add more fields as needed
       };
       formValues.containerDetails = {
@@ -234,11 +234,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "ContainerType": formValues.containerDetails?.ContainerType?.value || "",
         "ContainerTypeDescription": formValues.containerDetails?.ContainerType?.label || "",
         "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || "",
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || null,
         "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || "",
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || null,
         "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || "",
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
         // Add more fields as needed
       };
       formValues.productDetails = {
@@ -254,9 +254,9 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "DGClass": formValues.productDetails?.DGClass?.value || "",
         "DGClassDescription": formValues.productDetails?.DGClass?.label || "",
         "ContainerTareWeightUOM": formValues.productDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || "",
+        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || null,
         "ProductQuantityUOM": formValues.productDetails?.ProductQuantity?.dropdown || "",
-        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || "",
+        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || null,
         // Add more fields as needed
       };
       formValues.thuDetails = {
@@ -264,9 +264,9 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "THUID": formValues.thuDetails?.THUID?.value || "",
         "THUIDDescription": formValues.thuDetails?.THUID?.label || "",
         "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || "",
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
         "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
-        "THUWeight": formValues.thuDetails?.THUWeight?.input || "",
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
         // Add more fields as needed
       };
       formValues.journeyDetails = {
@@ -312,6 +312,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
         setPlanId=-1;
       }
+      console.log("setPlanId =====", setPlanId);
       const updatedPlanDetails = {
         // ...currentPlanDetails,
         "PlanLineUniqueID": setPlanId,
@@ -359,9 +360,30 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           onApiSuccess(true);
           onCloseDrawer();
         }
-        else{
-          console.log("else ===== error ", isSuccessStatus);
-          console.log("else ===== error ", JSON.parse(data?.data?.ResponseData)[0].Error_msg);
+        else {
+          console.log("before ---", jsonStore.getQuickOrder());
+          const quickOrder = jsonStore.getQuickOrder();
+          let resourceGroups = Array.isArray(quickOrder.ResourceGroup) ? quickOrder.ResourceGroup : [];
+          // Find the resource group for this resourceId
+          const updatedResourceGroups = resourceGroups.map((rg: any) => {
+            if (rg.ResourceUniqueID === resourceId) {
+              // Remove PlanDetails with PlanLineUniqueID: -1
+              const planDetailsArr = Array.isArray(rg.PlanDetails) ? rg.PlanDetails : [];
+              return {
+                ...rg,
+                PlanDetails: planDetailsArr.filter((plan: any) => plan.PlanLineUniqueID !== -1)
+              };
+            }
+            return rg;
+          });
+          console.log("updatedResourceGroups ", updatedResourceGroups);
+          jsonStore.setQuickOrder({
+            ...quickOrder,
+            ResourceGroup: updatedResourceGroups
+          });
+          console.log("updatedResourceGroups ", jsonStore.getQuickOrder());
+          const fullJsonElse = jsonStore.getQuickOrder();
+          console.log("Else error123 :: ", fullJsonElse);
           toast({
             title: "⚠️ Submission failed",
             description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
@@ -406,13 +428,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "WagonID": formValues.wagonNewDetails?.WagonID?.value || "",
         "WagonIDDescription": formValues.wagonNewDetails?.WagonID?.label || "",
         "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
         "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
         "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
         "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
         // Add more fields as needed
       };
       formValues.containerDetails = {
@@ -422,11 +444,11 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "ContainerType": formValues.containerDetails?.ContainerType?.value || "",
         "ContainerTypeDescription": formValues.containerDetails?.ContainerType?.label || "",
         "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || "",
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || null,
         "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || "",
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || null,
         "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || "",
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
         // Add more fields as needed
       };
       formValues.productDetails = {
@@ -442,9 +464,9 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "DGClass": formValues.productDetails?.DGClass?.value || "",
         "DGClassDescription": formValues.productDetails?.DGClass?.label || "",
         "ContainerTareWeightUOM": formValues.productDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || "",
+        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || null,
         "ProductQuantityUOM": formValues.productDetails?.ProductQuantity?.dropdown || "",
-        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || "",
+        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || null,
         // Add more fields as needed
       };
       formValues.thuDetails = {
@@ -452,9 +474,9 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         "THUID": formValues.thuDetails?.THUID?.value || "",
         "THUIDDescription": formValues.thuDetails?.THUID?.label || "",
         "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || "",
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
         "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
-        "THUWeight": formValues.thuDetails?.THUWeight?.input || "",
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
         // Add more fields as needed
       };
       formValues.journeyDetails = {
@@ -564,6 +586,28 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           onCloseDrawer();
         }
         else{
+          console.log("before ---", jsonStore.getQuickOrder());
+          const quickOrder = jsonStore.getQuickOrder();
+          let resourceGroups = Array.isArray(quickOrder.ResourceGroup) ? quickOrder.ResourceGroup : [];
+          // Find the resource group for this resourceId
+          const updatedResourceGroups = resourceGroups.map((rg: any) => {
+            if (rg.ResourceUniqueID === resourceId) {
+              // Remove PlanDetails with PlanLineUniqueID: -1
+              const planDetailsArr = Array.isArray(rg.ActualDetails) ? rg.ActualDetails : [];
+              return {
+                ...rg,
+                ActualDetails: planDetailsArr.filter((plan: any) => plan.ActualLineUniqueID !== -1)
+              };
+            }
+            return rg;
+          });
+          console.log("updatedResourceGroups ", updatedResourceGroups);
+          jsonStore.setQuickOrder({
+            ...quickOrder,
+            ResourceGroup: updatedResourceGroups
+          });
+          console.log("updatedResourceGroups ", jsonStore.getQuickOrder());
+          const fullJsonElse = jsonStore.getQuickOrder();
           toast({
             title: "⚠️ Submission failed",
             description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
@@ -2159,6 +2203,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
      setJourneyDetailsData({});
      setOtherDetailsData({});
      setSelectedItemId(undefined);
+     setSelectedPlan(undefined);
   }
 
   return (
