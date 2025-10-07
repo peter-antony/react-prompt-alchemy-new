@@ -119,49 +119,92 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
 
   const handleSavePlanActuals = async () => {
     // Helper function to truncate at pipe symbol
-      const truncateAtPipe = (value: string | null | undefined) => {
-        if (typeof value === "string" && value.includes("||")) {
-          return value.split("||")[0].trim();
-        }
-        return value;
-      };
+    const truncateAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        return value.split("||")[0].trim();
+      }
+      return value;
+    };
 
-      // Helper to recursively truncate all dropdown fields in an object
-      const truncateDropdowns = (obj: any) => {
-        if (!obj || typeof obj !== "object") return obj;
-        const newObj: any = Array.isArray(obj) ? [] : {};
-        for (const key in obj) {
-          if (!obj.hasOwnProperty(key)) continue;
-          const val = obj[key];
-          // If value is an object with a dropdown property, truncate it
-          if (val && typeof val === "object" && "dropdown" in val) {
-            newObj[key] = {
-              ...val,
-              dropdown: truncateAtPipe(val.dropdown)
-            };
-            // If input property exists, keep as is
-            if ("input" in val) {
-              newObj[key].input = val.input;
-            }
-          } else if (typeof val === "string") {
-            // If value is a string, truncate if it has a pipe
-            newObj[key] = truncateAtPipe(val);
-          } else if (typeof val === "object" && val !== null) {
-            // Recursively process nested objects
-            newObj[key] = truncateDropdowns(val);
-          } else {
-            newObj[key] = val;
+    // Helper to recursively truncate all dropdown fields in an object
+    const truncateDropdowns = (obj: any) => {
+      if (!obj || typeof obj !== "object") return obj;
+      const newObj: any = Array.isArray(obj) ? [] : {};
+      for (const key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+        const val = obj[key];
+        // If value is an object with a dropdown property, truncate it
+        if (val && typeof val === "object" && "dropdown" in val) {
+          newObj[key] = {
+            ...val,
+            dropdown: truncateAtPipe(val.dropdown)
+          };
+          // If input property exists, keep as is
+          if ("input" in val) {
+            newObj[key].input = val.input;
           }
+        } else if (typeof val === "string") {
+          // If value is a string, truncate if it has a pipe
+          newObj[key] = truncateAtPipe(val);
+        } else if (typeof val === "object" && val !== null) {
+          // Recursively process nested objects
+          newObj[key] = truncateDropdowns(val);
+        } else {
+          newObj[key] = val;
         }
-        return newObj;
-      };
+      }
+      return newObj;
+    };
+
+    // We'll create a helper that, if a string contains "||", returns an object with both parts.
+    const splitAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        const [first, ...rest] = value.split("||");
+        return {
+          value: first.trim(),
+          label: rest.join("||").trim()
+        };
+      }
+      return value;
+    };
+
+    // Helper to recursively process all dropdown fields in an object, splitting at "||"
+    const splitDropdowns = (obj: any) => {
+      if (!obj || typeof obj !== "object") return obj;
+      const newObj: any = Array.isArray(obj) ? [] : {};
+      for (const key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+        const val = obj[key];
+        // If value is an object with a dropdown property, split it
+        if (val && typeof val === "object" && "dropdown" in val) {
+          newObj[key] = {
+            ...val,
+            dropdown: splitAtPipe(val.dropdown)
+          };
+          // If input property exists, keep as is
+          if ("input" in val) {
+            newObj[key].input = val.input;
+          }
+        } else if (typeof val === "string") {
+          // If value is a string, split if it has a pipe
+          newObj[key] = splitAtPipe(val);
+        } else if (typeof val === "object" && val !== null) {
+          // Recursively process nested objects
+          newObj[key] = splitDropdowns(val);
+        } else {
+          newObj[key] = val;
+        }
+      }
+      console.log("splitDropdowns ===", newObj);
+      return newObj;
+    };
 
     const formValues = {
-      wagonNewDetails: truncateDropdowns(wagonDetailsRef.current?.getFormValues() || {}),
-      containerDetails: truncateDropdowns(containerDetailsRef.current?.getFormValues() || {}),
-      productDetails: truncateDropdowns(productDetailsRef.current?.getFormValues() || {}),
-      thuDetails: truncateDropdowns(thuDetailsRef.current?.getFormValues() || {}),
-      journeyDetails: truncateDropdowns(journeyDetailsRef.current?.getFormValues() || {}),
+      wagonNewDetails: splitDropdowns(wagonDetailsRef.current?.getFormValues() || {}),
+      containerDetails: splitDropdowns(containerDetailsRef.current?.getFormValues() || {}),
+      productDetails: splitDropdowns(productDetailsRef.current?.getFormValues() || {}),
+      thuDetails: splitDropdowns(thuDetailsRef.current?.getFormValues() || {}),
+      journeyDetails: splitDropdowns(journeyDetailsRef.current?.getFormValues() || {}),
       otherDetails: truncateDropdowns(otherDetailsRef.current?.getFormValues() || {}),
     };
     
@@ -170,51 +213,84 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       console.log("formValues before ====", formValues.wagonNewDetails);
       formValues.wagonNewDetails = {
         ...formValues.wagonNewDetails,
+        "WagonType": formValues.wagonNewDetails?.WagonType?.value || "",
+        "WagonTypeDescription": formValues.wagonNewDetails?.WagonType?.label || "",
+        "WagonID": formValues.wagonNewDetails?.WagonID?.value || "",
+        "WagonIDDescription": formValues.wagonNewDetails?.WagonID?.label || "",
         "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
         "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
         "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
         "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
         // Add more fields as needed
       };
       formValues.containerDetails = {
         ...formValues.containerDetails,
+        "ContainerID": formValues.containerDetails?.ContainerID?.value || "",
+        "ContainerIDDescription": formValues.containerDetails?.ContainerID?.label || "",
+        "ContainerType": formValues.containerDetails?.ContainerType?.value || "",
+        "ContainerTypeDescription": formValues.containerDetails?.ContainerType?.label || "",
         "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || "",
         "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || "",
         "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || "",
         // Add more fields as needed
       };
       formValues.productDetails = {
-        ...formValues.containerDetails,
-        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
-        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
+        ...formValues.productDetails,
+        "NHM": formValues.productDetails?.NHM?.value || "",
+        "NHMDescription": formValues.productDetails?.NHM?.label || "",
+        "ProductID": formValues.productDetails?.ProductID?.value || "",
+        "ProductIDDescription": formValues.productDetails?.ProductID?.label || "",
+        // "ClassofStores": formValues.productDetails?.ClassofStores?.value || "",
+        // "ClassofStoresDescription": formValues.productDetails?.ClassofStores?.label || "",
+        "UNCode": formValues.productDetails?.UNCode?.value || "",
+        "UNCodeDescription": formValues.productDetails?.UNCode?.label || "",
+        "DGClass": formValues.productDetails?.DGClass?.value || "",
+        "DGClassDescription": formValues.productDetails?.DGClass?.label || "",
+        "ContainerTareWeightUOM": formValues.productDetails?.ContainerTareWeight?.dropdown || "",
+        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || "",
+        "ProductQuantityUOM": formValues.productDetails?.ProductQuantity?.dropdown || "",
+        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || "",
         // Add more fields as needed
       };
       formValues.thuDetails = {
         ...formValues.thuDetails,
+        "THUID": formValues.thuDetails?.THUID?.value || "",
+        "THUIDDescription": formValues.thuDetails?.THUID?.label || "",
         "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || "",
         "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
-        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || "",
         // Add more fields as needed
       };
+      formValues.journeyDetails = {
+        ...formValues.journeyDetails,
+        "Departure": formValues.journeyDetails?.Departure?.value || "",
+        "DepartureDescription": formValues.journeyDetails?.Departure?.label || "",
+        "Arrival": formValues.journeyDetails?.Arrival?.value || "",
+        "ArrivalDescription": formValues.journeyDetails?.Arrival?.label || "",
+        "ActivityLocation": formValues.journeyDetails?.ActivityLocation?.value || "",
+        "ActivityLocationDescription": formValues.journeyDetails?.ActivityLocation?.label || "",
+        "Activity": formValues.journeyDetails?.Activity?.value || "",
+        "ActivityDescription": formValues.journeyDetails?.Activity?.label || "",
+      },
       formValues.otherDetails = {
         ...formValues.otherDetails,
         "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
-        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || "",
         "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
-        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || "",
         "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
-        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || "",
         // Add more fields as needed
       };
-      console.log("formValues after ====", formValues.wagonNewDetails);
+      console.log("formValues after ====", formValues.productDetails);
       // Prepare the updated PlanDetails by merging new form values with existing ones
       console.log("RESOURCE ID : ",resourceId)
       console.log("isEditQuickOrder: ",isEditQuickOrder)
@@ -268,35 +344,39 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         console.log("OrderNumber:", resourceGroupID);
+        const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
+        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+          toast({
+            title: "✅ Form submitted successfully",
+            description: "Your changes have been saved.",
+            variant: "default", // or "success" if you have custom variant
+          });
+          // setCurrentStep(2);
+          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+          onApiSuccess(true);
+          onCloseDrawer();
+        }
+        else{
+          console.log("else ===== error ", isSuccessStatus);
+          console.log("else ===== error ", JSON.parse(data?.data?.ResponseData)[0].Error_msg);
+          toast({
+            title: "⚠️ Submission failed",
+            description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+            variant: "destructive", // or "success" if you have custom variant
+          });
+        }
+
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
-          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-            toast({
-              title: "✅ Form submitted successfully",
-              description: "Your changes have been saved.",
-              variant: "default", // or "success" if you have custom variant
-            });
-            // setCurrentStep(2);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const fullJson2 = jsonStore.getJsonData();
-            console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-            onApiSuccess(true);
-            onCloseDrawer();
-          }
-          else{
-            toast({
-              title: "⚠️ Submission failed",
-              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
-              variant: "destructive", // or "success" if you have custom variant
-            });
-          }
+          
         })
 
       } catch (err) {
@@ -321,48 +401,81 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       // currentActualDetails = jsonStore.getPlanDetailsJson() || {};
       formValues.wagonNewDetails = {
         ...formValues.wagonNewDetails,
+        "WagonType": formValues.wagonNewDetails?.WagonType?.value || "",
+        "WagonTypeDescription": formValues.wagonNewDetails?.WagonType?.label || "",
+        "WagonID": formValues.wagonNewDetails?.WagonID?.value || "",
+        "WagonIDDescription": formValues.wagonNewDetails?.WagonID?.label || "",
         "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+        "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
         "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+        "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
         "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+        "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
         "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
+        "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
         // Add more fields as needed
       };
       formValues.containerDetails = {
         ...formValues.containerDetails,
+        "ContainerID": formValues.containerDetails?.ContainerID?.value || "",
+        "ContainerIDDescription": formValues.containerDetails?.ContainerID?.label || "",
+        "ContainerType": formValues.containerDetails?.ContainerType?.value || "",
+        "ContainerTypeDescription": formValues.containerDetails?.ContainerType?.label || "",
         "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
-        "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
+        "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || "",
         "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
-        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
+        "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || "",
         "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
-        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
+        "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || "",
         // Add more fields as needed
       };
       formValues.productDetails = {
-        ...formValues.containerDetails,
-        "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
-        "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
+        ...formValues.productDetails,
+        "NHM": formValues.productDetails?.NHM?.value || "",
+        "NHMDescription": formValues.productDetails?.NHM?.label || "",
+        "ProductID": formValues.productDetails?.ProductID?.value || "",
+        "ProductIDDescription": formValues.productDetails?.ProductID?.label || "",
+        // "ClassofStores": formValues.productDetails?.ClassofStores?.value || "",
+        // "ClassofStoresDescription": formValues.productDetails?.ClassofStores?.label || "",
+        "UNCode": formValues.productDetails?.UNCode?.value || "",
+        "UNCodeDescription": formValues.productDetails?.UNCode?.label || "",
+        "DGClass": formValues.productDetails?.DGClass?.value || "",
+        "DGClassDescription": formValues.productDetails?.DGClass?.label || "",
+        "ContainerTareWeightUOM": formValues.productDetails?.ContainerTareWeight?.dropdown || "",
+        "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || "",
+        "ProductQuantityUOM": formValues.productDetails?.ProductQuantity?.dropdown || "",
+        "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || "",
         // Add more fields as needed
       };
       formValues.thuDetails = {
         ...formValues.thuDetails,
+        "THUID": formValues.thuDetails?.THUID?.value || "",
+        "THUIDDescription": formValues.thuDetails?.THUID?.label || "",
         "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
-        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+        "THUQuantity": formValues.thuDetails?.THUQuantity?.input || "",
         "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
-        "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
+        "THUWeight": formValues.thuDetails?.THUWeight?.input || "",
         // Add more fields as needed
       };
+      formValues.journeyDetails = {
+        ...formValues.journeyDetails,
+        "Departure": formValues.journeyDetails?.Departure?.value || "",
+        "DepartureDescription": formValues.journeyDetails?.Departure?.label || "",
+        "Arrival": formValues.journeyDetails?.Arrival?.value || "",
+        "ArrivalDescription": formValues.journeyDetails?.Arrival?.label || "",
+        "ActivityLocation": formValues.journeyDetails?.ActivityLocation?.value || "",
+        "ActivityLocationDescription": formValues.journeyDetails?.ActivityLocation?.label || "",
+        "Activity": formValues.journeyDetails?.Activity?.value || "",
+        "ActivityDescription": formValues.journeyDetails?.Activity?.label || "",
+      },
       formValues.otherDetails = {
         ...formValues.otherDetails,
         "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
-        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
+        "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || "",
         "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
-        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
+        "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || "",
         "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
-        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
+        "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || "",
         // Add more fields as needed
       };
       console.log("RESOURCE ID : ",resourceId)
@@ -435,35 +548,37 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         //  Get OrderNumber from response
         const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
         console.log("OrderNumber:", resourceGroupID);
+        const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+        const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
+        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+          toast({
+            title: "✅ Form submitted successfully",
+            description: "Your changes have been saved.",
+            variant: "default", // or "success" if you have custom variant
+          });
+          // setCurrentStep(2);
+          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          const fullJson2 = jsonStore.getJsonData();
+          console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+          onApiSuccess(true);
+          onCloseDrawer();
+        }
+        else{
+          toast({
+            title: "⚠️ Submission failed",
+            description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+            variant: "destructive", // or "success" if you have custom variant
+          });
+        }
+
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-          const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
-          const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-            toast({
-              title: "✅ Form submitted successfully",
-              description: "Your changes have been saved.",
-              variant: "default", // or "success" if you have custom variant
-            });
-            // setCurrentStep(2);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const fullJson2 = jsonStore.getJsonData();
-            console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-            onApiSuccess(true);
-            onCloseDrawer();
-          }
-          else{
-            toast({
-              title: "⚠️ Submission failed",
-              description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
-              variant: "destructive", // or "success" if you have custom variant
-            });
-          }
+          
         })
 
       } catch (err) {
@@ -504,13 +619,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     formValues.wagonNewDetails = {
       ...formValues.wagonNewDetails,
       "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-      "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+      "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
       "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-      "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+      "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
       "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-      "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+      "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
       "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-      "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
+      "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
       // Add more fields as needed
     };
     formValues.containerDetails = {
@@ -1857,7 +1972,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       setTHUDetailsData(item.THUDetails);
       setJourneyDetailsData(item.JourneyAndSchedulingDetails);
       setOtherDetailsData(item.OtherDetails);
-
+      console.log("ProductDetails set : ", item.ProductDetails);
       // Bind the values to the form fields using refs to DynamicPanel
       if (wagonDetailsRef && wagonDetailsRef.current && "setFormValues" in wagonDetailsRef.current && typeof wagonDetailsRef.current.setFormValues === "function") {
         console.log("wagon");
@@ -1975,17 +2090,18 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       if (otherDetailsRef && otherDetailsRef.current && "setFormValues" in otherDetailsRef.current && typeof otherDetailsRef.current.setFormValues === "function") {
         otherDetailsRef.current.setFormValues(item.OtherDetails || {});
         if (item.OtherDetails && otherDetailsConfig && otherDetailsConfig.QCUserDefined1 && otherDetailsConfig.QCUserDefined1.fieldType === "inputdropdown") {
+          console.log("item.OtherDetails.QCUserDefined1 ", item.OtherDetails.QCUserDefined1);
           const QCUserDefined1InputDropdown = {
-            input: item.OtherDetails.QCUserDefined1 ?? "",
-            dropdown: item.OtherDetails.QCUserDefined1Value ?? ""
+            input: item.OtherDetails.QCUserDefined1Value ?? "",
+            dropdown: item.OtherDetails.QCUserDefined1 ?? ""
           };
           const QCUserDefined2InputDropdown = {
-            input: item.OtherDetails.QCUserDefined2 ?? "",
-            dropdown: item.OtherDetails.QCUserDefined2Value ?? ""
+            input: item.OtherDetails.QCUserDefined2Value ?? "",
+            dropdown: item.OtherDetails.QCUserDefined2 ?? ""
           };
           const QCUserDefined3InputDropdown = {
-            input: item.OtherDetails.QCUserDefined3 ?? "",
-            dropdown: item.OtherDetails.QCUserDefined3Value ?? ""
+            input: item.OtherDetails.QCUserDefined3Value ?? "",
+            dropdown: item.OtherDetails.QCUserDefined3 ?? ""
           };
           otherDetailsRef.current.setFormValues({
             ...item.OtherDetails,
@@ -2120,7 +2236,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
               <Input type="text" placeholder="--" value={'--'} readOnly />
             </div> */}
             {/* // ...in your JSX: */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 planActualLeftScroll">
 
               {isEditQuickOrder && mappedPlanActualItems.map((item, index) => (
                 <div

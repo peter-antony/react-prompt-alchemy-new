@@ -334,6 +334,21 @@ body::-webkit-scrollbar-thumb {
   font-size: 11px;
 } */
 
-
+.planActualLeftScroll {
+  height: calc(100vh - 250px);
+  overflow: hidden;
+  overflow-y: scroll;
+}
+.planActualLeftScroll::-webkit-scrollbar {
+  width: 0px;
+}
+.planActualLeftScroll::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px white;
+  border-radius: 10px;
+}
+.planActualLeftScroll::-webkit-scrollbar-thumb {
+  background: #ced1d3;
+  border-radius: 10px;
+}
 
 

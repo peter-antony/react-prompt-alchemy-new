@@ -56,6 +56,7 @@ const CreateQuickOrder = () => {
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
           setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
           console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
+          jsonStore.setQuickOrder(fetchedQuickOrderData);
           const fullJson2 = jsonStore.getJsonData();
           // const storedConfirmStatus = localStorage.getItem('confirmOrder');
           const storedConfirmStatus = jsonStore.getQuickOrder().Status;

@@ -197,7 +197,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
         activity: plan?.JourneyAndSchedulingDetails?.Activity,
         nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
         product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
-        PlanLineUniqueID: plan?.PlanLineUniqueID || '',
+        PlanLineUniqueID: plan?.ActualLineUniqueID || '',
       }));
     }
     setPlanAndActualListData(mapped);
@@ -232,6 +232,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
   ];
   const navigate = useNavigate();
   const handleLinkClick = (row: any, columnKey: any) => {
+    console.log('Link clicked:', columnKey, row);
     console.log('Link clicked:', columnKey, row.PlanLineUniqueID);
     if (columnKey === 'WagonID' && row.PlanLineUniqueID) {
       setPlanInfo({

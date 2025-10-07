@@ -1565,7 +1565,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       // Tariff: data.Tariff ?? '',
       Tariff: formatFieldWithName(data.Tariff, data.TariffIDDescription),
       TariffType: formatFieldWithName(data.TariffType, data.TariffTypeDescription),
-      Remarks: data.Remarks ?? '',
+      BillingRemarks: data.BillingRemarks ?? '',
     };
   }
 
@@ -2302,7 +2302,13 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             billingDetailsRef.current.setFormValues({
               ContractPrice: tariffRate,
               UnitPrice: tariffRate,
-              TariffType: matchedTariff.TariffType + '||' + matchedTariff.TariffTypeDescription
+              TariffType: matchedTariff.TariffType + ' || ' + matchedTariff.TariffTypeDescription
+            });
+          }
+          if (matchedTariff && basicDetailsRef && basicDetailsRef.current && typeof basicDetailsRef.current.setFormValues === "function") {
+            basicDetailsRef.current.setFormValues({
+              Resource: matchedTariff.Resource + ' || ' + matchedTariff.ResourceDescription,
+              ResourceType: matchedTariff.ResourceType + ' || ' + matchedTariff.ResourceTypeDescription,
             });
           }
           // Optionally update resource type and other fields in the store if needed
@@ -2333,8 +2339,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       order: 7,
       width: 'full',
     },
-    Remarks: {
-      id: 'Remarks',
+    BillingRemarks: {
+      id: 'BillingRemarks',
       label: 'Remarks',
       fieldType: 'text',
       value: '',
