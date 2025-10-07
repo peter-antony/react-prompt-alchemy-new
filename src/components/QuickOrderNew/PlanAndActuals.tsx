@@ -53,13 +53,91 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     mandatory: true,
     subRow: false
   },
+  // {
+  //   key: 'WagonType',
+  //   label: 'Wagon Type',
+  //   type: 'Text',
+  //   sortable: true,
+  //   editable: false,
+  //   mandatory: true,
+  //   subRow: false
+  // },
   {
-    key: 'containerID',
+    key: 'WagonQuantity',
+    label: 'Wagon Quantity',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: true
+  },
+  {
+    key: 'WagonTareWeight',
+    label: 'Wagon Tare Weight',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: true
+  },
+  {
+    key: 'WagonGrossWeight',
+    label: 'Wagon Gross Weight',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: true
+  },
+  {
+    key: 'WagonLength',
+    label: 'Wagon Length',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: true
+  },
+  {
+    key: 'WagonSequence',
+    label: 'Wagon Sequence',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    mandatory: true,
+    subRow: true
+  },
+  {
+    key: 'ContainerID',
     label: 'Container Id Type',
     type: 'Text',
     sortable: true,
     editable: false,
     subRow: false
+  },
+  {
+    key: 'ContainerQuantity',
+    label: 'Container Quantity',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'ContainerTareWeight',
+    label: 'Container Tare Weight',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'ContainerLoadWeight',
+    label: 'Container Load Weight',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
   },
   {
     key: 'ProductID',
@@ -70,12 +148,76 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     subRow: false
   },
   {
-    key: 'hazardousGoods',
-    label: 'Hazardous Goods',
-    type: 'Badge',
+    key: 'NHM',
+    label: 'NHM',
+    type: 'Text',
     sortable: true,
     editable: false,
-    subRow: false
+    subRow: true
+  },
+  {
+    key: 'ProductQuantity',
+    label: 'Product Quantity',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'UNCode',
+    label: 'UN Code',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'DGClass',
+    label: 'DG Class',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  // {
+  //   key: 'hazardousGoods',
+  //   label: 'Hazardous Goods',
+  //   type: 'Badge',
+  //   sortable: true,
+  //   editable: false,
+  //   subRow: false
+  // },
+  {
+    key: 'THUID',
+    label: 'THU ID',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'THUSerialNo',
+    label: 'THU Serial No',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'THUQuantity',
+    label: 'THU Quantity',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'THUWeight',
+    label: 'THU Weight',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
   },
   {
     key: 'departureAndArrival',
@@ -86,23 +228,15 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     subRow: false
   },
   {
-    key: 'planFromToDate',
-    label: tab === 'planned' ? 'Plan From & To Date' : 'Actual From & To Date',
+    key: 'ActivityLocation',
+    label: 'Activity Location',
     type: 'Text',
     sortable: true,
     editable: false,
-    subRow: false
+    subRow: true
   },
   {
-    key: 'nhm',
-    label: 'NHM',
-    type: 'Text',
-    sortable: true,
-    editable: false,
-    subRow: false
-  },
-  {
-    key: 'activity',
+    key: 'Activity',
     label: 'Activity',
     type: 'Text',
     sortable: true,
@@ -110,12 +244,84 @@ const initialColumns = (tab: any): GridColumnConfig[] => [
     subRow: false
   },
   {
-    key: 'product',
-    label: 'Product',
+    key: 'PlannedDateTime',
+    label: 'Planned Date Time',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'RevPlannedDateTime',
+    label: 'Rev.Planned Date Time',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'TrainNo',
+    label: 'Train No',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'PlanFromToDate',
+    label: tab === 'planned' ? 'Plan From & To Date' : 'Actual From & To Date',
     type: 'Text',
     sortable: true,
     editable: false,
     subRow: false
+  },
+  {
+    key: 'QCUserDefined1',
+    label: 'QCUserDefined1',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'QCUserDefined2',
+    label: 'QCUserDefined2',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'QCUserDefined3',
+    label: 'QCUserDefined3',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'Remarks1',
+    label: 'Remarks1',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'Remarks2',
+    label: 'Remarks2',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'Remarks3',
+    label: 'Remarks3',
+    type: 'Text',
+    sortable: true,
+    editable: false,
+    subRow: true
   },
 ];
 
@@ -124,7 +330,7 @@ interface PlanAndActualListData {
   containerID: string;
   departureAndArrival: string;
   hazardousGoods: string;
-  planFromToDate: string;
+  PlanFromToDate: string;
   nhm: string;
   product: string;
   PlanLineUniqueID?: string;
@@ -173,31 +379,92 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     if (tab === 'planned') {
       setGridTitle('Plan List');
       mapped = (arr?.[0]?.PlanDetails ?? []).map((plan: any) => ({
+        // WagonID: plan?.WagonDetails?.WagonID || '',
+        // WagonType: plan?.WagonDetails?.WagonType || '-',
         WagonID: `${plan?.WagonDetails?.WagonID || ''}-${plan?.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        containerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonQuantity: `${plan?.WagonDetails?.WagonQuantityUOM || ''}-${plan?.WagonDetails?.WagonQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonTareWeight: `${plan?.WagonDetails?.WagonTareWeightUOM || ''}-${plan?.WagonDetails?.WagonTareWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonGrossWeight: `${plan?.WagonDetails?.WagonGrossWeightUOM || ''}-${plan?.WagonDetails?.WagonGrossWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonLength: `${plan?.WagonDetails?.WagonLengthUOM || ''}-${plan?.WagonDetails?.WagonLength || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonSequence: plan?.WagonDetails?.WagonSequence || '-',
+        ContainerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerQuantity: `${plan?.ContainerDetails?.ContainerQuantityUOM || ''} - ${plan?.ContainerDetails?.ContainerQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerTareWeight: `${plan?.ContainerDetails?.ContainerTareWeightUOM || ''} - ${plan?.ContainerDetails?.ContainerTareWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerLoadWeight: `${plan?.ContainerDetails?.ContainerLoadWeightUOM || ''} - ${plan?.ContainerDetails?.ContainerLoadWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
         ProductID: plan.ProductDetails?.ProductID || '-',
-        hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        NHM: plan.ProductDetails?.NHM || '-',
+        DGClass: plan.ProductDetails?.DGClass || '-',
+        UNCode: plan.ProductDetails?.UNCode || '-',
+        ProductQuantity: `${plan?.ProductDetails?.ProductQuantityUOM || ''} - ${plan?.ProductDetails?.ProductQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        // hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        THUID: plan.THUDetails?.THUID || '-',
+        THUSerialNo: plan.THUDetails?.THUSerialNo || '-',
+        THUWeight: `${plan?.THUDetails?.THUWeightUOM || ''} - ${plan?.THUDetails?.THUWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        THUQuantity: `${plan?.THUDetails?.THUQuantityUOM || ''} - ${plan?.THUDetails?.THUQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
         departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
-        planFromToDate: dateFormatter(plan?.OtherDetails?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.ToDate),
+        ActivityLocation: plan?.JourneyAndSchedulingDetails?.ActivityLocation || '-',
+        Activity: plan?.JourneyAndSchedulingDetails?.Activity || '-',
+        PlannedDateTime: dateFormatter(plan?.JourneyAndSchedulingDetails?.PlannedDateTime) || '-',
+        RevPlannedDateTime: dateFormatter(plan?.JourneyAndSchedulingDetails?.RevPlannedDateTime) || '-',
+        TrainNo: plan?.JourneyAndSchedulingDetails?.TrainNo || '-',
+        PlanFromToDate: dateFormatter(plan?.OtherDetails?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.ToDate),
+        QCUserDefined1: `${plan?.OtherDetails?.QCUserDefined1Value || ''} - ${plan?.OtherDetails?.QCUserDefined1 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        QCUserDefined2: `${plan?.OtherDetails?.QCUserDefined2Value || ''} - ${plan?.OtherDetails?.QCUserDefined2 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        QCUserDefined3: `${plan?.OtherDetails?.QCUserDefined3Value || ''} - ${plan?.OtherDetails?.QCUserDefined3 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        Remarks1: plan?.OtherDetails?.Remarks1 || '-',
+        Remarks2: plan?.OtherDetails?.Remarks2 || '-',
+        Remarks3: plan?.OtherDetails?.Remarks3 || '-',
         // '12-Mar-2025 to 12-Mar-2025', // Replace with actual date logic if needed
-        activity: plan?.JourneyAndSchedulingDetails?.Activity,
-        nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
-        product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
-        PlanLineUniqueID: plan?.PlanLineUniqueID || '',
+        // nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
+        // product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
+        // PlanLineUniqueID: plan?.PlanLineUniqueID || '',
       }));
     } else {
       setGridTitle('Actual List');
       mapped = (arr?.[0]?.ActualDetails ?? []).map((plan: any) => ({
         WagonID: `${plan?.WagonDetails?.WagonID || ''}-${plan?.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
-        containerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonQuantity: `${plan?.WagonDetails?.WagonQuantityUOM || ''}-${plan?.WagonDetails?.WagonQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonTareWeight: `${plan?.WagonDetails?.WagonTareWeightUOM || ''}-${plan?.WagonDetails?.WagonTareWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonGrossWeight: `${plan?.WagonDetails?.WagonGrossWeightUOM || ''}-${plan?.WagonDetails?.WagonGrossWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonLength: `${plan?.WagonDetails?.WagonLengthUOM || ''}-${plan?.WagonDetails?.WagonLength || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        WagonSequence: plan?.WagonDetails?.WagonSequence || '-',
+        ContainerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerQuantity: `${plan?.ContainerDetails?.ContainerQuantityUOM || ''} - ${plan?.ContainerDetails?.ContainerQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerTareWeight: `${plan?.ContainerDetails?.ContainerTareWeightUOM || ''} - ${plan?.ContainerDetails?.ContainerTareWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        ContainerLoadWeight: `${plan?.ContainerDetails?.ContainerLoadWeightUOM || ''} - ${plan?.ContainerDetails?.ContainerLoadWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
         ProductID: plan.ProductDetails?.ProductID || '-',
-        hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        NHM: plan.ProductDetails?.NHM || '-',
+        DGClass: plan.ProductDetails?.DGClass || '-',
+        UNCode: plan.ProductDetails?.UNCode || '-',
+        ProductQuantity: `${plan?.ProductDetails?.ProductQuantityUOM || ''} - ${plan?.ProductDetails?.ProductQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        // hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        THUID: plan.THUDetails?.THUID || '-',
+        THUSerialNo: plan.THUDetails?.THUSerialNo || '-',
+        THUWeight: `${plan?.THUDetails?.THUWeightUOM || ''} - ${plan?.THUDetails?.THUWeight || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        THUQuantity: `${plan?.THUDetails?.THUQuantityUOM || ''} - ${plan?.THUDetails?.THUQuantity || ''}`.replace(/^[-]+|[-]+$/g, ''),
         departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
-        planFromToDate: plan?.JourneyAndSchedulingDetails?.PlannedDateTime - plan?.JourneyAndSchedulingDetails?.PlannedDateTime, // Replace with actual date logic if needed
-        activity: plan?.JourneyAndSchedulingDetails?.Activity,
-        nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
-        product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
-        PlanLineUniqueID: plan?.ActualLineUniqueID || '',
+        ActivityLocation: plan?.JourneyAndSchedulingDetails?.ActivityLocation || '-',
+        Activity: plan?.JourneyAndSchedulingDetails?.Activity || '-',
+        PlannedDateTime: dateFormatter(plan?.JourneyAndSchedulingDetails?.PlannedDateTime) || '-',
+        RevPlannedDateTime: dateFormatter(plan?.JourneyAndSchedulingDetails?.RevPlannedDateTime) || '-',
+        TrainNo: plan?.JourneyAndSchedulingDetails?.TrainNo || '-',
+        PlanFromToDate: dateFormatter(plan?.OtherDetails?.FromDate) + ' to ' + dateFormatter(plan?.OtherDetails?.ToDate),
+        QCUserDefined1: `${plan?.OtherDetails?.QCUserDefined1Value || ''} - ${plan?.OtherDetails?.QCUserDefined1 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        QCUserDefined2: `${plan?.OtherDetails?.QCUserDefined2Value || ''} - ${plan?.OtherDetails?.QCUserDefined2 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        QCUserDefined3: `${plan?.OtherDetails?.QCUserDefined3Value || ''} - ${plan?.OtherDetails?.QCUserDefined3 || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        Remarks1: plan?.OtherDetails?.Remarks1 || '-',
+        Remarks2: plan?.OtherDetails?.Remarks2 || '-',
+        Remarks3: plan?.OtherDetails?.Remarks3 || '-',
+        // WagonID: `${plan?.WagonDetails?.WagonID || ''}-${plan?.WagonDetails?.WagonType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        // containerID: `${plan?.ContainerDetails?.ContainerID || ''} - ${plan?.ContainerDetails?.ContainerType || ''}`.replace(/^[-]+|[-]+$/g, ''),
+        // ProductID: plan.ProductDetails?.ProductID || '-',
+        // hazardousGoods: plan.ProductDetails?.ContainHazardousGoods || '-',
+        // departureAndArrival: `${plan.JourneyAndSchedulingDetails?.Departure || ''} - ${plan.JourneyAndSchedulingDetails?.Arrival || ''}`.trim(),
+        // PlanFromToDate: plan?.JourneyAndSchedulingDetails?.PlannedDateTime - plan?.JourneyAndSchedulingDetails?.PlannedDateTime, // Replace with actual date logic if needed
+        // activity: plan?.JourneyAndSchedulingDetails?.Activity,
+        // nhm: plan?.ProductDetails?.NHM, // Replace with actual price if needed
+        // product: plan?.ProductDetails?.ProductID, // Replace with actual draft bill if needed
+        // PlanLineUniqueID: plan?.ActualLineUniqueID || '',
       }));
     }
     setPlanAndActualListData(mapped);
@@ -280,7 +547,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
     warning: true,
     // amount: row.price,
     location: row.departureAndArrival,
-    date: row.planFromToDate,
+    date: row.PlanFromToDate,
     // draftBill: row.draftBill,
   })), [planAndActualListData]);
 
@@ -475,7 +742,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                       rowClassName={(row: any, index: number) =>
                         selectedRows.has(index) ? 'smart-grid-row-selected' : ''
                       }
-                      // nestedRowRenderer={renderSubRow}
+                      nestedRowRenderer={renderSubRow}
                       // configurableButtons={}
                       showDefaultConfigurableButton={false}
                       gridTitle={gridTitle}
