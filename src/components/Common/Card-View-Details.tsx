@@ -49,9 +49,11 @@ interface CardDetailsProps {
     data: CardDetailsItem[];
     isEditQuickOrder: boolean;
     showMenuButton?: boolean; // New prop to control menu button visibility
+    onDeleteResourceGroup?: (item: CardDetailsItem) => void;
+    onCopyResourceGroup?: (item: CardDetailsItem) => void;
 }
 
-const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showMenuButton = true }) => {
+const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showMenuButton = true, onDeleteResourceGroup, onCopyResourceGroup }) => {
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const [isResourceGroup, setResourceGroupOpen] = useState({
@@ -91,13 +93,39 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         // const quickOrder = jsonStore.getQuickOrder();
         // setOrderType('BUY');
       }
+      const [fetchedQuickOrderData, setFetchedQuickOrderData] = useState<any>(null);
       useEffect(()=>{
         console.log("Inside USEEFFECT CARD-VIEW")
+        console.log("Inside Full JSON CARD-VIEW", jsonStore.getQuickOrder());
+        setFetchedQuickOrderData(jsonStore.getQuickOrder());
+        console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
         const resourceGroups = jsonStore.getAllResourceGroups();
         setItems(resourceGroups || []);
         console.log("resourceGroups = ",resourceGroups)
       }, [isResourceGroup,isBack,isEditQuickOrder])
 
+	const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
+
+    const handleDelete = (item: CardDetailsItem) => {
+        console.log("Delete item: ", item);
+        console.log("Delete item: ", jsonStore.getQuickOrder());
+        console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
+        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // Pass the item data to the parent component via the callback
+        if (typeof onDeleteResourceGroup === "function") {
+            onDeleteResourceGroup(item);
+        }
+    };
+
+    const handleCopy = (item: CardDetailsItem) => {
+        console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
+        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // Pass the item data to the parent component via the callback
+        if (typeof onCopyResourceGroup === "function") {
+            onCopyResourceGroup(item);
+        }
+    }
+    
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {items.map((item) => (
@@ -110,8 +138,15 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <UsersRound className="w-4 h-4 text-violet-500" />
                                     </span>
                                     <div>
-                                        <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
-                                        {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
+                                        <div className="d-flex relative">
+                                            <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
+                                            {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
+                                            <span className="absolute -top-1 left-full ml-2">
+                                                <span className={`text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer`}>
+                                                    {item?.ResourceStatus}
+                                                </span>
+                                            </span>
+                                        </div>
                                         <div className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</div>
                                     </div>
                                 </div>
@@ -139,15 +174,15 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <button className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><FileText className="w-4 h-4 text-gray-600" /></span> CIM/CUV Report
                                         </button>
-                                        <button className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
+                                        <button onClick={() => handleCopy(item)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><Copy className="w-4 h-4 text-gray-600" /></span> Copy
                                         </button>
-                                        <button className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
+                                        <button onClick={() => setAttachmentsOpen(true)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><FileText className="w-4 h-4 text-gray-600" /></span> Attachments
                                         </button>
                                         <div className="border-t my-1" />
-                                        <button className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 text-xs gap-2">
-                                            <span><Trash2 className="w-4 h-4 text-red-600" /></span> Delete
+                                        <button onClick={() => handleDelete(item)} className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 text-xs gap-2">
+                                            <span><Trash2 className="w-4 h-4 text-red-600" /></span> Cancel
                                         </button>
                                     </div>
                                 )}
@@ -278,6 +313,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
             >
                 <div className="text-sm text-gray-600">
                     <ResourceGroupDetailsForm isEditQuickOrder={true} onSaveSuccess={closeResource} resourceId={isResourceGroup.ResourceUniqueID} />
+                </div>
+            </SideDrawer>
+
+            <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} onScrollPanel={true} badgeContent={jsonStore.getQuickOrderNo()} isBadgeRequired={true}>
+                <div className="">
+                    <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={true} /></div>
                 </div>
             </SideDrawer>
         </div>
