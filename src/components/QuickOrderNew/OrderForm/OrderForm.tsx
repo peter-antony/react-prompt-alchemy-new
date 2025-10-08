@@ -713,7 +713,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       setError(`Error fetching API data for${err}`);
       console.log("ERROR IN COMBO DROPDOWN:: ", err);
       // jsonStore.setQuickOrderFields({ ContractID: "CON000000116", Customer: "C001", Vendor: "V001", Cluster: "CL01", WBS: "WBS123" });
-      setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
+      // setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
 
       // setApiData(data);
     }
@@ -1153,7 +1153,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   // }
 
   const openResourceGroupGetID = async () => {
-    setLoading(false);
+    // setLoading(false);
     console.log("OrderType ---", OrderType);
     console.log("contractId ---", jsonStore.getQuickOrder());
     try {

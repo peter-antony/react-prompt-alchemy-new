@@ -46,11 +46,12 @@ const CreateQuickOrder = () => {
     //  Fetch the full quick order details
     initializeJsonStore();
     const oldQuickOrder = jsonStore.getQuickOrder();
-
+    console.log("inside createQuickOrder useEffect()")
     console.log("INITIALIZING CREATE : ", isEditQuickOrder)
+    setLoading(false);
       quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
         let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
-        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("screenFetchQuickOrder byId result:", JSON.parse(fetchRes?.data?.ResponseData));
         console.log("Parsed result:", parsedData?.ResponseResult);
         if(parsedData?.ResponseResult != undefined){
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
@@ -74,6 +75,8 @@ const CreateQuickOrder = () => {
             setIsConfirmButtonDisabled(true);
             setIsSaveButtonDisabled(true);
           }
+          setLoading(true);
+
         }
 
       })
@@ -217,13 +220,36 @@ const CreateQuickOrder = () => {
     const orderFormValues = newQuickOrderRef.current?.getOrderValues() || {};
     console.log('OrderForm current values:', orderFormValues);
     console.log("setFetchedQuickOrderData ---", fetchedQuickOrderData);
+    const truncateAtPipe = (val: any) => {
+      if (typeof val === 'string' && val.includes('||')) {
+        return val.split('||')[0].trim();
+      }
+      return val;
+    };
     jsonStore.setQuickOrder({
       ...jsonStore.getJsonData().quickOrder,
       ...orderFormValues,
       "ModeFlag": "Update",
+      "Contract": truncateAtPipe(orderFormValues?.Contract),
+      "Cluster": truncateAtPipe(orderFormValues?.Cluster),
+      "Customer": truncateAtPipe(orderFormValues?.Customer),
+      "Vendor": truncateAtPipe(orderFormValues?.Vendor),
+      "QCUserDefined1": orderFormValues?.QCUserDefined1?.dropdown,
+      "QCUserDefined1Value": orderFormValues?.QCUserDefined1?.input,
+      "QCUserDefined2": orderFormValues?.QCUserDefined2?.dropdown,
+      "QCUserDefined2Value": orderFormValues?.QCUserDefined2?.input,
+      "QCUserDefined3": orderFormValues?.QCUserDefined3?.dropdown,
+      "QCUserDefined3Value": orderFormValues?.QCUserDefined3?.input,
     });
-    console.log("Handler FULL JSON ---", jsonStore.getQuickOrder());
+
     const fullJson = jsonStore.getQuickOrder();
+    // Remove 'contractDesc' property if it exists in the quick order JSON
+    if ('ContractDesc' in fullJson) {
+      delete fullJson.ContractDesc;
+      jsonStore.setQuickOrder(fullJson);
+    }
+    console.log("Handler FULL JSON ---", jsonStore.getQuickOrder());
+    // const fullJson = jsonStore.getQuickOrder();
     // const messageType = "Quick Order Cancel";
     try {
       //  Update resource
@@ -453,7 +479,10 @@ const CreateQuickOrder = () => {
           </div>
 
           <div className="">
-          <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} />
+          {loading ?
+            <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} />
+            : ''
+          }
           </div>
 
         </div>
