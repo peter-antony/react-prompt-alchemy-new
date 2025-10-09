@@ -1740,18 +1740,18 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
             {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setMoreInfoOpen(true)}>
               <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
             </button> */}
-            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setAttachmentsOpen(true)}>
+            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
               <Paperclip className="w-5 h-5 text-gray-600" />
             </button>
-            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={(e) => setHistoryOpen(true)}>
+            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Amendment History" onClick={(e) => setHistoryOpen(true)}>
               <BookX className="w-5 h-5 text-gray-600" />
             </button>
-            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setLinkedOrdersOpen(true)}>
+            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Linked Orders" onClick={() => setLinkedOrdersOpen(true)}>
               <Link className="w-5 h-5 text-gray-600" />
             </button>
             {
               isEditQuickOrder ?
-                <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setCopyModalOpen(true)}>
+                <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Copy" onClick={() => setCopyModalOpen(true)}>
                   <Copy className="w-5 h-5 text-gray-600" />
                 </button> : ' '
             }

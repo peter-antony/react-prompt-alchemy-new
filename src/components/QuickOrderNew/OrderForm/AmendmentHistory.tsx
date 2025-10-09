@@ -44,7 +44,7 @@ export default function AmendmentHistory() {
     <div className="bg-[#f8fafd] min-h-screen flex flex-col items-start px-8 py-6">
       <div className="relative w-full">
         <TooltipProvider>
-        {amendmentHistory.map((item, idx) => (
+        {amendmentHistory?.map((item, idx) => (
           <div key={item.AmendmentNo} className="flex items-start last:mb-0">
             {/* Timeline line */}
             <div className="flex flex-col items-center mr-4 mt-1">
