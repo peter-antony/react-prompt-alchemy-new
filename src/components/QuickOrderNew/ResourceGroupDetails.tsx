@@ -52,17 +52,26 @@ interface ResourceGroupDetailsFormProps {
   resourceId?: string;
   onSaveSuccess?: () => void; // <-- Add this
   onResourceCreated?: () => void;
+  initialStep?: number; // <-- Add this to set initial step
 }
 
 // const ResourceGroupDetailsForm = ({ open, onClose }: ResourceGroupDetailsFormProps) => {
-export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveSuccess, onResourceCreated }: ResourceGroupDetailsFormProps) => {
-  const [currentStep, setCurrentStep] = useState(1);
+export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveSuccess, onResourceCreated, initialStep = 1 }: ResourceGroupDetailsFormProps) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [isPlanActualsOpen, setIsPlanActualsOpen] = useState(false);
   const [isPlanActualsVisible, setIsPlanActualsVisible] = useState(false);
   const [resourceUniqueId, setResourceUniqueId] = useState(resourceId);
   const [TariffList, setTariffList] = useState([]);
   const { toast } = useToast();
   const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+  
+  // Handle initialStep prop changes - only run when initialStep changes from external source
+  useEffect(() => {
+    if (initialStep && initialStep !== currentStep) {
+      console.log('Setting currentStep from initialStep:', initialStep);
+      setCurrentStep(initialStep);
+    }
+  }, [initialStep]);
   const PlaceList = [
     "Bangalore",
     "New Delhi",
@@ -1855,6 +1864,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         onChange: (selected, event) => {
           console.log('Customer changed:', selected);
           setResourceSelected(selected);
+          if (basicDetailsRef && basicDetailsRef.current && typeof basicDetailsRef.current.setFormValues === "function") {
+            basicDetailsRef.current.setFormValues({
+              ResourceType: "",
+            });
+          }
         },
         onClick: (event, value) => {
           console.log('Customer dropdown clicked:', { event, value });
@@ -2466,6 +2480,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [isGroupLevelModalOpen, setGroupLevelModalOpen] = useState(false);
 
   const handleStepClick = (step: number) => {
+    console.log('handleStepClick called with step:', step, 'currentStep:', currentStep);
     setCurrentStep(step);
   };
 
@@ -2908,7 +2923,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
         )}
         {currentStep === 2 && isPlanActualsOpen === false && (
           <>
-            <Button variant="outline" onClick={handleFirstStep} className="h-8 my-2 rounded border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Button variant="outline" onClick={() => setCurrentStep(1)} className="h-8 my-2 rounded border-blue-600 text-blue-600 hover:bg-blue-50">
               Back to Resource Group
             </Button>
             <Button onClick={onSavePlanActualsGridDetails} className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700">

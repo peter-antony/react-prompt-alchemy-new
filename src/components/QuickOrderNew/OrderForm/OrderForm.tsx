@@ -293,7 +293,11 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       events: {
         onChange: (val: string) => {
           setOrderType(val), // To update state on change
-            getOrderFormDetailsConfig(OrderType);
+          getOrderFormDetailsConfig(OrderType);
+          // When OrderType changes, clear the Contract field (set to empty)
+          orderDetailsRef.current.setFormValues({
+            Contract: "",
+          });
         }
 
       }
@@ -591,7 +595,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       visible: true,
       editable: true,
       order: 13,
-      maxLength: 299,
+      maxLength: 255,
       options: qcList3?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     Remarks2: {
@@ -1484,21 +1488,46 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       console.log("Proceeding with deletion for ResourceUniqueID:", item.ResourceUniqueID);
       console.log("json data====", jsonStore.getQuickOrder());
       // Remove the resource group with item.ResourceUniqueID from the QuickOrder in jsonStore
+      // const quickOrder = jsonStore.getQuickOrder();
+      // if (quickOrder && Array.isArray(quickOrder.ResourceGroup)) {
+      //   const updatedResourceGroups = quickOrder.ResourceGroup.filter(
+      //     (rg: any) => rg.ResourceUniqueID !== item.ResourceUniqueID
+      //   );
+      //   // Update the QuickOrder in the store
+      //   jsonStore.setQuickOrder({
+      //     ...quickOrder,
+      //     ModeFlag: "NoChange",
+      //     ResourceGroup: updatedResourceGroups,
+      //   });
+      //   setResourceData(updatedResourceGroups);
+      //   setResourceCount(updatedResourceGroups.length);
+      // } 
+
+      // Remove the resource group with item.ResourceUniqueID from the QuickOrder in jsonStore
       const quickOrder = jsonStore.getQuickOrder();
       if (quickOrder && Array.isArray(quickOrder.ResourceGroup)) {
-        const updatedResourceGroups = quickOrder.ResourceGroup.filter(
-          (rg: any) => rg.ResourceUniqueID !== item.ResourceUniqueID
+        const updatedResourceGroups = quickOrder.ResourceGroup.map(
+          (rg: any) => {
+            if (rg.ResourceUniqueID === item.ResourceUniqueID) {
+              // Instead of removing, set ModeFlag and ResourceStatus
+              return {
+                ...rg,
+                ModeFlag: "Update",
+                ResourceStatus: "Cancelled"
+              };
+            }
+            return rg;
+          }
         );
         // Update the QuickOrder in the store
         jsonStore.setQuickOrder({
           ...quickOrder,
-          ModeFlag: "Update",
           ResourceGroup: updatedResourceGroups,
         });
         setResourceData(updatedResourceGroups);
         setResourceCount(updatedResourceGroups.length);
-      } 
-
+      }
+      
       console.log("json data after====", jsonStore.getQuickOrder());
       const fullJson = jsonStore.getQuickOrder();
       console.log("fullJson ===", fullJson);

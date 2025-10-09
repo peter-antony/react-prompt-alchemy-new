@@ -58,7 +58,8 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
     const menuRef = useRef<HTMLDivElement>(null);
     const [isResourceGroup, setResourceGroupOpen] = useState({
         isResourceGroupOpen: false,
-        ResourceUniqueID: "0"
+        ResourceUniqueID: "0",
+        initialStep: 1
     });
     const [items, setItems] = useState<any[]>(data || []);
     const formatDate = (dateStr) => {
@@ -85,7 +86,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
     }, [openMenuId]);
 
     const closeResource = () => {
-        setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0" });
+        setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0", initialStep: 1 });
         setIsBack(true);
         const resourceGroups = jsonStore.getAllResourceGroups();
         setItems(resourceGroups || []);
@@ -125,6 +126,16 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
             onCopyResourceGroup(item);
         }
     }
+
+    const handleShowPlanDetails = (item: CardDetailsItem) => {
+        console.log("handleShowPlanDetails", item);
+        // Open side drawer and set initial step to 2 (Plan data)
+        setResourceGroupOpen({ 
+            isResourceGroupOpen: true, 
+            ResourceUniqueID: item.ResourceUniqueID,
+            initialStep: 2
+        });
+    }
     
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -139,7 +150,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                     </span>
                                     <div>
                                         <div className="d-flex relative">
-                                            <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
+                                            <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID, initialStep: 1 })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
                                             {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
                                             <span className="absolute -top-1 left-full ml-2">
                                                 <span className={`text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer`}>
@@ -168,7 +179,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         ref={menuRef}
                                         className="absolute right-0 top-8 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2"
                                     >
-                                        <button className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
+                                        <button onClick={() => handleShowPlanDetails(item)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><Repeat1 className="w-4 h-4 text-gray-600" /></span> Compare Plan and Actuals
                                         </button>
                                         <button className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
@@ -181,10 +192,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                             <span><FileText className="w-4 h-4 text-gray-600" /></span> Attachments
                                         </button>
                                         <div className="border-t my-1" />
-                                        <button onClick={() => handleDelete(item)} className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 text-xs gap-2">
-                                            <span><Trash2 className="w-4 h-4 text-red-600" /></span> Cancel
-                                        </button>
-                                    </div>
+                                        {item?.ResourceStatus !== "Cancelled" && (
+                                            <button onClick={() => handleDelete(item)} className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 text-xs gap-2">
+                                                <span><Trash2 className="w-4 h-4 text-red-600" /></span> Cancel
+                                            </button>
+                                        )}
+                                        </div>
                                 )}
                             </div>
                         </div>
@@ -306,13 +319,18 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
             ))}
             <SideDrawer
                 isOpen={isResourceGroup.isResourceGroupOpen}
-                onClose={() => setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0" })}
+                onClose={() => setResourceGroupOpen({ isResourceGroupOpen: false, ResourceUniqueID: "0", initialStep: 1 })}
                 width="100%"
                 title="Resource Group Details"
                 isBack={isBack}
             >
                 <div className="text-sm text-gray-600">
-                    <ResourceGroupDetailsForm isEditQuickOrder={true} onSaveSuccess={closeResource} resourceId={isResourceGroup.ResourceUniqueID} />
+                    <ResourceGroupDetailsForm 
+                        isEditQuickOrder={true} 
+                        onSaveSuccess={closeResource} 
+                        resourceId={isResourceGroup.ResourceUniqueID}
+                        initialStep={isResourceGroup.initialStep}
+                    />
                 </div>
             </SideDrawer>
 
