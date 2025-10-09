@@ -722,6 +722,18 @@ function getQuickUniqueID() {
   return undefined;
 }
 
+function setQuickUniqueID(id: any) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder
+  ) {
+    jsonData.ResponseResult.QuickOrder.QuickUniqueID = id;
+    return true;
+  }
+  return false;
+}
+
 function getQuickOrderNo() {
   if (
     jsonData &&
@@ -1043,6 +1055,7 @@ const jsonStore = {
   updateActualDetailsByResourceAndPlanLineID,
   getPlanDetailsByResourceAndPlanLineID,
   getActualDetailsByResourceAndActualLineID,
+  setQuickUniqueID,
 };
 
 export default jsonStore;

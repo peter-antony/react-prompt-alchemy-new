@@ -1665,7 +1665,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   useEffect(() => {
     setLoading(false);
     console.log("load data=== ", jsonStore.getQuickUniqueID());
-    console.log("load data=== ", jsonStore.getQuickOrder());
+    console.log("load data getQuickOrder=== ", jsonStore.getQuickOrder());
+    console.log("jsonStore.getResourceGroupBasicDetails() == ", jsonStore.getResourceGroupBasicDetails())
+
     console.log("load isEditQuickOrder ", isEditQuickOrder);
     quickOrderService.getQuickOrder(jsonStore.getQuickUniqueID()).then((fetchRes: any) => {
       console.log("fetchRes:: ", fetchRes);
@@ -1675,7 +1677,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       console.log("Parsed id:", (parsedData?.ResponseResult)[0]);
       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
       const fullJson2 = jsonStore.getJsonData();
-      console.log("FULL JSON 33:: ", fullJson2?.ResourceGroup);
+      console.log("FULL JSON --RESOURCE GROUP 33:: ", fullJson2?.ResourceGroup);
     })
     console.log("load resourceId == ", resourceId)
     if (isEditQuickOrder && resourceId) {
@@ -1717,7 +1719,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     } 
     else {
       console.log("resourceId == ", resourceId)
-      console.log("jsonStore.getBasicDetailsByResourceUniqueID() == ", jsonStore.getResourceGroupBasicDetails())
+      console.log("jsonStore.getResourceGroupBasicDetails() == ", jsonStore.getResourceGroupBasicDetails())
       console.log("jsonStore.GETBILLINGDETAILS() == ", jsonStore.getResourceGroupBillingDetails())
       setBasicDetailsData(normalizeBasicDetails(jsonStore.getResourceGroupBasicDetails() || {}));
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getResourceGroupOperationalDetails() || {}));
