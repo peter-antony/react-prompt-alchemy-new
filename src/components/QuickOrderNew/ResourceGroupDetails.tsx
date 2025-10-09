@@ -964,6 +964,26 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
+            //  Fetch the full quick order details
+            quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+              let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+              console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+              console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+              // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+              jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+              console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+              console.log("parsedResource:",parsedResource);
+              const index=(parsedResource.length) -1;
+              setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+              
+              // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const fullJson2 = jsonStore.getJsonData();
+              console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+              onSaveSuccess();
+            })
             // onSaveSuccess();
             // onResourceCreated?.();
           }else{
@@ -985,27 +1005,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "destructive", // or "success" if you have custom variant
             });
           }
-          //  Fetch the full quick order details
-          quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-            let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-            console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-            console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-            // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-            jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
-            console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
-            console.log("parsedResource:",parsedResource);
-            const index=(parsedResource.length) -1;
-            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-            
-            // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const fullJson2 = jsonStore.getJsonData();
-            console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
-            onSaveSuccess();
-          })
-
+          
         } catch (err) {
           console.log(" catch", err);
           setError(`Error fetching API data for Update ResourceGroup`);
@@ -1078,6 +1078,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "ArrivalPoint": formValues.operationalDetails?.ArrivalPoint?.value || '',
           "ArrivalPointDescription": formValues.operationalDetails?.ArrivalPoint?.label || '',
         });
+        console.log("]]]]]]]]]]]", formValues.billingDetails);
         jsonStore.setResourceBillingDetails({
           ...jsonStore.getResourceJsonData().BillingDetails,
           ...formValues.billingDetails,
@@ -1086,6 +1087,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           "TariffType": formValues.billingDetails?.TariffType?.value || '',
           "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
         });
+        console.log("]]]]]]]]]]]", formValues.billingDetails);
         jsonStore.setResourceMoreInfoDetails({
           ...jsonStore.getResourceJsonData().MoreRefDocs,
           ...formValues.moreInfoDetailsRef
@@ -1134,8 +1136,28 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
-            // onSaveSuccess();
-            onResourceCreated?.();
+            //  Fetch the full quick order details
+            quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+              let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+              console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+              console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+              // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+              jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+              console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+              console.log("parsedResource:",parsedResource);
+              const index=(parsedResource.length) -1;
+              setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+
+              // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const fullJson2 = jsonStore.getJsonData();
+              
+              console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+              onSaveSuccess();
+              onResourceCreated?.();
+            })
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1155,29 +1177,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "destructive", // or "success" if you have custom variant
             });
           }
-          //  Fetch the full quick order details
-          quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-            let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-            console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-            console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-            // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-            jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
-            console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
-            console.log("parsedResource:",parsedResource);
-            const index=(parsedResource.length) -1;
-            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-
-            // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const fullJson2 = jsonStore.getJsonData();
-            
-            console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
-            onSaveSuccess();
-
-          })
-
+          
         } catch (err) {
           console.log(" catch", err);
           setError(`Error fetching API data for Update ResourceGroup`);
@@ -1300,8 +1300,28 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               description: "Your changes have been saved.",
               variant: "default", // or "success" if you have custom variant
             });
-            // onSaveSuccess();
-            onResourceCreated?.();              
+            //  Fetch the full quick order details
+            quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+              let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+              console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+              console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+              // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+              jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+              console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+              console.log("parsedResource:",parsedResource);
+              const index=(parsedResource.length) -1;
+              setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+
+              // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+              // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              const fullJson2 = jsonStore.getJsonData();
+              
+              console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+              onSaveSuccess();
+              onResourceCreated?.();              
+            })
           }else{
             // Remove the latest added resource group with ResourceUniqueID: -1 on API error
             let resourceGroups = jsonStore.getQuickOrder().ResourceGroup || [];
@@ -1322,28 +1342,6 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               variant: "destructive", // or "success" if you have custom variant
             });
           }
-          //  Fetch the full quick order details
-          quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-            let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-            console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-            console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-            // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-            jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
-            console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
-            console.log("parsedResource:",parsedResource);
-            const index=(parsedResource.length) -1;
-            setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-
-            // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
-            // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-            const fullJson2 = jsonStore.getJsonData();
-            
-            console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
-            onSaveSuccess();
-
-          })
 
         } catch (err) {
           console.log(" catch", err);

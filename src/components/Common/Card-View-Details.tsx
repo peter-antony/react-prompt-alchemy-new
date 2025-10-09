@@ -242,12 +242,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                             </div>
                             <div className="flex items-center gap-2 text-gray-700 text-xs">
                                 <CirclePercent className="w-4 h-4 text-gray-600" />
-                                <span className="truncate">{item?.BillingDetails?.TariffType}</span>
+                                <span className="truncate">{item?.BillingDetails?.TariffTypeDescription}</span>
                                 <div className="relative group inline-block">
                                     <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
                                     <div className="absolute right-0 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                         <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                            {item?.BillingDetails?.TariffType}
+                                            {item?.BillingDetails?.TariffTypeDescription}
                                         </div>
                                         <div className="px-4 py-3">
                                             <div className="flex justify-between items-center mb-2">
@@ -261,7 +261,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
 
                                             <div className="text-[11px] text-gray-400 mb-1 pt-2 border-t border-gray-300">Tariff Description</div>
                                             <div className="text-xs text-gray-700 font-medium">
-                                            {item?.BillingDetails?.TariffTypeDescription}
+                                                {item?.BillingDetails?.TariffIDDescription}
                                             </div>
                                         </div>
                                     </div>

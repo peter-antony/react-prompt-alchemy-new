@@ -690,7 +690,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+          tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+          tariffTypeDescription: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
           // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
         });
@@ -733,7 +734,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
 
   // Utility to normalize keys from store to config field IDs
   function normalizeOrderFormDetails(data) {
-    console.log("data 11111 OrderForm", data);
+    console.log("normalizeOrderFormDetails", data);
     // Generic helper to format a field with its name, fallback to '--' if name is empty/null
     function formatFieldWithName(id, name) {
       if (id) {
@@ -937,9 +938,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       setResourceData(resourceGroups);
     }
     if (isEditQuickOrder) {
-      setTimeout(() => {
-        openResourceGroupGetID();
-      }, 3000)
+      // setTimeout(() => {
+        // openResourceGroupGetID();
+      // }, 3000)
     }
   }, [isResourceData,isResourceGroupOpen]);
 
@@ -1227,7 +1228,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
             contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
             // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-            tariffType: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+            tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+            tariffTypeDescription: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
             // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
             // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
           });
@@ -1322,8 +1324,12 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       // setLoading(true);
     }
   }
-
+  
   const openUpdateResourceGroup = async () => {
+    openResourceGroupGetID();
+    setTimeout(() => {
+      setResourceGroupOpen(true);
+    }, 500);
     // const isValid = handleValidateAllPanels();
     // // if (isValid) {
     //   const formValuesRaw = orderDetailsRef.current?.getFormValues() || {};
@@ -1381,7 +1387,6 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
 
     //   const fullJson = jsonStore.getJsonData();
     //   console.log("FULL JSON :: ", fullJson);
-      setResourceGroupOpen(true);
       // try {
       //   //  Update resource
       //   const res: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
