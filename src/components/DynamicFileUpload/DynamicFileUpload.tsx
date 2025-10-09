@@ -69,11 +69,11 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     console.log("uploaded JSON :: ", isEditQuickOrder);
     console.log("uploaded JSON :: ", isResourceGroupAttchment);
     console.log("loadAttachmentData :: ", loadAttachmentData);
-    if(isResourceGroupAttchment){
-      setLoadedFiles(jsonStore.getResourceGroupAttachments());    
-    }else{
+    // if(isResourceGroupAttchment){
+    //   setLoadedFiles(jsonStore.getResourceGroupAttachments());    
+    // }else{
       setLoadedFiles(loadAttachmentData.AttachItems);  
-    }  
+    // }  
     console.log("loadedFiles---- :: ", loadedFiles);
     // Simulate successful upload by moving to uploaded files
     if(loadedFiles != undefined && loadedFiles.length != 0){

@@ -22,9 +22,10 @@ const mockAttachments = [
 interface NewAttachmentGroupProps {
   isEditQuickOrder?: boolean;
   isResourceGroupAttchment?: boolean;
+  isResourceID?: any;
 }
 
-const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachmentGroupProps) => {
+const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID }: NewAttachmentGroupProps) => {
 // export default function Attachments() {
   const [fileCategory, setFileCategory] = useState("BR Ammend");
   const [remarks, setRemarks] = useState("");
@@ -40,76 +41,169 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
 
   useEffect(() => {
     setLoading(false);
-    const attachmentList = jsonStore.getQuickOrder();
-    console.log("attachment ---", attachmentList.Attachments[0]);
-    setAttachmentData(attachmentList.Attachments[0]);
+    console.log("isResourceGroupAttchment", isResourceGroupAttchment);
+    console.log("isResourceID", isResourceID);
+    
+    if(isResourceGroupAttchment && isResourceID){
+      // Get attachment data from specific ResourceGroup using ResourceUniqueID
+      console.log("Loading attachments for ResourceGroup with ID:", isResourceID);
+      const resourceGroupAttachmentData = jsonStore.getResourceGroupAttachmentDataByUniqueID(isResourceID);
+      console.log("ResourceGroup attachment data:", resourceGroupAttachmentData);
+      setAttachmentData(resourceGroupAttachmentData);
+    } else {
+      // Get attachment data from QuickOrder level
+      const attachmentList = jsonStore.getQuickOrder();
+      console.log("QuickOrder attachment data:", attachmentList?.Attachments?.[0]);
+      setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
+    }
+    
     setLoading(true);
-  }, []);
+  }, [isResourceGroupAttchment, isResourceID]);
+
+  // const handleUpload = async (files: StagedFile[]) => {
+  //   // Simulate API call
+  //   console.log('Uploading files:', files);
+  //   const AttachItems = files.map((file) => {
+  //     // Get file type from file.file.name (extension after last dot)
+  //     const fileName = file.file?.name || '';
+  //     const fileType = fileName.split('.').pop()?.toLowerCase() || '';
+  //       const obj= {
+  //       AttachItemID: -1,
+  //       AttachmentType: fileType,
+  //       FileCategory: file.category,
+  //       AttachName: fileName,
+  //       AttachUniqueName: fileName,
+  //       AttachRelPath: "value",
+  //       ModeFlag: "Insert"
+  //     };
+  //     jsonStore.pushQuickOrderAttachment(obj)
+  //     return obj
+  //   });
+  //   console.log('AttachItems:', AttachItems);
+  //   // if(isResourceGroupAttchment){
+  //   //   jsonStore.pushResourceGroupAttachments(AttachItems[0]);
+  //   // }else{
+  //   //   jsonStore.pushAttachments(AttachItems[0]);
+  //   // }
+  //   console.log('get saved List:', jsonStore.getAttachments());
+  //   jsonStore.setQuickOrder({
+  //     ...jsonStore.getJsonData().quickOrder,
+  //     // ...formValues.QuickOrder,
+  //     "ModeFlag": "Update",
+  //     "Status": "Fresh",
+  //     "QuickOrderNo": jsonStore.getQuickUniqueID()
+  //   });
+  //   const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
+  //   console.log("FULL Plan JSON :: ", fullJson);
+  //   try {
+  //     // const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson, { headers });
+  //     const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson);
+  //     console.log(" try", data);
+  //     //  Get OrderNumber from response
+  //     const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+  //     console.log("OrderNumber:", resourceGroupID);
+  //     //  Fetch the full quick order details
+  //     quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+  //       let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+  //       console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+  //       console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+  //       // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+  //       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+  //       // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+  //       const fullJson2 = jsonStore.getJsonData();
+  //       console.log("ATTACHMENTS SAVE SAVE --- FULL JSON 66:: ", fullJson2);
+  //     })
+
+  //   } catch (err) {
+  //     console.log(" catch", err);
+  //     // setError(`Error fetching API data for Update ResourceGroup`);
+  //   }
+
+  //   return new Promise<void>((resolve) => {
+  //     setTimeout(() => {
+  //       console.log('Upload completed');
+  //       resolve();
+  //     }, 2000);
+  //   });
+  // };
 
   const handleUpload = async (files: StagedFile[]) => {
     // Simulate API call
     console.log('Uploading files:', files);
-    const AttachItems = files.map((file) => {
-      // Get file type from file.file.name (extension after last dot)
-      const fileName = file.file?.name || '';
-      const fileType = fileName.split('.').pop()?.toLowerCase() || '';
-        const obj= {
-        AttachItemID: -1,
-        AttachmentType: fileType,
-        FileCategory: file.category,
-        AttachName: fileName,
-        AttachUniqueName: fileName,
-        AttachRelPath: "value",
-        ModeFlag: "Insert"
-      };
-      jsonStore.pushQuickOrderAttachment(obj)
-      return obj
-    });
-    console.log('AttachItems:', AttachItems);
-    // if(isResourceGroupAttchment){
-    //   jsonStore.pushResourceGroupAttachments(AttachItems[0]);
-    // }else{
-    //   jsonStore.pushAttachments(AttachItems[0]);
-    // }
-    console.log('get saved List:', jsonStore.getAttachments());
-    jsonStore.setQuickOrder({
-      ...jsonStore.getJsonData().quickOrder,
-      // ...formValues.QuickOrder,
-      "ModeFlag": "Update",
-      "Status": "Fresh",
-      "QuickOrderNo": jsonStore.getQuickUniqueID()
-    });
-    const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
-    console.log("FULL Plan JSON :: ", fullJson);
-      try {
-        // Prepare headers with attached file
-        // Assuming 'files' is available in this scope (from handleUpload argument)
-        // We'll send the first file as an example; adapt as needed for multiple files
-        // let fileToSend = files && files.length > 0 ? files[0].file : null;
-        // let headers: any = {};
+    
+    try {
+      for (const file of files) {
+        // Get file type from file.file.name (extension after last dot)
+        const fileName = file.file?.name || '';
+        const fileType = fileName.split('.').pop()?.toLowerCase() || '';
         
-        // console.log("files ===", fileToSend);
-        // if (fileToSend) {
-        //   // Read file as base64 or blob if needed, here we use the File object directly
-        //   // You can also use fileToSend.name, fileToSend.type, etc.
-        //   headers['X_Attachment_Name'] = fileToSend.name;
-        //   headers['X_Attachment_Type'] = fileToSend.type;
-        //   // headers['X-File-Category'] = fileToSend.category;
-        //   // If you want to send the file content in header (not recommended for large files), you can use FileReader
-        //   // But usually, you send metadata in headers and the file in the body/form-data
-        // }
+        // Create FormData to send binary file data
+        const formData = new FormData();
+        
+        // Add the actual file as binary data
+        if (file.file) {
+          formData.append('Files', file.file, fileName);
+        }
+        
+        // Add other metadata
+        formData.append('Attachmenttype', fileType);
+        formData.append('Attachname', fileName);
+        formData.append('Filecategory', file.category);
+        
+        // Add any additional context if needed
+        // formData.append('QuickOrderID', '123455'); // You might want to get this from props or state
+        // formData.append('ModeFlag', 'Insert');
+        
+        console.log('Uploading file with FormData:', {
+          fileName,
+          fileType,
+          category: file.category,
+          fileSize: file.file?.size
+        });
+        
+        // Send to API with FormData containing binary file
+        const data: any = await quickOrderService.updateAttachmentQuickOrderResource(formData);
+        console.log("Upload response:", data);
+        const uploadedFiles= {
+          AttachItemID: -1,
+          ModeFlag: "Insert",
+          AttachmentType: data.Attachmenttype,
+          FileCategory: data.Filecategory,
+          AttachName: data.Attachname,
+          AttachUniqueName: data.Attachuniquename,
+          AttachRelPath: data.Attachrelpath,
+        };
+        console.log("uploadedFiles", uploadedFiles);
+        console.log("isResourceGroupAttchment", isResourceGroupAttchment);
+        if(isResourceGroupAttchment){
+          console.log("if");
+          jsonStore.pushResourceGroupAttachmentsByUniqueID(isResourceID, uploadedFiles);
+          // Refresh attachment data for ResourceGroup
+          const updatedResourceGroupAttachmentData = jsonStore.getResourceGroupAttachmentDataByUniqueID(isResourceID);
+          setAttachmentData(updatedResourceGroupAttachmentData);
+        }else{
+          console.log("else");
+          jsonStore.pushQuickOrderAttachment(uploadedFiles);
+          // Refresh attachment data for QuickOrder
+          const attachmentList = jsonStore.getQuickOrder();
+          setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
+        }
 
-        // If your API expects the file in headers (not recommended), you can encode it as base64:
-        // But beware of header size limits!
-        // const fileContent = await fileToSend.text();
-        // headers['X-Attachment-Content'] = btoa(fileContent);
+        console.log('get saved List:', jsonStore.getAttachments());
+        jsonStore.setQuickOrder({
+          ...jsonStore.getJsonData().quickOrder,
+          // ...formValues.QuickOrder,
+          "ModeFlag": "Update",
+        });
+        // const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
+        const fullJson = jsonStore.getQuickOrder();
+        console.log("FULL Plan JSON :: ", fullJson);
 
-        // Pass headers to the API call
-        // const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson, { headers });
-        const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson);
-        console.log(" try", data);
+        const dataRes: any = await quickOrderService.updateQuickOrderAttachment(fullJson);
+        console.log(" try", dataRes);
         //  Get OrderNumber from response
-        const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+        const resourceGroupID = JSON.parse(dataRes?.data?.ResponseData)[0].QuickUniqueID;
         console.log("OrderNumber:", resourceGroupID);
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
@@ -119,21 +213,19 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment }: NewAttachme
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
 
-          // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          const fullJson2 = jsonStore.getJsonData();
-          console.log("ATTACHMENTS SAVE SAVE --- FULL JSON 66:: ", fullJson2);
         })
-
-      } catch (err) {
-        console.log(" catch", err);
-        // setError(`Error fetching API data for Update ResourceGroup`);
       }
+      
+    } catch (err) {
+      console.log("Upload error:", err);
+      // setError(`Error uploading file`);
+    }
 
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         console.log('Upload completed');
         resolve();
-      }, 2000);
+      }, 1000);
     });
   };
 

@@ -403,12 +403,44 @@ export const quickOrderService = {
   updateAttachmentQuickOrderResource: async (
     // id: string,
     // data: QuickOrderUpdateInput, headers
-    data: QuickOrderUpdateInput
+    data: FormData | QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
     // Here we are getting the file uploaded details and want to send the data to API headers
     console.log("Upload Doc---", data);
     // console.log("Upload Doc---", headers);
 
+    let requestBody: any;
+    let headers: any = {};
+
+    // Check if data is FormData (file upload) or regular object
+    if (data instanceof FormData) {
+      // For file uploads, send FormData directly
+      requestBody = data;
+      // Set appropriate headers for file upload
+      headers = {
+        'Content-Type': 'multipart/form-data',
+      };
+    } else {
+      // For regular data, wrap in RequestData
+      requestBody = {
+        RequestData: data,
+      };
+    }
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.UPLOADFILES,
+      requestBody,
+      { headers }
+    );
+    // return response.data, headers;
+    return response.data;
+  },
+
+  // Update quick order
+  updateQuickOrderAttachment: async (
+    // id: string,
+    data: QuickOrderUpdateInput
+  ): Promise<ApiResponse<QuickOrder>> => {
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
@@ -422,26 +454,14 @@ export const quickOrderService = {
         QuickOrder: data,
       }]
     });
-
     const requestBody = {
       RequestData: stringifyData,
-      // headers: {
-      //   "Content-Type": headers.headers.X_Attachment_Type,          // e.g. application/pdf
-      //   "X-File-Name": headers.headers.X_Attachment_Name,           // custom header with file name
-      //   // "X-File-Category": "BR Amendment",  // your extra metadata
-      //   // Authorization: `Bearer ${localStorage.getItem("token")}`
-      // },
     };
-
-    // Pass the headers to the API call by returning them along with the requestBody
-    // The actual usage of headers will be in the apiClient.post call outside this selection
-    // return { requestBody, headers };
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.ORDERFORM,
       requestBody
     );
-    // return response.data, headers;
     return response.data;
   },
 

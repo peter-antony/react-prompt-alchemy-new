@@ -260,16 +260,123 @@ function pushResourceGroupAttachments(attachments: any) {
     jsonData &&
     jsonData.ResponseResult &&
     jsonData.ResponseResult.QuickOrder &&
-    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments
+    jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments
   ) {
-    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems)) {
-      jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems = [];
+    if (!Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments[0].AttachItems)) {
+      jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments[0].AttachItems = [];
     }
-    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems.push(attachments);
-    jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.TotalAttachment = jsonData.ResponseResult.QuickOrder.ResourceGroup.Attachments.AttachItems.length;
+    jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments[0].AttachItems.push(attachments);
+    jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments[0].TotalAttachment = jsonData.ResponseResult.QuickOrder.ResourceGroup[0].Attachments[0].AttachItems.length;
     return true;
   }
   return false;
+}
+
+function pushResourceGroupAttachmentsByUniqueID(resourceUniqueID: string, attachments: any) {
+  console.log("pushResourceGroupAttachmentsByUniqueID - ResourceUniqueID:", resourceUniqueID);
+  console.log("pushResourceGroupAttachmentsByUniqueID - attachments:", attachments);
+  
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup) {
+      // Check if Attachments array exists and has at least one item
+      if (!Array.isArray(resourceGroup.Attachments)) {
+        resourceGroup.Attachments = [];
+      }
+      
+      // If no attachments exist, create the first one
+      if (resourceGroup.Attachments.length === 0) {
+        resourceGroup.Attachments.push({
+          AttachItems: [],
+          TotalAttachment: 0
+        });
+      }
+      
+      // Initialize AttachItems array if it doesn't exist
+      if (!Array.isArray(resourceGroup.Attachments[0].AttachItems)) {
+        resourceGroup.Attachments[0].AttachItems = [];
+      }
+      
+      // Push the new attachment
+      resourceGroup.Attachments[0].AttachItems.push(attachments);
+      
+      // Update the total count
+      resourceGroup.Attachments[0].TotalAttachment = resourceGroup.Attachments[0].AttachItems.length;
+      
+      console.log("Successfully added attachment to ResourceGroup:", resourceUniqueID);
+      console.log("Updated attachments count:", resourceGroup.Attachments[0].TotalAttachment);
+      return true;
+    } else {
+      console.log("ResourceGroup not found with ResourceUniqueID:", resourceUniqueID);
+    }
+  }
+  return false;
+}
+
+function getResourceGroupAttachmentsByUniqueID(resourceUniqueID: string) {
+  console.log("getResourceGroupAttachmentsByUniqueID - ResourceUniqueID:", resourceUniqueID);
+  
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.Attachments) && resourceGroup.Attachments.length > 0) {
+      console.log("Found attachments for ResourceGroup:", resourceUniqueID);
+      return resourceGroup.Attachments[0].AttachItems || [];
+    } else {
+      console.log("No attachments found for ResourceGroup:", resourceUniqueID);
+      return [];
+    }
+  }
+  return [];
+}
+
+function getResourceGroupAttachmentDataByUniqueID(resourceUniqueID: string) {
+  console.log("getResourceGroupAttachmentDataByUniqueID - ResourceUniqueID:", resourceUniqueID);
+  
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const resourceGroup = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+    
+    if (resourceGroup && Array.isArray(resourceGroup.Attachments) && resourceGroup.Attachments.length > 0) {
+      console.log("Found attachment data for ResourceGroup:", resourceUniqueID);
+      return resourceGroup.Attachments[0];
+    } else {
+      console.log("No attachment data found for ResourceGroup:", resourceUniqueID);
+      // Return empty structure if no attachments exist
+      return {
+        AttachItems: [],
+        TotalAttachment: 0
+      };
+    }
+  }
+  return {
+    AttachItems: [],
+    TotalAttachment: 0
+  };
 }
 
 function getPlanDetails() {
@@ -1004,6 +1111,9 @@ const jsonStore = {
   getResourceGroupAttachments,
   setResourceGroupAttachments,
   pushResourceGroupAttachments,
+  pushResourceGroupAttachmentsByUniqueID,
+  getResourceGroupAttachmentsByUniqueID,
+  getResourceGroupAttachmentDataByUniqueID,
   getPlanDetails,
   setPlanDetails,
   getActualDetails,

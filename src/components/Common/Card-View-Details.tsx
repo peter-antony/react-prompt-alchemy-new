@@ -72,6 +72,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         ResourceUniqueID: "0",
         initialStep: 1
     });
+    const [currentResourceId, setCurrentResourceId] = useState<string>("");
     const [items, setItems] = useState<any[]>(data || []);
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
@@ -138,6 +139,16 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         }
     }
 
+    const handleAttachments = (item: CardDetailsItem) => {
+        console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
+        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // Pass the item data to the parent component via the callback
+        const resourceId = item.ResourceUniqueID;
+        console.log("resourceId", resourceId);
+        setCurrentResourceId(resourceId);
+        setAttachmentsOpen(true);
+    }
+
     const handleShowPlanDetails = (item: CardDetailsItem) => {
         console.log("handleShowPlanDetails", item);
         // Open side drawer and set initial step to 2 (Plan data)
@@ -200,7 +211,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <button onClick={() => handleCopy(item)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><Copy className="w-4 h-4 text-gray-600" /></span> Copy
                                         </button>
-                                        <button onClick={() => setAttachmentsOpen(true)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
+                                        <button onClick={() => handleAttachments(item)} className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2">
                                             <span><FileText className="w-4 h-4 text-gray-600" /></span> Attachments
                                         </button>
                                         <div className="border-t my-1" />
@@ -348,7 +359,13 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
 
             <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} onScrollPanel={true} badgeContent={jsonStore.getQuickOrderNo()} isBadgeRequired={true}>
                 <div className="">
-                    <div className="mt-0 text-sm text-gray-600"><Attachments isEditQuickOrder={isEditQuickOrder} isResourceGroupAttchment={true} /></div>
+                    <div className="mt-0 text-sm text-gray-600">
+                        <Attachments 
+                            isEditQuickOrder={isEditQuickOrder} 
+                            isResourceGroupAttchment={true} 
+                            isResourceID={currentResourceId}
+                        />
+                    </div>
                 </div>
             </SideDrawer>
         </div>
