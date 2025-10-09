@@ -1,13 +1,12 @@
 import React from 'react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Banknote, MapPin, TramFront, UserRound } from 'lucide-react';
-import { TripUserIcon, TramFrontSVG, TripCurrencyIcon, TripTrainIcon } from '../TripNew/TripIcons';
+import { TripUserIcon, TramFrontSVG, TripCurrencyIcon, TripTrainIcon } from './TripIcons';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 export const TripDetailsForm = () => {
+  const { tripData } = manageTripStore();
+  const { Header } = tripData || {};
+
   return (
     <div className="space-y-6 mb-6">
       {/* Trip Information Grid */}
@@ -16,13 +15,15 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <TripUserIcon />
-              <span>CUS0009173</span>
+              {Header?.Customer?.map((customer, index) => (
+                <span key={index} title={customer?.CustomerName}>{customer?.CustomerID}</span>
+              ))}
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <TramFrontSVG />
-              <span>Railtrax NV - 4679</span>
+              <span>{Header?.TrainNo}</span>
             </span>
           </div>
         </div>
@@ -30,14 +31,14 @@ export const TripDetailsForm = () => {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="flex items-center gap-2">
-              <TripCurrencyIcon/>
-              <span>€ 45595.00</span>
+              <TripCurrencyIcon />
+              <span>€ {Header?.UpdatedBillingValue}</span>
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <TripTrainIcon />
-              <span>Rail</span>
+              <span>{Header?.TransportMode}</span>
             </span>
           </div>
         </div>
@@ -46,13 +47,13 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#0068CF" strokeWidth={1.2} />
-              <span>53-202705, Voila</span>
+              <span className='truncate' title={Header?.ArrivalPointDescription}>{Header?.ArrivalPointDescription}</span>
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#D92D20" strokeWidth={1.2} />
-              <span>53-21925-3, Curtici</span>
+              <span className="truncate" title={Header?.DeparturePointDescription}>{Header?.DeparturePointDescription}</span>
             </span>
           </div>
         </div>

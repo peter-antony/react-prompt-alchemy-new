@@ -14,7 +14,7 @@ import { useFooterStore } from '@/stores/footerStore';
 import { filterService, quickOrderService } from '@/api/services';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
-import TripBulkCancelModal from "@/components/TripNew/TripBulkCancelModal";
+import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 
@@ -655,7 +655,7 @@ export const TripExecutionHub = () => {
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
     if (columnKey === 'TripPlanID') {
-      navigate(`/create-trip?id=${value.TripPlanID}`);
+      navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
   };
 
@@ -799,9 +799,9 @@ export const TripExecutionHub = () => {
       showDropdown: true,
       tooltipPosition: "top" as const,
       onClick: () => {
-        console.log('nav create-trip');
+        console.log('nav manage-trip');
         // No redirection here right now.
-        // navigate('/create-trip');
+        // navigate('/manage-trip');
       },
       dropdownItems: [
         {
@@ -809,7 +809,7 @@ export const TripExecutionHub = () => {
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             // No redirection here right now.
-            // navigate('/create-trip');
+            // navigate('/manage-trip');
           },
         },
         {
