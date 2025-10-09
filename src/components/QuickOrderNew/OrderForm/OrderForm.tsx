@@ -676,7 +676,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-        jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+        jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
         jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
@@ -711,7 +711,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
 
         console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
         console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
-        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) }));
+        setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS }));
       }
     } catch (err) {
       setError(`Error fetching API data for${err}`);
@@ -761,9 +761,42 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       Remark1: data.Remark1 ? data.Remark1 : '',
       Summary: data.Summary ? data.Summary : '',
       WBS: data.WBS ? data.WBS : '',
-      QCUserDefined1: data.QCUserDefined1 || { dropdown: '', input: '' },
-      QCUserDefined2: data.QCUserDefined2 || { dropdown: '', input: '' },
-      QCUserDefined3: data.QCUserDefined3 || { dropdown: '', input: '' },
+      QCUserDefined1: (() => {
+        if (data.QCUserDefined1 && typeof data.QCUserDefined1 === "object") {
+          return {
+            input: data.QCUserDefined1.input ?? data.QCUserDefined1Value ?? "",
+            dropdown: data.QCUserDefined1.dropdown ?? data.QCUserDefined1 ?? ""
+          };
+        }
+        return {
+          input: data.QCUserDefined1Value ?? "",
+          dropdown: data.QCUserDefined1 ?? ""
+        };
+      })(),
+      QCUserDefined2: (() => {
+        if (data.QCUserDefined2 && typeof data.QCUserDefined2 === "object") {
+          return {
+            input: data.QCUserDefined2.input ?? data.QCUserDefined2Value ?? "",
+            dropdown: data.QCUserDefined2.dropdown ?? data.QCUserDefined2 ?? ""
+          };
+        }
+        return {
+          input: data.QCUserDefined2Value ?? "",
+          dropdown: data.QCUserDefined2 ?? ""
+        };
+      })(),
+      QCUserDefined3: (() => {
+        if (data.QCUserDefined3 && typeof data.QCUserDefined3 === "object") {
+          return {
+            input: data.QCUserDefined3.input ?? data.QCUserDefined3Value ?? "",
+            dropdown: data.QCUserDefined3.dropdown ?? data.QCUserDefined3 ?? ""
+          };
+        }
+        return {
+          input: data.QCUserDefined3Value ?? "",
+          dropdown: data.QCUserDefined3 ?? ""
+        };
+      })(),
       // QCUserDefined1: data.QCUserDefined1,
       // QCUserDefined2: data.QCUserDefined2,
       // QCUserDefined3: data.QCUserDefined3,
@@ -1180,7 +1213,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           setOrderType(OrderType)
           // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
           // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
-          jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency, QuickOrderDate: formatDateToYYYYMMDD(contract.ValidFrom) });
+          jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency });
           jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
           const additionalInfo = contract.ContractTariff;
           jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
@@ -1214,7 +1247,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
         }
       }
       const quickOrderData = jsonStore.getQuickOrder();
-      console.log("quickOrderData :", quickOrderData);
+      console.log("quickOrderData +++ :", quickOrderData);
       jsonStore.setQuickOrderFields({ 
         OrderType: quickOrderData.OrderType ?? "",
         Contract: quickOrderData.ContractID ?? "",
@@ -1226,81 +1259,55 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
         ClusterLocationDesc: quickOrderData.ClusterLocationDesc ?? quickOrderData.ClusterLocationDesc ?? "",
         WBS: quickOrderData.WBS ?? "",
         Currency: quickOrderData.Currency ?? "",
-        QuickOrderDate: quickOrderData.ValidFrom ? formatDateToYYYYMMDD(quickOrderData.ValidFrom) : "",
+        QuickOrderDate: quickOrderData.QuickOrderDate ? formatDateToYYYYMMDD(quickOrderData.QuickOrderDate) : "",
         Summary: quickOrderData.Summary ?? "",
         Remark1: quickOrderData.Remark1 ?? "",
         Remarks2: quickOrderData.Remarks2 ?? "",
         Remarks3: quickOrderData.Remarks3 ?? "",
         
-        // QCUserDefined1: (() => {
-        //   if (quickOrderData.QCUserDefined1 && typeof quickOrderData.QCUserDefined1 === "object") {
-        //     // For proper binding like in plan/actuals (wagonDetails/containerDetails), prefer value/label structure
-        //     return {
-        //       input: quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
-        //       dropdown: quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
-        //     };
-        //   }
-        //   return {
-        //     input: quickOrderData.QCUserDefined1Value ?? quickOrderData.QCUserDefined1Input ?? "",
-        //     dropdown: quickOrderData.QCUserDefined1Dropdown ?? quickOrderData.QCUserDefined1 ?? ""
-        //   };
-        // })(),
-        // QCUserDefined2: (() => {
-        //   if (quickOrderData.QCUserDefined2 && typeof quickOrderData.QCUserDefined2 === "object") {
-        //     return {
-        //       input: quickOrderData.QCUserDefined2.input ?? quickOrderData.QCUserDefined2Value ?? "",
-        //       dropdown: quickOrderData.QCUserDefined2.dropdown ?? quickOrderData.QCUserDefined2 ?? ""
-        //     };
-        //   }
-        //   return {
-        //     input: quickOrderData.QCUserDefined2Value ?? "",
-        //     dropdown: quickOrderData.QCUserDefined2 ?? ""
-        //   };
-        // })(),
-        // QCUserDefined3: (() => {
-        //   if (quickOrderData.QCUserDefined3 && typeof quickOrderData.QCUserDefined3 === "object") {
-        //     return {
-        //       input: quickOrderData.QCUserDefined3.input ?? quickOrderData.QCUserDefined3Value ?? "",
-        //       dropdown: quickOrderData.QCUserDefined3.dropdown ?? quickOrderData.QCUserDefined3 ?? ""
-        //     };
-        //   }
-        //   return {
-        //     input: quickOrderData.QCUserDefined3Value ?? "",
-        //     dropdown: quickOrderData.QCUserDefined3 ?? ""
-        //   };
-        // })(),
+        QCUserDefined1: (() => {
+          if (quickOrderData.QCUserDefined1 && typeof quickOrderData.QCUserDefined1 === "object") {
+            return {
+              input: quickOrderData.QCUserDefined1.input ?? quickOrderData.QCUserDefined1Value ?? "",
+              dropdown: quickOrderData.QCUserDefined1.dropdown ?? quickOrderData.QCUserDefined1 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined1Value ?? "",
+            dropdown: quickOrderData.QCUserDefined1 ?? ""
+          };
+        })(),
+        QCUserDefined2: (() => {
+          if (quickOrderData.QCUserDefined2 && typeof quickOrderData.QCUserDefined2 === "object") {
+            return {
+              input: quickOrderData.QCUserDefined2.input ?? quickOrderData.QCUserDefined2Value ?? "",
+              dropdown: quickOrderData.QCUserDefined2.dropdown ?? quickOrderData.QCUserDefined2 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined2Value ?? "",
+            dropdown: quickOrderData.QCUserDefined2 ?? ""
+          };
+        })(),
+        QCUserDefined3: (() => {
+          if (quickOrderData.QCUserDefined3 && typeof quickOrderData.QCUserDefined3 === "object") {
+            return {
+              input: quickOrderData.QCUserDefined3.input ?? quickOrderData.QCUserDefined3Value ?? "",
+              dropdown: quickOrderData.QCUserDefined3.dropdown ?? quickOrderData.QCUserDefined3 ?? ""
+            };
+          }
+          return {
+            input: quickOrderData.QCUserDefined3Value ?? "",
+            dropdown: quickOrderData.QCUserDefined3 ?? ""
+          };
+        })(),
         
       });
 
-      // console.log("wagon", orderDetailsRef);
-      // // if (orderDetailsRef && orderDetailsRef.current && "setFormValues" in orderDetailsRef.current && typeof orderDetailsRef.current.setFormValues === "function") {
-      //   orderDetailsRef.current.setFormValues(quickOrderData || {});
-      //   // Map WagonQuantity and WagonQuantityUOM to the inputdropdown field structure expected by DynamicPanel
-      //   console.log("wagon", orderDetailsRef);
-      //   // if (quickOrderData && getOrderFormDetailsConfig && getOrderFormDetailsConfig.QCUserDefined1 && getOrderFormDetailsConfig.QCUserDefined1.fieldType === "inputdropdown") {
-      //     const wagonQuantityInputDropdown = {
-      //       input: quickOrderData.QCUserDefined1Value ?? "",
-      //       dropdown: quickOrderData.QCUserDefined1 ?? ""
-      //     };
-      //     const wagonGrossWeightInputDropdown = {
-      //       input: quickOrderData.QCUserDefined2Value ?? "",
-      //       dropdown: quickOrderData.QCUserDefined2 ?? ""
-      //     };
-      //     const wagonLengthInputDropdown = {
-      //       input: quickOrderData.QCUserDefined3Value ?? "",
-      //       dropdown: quickOrderData.QCUserDefined3 ?? ""
-      //     };
-      //     orderDetailsRef.current.setFormValues({
-      //       ...quickOrderData,
-      //       QCUserDefined1: wagonQuantityInputDropdown,
-      //       QCUserDefined2: wagonGrossWeightInputDropdown,
-      //       QCUserDefined3: wagonLengthInputDropdown,
-      //     });
-      //     console.log("orderDetailsRef", orderDetailsRef.current?.getFormValues());
-      //   // } else {
-      //   //   orderDetailsRef.current.setFormValues(quickOrderData || {});
-      //   // }
-      // // }
+      // Update formData state instead of using orderDetailsRef.setFormValues
+      // This ensures the form is properly controlled by the state
+      console.log("Updating formData state with API data", quickOrderData);
+      setFormData(normalizeOrderFormDetails(quickOrderData));
       
       setLoading(true);
     } catch (err) {
