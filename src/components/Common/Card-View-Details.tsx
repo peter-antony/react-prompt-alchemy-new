@@ -23,10 +23,21 @@ interface CardStatus {
 //     Failed: { label: "Failed", color: "text-red-600", bg: "bg-red-50" },
 //     "Under Amendment": { label: "Under Amendment", color: "text-orange-600", bg: "bg-orange-50" },
 // };
-const statusMap: Record<string, CardStatus> = {
-    Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
-    Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
-    "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
+const statusMap: any = {
+  // Approved: { label: "Approved", statusColor: "badge-green rounded-2xl", color: "text-green-600", bg: "bg-green-50" },
+  Failed: { label: "Failed", statusColor: "badge-red rounded-2xl", color: "text-red-600", bg: "bg-red-50" },
+  // "Under Amendment": { label: "Under Amendment", statusColor: "badge-orange rounded-2xl", color: "text-orange-600", bg: "bg-orange-50" },
+  Released: { label: "Under Amendment", statusColor: 'badge-fresh-green rounded-2xl' },
+  'Under Execution': 'badge-purple rounded-2xl',
+  'Open': 'badge-blue rounded-2xl',
+  'Cancelled': 'badge-red rounded-2xl',
+  'Deleted': 'badge-red rounded-2xl',
+  'Save': 'badge-green rounded-2xl',
+  'Hold': 'badge-orange rounded-2xl',
+  'Confirmed': 'badge-green rounded-2xl',
+  'Initiated': 'badge-blue rounded-2xl',
+  'Approved': 'badge-green rounded-2xl',
+  'Rerun Triggered': 'badge-purple rounded-2xl'
 };
 
 export interface CardDetailsItem {
@@ -149,16 +160,17 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <UsersRound className="w-4 h-4 text-violet-500" />
                                     </span>
                                     <div>
+                                        
+                                        <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID, initialStep: 1 })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
+                                        {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
                                         <div className="d-flex relative">
-                                            <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID, initialStep: 1 })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
-                                            {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
-                                            <span className="absolute -top-1 left-full ml-2">
-                                                <span className={`text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer`}>
+                                            <span className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</span>
+                                            <span className="absolute ml-2">
+                                                <span className={`text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer ${statusMap[item?.ResourceStatus]}`}>
                                                     {item?.ResourceStatus}
                                                 </span>
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</div>
                                     </div>
                                 </div>
                             </div>
@@ -294,15 +306,15 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                 <Files className="w-4 h-4 text-gray-600" />
                                 <span className="truncate" title={item?.MoreRefDocs?.SecondaryDocTypeDescription || item?.MoreRefDocs?.SecondaryDocNo}>{item?.MoreRefDocs?.SecondaryDocTypeDescription} - {item?.MoreRefDocs?.SecondaryDocNo}</span>
                             </div>
-                        </div>
-                        <div className="flex items-center text-blue-600 text-xs font-medium mt-2">
-                            <LinkIcon className="w-4 h-4 mr-1" />
-                            <span className="cursor-pointer">Draft Bill : {item?.BillingDetails?.DraftBillNo}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-medium">
-                            <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.BillingDetails?.DraftBillStatus]}`}>
-                                {item?.BillingDetails?.DraftBillStatus}
-                            </span>
+                            <div className="flex items-center text-blue-600 text-xs font-medium mt-2">
+                                <LinkIcon className="w-4 h-4 mr-1" />
+                                <span className="cursor-pointer">Draft Bill : {item?.BillingDetails?.DraftBillNo}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-medium">
+                                <span className={`px-2 py-1 rounded-full text-xs ${statusMap[item?.BillingDetails?.DraftBillStatus]}`}>
+                                    {item?.BillingDetails?.DraftBillStatus}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm mb-3">
