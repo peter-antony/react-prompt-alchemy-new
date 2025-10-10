@@ -397,7 +397,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     },
     Vendor: {
       id: 'Vendor',
-      label: 'Vendor',
+      label: 'Supplier',
       fieldType: 'lazyselect',
       width: 'half',
       value: '',
@@ -1617,6 +1617,31 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       cloned.ResourceUniqueID = -1;
       cloned.ModeFlag = "Insert";
 
+      // Set BillingDetails fields to null
+      cloned.BillingDetails = {
+        ...cloned.BillingDetails,
+        DraftBillNo: null,
+        DraftBillStatusCode: null,
+        DraftBillStatus: null,
+        InvoiceNo: null,
+        InvoiceStatusCode: null,
+        InvoiceStatus: null,
+        InternalOrderNo: null,
+      };
+
+      // Set MoreRefDocs fields to null
+      cloned.MoreRefDocs = {
+        PrimaryDocType: null,
+        PrimaryDocNo: null,
+        PrimaryDocDate: null,
+        SecondaryDocType: null,
+        SecondaryDocNo: null,
+        SecondaryDocDate: null,
+        AddtionalMoreRefDocs: null
+      };
+
+      cloned.Attachments = null;
+
       // Optional: clear child identifiers if present to avoid collisions
       if (Array.isArray(cloned.PlanDetails)) {
         cloned.PlanDetails = cloned.PlanDetails.map((p: any) => ({ ...p, PlanLineUniqueID: -1, ModeFlag: "Insert" }));
@@ -1630,7 +1655,12 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
 
       jsonStore.setQuickOrder({
         ...quickOrder,
-        ModeFlag: "Update",
+        // ModeFlag: "Update",
+        AmendNo: 0,
+        AmendReasonCode: null,
+        AmendReasonDescription: null,
+        AmendmentHistory: null,
+        Attachments: null,
         ResourceGroup: updatedResourceGroups,
       });
 
