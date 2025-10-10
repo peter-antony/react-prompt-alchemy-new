@@ -15,7 +15,7 @@ import { MoreInfo } from './MoreInfo';
 import Attachments from './Attachments';
 import AmendmentHistory from './AmendmentHistory';
 import LinkedOrders from './LinkedOrders';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import jsonStore from '@/stores/jsonStore';
 import { useEffect } from 'react';
 import Toast from '../../Common/Toast';
@@ -886,10 +886,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   const handleMoreInfoDataChange = (updatedData: any) => {
     console.log("Updated form data:", updatedData.OrderType);
   };
-  const copyDetails = () => {
 
-  }
-
+  const [resourceGroupData, setResourceGroupData] = useState<any[]>([]);
   const [isResourceData, setIsResourceData] = useState(false);
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [ResourceCount, setResourceCount] = useState(0);
@@ -1726,6 +1724,140 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     
   }
 
+  const copyQuickOrderDetails = async () => {
+    const quickOrderData = jsonStore.getQuickOrder();
+    console.log("copyQuickOrderDetails - Original data:", quickOrderData);
+    
+    // Deep clone the data to avoid mutations
+    const clonedData = JSON.parse(JSON.stringify(quickOrderData));
+    
+    // Update QuickOrder level fields
+    clonedData.QuickUniqueID = -1;
+    clonedData.ModeFlag = "Insert";
+    clonedData.QuickOrderNo = null;
+    clonedData.AmendmentHistory = null;
+    clonedData.Attachments = null;
+    clonedData.AmendNo = 0;
+    clonedData.AmendReasonCode = null;
+    clonedData.AmendReasonDescription = null;
+    clonedData.CanceReasonCode = null;
+    clonedData.CanceReasonDescription = null;
+    
+    // Update ResourceGroup fields
+    if (Array.isArray(clonedData.ResourceGroup)) {
+      clonedData.ResourceGroup = clonedData.ResourceGroup.map((resource: any) => {
+        // Update ResourceGroup level fields
+        resource.ResourceUniqueID = -1;
+        resource.ModeFlag = "Insert";
+        resource.Attachments = null;
+        
+        // Update BillingDetails
+        resource.BillingDetails = {
+          ...resource.BillingDetails,
+          DraftBillNo: null,
+          DraftBillStatusCode: null,
+          DraftBillStatus: null,
+          InvoiceNo: null,
+          InvoiceStatusCode: null,
+          InvoiceStatus: null,
+          IsDraftBillFailed: null,
+          DraftBillFailedReason: null,
+          InternalOrderNo: null
+        };
+        
+        // Update MoreRefDocs
+        resource.MoreRefDocs = {
+          PrimaryDocType: null,
+          PrimaryDocNo: null,
+          PrimaryDocDate: null,
+          SecondaryDocType: null,
+          SecondaryDocNo: null,
+          SecondaryDocDate: null,
+          AddtionalMoreRefDocs: null
+        };
+        
+        // Update PlanDetails
+        if (Array.isArray(resource.PlanDetails)) {
+          resource.PlanDetails = resource.PlanDetails.map((plan: any) => ({
+            ...plan,
+            PlanLineUniqueID: -1,
+            ModeFlag: "Insert"
+          }));
+        }
+        
+        // Update ActualDetails
+        if (Array.isArray(resource.ActualDetails)) {
+          resource.ActualDetails = resource.ActualDetails.map((actual: any) => ({
+            ...actual,
+            ActualLineUniqueID: -1,
+            ModeFlag: "Insert"
+          }));
+        }
+        
+        return resource;
+      });
+    }
+    
+    console.log("copyQuickOrderDetails - Updated data:", clonedData);
+    
+    // Update the store with modified data
+    jsonStore.setQuickOrder(clonedData);
+    console.log("Updated data:", jsonStore.getQuickOrder());
+    const fullJson = jsonStore.getQuickOrder();
+    
+    const res: any = await quickOrderService.updateQuickOrderResource(fullJson);
+    console.log("updateQuickOrderResource result:", res);
+    const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
+    const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
+    console.log("response ===", resourceStatus);
+    const OrderNumber = JSON.parse(res?.data?.ResponseData)[0].QuickUniqueID;
+    console.log("OrderNumber:", OrderNumber);
+    jsonStore.setQuickUniqueID(OrderNumber);
+    
+    if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+      toast({
+        title: "✅ Form submitted successfully",
+        description: "Your changes have been saved.",
+        variant: "default", // or "success" if you have custom variant
+      });
+      //  Fetch the full quick order details
+      quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
+        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
+        console.log("parsedREsponse:",parsedData?.ResponseResult[0].ResourceGroup);
+        console.log("parsedResource:",parsedResource);
+        const index=(parsedResource.length) -1;
+        // setResourceUniqueId(parsedResource[index].ResourceUniqueID);
+        
+        const fullJson2 = jsonStore.getJsonData();
+        console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+      })
+      setCopyModalOpen(false);
+    }else{
+      toast({
+        title: "⚠️ Submission failed",
+        description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
+        variant: "destructive", // or "success" if you have custom variant
+      });
+    }
+
+  }
+
+  const openCopyModal = () => {
+    const quickOrderData = jsonStore.getQuickOrder();
+    console.log("openCopyModal", quickOrderData);
+    
+    // Extract ResourceGroup data
+    const resourceGroups = Array.isArray(quickOrderData?.ResourceGroup) ? quickOrderData.ResourceGroup : [];
+    setResourceGroupData(resourceGroups);
+    setCopyModalOpen(true);
+  }
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -1781,7 +1913,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
             </button>
             {
               isEditQuickOrder ?
-                <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Copy" onClick={() => setCopyModalOpen(true)}>
+                <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Copy" onClick={() => openCopyModal()}>
                   <Copy className="w-5 h-5 text-gray-600" />
                 </button> : ' '
             }
@@ -1840,6 +1972,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           {/* Copy Modal */}
           <Dialog open={isCopyModalOpen} onOpenChange={setCopyModalOpen}>
             <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs">
+              <DialogTitle className="sr-only">Copy Resource Groups</DialogTitle>
               <div className="flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 pt-6 pb-2 border-b">
@@ -1847,21 +1980,46 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                     <span className="bg-blue-100 p-2 rounded-full"><Copy className="w-5 h-5 text-blue-500" /></span>
                     <span className="font-semibold text-lg">Copy</span>
                   </div>
-                  {/* <CircleX  onClick={() => setCopyModalOpen(false)} className="text-gray-400 hover:text-gray-600" /> */}
-
+                  <button 
+                    onClick={() => setCopyModalOpen(false)} 
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
                 {/* Resource Group */}
                 <div className="px-6 py-4">
                   <div className="text-sm font-medium mb-2">Resource Group</div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 border border-blue-200">R01 - Wagon Rentals <span className="ml-1 cursor-pointer">×</span></span>
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 border border-blue-200">R02 - ... <span className="ml-1 cursor-pointer">×</span></span>
-                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 border border-gray-200">+1</span>
+                    {resourceGroupData.map((resource, index) => (
+                      <span 
+                        key={index}
+                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 border border-blue-200"
+                      >
+                        {resource.BillingDetails?.InternalOrderNo || `R${String(index + 1).padStart(2, '0')}`} - {resource.BasicDetails?.ResourceDescription || 'No Description'}
+                        <span 
+                          className="ml-1 cursor-pointer hover:text-red-600" 
+                          onClick={() => {
+                            const updatedData = resourceGroupData.filter((_, i) => i !== index);
+                            setResourceGroupData(updatedData);
+                          }}
+                        >
+                          ×
+                        </span>
+                      </span>
+                    ))}
+                    {resourceGroupData.length === 0 && (
+                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 border border-gray-200">
+                        No Resource Groups
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Copy Details Button */}
                 <div className="px-6 pb-6">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onClick={(e) => copyDetails()}>Copy Details</button>
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onClick={() => copyQuickOrderDetails()}>Copy Details</button>
                 </div>
               </div>
             </DialogContent>
