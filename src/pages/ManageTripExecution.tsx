@@ -55,6 +55,7 @@ const ManageTripExecution = () => {
           type: 'Button' as const,
           onClick: () => {
             // tripCancelhandler();
+            console.log('Cancel clicked', tripData);
           },
         },
         {
@@ -78,7 +79,7 @@ const ManageTripExecution = () => {
       ],
     });
     return () => resetFooter();
-  }, []);
+  }, [tripData, saveTrip, setFooter, resetFooter]); // Add tripData and saveTrip to dependencies
 
   //API Call for dropdown data
   // const fetchData = async (messageType) => {
@@ -147,6 +148,13 @@ const ManageTripExecution = () => {
                 tripData={tripData} // Pass dataset to child/>
               />
             )}
+            {/* Debug JSON View for tripData in ManageTripExecution */}
+            <div className="mt-4 p-4 border rounded-md bg-gray-50">
+              <h3 className="font-medium mb-2">ManageTripExecution Data (tripData.Header)</h3>
+              <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-[300px]">
+                {JSON.stringify(tripData?.Header, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
       </div>

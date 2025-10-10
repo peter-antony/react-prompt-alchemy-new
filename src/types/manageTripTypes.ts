@@ -1,7 +1,7 @@
 export type ModeFlag = "Insert" | "Update" | "Delete" | "NoChange";
 // Basic Customer
 export interface CustomerItem {
-  CustomerID: string;
+  CustomerID: string | number;
   CustomerName: string;
 }
 
@@ -46,7 +46,7 @@ export interface Header {
   TripOU?: number | string;
   TripStatus?: string;
   TripStatusDescription?: string;
-  Customer?: CustomerItem[];
+  Customer?: CustomerItem;
   TransportSupplier?: string;
   TransportSupplierDescription?: string;
   SupplierRefNo?: string;

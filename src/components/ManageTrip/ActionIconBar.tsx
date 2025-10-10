@@ -21,10 +21,10 @@ export const ActionIconBar = () => {
   const [moreInfo, setMoreInfo] = useState(false);
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">
-      <Button onClick={() => setMoreInfo(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      {/* <Button onClick={() => setMoreInfo(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <CircleArrowOutUpRight size={16} strokeWidth={1.2} />
-        {/* <span className="text-xs">Location</span> */}
-      </Button>
+        <span className="text-xs">Location</span>
+      </Button> */}
       <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <MessageSquareText size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Map</span> */}

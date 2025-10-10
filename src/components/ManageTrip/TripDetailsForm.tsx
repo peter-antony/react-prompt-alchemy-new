@@ -15,9 +15,10 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <TripUserIcon />
-              {Header?.Customer?.map((customer, index) => (
+              {/* {Header?.Customer?.map((customer, index) => (
                 <span key={index} title={customer?.CustomerName}>{customer?.CustomerID}</span>
-              ))}
+              ))} */}
+              <span title={Header?.Customer?.CustomerName}>{Header?.Customer?.CustomerID}</span>
             </span>
           </div>
           <div>
@@ -47,13 +48,13 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#0068CF" strokeWidth={1.2} />
-              <span className='truncate' title={Header?.ArrivalPointDescription}>{Header?.ArrivalPointDescription}</span>
+              <span className='truncate' title={Header?.ArrivalPointDescription}>{Header?.ArrivalPoint}, {Header?.ArrivalPointDescription}</span>
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#D92D20" strokeWidth={1.2} />
-              <span className="truncate" title={Header?.DeparturePointDescription}>{Header?.DeparturePointDescription}</span>
+              <span className="truncate" title={Header?.DeparturePointDescription}>{Header?.DeparturePoint}, {Header?.DeparturePointDescription}</span>
             </span>
           </div>
         </div>

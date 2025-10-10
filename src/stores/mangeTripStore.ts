@@ -58,15 +58,13 @@ export const manageTripStore = create<TripState>((set, get) => ({
       set({ error: err?.message ?? "Fetch failed", loading: false });
     }
   },
-  updateHeaderField: (key, value, modeFlag = "Update") => {
-    const current = get().tripData;
-    if (!current) return;
-    const updatedHeader = {
-      ...current.Header,
-      [key]: value,
-      ModeFlag: modeFlag,
-    };
-    set({ tripData: { ...current, Header: updatedHeader } });
-    console.log('------tripData: ', get().tripData);
-  },
+  updateHeaderField: (key, value, action) => set((state) => ({
+    tripData: {
+      ...(state.tripData || { Header: {} }), // Ensure tripData exists, provide default Header
+      Header: {
+        ...((state.tripData?.Header) || {}), // Ensure Header exists
+        [key]: value, // Update the specific field immutably
+      },
+    },
+  })),
 }));
