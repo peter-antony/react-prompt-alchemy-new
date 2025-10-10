@@ -117,6 +117,13 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         console.log("resourceGroups = ",resourceGroups)
       }, [isResourceGroup,isBack,isEditQuickOrder])
 
+      // Add useEffect to watch for changes in the data prop
+      useEffect(() => {
+        console.log("Card-View-Details: data prop changed", data);
+        const resourceGroups = jsonStore.getAllResourceGroups();
+        setItems(resourceGroups || []);
+      }, [data]);
+
 	const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
 
     const handleDelete = (item: CardDetailsItem) => {

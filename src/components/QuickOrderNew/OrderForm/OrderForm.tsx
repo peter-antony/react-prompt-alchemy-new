@@ -954,6 +954,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     setFormData(normalizeOrderFormDetails(quickOrder));
     if (resourceGroups.length > 0) {
       setIsResourceData(true);
+      setResourceCount(resourceGroups.length);
       setResourceData(resourceGroups);
     }
   }
@@ -1567,6 +1568,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
             console.log("FULL JSON 33:: ", fullJson2);
             setResourceCount(fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
             console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
+            console.log("OrderForm: data Copy changed",jsonStore.getAllResourceGroups() );
+            const resourceGroups = jsonStore.getAllResourceGroups();
+            setResourceData(resourceGroups || []);
           })
           //  Update your store or state with the fetched data
           if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
@@ -1689,6 +1693,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           console.log("FULL JSON 33:: ", fullJson2);
           setResourceCount(fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
           console.log("RESOURCE COUNT:: ", fullJson2.ResponseResult?.QuickOrder?.ResourceGroup?.length);
+          console.log("OrderForm: data Copy changed",jsonStore.getAllResourceGroups() );
+          const resourceGroups = jsonStore.getAllResourceGroups();
+          setResourceData(resourceGroups || []);
         })
         //  Update your store or state with the fetched data
         if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
