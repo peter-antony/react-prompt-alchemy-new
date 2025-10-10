@@ -394,6 +394,33 @@ const CreateQuickOrder = () => {
   };
 
   const quickOrderCancelhandler = () => {
+    console.log('amendmend data rows:', reasonCodeTypeList);
+    setFields([
+      {
+        type: "select",
+        label: "Reason Code",
+        name: "reasonCode",
+        placeholder: "Select Reason Code",
+        // options: [
+        //   { value: "Reason AB", label: "Reason AB" },
+        //   { value: "Reason B", label: "Reason B" },
+        // ],
+        value: "",
+        options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        // events: {
+        //   onChange: (value, event) => {
+        //     console.log('contractType changed:', value);
+        //   }
+        // }
+      },
+      {
+        type: "text",
+        label: "Reason Code Desc.",
+        name: "reasonDesc",
+        placeholder: "Enter Reason Code Description",
+        value: "",
+      },
+    ]);
     setPopupAmendFlag('Cancel');
     setPopupOpen(true);
     setPopupTitle('Cancel Bill');

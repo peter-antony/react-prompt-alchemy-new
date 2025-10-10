@@ -888,6 +888,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   };
 
   const [resourceGroupData, setResourceGroupData] = useState<any[]>([]);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [resourceToDelete, setResourceToDelete] = useState<any>(null);
   const [isResourceData, setIsResourceData] = useState(false);
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [ResourceCount, setResourceCount] = useState(0);
@@ -1492,12 +1494,16 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   const handleDeleteResourceGroup = async (item: any) => {
     console.log("Delete resource group data received in OrderForm:", item);
       
-    // Example: Show confirmation dialog
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete resource group: ${item?.BillingDetails?.InternalOrderNo} - ${item?.BasicDetails?.ResourceDescription}?`
-    );
+    // Set the resource to delete and open confirmation modal
+    setResourceToDelete(item);
+    setDeleteModalOpen(true);
+  }
+
+  // Confirm delete resource group
+  const confirmDeleteResourceGroup = async () => {
+    if (!resourceToDelete) return;
     
-    if (confirmDelete) {
+    const item = resourceToDelete;
       // Here you can implement the actual deletion logic
       // For example, call an API to delete the resource group
       console.log("Proceeding with deletion for ResourceUniqueID:", item.ResourceUniqueID);
@@ -1603,7 +1609,16 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       }
       finally {        
       }
-    }
+    
+    // Close modal and reset state
+    setDeleteModalOpen(false);
+    setResourceToDelete(null);
+  }
+
+  // Cancel delete resource group
+  const cancelDeleteResourceGroup = () => {
+    setDeleteModalOpen(false);
+    setResourceToDelete(null);
   }
 
   const handleCopyResourceGroup = async (item: any) => {
@@ -2031,6 +2046,63 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Delete Confirmation Modal */}
+          <Dialog open={isDeleteModalOpen} onOpenChange={setDeleteModalOpen}>
+            <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs">
+              <DialogTitle className="sr-only">Cancel Resource Group Confirmation</DialogTitle>
+              <div className="flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 pt-3 pb-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-red-100 p-2 rounded-full">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    </span>
+                    <span className="font-semibold text-lg">Cancel Resource Group</span>
+                  </div>
+                  {/* <button 
+                    onClick={() => setDeleteModalOpen(false)} 
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button> */}
+                </div>
+                
+                {/* Content */}
+                <div className="px-6 py-4">
+                  <div className="text-sm text-gray-600 mb-4">
+                    Are you sure you want to cancel this resource group?
+                  </div>
+                  {resourceToDelete && (
+                    <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {resourceToDelete.BillingDetails?.InternalOrderNo || 'No Order Number'} - {resourceToDelete.BasicDetails?.ResourceDescription || 'No Description'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 px-6 pb-6">
+                  <button 
+                    onClick={cancelDeleteResourceGroup}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={confirmDeleteResourceGroup}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Toast
             message="Order No:QO/00001/2025 has been saved successfully."
             isError={false}
