@@ -31,6 +31,9 @@ interface TripState {
   // API actions
   fetchTrip: (tripId: string) => Promise<void>;
   saveTrip?: () => void;
+  
+  // Getters
+  getLegDetails: () => LegDetail[];
 }
 
 export const manageTripStore = create<TripState>((set, get) => ({
@@ -67,4 +70,10 @@ export const manageTripStore = create<TripState>((set, get) => ({
       },
     },
   })),
+
+  // Get LegDetails list
+  getLegDetails: () => {
+    const state = get();
+    return state.tripData?.LegDetails || [];
+  },
 }));

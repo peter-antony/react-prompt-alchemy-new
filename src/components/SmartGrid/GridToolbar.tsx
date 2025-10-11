@@ -163,12 +163,12 @@ export function GridToolbar({
         {gridTitle && (
           <div className="flex items-center">
             <span className="text-Gray-800 font-semibold text-lg flex items-center">
-              {gridTitle === "Trip Execution Create" && (
+              {gridTitle === "Leg Details" && (
                 <span className='p-3 rounded-xl bg-blue-50 mr-4'>
                   <Calendar color="#0058AF" strokeWidth={1.2} />
                 </span>
               )}
-              {gridTitle == 'Trip Execution Create' ? 'Activities & Consignment' : gridTitle}
+              {gridTitle == 'Leg Details' ? 'Activities & Consignment' : gridTitle}
             </span>
             {recordCount !== undefined && (gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
               <span
@@ -252,7 +252,7 @@ export function GridToolbar({
         </Button> */}
 
         {/* Server-side Filter Toggle */}
-        {onToggleServersideFilter && (
+        {onToggleServersideFilter && gridTitle !== "Leg Details" && (
           <div className="relative">
             <Button
               variant="ghost"
@@ -310,31 +310,33 @@ export function GridToolbar({
         </Button>
 
         {/* Export Dropdown Button */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={loading}
-              title="Export Data"
-              className="w-16 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13.9999 9.99993V10.7999C13.9999 11.92 13.9999 12.4801 13.7819 12.9079C13.5902 13.2842 13.2842 13.5902 12.9079 13.7819C12.4801 13.9999 11.92 13.9999 10.7999 13.9999H5.19997C4.07988 13.9999 3.51983 13.9999 3.09201 13.7819C2.71569 13.5902 2.40973 13.2842 2.21798 12.9079C2 12.4801 2 11.92 2 10.7999V9.99993M11.3332 6.66662L7.99995 9.99993M7.99995 9.99993L4.66664 6.66662M7.99995 9.99993V2" stroke="#475467" strokeWidth="1.33332" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {/* <Download className="h-4 w-4" /> */}
-              <ChevronDown className="h-3 w-3 ml-0.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onExport('csv')}>
-              Export CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onExport('xlsx')}>
-              Export Excel
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {gridTitle !== "Leg Details" && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={loading}
+                title="Export Data"
+                className="w-16 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M13.9999 9.99993V10.7999C13.9999 11.92 13.9999 12.4801 13.7819 12.9079C13.5902 13.2842 13.2842 13.5902 12.9079 13.7819C12.4801 13.9999 11.92 13.9999 10.7999 13.9999H5.19997C4.07988 13.9999 3.51983 13.9999 3.09201 13.7819C2.71569 13.5902 2.40973 13.2842 2.21798 12.9079C2 12.4801 2 11.92 2 10.7999V9.99993M11.3332 6.66662L7.99995 9.99993M7.99995 9.99993L4.66664 6.66662M7.99995 9.99993V2" stroke="#475467" strokeWidth="1.33332" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {/* <Download className="h-4 w-4" /> */}
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onExport('csv')}>
+                Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport('xlsx')}>
+                Export Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Filter System Toggle Button */}
         {/* {gridTitle !== 'Plan List' && setShowFilterSystem && (
@@ -414,7 +416,7 @@ export function GridToolbar({
           />
         )}
 
-        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
+        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List' && gridTitle !== 'Leg Details') && (
           <Button
             variant="ghost"
             size="sm"
@@ -497,7 +499,7 @@ export function GridToolbar({
           </DropdownMenu>
         )} */}
 
-        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
+        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List' && gridTitle !== 'Leg Details') && (
           <div className="h-8 w-1 flex justify-center">
             <div className="" style={{
               'width': '1px',

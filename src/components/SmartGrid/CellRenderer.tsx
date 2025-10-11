@@ -318,6 +318,15 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  // LegLocationFormat renderer
+  const renderLegLocationFormat = () => {
+    return (
+      <div className="text-sm min-w-0">
+        <div className="text-Gray-800 font-normal truncate">{value} - {row?.DeparturePoint}</div>
+      </div>
+    );
+  };
+
   // ExpandableCount renderer with modal
   const renderExpandableCount = () => {
     return (
@@ -578,6 +587,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderTextData();
       case 'TextPipedData':
         return renderTextPipedData();
+      case 'LegLocationFormat':
+        return renderLegLocationFormat();
       case 'TextCustom':
         // Custom text rendering logic can be added here
         return renderTextCustomised();

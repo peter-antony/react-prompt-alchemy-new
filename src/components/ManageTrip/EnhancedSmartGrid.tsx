@@ -16,7 +16,7 @@ import { DraggableSubRow, SmartGridWithGrouping } from "@/components/SmartGrid";
 import { GridColumnConfig } from '@/types/smartgrid';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { toast } from '../ui/sonner';
-
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 interface ActivityData {
   sno: number;
@@ -168,7 +168,7 @@ const PlannedActualCell = ({ plannedActual, details }: {
 // Smart Grid configuration for Activities & Consignment with configured widths
 const activitiesColumns: GridColumnConfig[] = [
   {
-    key: 'leg',
+    key: 'LegSequence',
     label: 'S. No.',
     type: 'Text',
     width: 100,
@@ -177,9 +177,10 @@ const activitiesColumns: GridColumnConfig[] = [
     editable: false,
     mandatory: true,
     subRow: false,
+    order: 1
   },
   {
-    key: 'behaviour',
+    key: 'LegBehaviour',
     label: 'Behaviour',
     type: 'Badge',
     width: 130,
@@ -196,26 +197,29 @@ const activitiesColumns: GridColumnConfig[] = [
       'LHTA': 'bg-purple-100 text-purple-800'
     },
     subRow: false,
+    order: 2
   },
   {
-    key: 'location',
+    key: 'ArrivalPoint',
     label: 'Location',
-    type: 'Text',
+    type: 'LegLocationFormat',
     width: 120,
     sortable: true,
     filterable: true,
     editable: false,
     subRow: false,
+    order: 3
   },
   {
     key: 'plannedActual',
     label: 'Planned/Actual',
-    type: 'Text',
+    type: 'LegLocationFormat',
     width: 140,
     sortable: true,
     filterable: true,
     editable: false,
     subRow: false,
+    order: 4
   },
   {
     key: 'consignment',
@@ -223,9 +227,10 @@ const activitiesColumns: GridColumnConfig[] = [
     type: 'Text',
     width: 150,
     sortable: false,
-    filterable: false,
+    filterable: true,
     editable: false,
     subRow: false,
+    order: 5
   },
   {
     key: 'status',
@@ -240,17 +245,18 @@ const activitiesColumns: GridColumnConfig[] = [
       'pending': 'bg-gray-100 text-gray-800'
     },
     subRow: false,
+    order: 6
   },
-  {
-    key: 'action',
-    label: 'Action',
-    type: 'Text',
-    width: 100,
-    sortable: false,
-    filterable: false,
-    editable: false,
-    subRow: false,
-  },
+  // {
+  //   key: 'action',
+  //   label: 'Action',
+  //   type: 'Text',
+  //   width: 100,
+  //   sortable: false,
+  //   filterable: false,
+  //   editable: false,
+  //   subRow: false,
+  // },
   {
     key: 'actualDateTime',
     label: 'Actual date and time',
@@ -259,7 +265,8 @@ const activitiesColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: true,
-    subRow: true
+    subRow: false,
+    order: 7
   }
 ];
 
@@ -311,6 +318,8 @@ export const EnhancedSmartGrid = () => {
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   
+  const { getLegDetails } = manageTripStore();
+  console.log('Leg Details from Store:', getLegDetails());
 
   const handleLinkClick = (value: any, row: any) => {
     console.log("Link clicked:", value, row);
@@ -347,7 +356,7 @@ export const EnhancedSmartGrid = () => {
     console.log('Activities Grid Data:', activitiesGridData);
     setApiStatus('loading');
     gridState.setColumns(activitiesColumns);
-    gridState.setGridData(activitiesGridData);
+    gridState.setGridData(getLegDetails() || []);
     gridState.setLoading(false);
   }, []);
 
@@ -386,7 +395,7 @@ export const EnhancedSmartGrid = () => {
         nestedRowRenderer={renderSubRow}
         // configurableButtons={gridConfigurableButtons}
         showDefaultConfigurableButton={false}
-        gridTitle="Trip Execution Create"
+        gridTitle="Leg Details"
         recordCount={gridState.gridData.length}
         showCreateButton={true}
         searchPlaceholder="Search"
@@ -395,7 +404,8 @@ export const EnhancedSmartGrid = () => {
         hideAdvancedFilter={true}
         serverFilters={[]}
         showFilterTypeDropdown={false}
-        showServersideFilter={showServersideFilter}
+        hideCheckboxToggle={true}
+        showServersideFilter={false}
         onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
         gridId="trip-execution-hub"
         userId="current-user"

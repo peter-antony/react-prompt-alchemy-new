@@ -23,7 +23,8 @@ export type GridColumnType =
   | 'SubRow'            // Sub-row expandable content
   | 'DateFormat'
   | 'CurrencyWithSymbol'
-  | 'ActionButton';        // Clickable button with SVG icon
+  | 'ActionButton'
+  | 'LegLocationFormat';        // Clickable button with SVG icon
 
 export interface GridColumnConfig {
   key: string;

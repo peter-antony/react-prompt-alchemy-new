@@ -194,10 +194,20 @@ export interface LegActivity {
 export interface LegDetail {
   LegSequence: string;
   LegBehaviour: string;
+  LegBehaviourDescription: string;
+  DeparturePoint: string;
+  DeparturePointDescription: string;
+  ArrivalPoint: string;
+  ArrivalPointDescription: string;
+  LegStartOdometer: any;
+  LegEndOdometer: any;
   FromShipPoint: string;
   ToShipPoint: string;
   ModeFlag: ModeFlag;
   Activities: LegActivity[];
+  ContactDetails: any;
+  AdditionalActivities: any;
+  Consignment: any[];
 }
 
 // 🔹 Root
