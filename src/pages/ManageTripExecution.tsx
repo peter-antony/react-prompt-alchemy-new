@@ -6,6 +6,11 @@ import { useFooterStore } from '@/stores/footerStore';
 import { useToast } from '@/hooks/use-toast';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { useSearchParams } from "react-router-dom";
+import { SideDrawer } from '../components/SideDrawer';
+import { useDrawerStore } from '@/stores/drawerStore';
+import { ResourcesDrawerScreen } from '@/components/drawer/ResourcesDrawerScreen';
+import { VASDrawerScreen } from '@/components/drawer/VASDrawerScreen';
+import { IncidentsDrawerScreen } from '@/components/drawer/IncidentsDrawerScreen';
 
 const ManageTripExecution = () => {
   const { loading, tripData, fetchTrip, saveTrip } = manageTripStore();
@@ -16,6 +21,7 @@ const ManageTripExecution = () => {
   const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(true);
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const { isOpen, drawerType, closeDrawer } = useDrawerStore();
 
   // Fetch trip data on first render if editing
   useEffect(() => {
@@ -157,6 +163,25 @@ const ManageTripExecution = () => {
             </div>
           </div>
         </div>
+
+        {/* Side Drawer */}
+        <SideDrawer
+          isOpen={isOpen}
+          onClose={closeDrawer}
+          onBack={drawerType === 'incidents' ? closeDrawer : undefined}
+          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : ''}
+          titleBadge={drawerType === 'vas' || drawerType === 'incidents' ? tripUniqueID || 'TRIP0000000001' : undefined}
+          slideDirection="right"
+          width={drawerType === 'incidents' ? '100%' : '75%'}
+          smoothness="smooth"
+          showBackButton={drawerType === 'incidents'}
+          showCloseButton={true}
+        >
+          {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
+          {drawerType === 'vas' && <VASDrawerScreen />}
+          {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
+        </SideDrawer>
+
       </div>
     </AppLayout>
   );

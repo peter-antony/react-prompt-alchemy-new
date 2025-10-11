@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, Wrench, 
   AlertTriangle, Briefcase, CreditCard, 
   PackageCheck, UserRoundCheck, Settings, CarFront,HandCoins, TicketPercent } from 'lucide-react';
+import { useDrawerStore } from '@/stores/drawerStore';
 
 const summaryCardsData = [
   {
@@ -61,47 +62,66 @@ const summaryCardsData = [
   }
 ];
 
-export const SummaryCardsGrid = () => (
-  <div className="grid grid-cols-2 gap-6">
-    {summaryCardsData.map((card, index) => {
-      const Icon = card.icon;
-      return (
-        <Card key={index} className="h-fit border-[#EAECF0] rounded-sm shadow-none">
-          <CardHeader className="p-4">
-            <CardTitle className="text-md font-medium flex items-center gap-2">
-              {/* <Icon className={`h-4 w-4 ${card.iconColor}`} /> */}
-              {card.title == 'Customer Orders' &&
-                <span className='p-3 rounded-xl bg-[#F0F3FE] mr-2'> <PackageCheck size={16} color="#1036C0" strokeWidth={1.2} /></span>
-              }
-              {card.title == 'Resources' &&
-                <span className='p-3 rounded-xl bg-[#FFF1F3] mr-2'> <UserRoundCheck size={16} color="#C01048" strokeWidth={1.2} /></span>
-              }
-              {card.title == 'VAS' &&
-                <span className='p-3 rounded-xl bg-[#a52a2a17] mr-2'> <Settings size={16} color="brown" strokeWidth={1.2} /></span>
-              }
-              {card.title == 'Incidents' &&
-                <span className='p-3 rounded-xl bg-[#ff980012] mr-2'> <CarFront size={16} color="#cd5c5c" strokeWidth={1.25} /></span>
-              }
-              {card.title == 'Jobs' &&
-                <span className='p-3 rounded-xl bg-[#677b8512] mr-2'> <HandCoins size={16} color="#677b85" strokeWidth={1.2} />
-                </span>
-              }
-              {card.title == 'Supplier Billing' &&
-                <span className='p-3 rounded-xl bg-[#9774de12] mr-2'> <TicketPercent size={16} color="#9774de" strokeWidth={1.2} /></span>
-              }
-              <span className='text-md'>{card.title}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-y-2 text-sm p-4 pt-0">
-            {card.values.map((value, valueIndex) => (
-              <div key={valueIndex} className="flex justify-between text-sm flex-col gap-1">
-                <span className="text-muted-foreground">{value.label}</span>
-                <span className="font-medium">{value.value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      );
-    })}
-  </div>
-);
+export const SummaryCardsGrid = () => {
+  const { openDrawer } = useDrawerStore();
+   const handleCardClick = (cardTitle: string) => {
+    if (cardTitle === 'Resources') {
+      openDrawer('resources');
+    } else if (cardTitle === 'VAS') {
+      openDrawer('vas');
+    } else if (cardTitle === 'Incidents') {
+      openDrawer('incidents');
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-6">
+      {summaryCardsData.map((card, index) => {
+        const Icon = card.icon;
+        const isClickable = card.title === 'Resources' || card.title === 'VAS' || card.title === 'Incidents';
+        return (
+          <Card key={index} 
+            className={`h-fit border-[#EAECF0] rounded-sm shadow-none ${
+              isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
+            }`}
+            onClick={() => isClickable && handleCardClick(card.title)}
+          >
+            <CardHeader className="p-4">
+              <CardTitle className="text-md font-medium flex items-center gap-2">
+                {/* <Icon className={`h-4 w-4 ${card.iconColor}`} /> */}
+                {card.title == 'Customer Orders' &&
+                  <span className='p-3 rounded-xl bg-[#F0F3FE] mr-2'> <PackageCheck size={16} color="#1036C0" strokeWidth={1.2} /></span>
+                }
+                {card.title == 'Resources' &&
+                  <span className='p-3 rounded-xl bg-[#FFF1F3] mr-2'> <UserRoundCheck size={16} color="#C01048" strokeWidth={1.2} /></span>
+                }
+                {card.title == 'VAS' &&
+                  <span className='p-3 rounded-xl bg-[#a52a2a17] mr-2'> <Settings size={16} color="brown" strokeWidth={1.2} /></span>
+                }
+                {card.title == 'Incidents' &&
+                  <span className='p-3 rounded-xl bg-[#ff980012] mr-2'> <CarFront size={16} color="#cd5c5c" strokeWidth={1.25} /></span>
+                }
+                {card.title == 'Jobs' &&
+                  <span className='p-3 rounded-xl bg-[#677b8512] mr-2'> <HandCoins size={16} color="#677b85" strokeWidth={1.2} />
+                  </span>
+                }
+                {card.title == 'Supplier Billing' &&
+                  <span className='p-3 rounded-xl bg-[#9774de12] mr-2'> <TicketPercent size={16} color="#9774de" strokeWidth={1.2} /></span>
+                }
+                <span className='text-md'>{card.title}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-y-2 text-sm p-4 pt-0">
+              {card.values.map((value, valueIndex) => (
+                <div key={valueIndex} className="flex justify-between text-sm flex-col gap-1">
+                  <span className="text-muted-foreground">{value.label}</span>
+                  <span className="font-medium">{value.value}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};

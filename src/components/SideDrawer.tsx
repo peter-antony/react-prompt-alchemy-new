@@ -19,6 +19,7 @@ interface SideDrawerProps {
   onClose: () => void;
   onBack?: () => void;
   title?: string;
+  titleBadge?: string;
   showBackButton?: boolean;
   showCloseButton?: boolean;
   showFooter?: boolean;
@@ -37,6 +38,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
   onClose,
   onBack,
   title,
+  titleBadge,
   showBackButton = false,
   showCloseButton = true,
   showFooter = false,
@@ -200,9 +202,16 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
               </Button>
             )}
             {title && (
-              <h2 className="text-lg font-semibold text-gray-900 truncate">
-                {title}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900 truncate">
+                  {title}
+                </h2>
+                {titleBadge && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded border border-primary/20">
+                    {titleBadge}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           
