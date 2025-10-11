@@ -488,7 +488,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
         </div>
         
         <div className="pt-0">
-          {filteredFiles.length === 0 ? (
+          {filteredFiles?.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <FileText className="h-8 w-8 text-gray-400" />
@@ -497,8 +497,8 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {filteredFiles.map(file => {
-                const extension = file.fileName.split('.').pop()?.toLowerCase();
+              {filteredFiles?.map(file => {
+                const extension = file?.fileName?.split('.').pop()?.toLowerCase();
                 let iconColor = '';
                 let iconBg = '';
                 

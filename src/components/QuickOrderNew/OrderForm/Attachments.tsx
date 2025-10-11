@@ -200,20 +200,22 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         const fullJson = jsonStore.getQuickOrder();
         console.log("FULL Plan JSON :: ", fullJson);
 
-        const dataRes: any = await quickOrderService.updateQuickOrderAttachment(fullJson);
-        console.log(" try", dataRes);
-        //  Get OrderNumber from response
-        const resourceGroupID = JSON.parse(dataRes?.data?.ResponseData)[0].QuickUniqueID;
-        console.log("OrderNumber:", resourceGroupID);
-        //  Fetch the full quick order details
-        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+        setTimeout(async () => {
+          const dataRes: any = await quickOrderService.updateQuickOrderAttachment(fullJson);
+          console.log(" try", dataRes);
+          //  Get OrderNumber from response
+          const resourceGroupID = JSON.parse(dataRes?.data?.ResponseData)[0].QuickUniqueID;
+          console.log("OrderNumber:", resourceGroupID);
+          //  Fetch the full quick order details
+          quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
           console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
 
-        })
+          })
+        }, 500);
       }
       
     } catch (err) {

@@ -35,10 +35,10 @@ const QUICK_ORDER_BASIC_JSON = {
       ],
       "AmendmentHistory": [
         {
-          "AmendmentNo": 1,
-          "username": "ramcouser",
-          "updTime": "2024-01-01",
-          "reasoncode": "Customer request"
+          "AmendmentNo": 0,
+          "username": "",
+          "updTime": "",
+          "reasoncode": ""
         }
       ],
       "Attachments": {
@@ -147,10 +147,10 @@ const QUICK_ORDER_JSON = {
       ],
       "AmendmentHistory": [
         {
-          "AmendmentNo": 1,
-          "username": "ramcouser",
-          "updTime": "2024-01-01",
-          "reasoncode": "Customer request"
+          "AmendmentNo": 0,
+          "username": "",
+          "updTime": "",
+          "reasoncode": ""
         }
       ],
       "Attachments": {
