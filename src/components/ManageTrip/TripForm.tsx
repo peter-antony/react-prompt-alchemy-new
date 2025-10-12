@@ -431,12 +431,12 @@ export const TripForm: React.FC<TripFormProps> = ({
       // onDataChange={handleDataChange} // Confirming it's commented out as per user
       />
       {/* Debug JSON View */}
-      <div className="mt-4 p-4 border rounded-md bg-gray-50">
-        <h3 className="font-medium mb-2">TripForm Data (tripData.Header)</h3> {/* Changed to display tripData.Header */}
+      {/* <div className="mt-4 p-4 border rounded-md bg-gray-50">
+        <h3 className="font-medium mb-2">TripForm Data (tripData.Header)</h3>
         <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-[300px]">
           {JSON.stringify(tripData?.Header, null, 2)} // Display tripData.Header
         </pre>
-      </div>
+      </div> */}
     </>
   );
 };

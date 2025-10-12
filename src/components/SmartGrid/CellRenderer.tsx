@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Info } from 'lucide-react';
+import { Info, Package } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
@@ -13,6 +13,7 @@ import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/forma
 import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
 import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
+import LocationDetailsTooltip from '@/components/Common/LocationDetailsTooltip';
 
 interface CellRendererProps {
   value: any;
@@ -44,7 +45,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   loading = false
 }) => {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const [tempValue, setTempValue] = useState(value);
+  const [tempValue, setTempValue] = React.useState(value);
 
   const handleSave = () => {
     onEdit(rowIndex, column.key, tempValue);
@@ -221,7 +222,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
             {firstCustomer?.SubServiceDescription}
           </div>
         );
-      } 
+      }
       // else if (column.key === "CustomerOrders") {
       //   return (
       //     <>
@@ -245,7 +246,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
                       className="hover:underline cursor-pointer text-blue-600"
                       title={customer.CustomerOrder}
                     > */}
-                      {customer.CustomerOrder}
+                    {customer.CustomerOrder}
                     {/* </a> */}
                     {index < customerOrders.length - 1 && ", "}
                   </span>
@@ -320,11 +321,31 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   // LegLocationFormat renderer
   const renderLegLocationFormat = () => {
-    return (
-      <div className="text-sm min-w-0">
-        <div className="text-Gray-800 font-normal truncate">{value} - {row?.DeparturePoint}</div>
-      </div>
-    );
+    // const [showLocationDetails, setShowLocationDetails] = useState(false);
+    if (column.key === "ArrivalPoint" && column.type === "LegLocationFormat") {
+      return (
+        <div className="relative text-sm min-w-0 flex items-center">
+          <div className="text-Gray-800 font-normal truncate">{value} - {row?.DeparturePoint}</div>
+          <LocationDetailsTooltip row={row} type="LegLocationFormat" value={value} propKey={column.key} />
+        </div>
+      );
+    }
+    if(column.key === "PlannedActual" && column.type === "LegLocationFormat") {
+      return (
+        <div className="relative text-sm flex items-center w-full">
+          {/* <div className="text-Gray-800 font-normal truncate">{value} - {row?.DeparturePoint}</div> */}
+          <LocationDetailsTooltip row={row} type="LegLocationFormat" value={value} propKey={column.key} />
+        </div>
+      );
+    }
+    if(column.key === "Consignment" && column.type === "LegLocationFormat") {
+      return (
+        <div className="relative text-sm flex items-center w-full justify-center">
+            <Package size={16} />
+        </div>
+      );
+    }
+    return null;
   };
 
   // ExpandableCount renderer with modal

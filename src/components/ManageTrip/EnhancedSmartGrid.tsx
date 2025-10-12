@@ -211,7 +211,7 @@ const activitiesColumns: GridColumnConfig[] = [
     order: 3
   },
   {
-    key: 'plannedActual',
+    key: 'PlannedActual',
     label: 'Planned/Actual',
     type: 'LegLocationFormat',
     width: 140,
@@ -222,9 +222,9 @@ const activitiesColumns: GridColumnConfig[] = [
     order: 4
   },
   {
-    key: 'consignment',
+    key: 'Consignment',
     label: 'Consignment',
-    type: 'Text',
+    type: 'LegLocationFormat',
     width: 150,
     sortable: false,
     filterable: true,
