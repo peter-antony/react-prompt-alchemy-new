@@ -61,6 +61,10 @@ body::-webkit-scrollbar-thumb {
   --badge-text-purple: #6938ef;
   --badge-bg-purple: #f4f3ff;
   --badge-border-purple: #d9d6fe;
+  /* Badge rose */
+  --badge-text-rose: #CB0B96;
+  --badge-bg-rose: #FFE0FC;
+  --badge-border-rose: #fdd8f1;
 }
 
 .headerSearch::placeholder {
@@ -305,6 +309,13 @@ body::-webkit-scrollbar-thumb {
   font-weight: 500;
   background-color: var(--badge-bg-fresh-green);
   border: 1px solid var(--badge-border-fresh-green);
+  padding: var(--badge-padding);
+}
+.badge-rose {
+  color: var(--badge-text-rose);
+  font-weight: 500;
+  background-color: var(--badge-bg-rose);
+  border: 1px solid var(--badge-border-rose);
   padding: var(--badge-padding);
 }
 

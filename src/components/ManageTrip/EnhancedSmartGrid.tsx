@@ -188,8 +188,9 @@ const activitiesColumns: GridColumnConfig[] = [
     filterable: true,
     editable: false,
     statusMap: {
-      'Pick': 'bg-blue-100 text-blue-800',
+      'Pick': 'badge-blue rounded-2xl',
       'Drvy': 'bg-green-100 text-green-800',
+      'Bhub': 'badge-rose rounded-2xl',
       'CHA-Import': 'bg-cyan-100 text-cyan-800',
       'PUD': 'bg-emerald-100 text-emerald-800',
       'GTIN': 'bg-pink-100 text-pink-800',

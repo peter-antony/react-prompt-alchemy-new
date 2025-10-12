@@ -341,7 +341,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     if(column.key === "Consignment" && column.type === "LegLocationFormat") {
       return (
         <div className="relative text-sm flex items-center w-full justify-center">
+          <div className='relative'>
             <Package size={16} />
+            <span className="absolute top-0 right-0 block w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
+          </div>
         </div>
       );
     }

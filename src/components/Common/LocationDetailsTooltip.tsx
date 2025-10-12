@@ -12,42 +12,84 @@ interface LocationDetailsTooltipProps {
 const LocationDetailsTooltip: React.FC<LocationDetailsTooltipProps> = ({ row, type, value, propKey }) => {
 
   const renderTooltipContent = () => {
-    if (propKey === "ArrivalPoint" && type === 'LegLocationFormat') {
+    if (propKey === "ArrivalPoint" && type === "LegLocationFormat") {
       return (
-        <div className="text-xs">
-          <div>{row?.ArrivalPoint || '-'}</div>
-          <div>{row?.ArrivalPointDescription || '-'}</div>
-          <hr />
-          <div>{row?.DeparturePoint || '-'}</div>
-          <div>{row?.DeparturePointDescription || '-'}</div>
-        </div>
-      );
-    } else if (propKey === 'PlannedActual' && type === 'LegLocationFormat') {
-      return (
-        <div className="text-xs space-y-1">
-          <div className="flex justify-between"><span className='mr-3'>Wagon Quantity</span><span>{row?.Consignment?.[0]?.Planned?.[0]?.WagonQty || '-'} Nos</span></div>
-          <div className="flex justify-between"><span className='mr-3'>Container Quantity</span><span>{row?.Consignment?.[0]?.Planned?.[0]?.ContainerQty || '-'} Nos</span></div>
-          <div className="flex justify-between"><span className='mr-3'>Product Weight</span><span>{row?.Consignment?.[0]?.Planned?.[0]?.ProductWeight || '-'} Ton</span></div>
-          <div className="flex justify-between"><span className='mr-3'>THU Quantity</span><span>{row?.Consignment?.[0]?.Planned?.[0]?.ThuQty || '-'} Nos</span></div>
+        <div className="space-y-2">
+          <div>
+            <div className="font-medium text-gray-900">{row?.ArrivalPoint || "-"}</div>
+            <div className="text-gray-500">{row?.ArrivalPointDescription || "-"}</div>
+          </div>
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <div className="font-medium text-gray-900">{row?.DeparturePoint || "-"}</div>
+            <div className="text-gray-500">{row?.DeparturePointDescription || "-"}</div>
+          </div>
         </div>
       );
     }
+
+    if (propKey === "PlannedActual" && type === "LegLocationFormat") {
+      const planned = row?.Consignment?.[0]?.Planned?.[0] || {};
+      return (
+        <div className="space-y-2">
+          {[
+            { label: "Wagon Quantity", value: `${planned.WagonQty || "-"} Nos` },
+            { label: "Container Quantity", value: `${planned.ContainerQty || "-"} Nos` },
+            { label: "Product Weight", value: `${planned.ProductWeight || "-"} Ton` },
+            { label: "THU Quantity", value: `${planned.ThuQty || "-"} Nos` },
+          ].map((item, i) => (
+            <div key={i} className="flex justify-between items-center">
+              <span className="text-gray-600">{item.label}</span>
+              <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 rounded-full px-2 py-[1px]">
+                {item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     return null;
   };
 
   return (
-    <TooltipProvider>
+    // <TooltipProvider>
+    //   <Tooltip>
+    //     <TooltipTrigger asChild>
+    //       <div className={`ml-2 cursor-pointer relative ${propKey != 'ArrivalPoint' ? 'w-full flex justify-center' : ''}`}>
+    //         <Info size={16} />
+    //       </div>
+    //     </TooltipTrigger>
+    //     <TooltipContent side="bottom" className="p-2 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+    //       <div className="text-xs font-semibold mb-1">
+    //         {propKey === 'ArrivalPoint' ? 'Location Details' : 'Planned/Actual Details'}
+    //       </div>
+    //       {renderTooltipContent()}
+    //     </TooltipContent>
+    //   </Tooltip>
+    // </TooltipProvider>
+    <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`ml-2 cursor-pointer relative ${propKey != 'ArrivalPoint' ? 'w-full flex justify-center' : ''}`}>
-            <Info size={16} />
+          <div
+            className={`ml-2 cursor-pointer relative ${propKey !== 'ArrivalPoint' ? 'w-full flex justify-center' : ''
+              }`}
+          >
+            <Info size={16} className="text-gray-400 hover:text-gray-600 transition-colors" />
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="p-2 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-          <div className="text-xs font-semibold mb-1">
+
+        <TooltipContent
+          side="bottom"
+          align="start"
+          className="p-0 w-60 bg-white border border-gray-200 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-50"
+        >
+          <div className="border-b border-gray-100 bg-blue-50 text-xs font-semibold text-gray-700 px-3 py-3 rounded-t-xl">
             {propKey === 'ArrivalPoint' ? 'Location Details' : 'Planned/Actual Details'}
           </div>
-          {renderTooltipContent()}
+
+          <div className="p-3 text-xs text-gray-700 space-y-2">
+            {renderTooltipContent()}
+          </div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
