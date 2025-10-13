@@ -1,23 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  Search,
-  Filter,
-  MoreHorizontal,
-  Info,
-  CheckCircle,
-  Package,
-  Edit3
+import { 
+  Search, 
+  Filter, 
+  MoreHorizontal, 
+  Info, 
+  CheckCircle, 
+  Package, 
+  Edit3 
 } from 'lucide-react';
-import { DraggableSubRow, SmartGridWithGrouping } from "@/components/SmartGrid";
-import { GridColumnConfig } from '@/types/smartgrid';
-import { useSmartGridState } from '@/hooks/useSmartGridState';
-import { toast } from '../ui/sonner';
-import { manageTripStore } from '@/stores/mangeTripStore';
-import { useDrawerStore } from '@/stores/drawerStore';
 
 interface ActivityData {
   sno: number;
@@ -25,7 +19,7 @@ interface ActivityData {
   location: string;
   locationDetails?: { code: string; name: string }[];
   plannedActual: string;
-  plannedActualDetails?: {
+  plannedActualDetails?: { 
     wagonQuantity: string;
     containerQuantity: string;
     productWeight: string;
@@ -78,7 +72,7 @@ const BehaviorBadge = ({ behavior }: { behavior: 'pickup' | 'via' | 'bhub' }) =>
     via: { label: 'Via', className: 'bg-pink-50 text-behavior-via-text border-behavior-via-text/20' },
     bhub: { label: 'Bhub', className: 'bg-teal-50 text-behavior-bhub-text border-behavior-bhub-text/20' }
   };
-
+  
   return (
     <Badge variant="outline" className={`${config[behavior].className} border`}>
       {config[behavior].label}
@@ -88,7 +82,7 @@ const BehaviorBadge = ({ behavior }: { behavior: 'pickup' | 'via' | 'bhub' }) =>
 
 const LocationCell = ({ location, details }: { location: string; details?: { code: string; name: string }[] }) => {
   if (!details) return <span className="text-sm">{location}</span>;
-
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -114,9 +108,9 @@ const LocationCell = ({ location, details }: { location: string; details?: { cod
   );
 };
 
-const PlannedActualCell = ({ plannedActual, details }: {
-  plannedActual: string;
-  details?: {
+const PlannedActualCell = ({ plannedActual, details }: { 
+  plannedActual: string; 
+  details?: { 
     wagonQuantity: string;
     containerQuantity: string;
     productWeight: string;
@@ -130,7 +124,7 @@ const PlannedActualCell = ({ plannedActual, details }: {
       </div>
     );
   }
-
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -166,268 +160,12 @@ const PlannedActualCell = ({ plannedActual, details }: {
     </TooltipProvider>
   );
 };
-// Smart Grid configuration for Activities & Consignment with configured widths
-const activitiesColumns: GridColumnConfig[] = [
-  {
-    key: 'LegSequence',
-    label: 'S. No.',
-    type: 'Text',
-    width: 100,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    mandatory: true,
-    subRow: false,
-    order: 1
-  },
-  {
-    key: 'LegBehaviour',
-    label: 'Behaviour',
-    type: 'Badge',
-    width: 130,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    statusMap: {
-      'Pick': 'badge-blue rounded-2xl',
-      'Drvy': 'bg-green-100 text-green-800',
-      'Bhub': 'badge-rose rounded-2xl',
-      'CHA-Import': 'bg-cyan-100 text-cyan-800',
-      'PUD': 'bg-emerald-100 text-emerald-800',
-      'GTIN': 'bg-pink-100 text-pink-800',
-      'GTOUT': 'bg-orange-100 text-orange-800',
-      'LHTA': 'bg-purple-100 text-purple-800'
-    },
-    subRow: false,
-    order: 2
-  },
-  {
-    key: 'ArrivalPoint',
-    label: 'Location',
-    type: 'LegLocationFormat',
-    width: 120,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: false,
-    order: 3
-  },
-  {
-    key: 'PlannedActual',
-    label: 'Planned/Actual',
-    type: 'LegLocationFormat',
-    width: 140,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: false,
-    order: 4
-  },
-  {
-    key: 'Consignment',
-    label: 'Consignment',
-    type: 'LegLocationFormat',
-    width: 150,
-    sortable: false,
-    filterable: true,
-    editable: false,
-    subRow: false,
-    order: 5
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    type: 'Badge',
-    width: 110,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    statusMap: {
-      'completed': 'bg-green-100 text-green-800',
-      'pending': 'bg-gray-100 text-gray-800'
-    },
-    subRow: false,
-    order: 6
-  },
-  // {
-  //   key: 'action',
-  //   label: 'Action',
-  //   type: 'Text',
-  //   width: 100,
-  //   sortable: false,
-  //   filterable: false,
-  //   editable: false,
-  //   subRow: false,
-  // },
-  {
-    key: 'actualDateTime',
-    label: 'Actual date and time',
-    type: 'Date',
-    width: 180,
-    sortable: true,
-    filterable: true,
-    editable: true,
-    subRow: false,
-    order: 7
-  }
-];
-
-const activitiesGridData = [
-  {
-    leg: '1',
-    behaviour: 'Pick',
-    location: 'CHN-MUM',
-    plannedActual: '20/20',
-    consignment: '',
-    status: 'completed',
-    action: '',
-    actualDateTime: '2024-01-15T10:30:00'
-  },
-  {
-    leg: '2',
-    behaviour: 'Drvy',
-    location: 'CHN-DEL',
-    plannedActual: '20/20',
-    consignment: '',
-    status: 'completed',
-    action: '',
-    actualDateTime: '2024-01-16T14:15:00'
-  },
-  {
-    leg: '3',
-    behaviour: 'CHA-Import',
-    location: 'DEL-CHN',
-    plannedActual: '20/20',
-    consignment: '',
-    status: 'completed',
-    action: '',
-    actualDateTime: '2024-01-17T08:45:00'
-  },
-  {
-    leg: '4',
-    behaviour: 'PUD',
-    location: 'CHN-HYD',
-    plannedActual: '20/20',
-    consignment: '',
-    status: 'completed',
-    action: '',
-    actualDateTime: '2024-01-18T16:20:00'
-  }
-];
 
 export const EnhancedSmartGrid = () => {
-  const gridState = useSmartGridState();
-  const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
-  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const { openDrawer } = useDrawerStore();
-
-  const { getLegDetails } = manageTripStore();
-  console.log('Leg Details from Store:', getLegDetails());
-
-  const handleLinkClick = (value: any, row: any) => {
-    console.log("Link clicked:", value, row);
-  };
-
-  const handleUpdate = async (updatedRow: any) => {
-    console.log("Updating row:", updatedRow);
-    gridState.setGridData((prev) =>
-      prev.map((row, index) =>
-        index === updatedRow.index ? { ...row, ...updatedRow } : row
-      )
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  };
-
-  const renderSubRow = (row: any, rowIndex: number) => {
-    return (
-      <DraggableSubRow
-        row={row}
-        rowIndex={rowIndex}
-        columns={gridState.columns}
-        subRowColumnOrder={gridState.subRowColumnOrder}
-        editingCell={gridState.editingCell}
-        onReorderSubRowColumns={gridState.handleReorderSubRowColumns}
-        onSubRowEdit={gridState.handleSubRowEdit}
-        onSubRowEditStart={gridState.handleSubRowEditStart}
-        onSubRowEditCancel={gridState.handleSubRowEditCancel}
-      />
-    );
-  };
-
-  useEffect(() => {
-    console.log('Activities Grid Data:', activitiesGridData);
-    setApiStatus('loading');
-    
-    // Add onClick handler to behaviour column
-    const columnsWithHandlers = activitiesColumns.map(col => 
-      col.key === 'behaviour' 
-        ? { ...col, onClick: () => openDrawer('trip-execution-create') }
-        : col
-    );
-    gridState.setColumns(activitiesColumns);
-    gridState.setGridData(getLegDetails() || []);
-    gridState.setLoading(false);
-  }, [openDrawer]);
-
-
   return (
     <div className="space-y-4">
-      {/* <SmartGridWithGrouping
-        columns={activitiesColumns}
-        data={activitiesGridData}
-        gridTitle="Activities & Consignment"
-        recordCount={7}
-        searchPlaceholder="Search activities..."
-        showCreateButton={false}
-        editableColumns={false}
-        paginationMode="pagination"
-      /> */}
-      <SmartGridWithGrouping
-        key={`grid-${gridState.forceUpdate}`}
-        columns={gridState.columns}
-        data={gridState.gridData}
-        groupableColumns={[]}
-        showGroupingDropdown={true}
-        editableColumns={['plannedStartEndDateTime']}
-        paginationMode="pagination"
-        onLinkClick={handleLinkClick}
-        onUpdate={handleUpdate}
-        onSubRowToggle={gridState.handleSubRowToggle}
-        // selectedRows={selectedRows}
-        // onSelectionChange={handleRowSelection}
-        // onFiltersChange={setCurrentFilters}
-        // onSearch={handleServerSideSearch}
-        // onClearAll={clearAllFilters}
-        // rowClassName={(row: any, index: number) =>
-        //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-        // }
-        nestedRowRenderer={renderSubRow}
-        // configurableButtons={gridConfigurableButtons}
-        showDefaultConfigurableButton={false}
-        gridTitle="Leg Details"
-        recordCount={gridState.gridData.length}
-        showCreateButton={true}
-        onRowClick={(row) => {
-          console.log('Row clicked:', row);
-          // const { openDrawer } = require('@/stores/drawerStore').useDrawerStore.getState();
-          openDrawer('trip-execution-create');
-        }}
-        searchPlaceholder="Search"
-        clientSideSearch={true}
-        showSubHeaders={false}
-        hideAdvancedFilter={true}
-        serverFilters={[]}
-        showFilterTypeDropdown={false}
-        hideCheckboxToggle={true}
-        showServersideFilter={false}
-        onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-        gridId="trip-execution-hub"
-        userId="current-user"
-      // api={}
-      />
       {/* Header with title and controls */}
-      {/* <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
             <span className="text-white text-xs font-medium">3</span>
@@ -447,10 +185,10 @@ export const EnhancedSmartGrid = () => {
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
-      </div> */}
+      </div>
 
       {/* Table */}
-      {/* <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/30">
@@ -499,7 +237,7 @@ export const EnhancedSmartGrid = () => {
             </tbody>
           </table>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };

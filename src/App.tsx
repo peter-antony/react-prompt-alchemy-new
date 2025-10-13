@@ -25,6 +25,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SignOut from "./pages/SignOut";
 import ManageTripExecution from "./pages/ManageTripExecution";
+import TripExecutionCreate from "./pages/TripExecutionCreate";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="manage-trip" element={<ManageTripExecution/>} />
+          <Route path="/trip-execution-create" element={<TripExecutionCreate />} />
           
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
