@@ -1,69 +1,73 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, Wrench, 
   AlertTriangle, Briefcase, CreditCard, 
   PackageCheck, UserRoundCheck, Settings, CarFront,HandCoins, TicketPercent } from 'lucide-react';
 import { useDrawerStore } from '@/stores/drawerStore';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
-const summaryCardsData = [
-  {
-    title: 'Customer Orders',
-    icon: Package,
-    values: [
-      { label: 'Total Customer Order', value: '100' },
-      { label: 'Total Weight / Volume', value: '100 TON / 100 CBM' }
-    ],
-    iconColor: 'text-blue-600'
-  },
-  {
-    title: 'Resources',
-    icon: Users,
-    values: [
-      { label: 'No. of Resource', value: '4' },
-      { label: 'Total Cost', value: 'USD 400' }
-    ],
-    iconColor: 'text-pink-600'
-  },
-  {
-    title: 'VAS',
-    icon: Wrench,
-    values: [
-      { label: 'Total VAS', value: '5' },
-      { label: 'Total Consumables', value: '5' }
-    ],
-    iconColor: 'text-amber-600'
-  },
-  {
-    title: 'Incidents',
-    icon: AlertTriangle,
-    values: [
-      { label: 'Total Incident', value: '3' },
-      { label: 'Closed Incident', value: '3' }
-    ],
-    iconColor: 'text-orange-600'
-  },
-  // {
-  //   title: 'Jobs',
-  //   icon: Briefcase,
-  //   values: [
-  //     { label: 'Total Jobs', value: '5' },
-  //     { label: 'Completed Jobs', value: '3' }
-  //   ],
-  //   iconColor: 'text-blue-600'
-  // },
-  {
-    title: 'Supplier Billing',
-    icon: CreditCard,
-    values: [
-      { label: 'Total Requested', value: 'USD 400' },
-      { label: 'Total Approved', value: 'USD 100' }
-    ],
-    iconColor: 'text-purple-600'
-  }
-];
+// const summaryCardsData = [
+//   {
+//     title: 'Customer Orders',
+//     icon: Package,
+//     values: [
+//       { label: 'Total Customer Order', value: '100' },
+//       { label: 'Total Weight / Volume', value: '100 TON / 100 CBM' }
+//     ],
+//     iconColor: 'text-blue-600'
+//   },
+//   {
+//     title: 'Resources',
+//     icon: Users,
+//     values: [
+//       { label: 'No. of Resource', value: '4' },
+//       { label: 'Total Cost', value: 'USD 400' }
+//     ],
+//     iconColor: 'text-pink-600'
+//   },
+//   {
+//     title: 'VAS',
+//     icon: Wrench,
+//     values: [
+//       { label: 'Total VAS', value: '5' },
+//       { label: 'Total Consumables', value: '5' }
+//     ],
+//     iconColor: 'text-amber-600'
+//   },
+//   {
+//     title: 'Incidents',
+//     icon: AlertTriangle,
+//     values: [
+//       { label: 'Total Incident', value: '3' },
+//       { label: 'Closed Incident', value: '3' }
+//     ],
+//     iconColor: 'text-orange-600'
+//   },
+//   // {
+//   //   title: 'Jobs',
+//   //   icon: Briefcase,
+//   //   values: [
+//   //     { label: 'Total Jobs', value: '5' },
+//   //     { label: 'Completed Jobs', value: '3' }
+//   //   ],
+//   //   iconColor: 'text-blue-600'
+//   // },
+//   {
+//     title: 'Supplier Billing',
+//     icon: CreditCard,
+//     values: [
+//       { label: 'Total Requested', value: 'USD 400' },
+//       { label: 'Total Approved', value: 'USD 100' }
+//     ],
+//     iconColor: 'text-purple-600'
+//   }
+// ];
 
 export const SummaryCardsGrid = () => {
   const { openDrawer } = useDrawerStore();
+  const { tripData } = manageTripStore();
+  console.log('SummaryCardsGrid tripData:', tripData);
+
    const handleCardClick = (cardTitle: string) => {
     if (cardTitle === 'Resources') {
       openDrawer('resources');
@@ -77,6 +81,95 @@ export const SummaryCardsGrid = () => {
       openDrawer('supplier-billing');
     }
   };
+  const summaryCardsData = useMemo(() => {
+    const customerOrders:any = tripData?.CustomerOrders || [];
+    const resources:any = tripData?.ResourceDetails || {};
+    const vas:any = tripData?.VAS || [];
+    const incidents:any = tripData?.Incidents || [];
+
+    const totalWeight = customerOrders
+      .map((order) => order?.TotalProductWeight)
+      .filter(Boolean)
+      .reduce((sum, val) => sum + Number(val), 0);
+
+    const totalVolume = customerOrders
+      .map((order) => order?.TotalContainer || 0)
+      .reduce((sum, val) => sum + Number(val), 0);
+
+    return [
+      {
+        title: 'Customer Orders',
+        icon: PackageCheck,
+        values: [
+          { label: 'Total Customer Order', value: customerOrders.length || 0 },
+          // {
+          //   label: 'Total Weight / Volume',
+          //   value: `${totalWeight} KG / ${totalVolume} Units`,
+          // },
+        ],
+        iconColor: '#1036C0',
+        bgColor: '#F0F3FE',
+      },
+      {
+        title: 'Resources',
+        icon: UserRoundCheck,
+        values: [
+          {
+            label: 'No. of Resource',
+            value:
+              (resources?.Equipments?.length || 0) +
+              (resources?.Vehicle?.length || 0) +
+              (resources?.Drivers?.length || 0),
+          },
+          // {
+          //   label: 'Total Cost',
+          //   value: `USD ${resources?.Supplier?.[0]?.Cost || 0}`,
+          // },
+        ],
+        iconColor: '#C01048',
+        bgColor: '#FFF1F3',
+      },
+      {
+        title: 'VAS',
+        icon: Settings,
+        values: [
+          { label: 'Total VAS', value: vas.length || 0 },
+          // { label: 'Total Consumables', value: vas.length || 0 },
+        ],
+        iconColor: 'brown',
+        bgColor: '#a52a2a17',
+      },
+      {
+        title: 'Incidents',
+        icon: CarFront,
+        values: [
+          { label: 'Total Incident', value: incidents.length || 0 },
+          {
+            label: 'Closed Incident',
+            value: incidents.filter((i) => i.Status === 'Closed').length || 0,
+          },
+        ],
+        iconColor: '#cd5c5c',
+        bgColor: '#ff980012',
+      },
+      {
+        title: 'Supplier Billing',
+        icon: TicketPercent,
+        values: [
+          {
+            label: 'Total Requested',
+            value: tripData?.Header?.BillingValueWithCurrency || 'USD 0',
+          },
+          {
+            label: 'Total Approved',
+            value: tripData?.Header?.UpdatedBillingValue || 'USD 0',
+          },
+        ],
+        iconColor: '#9774de',
+        bgColor: '#9774de12',
+      },
+    ];
+  }, [tripData]);
 
   return (
     <div className="grid grid-cols-2 gap-6">

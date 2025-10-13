@@ -267,7 +267,7 @@ const activitiesColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: true,
-    subRow: false,
+    subRow: true,
     order: 7
   }
 ];

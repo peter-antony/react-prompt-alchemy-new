@@ -97,7 +97,7 @@ export const tripService = {
         MessageID: "12345",
         MessageType: "TripLog SaveTrip",
       },
-      SearchCriteria: {},
+      RequestPayload: params,
       Pagination: {
         PageNumber: 1,
         PageSize: 10,

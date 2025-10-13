@@ -22,15 +22,15 @@ export const TripForm: React.FC<TripFormProps> = ({
   // utils/formMappers.ts - Moved from TripExecutionLanding.tsx
 
   const formatFieldWithName = (id: string | undefined, name: string | undefined) => {
-      if (id) {
-        if (name && name.trim() !== '') {
-          return id + ' || ' + name;
-        } else {
-          return id + ' || --';
-        }
+    if (id) {
+      if (name && name.trim() !== '') {
+        return id + ' || ' + name;
+      } else {
+        return id + ' || --';
       }
-      return '';
     }
+    return '';
+  }
 
   // Trip Execution form configuration for editable fields only
   const tripExecutionPanelConfig: PanelConfig = useMemo(() => {
@@ -66,7 +66,7 @@ export const TripForm: React.FC<TripFormProps> = ({
         label: 'Train No.',
         fieldType: 'text',
         width: 'half',
-        value: tripData?.Header?.TrainNo || "", // Bind directly to tripData.Header
+        value: tripData?.Header?.TrainNo ?? "", // Bind directly to tripData.Header
         mandatory: false,
         visible: true,
         editable: true,
@@ -91,7 +91,7 @@ export const TripForm: React.FC<TripFormProps> = ({
         visible: true,
         editable: true,
         order: 3,
-        hideSearch: true,
+        hideSearch: false,
         disableLazyLoading: false,
         fetchOptions: async ({ searchTerm, offset, limit }) => {
           const response = await quickOrderService.getMasterCommonData({
@@ -111,9 +111,12 @@ export const TripForm: React.FC<TripFormProps> = ({
           }));
         },
         events: {
-          onChange: (val: string) => {
+          onChange: (val: any) => {
+            if (!val) return;
+            const [clusterId, clusterDesc] = val?.value?.split('||').map((s) => s.trim());
             console.log('Cluster no change: ', val);
-            updateHeaderField("Cluster", val, "Update");
+            updateHeaderField("Cluster", clusterId, "Update");
+            updateHeaderField("ClusterDescription", clusterDesc, "Update");
           }
         }
       },
@@ -197,6 +200,16 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 5,
         maxLength: 255,
         options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+        events: {
+          onChange: (val: any) => {
+            console.log('QCUserDefined1 no change: ', val);
+            if (val && typeof val === "object") {
+              const { input, dropdown } = val;
+              updateHeaderField("QuickCodeValue1", input, "Update");
+              updateHeaderField("QuickCode1", dropdown, "Update");
+            }
+          }
+        }
       },
       ServiceType: {
         id: 'ServiceType',
@@ -228,9 +241,11 @@ export const TripForm: React.FC<TripFormProps> = ({
           }));
         },
         events: {
-          onChange: (val: string) => {
+          onChange: (val: any) => {
             console.log('ServiceType no change: ', val);
-            updateHeaderField("ServiceType", val, "Update");
+            const [serviceTypeId, serviceTypeDesc] = val?.value?.split('||').map((s) => s.trim());
+            updateHeaderField("ServiceType", serviceTypeId, "Update");
+            updateHeaderField("ServiceTypeDescription", serviceTypeDesc, "Update");
           }
         }
       },
@@ -264,9 +279,11 @@ export const TripForm: React.FC<TripFormProps> = ({
           }));
         },
         events: {
-          onChange: (val: string) => {
+          onChange: (val: any) => {
             console.log('SubServiceType no change: ', val);
-            updateHeaderField("SubServiceType", val, "Update");
+            const [subServiceTypeId, subServiceTypeDesc] = val?.value?.split('||').map((s) => s.trim());
+            updateHeaderField("SubServiceType", subServiceTypeId, "Update");
+            updateHeaderField("SubServiceTypeDescription", subServiceTypeDesc, "Update");
           }
         }
       },
@@ -300,9 +317,10 @@ export const TripForm: React.FC<TripFormProps> = ({
           }));
         },
         events: {
-          onChange: (val: string) => {
+          onChange: (val: any) => {
             console.log('Load type Init no change: ', val);
-            updateHeaderField("LoadType", val, "Update");
+            const [loadTypeId] = val?.value?.split('||').map((s) => s.trim());
+            updateHeaderField("LoadType", loadTypeId, "Update");
           }
         }
       },
@@ -326,6 +344,16 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 8,
         maxLength: 255,
         options: qcList2?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+        events: {
+          onChange: (val: any) => {
+            console.log('QCUserDefined2 no change: ', val);
+            if (val && typeof val === "object") {
+              const { input, dropdown } = val;
+              updateHeaderField("QuickCodeValue2", input, "Update");
+              updateHeaderField("QuickCode2", dropdown, "Update");
+            }
+          }
+        }
       },
       QCUserDefined3: {
         id: 'QCUserDefined3',
@@ -347,6 +375,16 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 9,
         maxLength: 255,
         options: qcList3?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+        events: {
+          onChange: (val: any) => {
+            console.log('QCUserDefined3 no change: ', val);
+            if (val && typeof val === "object") {
+              const { input, dropdown } = val;
+              updateHeaderField("QuickCodeValue3", input, "Update");
+              updateHeaderField("QuickCode3", dropdown, "Update");
+            }
+          }
+        }
       },
       Remarks1: {
         id: 'Remarks1',
@@ -360,6 +398,13 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 10,
         placeholder: 'Enter Remarks',
         maxLength: 500,
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('Remarks1 change: ', val.value);
+            updateHeaderField("Remarks1", val.value, "Update");
+          }
+        }
       },
       Remarks2: {
         id: 'Remarks2',
@@ -373,6 +418,13 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 11,
         placeholder: 'Enter Remarks',
         maxLength: 500,
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('Remarks2 change: ', val.value);
+            updateHeaderField("Remarks2", val.value, "Update");
+          }
+        }
       },
       Remarks3: {
         id: 'Remarks3',
@@ -386,6 +438,13 @@ export const TripForm: React.FC<TripFormProps> = ({
         order: 12,
         placeholder: 'Enter Remarks',
         maxLength: 500,
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('Remarks3 change: ', val.value);
+            updateHeaderField("Remarks3", val.value, "Update");
+          }
+        }
       },
     }; // Dependencies for useMemo (removed formData, added tripData for values)
   }, [tripType, tripData, updateHeaderField]);

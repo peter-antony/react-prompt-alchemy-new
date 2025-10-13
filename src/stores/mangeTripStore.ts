@@ -67,6 +67,7 @@ export const manageTripStore = create<TripState>((set, get) => ({
       Header: {
         ...((state.tripData?.Header) || {}), // Ensure Header exists
         [key]: value, // Update the specific field immutably
+        ModeFlag: action
       },
     },
   })),
@@ -76,4 +77,16 @@ export const manageTripStore = create<TripState>((set, get) => ({
     const state = get();
     return state.tripData?.LegDetails || [];
   },
+
+  // save trip action
+  saveTrip: async () => {
+    const state = get();
+    if (!state.tripData) {
+      console.error("No trip data to save");
+      return;
+    }
+    const response = await tripService.saveTrip(state.tripData);
+    console.log("Trip saved response:", response);
+    return response;
+  }
 }));

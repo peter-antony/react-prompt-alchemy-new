@@ -219,4 +219,8 @@ export interface TripData {
   SupplierBillingDetails?: SupplierBillingDetails[];
   TrackAndTrace?: TrackAndTrace[];
   LegDetails?: LegDetail[];
+  CustomerOrders?: any[];
+  ResourceDetails?: any[];
+  VAS?: any;
+  Incidents?: any;
 }

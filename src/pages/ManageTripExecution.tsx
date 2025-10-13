@@ -68,11 +68,11 @@ const ManageTripExecution = () => {
           },
         },
         {
-          label: "Save Draft",
+          label: "Save",
           type: "Button" as const,
           disabled: false,
           onClick: () => {
-            console.log("Save Draft clicked");
+            console.log("Save clicked");
             tripSaveDraftHandler();
           },
         },
@@ -127,8 +127,32 @@ const ManageTripExecution = () => {
   // Handlers
   const tripSaveDraftHandler = useCallback(async () => {
     try {
-      await saveTrip();
-      toast({ title: "Draft saved successfully", variant: "default" });
+      let result: any = await saveTrip();
+      if (result?.data?.IsSuccess) {
+        // ✅ Show success message
+        toast({
+          title: "Trip saved successfully",
+          description: result?.data?.Message ?? "Trip saved successfully.",
+          variant: "default",
+        });
+
+        // ✅ Re-fetch the trip data fresh from server
+        if (tripData?.Header?.TripNo) {
+          await fetchTrip(tripData.Header.TripNo);
+          console.log("🔄 Trip data refreshed after save.");
+        }
+      } else {
+      // Backend returned logical failure
+      toast({
+        title: "Save failed",
+        description:
+          result?.data?.Message ||
+          result?.message ||
+          "Unknown error occurred while saving trip.",
+        variant: "destructive",
+      });
+      console.warn("⚠️ Save failed:", result);
+    }
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
     }
@@ -168,25 +192,25 @@ const ManageTripExecution = () => {
         </div>
 
         {/* Side Drawer */}
-          <SideDrawer
-            isOpen={isOpen}
-            onClose={closeDrawer}
-            onBack={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' ? closeDrawer : undefined}
-            title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Activities & Consignment' : ''}
-            titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? tripUniqueID || 'TRIP0000000001' : undefined}
-            slideDirection="right"
-            width={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? '100%' : '75%'}
-            smoothness="smooth"
-            showBackButton={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create'}
-            showCloseButton={true}
-          >
-            {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
-            {drawerType === 'vas' && <VASDrawerScreen />}
-            {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
-            {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-            {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-            {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-        </SideDrawer>   
+        <SideDrawer
+          isOpen={isOpen}
+          onClose={closeDrawer}
+          onBack={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' ? closeDrawer : undefined}
+          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Activities & Consignment' : ''}
+          titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? tripUniqueID || 'TRIP0000000001' : undefined}
+          slideDirection="right"
+          width={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? '100%' : '75%'}
+          smoothness="smooth"
+          showBackButton={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create'}
+          showCloseButton={true}
+        >
+          {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
+          {drawerType === 'vas' && <VASDrawerScreen />}
+          {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
+          {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
+          {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
+          {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
+        </SideDrawer>
 
       </div>
     </AppLayout>

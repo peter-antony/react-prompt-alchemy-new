@@ -13,6 +13,7 @@ import { SummaryCardsGrid } from './SummaryCardsGrid';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { TripForm } from './TripForm'; // Updated import for TripFormRef
+import { TripNavButtons } from './TripNavButtons';
 
 interface NewCreateTripProps {
   isEditTrip?: boolean;
@@ -300,7 +301,7 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
         title: 'TRIP00000001',
         content: (
           <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-auto p-4 space-y-0 scroller-left-panel">
+            <div className="flex-1 overflow-auto p-4 space-y-3 scroller-left-panel">
               <TripStatusBadge />
               <TripDetailsForm />
               {/* Move to TripForm.tsx */}
@@ -313,6 +314,10 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
               <TripForm
                 // tripData={tripData} // Now managed internally by TripForm
                 tripExecutionRef={tripExecutionRef}
+              />
+              <TripNavButtons
+                previousTrips={tripData?.Header?.PreviousTrip}
+                nextTrips={tripData?.Header?.NextTrip}
               />
               {/* //    );
                  //  })()} */}
