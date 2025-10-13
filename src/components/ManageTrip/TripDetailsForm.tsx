@@ -18,13 +18,13 @@ export const TripDetailsForm = () => {
               {/* {Header?.Customer?.map((customer, index) => (
                 <span key={index} title={customer?.CustomerName}>{customer?.CustomerID}</span>
               ))} */}
-              <span title={Header?.Customer?.CustomerName}>{Header?.Customer?.CustomerID}</span>
+              <span title={Header?.Customer?.CustomerName}>{Header?.Customer?.CustomerName} - {Header?.Customer?.CustomerID}</span>
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <TramFrontSVG />
-              <span>{Header?.TrainNo}</span>
+              <span>{Header?.TransportSupplierDescription} - {Header?.TransportSupplier}</span>
             </span>
           </div>
         </div>

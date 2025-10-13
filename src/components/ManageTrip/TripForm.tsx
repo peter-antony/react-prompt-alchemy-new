@@ -130,9 +130,10 @@ export const TripForm: React.FC<TripFormProps> = ({
         maxLength: 40,
         placeholder: 'Enter Forward Trip ID',
         events: {
-          onChange: (val: string) => {
-            console.log('ForwardTripID no change: ', val);
-            updateHeaderField("ForwardTripID", val, "Update");
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('ForwardTripID change: ', val.value);
+            updateHeaderField("ForwardTripID", val.value, "Update");
           }
         }
       },
@@ -147,7 +148,14 @@ export const TripForm: React.FC<TripFormProps> = ({
         editable: true,
         order: 4,
         maxLength: 40,
-        placeholder: 'Enter Return Trip ID'
+        placeholder: 'Enter Return Trip ID',
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('ReturnTripID change: ', val.value);
+            updateHeaderField("ReturnTripID", val.value, "Update");
+          }
+        }
       },
       SupplierRefNo: {
         id: 'SupplierRefNo',
@@ -160,7 +168,14 @@ export const TripForm: React.FC<TripFormProps> = ({
         editable: true,
         order: 4,
         maxLength: 40,
-        placeholder: 'Enter Supplier Ref. No.'
+        placeholder: 'Enter Supplier Ref. No.',
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('SupplierRefNo change: ', val.value);
+            updateHeaderField("SupplierRefNo", val.value, "Update");
+          }
+        }
       },
       QCUserDefined1: {
         id: 'QCUserDefined1',
