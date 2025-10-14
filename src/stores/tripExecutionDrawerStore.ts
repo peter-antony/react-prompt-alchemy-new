@@ -51,6 +51,8 @@ export interface Consignment {
   volume: number;
   commodity: string;
   status: string;
+  Planned?: any[];
+  Actual?: any[];
 }
 
 export interface Transshipment {
@@ -73,6 +75,7 @@ export interface Leg {
   activities: Activity[];
   consignments: Consignment[];
   transshipments: Transshipment[];
+  LegSequence?: string;
 }
 
 interface TripExecutionDrawerStore {
@@ -87,6 +90,7 @@ interface TripExecutionDrawerStore {
   updateTransshipment: (legId: string, transshipment: Transshipment) => void;
   loadLegsFromAPI: () => void;
   getLegsFromAPI: () => Leg[];
+  getConsignments: (selectedLegId: any) => Consignment[];
 }
 
 const generateMockData = (legNumber: number, from: string, to: string) => {
@@ -271,6 +275,18 @@ export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set
       return [];
     } catch (error) {
       console.error("Error getting legs from API:", error);
+      return [];
+    }
+  },
+  getConsignments: (selectedLegId: any) => {
+    try {
+      const consignments = get().legs.filter(leg => leg.id === selectedLegId);
+      if (consignments && consignments.length > 0) {
+        return consignments.flatMap((leg: any) => leg.consignments || []);
+      }
+      return [];
+    } catch (error) {
+      console.error("Error getting consignments from API:", error);
       return [];
     }
   },

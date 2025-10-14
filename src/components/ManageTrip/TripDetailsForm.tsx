@@ -58,6 +58,15 @@ export const TripDetailsForm = () => {
             </span>
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="flex items-center gap-2">
+              {/* <MapPin size={18} color="#0068CF" strokeWidth={1.2} /> */}
+              <TramFront size={18} strokeWidth={1.2} />
+              <span className='truncate' title={Header?.TripType}>{Header?.TripType}</span>
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Trip Type Radio */}

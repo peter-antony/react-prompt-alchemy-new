@@ -18,25 +18,25 @@ export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavBu
               <span>↩</span>
               Previous Trip
               <span className="text-blue-600 font-semibold">
-                ({previousTrips.length})
+                ({previousTrips?.length})
               </span>
             </button>
           </TooltipTrigger>
-          {previousTrips.length > 0 && (
+          {previousTrips?.length > 0 && (
             <TooltipContent
               side="top"
               className="p-3 bg-white border border-gray-200 rounded-lg shadow-md min-w-[180px]"
             >
               <ul className="space-y-1">
-                {previousTrips.map((trip, i) => (
+                {previousTrips?.map((trip, i) => (
                   <li
                     key={i}
                     className="text-xs text-gray-800 font-medium border-b last:border-none border-gray-100 pb-1"
                   >
                     
-                    {trip.PrevTripNo && (
+                    {trip?.PrevTripNo && (
                       <span className="text-[13px] ml-1">
-                        {trip.PrevTripNo}
+                        {trip?.PrevTripNo}
                       </span>
                     )}
                   </li>
@@ -57,11 +57,11 @@ export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavBu
               <span>↪</span>
               Next Trip
               <span className="text-blue-600 font-semibold">
-                ({nextTrips.length})
+                ({nextTrips?.length})
               </span>
             </button>
           </TooltipTrigger>
-          {nextTrips.length > 0 && (
+          {nextTrips?.length > 0 && (
             <TooltipContent
               side="top"
               className="p-3 bg-white border border-gray-200 rounded-lg shadow-md min-w-[180px]"
@@ -70,15 +70,15 @@ export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavBu
                 Next Trip IDs
               </div> */}
               <ul className="space-y-1">
-                {nextTrips.map((trip, i) => (
+                {nextTrips?.map((trip, i) => (
                   <li
                     key={i}
                     className="text-xs text-gray-800 font-medium border-b last:border-none border-gray-100 pb-1"
                   >
                     {/* {trip.TripNo}{" "} */}
-                    {trip.NextTripNo && (
+                    {trip?.NextTripNo && (
                       <span className="text-[13px] ml-1">
-                        {trip.NextTripNo}
+                        {trip?.NextTripNo}
                       </span>
                     )}
                   </li>
