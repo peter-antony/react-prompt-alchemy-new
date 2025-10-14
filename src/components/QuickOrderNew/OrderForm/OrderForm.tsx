@@ -664,6 +664,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           Contract: (contract.ContractID ? contract.ContractID : '') + ' || ' + (contract.ContractDesc ? contract.ContractDesc : ''),
           ContractDescription: contract.ContractDesc,
           Vendor: (contract.VendorID ? contract.VendorID : '') + ' || ' + (contract.VendorName ? contract.VendorName : ''), 
+          Customer:(contract.CustomerID ? contract.CustomerID:'') +' || ' + (contract.CustomerName ? contract.CustomerName : ''), 
           VendorName: contract.VendorName, 
           Cluster: 
             (contract.ClusterLocation ? contract.ClusterLocation : '') + 
