@@ -16,12 +16,12 @@ import { SupplierBillingDrawerScreen } from '@/components/drawer/SupplierBilling
 import { TripExecutionCreateDrawerScreen } from '@/components/drawer/TripExecutionCreateDrawerScreen';
 
 const ManageTripExecution = () => {
-  const { loading, tripData, fetchTrip, saveTrip } = manageTripStore();
+  const { loading, tripData, fetchTrip, saveTrip, confirmTrip } = manageTripStore();
   const { config, setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditTrip = !!searchParams.get("id");
   const tripUniqueID = searchParams.get("id");
-  const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(true);
+  const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const { isOpen, drawerType, closeDrawer } = useDrawerStore();
@@ -160,10 +160,34 @@ const ManageTripExecution = () => {
 
   const tripConfirmHandler = useCallback(async () => {
     try {
-      await saveTrip(); // You can add confirm-specific API logic here
-      toast({ title: "Trip confirmed successfully", variant: "default" });
+      let result: any = await confirmTrip();
+      if (result?.data?.IsSuccess) {
+        // ✅ Show success message
+        toast({
+          title: "Trip confirmed successfully",
+          description: result?.data?.Message ?? "Trip confirmed successfully.",
+          variant: "default",
+        });
+        let res = result?.data?.ResponseData ? JSON.parse(result.data.ResponseData) : null;
+        // ✅ Re-fetch the trip data fresh from server
+        if (res?.TripID) {
+          await fetchTrip(res.TripID);
+          console.log("🔄 Trip data refreshed after confirm.");
+        }
+      } else {
+      // Backend returned logical failure
+      toast({
+        title: "Confirm failed",
+        description:
+          result?.data?.Message ||
+          result?.message ||
+          "Unknown error occurred while confirming trip.",
+        variant: "destructive",
+      });
+      console.warn("⚠️ Confirm failed:", result);
+    }
     } catch (err) {
-      toast({ title: "Error confirming trip", description: String(err), variant: "destructive" });
+      toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
     }
   }, [saveTrip, toast]);
 

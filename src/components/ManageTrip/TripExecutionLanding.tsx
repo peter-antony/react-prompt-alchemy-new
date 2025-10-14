@@ -294,7 +294,7 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
       left: {
         id: 'left',
         visible: true,
-        width: '420px',
+        width: '540px',
         collapsible: true,
         collapsed: false,
         minWidth: '0',
@@ -329,7 +329,7 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
       center: {
         id: 'center',
         visible: true,
-        width: 'calc(100% - 420px)',
+        width: 'calc(100% - 540px)',
         collapsible: false,
         title: '',
         content: (

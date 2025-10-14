@@ -198,10 +198,6 @@ export const SummaryCardsGrid = () => {
                 {card.title == 'Incidents' &&
                   <span className='p-3 rounded-xl bg-[#ff980012] mr-2'> <CarFront size={16} color="#cd5c5c" strokeWidth={1.25} /></span>
                 }
-                {card.title == 'Jobs' &&
-                  <span className='p-3 rounded-xl bg-[#677b8512] mr-2'> <HandCoins size={16} color="#677b85" strokeWidth={1.2} />
-                  </span>
-                }
                 {card.title == 'Supplier Billing' &&
                   <span className='p-3 rounded-xl bg-[#9774de12] mr-2'> <TicketPercent size={16} color="#9774de" strokeWidth={1.2} /></span>
                 }

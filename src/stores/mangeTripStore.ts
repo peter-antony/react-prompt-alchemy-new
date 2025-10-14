@@ -31,7 +31,8 @@ interface TripState {
   // API actions
   fetchTrip: (tripId: string) => Promise<void>;
   saveTrip?: () => void;
-  
+  confirmTrip?: () => void;
+
   // Getters
   getLegDetails: () => LegDetail[];
 }
@@ -61,16 +62,17 @@ export const manageTripStore = create<TripState>((set, get) => ({
       set({ error: err?.message ?? "Fetch failed", loading: false });
     }
   },
-  updateHeaderField: (key, value, action) => set((state) => ({
-    tripData: {
-      ...(state.tripData || { Header: {} }), // Ensure tripData exists, provide default Header
-      Header: {
-        ...((state.tripData?.Header) || {}), // Ensure Header exists
-        [key]: value, // Update the specific field immutably
-        ModeFlag: action
+  updateHeaderField: (key, value, action) =>
+    set((state) => ({
+      tripData: {
+        ...(state.tripData || { Header: {} }), // Ensure tripData exists, provide default Header
+        Header: {
+          ...(state.tripData?.Header || {}), // Ensure Header exists
+          [key]: value, // Update the specific field immutably
+          ModeFlag: action,
+        },
       },
-    },
-  })),
+    })),
 
   // Get LegDetails list
   getLegDetails: () => {
@@ -88,5 +90,17 @@ export const manageTripStore = create<TripState>((set, get) => ({
     const response = await tripService.saveTrip(state.tripData);
     console.log("Trip saved response:", response);
     return response;
-  }
+  },
+
+  // Confirm trip action
+  confirmTrip: async () => {
+    const state = get();
+    if (!state.tripData) {
+      console.error("No trip data to confirm");
+      return;
+    }
+    const response = await tripService.confirmTrip(state.tripData);
+    console.log("Trip confirm response:", response);
+    return response;
+  },
 }));

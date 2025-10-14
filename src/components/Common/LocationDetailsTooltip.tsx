@@ -16,12 +16,12 @@ const LocationDetailsTooltip: React.FC<LocationDetailsTooltipProps> = ({ row, ty
       return (
         <div className="space-y-2">
           <div>
-            <div className="font-medium text-gray-900">{row?.ArrivalPoint || "-"}</div>
-            <div className="text-gray-500">{row?.ArrivalPointDescription || "-"}</div>
+            <div className="font-medium text-gray-900">{row?.DeparturePointDescription || "-"}</div>
+            <div className="text-gray-500">{row?.DeparturePoint || "-"}</div>
           </div>
           <div className="border-t border-gray-100 pt-2 mt-2">
-            <div className="font-medium text-gray-900">{row?.DeparturePoint || "-"}</div>
-            <div className="text-gray-500">{row?.DeparturePointDescription || "-"}</div>
+            <div className="font-medium text-gray-900">{row?.ArrivalPointDescription || "-"}</div>
+            <div className="text-gray-500">{row?.ArrivalPoint || "-"}</div>
           </div>
         </div>
       );

@@ -7,7 +7,7 @@ interface TripNavButtonsProps {
 
 export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavButtonsProps) => {
   return (
-    <div className="flex gap-3">
+    <div className="flex justify-between gap-3">
       {/* 🔹 Previous Trip Button with Tooltip */}
       <TooltipProvider>
         <Tooltip>

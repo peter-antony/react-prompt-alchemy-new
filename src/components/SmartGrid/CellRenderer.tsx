@@ -325,7 +325,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     if (column.key === "ArrivalPoint" && column.type === "LegLocationFormat") {
       return (
         <div className="relative text-sm min-w-0 flex items-center">
-          <div className="text-Gray-800 font-normal truncate">{value} - {row?.DeparturePoint}</div>
+          <div className="text-Gray-800 font-normal truncate">{row?.DeparturePointDescription} - {row?.ArrivalPointDescription}</div>
           <LocationDetailsTooltip row={row} type="LegLocationFormat" value={value} propKey={column.key} />
         </div>
       );

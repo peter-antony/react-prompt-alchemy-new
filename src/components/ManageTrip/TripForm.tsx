@@ -160,6 +160,46 @@ export const TripForm: React.FC<TripFormProps> = ({
           }
         }
       },
+      CO2Emisions: {
+        id: 'CO2Emisions',
+        label: 'CO2 Emisions',
+        fieldType: 'text',
+        width: 'full',
+        value: tripData?.Header?.CO2Emisions || "", // Bind directly to tripData.Header
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 4,
+        maxLength: 40,
+        placeholder: 'Enter CO2 Emisions',
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('CO2Emisions change: ', val.value);
+            updateHeaderField("CO2Emisions", val.value, "Update");
+          }
+        }
+      },
+      CO2EmisionsUOM: {
+        id: 'CO2EmisionsUOM',
+        label: 'CO2 Emisions UOM',
+        fieldType: 'text',
+        width: 'full',
+        value: tripData?.Header?.CO2EmisionsUOM || "", // Bind directly to tripData.Header
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 4,
+        maxLength: 40,
+        placeholder: 'Enter CO2 Emisions UOM',
+        events: {
+          onBlur: (event: React.FocusEvent) => {
+            const val = event.target as HTMLInputElement;
+            console.log('CO2EmisionsUOM change: ', val.value);
+            updateHeaderField("CO2EmisionsUOM", val.value, "Update");
+          }
+        }
+      },
       SupplierRefNo: {
         id: 'SupplierRefNo',
         label: 'Supplier Ref. No.',
@@ -216,7 +256,7 @@ export const TripForm: React.FC<TripFormProps> = ({
         label: 'Service',
         fieldType: 'lazyselect',
         width: 'half',
-        value: tripData?.Header?.ServiceType || "", // Bind directly to tripData.Header
+        value: formatFieldWithName(tripData?.Header?.ServiceType, tripData?.Header?.ServiceTypeDescription), // Bind directly to tripData.Header
         mandatory: false,
         visible: true,
         editable: true,
@@ -254,7 +294,7 @@ export const TripForm: React.FC<TripFormProps> = ({
         label: 'Sub Service',
         fieldType: 'lazyselect',
         width: 'half',
-        value: tripData?.Header?.SubServiceType || "", // Bind directly to tripData.Header
+        value: formatFieldWithName(tripData?.Header?.SubServiceType, tripData?.Header?.SubServiceTypeDescription), // Bind directly to tripData.Header
         mandatory: false,
         visible: true,
         editable: true,
