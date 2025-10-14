@@ -5,13 +5,15 @@ export interface Activity {
   id: string;
   category: string;
   subCategory: string;
-  plannedDate: string;
-  plannedTime: string;
+  PlannedDate: string;
+  PlannedTime: string;
   actualDate?: string;
   actualTime?: string;
   location: string;
   status: 'pending' | 'completed' | 'in-progress';
   remarks?: string;
+  CustomerName?: string;
+  CustomerID?: string;
 }
 
 export interface Consignment {
@@ -56,6 +58,8 @@ interface TripExecutionDrawerStore {
   updateActivity: (legId: string, activity: Activity) => void;
   updateConsignment: (legId: string, consignment: Consignment) => void;
   updateTransshipment: (legId: string, transshipment: Transshipment) => void;
+  loadLegsFromAPI: () => void;
+  getLegsFromAPI: () => Leg[];
 }
 
 const generateMockData = (legNumber: number, from: string, to: string) => {
@@ -64,8 +68,8 @@ const generateMockData = (legNumber: number, from: string, to: string) => {
       id: `act-${legNumber}-1`,
       category: 'Loading',
       subCategory: 'Container Loading',
-      plannedDate: '2024-03-15',
-      plannedTime: '09:00',
+      PlannedDate: '2024-03-15',
+      PlannedTime: '09:00',
       location: from,
       status: 'pending' as const,
     },
@@ -73,8 +77,8 @@ const generateMockData = (legNumber: number, from: string, to: string) => {
       id: `act-${legNumber}-2`,
       category: 'Unloading',
       subCategory: 'Container Unloading',
-      plannedDate: '2024-03-15',
-      plannedTime: '14:00',
+      PlannedDate: '2024-03-15',
+      PlannedTime: '14:00',
       location: to,
       status: 'pending' as const,
     },
@@ -107,36 +111,24 @@ const generateMockData = (legNumber: number, from: string, to: string) => {
   return { activities, consignments, transshipments };
 };
 
+// Function to transform API leg details to store format
+const transformApiLegToStoreFormat = (apiLeg: any, index: number): Leg => {
+  return {
+    id: apiLeg.LegSequence || `leg-${index + 1}`,
+    from: apiLeg.DeparturePoint || '',
+    to: apiLeg.ArrivalPoint || '',
+    distance: '-- km', // You can calculate this or get from API
+    duration: '-- hours', // You can calculate this or get from API
+    hasInfo: true,
+    activities: apiLeg.Activities || [],
+    consignments: apiLeg.Consignment || [],
+    transshipments: [] // Transshipments might not be in API, so empty for now
+  };
+};
+
 export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set, get) => ({
-  legs: [
-    {
-      id: '1',
-      from: 'Mumbai Port',
-      to: 'Delhi ICD',
-      distance: '1,420 km',
-      duration: '2 days',
-      hasInfo: true,
-      ...generateMockData(1, 'Mumbai Port', 'Delhi ICD'),
-    },
-    {
-      id: '2',
-      from: 'Delhi ICD',
-      to: 'Ludhiana Warehouse',
-      distance: '320 km',
-      duration: '8 hours',
-      ...generateMockData(2, 'Delhi ICD', 'Ludhiana Warehouse'),
-    },
-    {
-      id: '3',
-      from: 'Ludhiana Warehouse',
-      to: 'Chandigarh DC',
-      distance: '120 km',
-      duration: '3 hours',
-      hasInfo: true,
-      ...generateMockData(3, 'Ludhiana Warehouse', 'Chandigarh DC'),
-    },
-  ],
-  selectedLegId: '1',
+  legs: [],
+  selectedLegId: null,
 
   addLeg: (from, to, viaLocation, plannedDate, plannedTime) => {
     const legs = get().legs;
@@ -216,5 +208,43 @@ export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set
           : leg
       ),
     }));
+  },
+
+  loadLegsFromAPI: () => {
+    try {
+      const apiLegDetails = manageTripStore.getState().getLegDetails();
+      console.log("Loading legs from API:", apiLegDetails);
+      
+      if (apiLegDetails && apiLegDetails.length > 0) {
+        const transformedLegs = apiLegDetails.map((apiLeg: any, index: number) => 
+          transformApiLegToStoreFormat(apiLeg, index)
+        );
+        
+        set({ 
+          legs: transformedLegs,
+          selectedLegId: transformedLegs.length > 0 ? transformedLegs[0].id : null
+        });
+      } else {
+        set({ legs: [], selectedLegId: null });
+      }
+    } catch (error) {
+      console.error("Error loading legs from API:", error);
+      set({ legs: [], selectedLegId: null });
+    }
+  },
+
+  getLegsFromAPI: () => {
+    try {
+      const apiLegDetails = manageTripStore.getState().getLegDetails();
+      if (apiLegDetails && apiLegDetails.length > 0) {
+        return apiLegDetails.map((apiLeg: any, index: number) => 
+          transformApiLegToStoreFormat(apiLeg, index)
+        );
+      }
+      return [];
+    } catch (error) {
+      console.error("Error getting legs from API:", error);
+      return [];
+    }
   },
 }));

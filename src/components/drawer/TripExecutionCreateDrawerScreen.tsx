@@ -24,7 +24,8 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
-  tripExecutionRef: React.RefObject<DynamicPanelRef>;
+  tripExecutionRef?: React.RefObject<DynamicPanelRef>;
+  tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
 }
 
 interface AdditionalActivity {
@@ -47,7 +48,8 @@ interface AdditionalActivity {
 export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawerScreenProps> = ({
   onClose,
   tripId = 'TRIP00000001',
-  tripExecutionRef
+  tripExecutionRef,
+  tripAdditionalRef
 }) => {
   // const { tripData, fetchTrip, updateHeaderField } = manageTripStore();
   const [expandedActivities, setExpandedActivities] = useState(true);
@@ -67,57 +69,261 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   });
 
   // Zustand store
-  const { selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg } = useTripExecutionDrawerStore();
+  const { legs, selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg, loadLegsFromAPI } = useTripExecutionDrawerStore();
   
-  // ManageTrip store for API data
-  const { tripData } = manageTripStore();
-  const [legs, setLegs] = useState<any[]>([]);
-
-  // Transform tripData.LegDetails to legs format
+  // Load legs from API on component mount
   useEffect(() => {
-    console.log("tripData ====", tripData?.LegDetails);
-    // const transformLegDetails = () => {
-    //   try {
-    //     const legDetails = tripData?.LegDetails || [];
-    //     console.log("TripData LegDetails:", legDetails);
-        
-    //     if (legDetails && legDetails.length > 0) {
-    //       const transformedLegs = legDetails.map((legDetail: any, index: number) => ({
-    //         id: legDetail.LegSequence || `leg-${index + 1}`,
-    //         from: legDetail.DeparturePoint || '',
-    //         to: legDetail.ArrivalPoint || '',
-    //         distance: '-- km', // You can calculate this or get from API
-    //         duration: '-- hours', // You can calculate this or get from API
-    //         hasInfo: true,
-    //         legSequence: legDetail.LegSequence,
-    //         legBehaviour: legDetail.LegBehaviour,
-    //         legBehaviourDescription: legDetail.LegBehaviourDescription,
-    //         fromDescription: legDetail.DeparturePointDescription,
-    //         toDescription: legDetail.ArrivalPointDescription,
-    //         activities: legDetail.Activities || [],
-    //         consignments: legDetail.Consignment || [],
-    //         transshipments: []
-    //       }));
-          
-    //       setLegs(transformedLegs);
-          
-    //       // Select first leg by default
-    //       if (transformedLegs.length > 0) {
-    //         selectLeg(transformedLegs[0].id);
-    //       }
-    //     } else {
-    //       setLegs([]);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error transforming leg details:", error);
-    //     setLegs([]);
-    //   }
-    // };
+    loadLegsFromAPI();
+  }, [loadLegsFromAPI]);
 
-    // transformLegDetails();
-  }, [tripData?.LegDetails, selectLeg]);
+  // Auto-bind first leg data when legs are loaded
+  useEffect(() => {
+    setLoading(false);
+    if (legs.length > 0 && selectedLegId && tripExecutionRef?.current?.setFormValues) {
+      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
+      if (selectedLegData) {
+        console.log("Auto-binding first leg data on load:", selectedLegData);
+        
+        const rawActivitiesData = selectedLegData.activities || [];
+        const formattedActivities = formatActivitiesForForm(rawActivitiesData);
+        const consignmentsData = selectedLegData.consignments || [];
+        
+        const formData = {
+          // Basic leg information
+          legSequence: selectedLegData.id,
+          from: selectedLegData.from,
+          to: selectedLegData.to,
+          distance: selectedLegData.distance,
+          duration: selectedLegData.duration,
+          
+          // Activities array - this is the key data we want to bind
+          activities: formattedActivities,
+          
+          // Individual activity fields for easier form access
+          ...(formattedActivities.length > 0 && {
+            firstActivity: formattedActivities[0],
+            lastActivity: formattedActivities[formattedActivities.length - 1],
+            activityCount: formattedActivities.length,
+            
+            // Bind first activity fields directly for easy access
+            firstActivitySeqNo: formattedActivities[0].SeqNo,
+            firstActivityName: formattedActivities[0].Activity,
+            firstActivityDescription: formattedActivities[0].ActivityDescription,
+            firstActivityCustomerName: formattedActivities[0].CustomerName,
+            PlannedDate: formattedActivities[0].PlannedDate,
+            firstActivityPlannedTime: formattedActivities[0].PlannedTime,
+            firstActivityCustomerOrder: formattedActivities[0].CustomerOrder,
+            firstActivityEventProfile: formattedActivities[0].EventProfile
+          }),
+          
+          // Consignments data
+          consignments: consignmentsData,
+          
+          // Additional leg metadata
+          hasInfo: selectedLegData.hasInfo,
+          transshipments: selectedLegData.transshipments || []
+        };
+        console.log("formData ====", formData);
+        tripExecutionRef.current.setFormValues(formData);
+        console.log("First leg data auto-bound to form fields");
+        setLoading(true);
+      }
+    }
+  }, [legs, selectedLegId, tripExecutionRef]);
+
+  // Handle selected leg changes and bind data to form fields
+  useEffect(() => {
+    setLoading(false);
+    if (selectedLegId && legs.length > 0) {
+      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
+      if (selectedLegData) {
+        console.log("Selected leg changed, binding data:", selectedLegData);
+        
+        // Prepare activities data for form binding
+        const rawActivitiesData = selectedLegData.activities || [];
+        const formattedActivities = formatActivitiesForForm(rawActivitiesData);
+        const consignmentsData = selectedLegData.consignments || [];
+        
+        // Create form data object with activities array
+        const formData = {
+          // Basic leg information
+          legSequence: selectedLegData.id,
+          from: selectedLegData.from,
+          to: selectedLegData.to,
+          distance: selectedLegData.distance,
+          duration: selectedLegData.duration,
+          
+          // Activities array - this is the key data we want to bind
+          activities: formattedActivities,
+          
+          // Individual activity fields for easier form access
+          ...(formattedActivities.length > 0 && {
+            firstActivity: formattedActivities[0],
+            lastActivity: formattedActivities[formattedActivities.length - 1],
+            activityCount: formattedActivities.length,
+            
+            // Bind first activity fields directly for easy access
+            firstActivitySeqNo: formattedActivities[0].SeqNo,
+            firstActivityName: formattedActivities[0].Activity,
+            firstActivityDescription: formattedActivities[0].ActivityDescription,
+            firstActivityCustomerName: formattedActivities[0].CustomerName,
+            PlannedDate: formattedActivities[0].PlannedDate,
+            firstActivityPlannedTime: formattedActivities[0].PlannedTime,
+            firstActivityCustomerOrder: formattedActivities[0].CustomerOrder,
+            firstActivityEventProfile: formattedActivities[0].EventProfile
+          }),
+          
+          // Consignments data
+          consignments: consignmentsData,
+          
+          // Additional leg metadata
+          hasInfo: selectedLegData.hasInfo,
+          transshipments: selectedLegData.transshipments || []
+        };
+        console.log("formData -----", formData.activities[0]);
+        // Bind data to tripExecutionRef (Activities panel)
+        if (tripExecutionRef?.current?.setFormValues) {
+          tripExecutionRef.current.setFormValues(formData.activities[0]);
+          console.log("Data automatically bound to tripExecutionRef on leg change");
+        }
+        
+        // Bind data to tripAdditionalRef (Additional Activities panel)
+        if (tripAdditionalRef?.current?.setFormValues) {
+          tripAdditionalRef.current.setFormValues({
+            ...formData,
+            // Additional specific data for additional activities panel
+            additionalActivities: formattedActivities.filter(activity => 
+              activity.category === 'Additional' || activity.subCategory === 'Additional'
+            )
+          });
+          console.log("Data automatically bound to tripAdditionalRef on leg change");
+        }
+        setLoading(true);
+      }
+    }
+  }, [selectedLegId, legs, tripExecutionRef, tripAdditionalRef]);
+
 
   const selectedLeg = getSelectedLeg();
+
+  // Helper function to format activities data for form binding
+  const formatActivitiesForForm = (activities: any[]) => {
+    if (!activities || activities.length === 0) return [];
+    
+    return activities.map((activity, index) => ({
+      // Map API response fields to form fields
+      SeqNo: activity.SeqNo || (index + 1),
+      Activity: activity.Activity || '',
+      ActivityDescription: activity.ActivityDescription || '',
+      CustomerID: activity.CustomerID || '',
+      CustomerName: activity.CustomerName || '',
+      ConsignmentInformation: activity.ConsignmentInformation || '',
+      CustomerOrder: activity.CustomerOrder || '',
+      PlannedDate: activity.PlannedDate || '',
+      PlannedTime: activity.PlannedTime || '',
+      RevisedDate: activity.RevisedDate || '',
+      RevisedTime: activity.RevisedTime || '',
+      ActualDate: activity.ActualDate || '',
+      ActualTime: activity.ActualTime || '',
+      DelayedIn: activity.DelayedIn || '',
+      QuickCode1: activity.QuickCode1 || '',
+      QuickCode2: activity.QuickCode2 || '',
+      QuickCode3: activity.QuickCode3 || '',
+      QuickCodeValue1: activity.QuickCodeValue1 || '',
+      QuickCodeValue2: activity.QuickCodeValue2 || '',
+      QuickCodeValue3: activity.QuickCodeValue3 || '',
+      Remarks1: activity.Remarks1 || '',
+      Remarks2: activity.Remarks2 || '',
+      Remarks3: activity.Remarks3 || '',
+      EventProfile: activity.EventProfile || '',
+      ReasonForChanges: activity.ReasonForChanges || '',
+      DelayedReason: activity.DelayedReason || '',
+      LastIdentifiedLocation: activity.LastIdentifiedLocation || '',
+      LastIdentifiedLocationDescription: activity.LastIdentifiedLocationDescription || '',
+      LastIdentifiedDate: activity.LastIdentifiedDate || '',
+      LastIdentifiedTime: activity.LastIdentifiedTime || '',
+      AmendmentNo: activity.AmendmentNo || '',
+      ModeFlag: activity.ModeFlag || 'NoChange',
+      
+      // Keep original activity data for reference
+      ...activity
+    }));
+  };
+
+  // Handle leg selection and bind data to dynamic panels
+  const handleLegSelection = (legId: string) => {
+    selectLeg(legId);
+    setLoading(false);
+    // Find the selected leg data
+    const selectedLegData = legs.find(leg => leg.id === legId);
+    if (selectedLegData) {
+      console.log("Selected leg data:", selectedLegData);
+      console.log("Selected leg activities:", selectedLegData.activities);
+      
+      // Prepare activities data for form binding
+      const rawActivitiesData = selectedLegData.activities || [];
+      const formattedActivities = formatActivitiesForForm(rawActivitiesData);
+      const consignmentsData = selectedLegData.consignments || [];
+      
+      // Create form data object with activities array
+      const formData = {
+        // Basic leg information
+        legSequence: selectedLegData.id,
+        from: selectedLegData.from,
+        to: selectedLegData.to,
+        distance: selectedLegData.distance,
+        duration: selectedLegData.duration,
+        
+        // Activities array - this is the key data we want to bind
+        activities: formattedActivities,
+        
+        // Individual activity fields for easier form access
+        ...(formattedActivities.length > 0 && {
+          firstActivity: formattedActivities[0],
+          lastActivity: formattedActivities[formattedActivities.length - 1],
+          activityCount: formattedActivities.length,
+          
+          // Bind first activity fields directly for easy access
+          firstActivitySeqNo: formattedActivities[0].SeqNo,
+          firstActivityName: formattedActivities[0].Activity,
+          firstActivityDescription: formattedActivities[0].ActivityDescription,
+          firstActivityCustomerName: formattedActivities[0].CustomerName,
+          PlannedDate: formattedActivities[0].PlannedDate,
+          firstActivityPlannedTime: formattedActivities[0].PlannedTime,
+          firstActivityCustomerOrder: formattedActivities[0].CustomerOrder,
+          firstActivityEventProfile: formattedActivities[0].EventProfile
+        }),
+        
+        // Consignments data
+        consignments: consignmentsData,
+        
+        // Additional leg metadata
+        hasInfo: selectedLegData.hasInfo,
+        transshipments: selectedLegData.transshipments || []
+      };
+      
+      console.log("Form data to be bound:", formData);
+      
+      // Bind data to tripExecutionRef (Activities panel)
+      if (tripExecutionRef?.current?.setFormValues) {
+        tripExecutionRef.current.setFormValues(formData.activities[0]);
+        console.log("Data bound to tripExecutionRef");
+      }
+      
+      // Bind data to tripAdditionalRef (Additional Activities panel)
+      if (tripAdditionalRef?.current?.setFormValues) {
+        tripAdditionalRef.current.setFormValues({
+          ...formData,
+          // Additional specific data for additional activities panel
+          additionalActivities: formattedActivities.filter(activity => 
+            activity.category === 'Additional' || activity.subCategory === 'Additional'
+          )
+        });
+        console.log("Data bound to tripAdditionalRef");
+      }
+      setLoading(true);
+    }
+  };
 
   const handleAddViaPoint = () => {
     if (!viaPointForm.viaLocation) {
@@ -166,16 +372,14 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   ];
 
   useEffect(() => {
-    // fetchTrip();
-    // console.log("tripData ====", fetchTrip());
-    console.log("tripData ====", tripData?.LegDetails);
-    console.log("tripData ====", tripData?.LegDetails?.[0].Activities);
-  }, [tripData]);
+    console.log("Legs loaded from API:", legs);
+  }, [legs]);
 
+  const [loading, setLoading] = useState(false);
   const tripExecutionPanelConfig: PanelConfig = useMemo(() => {
     return {
-      RevisedDateAndTime: {
-        id: "RevisedDateAndTime",
+      PlannedDate: {
+        id: "PlannedDate",
         label: "Revised Date and Time",
         fieldType: "date",
         width: 'third',
@@ -281,8 +485,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           }
         }
       },
-    }; // Dependencies for useMemo (removed formData, added tripData for values)
-  }, [tripData]);
+    }; // Dependencies for useMemo
+  }, [legs]);
 
   return (
     <>
@@ -316,7 +520,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             <h3 className="text-sm font-semibold flex items-center gap-2">
               Total Legs
               <Badge variant="secondary" className="rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
-                {tripData?.LegDetails.length}
+                {legs.length}
               </Badge>
             </h3>
             <Button 
@@ -333,13 +537,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         {/* Legs List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-2 space-y-2">
-            {tripData?.LegDetails.map((leg) => (
+            {legs.map((leg) => (
               <div
-                key={leg.LegSequence}
-                onClick={() => selectLeg(leg.LegSequence)}
+                key={leg.id}
+                onClick={() => handleLegSelection(leg.id)}
                 className={cn(
                   "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2",
-                  selectedLegId === leg.LegSequence && "border-primary bg-accent"
+                  selectedLegId === leg.id && "border-primary bg-accent"
                 )}
               >
                 {/* Leg Header */}
@@ -348,7 +552,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{leg.DeparturePoint}</div>
+                        <div className="font-medium text-sm truncate">{leg.from}</div>
                         <div className="text-xs text-muted-foreground">Origin</div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -363,7 +567,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                           className="h-5 w-5"
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeLeg(leg.LegSequence);
+                            removeLeg(leg.id);
                             toast.success('Leg removed successfully');
                           }}
                         >
@@ -378,7 +582,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{leg.ArrivalPoint}</div>
+                    <div className="font-medium text-sm truncate">{leg.to}</div>
                     <div className="text-xs text-muted-foreground">Destination</div>
                   </div>
                 </div>
@@ -391,13 +595,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 </div> */}
 
                 {/* API Data - Leg Sequence and Behavior */}
-                {leg.LegSequence && (
+                {leg.id && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="font-medium">Sequence: {leg.DeparturePoint}</span>
-                    {leg.LegBehaviour && (
+                    <span className="font-medium">Sequence: {leg.id}</span>
+                    {leg.hasInfo && (
                       <>
                         <span>•</span>
-                        <span>Behavior: {leg.LegBehaviour}</span>
+                        <span>Has Info: Yes</span>
                       </>
                     )}
                   </div>
@@ -474,25 +678,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       transition={{ duration: 0.2 }}
                       className="space-y-3 overflow-hidden"
                     >
-                    <DynamicPanel
-                      key="Activities" // Revert to tripType for controlled remounts on type change
-                      ref={tripExecutionRef}
-                      panelId="trip-execution-panel"
-                      panelTitle="Activities"
-                      panelConfig={tripExecutionPanelConfig} // Use the memoized config
-                    // initialData={formData} // Removed initialData prop
-                    // onDataChange={handleDataChange} // Confirming it's commented out as per user
-                    />
-                      {/* {selectedLeg.activities.map((activity) => (
+                    
+                      {selectedLeg.activities.map((activity) => (
                         <div key={activity.id} className="border rounded-lg bg-card">
                           <div className="flex items-center justify-between p-4 bg-muted/30">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3"> 
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
                                 <Package className="h-4 w-4" />
                               </div>
                               <div>
-                                <div className="font-medium text-sm">{activity.category} - {activity.subCategory}</div>
-                                <div className="text-xs text-muted-foreground">{activity.plannedDate} {activity.plannedTime}</div>
+                                <div className="font-medium text-sm">{activity.CustomerName} - {activity.CustomerID}</div>
+                                <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -505,7 +701,18 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                             </div>
                           </div>
 
-                          <div className="px-4 pb-4 pt-4 border-t space-y-4">
+                          {loading ?
+                            <DynamicPanel
+                              key="Activities" // Revert to tripType for controlled remounts on type change
+                              ref={tripExecutionRef}
+                              panelId="trip-execution-panel"
+                              panelTitle="Activities"
+                              panelConfig={tripExecutionPanelConfig} // Use the memoized config
+                              initialData={activity} // Removed initialData prop
+                            // onDataChange={handleDataChange} // Confirming it's commented out as per user
+                            /> : ''
+                          }
+                          {/* <div className="px-4 pb-4 pt-4 border-t space-y-4">
                             <div className="grid grid-cols-3 gap-4">
                               <div className="space-y-2">
                                 <Label className="text-xs text-muted-foreground">
@@ -549,9 +756,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 />
                               </div>
                             )}
-                          </div>
+                          </div> */}
                         </div>
-                      ))} */}
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -608,7 +815,16 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                           </div>
 
                           {/* Fields */}
-                          <div className="grid grid-cols-4 gap-4">
+                          {/* <DynamicPanel
+                            key="Additional Activities" // Revert to tripType for controlled remounts on type change
+                            ref={tripAdditionalRef}
+                            panelId="trip-execution-panel"
+                            panelTitle="Additional Activities"
+                            panelConfig={tripExecutionPanelConfig} // Use the memoized config
+                          // initialData={formData} // Removed initialData prop
+                          // onDataChange={handleDataChange} // Confirming it's commented out as per user
+                          /> */}
+                          {/* <div className="grid grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Sequence</Label>
                               <Input defaultValue={activity.fields.sequence} className="h-9" />
@@ -642,7 +858,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 </SelectContent>
                               </Select>
                             </div>
-                          </div>
+                          </div> */}
 
                           <div className="grid grid-cols-4 gap-4">
                             <div className="space-y-2">
