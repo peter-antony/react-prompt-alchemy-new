@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,15 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 import { toast } from 'sonner';
+import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
+import { PanelConfig } from '@/types/dynamicPanel';
+import { quickOrderService } from '@/api/services/quickOrderService';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
+  tripExecutionRef: React.RefObject<DynamicPanelRef>;
 }
 
 interface AdditionalActivity {
@@ -41,8 +46,10 @@ interface AdditionalActivity {
 
 export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawerScreenProps> = ({
   onClose,
-  tripId = 'TRIP00000001'
+  tripId = 'TRIP00000001',
+  tripExecutionRef
 }) => {
+  // const { tripData, fetchTrip, updateHeaderField } = manageTripStore();
   const [expandedActivities, setExpandedActivities] = useState(true);
   const [expandedAdditional, setExpandedAdditional] = useState(false);
   const [expandedPlanned, setExpandedPlanned] = useState(true);
@@ -60,7 +67,56 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   });
 
   // Zustand store
-  const { legs, selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg } = useTripExecutionDrawerStore();
+  const { selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg } = useTripExecutionDrawerStore();
+  
+  // ManageTrip store for API data
+  const { tripData } = manageTripStore();
+  const [legs, setLegs] = useState<any[]>([]);
+
+  // Transform tripData.LegDetails to legs format
+  useEffect(() => {
+    console.log("tripData ====", tripData?.LegDetails);
+    // const transformLegDetails = () => {
+    //   try {
+    //     const legDetails = tripData?.LegDetails || [];
+    //     console.log("TripData LegDetails:", legDetails);
+        
+    //     if (legDetails && legDetails.length > 0) {
+    //       const transformedLegs = legDetails.map((legDetail: any, index: number) => ({
+    //         id: legDetail.LegSequence || `leg-${index + 1}`,
+    //         from: legDetail.DeparturePoint || '',
+    //         to: legDetail.ArrivalPoint || '',
+    //         distance: '-- km', // You can calculate this or get from API
+    //         duration: '-- hours', // You can calculate this or get from API
+    //         hasInfo: true,
+    //         legSequence: legDetail.LegSequence,
+    //         legBehaviour: legDetail.LegBehaviour,
+    //         legBehaviourDescription: legDetail.LegBehaviourDescription,
+    //         fromDescription: legDetail.DeparturePointDescription,
+    //         toDescription: legDetail.ArrivalPointDescription,
+    //         activities: legDetail.Activities || [],
+    //         consignments: legDetail.Consignment || [],
+    //         transshipments: []
+    //       }));
+          
+    //       setLegs(transformedLegs);
+          
+    //       // Select first leg by default
+    //       if (transformedLegs.length > 0) {
+    //         selectLeg(transformedLegs[0].id);
+    //       }
+    //     } else {
+    //       setLegs([]);
+    //     }
+    //   } catch (error) {
+    //     console.error("Error transforming leg details:", error);
+    //     setLegs([]);
+    //   }
+    // };
+
+    // transformLegDetails();
+  }, [tripData?.LegDetails, selectLeg]);
+
   const selectedLeg = getSelectedLeg();
 
   const handleAddViaPoint = () => {
@@ -109,6 +165,125 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   ];
 
+  useEffect(() => {
+    // fetchTrip();
+    // console.log("tripData ====", fetchTrip());
+    console.log("tripData ====", tripData?.LegDetails);
+    console.log("tripData ====", tripData?.LegDetails?.[0].Activities);
+  }, [tripData]);
+
+  const tripExecutionPanelConfig: PanelConfig = useMemo(() => {
+    return {
+      RevisedDateAndTime: {
+        id: "RevisedDateAndTime",
+        label: "Revised Date and Time",
+        fieldType: "date",
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      },
+      ActualDateAndTime: {
+        id: "ActualDateAndTime",
+        label: "Actual Date And Time",
+        fieldType: "date",
+        width: 'third',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      },
+      LastIdentifiedLocation: {
+        id: 'LastIdentifiedLocation',
+        label: 'Last Identified Location',
+        fieldType: 'lazyselect',
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 3,
+        hideSearch: false,
+        disableLazyLoading: false,
+        // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        fetchOptions: async ({ searchTerm, offset, limit }) => {
+          const response = await quickOrderService.getMasterCommonData({
+            messageType: "Arrival Init",
+            searchTerm: searchTerm || '',
+            offset,
+            limit,
+          });
+          // response.data is already an array, so just return it directly
+          const rr: any = response.data
+          return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+            ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+              ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+              : {})
+          }));
+        },
+        events: {
+          onChange: (selected, event) => {
+            console.log('Customer changed:', selected);
+          },
+          onClick: (event, value) => {
+            console.log('Customer dropdown clicked:', { event, value });
+          }
+        }
+      },
+      LastIdentifiedDateAndTime: {
+        id: "LastIdentifiedDateAndTime",
+        label: "Last Identified Date And Time",
+        fieldType: "date",
+        width: 'third',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      },
+      DelayedReason: {
+        id: 'DelayedReason',
+        label: 'Delayed Reason',
+        fieldType: 'select',
+        value: '',
+        mandatory: true,
+        visible: true,
+        editable: true,
+        order: 3,
+        width: 'third',
+        // options: billingTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        events: {
+          onChange: (value, event) => {
+            console.log('contractType changed:', value);
+          }
+        }
+      },
+      ReasonForChanges: {
+        id: 'ReasonForChanges',
+        label: 'Reason For Changes',
+        fieldType: 'select',
+        value: '',
+        mandatory: true,
+        visible: true,
+        editable: true,
+        order: 3,
+        width: 'third',
+        // options: billingTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        events: {
+          onChange: (value, event) => {
+            console.log('contractType changed:', value);
+          }
+        }
+      },
+    }; // Dependencies for useMemo (removed formData, added tripData for values)
+  }, [tripData]);
+
   return (
     <>
       <motion.div
@@ -141,7 +316,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             <h3 className="text-sm font-semibold flex items-center gap-2">
               Total Legs
               <Badge variant="secondary" className="rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
-                {legs.length}
+                {tripData?.LegDetails.length}
               </Badge>
             </h3>
             <Button 
@@ -158,13 +333,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         {/* Legs List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-2 space-y-2">
-            {legs.map((leg) => (
+            {tripData?.LegDetails.map((leg) => (
               <div
-                key={leg.id}
-                onClick={() => selectLeg(leg.id)}
+                key={leg.LegSequence}
+                onClick={() => selectLeg(leg.LegSequence)}
                 className={cn(
                   "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2",
-                  selectedLegId === leg.id && "border-primary bg-accent"
+                  selectedLegId === leg.LegSequence && "border-primary bg-accent"
                 )}
               >
                 {/* Leg Header */}
@@ -173,22 +348,22 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{leg.from}</div>
+                        <div className="font-medium text-sm truncate">{leg.DeparturePoint}</div>
                         <div className="text-xs text-muted-foreground">Origin</div>
                       </div>
                       <div className="flex items-center gap-1">
-                        {leg.hasInfo && (
+                        {/* {leg.hasInfo && (
                           <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
                             <Info className="h-3 w-3" />
                           </Badge>
-                        )}
+                        )} */}
                         <Button
                           size="icon"
                           variant="ghost"
                           className="h-5 w-5"
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeLeg(leg.id);
+                            removeLeg(leg.LegSequence);
                             toast.success('Leg removed successfully');
                           }}
                         >
@@ -203,17 +378,30 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{leg.to}</div>
+                    <div className="font-medium text-sm truncate">{leg.ArrivalPoint}</div>
                     <div className="text-xs text-muted-foreground">Destination</div>
                   </div>
                 </div>
 
                 {/* Distance & Duration */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                {/* <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span>{leg.distance}</span>
                   <span>•</span>
                   <span>{leg.duration}</span>
-                </div>
+                </div> */}
+
+                {/* API Data - Leg Sequence and Behavior */}
+                {leg.LegSequence && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-medium">Sequence: {leg.DeparturePoint}</span>
+                    {leg.LegBehaviour && (
+                      <>
+                        <span>•</span>
+                        <span>Behavior: {leg.LegBehaviour}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -286,9 +474,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       transition={{ duration: 0.2 }}
                       className="space-y-3 overflow-hidden"
                     >
-                      {selectedLeg.activities.map((activity) => (
+                    <DynamicPanel
+                      key="Activities" // Revert to tripType for controlled remounts on type change
+                      ref={tripExecutionRef}
+                      panelId="trip-execution-panel"
+                      panelTitle="Activities"
+                      panelConfig={tripExecutionPanelConfig} // Use the memoized config
+                    // initialData={formData} // Removed initialData prop
+                    // onDataChange={handleDataChange} // Confirming it's commented out as per user
+                    />
+                      {/* {selectedLeg.activities.map((activity) => (
                         <div key={activity.id} className="border rounded-lg bg-card">
-                          {/* Activity Header */}
                           <div className="flex items-center justify-between p-4 bg-muted/30">
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
@@ -309,7 +505,6 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                             </div>
                           </div>
 
-                          {/* Activity Details */}
                           <div className="px-4 pb-4 pt-4 border-t space-y-4">
                             <div className="grid grid-cols-3 gap-4">
                               <div className="space-y-2">
@@ -356,7 +551,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                             )}
                           </div>
                         </div>
-                      ))}
+                      ))} */}
                     </motion.div>
                   )}
                 </AnimatePresence>
