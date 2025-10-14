@@ -14,6 +14,33 @@ export interface Activity {
   remarks?: string;
   CustomerName?: string;
   CustomerID?: string;
+  SeqNo?: number,
+  Activity?: string,
+  ActivityDescription?: string,
+  ConsignmentInformation?: string,
+  CustomerOrder?: string,
+  RevisedDate?: string,
+  RevisedTime?: string,
+  ActualDate?: string,
+  ActualTime?: string,
+  DelayedIn?: string,
+  QuickCode1?: string,
+  QuickCode2?: string,
+  QuickCode3?: string,
+  QuickCodeValue1?: string,
+  QuickCodeValue2?: string,
+  QuickCodeValue3?: string,
+  Remarks1?: string,
+  Remarks2?: string,
+  Remarks3?: string,
+  EventProfile?: string,
+  ReasonForChanges?: string,
+  DelayedReason?: string,
+  LastIdentifiedLocation?: string,
+  LastIdentifiedDate?: string,
+  LastIdentifiedTime?: string,
+  AmendmentNo?: string,
+
 }
 
 export interface Consignment {

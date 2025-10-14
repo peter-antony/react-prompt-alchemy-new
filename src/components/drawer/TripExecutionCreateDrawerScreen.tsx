@@ -163,14 +163,36 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             activityCount: formattedActivities.length,
             
             // Bind first activity fields directly for easy access
-            firstActivitySeqNo: formattedActivities[0].SeqNo,
-            firstActivityName: formattedActivities[0].Activity,
-            firstActivityDescription: formattedActivities[0].ActivityDescription,
-            firstActivityCustomerName: formattedActivities[0].CustomerName,
-            PlannedDate: formattedActivities[0].PlannedDate,
-            firstActivityPlannedTime: formattedActivities[0].PlannedTime,
-            firstActivityCustomerOrder: formattedActivities[0].CustomerOrder,
-            firstActivityEventProfile: formattedActivities[0].EventProfile
+            ActivitySeqNo: formattedActivities[0].SeqNo,
+          ActivityName: formattedActivities[0].Activity,
+          ActivityDescription: formattedActivities[0].ActivityDescription,
+          CustomerName: formattedActivities[0].CustomerName,
+          CustomerID: formattedActivities[0].CustomerID,
+          PlannedDate: formattedActivities[0].PlannedDate,
+          PlannedTime: formattedActivities[0].PlannedTime,
+          CustomerOrder: formattedActivities[0].CustomerOrder,
+          EventProfile: formattedActivities[0].EventProfile,
+          RevisedDate: formattedActivities[0].RevisedDate,
+          RevisedTime: formattedActivities[0].RevisedTime,
+          ActualDate: formattedActivities[0].ActualDate,
+          ActualTime: formattedActivities[0].ActualTime,
+          DelayedIn: formattedActivities[0].DelayedIn,
+          QuickCode1: formattedActivities[0].QuickCode1,
+          QuickCode2: formattedActivities[0].QuickCode2,
+          QuickCode3: formattedActivities[0].QuickCode3,
+          QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+          QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+          QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          Remarks1: formattedActivities[0].Remarks1,
+          Remarks2: formattedActivities[0].Remarks2,
+          Remarks3: formattedActivities[0].Remarks3,
+          ReasonForChanges: formattedActivities[0].ReasonForChanges,
+          DelayedReason: formattedActivities[0].DelayedReason,
+          LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation,
+          LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+          LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+          LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+          AmendmentNo: formattedActivities[0].AmendmentNo,
           }),
           
           // Consignments data
@@ -203,6 +225,137 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   }, [selectedLegId, legs, tripExecutionRef, tripAdditionalRef]);
 
+  // Helper function to update activities in the store
+  const updateActivitiesInStore = (legId: string, updatedActivities: any[]) => {
+    try {
+      // Update the activities in the store
+      const updatedLegs = legs.map(leg => 
+        leg.id === legId 
+          ? { ...leg, activities: updatedActivities }
+          : leg
+      );
+      
+      // You can add a method to update the store here
+      // For now, we'll just log the updated data
+      console.log("Updated legs with new activities:", updatedLegs);
+      
+      return updatedLegs;
+    } catch (error) {
+      console.error("Error updating activities in store:", error);
+      return null;
+    }
+  };
+
+  const onSaveActivities = () => {
+    console.log("Saving activities");
+    
+    try {
+      // Get the selected leg data
+      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
+      if (!selectedLegData) {
+        console.warn("No selected leg found");
+        toast.error('No leg selected');
+        return null;
+      }
+      
+      console.log("Selected leg data:", selectedLegData);
+      
+      // Get current activities from the leg (this is the data we want to submit to API)
+      const currentActivities = selectedLegData.activities || [];
+      console.log("Current activities from leg (for API submission):", currentActivities);
+      
+      // Check what methods are available on tripExecutionRef
+      console.log("tripExecutionRef methods:", Object.keys(tripExecutionRef?.current || {}));
+      
+      // Try to get form data using different methods
+      let formData = null;
+      
+      // Method 1: Try getFormValues
+      if (tripExecutionRef?.current?.getFormValues) {
+        try {
+          formData = tripExecutionRef.current.getFormValues();
+          console.log("Form data from getFormValues:", formData);
+        } catch (error) {
+          console.warn("getFormValues failed:", error);
+        }
+      }
+      
+      // Method 2: Try setFormValues (reverse operation)
+      if (!formData && tripExecutionRef?.current?.setFormValues) {
+        console.log("setFormValues method available, but no getFormValues");
+      }
+      
+      // Prepare activities data for API submission
+      const activitiesForAPI = currentActivities.map((activity: any, index) => ({
+        SeqNo: activity.SeqNo || (index + 1),
+        Activity: activity.Activity || '',
+        ActivityDescription: activity.ActivityDescription || '',
+        CustomerID: activity.CustomerID || '',
+        CustomerName: activity.CustomerName || '',
+        ConsignmentInformation: activity.ConsignmentInformation || '',
+        CustomerOrder: activity.CustomerOrder || '',
+        PlannedDate: activity.PlannedDate || '',
+        PlannedTime: activity.PlannedTime || '',
+        RevisedDate: activity.RevisedDate || '',
+        RevisedTime: activity.RevisedTime || '',
+        ActualDate: activity.ActualDate || '',
+        ActualTime: activity.ActualTime || '',
+        DelayedIn: activity.DelayedIn || '',
+        QuickCode1: activity.QuickCode1 || '',
+        QuickCode2: activity.QuickCode2 || '',
+        QuickCode3: activity.QuickCode3 || '',
+        QuickCodeValue1: activity.QuickCodeValue1 || '',
+        QuickCodeValue2: activity.QuickCodeValue2 || '',
+        QuickCodeValue3: activity.QuickCodeValue3 || '',
+        Remarks1: activity.Remarks1 || '',
+        Remarks2: activity.Remarks2 || '',
+        Remarks3: activity.Remarks3 || '',
+        EventProfile: activity.EventProfile || '',
+        ReasonForChanges: activity.ReasonForChanges || '',
+        DelayedReason: activity.DelayedReason || '',
+        LastIdentifiedLocation: activity.LastIdentifiedLocation || '',
+        LastIdentifiedLocationDescription: activity.LastIdentifiedLocationDescription || '',
+        LastIdentifiedDate: activity.LastIdentifiedDate || '',
+        LastIdentifiedTime: activity.LastIdentifiedTime || '',
+        AmendmentNo: activity.AmendmentNo || '',
+        ModeFlag: activity.ModeFlag || 'NoChange'
+      }));
+      
+      // Create the final data structure for API submission
+      const apiSubmissionData = {
+        // Leg information
+        legSequence: selectedLegData.id,
+        from: selectedLegData.from,
+        to: selectedLegData.to,
+        distance: selectedLegData.distance,
+        duration: selectedLegData.duration,
+        
+        // Activities array for API submission
+        activities: activitiesForAPI,
+        
+        // Form data (if available)
+        formData: formData,
+        
+        // Additional metadata
+        hasInfo: selectedLegData.hasInfo,
+        consignments: selectedLegData.consignments || [],
+        transshipments: selectedLegData.transshipments || []
+      };
+      
+      console.log("API submission data:", apiSubmissionData);
+      console.log("Activities for API:", activitiesForAPI);
+      
+      // Show success message
+      toast.success('Activities data prepared for API submission');
+      
+      return apiSubmissionData;
+      
+    } catch (error) {
+      console.error("Error saving activities:", error);
+      toast.error('Error saving activities');
+      return null;
+    }
+  };
 
   const selectedLeg = getSelectedLeg();
 
@@ -284,14 +437,36 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           activityCount: formattedActivities.length,
           
           // Bind first activity fields directly for easy access
-          firstActivitySeqNo: formattedActivities[0].SeqNo,
-          firstActivityName: formattedActivities[0].Activity,
-          firstActivityDescription: formattedActivities[0].ActivityDescription,
-          firstActivityCustomerName: formattedActivities[0].CustomerName,
+          ActivitySeqNo: formattedActivities[0].SeqNo,
+          ActivityName: formattedActivities[0].Activity,
+          ActivityDescription: formattedActivities[0].ActivityDescription,
+          CustomerName: formattedActivities[0].CustomerName,
+          CustomerID: formattedActivities[0].CustomerID,
           PlannedDate: formattedActivities[0].PlannedDate,
-          firstActivityPlannedTime: formattedActivities[0].PlannedTime,
-          firstActivityCustomerOrder: formattedActivities[0].CustomerOrder,
-          firstActivityEventProfile: formattedActivities[0].EventProfile
+          PlannedTime: formattedActivities[0].PlannedTime,
+          CustomerOrder: formattedActivities[0].CustomerOrder,
+          EventProfile: formattedActivities[0].EventProfile,
+          RevisedDate: formattedActivities[0].RevisedDate,
+          RevisedTime: formattedActivities[0].RevisedTime,
+          ActualDate: formattedActivities[0].ActualDate,
+          ActualTime: formattedActivities[0].ActualTime,
+          DelayedIn: formattedActivities[0].DelayedIn,
+          QuickCode1: formattedActivities[0].QuickCode1,
+          QuickCode2: formattedActivities[0].QuickCode2,
+          QuickCode3: formattedActivities[0].QuickCode3,
+          QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+          QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+          QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          Remarks1: formattedActivities[0].Remarks1,
+          Remarks2: formattedActivities[0].Remarks2,
+          Remarks3: formattedActivities[0].Remarks3,
+          ReasonForChanges: formattedActivities[0].ReasonForChanges,
+          DelayedReason: formattedActivities[0].DelayedReason,
+          LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation,
+          LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+          LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+          LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+          AmendmentNo: formattedActivities[0].AmendmentNo,
         }),
         
         // Consignments data
@@ -376,10 +551,49 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   }, [legs]);
 
   const [loading, setLoading] = useState(false);
+  const [apiData, setApiData] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [LastIdentifiedLocation, setLastIdentifiedLocation] = useState<any[]>([]);
+  const [ReasonForChanges, setReasonForChanges] = useState<any[]>([]);
+  const [DelayedReason, setDelayedReason] = useState<any[]>([]);
+  const messageTypes = [
+    "Location Init",
+    "Reason for changes Init",
+    "DelayedReason Init",
+  ];
+  useEffect(() => {
+    fetchAll();
+  }, []);
+  const fetchAll = async () => {
+    for (const type of messageTypes) {
+      await fetchData(type);
+    }
+  };
+  const fetchData = async (messageType) => {
+    setError(null);
+    try {
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      setApiData(data);
+      console.log("API Data:", data);
+      if (messageType == "Location Init") {
+        setLastIdentifiedLocation(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Reason for changes Init") {
+        setReasonForChanges(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "DelayedReason Init") {
+        setDelayedReason(JSON.parse(data?.data?.ResponseData));
+      }
+    } catch (err) {
+      setError(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    } finally {
+    }
+  };
   const tripExecutionPanelConfig: PanelConfig = useMemo(() => {
     return {
-      PlannedDate: {
-        id: "PlannedDate",
+      RevisedDate: {
+        id: "RevisedDate",
         label: "Revised Date and Time",
         fieldType: "date",
         width: 'third',
@@ -415,7 +629,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         fetchOptions: async ({ searchTerm, offset, limit }) => {
           const response = await quickOrderService.getMasterCommonData({
-            messageType: "Arrival Init",
+            messageType: "Location Init",
             searchTerm: searchTerm || '',
             offset,
             limit,
@@ -456,12 +670,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         label: 'Delayed Reason',
         fieldType: 'select',
         value: '',
-        mandatory: true,
+        mandatory: false,
         visible: true,
         editable: true,
         order: 3,
         width: 'third',
-        // options: billingTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        options: DelayedReason?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         events: {
           onChange: (value, event) => {
             console.log('contractType changed:', value);
@@ -473,18 +687,153 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         label: 'Reason For Changes',
         fieldType: 'select',
         value: '',
-        mandatory: true,
+        mandatory: false,
         visible: true,
         editable: true,
         order: 3,
         width: 'third',
-        // options: billingTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        options: ReasonForChanges?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         events: {
           onChange: (value, event) => {
             console.log('contractType changed:', value);
           }
         }
       },
+    }; // Dependencies for useMemo
+  }, [legs]);
+
+  const tripExecutionAdditionalPanelConfig: PanelConfig = useMemo(() => {
+    return {
+      Sequence: {
+        id: "Sequence",
+        label: "Sequence",
+        fieldType: "text",
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      },
+      Category: {
+        id: 'Category',
+        label: 'Category',
+        fieldType: 'select',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 2,
+        width: 'third',
+        options: DelayedReason?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        events: {
+          onChange: (value, event) => {
+            console.log('contractType changed:', value);
+          }
+        }
+      },
+      FromLocation: {
+        id: 'FromLocation',
+        label: 'From Location',
+        fieldType: 'lazyselect',
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 3,
+        hideSearch: false,
+        disableLazyLoading: false,
+        // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        fetchOptions: async ({ searchTerm, offset, limit }) => {
+          const response = await quickOrderService.getMasterCommonData({
+            messageType: "Location Init",
+            searchTerm: searchTerm || '',
+            offset,
+            limit,
+          });
+          // response.data is already an array, so just return it directly
+          const rr: any = response.data
+          return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+            ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+              ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+              : {})
+          }));
+        },
+        events: {
+          onChange: (selected, event) => {
+            console.log('Customer changed:', selected);
+          },
+          onClick: (event, value) => {
+            console.log('Customer dropdown clicked:', { event, value });
+          }
+        }
+      },
+      ToLocation: {
+        id: 'ToLocation',
+        label: 'To Location',
+        fieldType: 'lazyselect',
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 4,
+        hideSearch: false,
+        disableLazyLoading: false,
+        // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+        fetchOptions: async ({ searchTerm, offset, limit }) => {
+          const response = await quickOrderService.getMasterCommonData({
+            messageType: "Location Init",
+            searchTerm: searchTerm || '',
+            offset,
+            limit,
+          });
+          // response.data is already an array, so just return it directly
+          const rr: any = response.data
+          return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+            ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+              ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+              : {})
+          }));
+        },
+        events: {
+          onChange: (selected, event) => {
+            console.log('Customer changed:', selected);
+          },
+          onClick: (event, value) => {
+            console.log('Customer dropdown clicked:', { event, value });
+          }
+        }
+      },
+      RevisedDate: {
+        id: "RevisedDate",
+        label: "Revised Date and Time",
+        fieldType: "date",
+        width: 'third',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      },
+      ActualDate: {
+        id: "ActualDate",
+        label: "Actual Date And Time",
+        fieldType: "date",
+        width: 'third',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 1,
+      }
     }; // Dependencies for useMemo
   }, [legs]);
 
@@ -550,10 +899,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{leg.id}</span>
+                      {/* <MapPin className="h-4 w-4 text-muted-foreground" /> */}
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{leg.from}</div>
-                        <div className="text-xs text-muted-foreground">Origin</div>
+                        <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span>
+                        {/* <div className="text-xs text-muted-foreground">Origin</div> */}
                       </div>
                       <div className="flex items-center gap-1">
                         {/* {leg.hasInfo && (
@@ -579,13 +929,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 </div>
 
                 {/* Destination */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{leg.to}</div>
                     <div className="text-xs text-muted-foreground">Destination</div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Distance & Duration */}
                 {/* <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -815,15 +1165,15 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                           </div>
 
                           {/* Fields */}
-                          {/* <DynamicPanel
+                          <DynamicPanel
                             key="Additional Activities" // Revert to tripType for controlled remounts on type change
                             ref={tripAdditionalRef}
                             panelId="trip-execution-panel"
                             panelTitle="Additional Activities"
-                            panelConfig={tripExecutionPanelConfig} // Use the memoized config
-                          // initialData={formData} // Removed initialData prop
+                            panelConfig={tripExecutionAdditionalPanelConfig} // Use the memoized config
+                            initialData={activity} // Removed initialData prop
                           // onDataChange={handleDataChange} // Confirming it's commented out as per user
-                          /> */}
+                          />
                           {/* <div className="grid grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Sequence</Label>
@@ -860,7 +1210,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                             </div>
                           </div> */}
 
-                          <div className="grid grid-cols-4 gap-4">
+                          {/* <div className="grid grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Activity (Event)</Label>
                               <Select defaultValue={activity.fields.activity}>
@@ -899,13 +1249,22 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 </SelectContent>
                               </Select>
                             </div>
-                          </div>
+                          </div> */}
                         </div>
                       ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+            </div>
+            {/* Footer Actions */}
+            <div className="sticky bottom-0 z-20 flex items-center justify-end gap-3 px-6 py-4 border-t bg-card">
+              <Button variant="outline" onClick={onClose} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-background text-blue-600 border border-blue-600 hover:bg-blue-50 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm'>
+                Close
+              </Button>
+              <Button onClick={onSaveActivities} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm' >
+                Save
+              </Button>
             </div>
           </TabsContent>
 
@@ -1505,15 +1864,6 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           </TabsContent>
         </Tabs>
 
-        {/* Footer Actions */}
-        <div className="sticky bottom-0 z-20 flex items-center justify-end gap-3 px-6 py-4 border-t bg-card">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          <Button>
-            Save Changes
-          </Button>
-        </div>
         </>
         )}
       </div>
