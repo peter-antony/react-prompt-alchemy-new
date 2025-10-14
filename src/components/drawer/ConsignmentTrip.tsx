@@ -32,7 +32,7 @@ export const ConsignmentTrip = ({ legId }) => {
   // 🧩 Step 1: Build Customer Order dropdown list
   const buildCustomerOrderList = (consignments: any[] = []) => {
     return consignments.map((item, index) => ({
-      label: `${item.CustomerOrderNo || '-'} — ${item.CustomerName || "-"} (${item.CustomerID || "-"})`,
+      label: `${item.CustomerID || '-'} — ${item.CustomerName || "-"}`,
       value: index.toString(),
       departureFrom: item.DepartureFrom,
       departureTo: item.DepartureTo,
@@ -198,10 +198,10 @@ export const ConsignmentTrip = ({ legId }) => {
                 <span className="font-medium text-gray-700">Arrival: </span>
                 {selectedCustomerData?.DepartureTo || "-"}
               </div>
-              <div>
+              {/* <div>
                 <span className="font-medium text-gray-700">Customer Order No: </span>
                 {selectedCustomerData?.CustomerOrderNo || "-"}
-              </div>
+              </div> */}
               <div>
                 <span className="font-medium text-gray-700">Load Type: </span>
                 {selectedCustomerData?.LoadType || "-"}

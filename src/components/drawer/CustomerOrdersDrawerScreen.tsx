@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, X, Plus, Search, Download, Filter, Copy, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { GridColumnConfig } from '@/types/smartgrid';
+import { SmartGrid } from '@/components/SmartGrid';
+import { manageTripStore } from '@/stores/mangeTripStore';
+
 import {
   Table,
   TableBody,
@@ -15,103 +19,187 @@ import {
 interface CustomerOrdersDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
+  tripData?: any;
 }
 
 interface CustomerOrder {
   id: string;
-  customerId: string;
-  customerName: string;
-  executionPlanId: string;
-  legBehaviour: string;
-  departure: string;
-  arrival: string;
-  pickupDate: string;
-  deliveryDate: string;
-  planFromDate: string;
-  planToDate: string;
+  CustomerID: string;
+  CustomerName: string;
+  ExecutionPlanID: string;
+  LegBehaviour: string;
+  DeparturePoint: string;
+  ArrivalPoint: string;
+  PickupDateTime: string;
+  DeliveryDateTime: string;
+  PlannedFromDateTime: string;
+  PlannedToDateTime: string;
+  Consignor?: string | null;
+  Consignee?: string | null;
+  ServiceType?: string | null;
+  SubServiceType?: string | null;
+  LoadType?: string | null;
 }
 
-const mockOrders: CustomerOrder[] = [
+// Smart Grid configuration for Customer Orders with configured widths
+const customerOrdersGridColumns: GridColumnConfig[] = [
   {
-    id: 'CO00000001',
-    customerId: 'CO00000001',
-    customerName: 'ABC Customer',
-    executionPlanId: 'EXE302492304',
-    legBehaviour: 'Line Haul',
-    departure: 'Frankfurt Station A',
-    arrival: 'Frankfurt Station B',
-    pickupDate: '12-Mar-2025',
-    deliveryDate: '14-Mar-2025',
-    planFromDate: '12-Mar-2025',
-    planToDate: '14-Mar-2025',
+    key: 'CustomerID',
+    label: 'Customer ID',
+    type: 'Text',
+    width: 150,
+    sortable: true,
+    filterable: true,
+    editable: false,
   },
   {
-    id: 'CO00000002',
-    customerId: 'CO00000002',
-    customerName: 'ABC Customer',
-    executionPlanId: 'EXE302492304',
-    legBehaviour: 'Line Haul',
-    departure: 'Frankfurt Station A',
-    arrival: 'Frankfurt Station B',
-    pickupDate: '12-Mar-2025',
-    deliveryDate: '14-Mar-2025',
-    planFromDate: '12-Mar-2025',
-    planToDate: '14-Mar-2025',
+    key: 'ExecutionPlanID',
+    label: 'Execution Plan Id',
+    type: 'Text',
+    width: 160,
+    sortable: true,
+    filterable: true,
+    editable: false,
   },
   {
-    id: 'CO00000003',
-    customerId: 'CO00000003',
-    customerName: 'ABC Customer',
-    executionPlanId: 'EXE302492304',
-    legBehaviour: 'Line Haul',
-    departure: 'Frankfurt Station A',
-    arrival: 'Frankfurt Station B',
-    pickupDate: '12-Mar-2025',
-    deliveryDate: '14-Mar-2025',
-    planFromDate: '12-Mar-2025',
-    planToDate: '14-Mar-2025',
+    key: 'LegBehaviour',
+    label: 'Leg Behaviour',
+    type: 'Text',
+    width: 140,
+    sortable: true,
+    filterable: true,
+    editable: false,
   },
   {
-    id: 'CO00000004',
-    customerId: 'CO00000004',
-    customerName: 'ABC Customer',
-    executionPlanId: 'EXE302492304',
-    legBehaviour: 'Line Haul',
-    departure: 'Frankfurt Station A',
-    arrival: 'Frankfurt Station B',
-    pickupDate: '12-Mar-2025',
-    deliveryDate: '14-Mar-2025',
-    planFromDate: '12-Mar-2025',
-    planToDate: '14-Mar-2025',
+    key: 'DepartureArrival',
+    label: 'Departure and Arrival',
+    type: 'Text',
+    width: 180,
+    sortable: false,
+    filterable: false,
+    editable: false,
   },
   {
-    id: 'CO00000005',
-    customerId: 'CO00000005',
-    customerName: 'ABC Customer',
-    executionPlanId: 'EXE302492304',
-    legBehaviour: 'Line Haul',
-    departure: 'Frankfurt Station A',
-    arrival: 'Frankfurt Station B',
-    pickupDate: '12-Mar-2025',
-    deliveryDate: '14-Mar-2025',
-    planFromDate: '12-Mar-2025',
-    planToDate: '14-Mar-2025',
+    key: 'PickupDelivery',
+    label: 'Pickup and Delivery',
+    type: 'Text',
+    width: 180,
+    sortable: false,
+    filterable: false,
+    editable: false,
+  },
+  {
+    key: 'PlanFromToDate',
+    label: 'Plan From & To Date',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+  },
+  {
+    key: 'Consignor',
+    label: 'Consignor ID',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'Consignee',
+    label: 'Consignee ID',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'ServiceType',
+    label: 'Service',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'SubServiceType',
+    label: 'Sub Service',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'LoadType',
+    label: 'Load Type',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
   },
 ];
 
 export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProps> = ({
   onClose,
   tripId = 'TRIP00000001',
+  // tripData
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [orders] = useState<CustomerOrder[]>(mockOrders);
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.customerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.executionPlanId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { tripData } = manageTripStore();
+
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+
+  console.log('tripData', tripData);
+
+  useEffect(() => {
+    if (tripData?.CustomerOrders) {
+      // map JSON to CustomerOrder interface
+      const mappedOrders = tripData.CustomerOrders.map((co: any) => ({
+        id: co.CustomerOrderNo,
+        CustomerID: co.CustomerID,
+        CustomerName: co.CustomerName,
+        ExecutionPlanID: co.ExecutionPlanID,
+        LegBehaviour: co.LegBehaviour,
+        DeparturePoint: co.DeparturePoint,
+        ArrivalPoint: co.ArrivalPoint,
+        PickupDateTime: co.PickupDateTime,
+        DeliveryDateTime: co.DeliveryDateTime,
+        PlannedFromDateTime: co.PlannedFromDateTime,
+        PlannedToDateTime: co.PlannedToDateTime,
+        Consignor: co.Consignor,
+        Consignee: co.Consignee,
+        ServiceType: co.ServiceType,
+        SubServiceType: co.SubServiceType,
+        LoadType: co.LoadType,
+      }));
+      setOrders(mappedOrders);
+    }
+  }, [tripData]);
+
+  const filteredOrders = orders
+    .filter(
+      (order) =>
+        order.CustomerID.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.CustomerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.ExecutionPlanID.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .map((order) => ({
+      ...order,
+      DepartureArrival: `${order.DeparturePoint} - ${order.ArrivalPoint}`,
+      PickupDelivery: `${order.PickupDateTime} to ${order.DeliveryDateTime}`,
+      PlanFromToDate: `${order.PlannedFromDateTime} to ${order.PlannedToDateTime}`,
+    }));
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -142,7 +230,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
       </div> */}
 
       {/* Sub Header with Total Bookings */}
-      <div className="px-6 py-4 border-b bg-card">
+      <div className="px-6 py-4 bg-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Total Bookings</span>
@@ -158,7 +246,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
       </div>
 
       {/* Toolbar */}
-      <div className="px-6 py-4 border-b bg-card">
+      {/* <div className="px-6 py-4 border-b bg-card">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Customer Orders</h3>
           <div className="flex items-center gap-2">
@@ -185,10 +273,29 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
             </Button>
           </div>
         </div>
+      </div> */}
+
+      {/* SmartGrid */}
+      <div className="flex-1 overflow-auto px-6">
+        <SmartGrid
+          columns={customerOrdersGridColumns}
+          data={filteredOrders}
+          gridTitle="Customer Orders"
+          recordCount={filteredOrders.length}
+          searchPlaceholder="Search orders..."
+          showCreateButton={false}
+          editableColumns={false}
+          paginationMode="pagination"
+        />
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-auto px-6">
+     
+           
+
+
+      {/* Table Component */}
+      
+      {/* <div className="flex-1 overflow-auto px-6">
         <Table>
           <TableHeader>
             <TableRow>
@@ -240,7 +347,8 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
             ))}
           </TableBody>
         </Table>
-      </div>
+      </div> */}
+     
     </div>
   );
 };
