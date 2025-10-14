@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 export interface Activity {
   id: string;
@@ -109,7 +110,7 @@ const generateMockData = (legNumber: number, from: string, to: string) => {
 export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set, get) => ({
   legs: [
     {
-      id: 'leg-1',
+      id: '1',
       from: 'Mumbai Port',
       to: 'Delhi ICD',
       distance: '1,420 km',
@@ -118,7 +119,7 @@ export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set
       ...generateMockData(1, 'Mumbai Port', 'Delhi ICD'),
     },
     {
-      id: 'leg-2',
+      id: '2',
       from: 'Delhi ICD',
       to: 'Ludhiana Warehouse',
       distance: '320 km',
@@ -126,7 +127,7 @@ export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set
       ...generateMockData(2, 'Delhi ICD', 'Ludhiana Warehouse'),
     },
     {
-      id: 'leg-3',
+      id: '3',
       from: 'Ludhiana Warehouse',
       to: 'Chandigarh DC',
       distance: '120 km',
@@ -135,12 +136,12 @@ export const useTripExecutionDrawerStore = create<TripExecutionDrawerStore>((set
       ...generateMockData(3, 'Ludhiana Warehouse', 'Chandigarh DC'),
     },
   ],
-  selectedLegId: 'leg-1',
+  selectedLegId: '1',
 
   addLeg: (from, to, viaLocation, plannedDate, plannedTime) => {
     const legs = get().legs;
     const newLegNumber = legs.length + 1;
-    const newLegId = `leg-${newLegNumber}`;
+    const newLegId = `${newLegNumber}`;
     
     const newLeg: Leg = {
       id: newLegId,
