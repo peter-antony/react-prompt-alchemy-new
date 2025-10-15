@@ -18,6 +18,7 @@ import { useFilterStore } from '@/stores/filterStore';
 import { useToast } from '../ui/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { GridColumnConfig } from '@/types/smartgrid';
+import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
 
 
 export const ConsignmentTrip = ({ legId }) => {
@@ -42,6 +43,7 @@ export const ConsignmentTrip = ({ legId }) => {
   const [plannedData, setPlannedData] = useState<any[]>([]);
   const [actualData, setActualData] = useState<any[]>([]);
   const [currentLeg, setCurrentLeg] = useState<string | null>(null);
+  const [showPlanActualDrawer, setShowPlanActualDrawer] = useState(false);
 
   const plannedColumns: GridColumnConfig[] = [
     {
@@ -849,7 +851,7 @@ export const ConsignmentTrip = ({ legId }) => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Consignment Details</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" className="h-8">
+            <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
               <Plus className="h-4 w-4 mr-1" />
               Add Actuals
             </Button>
@@ -1183,6 +1185,11 @@ export const ConsignmentTrip = ({ legId }) => {
           </AnimatePresence>
         </div>
       </div>
+      {/* Plan and Actual Details Drawer */}
+      <PlanActualDetailsDrawer 
+        isOpen={showPlanActualDrawer}
+        onClose={() => setShowPlanActualDrawer(false)}
+      />
     </TabsContent>
   );
 };
