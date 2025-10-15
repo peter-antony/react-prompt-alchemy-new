@@ -15,6 +15,7 @@ import { CustomerOrdersDrawerScreen } from '@/components/drawer/CustomerOrdersDr
 import { SupplierBillingDrawerScreen } from '@/components/drawer/SupplierBillingDrawerScreen';
 import { TripExecutionCreateDrawerScreen } from '@/components/drawer/TripExecutionCreateDrawerScreen';
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
+import { LinkedTransactionsDrawerScreen } from '@/components/drawer/LinkedTransactionsDrawerScreen';
 
 const ManageTripExecution = () => {
   const { loading, tripData, fetchTrip, saveTrip, confirmTrip } = manageTripStore();
@@ -235,7 +236,7 @@ const ManageTripExecution = () => {
           {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-          {/* {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />} */}
+          {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
         </SideDrawer>
 

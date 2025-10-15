@@ -43,7 +43,7 @@ export const ActionIconBar = () => {
         <FileUp size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Vehicle</span> */}
       </Button>
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button onClick={() => openDrawer('linked-transactions')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <Link size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
