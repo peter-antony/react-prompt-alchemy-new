@@ -2007,9 +2007,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                     onClick={() => setCopyModalOpen(false)} 
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {/* <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    </svg> */}
                   </button>
                 </div>
                 {/* Resource Group */}
@@ -2087,17 +2087,17 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                 
                 {/* Action Buttons */}
                 <div className="flex gap-3 px-6 pb-6">
-                  <button 
+                  {/* <button 
                     onClick={cancelDeleteResourceGroup}
                     className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition"
                   >
                     Cancel
-                  </button>
+                  </button> */}
                   <button 
                     onClick={confirmDeleteResourceGroup}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition"
                   >
-                    Delete
+                    Cancel
                   </button>
                 </div>
               </div>

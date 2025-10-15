@@ -1201,6 +1201,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     WagonID: {
       id: "WagonID",
@@ -1233,6 +1241,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+            events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     WagonQuantity: {
       id: "WagonQuantity",
@@ -1313,7 +1329,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       editable: true,
       order: 1,
       hideSearch: false,
-      disableLazyLoading: true,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Container Type Init",
@@ -1332,6 +1348,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+            events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     ContainerID: {
       id: "ContainerID",
@@ -1436,6 +1460,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+           events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     ProductID: {
       id: "ProductID",
@@ -1467,6 +1499,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     ProductQuantity: {
       id: "ProductQuantity",
@@ -1577,8 +1617,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       visible: true,
       editable: true,
       order: 1,
-      hideSearch: true,
-      disableLazyLoading: true,
+      hideSearch: false,
+      disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "THU Init",
@@ -1597,6 +1637,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     THUSerialNo: {
       id: "THUSerialNo",
@@ -1730,6 +1778,14 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
             : {})
         }));
       },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
     },
     Activity: {
       id: "Activity",
