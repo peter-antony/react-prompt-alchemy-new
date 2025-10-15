@@ -76,13 +76,16 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   ]);
 
   const [selectAll, setSelectAll] = useState(false);
-
+  const [selecteditem, setSelecteditem] =  useState(null);
   const handleItemClick = (item: WagonItem,index) => {
     setActiveWagon(index);
     console.log('selected item: ', item);
+    setSelecteditem(item);
+    // console.log('selected item: ', selecteditem);
   };
 
   // Get current wagon's actuals data
+ 
   const currentWagonData = activeWagonId ? getWagonData(activeWagonId) : null;
   const actualsData = currentWagonData?.actuals || {};
   const plannedData = currentWagonData?.planned || {};
@@ -301,7 +304,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-
+                      Wagon {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
                     </Badge>
                     {expandedSections.wagon ? (
                       <ChevronUp className="h-4 w-4" />
@@ -324,31 +327,31 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Type</div>
-                            <div className="text-sm font-medium">Habbins</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonType ? selecteditem?.WagonType : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon ID</div>
-                            <div className="text-sm font-medium">HAB3243</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonId ? selecteditem?.WagonId : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Quantity</div>
-                            <div className="text-sm font-medium">1 EA</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Tare Weight</div>
-                            <div className="text-sm font-medium">100 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Gross Weight</div>
-                            <div className="text-sm font-medium">100 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Length</div>
-                            <div className="text-sm font-medium">2139 M</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Sequence</div>
-                            <div className="text-sm font-medium">1A</div>
+                            <div className="text-sm font-medium">{selecteditem?.Seqno ? selecteditem?.Seqno : '-'}</div>
                           </div>
                         </div>
                       </div>
@@ -369,7 +372,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-teal-50 text-teal-600 border-teal-200">
-                      Container 1
+                      Container {selecteditem?.ContainerQty ? selecteditem?.ContainerQty : '-'}
                     </Badge>
                     {expandedSections.container ? (
                       <ChevronUp className="h-4 w-4" />
@@ -392,23 +395,23 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Container Type</div>
-                            <div className="text-sm font-medium">Container A</div>
+                            <div className="text-sm font-medium">{selecteditem?.ContainerType ? selecteditem?.ContainerType : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Container ID</div>
-                            <div className="text-sm font-medium">CONT3243</div>
+                            <div className="text-sm font-medium">{selecteditem?.ContainerId ? selecteditem?.ContainerId : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
-                            <div className="text-sm font-medium">1 EA</div>
+                            <div className="text-sm font-medium">{selecteditem?.ContainerQty ? selecteditem?.ContainerQty : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
-                            <div className="text-sm font-medium">100 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.ContainerAvgTareWeight ? selecteditem?.ContainerAvgTareWeight : '-'} {selecteditem?.ContainerWeightUOM ? selecteditem?.ContainerWeightUOM : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Container Load Weight</div>
-                            <div className="text-sm font-medium">100 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.ContainerAvgLoadWeight ? selecteditem?.ContainerAvgLoadWeight : '-'}</div>
                           </div>
                         </div>
                       </div>
@@ -429,7 +432,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
-                      Wheat Muslin
+                      {selecteditem?.Product ? selecteditem?.Product : '-'}
                     </Badge>
                     {expandedSections.product ? (
                       <ChevronUp className="h-4 w-4" />
@@ -460,11 +463,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Product ID</div>
-                            <div className="text-sm font-medium">Wheat Muslin</div>
+                            <div className="text-sm font-medium">{selecteditem?.Product ? selecteditem?.Product : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Product Quantity</div>
-                            <div className="text-sm font-medium">100 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.ProductWeight ? selecteditem?.ProductWeight : '-'} {selecteditem?.ProductWeightUOM ? selecteditem?.ProductWeightUOM : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Class of Stores</div>
@@ -497,7 +500,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-cyan-50 text-cyan-600 border-cyan-200">
-                      THU 5
+                      {selecteditem?.ThuId ? selecteditem?.ThuId : '-'}
                     </Badge>
                     {expandedSections.thu ? (
                       <ChevronUp className="h-4 w-4" />
@@ -520,19 +523,19 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">THU ID</div>
-                            <div className="text-sm font-medium">THU329847</div>
+                            <div className="text-sm font-medium">{selecteditem?.ThuId ? selecteditem?.ThuId : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">THU Serial No.</div>
-                            <div className="text-sm font-medium">TH23300000/2025</div>
+                            <div className="text-sm font-medium">{selecteditem?.ThuSerialNo ? selecteditem?.ThuSerialNo : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">THU Quantity</div>
-                            <div className="text-sm font-medium">10 EA</div>
+                            <div className="text-sm font-medium">{selecteditem?.ThuQty ? selecteditem?.ThuQty : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">THU Weight</div>
-                            <div className="text-sm font-medium">10 TON</div>
+                            <div className="text-sm font-medium">{selecteditem?.ThuWeight ? selecteditem?.ThuWeight : '-'} {selecteditem?.ThuWeightUOM ? selecteditem?.ThuWeightUOM : '-'}</div>
                           </div>
                         </div>
                       </div>
@@ -576,35 +579,35 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Departure</div>
-                            <div className="text-sm font-medium">Frankfurt Station Point A</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Arrival</div>
-                            <div className="text-sm font-medium">Frankfurt Station Point B</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Activity Location</div>
-                            <div className="text-sm font-medium">Frankfurt Station</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Activity</div>
-                            <div className="text-sm font-medium">Loading</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Planned Date and Time</div>
-                            <div className="text-sm font-medium">10-Mar-2025 10:00 AM</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Rev. Planned Date and Time</div>
-                            <div className="text-sm font-medium">10-Mar-2025 10:00 AM</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Train No.</div>
-                            <div className="text-sm font-medium">---</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Load Type</div>
-                            <div className="text-sm font-medium">Loaded</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                         </div>
                       </div>
@@ -643,11 +646,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">From Date and Time</div>
-                            <div className="text-sm font-medium">12-Mar-2025 08:00 AM</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">To Date and Time</div>
-                            <div className="text-sm font-medium">12-Mar-2025 08:00 AM</div>
+                            <div className="text-sm font-medium">--</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">QC Userdefined 1</div>
@@ -663,15 +666,15 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Remarks 1</div>
-                            <div className="text-sm font-medium">---</div>
+                            <div className="text-sm font-medium">{selecteditem?.Remarks1 ? selecteditem?.Remarks1 : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Remarks 2</div>
-                            <div className="text-sm font-medium">---</div>
+                            <div className="text-sm font-medium">{selecteditem?.Remarks2 ? selecteditem?.Remarks2 : '-'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Remarks 3</div>
-                            <div className="text-sm font-medium">---</div>
+                            <div className="text-sm font-medium">{selecteditem?.Remarks3 ? selecteditem?.Remarks3 : '-'}</div>
                           </div>
                         </div>
                       </div>

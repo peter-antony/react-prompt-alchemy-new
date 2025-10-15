@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import { MoreInfoPanel } from './MoreInfo';
 import { SideDrawer } from '@/components/Common/SideDrawer';
+import { useDrawerStore } from '@/stores/drawerStore';
 
 export const ActionIconBar = () => {
   const [moreInfo, setMoreInfo] = useState(false);
+  const { openDrawer } = useDrawerStore();
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">
       {/* <Button onClick={() => setMoreInfo(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
@@ -45,7 +47,7 @@ export const ActionIconBar = () => {
         <Link size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button onClick={() => openDrawer('train-parameters')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <TramFront size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
