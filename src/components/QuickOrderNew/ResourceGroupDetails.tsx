@@ -2018,7 +2018,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       fieldType: 'lazyselect',
       width: 'third',
       value: '',
-      mandatory: true,
+      mandatory: false,
       visible: true,
       editable: true,
       order: 1,

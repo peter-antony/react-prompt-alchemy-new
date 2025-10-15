@@ -2603,7 +2603,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                         {/* <SelectItem value="" className="text-xs">Select Items</SelectItem> */}
                         {resourceGroupArray?.map((item: any, index: number) => (
                           <SelectItem key={item.ResourceUniqueID || index} value={item.ResourceUniqueID} className="text-xs">
-                            {`${item?.ResourceUniqueID} || ${item?.ResourceStatus}`}
+                            {`${item?.BillingDetails.InternalOrderNo} || ${item?.ResourceStatus}`}
                           </SelectItem>
                         ))}
                       </SelectContent>
