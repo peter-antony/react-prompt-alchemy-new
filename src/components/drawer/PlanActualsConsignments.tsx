@@ -15,6 +15,9 @@ import { a } from 'node_modules/framer-motion/dist/types.d-Bq-Qm38R';
 import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
+import { Input } from '@/components/ui/input';
+import { InputDropdown, InputDropdownValue } from '@/components/ui/input-dropdown';
+
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
@@ -89,6 +92,15 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [actualList, setActualList] = useState<any[]>([]);
   const [currentWagon, setCurrentWagon] = useState<any>(null);
   const [selectedWagonId, setSelectedWagonId] = useState<string | null>(null);
+  const [plannedWagonQuantity, setPlannedWagonQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [actualsWagonQuantity, setActualsWagonQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+
+  const quantityUnitOptions = [
+    { label: 'KG', value: 'KG' },
+    { label: 'TON', value: 'TON' },
+    { label: 'LBS', value: 'LBS' },
+    { label: 'MT', value: 'MT' },
+  ];
 
   // 🧩 STEP 1: Load Planned or Actual wagon list based on activeTab
   // 🔹 Load both lists when consignment changes
@@ -773,28 +785,538 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon ID</div>
                             <div className="text-sm font-medium">
-                              
+                              <Input type='text' 
+                              value={'W1234'}
+                              onChange={(e) => {}}
+                              />
                             </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Quantity</div>
-                            <div className="text-sm font-medium">{selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Tare Weight</div>
-                            <div className="text-sm font-medium">{selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'}</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* </div> */}
+                            </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Gross Weight</div>
-                            <div className="text-sm font-medium">{selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'}</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Length</div>
-                            <div className="text-sm font-medium">{selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'}</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
+                              </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon Sequence</div>
-                            <div className="text-sm font-medium">{selecteditem?.Seqno ? selecteditem?.Seqno : '-'}</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'1'}
+                              onChange={(e) => {}}
+                              />
+                              {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('container')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">Container Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      Container {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
+                    </Badge>
+                    {expandedSections.wagon ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.wagon && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={plannedWagonType}
+                                onChange={(value) => setPlannedWagonType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container ID</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'W1234'}
+                              onChange={(e) => {}}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* </div> */}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Gross Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Length</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Sequence</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'1'}
+                              onChange={(e) => {}}
+                              />
+                              {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('product')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">Product Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      Product {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
+                    </Badge>
+                    {expandedSections.wagon ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.wagon && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={plannedWagonType}
+                                onChange={(value) => setPlannedWagonType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container ID</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'W1234'}
+                              onChange={(e) => {}}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* </div> */}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Gross Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Length</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Sequence</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'1'}
+                              onChange={(e) => {}}
+                              />
+                              {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('thu')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">THU Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      THU {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
+                    </Badge>
+                    {expandedSections.wagon ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.wagon && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={plannedWagonType}
+                                onChange={(value) => setPlannedWagonType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container ID</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'W1234'}
+                              onChange={(e) => {}}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* </div> */}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Gross Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Length</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Sequence</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'1'}
+                              onChange={(e) => {}}
+                              />
+                              {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('other')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">Other Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      Other {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
+                    </Badge>
+                    {expandedSections.wagon ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.wagon && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={plannedWagonType}
+                                onChange={(value) => setPlannedWagonType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container ID</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'W1234'}
+                              onChange={(e) => {}}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* </div> */}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Gross Weight</div>
+                            <div className="text-sm font-medium">
+                              {/* {selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'} */}
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Length</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={plannedWagonQuantity}
+                                onChange={setPlannedWagonQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                              {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
+                              </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Sequence</div>
+                            <div className="text-sm font-medium">
+                              <Input type='text' 
+                              value={'1'}
+                              onChange={(e) => {}}
+                              />
+                              {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -804,7 +1326,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
               </div>
 
               {/* Wagon Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="Wagon Details"
                 config={[
                   {
@@ -911,10 +1433,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
 
               {/* Container Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="Container Details"
                 config={[
                   {
@@ -987,10 +1509,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
 
               {/* Product Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="Product Details"
                 config={[
                   {
@@ -1076,10 +1598,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
 
               {/* THU Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="THU Details"
                 config={[
                   {
@@ -1193,10 +1715,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
 
               {/* Journey and Scheduling Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="Journey and Scheduling Details"
                 config={[
                   {
@@ -1247,10 +1769,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
 
               {/* Other Details */}
-              <SimpleDynamicPanel
+              {/* <SimpleDynamicPanel
                 title="Other Details"
                 config={[
                   {
@@ -1308,7 +1830,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
-              />
+              /> */}
             </TabsContent>
           </Tabs>
 

@@ -46,7 +46,7 @@ export const tripService = {
         MessageID: "12345",
         MessageType: "Trip Log Bulk Cancel",
       },
-      MessageContents: params
+      MessageContents: params,
     });
     const requestBody = {
       RequestData: requestPayload,
@@ -204,7 +204,10 @@ export const tripService = {
   },
 
   // Update trip
-  updateTrip: async (id: string, data: TripUpdateInput): Promise<ApiResponse<Trip>> => {
+  updateTrip: async (
+    id: string,
+    data: TripUpdateInput
+  ): Promise<ApiResponse<Trip>> => {
     const response = await apiClient.put(API_ENDPOINTS.TRIPS.UPDATE(id), data);
     return response.data;
   },
@@ -225,7 +228,7 @@ export const tripService = {
         MessageType: "GetVASFromTrip",
       },
       SearchCriteria: {
-        TripID: tripId
+        TripID: tripId,
       },
       // Pagination: {
       //   PageNumber: 1,
@@ -241,5 +244,82 @@ export const tripService = {
       requestBody
     );
     return response.data;
-  }
+  },
+
+  getPathConstraints: async (tripId: string): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "GetPathConstraints",
+      },
+      SearchCriteria: {
+        RefDocNo: tripId,
+        RefDocType: "TripLog",
+      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  savePathConstraints: async (tripId: string, trainParams): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "SavePathConstraints",
+      },
+      RequestPayload: {
+        Header: {
+          RefDocNo: tripId,
+          RefDocType: "TripLog",
+        },
+        PathConstraints: trainParams
+      }
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  getCommonCombo: async (params): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: params?.messageType,
+      },
+      AdditionalFilter: [],
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  },
 };
