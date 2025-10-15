@@ -1186,10 +1186,14 @@ export const ConsignmentTrip = ({ legId }) => {
         </div>
       </div>
       {/* Plan and Actual Details Drawer */}
-      <PlanActualDetailsDrawer 
+      {showPlanActualDrawer && (
+        <PlanActualDetailsDrawer
+        legId={legId}
+        consignmentIndex={selectedCustomerIndex}
         isOpen={showPlanActualDrawer}
         onClose={() => setShowPlanActualDrawer(false)}
-      />
+        />
+      )}
     </TabsContent>
   );
 };

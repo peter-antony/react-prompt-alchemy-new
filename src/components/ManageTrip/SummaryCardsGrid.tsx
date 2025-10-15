@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, Wrench, 
   AlertTriangle, Briefcase, CreditCard, 
   PackageCheck, UserRoundCheck, Settings, CarFront,HandCoins, TicketPercent } from 'lucide-react';
 import { useDrawerStore } from '@/stores/drawerStore';
 import { manageTripStore } from '@/stores/mangeTripStore';
+import { tripService } from '@/api/services';
 
 // const summaryCardsData = [
 //   {
@@ -66,7 +67,52 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 export const SummaryCardsGrid = () => {
   const { openDrawer } = useDrawerStore();
   const { tripData } = manageTripStore();
+  const [vasData, setVasData] = useState<any[]>([]);
+  const [vasLoading, setVasLoading] = useState(false);
+  
   console.log('SummaryCardsGrid tripData:', tripData);
+  const tripId: any = tripData?.Header?.TripNo;
+
+  // const fetchVASForTrip = async (tripId: any) => {
+  //   try {
+  //     const res = await tripService.getVASTrip(tripId);
+
+  //     // Assuming API response: { data: { VAS: [...] } }
+  //     const vasList = res?.data?.VAS || [];
+  //   } catch (error) {
+  //     console.error("Error fetching VAS:", error);
+  //   }
+  // }
+
+ // 🔹 Fetch VAS data once tripId changes
+  useEffect(() => {
+    if (!tripId) return;
+
+    const fetchVas = async () => {
+      try {
+        setVasLoading(true);
+        const response = await tripService.getVASTrip(tripId);
+
+        // Assuming response format like:
+        // { message: "Success", data: { VAS: [...] } }
+        const vasList =
+          JSON.parse(response?.data?.ResponseData) ||
+          response?.data ||
+          response?.VAS ||
+          []; // normalize structure
+          console.log('VAS List:', response);
+
+        setVasData(vasList);
+      } catch (error) {
+        console.error("Error fetching VAS:", error);
+        setVasData([]);
+      } finally {
+        setVasLoading(false);
+      }
+    };
+
+    fetchVas();
+  }, [tripId]);
 
    const handleCardClick = (cardTitle: string) => {
     if (cardTitle === 'Resources') {
@@ -133,7 +179,7 @@ export const SummaryCardsGrid = () => {
         title: 'VAS',
         icon: Settings,
         values: [
-          { label: 'Total VAS', value: vas.length || 0 },
+          { label: 'Total VAS', value: vasLoading ? "..." : vasData.length },
           // { label: 'Total Consumables', value: vas.length || 0 },
         ],
         iconColor: 'brown',

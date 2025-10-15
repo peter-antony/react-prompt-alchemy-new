@@ -12,10 +12,14 @@ import { SimpleDynamicPanel } from '@/components/DynamicPanel/SimpleDynamicPanel
 import { PanelFieldConfig } from '@/types/dynamicPanel';
 import { usePlanActualStore, ActualsData } from '@/stores/planActualStore';
 import { a } from 'node_modules/framer-motion/dist/types.d-Bq-Qm38R';
+import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
+
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  legId?: any;
+  consignmentIndex?: any;
 }
 
 interface WagonItem {
@@ -29,10 +33,15 @@ interface WagonItem {
 export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = ({
   isOpen,
   onClose,
+  legId,
+  consignmentIndex,
 }) => {
+  const { getConsignmentByIndex } = useTripExecutionDrawerStore();
+  const getFullConsignment = getConsignmentByIndex(legId, consignmentIndex);
+  console.log('consignment Index from store:', getFullConsignment);
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
   const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('actuals');
-  
+
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
     container: true,
@@ -159,9 +168,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <div className="font-medium text-sm text-blue-600">{item.name}</div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
+                      <Button
+                        size="icon"
+                        variant="ghost"
                         className="h-5 w-5 shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -189,9 +198,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <Tabs 
-            defaultValue="actuals" 
-            className="flex-1 flex flex-col" 
+          <Tabs
+            defaultValue="actuals"
+            className="flex-1 flex flex-col"
             onValueChange={(value: string) => {
               setActiveTab(value as 'planned' | 'actuals');
             }}
@@ -217,8 +226,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
               </TabsList>
             </div>
 
-            <TabsContent 
-              value="planned" 
+            <TabsContent
+              value="planned"
               className={cn(
                 "flex-1 m-0 overflow-y-auto p-6 space-y-4",
                 activeTab === 'planned' ? 'block' : 'hidden'
@@ -616,8 +625,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
               </div>
             </TabsContent>
 
-            <TabsContent 
-              value="actuals" 
+            <TabsContent
+              value="actuals"
               className={cn(
                 "flex-1 m-0 overflow-y-auto p-6 space-y-4",
                 activeTab === 'actuals' ? 'block' : 'hidden'
@@ -727,7 +736,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                     placeholder: 'Enter sequence',
                     onChange: (value) => updateCurrentActuals({ wagonSequence: value }),
                   },
-                 ] as PanelFieldConfig[]}
+                ] as PanelFieldConfig[]}
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"
@@ -892,7 +901,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                     ],
                     onChange: (value) => updateCurrentActuals({ dgClass: value }),
                   },
-                 ] as PanelFieldConfig[]}
+                ] as PanelFieldConfig[]}
                 initialData={actualsData}
                 onDataChange={(data) => updateCurrentActuals(data)}
                 className="border-0 shadow-none"

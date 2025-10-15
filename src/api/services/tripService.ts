@@ -214,4 +214,32 @@ export const tripService = {
     const response = await apiClient.post(API_ENDPOINTS.TRIPS.CREATE, data);
     return response.data;
   },
+
+  getVASTrip: async (tripId: string): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "GetVASFromTrip",
+      },
+      SearchCriteria: {
+        TripID: tripId
+      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  }
 };
