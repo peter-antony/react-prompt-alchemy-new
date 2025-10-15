@@ -38,9 +38,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 }) => {
   const { getConsignmentByIndex } = useTripExecutionDrawerStore();
   const getFullConsignment = getConsignmentByIndex(legId, consignmentIndex);
-  console.log('consignment Index from store:', getFullConsignment);
+  // console.log('consignment Index from store:', getFullConsignment);
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
-  const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('actuals');
+  const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('planned');
 
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
@@ -50,18 +50,36 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
     journey: true,
     other: false,
   });
+  const [plannedList, setPlannedList] = useState<any[]>([]);
+  const [actualList, setActualList] = useState<any[]>([]);
+  const [currentWagon, setCurrentWagon] = useState<any>(null);
+  const [selectedWagonId, setSelectedWagonId] = useState<string | null>(null);
+
+  // 🧩 STEP 1: Load Planned or Actual wagon list based on activeTab
+  // 🔹 Load both lists when consignment changes
+  useEffect(() => {
+    if (!getFullConsignment) return;
+    setPlannedList(getFullConsignment?.Planned || []);
+    setActualList(getFullConsignment?.Actual || []);
+    setCurrentWagon(null);
+    setSelectedWagonId(null);
+  }, [getFullConsignment, legId]);
+
+  // ✅ Compute active list dynamically based on tab
+  const activeList = activeTab === "actuals" ? actualList : plannedList;
 
   const [selectedItems, setSelectedItems] = useState<WagonItem[]>([
-    { id: 'WAG00000001', name: 'WAG00000001', description: 'Habbins', price: '€ 1395.00', checked: true },
-    { id: 'WAG00000002', name: 'WAG00000002', description: 'Zaccs', price: '€ 1395.00', checked: false },
-    { id: 'WAG00000003', name: 'WAG00000003', description: 'A Type Wagon', price: '€ 1395.00', checked: false },
-    { id: 'WAG00000004', name: 'WAG00000004', description: 'Closed Wagon', price: '€ 1395.00', checked: false },
+    // { id: 'WAG00000001', name: 'WAG00000001', description: 'Habbins', price: '€ 1395.00', checked: true },
+    // { id: 'WAG00000002', name: 'WAG00000002', description: 'Zaccs', price: '€ 1395.00', checked: false },
+    // { id: 'WAG00000003', name: 'WAG00000003', description: 'A Type Wagon', price: '€ 1395.00', checked: false },
+    // { id: 'WAG00000004', name: 'WAG00000004', description: 'Closed Wagon', price: '€ 1395.00', checked: false },
   ]);
 
   const [selectAll, setSelectAll] = useState(false);
 
-  const handleItemClick = (item: WagonItem) => {
-    setActiveWagon(item.id);
+  const handleItemClick = (item: WagonItem,index) => {
+    setActiveWagon(index);
+    console.log('selected item: ', item);
   };
 
   // Get current wagon's actuals data
@@ -118,11 +136,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
           {/* Select All */}
           <div className="p-4 border-b">
             <div className="flex items-center space-x-2">
-              <Checkbox
+              {/* <Checkbox
                 id="select-all"
                 checked={selectAll}
                 onCheckedChange={toggleSelectAll}
-              />
+              /> */}
               <Label htmlFor="select-all" className="font-medium cursor-pointer">
                 All Item
               </Label>
@@ -149,25 +167,25 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
           {/* Items List */}
           <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {selectedItems.map((item) => (
+            {plannedList && activeTab == 'planned' && plannedList.map((item, index: any) => (
               <div
-                key={item.id}
-                onClick={() => handleItemClick(item)}
+                key={item.wagonId + '-' + index}
+                onClick={() => handleItemClick(item, index)}
                 className={cn(
                   "p-3 border rounded-md bg-card hover:bg-accent/50 transition-colors cursor-pointer",
                   item.checked && "border-primary bg-accent",
-                  activeWagonId === item.id && "ring-2 ring-primary"
+                  activeWagonId === index && "ring-2 ring-primary"
                 )}
               >
                 <div className="flex items-start gap-2">
-                  <Checkbox
+                  {/* <Checkbox
                     checked={item.checked}
                     onCheckedChange={() => toggleItemCheck(item.id)}
                     onClick={(e) => e.stopPropagation()}
-                  />
+                  /> */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="font-medium text-sm text-blue-600">{item.name}</div>
+                      <div className="font-medium text-sm text-blue-600">{item.WagonId}</div>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -181,8 +199,46 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         </svg>
                       </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground mb-2">{item.description}</div>
+                    <div className="text-xs text-muted-foreground mb-2">{item.WagonType}</div>
                     <div className="text-sm font-medium text-blue-600">{item.price}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {actualList && activeTab == 'actuals' && actualList.map((item,index: any) => (
+              <div
+                key={item.wagon+'-'+index}
+                onClick={() => handleItemClick(item,index)}
+                className={cn(
+                  "p-3 border rounded-md bg-card hover:bg-accent/50 transition-colors cursor-pointer",
+                  item.checked && "border-primary bg-accent",
+                  activeWagonId === index && "ring-2 ring-primary"
+                )}
+              >
+                <div className="flex items-start gap-2">
+                  {/* <Checkbox
+                    checked={item.checked}
+                    onCheckedChange={() => toggleItemCheck(item.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  /> */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="font-medium text-sm text-blue-600">{item.Wagon}</div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-5 w-5 shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="12" cy="5" r="2" />
+                          <circle cx="12" cy="12" r="2" />
+                          <circle cx="12" cy="19" r="2" />
+                        </svg>
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-2">{item.WagonType}</div>
+                    <div className="text-sm font-medium text-blue-600">{item.Seqno}</div>
                   </div>
                 </div>
               </div>
@@ -199,7 +255,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
           <Tabs
-            defaultValue="actuals"
+            defaultValue="planned"
             className="flex-1 flex flex-col"
             onValueChange={(value: string) => {
               setActiveTab(value as 'planned' | 'actuals');
@@ -245,7 +301,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                      Wagon 1
+
                     </Badge>
                     {expandedSections.wagon ? (
                       <ChevronUp className="h-4 w-4" />
