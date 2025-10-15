@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, NotebookPen, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 import { ConsignmentTrip } from './ConsignmentTrip';
 import { tripService } from "@/api/services/tripService";
 import { useToast } from '@/hooks/use-toast';
+import CommonPopup from '@/components/Common/CommonPopup';
 
 interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
@@ -173,6 +174,42 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       return timeString || '';
     }
   };
+
+  // Helper function to transform QuickCode objects to separate fields
+  const transformQuickCodeFields = (formData: any, currentActivity: any) => {
+    const transformQuickCode = (quickCodeField: string, quickCodeValueField: string) => {
+      const quickCodeData = formData[quickCodeField];
+      const quickCodeValueData = formData[quickCodeValueField];
+      
+      // If QuickCode is an object with dropdown/input properties
+      if (typeof quickCodeData === 'object' && quickCodeData?.dropdown !== undefined) {
+        return {
+          [quickCodeField]: quickCodeData.dropdown,
+          [quickCodeValueField]: quickCodeData.input || ''
+        };
+      }
+      // If QuickCodeValue is an object with dropdown/input properties
+      else if (typeof quickCodeValueData === 'object' && quickCodeValueData?.dropdown !== undefined) {
+        return {
+          [quickCodeField]: quickCodeValueData.dropdown,
+          [quickCodeValueField]: quickCodeValueData.input || ''
+        };
+      }
+      // Use existing values or fallback to current activity
+      else {
+        return {
+          [quickCodeField]: formData[quickCodeField] || currentActivity[quickCodeField],
+          [quickCodeValueField]: formData[quickCodeValueField] || currentActivity[quickCodeValueField]
+        };
+      }
+    };
+
+    return {
+      ...transformQuickCode('QuickCode1', 'QuickCodeValue1'),
+      ...transformQuickCode('QuickCode2', 'QuickCodeValue2'),
+      ...transformQuickCode('QuickCode3', 'QuickCodeValue3')
+    };
+  };
   
   // Load legs from API on component mount
   useEffect(() => {
@@ -294,7 +331,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           transshipments: selectedLegData.transshipments || []
         };
         console.log("Form data to additionalFormData:", additionalFormData);
-        tripAdditionalRef.current.setFormValues(additionalFormData);
+        if (tripAdditionalRef?.current?.setFormValues) {
+          tripAdditionalRef.current.setFormValues(additionalFormData);
+        }
         console.log("First leg data auto-bound to form fields");
         setLoading(true);
       }
@@ -555,12 +594,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         ActualDate: formData.ActualDate || currentActivity['ActualDate'],
         ActualTime: formData.ActualTime || currentActivity['ActualTime'],
         DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
-        QuickCode1: formData.QuickCode1 || currentActivity['QuickCode1'],
-        QuickCode2: formData.QuickCode2 || currentActivity['QuickCode2'],
-        QuickCode3: formData.QuickCode3 || currentActivity['QuickCode3'],
-        QuickCodeValue1: formData.QuickCodeValue1 || currentActivity['QuickCodeValue1'],
-        QuickCodeValue2: formData.QuickCodeValue2 || currentActivity['QuickCodeValue2'],
-        QuickCodeValue3: formData.QuickCodeValue3 || currentActivity['QuickCodeValue3'],
+        // Transform QuickCode objects to separate fields using helper function
+        ...transformQuickCodeFields(formData, currentActivity),
         Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
         Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
         Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
@@ -798,7 +833,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       // Map API response fields to form fields
       SeqNo: activity.SeqNo || (index + 1),
       Activity: activity.Activity || '',
-      ActivityDescription: activity.ActivityDescription || '',
+      ActivityDescription: (activity as any).ActivityDescription || '',
       CustomerID: activity.CustomerID || '',
       CustomerName: activity.CustomerName || '',
       ConsignmentInformation: activity.ConsignmentInformation || '',
@@ -843,7 +878,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       Sequence: activity.Sequence || (index + 1),
       Category: activity.Category || '',
       Activity: activity.Activity || '',
-      ActivityDescription: activity.ActivityDescription || '',
+      ActivityDescription: (activity as any).ActivityDescription || '',
       PlaceIt: activity.PlaceIt || '',
       ReportedBy: activity.ReportedBy || '',
       CustomerOrder: activity.CustomerOrder || '',
@@ -1070,11 +1105,31 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [ReasonForChanges, setReasonForChanges] = useState<any[]>([]);
   const [DelayedReason, setDelayedReason] = useState<any[]>([]);
   const [TripLogActivity, setTripLogActivity] = useState<any[]>([]);
+  const [TripLogCustomEventCategory, setTripLogCustomEventCategory] = useState<any[]>([]);
+  const [qcList1, setqcList1] = useState<any>();
+  const [qcList2, setqcList2] = useState<any>();
+  const [qcList3, setqcList3] = useState<any>();
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupTitle, setPopupTitle] = useState('');
+  const [popupButtonName, setPopupButtonName] = useState('');
+  const [popupBGColor, setPopupBGColor] = useState('');
+  const [popupTextColor, setPopupTextColor] = useState('');
+  const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const [popupAmendFlag, setPopupAmendFlag] = useState('');
+  const [fields, setFields] = useState([]);
+  const [activityPlaced, setActivityPlaced] = useState<any[]>([]);
+  const [activityName, setActivityName] = useState<any[]>([]);
   const messageTypes = [
     "Location Init",
     "Reason for changes Init",
     "DelayedReason Init",
     "Trip Log Activity (Event) Init",
+    "Trip Log Custom Event Category",
+    "Quick Order Header Quick Code1 Init",
+    "Quick Order Header Quick Code2 Init",
+    "Quick Order Header Quick Code3 Init",
+    "Trip Log Placed Init",
+    "Activity Name Init"
   ];
   useEffect(() => {
     fetchAll();
@@ -1103,6 +1158,29 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       if (messageType == "Trip Log Activity (Event) Init") {
         setTripLogActivity(JSON.parse(data?.data?.ResponseData));
       }
+      if (messageType == "Trip Log Custom Event Category") {
+        setTripLogCustomEventCategory(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code1 Init") {
+        setqcList1(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code2 Init") {
+        setqcList2(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code2 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Quick Order Header Quick Code3 Init") {
+        setqcList3(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code3 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Trip Log Placed Init") {
+        setActivityPlaced(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code3 Init', JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Activity Name Init") {
+        setActivityName(JSON.parse(data?.data?.ResponseData) || []);
+        // console.log('Quick Order Header Quick Code3 Init', JSON.parse(data?.data?.ResponseData));
+      }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
       // setApiData(data);
@@ -1113,36 +1191,58 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const tripExecutionPanelConfig: PanelConfig = {
       RevisedDate: {
         id: "RevisedDate",
-        label: "Revised Date and Time",
+        label: "Revised Date",
         fieldType: "date",
-        width: 'third',
+        width: 'four',
         value: '',
         mandatory: false,
         visible: true,
         editable: true,
         order: 1,
       },
-      ActualDate: {
-        id: "ActualDate",
-        label: "Actual Date And Time",
-        fieldType: "date",
-        width: 'third',
+      RevisedTime: {
+        id: 'RevisedTime',
+        label: 'Revised Time',
+        fieldType: 'time',
+        width: 'four',
         value: "",
         mandatory: false,
         visible: true,
         editable: true,
-        order: 2,
+        order: 2
+      },
+      ActualDate: {
+        id: "ActualDate",
+        label: "Actual Date",
+        fieldType: "date",
+        width: 'four',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 3,
+      },
+      ActualTime: {
+        id: 'ActualTime',
+        label: 'Actual Time',
+        fieldType: 'time',
+        width: 'four',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 4
       },
       LastIdentifiedLocation: {
         id: 'LastIdentifiedLocation',
         label: 'Last Identified Location',
         fieldType: 'lazyselect',
-        width: 'third',
+        width: 'four',
         value: '',
         mandatory: false,
         visible: true,
         editable: true,
-        order: 4,
+        order: 5,
         hideSearch: false,
         disableLazyLoading: false,
         // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
@@ -1175,14 +1275,25 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       },
       LastIdentifiedDate: {
         id: "LastIdentifiedDate",
-        label: "Last Identified Date And Time",
+        label: "Last Identified Date",
         fieldType: "date",
-        width: 'third',
+        width: 'four',
         value: "",
         mandatory: false,
         visible: true,
         editable: true,
-        order: 3,
+        order: 6,
+      },
+      LastIdentifiedTime: {
+        id: 'LastIdentifiedTime',
+        label: 'Last Identified Time',
+        fieldType: 'time',
+        width: 'four',
+        value: "",
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 7
       },
       DelayedReason: {
         id: 'DelayedReason',
@@ -1192,8 +1303,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         mandatory: false,
         visible: true,
         editable: true,
-        order: 5,
-        width: 'third',
+        order: 8,
+        width: 'four',
         options: ReasonForChanges?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         events: {
           onChange: (value, event) => {
@@ -1209,8 +1320,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         mandatory: false,
         visible: true,
         editable: true,
-        order: 6,
-        width: 'third',
+        order: 9,
+        width: 'four',
         options: ReasonForChanges?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         events: {
           onChange: (value, event) => {
@@ -1218,7 +1329,132 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           }
         }
       },
+      QuickCode1: {
+        id: 'QuickCode1',
+        label: 'QC Userdefined 1',
+        fieldType: 'inputdropdown',
+        width: 'four',
+        value: '', // <-- Set default dropdown value here
+        // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 10,
+        maxLength: 255,
+        options: qcList1?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      },
+      QuickCode2: {
+        id: 'QuickCode2',
+        label: 'QC Userdefined 2',
+        fieldType: 'inputdropdown',
+        width: 'four',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 11,
+        maxLength: 255,
+        options: qcList2?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      },
+      QuickCode3: {
+        id: 'QuickCode3',
+        label: 'QC Userdefined 3',
+        fieldType: 'inputdropdown',
+        width: 'four',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 12,
+        maxLength: 255,
+        options: qcList3?.filter((qc:any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+      },
+      Remarks1: {
+        id: 'Remarks1',
+        label: 'Remarks 1',
+        fieldType: 'text',
+        width: 'four',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 13,
+        placeholder: '',
+        maxLength: 500,
+      },
+      Remarks2: {
+        id: 'Remarks2',
+        label: 'Remarks 2',
+        fieldType: 'text',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 14,
+        placeholder: '',
+        width: 'four',
+        maxLength: 500,
+      },
+      Remarks3: {
+        id: 'Remarks3',
+        label: 'Remarks 3',
+        fieldType: 'text',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 15,
+        placeholder: '',
+        width: 'four',
+        maxLength: 500,
+      }
   };
+
+  const quickOrderAmendHandler = () => {
+    console.log('amendmend data rows:', activityPlaced);
+    setFields([
+      {
+        type: "select",
+        label: "Activity Placed",
+        name: "ActivityPlaced",
+        placeholder: "Select Place",
+        value: "",
+        options: activityPlaced?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      },
+      {
+        type: "select",
+        label: "Activity Name",
+        name: "ActivityName",
+        placeholder: "Select Name",
+        value: "",
+        options: activityName?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      },
+      {
+        type: "date",
+        label: "Planned Date",
+        name: "PlannedDate",
+        placeholder: "",
+        value: "",
+      },
+    ]);
+    setPopupAmendFlag('AddActivities');
+    setPopupOpen(true);
+    setPopupTitle('Add Activities');
+    setPopupButtonName('Confirm');
+    setPopupBGColor('bg-blue-600');
+    setPopupTextColor('text-blue-600');
+    setPopupTitleBgColor('bg-blue-100');
+  };
+
+  const handleFieldChange = (name, value) => {
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const addActivitiesData = async (fields: any) => {
+    console.log("Amend Fields:");
+  }
 
   const tripExecutionAdditionalPanelConfig: PanelConfig = {
     Sequence: {
@@ -1242,7 +1478,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       editable: true,
       order: 2,
       width: 'third',
-      options: DelayedReason?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      options: TripLogCustomEventCategory?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
           console.log('contractType changed:', value);
@@ -1523,7 +1759,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 {/* <h2 className="text-lg font-semibold">Activities Details - {selectedLeg.from} to {selectedLeg.to}</h2> */}
                 <h2 className="text-lg font-semibold"></h2>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button onClick={quickOrderAmendHandler} variant="outline" size="sm" className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Activities
                   </Button>
@@ -1571,7 +1807,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 <Package className="h-4 w-4" />
                               </div>
                               <div>
-                                <div className="font-medium text-sm">{activity.ActivityDescription} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}</div>
+                                <div className="font-medium text-sm">{(activity as any).ActivityDescription} - {formatDateToDDMMYYYY((activity as any).PlannedDate)} {formatTimeTo12Hour((activity as any).PlannedTime)}</div>
                                 {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
                               </div>
                             </div>
@@ -1696,7 +1932,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 {activity.icon}
                               </div>
                               <div>
-                                <div className="font-medium text-sm">{activity.ActivityDescription} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}</div>
+                                <div className="font-medium text-sm">{(activity as any).ActivityDescription} - {formatDateToDDMMYYYY((activity as any).PlannedDate)} {formatTimeTo12Hour((activity as any).PlannedTime)}</div>
                                 {/* <div className="text-xs text-muted-foreground">{activity.timestamp}</div> */}
                               </div>
                             </div>
@@ -1998,6 +2234,22 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       </div>
     </motion.div>
 
+      {loading ?
+        <CommonPopup
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          title={popupTitle}
+          titleColor={popupTextColor}
+          titleBGColor={popupTitleBgColor}
+          icon={<NotebookPen className="w-4 h-4" />}
+          fields={fields as any}
+          onFieldChange={handleFieldChange}
+          onSubmit={addActivitiesData}
+          submitLabel={popupButtonName}
+          submitColor={popupBGColor}
+        /> : ''
+      }
+      
       {/* Add Via Points Dialog */}
       <Dialog open={showAddViaPointsDialog} onOpenChange={setShowAddViaPointsDialog}>
         <DialogContent className="sm:max-w-[500px]">

@@ -324,7 +324,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     }
   };
 
-  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'full') => {
+  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'four' | 'full') => {
     switch (fieldWidth) {
       case 'third':
         return 'col-span-4'; // 4/12 = 1/3
@@ -332,6 +332,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
         return 'col-span-6'; // 6/12 = 1/2 (50%)
       case 'two-thirds':
         return 'col-span-8'; // 8/12 = 2/3
+      case 'four':
+        return 'col-span-3'; // 8/12 = 2/3
       case 'full':
       default:
         return 'col-span-12'; // 12/12 = 100%
