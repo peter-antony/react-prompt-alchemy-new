@@ -707,19 +707,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       try{
         const response = await tripService.saveTrip(updatedTripData);
         console.log("Trip saved response:", response);
-        console.log("Trip saved response:", (response as any)?.data?.Message);
-        // toast.success(response?.data?.Message);
-
-        if((response as any)?.data?.IsSuccess === "true" || (response as any)?.data?.IsSuccess === "TRUE"){
-          const successMessage = updatedAdditionalActivity 
-            ? "Activities and Additional Activities updated successfully" 
-            : "Activities updated successfully";
+        console.log("Trip saved response:", (response as any)?.data?.ResponseData);
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        console.log("resourceStatus ===", resourceStatus);
+        if(resourceStatus){
           toast({
-            title: "✅ Form submitted successfully",
-            description: successMessage,
+            title: "✅ Trip Saved Successfully",
+            description: (response as any)?.data?.ResponseData.Message,
             variant: "default", // or "success" if you have custom variant
           });
         }else{
+          console.log("error as any ===", (response as any)?.data?.Message);
           toast({
             title: "⚠️ Submission failed",
             description: (response as any)?.data?.Message,
