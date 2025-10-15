@@ -895,6 +895,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [ResourceCount, setResourceCount] = useState(0);
   const [isResourceGroupOpen, setResourceGroupOpen] = useState(false);
+  const [isResourceClosed, setIsResourceClosed] = useState(false);
   useEffect(()=>{
     console.log("Inside USEEFFECT(1) ORDERFORM- ",isBack)
     const resourceGroups = jsonStore.getAllResourceGroups();
@@ -949,6 +950,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     console.log("ON CLOSE calledd")
     setResourceGroupOpen(false);
     setIsBack(true);
+    setIsResourceClosed(true);
     const resourceGroups = jsonStore.getAllResourceGroups();
     console.log("ORDER FORM--RESOURCE GROUPS::::: ", resourceGroups);
     const quickOrder = jsonStore.getQuickOrder();
@@ -2120,7 +2122,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       </div>
 
       <div className="lg:col-span-1 w-4/6">
-        {(!isEditQuickOrder && !isResourceData) ?
+        {(!isEditQuickOrder && !isResourceData && !isResourceClosed) ?
           <div className="rounded-lg p-8 flex flex-col items-center justify-center h-full">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
               {/* <Plus className="w-10 h-10 text-blue-500" /> */}
