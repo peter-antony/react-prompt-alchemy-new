@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronDown, ChevronUp, Truck, Container as ContainerIcon, Package, Box, Calendar, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { SimpleDynamicPanel } from '@/components/DynamicPanel/SimpleDynamicPanel';
 import { PanelFieldConfig } from '@/types/dynamicPanel';
 import { usePlanActualStore, ActualsData } from '@/stores/planActualStore';
+import { a } from 'node_modules/framer-motion/dist/types.d-Bq-Qm38R';
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   onClose,
 }) => {
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
+  const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('actuals');
   
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
@@ -101,7 +103,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         </Button>
       </div>
 
-      <div className="flex h-[calc(100vh-56px)]">
+      <div className="flex h-[calc(100vh-56px)] overflow-y-auto">
         {/* Left Sidebar - Items List */}
         <div className="w-64 border-r bg-muted/30 flex flex-col">
           {/* Select All */}
@@ -187,15 +189,41 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <Tabs defaultValue="actuals" className="flex-1 flex flex-col">
+          <Tabs 
+            defaultValue="actuals" 
+            className="flex-1 flex flex-col" 
+            onValueChange={(value: string) => {
+              setActiveTab(value as 'planned' | 'actuals');
+            }}
+          >
             <div className="border-b px-6 pt-4">
               <TabsList>
-                <TabsTrigger value="planned">Planned</TabsTrigger>
-                <TabsTrigger value="actuals">Actuals</TabsTrigger>
+                <TabsTrigger value="planned">
+                  <span className="relative">
+                    Planned
+                    {currentWagonData?.planned && Object.keys(currentWagonData.planned).length > 0 && (
+                      <span className="absolute -top-1 -right-2 w-2 h-2 bg-primary rounded-full" />
+                    )}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="actuals">
+                  <span className="relative">
+                    Actuals
+                    {currentWagonData?.actuals && Object.keys(currentWagonData.actuals).length > 0 && (
+                      <span className="absolute -top-1 -right-2 w-2 h-2 bg-primary rounded-full" />
+                    )}
+                  </span>
+                </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="planned" className="flex-1 m-0 overflow-y-auto p-6 space-y-4">
+            <TabsContent 
+              value="planned" 
+              className={cn(
+                "flex-1 m-0 overflow-y-auto p-6 space-y-4",
+                activeTab === 'planned' ? 'block' : 'hidden'
+              )}
+              forceMount>
               {/* Wagon Details - Planned */}
               <div className="border rounded-lg bg-card">
                 <div
@@ -588,7 +616,13 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
               </div>
             </TabsContent>
 
-            <TabsContent value="actuals" className="flex-1 m-0 overflow-y-auto p-6 space-y-4">
+            <TabsContent 
+              value="actuals" 
+              className={cn(
+                "flex-1 m-0 overflow-y-auto p-6 space-y-4",
+                activeTab === 'actuals' ? 'block' : 'hidden'
+              )}
+              forceMount>
               {/* Wagon Details */}
               <SimpleDynamicPanel
                 title="Wagon Details"
@@ -1100,8 +1134,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
           {/* Footer */}
           <div className="border-t p-4 flex items-center justify-end gap-2">
-            <Button variant="outline">Move to Transshipment</Button>
-            <Button>Save Actual Details</Button>
+            <Button variant="outline" disabled={activeTab === 'planned'}>Move to Transshipment</Button>
+            <Button disabled={activeTab === 'planned'}>Save Actual Details</Button>
           </div>
         </div>
       </div>
