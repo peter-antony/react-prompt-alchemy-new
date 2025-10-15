@@ -14,6 +14,7 @@ import { usePlanActualStore, ActualsData } from '@/stores/planActualStore';
 import { a } from 'node_modules/framer-motion/dist/types.d-Bq-Qm38R';
 import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 
+import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
@@ -41,6 +42,40 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   // console.log('consignment Index from store:', getFullConsignment);
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
   const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('planned');
+
+  const [plannedWagonType, setPlannedWagonType] = useState<string | undefined>();
+  const [actualsWagonType, setActualsWagonType] = useState<string | undefined>();
+
+  // Mock fetch function for wagon types with lazy loading
+  const fetchWagonTypes = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Mock data - in production this would be an API call
+    const allTypes = [
+      { value: 'hasbins', label: 'Hasbins' },
+      { value: 'zaccs', label: 'Zaccs' },
+      { value: 'type-a-wagon', label: 'A Type Wagon' },
+      { value: 'closed-wagon', label: 'Closed Wagon' },
+      { value: 'open-wagon', label: 'Open Wagon' },
+      { value: 'flat-wagon', label: 'Flat Wagon' },
+      { value: 'tank-wagon', label: 'Tank Wagon' },
+      { value: 'hopper-wagon', label: 'Hopper Wagon' },
+      { value: 'box-wagon', label: 'Box Wagon' },
+      { value: 'refrigerated-wagon', label: 'Refrigerated Wagon' },
+    ];
+
+    // Filter by search term
+    const filtered = searchTerm
+      ? allTypes.filter(type => 
+          type.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          type.value.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : allTypes;
+
+    // Paginate
+    return filtered.slice(offset, offset + limit);
+  };
 
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
@@ -691,6 +726,83 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 activeTab === 'actuals' ? 'block' : 'hidden'
               )}
               forceMount>
+
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('wagon')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold">Wagon Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                      Wagon {selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}
+                    </Badge>
+                    {expandedSections.wagon ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.wagon && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={plannedWagonType}
+                                onChange={(value) => setPlannedWagonType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon ID</div>
+                            <div className="text-sm font-medium">
+                              
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Quantity</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonQty ? selecteditem?.WagonQty : '-'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Tare Weight</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonTareWeight ? selecteditem?.WagonTareWeight : '-'} {selecteditem?.WagonTareWeightUOM ? selecteditem?.WagonTareWeightUOM : '-'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Gross Weight</div>
+                            <div className="text-sm font-medium">{selecteditem?.GrossWeight ? selecteditem?.GrossWeight : '-'} {selecteditem?.GrossWeightUOM ? selecteditem?.GrossWeightUOM : '-'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Length</div>
+                            <div className="text-sm font-medium">{selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Wagon Sequence</div>
+                            <div className="text-sm font-medium">{selecteditem?.Seqno ? selecteditem?.Seqno : '-'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Wagon Details */}
               <SimpleDynamicPanel
                 title="Wagon Details"
