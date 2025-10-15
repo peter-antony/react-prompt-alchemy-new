@@ -259,72 +259,72 @@ const activitiesColumns: GridColumnConfig[] = [
   //   editable: false,
   //   subRow: false,
   // },
-  {
-    key: 'DepartedPlan',
-    label: 'Departed - Plan/Actual',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: true,
-    order: 7
-  },
-  {
-    key: 'DepartedactualDateTime',
-    label: 'Departed - Actual date and time',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: true,
-    subRow: true,
-    order: 7
-  },
-  {
-    key: 'DepartedDelayTime',
-    label: 'Departed - Delay Time',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: true,
-    order: 7
-  },
-  {
-    key: 'ArrivalPlan',
-    label: 'Arrival - Plan/Actual',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: true,
-    order: 7
-  },
-  {
-    key: 'ArrivalactualDateTime',
-    label: 'Arrival - Actual date and time',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: true,
-    subRow: true,
-    order: 7
-  },
-  {
-    key: 'ArrivalDelayTime',
-    label: 'Arrival - Delay Time',
-    type: 'Date',
-    // width: 180,
-    sortable: true,
-    filterable: true,
-    editable: false,
-    subRow: true,
-    order: 7
-  }
+  // {
+  //   key: 'DepartedPlan',
+  //   label: 'Departed - Plan/Actual',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: false,
+  //   subRow: true,
+  //   order: 7
+  // },
+  // {
+  //   key: 'DepartedactualDateTime',
+  //   label: 'Departed - Actual date and time',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: true,
+  //   subRow: true,
+  //   order: 7
+  // },
+  // {
+  //   key: 'DepartedDelayTime',
+  //   label: 'Departed - Delay Time',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: false,
+  //   subRow: true,
+  //   order: 7
+  // },
+  // {
+  //   key: 'ArrivalPlan',
+  //   label: 'Arrival - Plan/Actual',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: false,
+  //   subRow: true,
+  //   order: 7
+  // },
+  // {
+  //   key: 'ArrivalactualDateTime',
+  //   label: 'Arrival - Actual date and time',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: true,
+  //   subRow: true,
+  //   order: 7
+  // },
+  // {
+  //   key: 'ArrivalDelayTime',
+  //   label: 'Arrival - Delay Time',
+  //   type: 'Date',
+  //   // width: 180,
+  //   sortable: true,
+  //   filterable: true,
+  //   editable: false,
+  //   subRow: true,
+  //   order: 7
+  // }
 ];
 
 const activitiesGridData = [

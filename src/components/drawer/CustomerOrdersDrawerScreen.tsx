@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Sub } from '@radix-ui/react-dropdown-menu';
 
 interface CustomerOrdersDrawerScreenProps {
   onClose: () => void;
@@ -37,7 +38,9 @@ interface CustomerOrder {
   Consignor?: string | null;
   Consignee?: string | null;
   ServiceType?: string | null;
+  ServiceTypeDescription?: string | null;
   SubServiceType?: string | null;
+  SubServiceTypeDescription?: string | null;
   LoadType?: string | null;
 }
 
@@ -46,6 +49,15 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
   {
     key: 'CustomerID',
     label: 'Customer ID',
+    type: 'Text',
+    width: 150,
+    sortable: true,
+    filterable: true,
+    editable: false,
+  },
+  {
+    key: 'CustomerName',
+    label: 'Customer Name',
     type: 'Text',
     width: 150,
     sortable: true,
@@ -128,8 +140,28 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     subRow: true
   },
   {
+    key: 'ServiceTypeDescription',
+    label: 'Service Type Description',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
     key: 'SubServiceType',
     label: 'Sub Service',
+    type: 'Text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    subRow: true
+  },
+  {
+    key: 'SubServiceTypeDescription',
+    label: 'Sub Service Type Description',
     type: 'Text',
     width: 140,
     sortable: false,
@@ -180,7 +212,9 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
         Consignor: co.Consignor,
         Consignee: co.Consignee,
         ServiceType: co.ServiceType,
+        ServiceTypeDescription: co.ServiceTypeDescription,
         SubServiceType: co.SubServiceType,
+        SubServiceTypeDescription: co.SubServiceTypeDescription,
         LoadType: co.LoadType,
       }));
       setOrders(mappedOrders);
@@ -238,10 +272,10 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
               {orders.length}
             </Badge>
           </div>
-          <Button size="sm" className="gap-2">
+          {/* <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             Add CO to Running Trip
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -286,6 +320,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
           showCreateButton={false}
           editableColumns={false}
           paginationMode="pagination"
+          hideCheckboxToggle={true}
         />
       </div>
 

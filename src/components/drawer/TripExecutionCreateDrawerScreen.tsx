@@ -28,7 +28,7 @@ interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
   // tripExecutionRef?: React.RefObject<DynamicPanelRef>;
-  tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
+  // tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
 }
 
 interface AdditionalActivity {
@@ -52,7 +52,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   onClose,
   tripId = 'TRIP00000001',
   // tripExecutionRef,
-  tripAdditionalRef
+  // tripAdditionalRef
 }) => {
   // const { tripData, fetchTrip, updateHeaderField } = manageTripStore();
   const [expandedActivities, setExpandedActivities] = useState(true);
@@ -64,6 +64,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [showAddViaPointsDialog, setShowAddViaPointsDialog] = useState(false);
   
   const tripExecutionRef = useRef<DynamicPanelRef>(null);
+  const tripAdditionalRef = useRef<DynamicPanelRef>(null);
   // Add Via Points dialog state
   const [viaPointForm, setViaPointForm] = useState({
     legFromTo: '',
@@ -78,6 +79,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   // State to track form data changes
   const [formDataState, setFormDataState] = useState<any>({});
   const [activitiesFormData, setActivitiesFormData] = useState<any[]>([]);
+  
+  // State to track additional activities form data
+  const [additionalFormDataState, setAdditionalFormDataState] = useState<any>({});
+  const [additionalActivitiesFormData, setAdditionalActivitiesFormData] = useState<any[]>([]);
 
   // Date formatting utility function
   const formatDateToDDMMYYYY = (dateString: string | null | undefined): string => {
@@ -186,6 +191,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         const rawActivitiesData = selectedLegData.activities || [];
         const formattedActivities = formatActivitiesForForm(rawActivitiesData);
         const consignmentsData = selectedLegData.consignments || [];
+
+        // Prepare additional activities data for form binding
+        const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
+        const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
         
         const formData = {
           // Basic leg information
@@ -246,6 +255,46 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         };
         console.log("formData ====", formData);
         tripExecutionRef.current.setFormValues(formData);
+        // Create additional activities form data
+        const additionalFormData = {
+          // Basic leg information
+          legSequence: selectedLegData.id,
+          from: selectedLegData.from,
+          to: selectedLegData.to,
+          distance: selectedLegData.distance,
+          duration: selectedLegData.duration,
+          
+          // Additional activities array - this is the key data we want to bind
+          additionalActivities: formattedAdditionalActivities,
+          
+          // Individual additional activity fields for easier form access
+          ...(formattedAdditionalActivities.length > 0 && {
+            firstAdditionalActivity: formattedAdditionalActivities[0],
+            lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
+            additionalActivityCount: formattedAdditionalActivities.length,
+            
+            // Bind first additional activity fields directly for easy access
+            Sequence: formattedAdditionalActivities[0].Sequence,
+            Category: formattedAdditionalActivities[0].Category,
+            ActivityName: formattedAdditionalActivities[0].Activity,
+            ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
+            ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
+            FromLocation: formattedAdditionalActivities[0].FromLocation,
+            ToLocation: formattedAdditionalActivities[0].ToLocation,
+            Activity: formattedAdditionalActivities[0].Activity,
+            RevisedDate: formattedAdditionalActivities[0].RevisedDate,
+            ActualDate: formattedAdditionalActivities[0].ActualDate
+          }),
+          
+          // Consignments data
+          consignments: consignmentsData,
+          
+          // Additional leg metadata
+          hasInfo: selectedLegData.hasInfo,
+          transshipments: selectedLegData.transshipments || []
+        };
+        console.log("Form data to additionalFormData:", additionalFormData);
+        tripAdditionalRef.current.setFormValues(additionalFormData);
         console.log("First leg data auto-bound to form fields");
         setLoading(true);
       }
@@ -264,6 +313,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         const rawActivitiesData = selectedLegData.activities || [];
         const formattedActivities = formatActivitiesForForm(rawActivitiesData);
         const consignmentsData = selectedLegData.consignments || [];
+        
+        // Prepare additional activities data for form binding
+        const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
+        const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
         
         // Create form data object with activities array
         const formData = {
@@ -324,6 +377,45 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           transshipments: selectedLegData.transshipments || []
         };
         console.log("formData -----", formData.activities[0]);
+
+        const additionalFormData = {
+          // Basic leg information
+          legSequence: selectedLegData.id,
+          from: selectedLegData.from,
+          to: selectedLegData.to,
+          distance: selectedLegData.distance,
+          duration: selectedLegData.duration,
+          
+          // Additional activities array - this is the key data we want to bind
+          additionalActivities: formattedAdditionalActivities,
+          
+          // Individual additional activity fields for easier form access
+          ...(formattedAdditionalActivities.length > 0 && {
+            firstAdditionalActivity: formattedAdditionalActivities[0],
+            lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
+            additionalActivityCount: formattedAdditionalActivities.length,
+            
+            // Bind first additional activity fields directly for easy access
+            Sequence: formattedAdditionalActivities[0].Sequence,
+            Category: formattedAdditionalActivities[0].Category,
+            ActivityName: formattedAdditionalActivities[0].Activity,
+            ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
+            ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
+            FromLocation: formattedAdditionalActivities[0].FromLocation,
+            ToLocation: formattedAdditionalActivities[0].ToLocation,
+            Activity: formattedAdditionalActivities[0].Activity,
+            RevisedDate: formattedAdditionalActivities[0].RevisedDate,
+            ActualDate: formattedAdditionalActivities[0].ActualDate
+          }),
+          
+          // Consignments data
+          consignments: consignmentsData,
+          
+          // Additional leg metadata
+          hasInfo: selectedLegData.hasInfo,
+          transshipments: selectedLegData.transshipments || []
+        };
+        console.log("Form data to additionalFormData:", additionalFormData);
         // Bind data to tripExecutionRef (Activities panel)
         if (tripExecutionRef?.current?.setFormValues) {
           tripExecutionRef.current.setFormValues(formData.activities[0]);
@@ -332,13 +424,14 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         
         // Bind data to tripAdditionalRef (Additional Activities panel)
         if (tripAdditionalRef?.current?.setFormValues) {
-          tripAdditionalRef.current.setFormValues({
-            ...formData,
-            // Additional specific data for additional activities panel
-            additionalActivities: formattedActivities.filter(activity => 
-              activity.category === 'Additional' || activity.subCategory === 'Additional'
-            )
-          });
+          tripAdditionalRef.current.setFormValues(additionalFormData);
+          // tripAdditionalRef.current.setFormValues({
+          //   ...formData,
+          //   // Additional specific data for additional activities panel
+          //   additionalActivities: formattedActivities.filter(activity => 
+          //     activity.category === 'Additional' || activity.subCategory === 'Additional'
+          //   )
+          // });
           console.log("Data automatically bound to tripAdditionalRef on leg change");
         }
         setLoading(true);
@@ -369,6 +462,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
   const { getLegDetails, tripData, setTrip } = manageTripStore();
     
+
   const onSaveActivities = async () => {
     console.log("Saving activities");
     
@@ -498,6 +592,100 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       console.log("Updated leg details:", updatedLegDetails[legIndex]);
       console.log("Updated activities array:", updatedLegDetails[legIndex].Activities);
       
+      // Handle Additional Activities if tripAdditionalRef is available
+      let updatedAdditionalActivity = null;
+      if (tripAdditionalRef?.current?.getFormValues) {
+        try {
+          // Get additional activities form data from tripAdditionalRef
+          let additionalFormData = null;
+          
+          if (tripAdditionalRef?.current?.getFormValues) {
+            try {
+              additionalFormData = tripAdditionalRef.current.getFormValues();
+              console.log("Additional activities form data from tripAdditionalRef:", additionalFormData);
+            } catch (error) {
+              console.warn("tripAdditionalRef.getFormValues() failed:", error);
+            }
+          }
+          
+          // Fallback to state-based form data
+          if (!additionalFormData || Object.keys(additionalFormData).length === 0) {
+            additionalFormData = additionalFormDataState;
+            console.log("Using state-based additional activities form data:", additionalFormData);
+          }
+          
+          if (additionalFormData && Object.keys(additionalFormData).length > 0) {
+            // Get the sequence number from additional activities form data
+            const additionalSequenceNumber = additionalFormData.firstAdditionalActivitySequence || additionalFormData.Sequence || 1;
+            console.log("Additional activities sequence number from form:", additionalSequenceNumber);
+            
+            // Get the current leg's additional activities
+            const currentAdditionalActivities = currentLeg.AdditionalActivities || [];
+            console.log("Current additional activities in leg:", currentAdditionalActivities);
+            
+            // Find the additional activity by sequence number
+            const additionalActivityIndex = currentAdditionalActivities.findIndex((activity: any) => 
+              activity.Sequence === additionalSequenceNumber || activity.Sequence === parseInt(additionalSequenceNumber)
+            );
+            
+            if (additionalActivityIndex !== -1) {
+              console.log("Found additional activity at index:", additionalActivityIndex, "with sequence number:", additionalSequenceNumber);
+              // Create updated additional activity with form data
+              const currentAdditionalActivity = currentAdditionalActivities[additionalActivityIndex] as any;
+              console.log("additionalFormData ===", additionalFormData);
+              console.log("currentAdditionalActivity ===", currentAdditionalActivity);
+              updatedAdditionalActivity = {
+                ...currentAdditionalActivity,
+                // Update with form data
+                Category: additionalFormData.Category || currentAdditionalActivity.Category,
+                Activity: additionalFormData.ActivityName || currentAdditionalActivity.Activity,
+                ActivityDescription: additionalFormData.firstAdditionalActivityDescription || currentAdditionalActivity.ActivityDescription,
+                PlaceIt: additionalFormData.ActivityPlaceIt || currentAdditionalActivity.PlaceIt,
+                ReportedBy: additionalFormData.ReportedBy || currentAdditionalActivity.ReportedBy,
+                CustomerOrder: additionalFormData.ActivityCustomerOrder || currentAdditionalActivity.CustomerOrder,
+                LocationID: additionalFormData.ActivityLocationID || currentAdditionalActivity.LocationID,
+                LocationDescription: additionalFormData.ActivityLocationDescription || currentAdditionalActivity.LocationDescription,
+                FromLocation: additionalFormData.FromLocation || currentAdditionalActivity.FromLocation,
+                FromLocationDescription: additionalFormData.FromLocationDescription || currentAdditionalActivity.FromLocationDescription,
+                ToLocation: additionalFormData.ToLocation || currentAdditionalActivity.ToLocation,
+                ToLocationDescription: additionalFormData.ToLocationDescription || currentAdditionalActivity.ToLocationDescription,
+                PlannedDate: additionalFormData.ActivityPlannedDate || currentAdditionalActivity.PlannedDate,
+                PlannedTime: additionalFormData.ActivityPlannedTime || currentAdditionalActivity.PlannedTime,
+                RevisedDate: additionalFormData.RevisedDate || currentAdditionalActivity.RevisedDate,
+                RevisedTime: additionalFormData.RevisedTime || currentAdditionalActivity.RevisedTime,
+                ActualDate: additionalFormData.ActualDate || currentAdditionalActivity.ActualDate,
+                ActualTime: additionalFormData.ActualTime || currentAdditionalActivity.ActualTime,
+                Remarks: additionalFormData.Remarks || currentAdditionalActivity.Remarks,
+                Remarks1: additionalFormData.Remarks1 || currentAdditionalActivity.Remarks1,
+                Remarks2: additionalFormData.Remarks2 || currentAdditionalActivity.Remarks2,
+                EventProfile: additionalFormData.ActivityEventProfile || currentAdditionalActivity.EventProfile,
+                ModeFlag: 'Update'
+              };
+              
+              console.log("Updated additional activity:", updatedAdditionalActivity);
+              
+              // Update the additional activity in the leg details
+              updatedLegDetails[legIndex] = {
+                ...updatedLegDetails[legIndex],
+                AdditionalActivities: [
+                  ...updatedLegDetails[legIndex].AdditionalActivities.slice(0, additionalActivityIndex),
+                  updatedAdditionalActivity,
+                  ...updatedLegDetails[legIndex].AdditionalActivities.slice(additionalActivityIndex + 1)
+                ]
+              };
+              
+              console.log("Updated additional activities array:", updatedLegDetails[legIndex].AdditionalActivities);
+            } else {
+              console.log("No additional activity found with sequence number:", additionalSequenceNumber);
+            }
+          } else {
+            console.log("No additional activities form data available");
+          }
+        } catch (error) {
+          console.warn("Error processing additional activities:", error);
+        }
+      }
+      
       // Get the current trip data from the store
       const currentTripData = tripData;
       console.log("Current trip data:", currentTripData);
@@ -519,19 +707,22 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       try{
         const response = await tripService.saveTrip(updatedTripData);
         console.log("Trip saved response:", response);
-        console.log("Trip saved response:", response?.data?.Message);
+        console.log("Trip saved response:", (response as any)?.data?.Message);
         // toast.success(response?.data?.Message);
 
-        if(response?.data?.IsSuccess === "true" || response?.data?.IsSuccess === "TRUE"){
+        if((response as any)?.data?.IsSuccess === "true" || (response as any)?.data?.IsSuccess === "TRUE"){
+          const successMessage = updatedAdditionalActivity 
+            ? "Activities and Additional Activities updated successfully" 
+            : "Activities updated successfully";
           toast({
             title: "✅ Form submitted successfully",
-            description: "Your changes have been saved.",
+            description: successMessage,
             variant: "default", // or "success" if you have custom variant
           });
         }else{
           toast({
             title: "⚠️ Submission failed",
-            description: response?.data?.Message,
+            description: (response as any)?.data?.Message,
             variant: "destructive", // or "success" if you have custom variant
           });
         }
@@ -645,6 +836,42 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }));
   };
 
+  // Helper function to format additional activities data for form binding
+  const formatAdditionalActivitiesForForm = (additionalActivities: any[]) => {
+    if (!additionalActivities || additionalActivities.length === 0) return [];
+    
+    return additionalActivities.map((activity, index) => ({
+      // Map API response fields to form fields
+      Sequence: activity.Sequence || (index + 1),
+      Category: activity.Category || '',
+      Activity: activity.Activity || '',
+      ActivityDescription: activity.ActivityDescription || '',
+      PlaceIt: activity.PlaceIt || '',
+      ReportedBy: activity.ReportedBy || '',
+      CustomerOrder: activity.CustomerOrder || '',
+      LocationID: activity.LocationID || '',
+      LocationDescription: activity.LocationDescription || '',
+      FromLocation: activity.FromLocation || '',
+      FromLocationDescription: activity.FromLocationDescription || '',
+      ToLocation: activity.ToLocation || '',
+      ToLocationDescription: activity.ToLocationDescription || '',
+      PlannedDate: activity.PlannedDate || '',
+      PlannedTime: activity.PlannedTime || '',
+      RevisedDate: activity.RevisedDate || '',
+      RevisedTime: activity.RevisedTime || '',
+      ActualDate: activity.ActualDate || '',
+      ActualTime: activity.ActualTime || '',
+      Remarks: activity.Remarks || '',
+      Remarks1: activity.Remarks1 || '',
+      Remarks2: activity.Remarks2 || '',
+      EventProfile: activity.EventProfile || '',
+      ModeFlag: activity.ModeFlag || 'NoChange',
+      
+      // Keep original activity data for reference
+      ...activity
+    }));
+  };
+
   // Handle leg selection and bind data to dynamic panels
   const handleLegSelection = (legId: string) => {
     selectLeg(legId);
@@ -659,6 +886,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const rawActivitiesData = selectedLegData.activities || [];
       const formattedActivities = formatActivitiesForForm(rawActivitiesData);
       const consignmentsData = selectedLegData.consignments || [];
+      
+      // Prepare additional activities data for form binding
+      const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
+      const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
       
       // Create form data object with activities array
       const formData = {
@@ -725,6 +956,50 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       setFormDataState(formData);
       setActivitiesFormData(formattedActivities);
       
+      // Create additional activities form data
+      const additionalFormData = {
+        // Basic leg information
+        legSequence: selectedLegData.id,
+        from: selectedLegData.from,
+        to: selectedLegData.to,
+        distance: selectedLegData.distance,
+        duration: selectedLegData.duration,
+        
+        // Additional activities array - this is the key data we want to bind
+        additionalActivities: formattedAdditionalActivities,
+        
+        // Individual additional activity fields for easier form access
+        ...(formattedAdditionalActivities.length > 0 && {
+          firstAdditionalActivity: formattedAdditionalActivities[0],
+          lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
+          additionalActivityCount: formattedAdditionalActivities.length,
+          
+          // Bind first additional activity fields directly for easy access
+          Sequence: formattedAdditionalActivities[0].Sequence,
+          Category: formattedAdditionalActivities[0].Category,
+          ActivityName: formattedAdditionalActivities[0].Activity,
+          ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
+          ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
+          FromLocation: formattedAdditionalActivities[0].FromLocation,
+          ToLocation: formattedAdditionalActivities[0].ToLocation,
+          Activity: formattedAdditionalActivities[0].Activity,
+          RevisedDate: formattedAdditionalActivities[0].RevisedDate,
+          ActualDate: formattedAdditionalActivities[0].ActualDate
+        }),
+        
+        // Consignments data
+        consignments: consignmentsData,
+        
+        // Additional leg metadata
+        hasInfo: selectedLegData.hasInfo,
+        transshipments: selectedLegData.transshipments || []
+      };
+      console.log("Form data to additionalFormData:", additionalFormData);
+      
+      // Store additional form data in state for later retrieval
+      setAdditionalFormDataState(additionalFormData);
+      setAdditionalActivitiesFormData(formattedAdditionalActivities);
+      
       // Bind data to tripExecutionRef (Activities panel)
       if (tripExecutionRef?.current?.setFormValues) {
         tripExecutionRef.current.setFormValues(formData.activities[0]);
@@ -733,14 +1008,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       
       // Bind data to tripAdditionalRef (Additional Activities panel)
       if (tripAdditionalRef?.current?.setFormValues) {
-        tripAdditionalRef.current.setFormValues({
-          ...formData,
-          // Additional specific data for additional activities panel
-          additionalActivities: formattedActivities.filter(activity => 
-            activity.category === 'Additional' || activity.subCategory === 'Additional'
-          )
-        });
-        console.log("Data bound to tripAdditionalRef");
+        tripAdditionalRef.current.setFormValues(additionalFormData);
+        console.log("Additional activities data bound to tripAdditionalRef");
       }
       setLoading(true);
     }
@@ -802,10 +1071,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [LastIdentifiedLocation, setLastIdentifiedLocation] = useState<any[]>([]);
   const [ReasonForChanges, setReasonForChanges] = useState<any[]>([]);
   const [DelayedReason, setDelayedReason] = useState<any[]>([]);
+  const [TripLogActivity, setTripLogActivity] = useState<any[]>([]);
   const messageTypes = [
     "Location Init",
     "Reason for changes Init",
     "DelayedReason Init",
+    "Trip Log Activity (Event) Init",
   ];
   useEffect(() => {
     fetchAll();
@@ -830,6 +1101,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       }
       if (messageType == "DelayedReason Init") {
         setDelayedReason(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Trip Log Activity (Event) Init") {
+        setTripLogActivity(JSON.parse(data?.data?.ResponseData));
       }
     } catch (err) {
       setError(`Error fetching API data for ${messageType}`);
@@ -948,140 +1222,155 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       },
   };
 
-  const tripExecutionAdditionalPanelConfig: PanelConfig = useMemo(() => {
-    return {
-      Sequence: {
-        id: "Sequence",
-        label: "Sequence",
-        fieldType: "text",
-        width: 'third',
-        value: '',
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 1,
-      },
-      Category: {
-        id: 'Category',
-        label: 'Category',
-        fieldType: 'select',
-        value: '',
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 2,
-        width: 'third',
-        options: DelayedReason?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-        events: {
-          onChange: (value, event) => {
-            console.log('contractType changed:', value);
-          }
+  const tripExecutionAdditionalPanelConfig: PanelConfig = {
+    Sequence: {
+      id: "Sequence",
+      label: "Sequence",
+      fieldType: "text",
+      width: 'third',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+    },
+    Category: {
+      id: 'Category',
+      label: 'Category',
+      fieldType: 'select',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'third',
+      options: DelayedReason?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
         }
-      },
-      FromLocation: {
-        id: 'FromLocation',
-        label: 'From Location',
-        fieldType: 'lazyselect',
-        width: 'third',
-        value: '',
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 3,
-        hideSearch: false,
-        disableLazyLoading: false,
-        // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-        fetchOptions: async ({ searchTerm, offset, limit }) => {
-          const response = await quickOrderService.getMasterCommonData({
-            messageType: "Location Init",
-            searchTerm: searchTerm || '',
-            offset,
-            limit,
-          });
-          // response.data is already an array, so just return it directly
-          const rr: any = response.data
-          return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-            ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-              ? {
-                label: `${item.id} || ${item.name}`,
-                value: `${item.id} || ${item.name}`,
-              }
-              : {})
-          }));
-        },
-        events: {
-          onChange: (selected, event) => {
-            console.log('Customer changed:', selected);
-          },
-          onClick: (event, value) => {
-            console.log('Customer dropdown clicked:', { event, value });
-          }
-        }
-      },
-      ToLocation: {
-        id: 'ToLocation',
-        label: 'To Location',
-        fieldType: 'lazyselect',
-        width: 'third',
-        value: '',
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 4,
-        hideSearch: false,
-        disableLazyLoading: false,
-        // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-        fetchOptions: async ({ searchTerm, offset, limit }) => {
-          const response = await quickOrderService.getMasterCommonData({
-            messageType: "Location Init",
-            searchTerm: searchTerm || '',
-            offset,
-            limit,
-          });
-          // response.data is already an array, so just return it directly
-          const rr: any = response.data
-          return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-            ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-              ? {
-                label: `${item.id} || ${item.name}`,
-                value: `${item.id} || ${item.name}`,
-              }
-              : {})
-          }));
-        },
-        events: {
-          onChange: (selected, event) => {
-            console.log('Customer changed:', selected);
-          },
-          onClick: (event, value) => {
-            console.log('Customer dropdown clicked:', { event, value });
-          }
-        }
-      },
-      RevisedDate: {
-        id: "RevisedDate",
-        label: "Revised Date and Time",
-        fieldType: "date",
-        width: 'third',
-        value: '',
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 1,
-      },
-      ActualDate: {
-        id: "ActualDate",
-        label: "Actual Date And Time",
-        fieldType: "date",
-        width: 'third',
-        value: "",
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 1,
       }
-    }; // Dependencies for useMemo
-  }, [legs]);
+    },
+    FromLocation: {
+      id: 'FromLocation',
+      label: 'From Location',
+      fieldType: 'lazyselect',
+      width: 'third',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      hideSearch: false,
+      disableLazyLoading: false,
+      // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Location Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+    },
+    ToLocation: {
+      id: 'ToLocation',
+      label: 'To Location',
+      fieldType: 'lazyselect',
+      width: 'third',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      hideSearch: false,
+      disableLazyLoading: false,
+      // options: arrivalList.map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Location Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+    },
+    Activity: {
+      id: 'Activity',
+      label: 'Activity (Event)',
+      fieldType: 'select',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'third',
+      options: TripLogActivity?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+      events: {
+        onChange: (value, event) => {
+          console.log('contractType changed:', value);
+        }
+      }
+    },
+    RevisedDate: {
+      id: "RevisedDate",
+      label: "Revised Date and Time",
+      fieldType: "date",
+      width: 'third',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+    },
+    ActualDate: {
+      id: "ActualDate",
+      label: "Actual Date And Time",
+      fieldType: "date",
+      width: 'third',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+    }
+  }; // Dependencies for useMemo
 
   return (
     <>
@@ -1409,8 +1698,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                 {activity.icon}
                               </div>
                               <div>
-                                <div className="font-medium text-sm">{activity.name}</div>
-                                <div className="text-xs text-muted-foreground">{activity.timestamp}</div>
+                                <div className="font-medium text-sm">{activity.ActivityDescription} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}</div>
+                                {/* <div className="text-xs text-muted-foreground">{activity.timestamp}</div> */}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1429,7 +1718,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               key="Additional-Activities"
                               panelId="trip-additional-panel"
                               panelTitle="Additional Activities"
-                              panelConfig={tripExecutionPanelConfig}
+                              panelConfig={tripExecutionAdditionalPanelConfig}
                               formName="operationalDetailsForm"
                               initialData={activity}
                             /> : ''

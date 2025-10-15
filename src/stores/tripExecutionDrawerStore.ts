@@ -42,6 +42,48 @@ export interface Activity {
   AmendmentNo?: string;
 }
 
+export interface AdditionalActivities {
+  id: string;
+  category: string;
+  subCategory: string;
+  PlannedDate: string;
+  PlannedTime: string;
+  actualDate?: string;
+  actualTime?: string;
+  location: string;
+  status: 'pending' | 'completed' | 'in-progress';
+  remarks?: string;
+  CustomerName?: string;
+  CustomerID?: string;
+  SeqNo?: number,
+  Activity?: string,
+  ActivityDescription?: string,
+  ConsignmentInformation?: string,
+  CustomerOrder?: string,
+  RevisedDate?: string,
+  RevisedTime?: string,
+  ActualDate?: string,
+  ActualTime?: string,
+  DelayedIn?: string,
+  QuickCode1?: string,
+  QuickCode2?: string,
+  QuickCode3?: string,
+  QuickCodeValue1?: string,
+  QuickCodeValue2?: string,
+  QuickCodeValue3?: string,
+  Remarks1?: string,
+  Remarks2?: string,
+  Remarks3?: string,
+  EventProfile?: string,
+  ReasonForChanges?: string,
+  DelayedReason?: string,
+  LastIdentifiedLocation?: string,
+  LastIdentifiedDate?: string,
+  LastIdentifiedTime?: string,
+  AmendmentNo?: string,
+
+}
+
 export interface Consignment {
   id: string;
   consignmentNo: string;
@@ -72,6 +114,7 @@ export interface Leg {
   duration: string;
   hasInfo?: boolean;
   activities: Activity[];
+  additionalActivities: AdditionalActivities[];
   consignments: Consignment[];
   transshipments: Transshipment[];
   LegSequence?: string;
@@ -158,6 +201,7 @@ const transformApiLegToStoreFormat = (apiLeg: any, index: number): Leg => {
     duration: "-- hours", // You can calculate this or get from API
     hasInfo: true,
     activities: apiLeg.Activities || [],
+    additionalActivities: apiLeg.AdditionalActivities || [],
     consignments: apiLeg.Consignment || [],
     transshipments: [], // Transshipments might not be in API, so empty for now
   };
