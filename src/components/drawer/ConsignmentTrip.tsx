@@ -13,8 +13,25 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '../ui/card';
 import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
+import { SmartGridWithGrouping } from '../SmartGrid/SmartGridWithGrouping';
+import { useFilterStore } from '@/stores/filterStore';
+import { useToast } from '../ui/use-toast';
+import { useSmartGridState } from '@/hooks/useSmartGridState';
+import { GridColumnConfig } from '@/types/smartgrid';
+
 
 export const ConsignmentTrip = ({ legId }) => {
+  const gridPlanId = 'ConsignmentTripPlanGrid';
+  const gridActualId = 'ConsignmentTripActualGrid';
+  const { activeFilters, setActiveFilters } = useFilterStore();
+  // const filtersForThisGrid = activeFilters[gridId] || {};
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
+  const [searchData, setSearchData] = useState<Record<string, any>>({});
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const { toast } = useToast();
   const [expandedPlanned, setExpandedPlanned] = useState(true);
   const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,10 +43,713 @@ export const ConsignmentTrip = ({ legId }) => {
   const [actualData, setActualData] = useState<any[]>([]);
   const [currentLeg, setCurrentLeg] = useState<string | null>(null);
 
+  const plannedColumns: GridColumnConfig[] = [
+    {
+      key: 'WagonId',
+      label: 'Wagon ID',
+      type: 'Link',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'WagonType',
+      label: 'Wagon Type',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'WagonQty',
+      label: 'Wagon Quantity',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'ContainerType',
+      label: 'Container Type',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ContainerId',
+      label: 'Container ID',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ContainerQty',
+      label: 'Container Qty',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'Product',
+      label: 'Product',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ProductWeight',
+      label: 'Product Weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ProductWeightUOM',
+      label: 'Product Weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'WagonAvgLoadWeight',
+      label: 'Wagon Avg Load weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonAvgTareWeight',
+      label: 'Wagon Avg Tare weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonWeightUOM',
+      label: 'Wagon weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonAvgLength',
+      label: 'Wagon avg length',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonAvgLengthUOM',
+      label: 'Wagon avg length UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerAvgTareWeight',
+      label: 'Container Avg tare weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerAvgLoadWeight',
+      label: 'Container Avg load weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerWeightUOM',
+      label: 'Container weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerWeightUOM',
+      label: 'Container weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuId',
+      label: 'Thu ID',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuSerialNo',
+      label: 'THU Serial no',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuQty',
+      label: 'THU Qty',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuWeight',
+      label: 'THU Weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuWeightUOM',
+      label: 'THU weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks1',
+      label: 'Remarks1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks2',
+      label: 'Remarks2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks3',
+      label: 'Remarks3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonTareWeight',
+      label: 'Wagon Tare weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonTareWeightUOM',
+      label: 'Wagon Tare weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'GrossWeight',
+      label: 'Gross weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'GrossWeightUOM',
+      label: 'Gross weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonLength',
+      label: 'Wagon length',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported1',
+      label: 'Last Commodity Transported 1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported2',
+      label: 'Last Commodity Transported 2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported3',
+      label: 'Last Commodity Transported 3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    }
+  ];
+
+  const actualColumns: GridColumnConfig[] = [
+    {
+      key: 'Wagon',
+      label: 'Wagon ID',
+      type: 'Link',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'WagonType',
+      label: 'Wagon Type',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'WagonQty',
+      label: 'Wagon Quantity',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false
+    },
+    {
+      key: 'ContainerType',
+      label: 'Container Type',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ContainerDescription',
+      label: 'Container ID',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ContainerQty',
+      label: 'Container Qty',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'Product',
+      label: 'Product',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ProductWeight',
+      label: 'Product Weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'ProductWeightUOM',
+      label: 'Product Weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
+      key: 'WagonPosition',
+      label: 'Wagon Position',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: true
+    },
+    {
+      key: 'WagonQtyUOM',
+      label: 'Wagon Qty UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: true
+    },
+    {
+      key: 'ContainerQtyUOM',
+      label: 'Container Qty UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: true
+    },
+    {
+      key: 'Thu',
+      label: 'THU',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuSerialNo',
+      label: 'THU Serial No',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuQty',
+      label: 'THU Qty',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuWeight',
+      label: 'THU Weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ThuWeightUOM',
+      label: 'THU Weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntingOption',
+      label: 'Shunting Option',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ReplacedWagon',
+      label: 'Replaced Wagon',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntingReasonCode',
+      label: 'Shunting Reason Code',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks',
+      label: 'Remarks',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntInLocationDescription',
+      label: 'Shunt In Location',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntOutLocationDescription',
+      label: 'Shunt Out Location',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntInDate',
+      label: 'Shunt In Date',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntInTime',
+      label: 'Shunt In Time',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntOutDate',
+      label: 'Shunt Out Time',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ShuntOutTime',
+      label: 'Shunt Out Time',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ClassOfStores',
+      label: 'Class Of Stores',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'NHMDescription',
+      label: 'NHM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'UNCodeDescription',
+      label: 'UN Code',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'DGClass',
+      label: 'DG Class',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainsHazardousGoods',
+      label: 'Contains Hazardous Goods',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonSealNo',
+      label: 'Wagon Seal No.',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerSealNo',
+      label: 'Container Seal No.',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerTareWeight',
+      label: 'Container Tare Weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'ContainerTareWeightUOM',
+      label: 'Container Tare Weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported1',
+      label: 'Last Commodity Transported 1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported2',
+      label: 'Last Commodity Transported 2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'LastCommodityTransported3',
+      label: 'Last Commodity Transported 3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonTareWeight',
+      label: 'Wagon Tare weight',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonTareWeightUOM',
+      label: 'Wagon Tare weight UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonLength',
+      label: 'Wagon Length',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'WagonLengthUOM',
+      label: 'Wagon length UOM',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCode1',
+      label: 'Quick code 1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCode2',
+      label: 'Quick code 2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCode3',
+      label: 'Quick code 3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCodeValue1',
+      label: 'Quick code Value 1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCodeValue2',
+      label: 'Quick code Value 2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'QuickCodeValue3',
+      label: 'Quick code Value 3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks1',
+      label: 'Remarks1',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks2',
+      label: 'Remarks2',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: 'Remarks3',
+      label: 'Remarks3',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+  ];
+
   const { getConsignments } = useTripExecutionDrawerStore();
   const consignments = getConsignments(legId) || [];
 
-  // 🧩 Step 1: Build Customer Order dropdown list
+  // Step 1: Build Customer Order dropdown list
   const buildCustomerOrderList = (consignments: any[] = []) => {
     return consignments.map((item, index) => ({
       label: `${item.CustomerID || '-'} — ${item.CustomerName || "-"}`,
@@ -42,10 +762,17 @@ export const ConsignmentTrip = ({ legId }) => {
       customerRefNo: item.CustomerReferenceNo,
       SourceBRId: item.SourceBRId,
       ReturnBRId: item.ReturnBRId,
+
+      // Totals
+      WagonQuantity: item.TotalWagons,
+      ContainerQuantity: item.TotalContainer,
+      ProductWeight: item.TotalProductWeight,
+      TotalTHU: item.TotalTHU,
+      // HazardousGoods: item.HazardousGoods,
     }));
   };
 
-  // 🧩 Step 2: Load fresh data whenever legId changes
+  // Step 2: Load fresh data whenever legId changes
   useEffect(() => {
     if (!legId) return;
 
@@ -77,7 +804,7 @@ export const ConsignmentTrip = ({ legId }) => {
     }
   }, [legId]); // only on leg change
 
-  // 🧩 Step 3: Keep selection stable if same leg data updates
+  // Step 3: Keep selection stable if same leg data updates
   useEffect(() => {
     if (currentLeg && consignments.length > 0) {
       const list = buildCustomerOrderList(consignments);
@@ -87,33 +814,34 @@ export const ConsignmentTrip = ({ legId }) => {
       const selected = consignments[selectedIndex];
       if (selected) {
         setSelectedCustomerData(selected);
-        setPlannedData(selected?.Planned ?? []);
-        setActualData(selected?.Actual ?? []);
-        // console.log('Planned select', plannedData,actualData);
+        const plannedConsignments = selected?.Planned ?? [];
+        const actualConsignments = selected?.Actual ?? [];
+
+        // Update component state with the data
+        setPlannedData(plannedConsignments);
+        setActualData(actualConsignments);
+
+        // Set the columns once
+        // setColumns(initialColumns());
       }
     }
-  }, [consignments]); // re-sync planned/actual if store updates
+  }, [consignments, selectedCustomerIndex, plannedData, actualData]); // re-sync when consignments or selection changes
 
-  // 🧩 Step 4: Handle dropdown change
-  const handleCustomerChange = (indexValue: string) => {
-    setSelectedCustomerIndex(indexValue);
-    const index = parseInt(indexValue, 10);
-    const selected = consignments[index];
-    setSelectedCustomerData(selected);
-    setPlannedData(selected?.Planned ?? []);
-    setActualData(selected?.Actual ?? []);
-    console.log('Planned changed:', plannedData, actualData);
+  // Step 4: Handle dropdown change
+  const handleCustomerChange = (idx: string) => {
+    setSelectedCustomerIndex(idx);
+    // Let the useEffect hook handle the data updates
   };
 
   return (
     <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
       {/* Warning Alert */}
-      <Alert className="mx-6 mt-4 mb-2 border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
+      {/* <Alert className="mx-6 mt-4 mb-2 border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
         <AlertCircle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-sm text-orange-800 dark:text-orange-200">
           Kindly take note that the Actual {'<<'} weight/length/wagon quantity {'>>'} is higher than the allowed limit. Please check path constraints for more details.
         </AlertDescription>
-      </Alert>
+      </Alert> */}
 
       {/* Consignment Content */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
@@ -240,7 +968,7 @@ export const ConsignmentTrip = ({ legId }) => {
             <h4 className="font-semibold flex items-center gap-2">
               Planned
               <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                5
+                {plannedData.length}
               </Badge>
             </h4>
             {expandedPlanned ? (
@@ -266,7 +994,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Truck className="h-5 w-5 text-blue-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">12 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.WagonQuantity ? selectedCustomerData.WagonQuantity : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Wagon Quantity</div>
                       </div>
                     </div>
@@ -277,7 +1005,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Container className="h-5 w-5 text-purple-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">12 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.ContainerQuantity ? selectedCustomerData?.ContainerQuantity : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Container Quantity</div>
                       </div>
                     </div>
@@ -288,7 +1016,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Box className="h-5 w-5 text-pink-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">23 Ton</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.ProductWeight ? selectedCustomerData?.ProductWeight : '-'} Ton</div>
                         <div className="text-xs text-muted-foreground">Product Weight</div>
                       </div>
                     </div>
@@ -299,7 +1027,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <PackageCheck className="h-5 w-5 text-cyan-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">10 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">THU Quantity</div>
                       </div>
                     </div>
@@ -308,123 +1036,34 @@ export const ConsignmentTrip = ({ legId }) => {
 
                 {/* Plan List */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="font-semibold">Plan List</h5>
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search" className="pl-8 h-9 w-[200px]" />
-                      </div>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <Filter className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <FileEdit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
                   {/* Table */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="w-[150px]">Wagon ID Type</TableHead>
-                          <TableHead className="w-[150px]">Container ID Type</TableHead>
-                          <TableHead className="w-[120px]">Hazardous Goods</TableHead>
-                          <TableHead className="w-[280px]">Departure and Arrival</TableHead>
-                          <TableHead className="w-[200px]">Plan From & To Date</TableHead>
-                          <TableHead className="w-[120px]">Price</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[1, 2, 3].map((item) => (
-                          <TableRow key={item}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium text-blue-600">WAG00000001</div>
-                                <div className="text-xs text-muted-foreground">Habbins</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">CONT100001</div>
-                                <div className="text-xs text-muted-foreground">Container A</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center">
-                                {item > 1 ? (
-                                  <Badge variant="outline" className="h-6 w-6 p-0 rounded-full flex items-center justify-center border-orange-500 text-orange-500">
-                                    <AlertCircle className="h-4 w-4" />
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">Frankfurt Station A - Frankfurt Station B</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">12-Mar-2025 to 12-Mar-2025</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="font-medium">€ 1395.00</div>
-                            </TableCell>
-                            <TableCell>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <div className="border rounded-lg overflow-hidden pt-2">
+                    {/* Planned Grid */}
+                    {plannedData && (
+                      <SmartGridWithGrouping
+                        columns={plannedColumns}
+                        data={plannedData}
+                        groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                        showGroupingDropdown={true}
+                        editableColumns={['plannedStartEndDateTime']}
+                        paginationMode="pagination"
+                        selectedRows={selectedRows}
+                        rowClassName={(row: any, index: number) => {
+                          return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                        }}
+                        showDefaultConfigurableButton={false}
+                        gridTitle="Planned"
+                        recordCount={plannedData.length}
+                        searchPlaceholder="Search"
+                        clientSideSearch={true}
+                        showSubHeaders={false}
+                        hideAdvancedFilter={true}
+                        gridId={gridPlanId}
+                        userId="current-user"
+                      />
+                    )}
 
-                  {/* Pagination */}
-                  <div className="flex items-center justify-center gap-1">
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                      <ChevronDown className="h-4 w-4 rotate-90" />
-                      <ChevronDown className="h-4 w-4 rotate-90 -ml-2" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                      <ChevronDown className="h-4 w-4 rotate-90" />
-                    </Button>
-                    {[1, 2, 3, 4, 5].map((page) => (
-                      <Button
-                        key={page}
-                        size="sm"
-                        variant={currentPage === page ? "default" : "outline"}
-                        className="h-8 w-8 p-0"
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    <span className="text-sm text-muted-foreground px-2">...</span>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                      10
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
-                      <ChevronDown className="h-4 w-4 -rotate-90 -ml-2" />
-                    </Button>
-                    <div className="flex items-center gap-2 ml-4">
-                      <span className="text-sm text-muted-foreground">Go to</span>
-                      <Input type="number" className="h-8 w-16 text-center" defaultValue="12" />
-                    </div>
+                    {/* Actual Grid */}
                   </div>
                 </div>
               </motion.div>
@@ -441,7 +1080,7 @@ export const ConsignmentTrip = ({ legId }) => {
             <h4 className="font-semibold flex items-center gap-2">
               Actuals
               <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                5
+                {actualData.length}
               </Badge>
             </h4>
             {expandedActuals ? (
@@ -467,7 +1106,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Truck className="h-5 w-5 text-blue-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">12 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.WagonQuantity ? selectedCustomerData?.WagonQuantity : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Wagon Quantity</div>
                       </div>
                     </div>
@@ -478,7 +1117,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Container className="h-5 w-5 text-purple-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">12 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.ContainerQuantity ? selectedCustomerData?.ContainerQuantity : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Container Quantity</div>
                       </div>
                     </div>
@@ -489,7 +1128,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Box className="h-5 w-5 text-pink-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">23 Ton</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.ProductWeight ? selectedCustomerData?.ProductWeight : '-'} Ton</div>
                         <div className="text-xs text-muted-foreground">Product Weight</div>
                       </div>
                     </div>
@@ -500,7 +1139,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <PackageCheck className="h-5 w-5 text-cyan-500" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold">10 Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">THU Quantity</div>
                       </div>
                     </div>
@@ -509,86 +1148,34 @@ export const ConsignmentTrip = ({ legId }) => {
 
                 {/* Actual List */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="font-semibold">Actual List</h5>
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search" className="pl-8 h-9 w-[200px]" />
-                      </div>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <Filter className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <FileEdit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-9 w-9 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
                   {/* Table */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="w-[150px]">Wagon ID Type</TableHead>
-                          <TableHead className="w-[150px]">Container ID Type</TableHead>
-                          <TableHead className="w-[120px]">Hazardous Goods</TableHead>
-                          <TableHead className="w-[280px]">Departure and Arrival</TableHead>
-                          <TableHead className="w-[200px]">Plan From & To Date</TableHead>
-                          <TableHead className="w-[120px]">Price</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[1, 2, 3].map((item) => (
-                          <TableRow key={item}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium text-blue-600">WAG00000001</div>
-                                <div className="text-xs text-muted-foreground">Habbins</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">CONT100001</div>
-                                <div className="text-xs text-muted-foreground">Container A</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center">
-                                {item > 1 ? (
-                                  <Badge variant="outline" className="h-6 w-6 p-0 rounded-full flex items-center justify-center border-orange-500 text-orange-500">
-                                    <AlertCircle className="h-4 w-4" />
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">Frankfurt Station A - Frankfurt Station B</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">12-Mar-2025 to 12-Mar-2025</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="font-medium">€ 1395.00</div>
-                            </TableCell>
-                            <TableCell>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <div className="border rounded-lg overflow-hidden pt-2">
+                    {actualData && (
+                      <SmartGridWithGrouping
+                        columns={actualColumns}
+                        data={actualData}
+                        groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                        showGroupingDropdown={true}
+                        paginationMode="pagination"
+                        selectedRows={selectedRows}
+                        rowClassName={(row: any, index: number) => {
+                          return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                        }}
+                        showDefaultConfigurableButton={false}
+                        gridTitle="Actuals"
+                        recordCount={actualData.length}
+                        showCreateButton={false}
+                        searchPlaceholder="Search"
+                        clientSideSearch={true}
+                        showSubHeaders={false}
+                        hideAdvancedFilter={true}
+                        hideCheckboxToggle={true}
+                        gridId={gridActualId}
+                        userId="current-user"
+                        editableColumns={['plannedStartEndDateTime']}
+
+                      />
+                    )}
                   </div>
                 </div>
               </motion.div>
