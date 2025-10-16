@@ -13,6 +13,9 @@ import { PanelFieldConfig } from '@/types/dynamicPanel';
 import { usePlanActualStore, ActualsData } from '@/stores/planActualStore';
 import { a } from 'node_modules/framer-motion/dist/types.d-Bq-Qm38R';
 import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
+import { manageTripStore } from '@/stores/mangeTripStore';
+import { tripService } from '@/api/services/tripService';
+import { useToast } from '@/hooks/use-toast';
 
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { Input } from '@/components/ui/input';
@@ -48,6 +51,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const getFullConsignment = getConsignmentByIndex(legId, consignmentIndex);
   // console.log('consignment Index from store:', getFullConsignment);
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
+  const { getLegDetails, tripData, setTrip } = manageTripStore();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('planned');
 
    // Generic fetch function for master common data using quickOrderService.getMasterCommonData
@@ -263,10 +268,78 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
   const handleItemClick = (item: WagonItem, index: number) => {
     setActiveWagon(index.toString());
-    setSelecteditem(item);
+    console.log("=====", index);
+    console.log("=====", actualList);
+    setSelecteditem(activeList[index]);
     console.log('selected item: ', item);
     // setWagonDetailsId(item.Wagon);
+    console.log("selecteditem", selecteditem);
+    setWagonDetailsId(selecteditem?.Wagon);
+    setWagonDetailsType(selecteditem?.WagonType);
   };
+
+  useEffect(() => {
+    if (selecteditem) {
+      console.log('selecteditem updated:', selecteditem);
+      setWagonDetailsId(selecteditem?.Wagon);
+      setWagonDetailsType(selecteditem?.WagonType);
+      setWagonDetailsQuantity({
+        dropdown: selecteditem?.WagonQtyUOM,
+        input: selecteditem?.WagonQty
+      });
+      setWagonDetailsTareWeight({
+        dropdown: selecteditem?.WagonTareWeightUOM,
+        input: selecteditem?.WagonTareWeight
+      });
+      setWagonDetailsGrossWeight({
+        dropdown: selecteditem?.WagonGrossWeightUOM,
+        input: selecteditem?.WagonGrossWeight
+      });
+      setWagonDetailsLength({
+        dropdown: selecteditem?.WagonLengthUOM,
+        input: selecteditem?.WagonLength
+      });
+      setWagonDetailsSequence(selecteditem?.WagonSealNo);
+
+      setContainerDetailsType(selecteditem?.ContainerType);
+      setContainerDetailsId(selecteditem?.ContainerId);
+      setContainerDetailsQuantity({
+        dropdown: selecteditem?.ContainerQtyUOM,
+        input: selecteditem?.ContainerQty
+      });
+      setContainerDetailsTareWeight({
+        dropdown: selecteditem?.ContainerTareWeightUOM,
+        input: selecteditem?.ContainerTareWeight
+      });
+      setContainerDetailsLoadWeight({
+        dropdown: selecteditem?.ContainerLoadWeightUOM,
+        input: selecteditem?.ContainerLoadWeight
+      });
+
+      setProductNHM(selecteditem?.NHM);
+      setProductId(selecteditem?.ProductID);
+      setProductQuantity({
+        dropdown: selecteditem?.ProductQuantityUOM,
+        input: selecteditem?.ProductQuantity
+      });
+      setClassOfStores(selecteditem?.ClassofStores);
+      setUnCode(selecteditem?.UNCode);
+      setDgClass(selecteditem?.DGClass);
+
+      setThuDetailsId(selecteditem?.ThuId);
+      setThuDetailsSerialNo(selecteditem?.ThuSerialNo);
+      setThuDetailsQuantity({
+        dropdown: selecteditem?.ThuQtyUOM,
+        input: selecteditem?.ThuQty
+      });
+      setThuDetailsWeight({
+        dropdown: selecteditem?.ThuWeightUOM,
+        input: selecteditem?.ThuWeight
+      });
+      // Do any operations that depend on selecteditem here
+      // setWagonDetailsId(selecteditem.Wagon);
+    }
+  }, [selecteditem]);
 
   // Get current wagon's actuals data
  
@@ -457,78 +530,133 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
   if (!isOpen) return null;
 
-  const handleSaveActualDetails = () => {
-    if (!selecteditem) {
-      console.log('No item selected');
-      return;
-    }
+  const handleSaveActualDetails = async () => {
+    // if (!selecteditem) {
+    //   console.log('No item selected');
+    //   toast({
+    //     title: "⚠️ No Item Selected",
+    //     description: "Please select an item to save.",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
-    // Create updated item with existing data and new form data
-    const updatedItem = {
-      ...selecteditem, // Keep all existing data
-      // Update with new form data
-      ModeFlag: "Update",
-      WagonType: wagonDetailsType || selecteditem.WagonType,
-      Wagon: wagonDetailsId || selecteditem.Wagon,
-      WagonQty: wagonDetailsQuantity.input ? parseFloat(wagonDetailsQuantity.input) : selecteditem.WagonQty,
-      WagonQtyUOM: wagonDetailsQuantity.dropdown || selecteditem.WagonQtyUOM,
-      WagonTareWeight: wagonDetailsTareWeight.input ? parseFloat(wagonDetailsTareWeight.input) : selecteditem.WagonTareWeight,
-      WagonTareWeightUOM: wagonDetailsTareWeight.dropdown || selecteditem.WagonTareWeightUOM,
-      WagonGrossWeight: wagonDetailsGrossWeight.input ? parseFloat(wagonDetailsGrossWeight.input) : selecteditem.WagonGrossWeight,
-      WagonGrossWeightUOM: wagonDetailsGrossWeight.dropdown || selecteditem.WagonGrossWeightUOM,
-      WagonLength: wagonDetailsLength.input ? parseFloat(wagonDetailsLength.input) : selecteditem.WagonLength,
-      WagonLengthUOM: wagonDetailsLength.dropdown || selecteditem.WagonLengthUOM,
-      WagonSealNo: wagonDetailsSequence || selecteditem.WagonSealNo,
+    try {
+      console.log("Saving actual details for item:", selecteditem);
+      
+      // Get the full trip data from the store
+      const currentTripData = tripData;
+      if (!currentTripData) {
+        console.warn("No trip data available in store");
+        toast({
+          title: "⚠️ No Trip Data",
+          description: "No trip data available to update.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      ContainerId: containerDetailsId || selecteditem.ContainerId,
-      ContainerType: containerDetailsType || selecteditem.ContainerType,
-      ContainerQty: containerDetailsQuantity.input ? parseFloat(containerDetailsQuantity.input) : selecteditem.ContainerQty,
-      // ContainerQtyUOM: containerDetailsQuantity.dropdown || selecteditem.ContainerQtyUOM,
-      ContainerTareWeight: containerDetailsTareWeight.input ? parseFloat(containerDetailsTareWeight.input) : selecteditem.ContainerTareWeight,
-      ContainerTareWeightUOM: containerDetailsTareWeight.dropdown || selecteditem.ContainerTareWeightUOM,
-      ContainerLoadWeight: containerDetailsLoadWeight.input ? parseFloat(containerDetailsLoadWeight.input) : selecteditem.ContainerLoadWeight,
-      ContainerLoadWeightUOM: containerDetailsLoadWeight.dropdown || selecteditem.ContainerLoadWeightUOM,
+      console.log("Current trip data:", currentTripData);
+      console.log("setSelecteditem index:", selecteditem);
+      
+      // Get the leg details from the store
+      const fullLegDetails = getLegDetails();
+      
+      
+      // Create updated item with form data
+      const updatedItem = {
+        ...selecteditem, // Keep all existing data
+        // Update with new form data
+        ModeFlag: "Update",
+        WagonType: wagonDetailsType || selecteditem.WagonType,
+        Wagon: wagonDetailsId || selecteditem.Wagon,
+        WagonQty: wagonDetailsQuantity.input ? parseFloat(wagonDetailsQuantity.input) : selecteditem.WagonQty,
+        WagonQtyUOM: wagonDetailsQuantity.dropdown || selecteditem.WagonQtyUOM,
+        WagonTareWeight: wagonDetailsTareWeight.input ? parseFloat(wagonDetailsTareWeight.input) : selecteditem.WagonTareWeight,
+        WagonTareWeightUOM: wagonDetailsTareWeight.dropdown || selecteditem.WagonTareWeightUOM,
+        WagonGrossWeight: wagonDetailsGrossWeight.input ? parseFloat(wagonDetailsGrossWeight.input) : selecteditem.WagonGrossWeight,
+        WagonGrossWeightUOM: wagonDetailsGrossWeight.dropdown || selecteditem.WagonGrossWeightUOM,
+        WagonLength: wagonDetailsLength.input ? parseFloat(wagonDetailsLength.input) : selecteditem.WagonLength,
+        WagonLengthUOM: wagonDetailsLength.dropdown || selecteditem.WagonLengthUOM,
+        WagonSealNo: wagonDetailsSequence || selecteditem.WagonSealNo,
 
-      ThuId: thuDetailsId || selecteditem.ThuId,
-      ThuSerialNo: thuDetailsSerialNo || selecteditem.ThuSerialNo,
-      ThuQty: thuDetailsQuantity.input ? parseFloat(thuDetailsQuantity.input) : selecteditem.ThuQuantity,
-      ThuQtyUOM: thuDetailsQuantity.dropdown || selecteditem.ThuQuantityUOM,
-      ThuWeight: thuDetailsWeight.input ? parseFloat(thuDetailsWeight.input) : selecteditem.ThuWeight,
-      ThuWeightUOM: thuDetailsWeight.dropdown || selecteditem.ThuWeightUOM,
+        ContainerId: containerDetailsId || selecteditem.ContainerId,
+        ContainerType: containerDetailsType || selecteditem.ContainerType,
+        ContainerQty: containerDetailsQuantity.input ? parseFloat(containerDetailsQuantity.input) : selecteditem.ContainerQty,
+        ContainerTareWeight: containerDetailsTareWeight.input ? parseFloat(containerDetailsTareWeight.input) : selecteditem.ContainerTareWeight,
+        ContainerTareWeightUOM: containerDetailsTareWeight.dropdown || selecteditem.ContainerTareWeightUOM,
+        ContainerLoadWeight: containerDetailsLoadWeight.input ? parseFloat(containerDetailsLoadWeight.input) : selecteditem.ContainerLoadWeight,
+        ContainerLoadWeightUOM: containerDetailsLoadWeight.dropdown || selecteditem.ContainerLoadWeightUOM,
 
-      productNHM: productNHM || selecteditem.NHM,
-      productId: productId || selecteditem.ProductID,
-      productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
-      productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
-      classOfStores: classOfStores || selecteditem.ClassofStores,
-      unCode: unCode || selecteditem.UNCode,
-      dgClass: dgClass || selecteditem.DGClass,
-    };
+        ThuId: thuDetailsId || selecteditem.ThuId,
+        ThuSerialNo: thuDetailsSerialNo || selecteditem.ThuSerialNo,
+        ThuQty: thuDetailsQuantity.input ? parseFloat(thuDetailsQuantity.input) : selecteditem.ThuQuantity,
+        ThuQtyUOM: thuDetailsQuantity.dropdown || selecteditem.ThuQuantityUOM,
+        ThuWeight: thuDetailsWeight.input ? parseFloat(thuDetailsWeight.input) : selecteditem.ThuWeight,
+        ThuWeightUOM: thuDetailsWeight.dropdown || selecteditem.ThuWeightUOM,
 
-    console.log('Updated item with form data:', updatedItem);
-    
-    // Update the store with the new actuals data
-    if (activeWagonId !== null) {
-      updateActualsData(activeWagonId, {
-        wagonType: updatedItem.WagonType,
-        wagonId: updatedItem.Wagon,
-        wagonQuantity: updatedItem.WagonQty,
-        wagonQuantityUnit: updatedItem.WagonQtyUOM,
-        wagonTareWeight: updatedItem.WagonTareWeight,
-        wagonTareWeightUnit: updatedItem.WagonTareWeightUOM,
-        wagonGrossWeight: updatedItem.WagonGrossWeight,
-        wagonGrossWeightUnit: updatedItem.WagonGrossWeightUOM,
-        wagonLength: updatedItem.WagonLength,
-        wagonLengthUnit: updatedItem.WagonLengthUOM,
-        wagonSequence: updatedItem.wagonDetailsSequence,
+        NHM: productNHM || selecteditem.NHM,
+        Product: productId || selecteditem.ProductID,
+        productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
+        productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
+        ClassOfStores: classOfStores || selecteditem.ClassofStores,
+        UNCode: unCode || selecteditem.UNCode,
+        DGClass: dgClass || selecteditem.DGClass,
+      };
+
+      console.log('Updated item with form data:', updatedItem);
+            
+      
+      // Save to API
+      // try {
+      //   const response = await tripService.saveTrip(updatedTripData);
+      //   console.log("Trip saved response:", response);
+        
+      //   const resourceStatus = (response as any)?.data?.IsSuccess;
+      //   console.log("resourceStatus ===", resourceStatus);
+        
+      //   if (resourceStatus) {
+      //     // Update the store with the new trip data
+      //     // if (setTrip) {
+      //       setTrip(updatedTripData);
+      //     //   console.log("Trip data updated in store");
+      //     // }
+          
+      //     // Update local state
+      //     setSelecteditem(updatedItem);
+          
+      //     toast({
+      //       title: "✅ Actual Details Saved Successfully",
+      //       description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+      //       variant: "default",
+      //     });
+      //   } else {
+      //     console.log("error as any ===", (response as any)?.data?.Message);
+      //     toast({
+      //       title: "⚠️ Save Failed",
+      //       description: (response as any)?.data?.Message || "Failed to save changes.",
+      //       variant: "destructive",
+      //     });
+      //   }
+      // } catch (apiError) {
+      //   console.error("API Error:", apiError);
+      //   toast({
+      //     title: "⚠️ Save Failed",
+      //     description: "Failed to save changes. Please try again.",
+      //     variant: "destructive",
+      //   });
+      // }
+      
+    } catch (error) {
+      console.error("Error saving actual details:", error);
+      toast({
+        title: "⚠️ Save Failed",
+        description: "An error occurred while saving. Please try again.",
+        variant: "destructive",
       });
     }
-    
-    // Update the selecteditem state with the new data
-    setSelecteditem(updatedItem);
-    
-    console.log('Data saved successfully!');
   };
+  
   return (
     <motion.div
       initial={{ x: '100%' }}
@@ -1522,7 +1650,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-muted-foreground mb-1">To Date and Time</div>
+                            <div className="text-xs text-muted-foreground mb-1">To Date</div>
                             <div className="text-sm font-medium">
                               <Popover>
                                 <PopoverTrigger asChild>
