@@ -636,34 +636,42 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
           throw new Error("LegDetails not found or not an array");
         }
         
-        if (!updatedTripData.LegDetails[legID] || !updatedTripData.LegDetails[legID].Consignment) {
-          throw new Error(`Leg at index ${legID} or its Consignment not found`);
+        // Find the leg by matching LegSequence with legID
+        const legIndex = updatedTripData.LegDetails.findIndex(leg => leg.LegSequence === legID);
+        if (legIndex === -1) {
+          throw new Error(`Leg with LegSequence ${legID} not found`);
         }
         
-        if (!Array.isArray(updatedTripData.LegDetails[legID].Consignment)) {
+        console.log(`Found leg at index ${legIndex} with LegSequence ${legID}`);
+        
+        if (!updatedTripData.LegDetails[legIndex].Consignment) {
+          throw new Error(`Leg at index ${legIndex} has no Consignment`);
+        }
+        
+        if (!Array.isArray(updatedTripData.LegDetails[legIndex].Consignment)) {
           throw new Error("Consignment is not an array");
         }
         
-        if (!updatedTripData.LegDetails[legID].Consignment[consignmentsIndex] || 
-            !updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual) {
+        if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex] || 
+            !updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex].Actual) {
           throw new Error(`Consignment at index ${consignmentsIndex} or its Actual not found`);
         }
         
-        if (!Array.isArray(updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual)) {
+        if (!Array.isArray(updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex].Actual)) {
           throw new Error("Actual is not an array");
         }
         
-        if (!updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex]) {
+        if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex].Actual[actualCurrentIndex]) {
           throw new Error(`Actual item at index ${actualCurrentIndex} not found`);
         }
         
         // Update the specific object
-        updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex] = updatedItem;
+        updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex].Actual[actualCurrentIndex] = updatedItem;
         
-        console.log("Successfully updated the nested object:", updatedTripData);
-        console.log("Updated LegDetails:", updatedTripData.LegDetails[legID]);
-        console.log("Updated Consignment:", updatedTripData.LegDetails[legID].Consignment[consignmentsIndex]);
-        console.log("Updated Actual item:", updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex]);
+        console.log("Successfully updated the nested object:");
+        console.log("Updated LegDetails:", updatedTripData.LegDetails[legIndex]);
+        console.log("Updated Consignment:", updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex]);
+        console.log("Updated Actual item:", updatedTripData.LegDetails[legIndex].Consignment[consignmentsIndex].Actual[actualCurrentIndex]);
         
         // Save to API
         try {
@@ -767,11 +775,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   <path d="M22 12A10 10 0 0 0 12 2v10z" />
                 </svg>
               </Button>
-              <Button size="icon" variant="default" className="h-8 w-8">
+              {/* <Button size="icon" variant="default" className="h-8 w-8">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-              </Button>
+              </Button> */}
             </div>
           </div>
 
