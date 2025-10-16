@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, ChevronUp, Truck, Container as ContainerIcon, Package, Box, Calendar, Info } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Truck, Container as ContainerIcon, Package, Box, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,10 @@ import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { Input } from '@/components/ui/input';
 import { InputDropdown, InputDropdownValue } from '@/components/ui/input-dropdown';
-
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { MoreVertical, Edit, Copy, Plus, CalendarIcon, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
@@ -101,6 +104,35 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [wagonDetailsLength, setWagonDetailsLength] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [wagonDetailsSequence, setWagonDetailsSequence] = useState<string | undefined>();
   
+  const [containerDetailsType, setContainerDetailsType] = useState<string | undefined>();
+  const [containerDetailsId, setContainerDetailsId] = useState<string | undefined>();
+  const [containerDetailsQuantity, setContainerDetailsQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [containerDetailsTareWeight, setContainerDetailsTareWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [containerDetailsLoadWeight, setContainerDetailsLoadWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+
+  const [productNHM, setProductNHM] = useState<string | undefined>();
+  const [productId, setProductId] = useState<string | undefined>();
+  const [productQuantity, setProductQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [classOfStores, setClassOfStores] = useState<string | undefined>();
+  const [unCode, setUnCode] = useState<string | undefined>();
+  const [dgClass, setDgClass] = useState<string | undefined>();
+
+  const [thuDetailsId, setThuDetailsId] = useState<string | undefined>();
+  const [thuDetailsSerialNo, setThuDetailsSerialNo] = useState<string | undefined>();
+  const [thuDetailsQuantity, setThuDetailsQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [thuDetailsWeight, setThuDetailsWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+
+  const [otherDetailsQcUserdefined1, setOtherDetailsQcUserdefined1] = useState<InputDropdownValue>({ dropdown: '', input: '' });
+  const [otherDetailsQcUserdefined2, setOtherDetailsQcUserdefined2] = useState<InputDropdownValue>({ dropdown: '', input: '' });
+  const [otherDetailsQcUserdefined3, setOtherDetailsQcUserdefined3] = useState<InputDropdownValue>({ dropdown: '', input: '' });
+  const [otherDetailsRemarks1, setOtherDetailsRemarks1] = useState<string | undefined>();
+  const [otherDetailsRemarks2, setOtherDetailsRemarks2] = useState<string | undefined>();
+  const [otherDetailsRemarks3, setOtherDetailsRemarks3] = useState<string | undefined>();
+  const [otherDetailsFromDateTime, setOtherDetailsFromDateTime] = useState<Date>();
+  const [otherDetailsToDateTime, setOtherDetailsToDateTime] = useState<Date>();
+  const [otherDetailsFromTime, setOtherDetailsFromTime] = useState<string | undefined>();
+  const [otherDetailsToTime, setOtherDetailsToTime] = useState<string | undefined>();
+
   const quantityUnitOptions = [
     { label: 'KG', value: 'KG' },
     { label: 'TON', value: 'TON' },
@@ -151,6 +183,42 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         input: activeList[0]?.WagonLength
       });
       setWagonDetailsSequence(activeList?.[0]?.WagonSealNo);
+
+      setContainerDetailsType(activeList?.[0]?.ContainerType);
+      setContainerDetailsId(activeList?.[0]?.ContainerId);
+      setContainerDetailsQuantity({
+        dropdown: activeList?.[0]?.ContainerQtyUOM,
+        input: activeList?.[0]?.ContainerQty
+      });
+      setContainerDetailsTareWeight({
+        dropdown: activeList?.[0]?.ContainerTareWeightUOM,
+        input: activeList?.[0]?.ContainerTareWeight
+      });
+      setContainerDetailsLoadWeight({
+        dropdown: activeList?.[0]?.ContainerLoadWeightUOM,
+        input: activeList?.[0]?.ContainerLoadWeight
+      });
+
+      setProductNHM(activeList?.[0]?.NHM);
+      setProductId(activeList?.[0]?.ProductID);
+      setProductQuantity({
+        dropdown: activeList?.[0]?.ProductQuantityUOM,
+        input: activeList?.[0]?.ProductQuantity
+      });
+      setClassOfStores(activeList?.[0]?.ClassofStores);
+      setUnCode(activeList?.[0]?.UNCode);
+      setDgClass(activeList?.[0]?.DGClass);
+
+      setThuDetailsId(activeList?.[0]?.ThuId);
+      setThuDetailsSerialNo(activeList?.[0]?.ThuSerialNo);
+      setThuDetailsQuantity({
+        dropdown: activeList?.[0]?.ThuQtyUOM,
+        input: activeList?.[0]?.ThuQty
+      });
+      setThuDetailsWeight({
+        dropdown: activeList?.[0]?.ThuWeightUOM,
+        input: activeList?.[0]?.ThuWeight
+      });
     } else {
       setCurrentWagon(null);
       setSelectedWagonId(null);
@@ -184,36 +252,6 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
     console.log('selected item: ', item);
     // setWagonDetailsId(item.Wagon);
   };
-
-  // const handleItemClick = (item: WagonItem,index) => {
-  //   setActiveWagon(index);
-  //   console.log('selected item: ', item);
-  //   setSelecteditem(item);
-        
-  //   console.log("selecteditem ", selecteditem);
-  //   // Populate form fields with existing data
-  //   // setWagonDetailsType(selecteditem?.WagonType || '');
-  //   // setWagonDetailsId(selecteditem?.WagonDescription || '');
-  //   // setWagonDetailsQuantity({
-  //   //   dropdown: item.WagonQtyUOM || 'TON',
-  //   //   input: item.WagonQty ? item.WagonQty.toString() : ''
-  //   // });
-  //   // setWagonDetailsTareWeight({
-  //   //   dropdown: item.WagonTareWeightUOM || 'TON',
-  //   //   input: item.WagonTareWeight ? item.WagonTareWeight.toString() : ''
-  //   // });
-  //   // setWagonDetailsGrossWeight({
-  //   //   dropdown: 'TON', // Default since not in original data
-  //   //   input: '' // Default since not in original data
-  //   // });
-  //   // setWagonDetailsLength({
-  //   //   dropdown: item.WagonLengthUOM || 'M',
-  //   //   input: item.WagonLength ? item.WagonLength.toString() : ''
-  //   // });
-  //   // setWagonDetailsSequence(item.Seqno || '');
-    
-  //   // console.log('selected item: ', selecteditem);
-  // };
 
   // Get current wagon's actuals data
  
@@ -730,7 +768,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   onClick={() => toggleSection('journey')}
                 >
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-blue-600" />
+                    {/* <Calendar className="h-5 w-5 text-blue-600" /> */}
                     <h3 className="font-semibold">Journey and Scheduling Details</h3>
                   </div>
                   <div className="flex items-center gap-2">
@@ -870,7 +908,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 activeTab === 'actuals' ? 'block' : 'hidden'
               )}
               forceMount>
-
+              
+              {/* Wagon Details - Actual */}
               <div className="border rounded-lg bg-card">
                 <div
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
@@ -989,513 +1028,492 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 </AnimatePresence>
               </div>
               
+              {/* Container Details - Planned */}
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('container')}
+                >
+                  <div className="flex items-center gap-2">
+                    <ContainerIcon className="h-5 w-5 text-purple-600" />
+                    <h3 className="font-semibold">Container Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-teal-50 text-teal-600 border-teal-200">
+                      Container {selecteditem?.ContainerQty ? selecteditem?.ContainerQty : '-'}
+                    </Badge>
+                    {expandedSections.container ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
 
-              {/* Wagon Details */}
-              {/* <SimpleDynamicPanel
-                title="Wagon Details"
-                config={[
-                  {
-                    fieldType: 'lazyselect',
-                    key: 'wagonType',
-                    label: 'Wagon Type',
-                    fetchOptions: async ({ searchTerm, offset, limit }) => {
-                      const allOptions = [
-                        { label: 'Habbins', value: 'habbins' },
-                        { label: 'Zaccs', value: 'zaccs' },
-                        { label: 'A Type Wagon', value: 'a-type' },
-                        { label: 'Closed Wagon', value: 'closed' },
-                      ];
-                      const filtered = searchTerm
-                        ? allOptions.filter(opt => opt.label.toLowerCase().includes(searchTerm.toLowerCase()))
-                        : allOptions;
-                      return filtered.slice(offset, offset + limit);
-                    },
-                    onChange: (selected) => updateCurrentActuals({ wagonType: selected?.value }),
-                  },
-                  {
-                    fieldType: 'search',
-                    key: 'wagonId',
-                    label: 'Wagon ID',
-                    placeholder: 'Search Wagon ID',
-                    onChange: (value) => updateCurrentActuals({ wagonId: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'wagonQuantity',
-                    label: 'Wagon Quantity',
-                    placeholder: 'Enter quantity',
-                    onChange: (value) => updateCurrentActuals({ wagonQuantity: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'wagonQuantityUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'EA', value: 'EA' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ wagonQuantityUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'wagonTareWeight',
-                    label: 'Wagon Tare Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ wagonTareWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'wagonTareWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ wagonTareWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'wagonGrossWeight',
-                    label: 'Wagon Gross Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ wagonGrossWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'wagonGrossWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ wagonGrossWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'wagonLength',
-                    label: 'Wagon Length',
-                    placeholder: 'Enter length',
-                    onChange: (value) => updateCurrentActuals({ wagonLength: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'wagonLengthUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'M', value: 'M' },
-                      { label: 'FT', value: 'FT' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ wagonLengthUnit: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'wagonSequence',
-                    label: 'Wagon Sequence',
-                    placeholder: 'Enter sequence',
-                    onChange: (value) => updateCurrentActuals({ wagonSequence: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+                <AnimatePresence>
+                  {expandedSections.container && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Type</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={containerDetailsType}
+                                onChange={(value) => setContainerDetailsType(value as string)}
+                                placeholder="Select Type"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container ID</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={containerDetailsId}
+                                onChange={(value) => setContainerDetailsId(value as string)}
+                                placeholder="Select ID"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Quantity</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={containerDetailsQuantity}
+                                onChange={setContainerDetailsQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Tare Weight</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={containerDetailsTareWeight}
+                                onChange={setContainerDetailsTareWeight}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Container Load Weight</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={containerDetailsLoadWeight}
+                                onChange={setContainerDetailsLoadWeight}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-              {/* Container Details */}
-              {/* <SimpleDynamicPanel
-                title="Container Details"
-                config={[
-                  {
-                    fieldType: 'select',
-                    key: 'containerType',
-                    label: 'Container Type',
-                    options: [
-                      { label: '20ft Standard', value: '20ft' },
-                      { label: '40ft Standard', value: '40ft' },
-                      { label: 'Container A', value: 'container-a' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ containerType: value }),
-                  },
-                  {
-                    fieldType: 'search',
-                    key: 'containerId',
-                    label: 'Container ID',
-                    placeholder: 'Search Container ID',
-                    onChange: (value) => updateCurrentActuals({ containerId: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'containerQuantity',
-                    label: 'Container Quantity',
-                    placeholder: 'Enter quantity',
-                    onChange: (value) => updateCurrentActuals({ containerQuantity: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'containerQuantityUnit',
-                    label: 'Unit',
-                    options: [{ label: 'EA', value: 'EA' }],
-                    onChange: (value) => updateCurrentActuals({ containerQuantityUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'containerTareWeight',
-                    label: 'Container Tare Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ containerTareWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'containerTareWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ containerTareWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'containerLoadWeight',
-                    label: 'Container Load Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ containerLoadWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'containerLoadWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ containerLoadWeightUnit: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+              {/* Product Details - Planned */}
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('product')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-pink-600" />
+                    <h3 className="font-semibold">Product Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
+                      {selecteditem?.Product ? selecteditem?.Product : '-'}
+                    </Badge>
+                    {expandedSections.product ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
 
-              {/* Product Details */}
-              {/* <SimpleDynamicPanel
-                title="Product Details"
-                config={[
-                  {
-                    fieldType: 'radio',
-                    key: 'hazardousGoods',
-                    label: 'Hazardous Goods',
-                    options: [
-                      { label: 'Yes', value: 'yes' },
-                      { label: 'No', value: 'no' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ hazardousGoods: value === 'yes' }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'nhm',
-                    label: 'NHM',
-                    options: [
-                      { label: '2WQ1E32R43', value: '2WQ1E32R43' },
-                      { label: 'NHM 1', value: 'nhm1' },
-                      { label: 'NHM 2', value: 'nhm2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ nhm: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'productId',
-                    label: 'Product ID',
-                    placeholder: 'Enter Product ID',
-                    onChange: (value) => updateCurrentActuals({ productId: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'productQuantity',
-                    label: 'Product Quantity',
-                    placeholder: 'Enter quantity',
-                    onChange: (value) => updateCurrentActuals({ productQuantity: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'productQuantityUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'EA', value: 'EA' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ productQuantityUnit: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'classOfStores',
-                    label: 'Class of Stores',
-                    options: [
-                      { label: 'Class A', value: 'class-a' },
-                      { label: 'Class 1', value: 'class1' },
-                      { label: 'Class 2', value: 'class2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ classOfStores: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'unCode',
-                    label: 'UN Code',
-                    options: [
-                      { label: '2432', value: '2432' },
-                      { label: 'UN 1', value: 'un1' },
-                      { label: 'UN 2', value: 'un2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ unCode: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'dgClass',
-                    label: 'DG Class',
-                    options: [
-                      { label: 'AAA', value: 'AAA' },
-                      { label: 'DG 1', value: 'dg1' },
-                      { label: 'DG 2', value: 'dg2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ dgClass: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+                <AnimatePresence>
+                  {expandedSections.product && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          {/* <div>
+                            <div className="text-xs text-muted-foreground mb-1">Hazardous Goods</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={hazardousGoods}
+                                onChange={(value) => setHazardousGoods(value as string)}
+                                placeholder="Select Hazardous Goods"
+                              />
+                            </div>  
+                          </div> */}
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">NHM</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={productNHM}
+                                onChange={(value) => setProductNHM(value as string)}
+                                placeholder="Select NHM"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Product ID</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={productId}
+                                onChange={(value) => setProductId(value as string)}
+                                placeholder="Select NHM"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Product Quantity</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={productQuantity}
+                                onChange={setProductQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Class of Stores</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={classOfStores}
+                                onChange={(value) => setClassOfStores(value as string)}
+                                placeholder="Select Class of Stores"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">UN Code</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={unCode}
+                                onChange={(value) => setUnCode(value as string)}
+                                placeholder="Select UN Code"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">DG Class</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={dgClass}
+                                onChange={(value) => setDgClass(value as string)}
+                                placeholder="Select DG Class"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-              {/* THU Details */}
-              {/* <SimpleDynamicPanel
-                title="THU Details"
-                config={[
-                  {
-                    fieldType: 'select',
-                    key: 'thuId',
-                    label: 'THU ID',
-                    options: [
-                      { label: 'THU329847', value: 'THU329847' },
-                      { label: 'THU 1', value: 'thu1' },
-                      { label: 'THU 2', value: 'thu2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ thuId: value }),
-                  },
-                  {
-                    fieldType: 'text',
-                    key: 'thuQuantity',
-                    label: 'THU Quantity',
-                    placeholder: 'Enter quantity',
-                    onChange: (value) => updateCurrentActuals({ thuQuantity: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'thuQuantityUnit',
-                    label: 'Unit',
-                    options: [{ label: 'EA', value: 'EA' }],
-                    onChange: (value) => updateCurrentActuals({ thuQuantityUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuGrossWeight',
-                    label: 'THU Gross Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ thuGrossWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'thuGrossWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ thuGrossWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuTareWeight',
-                    label: 'THU Tare Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ thuTareWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'thuTareWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ thuTareWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuNetWeight',
-                    label: 'THU Net Weight',
-                    placeholder: 'Enter weight',
-                    onChange: (value) => updateCurrentActuals({ thuNetWeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'thuNetWeightUnit',
-                    label: 'Unit',
-                    options: [
-                      { label: 'TON', value: 'TON' },
-                      { label: 'KG', value: 'KG' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ thuNetWeightUnit: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuLength',
-                    label: 'THU Length',
-                    placeholder: 'Enter length',
-                    onChange: (value) => updateCurrentActuals({ thuLength: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuWidth',
-                    label: 'THU Width',
-                    placeholder: 'Enter width',
-                    onChange: (value) => updateCurrentActuals({ thuWidth: value }),
-                  },
-                  {
-                    fieldType: 'currency',
-                    key: 'thuHeight',
-                    label: 'THU Height',
-                    placeholder: 'Enter height',
-                    onChange: (value) => updateCurrentActuals({ thuHeight: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'thuDimensionUnit',
-                    label: 'Dimension Unit',
-                    options: [
-                      { label: 'M', value: 'M' },
-                      { label: 'CM', value: 'CM' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ thuLengthUnit: value, thuWidthUnit: value, thuHeightUnit: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+              {/* THU Details - Planned */}
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('thu')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Box className="h-5 w-5 text-cyan-600" />
+                    <h3 className="font-semibold">THU Details</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-cyan-50 text-cyan-600 border-cyan-200">
+                      {selecteditem?.ThuId ? selecteditem?.ThuId : '-'}
+                    </Badge>
+                    {expandedSections.thu ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
 
-              {/* Journey and Scheduling Details */}
-              {/* <SimpleDynamicPanel
-                title="Journey and Scheduling Details"
-                config={[
-                  {
-                    fieldType: 'select',
-                    key: 'departure',
-                    label: 'Departure',
-                    options: [
-                      { label: 'Frankfurt Station Point A', value: 'frankfurt-a' },
-                      { label: 'Frankfurt Station Point B', value: 'frankfurt-b' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ departure: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'destination',
-                    label: 'Destination',
-                    options: [
-                      { label: 'Frankfurt Station Point A', value: 'frankfurt-a' },
-                      { label: 'Frankfurt Station Point B', value: 'frankfurt-b' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ destination: value }),
-                  },
-                  {
-                    fieldType: 'date',
-                    key: 'fromDate',
-                    label: 'From Date',
-                    onChange: (value) => updateCurrentActuals({ fromDate: value }),
-                  },
-                  {
-                    fieldType: 'time',
-                    key: 'fromTime',
-                    label: 'From Time',
-                    onChange: (value) => updateCurrentActuals({ fromTime: value }),
-                  },
-                  {
-                    fieldType: 'date',
-                    key: 'toDate',
-                    label: 'To Date',
-                    onChange: (value) => updateCurrentActuals({ toDate: value }),
-                  },
-                  {
-                    fieldType: 'time',
-                    key: 'toTime',
-                    label: 'To Time',
-                    onChange: (value) => updateCurrentActuals({ toTime: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+                <AnimatePresence>
+                  {expandedSections.thu && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">THU ID</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={thuDetailsId}
+                                onChange={(value) => setThuDetailsId(value as string)}
+                                placeholder="Select THU ID"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">THU Serial No.</div>
+                            <div className="text-sm font-medium">
+                            <DynamicLazySelect
+                                fetchOptions={fetchWagonTypes}
+                                value={thuDetailsSerialNo}
+                                onChange={(value) => setThuDetailsSerialNo(value as string)}
+                                placeholder="Select THU Serial No."
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">THU Quantity</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={thuDetailsQuantity}
+                                onChange={setThuDetailsQuantity}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">THU Weight</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={thuDetailsWeight}
+                                onChange={setThuDetailsWeight}
+                                options={quantityUnitOptions}
+                                placeholder="Enter Quantity"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-              {/* Other Details */}
-              {/* <SimpleDynamicPanel
-                title="Other Details"
-                config={[
-                  {
-                    fieldType: 'select',
-                    key: 'qcUserdefined1',
-                    label: 'QC Userdefined 1',
-                    options: [
-                      { label: 'QC 1', value: 'qc1' },
-                      { label: 'QC 2', value: 'qc2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ qcUserdefined1: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'qcUserdefined2',
-                    label: 'QC Userdefined 2',
-                    options: [
-                      { label: 'QC 1', value: 'qc1' },
-                      { label: 'QC 2', value: 'qc2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ qcUserdefined2: value }),
-                  },
-                  {
-                    fieldType: 'select',
-                    key: 'qcUserdefined3',
-                    label: 'QC Userdefined 3',
-                    options: [
-                      { label: 'QC 1', value: 'qc1' },
-                      { label: 'QC 2', value: 'qc2' },
-                    ],
-                    onChange: (value) => updateCurrentActuals({ qcUserdefined3: value }),
-                  },
-                  {
-                    fieldType: 'textarea',
-                    key: 'remarks1',
-                    label: 'Remarks 1',
-                    placeholder: 'Enter remarks',
-                    onChange: (value) => updateCurrentActuals({ remarks1: value }),
-                  },
-                  {
-                    fieldType: 'textarea',
-                    key: 'remarks2',
-                    label: 'Remarks 2',
-                    placeholder: 'Enter remarks',
-                    onChange: (value) => updateCurrentActuals({ remarks2: value }),
-                  },
-                  {
-                    fieldType: 'textarea',
-                    key: 'remarks3',
-                    label: 'Remarks 3',
-                    placeholder: 'Enter remarks',
-                    onChange: (value) => updateCurrentActuals({ remarks3: value }),
-                  },
-                ] as PanelFieldConfig[]}
-                initialData={actualsData}
-                onDataChange={(data) => updateCurrentActuals(data)}
-                className="border-0 shadow-none"
-              /> */}
+              {/* Other Details - Planned */}
+              <div className="border rounded-lg bg-card">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => toggleSection('other')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Info className="h-5 w-5 text-orange-600" />
+                    <h3 className="font-semibold">Other Details</h3>
+                  </div>
+                  {expandedSections.other ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </div>
+
+                <AnimatePresence>
+                  {expandedSections.other && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Separator />
+                      <div className="p-4">
+                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">From Date</div>
+                            <div className="text-sm font-medium">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !otherDetailsFromDateTime && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {otherDetailsFromDateTime 
+                                      ? format(otherDetailsFromDateTime, "dd/MM/yyyy") 
+                                      : <span>{"Pick a date"}</span>
+                                    }
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={otherDetailsFromDateTime}
+                                    onSelect={setOtherDetailsFromDateTime}
+                                    initialFocus
+                                    className="pointer-events-auto"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">From Time</div>
+                            <div className="text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  id="planned-container-time"
+                                  type="time"
+                                  value={otherDetailsFromTime}
+                                  onChange={(e) => setOtherDetailsFromTime(e.target.value)}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">To Date and Time</div>
+                            <div className="text-sm font-medium">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !otherDetailsToDateTime && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {otherDetailsToDateTime 
+                                      ? format(otherDetailsToDateTime, "dd/MM/yyyy") 
+                                      : <span>{"Pick a date"}</span>
+                                    }
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={otherDetailsToDateTime}
+                                    onSelect={setOtherDetailsToDateTime}
+                                    initialFocus
+                                    className="pointer-events-auto"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">To Time</div>
+                            <div className="text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  id="planned-container-time"
+                                  type="time"
+                                  value={otherDetailsToTime}
+                                  onChange={(e) => setOtherDetailsToTime(e.target.value)}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">QC Userdefined 1</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={otherDetailsQcUserdefined1 as InputDropdownValue}
+                                onChange={setOtherDetailsQcUserdefined1}
+                                options={quantityUnitOptions}
+                                placeholder="Select QC Userdefined 1"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">QC Userdefined 2</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={otherDetailsQcUserdefined2}
+                                onChange={setOtherDetailsQcUserdefined2}
+                                options={quantityUnitOptions}
+                                placeholder="Select QC Userdefined 2"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">QC Userdefined 3</div>
+                            <div className="text-sm font-medium">
+                              <InputDropdown
+                                value={otherDetailsQcUserdefined3}
+                                onChange={setOtherDetailsQcUserdefined3}
+                                options={quantityUnitOptions}
+                                placeholder="Select QC Userdefined 3"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Remarks 1</div>
+                            <div className="text-sm font-medium">
+                              <Input
+                                value={otherDetailsRemarks1}
+                                onChange={(e) => setOtherDetailsRemarks1(e.target.value)}
+                                placeholder="Enter Remarks 1"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Remarks 2</div>
+                            <div className="text-sm font-medium">
+                              <Input
+                                value={otherDetailsRemarks2}
+                                onChange={(e) => setOtherDetailsRemarks2(e.target.value)}
+                                placeholder="Enter Remarks 1"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Remarks 3</div>
+                            <div className="text-sm font-medium">
+                              <Input
+                                value={otherDetailsRemarks3}
+                                onChange={(e) => setOtherDetailsRemarks3(e.target.value)}
+                                placeholder="Enter Remarks 1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
             </TabsContent>
           </Tabs>
 
