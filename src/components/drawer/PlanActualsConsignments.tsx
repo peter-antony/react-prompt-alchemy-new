@@ -479,6 +479,30 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       WagonLength: wagonDetailsLength.input ? parseFloat(wagonDetailsLength.input) : selecteditem.WagonLength,
       WagonLengthUOM: wagonDetailsLength.dropdown || selecteditem.WagonLengthUOM,
       WagonSealNo: wagonDetailsSequence || selecteditem.WagonSealNo,
+
+      ContainerId: containerDetailsId || selecteditem.ContainerId,
+      ContainerType: containerDetailsType || selecteditem.ContainerType,
+      ContainerQty: containerDetailsQuantity.input ? parseFloat(containerDetailsQuantity.input) : selecteditem.ContainerQty,
+      // ContainerQtyUOM: containerDetailsQuantity.dropdown || selecteditem.ContainerQtyUOM,
+      ContainerTareWeight: containerDetailsTareWeight.input ? parseFloat(containerDetailsTareWeight.input) : selecteditem.ContainerTareWeight,
+      ContainerTareWeightUOM: containerDetailsTareWeight.dropdown || selecteditem.ContainerTareWeightUOM,
+      ContainerLoadWeight: containerDetailsLoadWeight.input ? parseFloat(containerDetailsLoadWeight.input) : selecteditem.ContainerLoadWeight,
+      ContainerLoadWeightUOM: containerDetailsLoadWeight.dropdown || selecteditem.ContainerLoadWeightUOM,
+
+      ThuId: thuDetailsId || selecteditem.ThuId,
+      ThuSerialNo: thuDetailsSerialNo || selecteditem.ThuSerialNo,
+      ThuQty: thuDetailsQuantity.input ? parseFloat(thuDetailsQuantity.input) : selecteditem.ThuQuantity,
+      ThuQtyUOM: thuDetailsQuantity.dropdown || selecteditem.ThuQuantityUOM,
+      ThuWeight: thuDetailsWeight.input ? parseFloat(thuDetailsWeight.input) : selecteditem.ThuWeight,
+      ThuWeightUOM: thuDetailsWeight.dropdown || selecteditem.ThuWeightUOM,
+
+      productNHM: productNHM || selecteditem.NHM,
+      productId: productId || selecteditem.ProductID,
+      productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
+      productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
+      classOfStores: classOfStores || selecteditem.ClassofStores,
+      unCode: unCode || selecteditem.UNCode,
+      dgClass: dgClass || selecteditem.DGClass,
     };
 
     console.log('Updated item with form data:', updatedItem);
