@@ -1164,7 +1164,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">Container Type</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchContainerTypes}
                                 value={containerDetailsType}
                                 onChange={(value) => setContainerDetailsType(value as string)}
                                 placeholder="Select Type"
@@ -1175,7 +1175,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">Container ID</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchContainerIds}
                                 value={containerDetailsId}
                                 onChange={(value) => setContainerDetailsId(value as string)}
                                 placeholder="Select ID"
