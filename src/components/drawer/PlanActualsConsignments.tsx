@@ -153,6 +153,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [otherDetailsFromTime, setOtherDetailsFromTime] = useState<string | undefined>();
   const [otherDetailsToTime, setOtherDetailsToTime] = useState<string | undefined>();
 
+  const [globalIndex, setGlobalIndex] = useState<number>(-1);
+  const [localIndex, setLocalIndex] = useState<number>(0);
+
   const quantityUnitOptions = [
     { label: 'KG', value: 'KG' },
     { label: 'TON', value: 'TON' },
@@ -263,14 +266,27 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
     if (activeList.length > 0 && !selecteditem) {
       setSelecteditem(activeList[0]);
       setActiveWagon('0');
+      if (activeTab === 'actuals') {
+        setLocalIndex(0);
+        console.log('Auto-selected first actual item with localIndex: 0');
+      } else {
+        console.log('Auto-selected first planned item - localIndex not updated');
+      }
     }
-  }, [activeList, selecteditem]);
+  }, [activeList, selecteditem, activeTab]);
 
   const handleItemClick = (item: WagonItem, index: number) => {
     setActiveWagon(index.toString());
     console.log("=====", index);
     console.log("=====", actualList);
     setSelecteditem(activeList[index]);
+    if (activeTab === 'actuals') {
+      setLocalIndex(index);
+      console.log('localIndex updated to:', index, 'for actuals tab');
+    } else {
+      console.log('Planned tab - localIndex not updated');
+    }
+ 
     console.log('selected item: ', item);
     // setWagonDetailsId(item.Wagon);
     console.log("selecteditem", selecteditem);
@@ -545,6 +561,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       console.log("Saving actual details for item:", selecteditem);
       
       // Get the full trip data from the store
+      let legID = legId;
+      let consignmentsIndex = consignmentIndex;
+      let actualCurrentIndex = localIndex;
+      console.log("legID ====", legID + consignmentsIndex + actualCurrentIndex)
       const currentTripData = tripData;
       if (!currentTripData) {
         console.warn("No trip data available in store");
@@ -605,47 +625,94 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       };
 
       console.log('Updated item with form data:', updatedItem);
-            
       
-      // Save to API
-      // try {
-      //   const response = await tripService.saveTrip(updatedTripData);
-      //   console.log("Trip saved response:", response);
+      // Create a deep copy of the trip data to avoid mutation
+      const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
+      
+      // Find and update the specific nested object
+      try {
+        // Validate the path exists
+        if (!updatedTripData.LegDetails || !Array.isArray(updatedTripData.LegDetails)) {
+          throw new Error("LegDetails not found or not an array");
+        }
         
-      //   const resourceStatus = (response as any)?.data?.IsSuccess;
-      //   console.log("resourceStatus ===", resourceStatus);
+        if (!updatedTripData.LegDetails[legID] || !updatedTripData.LegDetails[legID].Consignment) {
+          throw new Error(`Leg at index ${legID} or its Consignment not found`);
+        }
         
-      //   if (resourceStatus) {
-      //     // Update the store with the new trip data
-      //     // if (setTrip) {
-      //       setTrip(updatedTripData);
-      //     //   console.log("Trip data updated in store");
-      //     // }
+        if (!Array.isArray(updatedTripData.LegDetails[legID].Consignment)) {
+          throw new Error("Consignment is not an array");
+        }
+        
+        if (!updatedTripData.LegDetails[legID].Consignment[consignmentsIndex] || 
+            !updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual) {
+          throw new Error(`Consignment at index ${consignmentsIndex} or its Actual not found`);
+        }
+        
+        if (!Array.isArray(updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual)) {
+          throw new Error("Actual is not an array");
+        }
+        
+        if (!updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex]) {
+          throw new Error(`Actual item at index ${actualCurrentIndex} not found`);
+        }
+        
+        // Update the specific object
+        updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex] = updatedItem;
+        
+        console.log("Successfully updated the nested object:", updatedTripData);
+        console.log("Updated LegDetails:", updatedTripData.LegDetails[legID]);
+        console.log("Updated Consignment:", updatedTripData.LegDetails[legID].Consignment[consignmentsIndex]);
+        console.log("Updated Actual item:", updatedTripData.LegDetails[legID].Consignment[consignmentsIndex].Actual[actualCurrentIndex]);
+        
+        // Save to API
+        try {
+          const response = await tripService.saveTrip(updatedTripData);
+          console.log("Trip saved response:", response);
           
-      //     // Update local state
-      //     setSelecteditem(updatedItem);
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("resourceStatus ===", resourceStatus);
           
-      //     toast({
-      //       title: "✅ Actual Details Saved Successfully",
-      //       description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-      //       variant: "default",
-      //     });
-      //   } else {
-      //     console.log("error as any ===", (response as any)?.data?.Message);
-      //     toast({
-      //       title: "⚠️ Save Failed",
-      //       description: (response as any)?.data?.Message || "Failed to save changes.",
-      //       variant: "destructive",
-      //     });
-      //   }
-      // } catch (apiError) {
-      //   console.error("API Error:", apiError);
-      //   toast({
-      //     title: "⚠️ Save Failed",
-      //     description: "Failed to save changes. Please try again.",
-      //     variant: "destructive",
-      //   });
-      // }
+          if (resourceStatus) {
+            // Update the store with the new trip data
+            if (setTrip) {
+              setTrip(updatedTripData);
+              console.log("Trip data updated in store");
+            }
+            
+            // Update local state
+            setSelecteditem(updatedItem);
+            
+            toast({
+              title: "✅ Actual Details Saved Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+              variant: "default",
+            });
+          } else {
+            console.log("error as any ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Save Failed",
+              description: (response as any)?.data?.Message || "Failed to save changes.",
+              variant: "destructive",
+            });
+          }
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          toast({
+            title: "⚠️ Save Failed",
+            description: "Failed to save changes. Please try again.",
+            variant: "destructive",
+          });
+        }
+        
+      } catch (updateError) {
+        console.error("Error updating nested data:", updateError);
+        toast({
+          title: "⚠️ Update Failed",
+          description: `Failed to update the data structure: ${updateError.message}`,
+          variant: "destructive",
+        });
+      }
       
     } catch (error) {
       console.error("Error saving actual details:", error);
@@ -1603,98 +1670,6 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                       <Separator />
                       <div className="p-4">
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">From Date</div>
-                            <div className="text-sm font-medium">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal",
-                                      !otherDetailsFromDateTime && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {otherDetailsFromDateTime 
-                                      ? format(otherDetailsFromDateTime, "dd/MM/yyyy") 
-                                      : <span>{"Pick a date"}</span>
-                                    }
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={otherDetailsFromDateTime}
-                                    onSelect={setOtherDetailsFromDateTime}
-                                    initialFocus
-                                    className="pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">From Time</div>
-                            <div className="text-sm font-medium">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                <Input
-                                  id="planned-container-time"
-                                  type="time"
-                                  value={otherDetailsFromTime}
-                                  onChange={(e) => setOtherDetailsFromTime(e.target.value)}
-                                  className="flex-1"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">To Date</div>
-                            <div className="text-sm font-medium">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal",
-                                      !otherDetailsToDateTime && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {otherDetailsToDateTime 
-                                      ? format(otherDetailsToDateTime, "dd/MM/yyyy") 
-                                      : <span>{"Pick a date"}</span>
-                                    }
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={otherDetailsToDateTime}
-                                    onSelect={setOtherDetailsToDateTime}
-                                    initialFocus
-                                    className="pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">To Time</div>
-                            <div className="text-sm font-medium">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                <Input
-                                  id="planned-container-time"
-                                  type="time"
-                                  value={otherDetailsToTime}
-                                  onChange={(e) => setOtherDetailsToTime(e.target.value)}
-                                  className="flex-1"
-                                />
-                              </div>
-                            </div>
-                          </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">QC Userdefined 1</div>
                             <div className="text-sm font-medium">
