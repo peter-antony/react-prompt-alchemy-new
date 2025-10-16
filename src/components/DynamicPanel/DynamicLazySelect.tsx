@@ -245,9 +245,9 @@ export function DynamicLazySelect({
               {hideSearch ? 'No options available.' : (debouncedSearchTerm ? 'No results found.' : 'Start typing to search...')}
             </div>
           ) : (
-            options.map((option) => (
+            options.map((option:any, index) => (
               <div
-                key={option.value}
+                key={(option?.id || option?.value) + '-' + index}
                 className={cn(
                   "flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                   isSelected(option.value) && "bg-accent"

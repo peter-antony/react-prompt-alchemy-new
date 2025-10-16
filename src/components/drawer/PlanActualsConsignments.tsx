@@ -21,6 +21,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MoreVertical, Edit, Copy, Plus, CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { quickOrderService } from '@/api/services/quickOrderService';
 
 interface PlanActualDetailsDrawerProps {
   isOpen: boolean;
@@ -49,36 +50,50 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const { wagonItems, activeWagonId, setActiveWagon, updateActualsData, getWagonData } = usePlanActualStore();
   const [activeTab, setActiveTab] = useState<'planned' | 'actuals'>('planned');
 
-  // Mock fetch function for wagon types with lazy loading
-  const fetchWagonTypes = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Mock data - in production this would be an API call
-    const allTypes = [
-      { value: 'hasbins', label: 'Hasbins' },
-      { value: 'zaccs', label: 'Zaccs' },
-      { value: 'type-a-wagon', label: 'A Type Wagon' },
-      { value: 'closed-wagon', label: 'Closed Wagon' },
-      { value: 'open-wagon', label: 'Open Wagon' },
-      { value: 'flat-wagon', label: 'Flat Wagon' },
-      { value: 'tank-wagon', label: 'Tank Wagon' },
-      { value: 'hopper-wagon', label: 'Hopper Wagon' },
-      { value: 'box-wagon', label: 'Box Wagon' },
-      { value: 'refrigerated-wagon', label: 'Refrigerated Wagon' },
-    ];
-
-    // Filter by search term
-    const filtered = searchTerm
-      ? allTypes.filter(type => 
-          type.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          type.value.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : allTypes;
-
-    // Paginate
-    return filtered.slice(offset, offset + limit);
+   // Generic fetch function for master common data using quickOrderService.getMasterCommonData
+  const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+      
+      const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+            : {})
+        }));
+      
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
   };
+
+  // Specific fetch functions for different message types
+  const fetchWagonTypes = fetchMasterData("Wagon type Init");
+  const fetchContainerTypes = fetchMasterData("Container Type Init");
+  const fetchWagonIds = fetchMasterData("Wagon id Init");
+  const fetchContainerIds = fetchMasterData("Container ID Init");
+  const fetchProductIds = fetchMasterData("Product ID Init");
+  const fetchUnCodes = fetchMasterData("UN Code Init");
+  const fetchDgClasses = fetchMasterData("DG Class Init");
+  const fetchThuTypes = fetchMasterData("THU Init");
+  const fetchDepartures = fetchMasterData("Departure Init");
+  const fetchArrivals = fetchMasterData("Arrival Init");
+  const fetchLocations = fetchMasterData("Location Init");
+  const fetchActivities = fetchMasterData("Activity Init");
+  const fetchNhmTypes = fetchMasterData("NHM Init");
 
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
@@ -258,6 +273,162 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const currentWagonData = activeWagonId ? getWagonData(activeWagonId) : null;
   const actualsData = currentWagonData?.actuals || {};
   const plannedData = currentWagonData?.planned || {};
+
+  const messageTypes = [
+      "Quick Order Header Quick Code1 Init",
+      "Quick Order Header Quick Code2 Init",
+      "Quick Order Header Quick Code3 Init",
+      "Weight UOM Init",
+      "Wagon Length UOM Init",
+      "Wagon Qty UOM Init",
+      "Container Qty UOM Init",
+      "Product Qty UOM Init",
+      "THU Qty UOM Init",
+    ];
+    const [qcList1, setqcList1] = useState<any>([]);
+    const [qcList2, setqcList2] = useState<any>([]);
+    const [qcList3, setqcList3] = useState<any>([]);
+    const [weightList, setWeightList] = useState<any>([]);
+    const [wagonQty, setWagonQty] = useState<any>([]);
+    const [weightLength, setWeightLength] = useState<any>([]);
+    const [containerQty, setContainerQty] = useState<any>([]);
+    const [productQty, setProductQty] = useState<any>([]);
+    const [thuQty, setThuQty] = useState<any>([]);
+    const [apiData, setApiData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Iterate through all messageTypes
+    const fetchAll = async () => {
+      setLoading(false);
+      for (const type of messageTypes) {
+        await fetchData(type);
+      }
+    };
+  
+    useEffect(() => {
+      fetchAll();
+  
+    }, []);
+  
+    //API Call for dropdown data
+    const fetchData = async (messageType) => {
+      console.log("fetch data");
+      setLoading(false);
+      setError(null);
+      try {
+        console.log("fetch try");
+        const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType});
+        setApiData(data);
+        console.log("load inside try", data);
+        if (messageType == "Quick Order Header Quick Code1 Init") {
+          // setqcList1(JSON.parse(data?.data?.ResponseData) || []);
+          console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setqcList1(formattedData);
+        }
+        if (messageType == "Quick Order Header Quick Code2 Init") {
+          // setqcList2(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setqcList2(formattedData);
+        }
+        if (messageType == "Quick Order Header Quick Code3 Init") {
+          // setqcList3(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setqcList3(formattedData);
+        }
+        if (messageType == "Weight UOM Init") {
+          // setWeightList(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+
+          setWeightList(formattedData);
+        }
+        if (messageType == "Wagon Qty UOM Init") {
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setWagonQty(formattedData);
+        }
+        if (messageType == "Wagon Length UOM Init") {
+          // setWeightLength(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setWeightLength(formattedData);
+        }
+        if (messageType == "Container Qty UOM Init") {
+          // setContainerQty(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setContainerQty(formattedData);
+        }
+        if (messageType == "Product Qty UOM Init") {
+          // setProductQty(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setProductQty(formattedData);
+        }
+        if (messageType == "THU Qty UOM Init") {
+          // setThuQty(JSON.parse(data?.data?.ResponseData) || []);
+          let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+          setThuQty(formattedData);
+        }
+      } catch (err) {
+        setError(`Error fetching API data for ${messageType}`);
+        // setApiData(data);
+      }
+      finally {
+        setLoading(true);
+      }
+    };
 
   // Helper to update actuals for the current wagon
   const updateCurrentActuals = (data: Partial<ActualsData>) => {
@@ -761,78 +932,6 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 </AnimatePresence>
               </div>
 
-              {/* Journey and Scheduling Details - Planned */}
-              <div className="border rounded-lg bg-card">
-                <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
-                  onClick={() => toggleSection('journey')}
-                >
-                  <div className="flex items-center gap-2">
-                    {/* <Calendar className="h-5 w-5 text-blue-600" /> */}
-                    <h3 className="font-semibold">Journey and Scheduling Details</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                      10-Mar-2025
-                    </Badge>
-                    {expandedSections.journey ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {expandedSections.journey && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <Separator />
-                      <div className="p-4">
-                        <div className="grid grid-cols-4 gap-x-6 gap-y-3">
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Departure</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Arrival</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Activity Location</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Activity</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Planned Date and Time</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Rev. Planned Date and Time</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Train No.</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Load Type</div>
-                            <div className="text-sm font-medium">--</div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Other Details - Planned */}
               <div className="border rounded-lg bg-card">
                 <div
@@ -969,7 +1068,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={wagonDetailsQuantity}
                                 onChange={setWagonDetailsQuantity}
-                                options={quantityUnitOptions}
+                                options={wagonQty}
                                 placeholder="Enter Quantity"
                               />
                               </div>
@@ -981,7 +1080,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={wagonDetailsTareWeight}
                                 onChange={setWagonDetailsTareWeight}
-                                options={quantityUnitOptions}
+                                options={weightList}
                                 placeholder="Enter Quantity"
                               />
                               {/* </div> */}
@@ -994,7 +1093,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={wagonDetailsGrossWeight}
                                 onChange={setWagonDetailsGrossWeight}
-                                options={quantityUnitOptions}
+                                options={weightList}
                                 placeholder="Enter Quantity"
                               />
                             </div>
@@ -1005,7 +1104,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={wagonDetailsLength}
                                 onChange={setWagonDetailsLength}
-                                options={quantityUnitOptions}
+                                options={weightLength}
                                 placeholder="Enter Quantity"
                               />
                               {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
