@@ -754,20 +754,22 @@ export const ConsignmentTrip = ({ legId }) => {
   // Step 1: Build Customer Order dropdown list
   const buildCustomerOrderList = (consignments: any[] = []) => {
     return consignments.map((item, index) => ({
-      label: `${item.CustomerID || '-'} — ${item.CustomerName || "-"}`,
+      label: `${item.CustomerOrderNo} — ${item.CustomerName || "-"}`,
       value: index.toString(),
-      departureFrom: item.DepartureFrom,
-      departureTo: item.DepartureTo,
-      loadType: item.LoadType,
+      // Map all required fields for display
+      DepartureFrom: item.CODepartureDescription,
+      DepartureTo: item.COArrivalDescription,
+      LoadType: item.LoadType,
       serviceDesc: item.ServiceDescription,
       subServiceDesc: item.SubServiceDescription,
-      customerRefNo: item.CustomerReferenceNo,
-      SourceBRId: item.SourceBRId,
-      ReturnBRId: item.ReturnBRId,
+      CustomerRefNo: item.CustomerReferenceNo,
+      SourceBRID: item.SourceBRId,
+      ReturnBRID: item.ReturnBRId,
+      CustomerOrderNo: item.CustomerOrderNo,
 
       // Totals
       WagonQuantity: item.TotalWagons,
-      ContainerQuantity: item.TotalContainer,
+      ContainerQuantity: item.TotalContainer || item.ContainerQuantity || item.TotalContainerQuantity || item.ContainerQty,
       ProductWeight: item.TotalProductWeight,
       TotalTHU: item.TotalTHU,
       // HazardousGoods: item.HazardousGoods,
@@ -786,14 +788,15 @@ export const ConsignmentTrip = ({ legId }) => {
       if (cons.length > 0) {
         const list = buildCustomerOrderList(cons);
         setCustomerList(list);
+        // Built customer list for dropdown
 
         // ✅ reset selection to 0 for new leg
         setSelectedCustomerIndex('0');
         const selected = cons[0];
-        setSelectedCustomerData(selected);
+        setSelectedCustomerData(selected); // Use raw consignment data
         setPlannedData(selected?.Planned ?? []);
         setActualData(selected?.Actual ?? []);
-        console.log('Planned legid', plannedData, actualData);
+        // Initial leg data loaded successfully
       } else {
         // reset everything if no consignment for new leg
         setCustomerList([]);
@@ -801,7 +804,7 @@ export const ConsignmentTrip = ({ legId }) => {
         setSelectedCustomerData(null);
         setPlannedData([]);
         setActualData([]);
-        console.log('Planned No', plannedData, actualData);
+        // No consignment data available for this leg
       }
     }
   }, [legId]); // only on leg change
@@ -815,7 +818,7 @@ export const ConsignmentTrip = ({ legId }) => {
       const selectedIndex = parseInt(selectedCustomerIndex || '0', 10);
       const selected = consignments[selectedIndex];
       if (selected) {
-        setSelectedCustomerData(selected);
+        setSelectedCustomerData(selected); // Use raw consignment data
         const plannedConsignments = selected?.Planned ?? [];
         const actualConsignments = selected?.Actual ?? [];
 
@@ -823,11 +826,10 @@ export const ConsignmentTrip = ({ legId }) => {
         setPlannedData(plannedConsignments);
         setActualData(actualConsignments);
 
-        // Set the columns once
-        // setColumns(initialColumns());
+        // Customer data updated successfully
       }
     }
-  }, [consignments, selectedCustomerIndex, plannedData, actualData]); // re-sync when consignments or selection changes
+  }, [consignments, selectedCustomerIndex, currentLeg]); // Fixed dependencies to prevent infinite loops
 
   // Step 4: Handle dropdown change
   const handleCustomerChange = (idx: string) => {
@@ -922,11 +924,11 @@ export const ConsignmentTrip = ({ legId }) => {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <span className="font-medium text-gray-700">Departure: </span>
-                {selectedCustomerData?.DepartureFrom || "-"}
+                {selectedCustomerData?.CODepartureDescription || "-"}
               </div>
               <div>
                 <span className="font-medium text-gray-700">Arrival: </span>
-                {selectedCustomerData?.DepartureTo || "-"}
+                {selectedCustomerData?.COArrivalDescription || "-"}
               </div>
               {/* <div>
                 <span className="font-medium text-gray-700">Customer Order No: </span>
@@ -938,23 +940,23 @@ export const ConsignmentTrip = ({ legId }) => {
               </div>
               <div>
                 <span className="font-medium text-gray-700">Service: </span>
-                {selectedCustomerData?.serviceDesc || "-"}
+                {selectedCustomerData?.ServiceDescription || "-"}
               </div>
               <div>
                 <span className="font-medium text-gray-700">Sub Service: </span>
-                {selectedCustomerData?.subServiceDesc || "-"}
+                {selectedCustomerData?.SubServiceDescription || "-"}
               </div>
               <div>
                 <span className="font-medium text-gray-700">Customer Ref No: </span>
-                {selectedCustomerData?.CustomerRefNo || "-"}
+                {selectedCustomerData?.CustomerReferenceNo || "-"}
               </div>
               <div>
                 <span className="font-medium text-gray-700">Source BR ID: </span>
-                {selectedCustomerData?.SourceBRID || "-"}
+                {selectedCustomerData?.SourceBRId || "-"}
               </div>
               <div>
                 <span className="font-medium text-gray-700">Return BR ID: </span>
-                {selectedCustomerData?.ReturnBRID || "-"}
+                {selectedCustomerData?.ReturnBRId || "-"}
               </div>
             </div>
           )}
@@ -996,7 +998,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Truck className="h-5 w-5 text-blue-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.WagonQuantity ? selectedCustomerData.WagonQuantity : '-'} Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData.TotalWagons : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Wagon Quantity</div>
                       </div>
                     </div>
@@ -1007,7 +1009,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Container className="h-5 w-5 text-purple-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.ContainerQuantity ? selectedCustomerData?.ContainerQuantity : '-'} Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Container Quantity</div>
                       </div>
                     </div>
@@ -1018,7 +1020,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Box className="h-5 w-5 text-pink-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.ProductWeight ? selectedCustomerData?.ProductWeight : '-'} Ton</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
                         <div className="text-xs text-muted-foreground">Product Weight</div>
                       </div>
                     </div>
@@ -1108,7 +1110,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Truck className="h-5 w-5 text-blue-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.WagonQuantity ? selectedCustomerData?.WagonQuantity : '-'} Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData?.TotalWagons : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Wagon Quantity</div>
                       </div>
                     </div>
@@ -1119,7 +1121,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Container className="h-5 w-5 text-purple-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.ContainerQuantity ? selectedCustomerData?.ContainerQuantity : '-'} Nos</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
                         <div className="text-xs text-muted-foreground">Container Quantity</div>
                       </div>
                     </div>
@@ -1130,7 +1132,7 @@ export const ConsignmentTrip = ({ legId }) => {
                         <Box className="h-5 w-5 text-pink-500" />
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.ProductWeight ? selectedCustomerData?.ProductWeight : '-'} Ton</div>
+                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
                         <div className="text-xs text-muted-foreground">Product Weight</div>
                       </div>
                     </div>
