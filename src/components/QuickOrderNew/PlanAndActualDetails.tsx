@@ -57,6 +57,11 @@ interface PlanAndActualsDetailsProps {
 }
 export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resourceId, onApiSuccess, PlanInfo }: PlanAndActualsDetailsProps) => {
   let currentStep = 1;
+  
+  // Function to generate random number between 100 and 2000
+  const generateRandomId = () => {
+    return Math.floor(Math.random() * (2000 - 10 + 1)) + 100;
+  };
   const [planType, setPlanType] = useState("plan");
   const [isOpen, setIsOpen] = useState(false);
   const [wagonDetailsVisible, setWagonDetailsVisible] = useState(true);
@@ -2651,7 +2656,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-medium text-sm">{(item?.PlanLineUniqueID || item?.ActualLineUniqueID)} - {item.WagonDetails.WagonID}</div>
+                      {/* <div className="font-medium text-sm">{(item?.PlanLineUniqueID || item?.ActualLineUniqueID)}  - {item.WagonDetails.WagonID}</div> */}
+                      <div className="font-medium text-sm">{(item?generateRandomId:'')}  - {item.WagonDetails.WagonID}</div>
                       <div className="text-xs text-gray-500 mt-2">
                         {item.WagonDetails.WagonType}
                       </div>
