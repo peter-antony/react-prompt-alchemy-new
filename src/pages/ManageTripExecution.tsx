@@ -16,6 +16,7 @@ import { SupplierBillingDrawerScreen } from '@/components/drawer/SupplierBilling
 import { TripExecutionCreateDrawerScreen } from '@/components/drawer/TripExecutionCreateDrawerScreen';
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { LinkedTransactionsDrawerScreen } from '@/components/drawer/LinkedTransactionsDrawerScreen';
+import { tripService } from '@/api/services/tripService';
 
 const ManageTripExecution = () => {
   const { loading, tripData, fetchTrip, saveTrip, confirmTrip } = manageTripStore();
@@ -35,62 +36,6 @@ const ManageTripExecution = () => {
         .catch((err) => toast({ title: "Error fetching trip", description: String(err), variant: "destructive" }));
     }
   }, [isEditTrip, tripUniqueID, fetchTrip, toast]);
-
-
-  useEffect(() => {
-    // fetchAll();
-    //  Fetch the full trip details
-    // initializeJsonStore();
-
-    setFooter({
-      visible: true,
-      pageName: 'Create_Trip',
-      leftButtons: [
-        {
-          label: "Print Report",
-          onClick: () => console.log("Print Report"),
-          type: "Icon",
-          iconName: 'Printer'
-        },
-        {
-          label: "Dropdown Menu",
-          onClick: () => console.log("Menu"),
-          type: "Icon",
-          iconName: 'BookText'
-        },
-      ],
-      rightButtons: [
-        {
-          label: "Cancel",
-          disabled: false,
-          type: 'Button' as const,
-          onClick: () => {
-            // tripCancelhandler();
-            console.log('Cancel clicked', tripData);
-          },
-        },
-        {
-          label: "Save",
-          type: "Button" as const,
-          disabled: false,
-          onClick: () => {
-            console.log("Save clicked");
-            tripSaveDraftHandler();
-          },
-        },
-        {
-          label: "Confirm Trip",
-          type: "Button" as const,
-          disabled: isConfirmButtonDisabled,
-          onClick: () => {
-            console.log("Confirm clicked");
-            tripConfirmHandler();
-          },
-        }
-      ],
-    });
-    return () => resetFooter();
-  }, [tripData, saveTrip, setFooter, resetFooter]); // Add tripData and saveTrip to dependencies
 
   //API Call for dropdown data
   // const fetchData = async (messageType) => {
@@ -191,7 +136,97 @@ const ManageTripExecution = () => {
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
     }
-  }, [saveTrip, toast]);
+  }, [confirmTrip, toast, fetchTrip]);
+
+  const tripAmendHandler = useCallback(async () => {
+    try {
+      let result: any = await tripService.amendTrip();
+      if (result?.data?.IsSuccess) {
+        // ✅ Show success message
+        toast({
+          title: "Trip amended successfully",
+          description: result?.data?.Message ?? "Trip amended successfully.",
+          variant: "default",
+        });
+        let res = result?.data?.ResponseData ? JSON.parse(result.data.ResponseData) : null;
+        // ✅ Re-fetch the trip data fresh from server
+        if (res?.TripID) {
+          await fetchTrip(res.TripID);
+          console.log("🔄 Trip data refreshed after amend.");
+        }
+      } else {
+      // Backend returned logical failure
+      toast({
+        title: "Amend failed",
+        description:
+          result?.data?.Message ||
+          result?.message ||
+          "Unknown error occurred while amending trip.",
+        variant: "destructive",
+      });
+      console.warn("⚠️ Amend failed:", result);
+    }
+    } catch (err) {
+      toast({ title: "Error amending trip", description: String(err), variant: "destructive" });
+    }
+  }, [toast, fetchTrip]);
+
+  // Set footer with conditional button based on trip status
+  useEffect(() => {
+    // Check if trip status is "Completed" to determine button label and action
+    const isTripCompleted = tripData?.Header?.TripStatus === "Confirmed";
+    const confirmButtonLabel = isTripCompleted ? "Amend" : "Confirm Trip";
+    const confirmButtonHandler = isTripCompleted ? tripAmendHandler : tripConfirmHandler;
+
+    setFooter({
+      visible: true,
+      pageName: 'Create_Trip',
+      leftButtons: [
+        {
+          label: "Print Report",
+          onClick: () => console.log("Print Report"),
+          type: "Icon",
+          iconName: 'Printer'
+        },
+        {
+          label: "Dropdown Menu",
+          onClick: () => console.log("Menu"),
+          type: "Icon",
+          iconName: 'BookText'
+        },
+      ],
+      rightButtons: [
+        {
+          label: "Cancel",
+          disabled: false,
+          type: 'Button' as const,
+          onClick: () => {
+            // tripCancelhandler();
+            console.log('Cancel clicked', tripData);
+          },
+        },
+        {
+          label: "Save",
+          type: "Button" as const,
+          disabled: false,
+          onClick: () => {
+            console.log("Save clicked");
+            tripSaveDraftHandler();
+          },
+        },
+        {
+          label: confirmButtonLabel,
+          type: "Button" as const,
+          disabled: isConfirmButtonDisabled,
+          onClick: () => {
+            console.log(`${confirmButtonLabel} clicked`);
+            confirmButtonHandler();
+          },
+        }
+      ],
+    });
+    return () => resetFooter();
+  }, [tripData, setFooter, resetFooter, tripAmendHandler, tripConfirmHandler, tripSaveDraftHandler, isConfirmButtonDisabled]);
 
   return (
     <AppLayout>

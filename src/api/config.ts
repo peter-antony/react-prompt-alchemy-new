@@ -57,6 +57,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/trips/${id}`,
     DELETE: (id: string) => `/trips/${id}`,
     APPROVE: (id: string) => `/trips/${id}/approve`,
+    GET_VAS: "/transportexecution/getvasfromtrip",
+    SAVE_VAS: "/transportexecution/savevas"
   },
   // Quick Order management
   QUICK_ORDERS: {

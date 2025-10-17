@@ -178,9 +178,7 @@ export const tripService = {
         MessageID: "12345",
         MessageType: "TripLog AmendTrip",
       },
-      SearchCriteria: {
-        TripID: params?.id,
-      },
+      RequestPayload: params,
       Pagination: {
         PageNumber: 1,
         PageSize: 10,
@@ -240,7 +238,7 @@ export const tripService = {
       RequestData: requestPayload,
     };
     const response = await apiClient.post(
-      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      `${API_ENDPOINTS.TRIPS.GET_VAS}`,
       requestBody
     );
     return response.data;
@@ -267,7 +265,7 @@ export const tripService = {
       RequestData: requestPayload,
     };
     const response = await apiClient.post(
-      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      `${API_ENDPOINTS.TRIPS.SAVE_VAS}`,
       requestBody
     );
     return response.data;
