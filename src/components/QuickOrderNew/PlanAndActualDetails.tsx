@@ -2657,7 +2657,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                   <div className="flex items-start justify-between">
                     <div>
                       {/* <div className="font-medium text-sm">{(item?.PlanLineUniqueID || item?.ActualLineUniqueID)}  - {item.WagonDetails.WagonID}</div> */}
-                      <div className="font-medium text-sm">{(item?generateRandomId:'')}  - {item.WagonDetails.WagonID}</div>
+                      <div className="font-medium text-sm">{(generateRandomId())}  - {item.WagonDetails.WagonID}</div>
                       <div className="text-xs text-gray-500 mt-2">
                         {item.WagonDetails.WagonType}
                       </div>
