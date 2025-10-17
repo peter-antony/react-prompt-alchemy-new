@@ -33,6 +33,7 @@ const CreateQuickOrder = () => {
   const [selectedType, setSelectedType] = useState("");
   const [customerOrderNoList, setCustomerOrderNoList] = useState<any[]>([]);
   const [fetchedQuickOrderData, setFetchedQuickOrderData] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const messageTypes = [
     // "Quick Order Billing Type Init",
@@ -118,7 +119,7 @@ const CreateQuickOrder = () => {
           type: "Button" as const,
           disabled: isSaveButtonDisabled, //isConfirmButtonDisabled,
           onClick: () => {
-            console.log("Confirm clicked");
+            console.log("Confirm clicked XXXX");
             quickOrderConfirmHandler();
           },
         }
@@ -317,6 +318,27 @@ const CreateQuickOrder = () => {
         });
         // setCurrentStep(2);
         setShowAmendButton(true);
+        
+        // Fetch updated QuickOrder details and update the form
+        try {
+          const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
+          console.log("Updated QuickOrder response:", updatedQuickOrderRes);
+          let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
+          console.log("Updated QuickOrder data:", updatedParsedData);
+          
+          // Update the jsonStore with fresh data
+          jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
+          
+          // Update the fetchedQuickOrderData state to trigger re-render
+          setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
+          
+          // Trigger a refresh of the OrderForm component
+          setRefreshTrigger(prev => prev + 1);
+          
+          console.log("QuickOrder details updated successfully");
+        } catch (error) {
+          console.error("Error fetching updated QuickOrder details:", error);
+        }
       }else{
         toast({
           title: "⚠️ Submission failed",
@@ -507,7 +529,7 @@ const CreateQuickOrder = () => {
 
           <div className="">
           {loading ?
-            <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} />
+            <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} key={refreshTrigger} />
             : ''
           }
           </div>

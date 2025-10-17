@@ -688,8 +688,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
           // tariff: additionalInfo[0].TariffID && additionalInfo[0].TariffDescription
           //     ? `${additionalInfo[0].TariffID} || ${additionalInfo[0].TariffDescription}`
           //     : (additionalInfo[0].TariffID || additionalInfo[0].TariffDescription || ""),
-          contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
-          unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+          contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : 0,
+          unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate :'',
           // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
           tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
           tariffTypeDescription: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",

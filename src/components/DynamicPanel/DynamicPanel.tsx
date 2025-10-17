@@ -238,8 +238,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       // Derive NetAmount when BillingQty or UnitPrice changes
       const qty = parseFloat(String(data?.BillingQty ?? '')) || 0;
       const unit = parseUnitPrice(data?.UnitPrice);
-      const computedNet = Number.isFinite(qty * unit) ? parseFloat((qty * unit).toFixed(2)) : 0;
-      if ((data?.NetAmount ?? 0) !== computedNet) {
+      // Format computed net with comma as decimal separator
+      const computedNetRaw = Number.isFinite(qty * unit) ? (qty * unit).toFixed(2) : '0,00';
+      const computedNet = computedNetRaw.replace('.', ',');
+      console.log("computedNet (formatted)", computedNet);
+      if ((data?.NetAmount?.toString?.() ?? '') !== computedNet) {
         setValue('NetAmount', computedNet, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
       }
     });

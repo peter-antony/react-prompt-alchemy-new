@@ -2314,7 +2314,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           console.log('Matched Tariff Object:', matchedTariff);
           // When the Tariff changes, update the ContractPrice and NetAmount fields in the billingDetails form
           if (matchedTariff && billingDetailsRef && billingDetailsRef.current && typeof billingDetailsRef.current.setFormValues === "function") {
-            const tariffRate = matchedTariff.TariffRate ? matchedTariff.TariffRate : "";
+            const tariffRate = matchedTariff.TariffRate ? matchedTariff.TariffRate : 0;
             billingDetailsRef.current.setFormValues({
               ContractPrice: tariffRate,
               UnitPrice: tariffRate,
@@ -2331,7 +2331,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           if (matchedTariff) {
             jsonStore.setResourceType({ Resource: matchedTariff.Resource, ResourceType: matchedTariff.ResourceType });
             jsonStore.setTariffFields({
-              contractPrice: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
+              contractPrice: matchedTariff.TariffRate ? matchedTariff.TariffRate : 0,
               unitPrice: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
               netAmount: matchedTariff.TariffRate ? matchedTariff.TariffRate : "",
               tariffType: matchedTariff.TariffTypeDescription ? matchedTariff.TariffTypeDescription : "",
