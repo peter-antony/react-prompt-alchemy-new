@@ -354,13 +354,14 @@ const saveCurrentFormData = () => {
     setFormData(initialFormData);
     setSelectedVAS(null);
   };
+  console.log("VASDrawerScreen CustomerOrderNo:", tripData.CustomerOrders);
 
   return (
     <div className="flex h-full">
       {/* Left Sidebar - VAS Items List */}
       <div className="w-64 border-r border-border bg-muted/30 p-4 flex flex-col">
         {/* Customer Order No */}
-        <div className="space-y-2 mb-4">
+        {/* <div className="space-y-2 mb-4">
           <Label>Customer Order No.</Label>
           <Select value={formData.CustomerOrderNo} onValueChange={(value) => setFormData({ ...formData, CustomerOrderNo: value })}>
             <SelectTrigger>
@@ -370,7 +371,40 @@ const saveCurrentFormData = () => {
               <SelectItem value="CO000000001">CO000000001</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
+        <div className="space-y-2 mb-4">
+  <Label>Customer Order No.</Label>
+  <Select
+    value={formData.CustomerOrderNo}
+    onValueChange={(value) => {
+      const selectedOrder = tripData?.CustomerOrders?.find((o: any) => o.CustomerOrderNo === value);
+      setFormData({
+        ...formData,
+        CustomerOrderNo: value,
+        CustomerID: selectedOrder?.CustomerID || '',
+        CustomerDescription: selectedOrder?.CustomerName || '',
+      });
+    }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select Customer Order No" />
+    </SelectTrigger>
+    <SelectContent>
+      {tripData?.CustomerOrders?.length > 0 ? (
+        tripData.CustomerOrders.map((order: any, idx: number) => (
+          <SelectItem key={idx} value={order.CustomerOrderNo}>
+            {order.CustomerOrderNo}
+          </SelectItem>
+        ))
+      ) : (
+        <SelectItem value="none" disabled>
+          No Orders Available
+        </SelectItem>
+      )}
+    </SelectContent>
+  </Select>
+</div>
+
 
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-sm">All VAS</h3>
