@@ -219,7 +219,30 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   //   }
   // }, []);
 
+  // Save current formData before switching or saving
+const saveCurrentFormData = () => {
+  if (selectedVAS) {
+    setVasItems(prevItems =>
+      prevItems.map(item =>
+        item.id === selectedVAS
+          ? {
+              ...item,
+              formData: {
+                ...formData,
+                // Only change ModeFlag if it was NoChanges
+                ModeFlag: formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag
+              }
+            }
+          : item
+      )
+    );
+  }
+};
+
   const handleVASClick = async (vas: VASItem) => {
+    // Save current changes before switching
+    saveCurrentFormData();
+    
     console.log(vas);
     setSelectedVAS(vas.id);
     setFormData(vas.formData);
@@ -244,35 +267,88 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
       .map(item => item.formData);
   };
 
+  // const handleSave = async () => {
+  //   if (selectedVAS) {
+  //     // Update existing VAS
+  //     setVasItems(vasItems.map(item =>
+  //       item.id === selectedVAS
+  //         ? { ...item, formData }
+  //         : item
+  //     ));
+  //   } else {
+  //     // Create new VAS
+  //     const newVAS: VASItem = {
+  //       id: Date.now().toString(),
+  //       name: formData.VASID || 'New VAS',
+  //       quantity: parseInt(formData.NoOfTHUServed) || 1,
+  //       formData,
+  //     };
+  //     setVasItems([...vasItems, newVAS]);
+  //     setSelectedVAS(newVAS.id);
+  //   }
+  //   const HeaderInfo = {
+  //     TripNo: tripData?.Header?.TripNo,
+  //     TripOU: tripData?.Header?.TripOU,
+  //     TripStatus: tripData?.Header?.TripStatus,
+  //     TripStatusDescription: tripData?.Header?.TripStatusDescription
+  //   }
+  //   const vasList = prepareVasPayload(vasItems);
+  //   const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+  //   console.log('Save VAS response', response);
+  // };
+
   const handleSave = async () => {
-    if (selectedVAS) {
-      // Update existing VAS
-      setVasItems(vasItems.map(item =>
-        item.id === selectedVAS
-          ? { ...item, formData }
-          : item
-      ));
-    } else {
-      // Create new VAS
-      const newVAS: VASItem = {
-        id: Date.now().toString(),
-        name: formData.VASID || 'New VAS',
-        quantity: parseInt(formData.NoOfTHUServed) || 1,
-        formData,
-      };
-      setVasItems([...vasItems, newVAS]);
-      setSelectedVAS(newVAS.id);
-    }
-    const HeaderInfo = {
-      TripNo: tripData?.Header?.TripNo,
-      TripOU: tripData?.Header?.TripOU,
-      TripStatus: tripData?.Header?.TripStatus,
-      TripStatusDescription: tripData?.Header?.TripStatusDescription
-    }
-    const vasList = prepareVasPayload(vasItems);
-    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
-    console.log('Save VAS response', response);
+  let updatedVasItems = [...vasItems];
+
+  if (selectedVAS) {
+    // Update existing VAS → only the edited one gets ModeFlag updated
+    updatedVasItems = updatedVasItems.map(item => {
+      if (item.id === selectedVAS) {
+        return {
+          ...item,
+          formData: {
+            ...formData,
+            ModeFlag: formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag
+          }
+        };
+      }
+      return item;
+    });
+  } else {
+    // New VAS → mark as New
+    const newVAS: VASItem = {
+      id: Date.now().toString(),
+      name: formData.VASID || 'New VAS',
+      quantity: parseInt(formData.NoOfTHUServed) || 1,
+      formData: {
+        ...formData,
+        ModeFlag: "New"
+      }
+    };
+    updatedVasItems.push(newVAS);
+    setSelectedVAS(newVAS.id);
+  }
+
+  setVasItems(updatedVasItems);
+
+  const HeaderInfo = {
+    TripNo: tripData?.Header?.TripNo,
+    TripOU: tripData?.Header?.TripOU,
+    TripStatus: tripData?.Header?.TripStatus,
+    TripStatusDescription: tripData?.Header?.TripStatusDescription
   };
+
+  const vasList = prepareVasPayload(updatedVasItems);
+
+  try {
+    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+    console.log("Save VAS response", response);
+  } catch (error) {
+    console.error("Error saving VAS:", error);
+  }
+};
+
+
 
   const handleClear = () => {
     setFormData(initialFormData);
