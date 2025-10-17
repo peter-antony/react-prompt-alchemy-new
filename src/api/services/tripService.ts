@@ -246,6 +246,33 @@ export const tripService = {
     return response.data;
   },
 
+  saveVASTrip: async (HeaderInfo: any, vasList: any): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "TripLog SaveVas",
+      },
+      Header: HeaderInfo,
+      VAS: vasList
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   getPathConstraints: async (tripId: string): Promise<any> => {
     const requestPayload = JSON.stringify({
       context: {
@@ -289,8 +316,8 @@ export const tripService = {
           RefDocNo: tripId,
           RefDocType: "TripLog",
         },
-        PathConstraints: trainParams
-      }
+        PathConstraints: trainParams,
+      },
     });
     const requestBody = {
       RequestData: requestPayload,

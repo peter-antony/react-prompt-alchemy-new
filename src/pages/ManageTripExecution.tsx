@@ -231,7 +231,7 @@ const ManageTripExecution = () => {
           showCloseButton={true}
         >
           {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
-          {drawerType === 'vas' && <VASDrawerScreen />}
+          {drawerType === 'vas' && <VASDrawerScreen tripUniqueNo={tripUniqueID || undefined}/>}
           {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
           {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}

@@ -12,129 +12,70 @@ import { cn } from '@/lib/utils';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService, tripService } from '@/api/services';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
- 
+
 interface FormData {
-  customerOrderNo: string;
-  applicableToCustomer: boolean;
-  applicableToSupplier: boolean;
+  CustomerOrderNo: string;
   VASID: string;
+  VASIDDescription: string;
+  IsApplicableToCustomer: boolean;
+  IsApplicableToSupplier: boolean;
   CustomerID: string;
+  CustomerDescription: string;
   SupplierContract: string;
+  SupplierContractDescription: string;
   SupplierID: string;
-  thuServed: string;
-  startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
-  remarks: string;
+  SupplierDescription: any;
+  StartDate: string;
+  StartTime: string;
+  EndDate: string;
+  EndTime: string;
+  Remarks: string;
+  QuickCode1: string | null;
+  QuickCodeValue1: string | null;
+  NoOfTHUServed: any;
+  ModeFlag: string;
+  SeqNo: any;
 }
- 
+
 interface VASItem {
   id: string;
   name: string;
   quantity: number;
   formData: FormData;
 }
- 
+
 const initialFormData: FormData = {
-  customerOrderNo: '',
-  applicableToCustomer: true,
-  applicableToSupplier: false,
+  SeqNo: '',
+  CustomerOrderNo: '',
+  IsApplicableToCustomer: true,
+  IsApplicableToSupplier: false,
   VASID: '',
   CustomerID: '',
   SupplierContract: '',
   SupplierID: '',
-  thuServed: '',
-  startDate: '',
-  startTime: '',
-  endDate: '',
-  endTime: '',
-  remarks: '',
+  StartDate: '',
+  StartTime: '',
+  EndDate: '',
+  EndTime: '',
+  Remarks: '',
+  VASIDDescription: '',
+  CustomerDescription: '',
+  SupplierContractDescription: '',
+  SupplierDescription: '',
+  QuickCode1: '',
+  QuickCodeValue1: '',
+  NoOfTHUServed: '',
+  ModeFlag: ''
 };
- 
+
 // const initialVASItems: VASItem[] = [
 //   {
 //     id: '1',
 //     name: 'Bubble Wrap',
 //     quantity: 2,
-//     formData: {
-//       customerOrderNo: 'CO000000001',
-//       applicableToCustomer: true,
-//       applicableToSupplier: true,
-//       vasId: 'vas1',
-//       customer: 'customer1',
-//       supplierContract: 'contract1',
-//       supplier: 'Supplier A',
-//       thuServed: '2',
-//       startDate: '2025-01-15',
-//       startTime: '08:00',
-//       endDate: '2025-01-15',
-//       endTime: '17:00',
-//       remarks: 'Handle with care',
-//     }
 //   },
 //   {
-//     id: '2',
-//     name: 'Packing',
-//     quantity: 2,
-//     formData: {
-//       customerOrderNo: 'CO000000001',
-//       applicableToCustomer: true,
-//       applicableToSupplier: false,
-//       vasId: 'vas2',
-//       customer: 'customer2',
-//       supplierContract: 'contract2',
-//       supplier: 'Supplier B',
-//       thuServed: '2',
-//       startDate: '2025-01-16',
-//       startTime: '09:00',
-//       endDate: '2025-01-16',
-//       endTime: '18:00',
-//       remarks: 'Standard packing',
-//     }
-//   },
-//   {
-//     id: '3',
-//     name: 'Unpacking',
-//     quantity: 2,
-//     formData: {
-//       customerOrderNo: 'CO000000001',
-//       applicableToCustomer: false,
-//       applicableToSupplier: true,
-//       vasId: 'vas1',
-//       customer: 'customer1',
-//       supplierContract: 'contract1',
-//       supplier: 'Supplier C',
-//       thuServed: '2',
-//       startDate: '2025-01-17',
-//       startTime: '10:00',
-//       endDate: '2025-01-17',
-//       endTime: '16:00',
-//       remarks: '',
-//     }
-//   },
-//   {
-//     id: '4',
-//     name: 'Gasoline',
-//     quantity: 2,
-//     formData: {
-//       customerOrderNo: 'CO000000001',
-//       applicableToCustomer: true,
-//       applicableToSupplier: true,
-//       vasId: 'vas2',
-//       customer: 'customer2',
-//       supplierContract: 'contract2',
-//       supplier: 'Supplier D',
-//       thuServed: '2',
-//       startDate: '2025-01-18',
-//       startTime: '07:00',
-//       endDate: '2025-01-18',
-//       endTime: '15:00',
-//       remarks: 'Full tank',
-//     }
-//   },
-//   {
-//     id: '5',
+//     id: '1',
 //     name: 'Unloading',
 //     quantity: 2,
 //     formData: {
@@ -154,14 +95,14 @@ const initialFormData: FormData = {
 //     }
 //   },
 // ];
- 
-export const VASDrawerScreen = () => {
+
+export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const [vasItems, setVasItems] = useState<VASItem[]>([]);
   const [selectedVAS, setSelectedVAS] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
- 
+
   // Temporary placeholder until real implementation is connected
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -173,17 +114,17 @@ export const VASDrawerScreen = () => {
         limit,
         ...(extraParams || {}),
       });
-     
+
       const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-                label: `${item.id} || ${item.name}`,
-                value: `${item.id} || ${item.name}`,
-              }
-            : {})
-        }));
-     
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
       // Fallback to empty array if API call fails
       return [];
     } catch (error) {
@@ -192,24 +133,24 @@ export const VASDrawerScreen = () => {
       return [];
     }
   };
- 
- 
-  const fetchVASID = fetchMasterData("VAS Code Desc Init");  
+
+
+  const fetchVASID = fetchMasterData("VAS Code Desc Init");
   const fetchCustomers = fetchMasterData("Customer Init");
   const fetchSupplierContract = fetchMasterData("Contract Init", { OrderType: 'BUY' });
   const fetchSupplier = fetchMasterData("Supplier Init");
   const [customerValue, setCustomerValue] = useState<string | undefined>();
- 
- 
- 
+
+
+
   // VAS API Fetch
   useEffect(() => {
     if (!tripId) return;
- 
+
     const fetchVASForTrip = async () => {
       try {
         const response = await tripService.getVASTrip(tripId);
- 
+
         // Same normalization logic as in SummaryCardsGrid
         let vasapi: any = JSON.parse(response?.data?.ResponseData);
         const vasList =
@@ -217,33 +158,42 @@ export const VASDrawerScreen = () => {
           response?.data ||
           response?.VAS ||
           [];
- 
+
         console.log("VAS List (Drawer):", vasList);
- 
+
         // Map API data into your local VASItem structure
-        const formattedVasItems = vasList.map((vas: any, index: number) => ({
+        const formattedVasItems: VASItem[] = vasList.map((vas: any, index: number) => ({
           id: vas.VASID || index.toString(),
           name: vas.VASIDDescription || `VAS ${index + 1}`,
           quantity: vas.VASID || 1,
           formData: {
-            customerOrderNo: '',
-            applicableToCustomer: vas.IsApplicableToCustomer === '1',
-            applicableToSupplier: vas.IsApplicableToSupplier === '1',
+            SeqNo: vas.SeqNo,
+            CustomerOrderNo: vas.CustomerOrderNo,
             VASID: vas.VASID || '',
+            VASIDDescription: vas.VASIDDescription,
+            IsApplicableToCustomer: vas.IsApplicableToCustomer === '1',
+            IsApplicableToSupplier: vas.IsApplicableToSupplier === '1',
             CustomerID: vas.CustomerID || '',
+            CustomerDescription: vas.CustomerDescription,
             SupplierContract: vas.SupplierContract || '',
+            SupplierContractDescription: vas.SupplierContractDescription || '',
             SupplierID: vas.SupplierID || '',
-            thuServed: vas.NoOfTHUServed || '',
-            startDate: vas.StartDate || '',
-            startTime: vas.StartTime || '',
-            endDate: vas.EndDate || '',
-            endTime: vas.EndTime || '',
-            remarks: vas.Remarks || '',
+            SupplierDescription: vas.SupplierDescription || '',
+
+            StartDate: vas.StartDate || '',
+            StartTime: vas.StartTime || '',
+            EndDate: vas.EndDate || '',
+            EndTime: vas.EndTime || '',
+            Remarks: vas.Remarks || '',
+            QuickCode1: vas.QuickCode1,
+            QuickCodeValue1: vas.QuickCodeValue1,
+            NoOfTHUServed: vas.NoOfTHUServed || '',
+            ModeFlag: vas.ModeFlag
           }
         }));
- 
+
         setVasItems(formattedVasItems);
- 
+
         // Auto-select first VAS if available
         if (formattedVasItems.length > 0) {
           const firstVAS = formattedVasItems[0];
@@ -254,12 +204,12 @@ export const VASDrawerScreen = () => {
         console.error("Error fetching VAS:", error);
       }
     };
- 
+
     fetchVASForTrip();
   }, [tripId]);
- 
- 
- 
+
+
+
   // Auto-select first VAS on mount
   // useEffect(() => {
   //   if (vasItems.length > 0 && !selectedVAS) {
@@ -268,17 +218,18 @@ export const VASDrawerScreen = () => {
   //     setFormData(firstVAS.formData);
   //   }
   // }, []);
- 
-  const handleVASClick = (vas: VASItem) => {
+
+  const handleVASClick = async (vas: VASItem) => {
+    console.log(vas);
     setSelectedVAS(vas.id);
     setFormData(vas.formData);
   };
- 
+
   const handleAddNew = () => {
     setSelectedVAS(null);
     setFormData(initialFormData);
   };
- 
+
   const handleDeleteItem = (id: string) => {
     setVasItems(vasItems.filter(item => item.id !== id));
     if (selectedVAS === id) {
@@ -286,8 +237,14 @@ export const VASDrawerScreen = () => {
       setFormData(initialFormData);
     }
   };
- 
-  const handleSave = () => {
+
+  const prepareVasPayload = (vasItems) => {
+    return vasItems
+      .filter(item => item.formData && Object.keys(item.formData).length > 0)
+      .map(item => item.formData);
+  };
+
+  const handleSave = async () => {
     if (selectedVAS) {
       // Update existing VAS
       setVasItems(vasItems.map(item =>
@@ -300,19 +257,28 @@ export const VASDrawerScreen = () => {
       const newVAS: VASItem = {
         id: Date.now().toString(),
         name: formData.VASID || 'New VAS',
-        quantity: parseInt(formData.thuServed) || 1,
+        quantity: parseInt(formData.NoOfTHUServed) || 1,
         formData,
       };
       setVasItems([...vasItems, newVAS]);
       setSelectedVAS(newVAS.id);
     }
+    const HeaderInfo = {
+      TripNo: tripData?.Header?.TripNo,
+      TripOU: tripData?.Header?.TripOU,
+      TripStatus: tripData?.Header?.TripStatus,
+      TripStatusDescription: tripData?.Header?.TripStatusDescription
+    }
+    const vasList = prepareVasPayload(vasItems);
+    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+    console.log('Save VAS response', response);
   };
- 
+
   const handleClear = () => {
     setFormData(initialFormData);
     setSelectedVAS(null);
   };
- 
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - VAS Items List */}
@@ -320,7 +286,7 @@ export const VASDrawerScreen = () => {
         {/* Customer Order No */}
         <div className="space-y-2 mb-4">
           <Label>Customer Order No.</Label>
-          <Select value={formData.customerOrderNo} onValueChange={(value) => setFormData({ ...formData, customerOrderNo: value })}>
+          <Select value={formData.CustomerOrderNo} onValueChange={(value) => setFormData({ ...formData, CustomerOrderNo: value })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -329,7 +295,7 @@ export const VASDrawerScreen = () => {
             </SelectContent>
           </Select>
         </div>
- 
+
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-sm">All VAS</h3>
           <Button
@@ -341,14 +307,13 @@ export const VASDrawerScreen = () => {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
- 
+
         <div className="space-y-2 flex-1 overflow-y-auto">
           {vasItems.map((item) => (
             <Card
               key={item.id}
-              className={`cursor-pointer transition-colors hover:bg-accent ${
-                selectedVAS === item.id ? 'bg-accent border-primary' : ''
-              }`}
+              className={`cursor-pointer transition-colors hover:bg-accent ${selectedVAS === item.id ? 'bg-accent border-primary' : ''
+                }`}
               onClick={() => handleVASClick(item)}
             >
               <CardContent className="p-3">
@@ -378,7 +343,7 @@ export const VASDrawerScreen = () => {
           ))}
         </div>
       </div>
- 
+
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
@@ -389,8 +354,8 @@ export const VASDrawerScreen = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="customer"
-                  checked={formData.applicableToCustomer}
-                  onCheckedChange={(checked) => setFormData({ ...formData, applicableToCustomer: checked as boolean })}
+                  checked={formData.IsApplicableToCustomer}
+                  onCheckedChange={(checked) => setFormData({ ...formData, IsApplicableToCustomer: checked as boolean })}
                 />
                 <label htmlFor="customer" className="text-sm cursor-pointer">
                   Customer
@@ -400,15 +365,15 @@ export const VASDrawerScreen = () => {
             <div className="flex items-center space-x-2 pt-7">
               <Checkbox
                 id="supplier"
-                checked={formData.applicableToSupplier}
-                onCheckedChange={(checked) => setFormData({ ...formData, applicableToSupplier: checked as boolean })}
+                checked={formData.IsApplicableToSupplier}
+                onCheckedChange={(checked) => setFormData({ ...formData, IsApplicableToSupplier: checked as boolean })}
               />
               <label htmlFor="supplier" className="text-sm cursor-pointer">
                 Supplier
               </label>
             </div>
           </div>
- 
+
           {/* VAS and Customer Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -448,7 +413,7 @@ export const VASDrawerScreen = () => {
               />
             </div>
           </div>
- 
+
           {/* Supplier and Contract */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -458,7 +423,7 @@ export const VASDrawerScreen = () => {
                 value={formData.supplier}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
               /> */}
-               <DynamicLazySelect
+              <DynamicLazySelect
                 fetchOptions={fetchSupplier}
                 value={formData.SupplierID}
                 onChange={(value) => setFormData({ ...formData, SupplierID: value as string })}
@@ -484,17 +449,17 @@ export const VASDrawerScreen = () => {
               />
             </div>
           </div>
- 
+
           {/* No of THU Served */}
           <div className="space-y-2">
             <Label>VAS Qty</Label>
             <Input
               type="number"
-              value={formData.thuServed}
-              onChange={(e) => setFormData({ ...formData, thuServed: e.target.value })}
+              value={formData.NoOfTHUServed}
+              onChange={(e) => setFormData({ ...formData, NoOfTHUServed: e.target.value })}
             />
           </div>
- 
+
           {/* Start Date and Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -502,8 +467,8 @@ export const VASDrawerScreen = () => {
               <div className="relative">
                 <Input
                   type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  value={formData.StartDate}
+                  onChange={(e) => setFormData({ ...formData, StartDate: e.target.value })}
                   placeholder="DD-MMM-YYYY"
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -514,15 +479,15 @@ export const VASDrawerScreen = () => {
               <div className="relative">
                 <Input
                   type="time"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  value={formData.StartTime}
+                  onChange={(e) => setFormData({ ...formData, StartTime: e.target.value })}
                   placeholder="HH:MM"
                 />
                 <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
           </div>
- 
+
           {/* End Date and Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -530,8 +495,8 @@ export const VASDrawerScreen = () => {
               <div className="relative">
                 <Input
                   type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  value={formData.EndDate}
+                  onChange={(e) => setFormData({ ...formData, EndDate: e.target.value })}
                   placeholder="DD-MMM-YYYY"
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -542,26 +507,26 @@ export const VASDrawerScreen = () => {
               <div className="relative">
                 <Input
                   type="time"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  value={formData.EndTime}
+                  onChange={(e) => setFormData({ ...formData, EndTime: e.target.value })}
                   placeholder="HH:MM"
                 />
                 <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
           </div>
- 
+
           {/* Remarks */}
           <div className="space-y-2">
             <Label>Remarks</Label>
             <Textarea
               placeholder="Enter remarks"
-              value={formData.remarks}
-              onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+              value={formData.Remarks}
+              onChange={(e) => setFormData({ ...formData, Remarks: e.target.value })}
               rows={3}
             />
           </div>
- 
+
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={handleClear}>
@@ -576,4 +541,3 @@ export const VASDrawerScreen = () => {
     </div>
   );
 };
- 
