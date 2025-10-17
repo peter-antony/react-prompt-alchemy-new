@@ -19,7 +19,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
-
+import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 
 const TripPlanning = () => {
   const [tripNo, setTripNo] = useState('');
@@ -143,7 +143,7 @@ const TripPlanning = () => {
     <AppLayout>
       <div className="min-h-screen bg-background">
         {/* Main Content */}
-        <main className="px-6 py-6">
+        <main className="px-6 py-6 main-bg">
           <div className="hidden md:block">
             <Breadcrumb items={breadcrumbItems} />
           </div>
@@ -473,7 +473,7 @@ const TripPlanning = () => {
                   </div>
 
                   {/* SmartGrid */}
-                  <div className="mt-4">
+                  {/* <div className="mt-4">
                     <SmartGrid
                       columns={customerOrdersColumns}
                       data={customerOrdersData}
@@ -487,7 +487,7 @@ const TripPlanning = () => {
                       }}
                       paginationMode="pagination"
                     />
-                  </div>
+                  </div> */}
 
                   {/* Trip Creation Controls */}
                   <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
@@ -608,8 +608,11 @@ const TripPlanning = () => {
                         </Label>
                       </div>
 
+                      {/* Trip Planning Customer Order Hub */}
+                      <TripCOHub />
+
                       {/* Grid */}
-                      <SmartGrid
+                      {/* <SmartGrid
                         columns={customerOrdersColumns}
                         data={customerOrdersData}
                         onUpdate={async (row) => {
@@ -621,7 +624,7 @@ const TripPlanning = () => {
                           console.log('Selection changed:', rows);
                         }}
                         paginationMode="pagination"
-                      />
+                      /> */}
                     </div>
                   </div>
 
