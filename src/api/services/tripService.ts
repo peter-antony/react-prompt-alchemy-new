@@ -179,11 +179,11 @@ export const tripService = {
         MessageType: "TripLog AmendTrip",
       },
       RequestPayload: params,
-      Pagination: {
-        PageNumber: 1,
-        PageSize: 10,
-        TotalRecords: 200,
-      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
     });
     const requestBody = {
       RequestData: requestPayload,

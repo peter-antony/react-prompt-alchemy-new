@@ -51,7 +51,7 @@ interface TripAmendModalProps {
   submitColor?: string;
 }
 
-const TripAmendModal: React.FC<TripAmendModalProps> = ({
+export const TripAmendModal: React.FC<TripAmendModalProps> = ({
   open,
   onClose,
   title,
@@ -87,7 +87,7 @@ const TripAmendModal: React.FC<TripAmendModalProps> = ({
         if (f.type === "select") {
           try {
             const res: any = await quickOrderService.getMasterCommonData({
-              messageType: "Amend Reason Init",
+              messageType: "Cancellation Reason Init",
             });
             const parsedData = JSON.parse(res?.data?.ResponseData || "[]");
             setSelectOptions(parsedData);
@@ -122,7 +122,7 @@ const TripAmendModal: React.FC<TripAmendModalProps> = ({
         <DialogTitle>
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="p-[10px] rounded-full flex items-center justify-center bg-red-100">
+              <div className="p-[10px] rounded-full flex items-center justify-center bg-blue-100">
                 {icon}
               </div>
               <span className="font-semibold text-[14px] text-Gray-700">
@@ -225,7 +225,7 @@ const TripAmendModal: React.FC<TripAmendModalProps> = ({
           <div className="border-t pt-4">
             <button
               type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md px-6 py-2 text-[13px] font-medium"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md px-6 py-2 text-[13px] font-medium"
             >
               {submitLabel}
             </button>
@@ -235,5 +235,3 @@ const TripAmendModal: React.FC<TripAmendModalProps> = ({
     </Dialog>
   );
 };
-
-export default TripAmendModal;

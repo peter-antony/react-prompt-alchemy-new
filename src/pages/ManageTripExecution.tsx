@@ -17,6 +17,9 @@ import { TripExecutionCreateDrawerScreen } from '@/components/drawer/TripExecuti
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { LinkedTransactionsDrawerScreen } from '@/components/drawer/LinkedTransactionsDrawerScreen';
 import { tripService } from '@/api/services/tripService';
+import { NotebookPen, Search, Clock } from "lucide-react";
+import { TripAmendModal } from '@/components/ManageTrip/TripAmendModal';
+
 
 const ManageTripExecution = () => {
   const { loading, tripData, fetchTrip, saveTrip, confirmTrip } = manageTripStore();
@@ -28,6 +31,51 @@ const ManageTripExecution = () => {
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const { isOpen, drawerType, closeDrawer } = useDrawerStore();
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupTitle, setPopupTitle] = useState('Amend');
+  const [popupButtonName, setPopupButtonName] = useState('Amend');
+  const [popupBGColor, setPopupBGColor] = useState('');
+  const [popupTextColor, setPopupTextColor] = useState('');
+  const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const [fields, setFields] = useState([
+    {
+      type: "date",
+      label: "Requested Date and Time",
+      name: "date",
+      placeholder: "Select Requested Date and Time",
+      value: "",
+      required: true,
+      mappedName: 'Canceldatetime'
+    },
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'ReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'Remarks'
+    },
+  ]);
+  // console.log('filtersForThisGrid: ', filtersForThisGrid);
+
+  const handleFieldChange = (name, value) => {
+    console.log('Field changed:', name, value);
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
 
   // Fetch trip data on first render if editing
   useEffect(() => {
@@ -89,17 +137,17 @@ const ManageTripExecution = () => {
           console.log("🔄 Trip data refreshed after save.");
         }
       } else {
-      // Backend returned logical failure
-      toast({
-        title: "Save failed",
-        description:
-          result?.data?.Message ||
-          result?.message ||
-          "Unknown error occurred while saving trip.",
-        variant: "destructive",
-      });
-      console.warn("⚠️ Save failed:", result);
-    }
+        // Backend returned logical failure
+        toast({
+          title: "Save failed",
+          description:
+            result?.data?.Message ||
+            result?.message ||
+            "Unknown error occurred while saving trip.",
+          variant: "destructive",
+        });
+        console.warn("⚠️ Save failed:", result);
+      }
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
     }
@@ -122,59 +170,138 @@ const ManageTripExecution = () => {
           console.log("🔄 Trip data refreshed after confirm.");
         }
       } else {
-      // Backend returned logical failure
-      toast({
-        title: "Confirm failed",
-        description:
-          result?.data?.Message ||
-          result?.message ||
-          "Unknown error occurred while confirming trip.",
-        variant: "destructive",
-      });
-      console.warn("⚠️ Confirm failed:", result);
-    }
+        // Backend returned logical failure
+        toast({
+          title: "Confirm failed",
+          description:
+            result?.data?.Message ||
+            result?.message ||
+            "Unknown error occurred while confirming trip.",
+          variant: "destructive",
+        });
+        console.warn("⚠️ Confirm failed:", result);
+      }
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
     }
   }, [confirmTrip, toast, fetchTrip]);
 
   const tripAmendHandler = useCallback(async () => {
+    setPopupOpen(true);
+  }, [tripData, toast, fetchTrip]);
+
+  const handleTripsAmendSubmit = async (formFields: any) => {
+    console.log('Form fields received:', formFields);
+    
+    // Map form fields to API object
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for API:', mappedObj);
+    
+    // Prepare trip data object for API
+    let tripDataObj: any = { ...tripData };
+    tripDataObj.Header.Amendment.AmendmentRequestedDateTime = mappedObj?.Canceldatetime;
+    tripDataObj.Header.Amendment.AmendmentReasonCode = mappedObj?.ReasonCode;
+    tripDataObj.Header.Amendment.AmendmentReasonCodeDescription = mappedObj?.ReasonCode;
+    tripDataObj.Header.Amendment.AmendmentRemarks = mappedObj?.Remarks;
+    console.log('Trip Data Object for API:', tripDataObj);
+    
     try {
-      let result: any = await tripService.amendTrip();
-      if (result?.data?.IsSuccess) {
-        // ✅ Show success message
+      setApiStatus('loading');
+      console.log('Calling amendTrip API...');
+      
+      // Wait for the API response
+      const response: any = await tripService.amendTrip(tripDataObj);
+      
+      console.log('Amend Trip API Response:', response);
+      console.log('Response data:', response?.data);
+      console.log('IsSuccess:', response?.data?.IsSuccess);
+      console.log('Message:', response?.data?.Message);
+      console.log('ResponseData (raw):', response?.data?.ResponseData);
+      
+      setApiStatus('success');
+      setPopupOpen(false);
+      
+      // Handle success/failure based on server response
+      if (response?.data?.IsSuccess) {
+        // Parse the ResponseData JSON string to get detailed trip amendment info
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+        
+        // Use the message from ResponseData if available, otherwise use the main message
+        const successMessage = responseData?.Message || response?.data?.Message || "Trip amended successfully.";
+        const reasonCode = responseData?.ReasonCode || "";
+        const templateId = responseData?.TemplateID || "";
+        
         toast({
           title: "Trip amended successfully",
-          description: result?.data?.Message ?? "Trip amended successfully.",
+          description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
           variant: "default",
         });
-        let res = result?.data?.ResponseData ? JSON.parse(result.data.ResponseData) : null;
-        // ✅ Re-fetch the trip data fresh from server
-        if (res?.TripID) {
-          await fetchTrip(res.TripID);
-          console.log("🔄 Trip data refreshed after amend.");
+        
+        console.log('Trip Amendment Details:', {
+          message: successMessage,
+          reasonCode: reasonCode,
+          templateId: templateId,
+          status: responseData?.Status
+        });
+        
+        // Optionally refresh trip data after successful amendment
+        if (tripData?.Header?.TripNo) {
+          await fetchTrip(tripData.Header.TripNo);
+          console.log("🔄 Trip data refreshed after amendment.");
         }
       } else {
-      // Backend returned logical failure
+        // Parse ResponseData for error details if available
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed Error ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse error ResponseData:', parseError);
+        }
+        
+        const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Trip amendment failed.";
+        
+        toast({
+          title: "Trip amendment failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Amend Trip API Error:', error);
+      setApiStatus('error');
+      
+      // Handle different types of errors
+      let errorMessage = "An unexpected error occurred while amending the trip.";
+      
+      if (error?.response?.data?.Message) {
+        errorMessage = error.response.data.Message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Amend failed",
-        description:
-          result?.data?.Message ||
-          result?.message ||
-          "Unknown error occurred while amending trip.",
+        title: "Error amending trip",
+        description: errorMessage,
         variant: "destructive",
       });
-      console.warn("⚠️ Amend failed:", result);
     }
-    } catch (err) {
-      toast({ title: "Error amending trip", description: String(err), variant: "destructive" });
-    }
-  }, [toast, fetchTrip]);
+  }
 
   // Set footer with conditional button based on trip status
   useEffect(() => {
     // Check if trip status is "Completed" to determine button label and action
-    const isTripCompleted = tripData?.Header?.TripStatus === "Confirmed";
+    const isTripCompleted = tripData?.Header?.TripStatus === "Executed";
     const confirmButtonLabel = isTripCompleted ? "Amend" : "Confirm Trip";
     const confirmButtonHandler = isTripCompleted ? tripAmendHandler : tripConfirmHandler;
 
@@ -266,7 +393,7 @@ const ManageTripExecution = () => {
           showCloseButton={true}
         >
           {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
-          {drawerType === 'vas' && <VASDrawerScreen tripUniqueNo={tripUniqueID || undefined}/>}
+          {drawerType === 'vas' && <VASDrawerScreen tripUniqueNo={tripUniqueID || undefined} />}
           {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
           {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
@@ -274,6 +401,20 @@ const ManageTripExecution = () => {
           {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
         </SideDrawer>
+
+        <TripAmendModal
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          title={popupTitle}
+          // titleColor={popupTextColor}
+          // titleBGColor={popupTitleBgColor}
+          icon={<NotebookPen className="w-4 h-4" color="blue" strokeWidth={1.5} />}
+          fields={fields as any}
+          onFieldChange={handleFieldChange}
+          onSubmit={handleTripsAmendSubmit}
+          submitLabel={popupButtonName}
+        // submitColor={popupBGColor}
+        />
 
       </div>
     </AppLayout>
