@@ -801,7 +801,7 @@ export const TripExecutionHub = () => {
       onClick: () => {
         console.log('nav manage-trip');
         // No redirection here right now.
-        // navigate('/manage-trip');
+        navigate('/trip-planning');
       },
       dropdownItems: [
         {
@@ -809,7 +809,7 @@ export const TripExecutionHub = () => {
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             // No redirection here right now.
-            // navigate('/manage-trip');
+            navigate('/trip-planning');
           },
         },
         {

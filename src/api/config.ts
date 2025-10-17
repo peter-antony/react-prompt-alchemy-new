@@ -16,8 +16,10 @@ export const Config = {
 
 } as const;
 // const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
-const REACT_APP_API_URL = "http://192.168.2.92/v1";
-// const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1";
+const REACT_APP_API_URL = "http://192.168.2.17/v1"; // santhanam url
+// const REACT_APP_API_URL = "http://192.168.2.92/v1"; // Local Dev url
+// const REACT_APP_API_URL = "https://forwardis.ramcouat.com/coreapiops/v1"; // UAT url
+// const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1"; // Dev url
 
 const token: any = localStorage.getItem("token");
 
@@ -73,6 +75,7 @@ export const API_ENDPOINTS = {
     ORDERFORM: "/quickorderhub/update",
     QUICKORDER_GET:"/quickorder/getdata",
     LINKEDORDERS_GET:"/quickorder/showlinked",
+    UPLOADFILES: "/fileupload/update",
   },
   // Invoice management
   INVOICES: {

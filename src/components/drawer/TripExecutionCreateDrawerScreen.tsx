@@ -1660,19 +1660,22 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 key={leg.id}
                 onClick={() => handleLegSelection(leg.id)}
                 className={cn(
-                  "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2",
+                  "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2 relative min-h-[80px]",
                   selectedLegId === leg.id && "border-primary bg-accent"
                 )}
               >
                 {/* Leg Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span>{leg.id}</span>
+                    <div className="flex items-center gap-1">
+                      <span>{leg.id} :</span>
                       {/* <MapPin className="h-4 w-4 text-muted-foreground" /> */}
                       <div className="flex-1 min-w-0">
                         <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span>
                         {/* <div className="text-xs text-muted-foreground">Origin</div> */}
+                      </div>
+                      <div className="absolute right-1 top-3 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl">
+                        {leg.LegBehaviourDescription}
                       </div>
                       <div className="flex items-center gap-1">
                         {/* {leg.hasInfo && (
@@ -1680,7 +1683,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                             <Info className="h-3 w-3" />
                           </Badge>
                         )} */}
-                        <Button
+                        {/* <Button
                           size="icon"
                           variant="ghost"
                           className="h-5 w-5"
@@ -1691,7 +1694,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                           }}
                         >
                           <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </div>
@@ -1715,14 +1718,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
                 {/* API Data - Leg Sequence and Behavior */}
                 {leg.id && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="font-medium">Sequence: {leg.id}</span>
-                    {leg.hasInfo && (
-                      <>
-                        <span>•</span>
-                        <span>Has Info: Yes</span>
-                      </>
-                    )}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground absolute bottom-3">
+                    <span className="font-medium">{formatDateToDDMMYYYY(leg.PlanStartDate)} {formatTimeTo12Hour(leg.PlanStartTime)} - {formatDateToDDMMYYYY(leg.PlanEndDate)} {formatTimeTo12Hour(leg.PlanEndTime)}</span>
+                    
                   </div>
                 )}
               </div>

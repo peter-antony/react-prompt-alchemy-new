@@ -118,6 +118,11 @@ export interface Leg {
   consignments: Consignment[];
   transshipments: Transshipment[];
   LegSequence?: string;
+  LegBehaviourDescription?: string;
+  PlanStartDate?: string;
+  PlanEndDate?: string;
+  PlanStartTime?: string;
+  PlanEndTime?: string;
 }
 
 interface TripExecutionDrawerStore {
@@ -195,8 +200,13 @@ const generateMockData = (legNumber: number, from: string, to: string) => {
 const transformApiLegToStoreFormat = (apiLeg: any, index: number): Leg => {
   return {
     id: apiLeg.LegSequence || `leg-${index + 1}`,
-    from: apiLeg.DeparturePoint || "",
-    to: apiLeg.ArrivalPoint || "",
+    from: apiLeg.DeparturePointDescription || "",
+    to: apiLeg.ArrivalPointDescription || "",
+    LegBehaviourDescription: apiLeg.LegBehaviourDescription || "",
+    PlanStartDate: apiLeg.PlanStartDate || "",
+    PlanEndDate: apiLeg.PlanEndDate || "",
+    PlanStartTime: apiLeg.PlanStartTime || "",
+    PlanEndTime: apiLeg.PlanEndTime || "",
     distance: "-- km", // You can calculate this or get from API
     duration: "-- hours", // You can calculate this or get from API
     hasInfo: true,
