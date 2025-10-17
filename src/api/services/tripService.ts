@@ -71,11 +71,11 @@ export const tripService = {
       SearchCriteria: {
         TripID: params?.id,
       },
-      Pagination: {
-        PageNumber: 1,
-        PageSize: 10,
-        TotalRecords: 200,
-      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
     });
     const requestBody = {
       RequestData: requestPayload,
@@ -98,11 +98,11 @@ export const tripService = {
         MessageType: "TripLog SaveTrip",
       },
       RequestPayload: params,
-      Pagination: {
-        PageNumber: 1,
-        PageSize: 10,
-        TotalRecords: 200,
-      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
     });
     const requestBody = {
       RequestData: requestPayload,
@@ -125,11 +125,11 @@ export const tripService = {
         MessageType: "TripLog ConfirmTrip",
       },
       RequestPayload: params,
-      Pagination: {
-        PageNumber: 1,
-        PageSize: 10,
-        TotalRecords: 200,
-      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
     });
     const requestBody = {
       RequestData: requestPayload,
@@ -152,11 +152,11 @@ export const tripService = {
         MessageType: "TripLog CancelTrip",
       },
       SearchCriteria: {},
-      Pagination: {
-        PageNumber: 1,
-        PageSize: 10,
-        TotalRecords: 200,
-      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
     });
     const requestBody = {
       RequestData: requestPayload,
