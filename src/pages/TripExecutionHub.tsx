@@ -180,7 +180,7 @@ export const TripExecutionHub = () => {
 
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
-    { label: "Transport Execution Management", active: true },
+    { label: "Transport Planning and Execution", active: true },
     // { label: 'Trip Execution Management', active: false },
   ];
 

@@ -115,7 +115,7 @@ const ManageTripExecution = () => {
   //BreadCrumb data
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
-    { label: 'Transport Execution Management', href: '/trip-hub', active: false }, // Updated breadcrumb
+    { label: 'Transport Planning and Execution', href: '/trip-hub', active: false }, // Updated breadcrumb
     { label: 'Transport Execution', active: true } // Updated breadcrumb
   ];
 
