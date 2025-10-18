@@ -813,28 +813,28 @@ export const TripExecutionHub = () => {
     {
       label: " Create Trip",
       tooltipTitle: "Create a new trip or upload in bulk",
-      showDropdown: true,
+      showDropdown: false,
       tooltipPosition: "top" as const,
       onClick: () => {
         console.log('nav manage-trip');
         // No redirection here right now.
         navigate('/trip-planning');
       },
-      dropdownItems: [
-        {
-          label: "Create Trip",
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            // No redirection here right now.
-            navigate('/trip-planning');
-          },
-        },
-        {
-          label: "Bulk Upload",
-          icon: <CloudUpload className="h-4 w-4" />,
-          onClick: handleBulkUpload,
-        },
-      ],
+      // dropdownItems: [
+      //   {
+      //     label: "Create Trip",
+      //     icon: <Plus className="h-4 w-4" />,
+      //     onClick: () => {
+      //       // No redirection here right now.
+      //       navigate('/trip-planning');
+      //     },
+      //   },
+      //   {
+      //     label: "Bulk Upload",
+      //     icon: <CloudUpload className="h-4 w-4" />,
+      //     onClick: handleBulkUpload,
+      //   },
+      // ],
     },
   ];
 

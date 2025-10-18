@@ -92,7 +92,7 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
       <button
         ref={buttonRef}
         className={cn(
-          "border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded px-3 flex items-center transition-colors duration-200 gap-2",
+          "border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2",
           className
         )}
         onClick={handleMainButtonClick}
@@ -100,14 +100,14 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
         onMouseLeave={() => setShowTooltip(false)}
         type="button"
       >
-        <span
+        <div
           onClick={config.onClick}
           style={{ cursor: 'pointer', userSelect: 'none' }}
-          className="select-none flex items-center text-sm font-medium gap-2"
+          className="select-none flex items-center text-sm font-medium px-3 gap-2 w-full h-full"
         >
           <Plus className="h-4 w-4" />
           {label}
-        </span>
+        </div>
         {hasDropdown && (
           <>
             <div className="w-px h-9 bg-blue-500 ml-2 mr-1" />
