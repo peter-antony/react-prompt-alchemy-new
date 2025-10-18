@@ -16,6 +16,8 @@ export const TripForm: React.FC<TripFormProps> = ({
   const [qcList1, setqcList1] = useState<any>();
   const [qcList2, setqcList2] = useState<any>();
   const [qcList3, setqcList3] = useState<any>();
+  const [co2List, setCo2List] = useState<any>();
+
   // Removed formData state as DynamicPanel is not fully controlled by TripForm's local state
   // const [formData, setFormData] = useState<Record<string, any>>(() => buildTripExecutionFormData(tripData));
 
@@ -160,46 +162,79 @@ export const TripForm: React.FC<TripFormProps> = ({
           }
         }
       },
+      // CO2Emisions: {
+      //   id: 'CO2Emisions',
+      //   label: 'CO2 Emisions',
+      //   fieldType: 'text',
+      //   width: 'full',
+      //   value: tripData?.Header?.CO2Emisions || "", // Bind directly to tripData.Header
+      //   mandatory: false,
+      //   visible: true,
+      //   editable: true,
+      //   order: 4,
+      //   maxLength: 40,
+      //   placeholder: 'Enter CO2 Emisions',
+      //   events: {
+      //     onBlur: (event: React.FocusEvent) => {
+      //       const val = event.target as HTMLInputElement;
+      //       console.log('CO2Emisions change: ', val.value);
+      //       updateHeaderField("CO2Emisions", val.value, "Update");
+      //     }
+      //   }
+      // },
       CO2Emisions: {
-        id: 'CO2Emisions',
-        label: 'CO2 Emisions',
-        fieldType: 'text',
-        width: 'full',
-        value: tripData?.Header?.CO2Emisions || "", // Bind directly to tripData.Header
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 4,
-        maxLength: 40,
-        placeholder: 'Enter CO2 Emisions',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('CO2Emisions change: ', val.value);
-            updateHeaderField("CO2Emisions", val.value, "Update");
-          }
-        }
-      },
-      CO2EmisionsUOM: {
-        id: 'CO2EmisionsUOM',
-        label: 'CO2 Emisions UOM',
-        fieldType: 'text',
-        width: 'full',
-        value: tripData?.Header?.CO2EmisionsUOM || "", // Bind directly to tripData.Header
-        mandatory: false,
-        visible: true,
-        editable: true,
-        order: 4,
-        maxLength: 40,
-        placeholder: 'Enter CO2 Emisions UOM',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('CO2EmisionsUOM change: ', val.value);
-            updateHeaderField("CO2EmisionsUOM", val.value, "Update");
-          }
-        }
-      },
+  id: 'CO2Emisions',
+  label: 'CO2 Emissions',
+  fieldType: 'inputdropdown',
+  width: 'full',
+  value: (() => {
+    const header = tripData?.Header as any;
+    const emissionValue = header?.CO2Emisions;
+    const emissionUOM = header?.CO2EmisionsUOM;
+    if (emissionValue && typeof emissionValue === "object") {
+      return { input: emissionValue.input ?? emissionValue ?? "", dropdown: emissionValue.dropdown ?? emissionUOM ?? "" };
+    }
+    return { input: emissionValue ?? "", dropdown: emissionUOM ?? "" };
+  })(),
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 4,
+  maxLength: 255,
+  options: co2List?.filter((u: any) => u.id).map((u: any) => ({ label: u.name, value: u.id })),
+  events: {
+    onChange: (val: any) => {
+      console.log('CO2Emisions change: ', val);
+      if (val && typeof val === "object") {
+        const { input, dropdown } = val;
+        updateHeaderField("CO2Emisions", input, "Update");
+        updateHeaderField("CO2EmisionsUOM", dropdown, "Update");
+      }
+    }
+  }
+},
+
+
+      // CO2EmisionsUOM: {
+      //   id: 'CO2EmisionsUOM',
+      //   label: 'CO2 Emisions UOM',
+      //   fieldType: 'text',
+      //   width: 'full',
+      //   value: tripData?.Header?.CO2EmisionsUOM || "", // Bind directly to tripData.Header
+      //   mandatory: false,
+      //   visible: true,
+      //   editable: true,
+      //   order: 4,
+      //   maxLength: 40,
+      //   placeholder: 'Enter CO2 Emisions UOM',
+      //   events: {
+      //     onBlur: (event: React.FocusEvent) => {
+      //       const val = event.target as HTMLInputElement;
+      //       console.log('CO2EmisionsUOM change: ', val.value);
+      //       updateHeaderField("CO2EmisionsUOM", val.value, "Update");
+      //     }
+      //   }
+      // },
       SupplierRefNo: {
         id: 'SupplierRefNo',
         label: 'Supplier Ref. No.',
@@ -487,7 +522,7 @@ export const TripForm: React.FC<TripFormProps> = ({
         }
       },
     }; // Dependencies for useMemo (removed formData, added tripData for values)
-  }, [tripType, tripData, updateHeaderField]);
+  }, [tripType, tripData, updateHeaderField, qcList1, qcList2, qcList3, co2List]);
 
   // Map IsRoundTrip -> TripType - Moved from TripExecutionLanding.tsx
   useEffect(() => {
@@ -522,6 +557,7 @@ export const TripForm: React.FC<TripFormProps> = ({
       try {
         const data: any = await quickOrderService.getMasterCommonData({ messageType });
         const parsedData = JSON.parse(data?.data?.ResponseData) || [];
+        console.log(`TripForm: Fetched ${messageType} data:`, parsedData);
         setQcList(parsedData);
       } catch (error) {
         console.error(`TripForm: Error fetching ${messageType}`, error);
@@ -531,12 +567,13 @@ export const TripForm: React.FC<TripFormProps> = ({
     fetchQcData("Trip Log QC1 Combo Init", setqcList1);
     fetchQcData("Trip Log QC2 Combo Init", setqcList2);
     fetchQcData("Trip Log QC3 Combo Init", setqcList3);
+    fetchQcData("Container Qty UOM Init", setCo2List);
   }, []); // Only run once on mount
 
   return (
     <>
       <DynamicPanel
-        key={tripType} // Revert to tripType for controlled remounts on type change
+        key={`${tripType}-${qcList1?.length || 0}-${qcList2?.length || 0}-${qcList3?.length || 0}`}  // include QC list loading state
         ref={tripExecutionRef}
         panelId="trip-execution-panel"
         panelTitle="Trip Details"
