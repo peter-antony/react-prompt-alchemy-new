@@ -20,8 +20,10 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
+import { useNavigate } from 'react-router-dom';
 
 const TripPlanning = () => {
+  const navigate = useNavigate();
   const [tripNo, setTripNo] = useState('');
   const [location, setLocation] = useState('Forwardis GMBH');
   const [cluster, setCluster] = useState('10000406');
@@ -97,6 +99,11 @@ const TripPlanning = () => {
     },
   ];
 
+  // Handle Manage Trips button click
+  const handleManageTripsClick = () => {
+    navigate('/trip-hub?createTripPlan=true');
+  };
+
   //BreadCrumb data
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
@@ -139,6 +146,10 @@ const TripPlanning = () => {
   const fetchCluster = fetchMasterData("Cluster Init");
   const fetchRefDocType = fetchMasterData("Ref Doc Type(Tug) Init");
 
+  const fetchSupplier = fetchMasterData("Supplier Init");
+  const fetchSchedule = fetchMasterData("Container Type Init");
+  const [supplier, setSupplier] = useState<string | undefined>();
+  const [schedule, setSchedule] = useState<string | undefined>();
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -152,7 +163,11 @@ const TripPlanning = () => {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-semibold">Trip No.</h1>
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="text-primary border-primary">
+              <Button 
+                  variant="outline" 
+                  className="text-primary border-primary"
+                  onClick={handleManageTripsClick}
+                >
                   Manage Trips
                 </Button>
                 <Button variant="ghost" size="icon">
@@ -173,7 +188,7 @@ const TripPlanning = () => {
           </div>
 
           {/* Planning Details Card */}
-          <div className="bg-card border border-border rounded-lg p-6 mb-6">
+          <div className="bg-card border border-border rounded-lg px-6 pt-3 pb-6 mb-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-medium">Planning Details</h2>
@@ -539,53 +554,10 @@ const TripPlanning = () => {
                       <p className="text-sm text-white/90">12 orders ready for planning</p>
                     </div> */}
 
-                    {/* <SmartGridWithGrouping
-                      key={`grid-${gridState.forceUpdate}`}
-                      columns={gridState.columns}
-                      data={gridState.gridData}
-                      groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                      showGroupingDropdown={true}
-                      editableColumns={['plannedStartEndDateTime']}
-                      paginationMode="pagination"
-                      onLinkClick={handleLinkClick}
-                      onUpdate={handleUpdate}
-                      onSubRowToggle={gridState.handleSubRowToggle}
-                      selectedRows={selectedRows}
-                      onSelectionChange={handleRowSelection}
-                      onRowClick={handleRowClick}
-                      // onFiltersChange={setCurrentFilters}
-                      onSearch={handleServerSideSearch}
-                      onClearAll={clearAllFilters}
-                      // rowClassName={(row: any, index: number) =>
-                      //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-                      // }
-                      rowClassName={(row: any, index: number) => {
-                        return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                      }}
-                      nestedRowRenderer={renderSubRow}
-                      configurableButtons={gridConfigurableButtons}
-                      showDefaultConfigurableButton={false}
-                      gridTitle="Trip Plans"
-                      recordCount={gridState.gridData.length}
-                      showCreateButton={true}
-                      searchPlaceholder="Search"
-                      clientSideSearch={true}
-                      showSubHeaders={false}
-                      hideAdvancedFilter={true}
-                      hideCheckboxToggle={true}
-                      serverFilters={dynamicServerFilters}
-                      showFilterTypeDropdown={false}
-                      showServersideFilter={showServersideFilter}
-                      onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                      gridId={gridId}
-                      userId="current-user"
-                      api={filterService}
-                    /> */}
-
                     {/* Content */}
                     <div className="p-4">
                       {/* Search */}
-                      <div className="relative mb-4">
+                      {/* <div className="relative mb-4">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
                           placeholder="Search orders..."
@@ -593,10 +565,78 @@ const TripPlanning = () => {
                           onChange={(e) => setCustomerOrderSearch(e.target.value)}
                           className="pl-9"
                         />
+                      </div> */}
+
+                      <div className='flex gap-6'>
+                        <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
+                          {/* Trip Planning Customer Order Hub */}
+                          <TripCOHub />
+                        </div>
+                        {/* Resources Cards - Right */}
+                        <div className="w-1/4 space-y-3">
+                          <div className=''>
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-1">Supplier</div>
+                              <div className="text-sm font-medium">
+                                <DynamicLazySelect
+                                  fetchOptions={fetchSupplier}
+                                  value={supplier}
+                                  onChange={(value) => setSupplier(value as string)}
+                                  placeholder="VEN0000001-Supplier Name"
+                                />
+                              </div>
+                            </div>
+
+                            <div className='mt-3'>
+                              <div className="text-xs text-muted-foreground mb-1">Schedule</div>
+                              <div className="text-sm font-medium">
+                                <DynamicLazySelect
+                                  fetchOptions={fetchSchedule}
+                                  value={schedule}
+                                  onChange={(value) => setSchedule(value as string)}
+                                  placeholder="SCH-0000001-Schedule Name"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {[
+                            { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                            { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
+                            { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
+                            { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
+                            { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
+                            { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
+                            { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
+                          ].map((resource) => {
+                            const Icon = resource.icon;
+                            return (
+                              <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+                                      <Icon className={cn("h-5 w-5", resource.iconColor)} />
+                                    </div>
+                                    <div>
+                                      <h3 className="font-medium text-sm">{resource.title} 
+                                        <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
+                                      </h3>
+                                      {resource.subtitle && (
+                                        <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button variant="ghost" size="icon">
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* Toggle */}
-                      <div className="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-3 mt-3 p-3 bg-muted/30 rounded-lg">
                         <Switch 
                           id="consolidated-trip-inline"
                           checked={consolidatedTrip}
@@ -607,9 +647,6 @@ const TripPlanning = () => {
                           Create single trip with consolidated orders
                         </Label>
                       </div>
-
-                      {/* Trip Planning Customer Order Hub */}
-                      <TripCOHub />
 
                       {/* Grid */}
                       {/* <SmartGrid

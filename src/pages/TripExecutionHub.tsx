@@ -9,7 +9,7 @@ import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { ConfigurableButtonConfig } from '@/components/ui/configurable-button';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useFooterStore } from '@/stores/footerStore';
 import { filterService, quickOrderService } from '@/api/services';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
@@ -19,6 +19,9 @@ import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 
 export const TripExecutionHub = () => {
+  const [searchParams] = useSearchParams();
+  const createTripPlan = searchParams.get('createTripPlan');
+  
   const gridId = "trip-hub"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
@@ -31,6 +34,17 @@ export const TripExecutionHub = () => {
   const gridState = useSmartGridState();
   const { toast } = useToast();
   const { config, setFooter, resetFooter } = useFooterStore();
+
+  // Handle createTripPlan parameter
+  useEffect(() => {
+    if (createTripPlan === 'true') {
+      toast({
+        title: "Create Trip Plan Mode",
+        description: "You are now in trip plan creation mode. Use the available options to create a new trip plan.",
+        variant: "default",
+      });
+    }
+  }, [createTripPlan, toast]);
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -654,8 +668,11 @@ export const TripExecutionHub = () => {
 
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
-    if (columnKey === 'TripPlanID') {
+    console.log("createTripPlan: ", createTripPlan);
+    if (columnKey === 'TripPlanID' && createTripPlan !== 'true') {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
+    }else{
+      navigate(`/trip-planning?manage=true&tripId=${value.TripPlanID}`);
     }
   };
 
