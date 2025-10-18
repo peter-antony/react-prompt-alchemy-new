@@ -254,7 +254,7 @@ export const tripService = {
         MessageType: "TripLog SaveVas",
       },
       Header: HeaderInfo,
-      VAS: vasList
+      VAS: vasList,
       // Pagination: {
       //   PageNumber: 1,
       //   PageSize: 10,
@@ -343,6 +343,28 @@ export const tripService = {
     };
     const response = await apiClient.post(
       `${API_ENDPOINTS.QUICK_ORDERS.COMBO}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  getCOs: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "GetCustomerOrders-CreateTripPlan",
+      },
+      SearchCriteria: params?.searchCriteria,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.CREATE_TRIP_CO,
       requestBody
     );
     return response.data;

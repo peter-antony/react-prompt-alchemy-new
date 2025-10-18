@@ -60,7 +60,8 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/trips/${id}`,
     APPROVE: (id: string) => `/trips/${id}/approve`,
     GET_VAS: "/transportexecution/getvasfromtrip",
-    SAVE_VAS: "/transportexecution/savevas"
+    SAVE_VAS: "/transportexecution/savevas",
+    CREATE_TRIP_CO:"/tripplanexecution/createtripplan"
   },
   // Quick Order management
   QUICK_ORDERS: {

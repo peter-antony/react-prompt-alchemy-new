@@ -13,10 +13,11 @@ import { useNavigate } from 'react-router-dom';
 import { useFooterStore } from '@/stores/footerStore';
 import { filterService, quickOrderService } from '@/api/services';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
-import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
+import { tripCOSearchCriteria, SearchCriteria } from "@/constants/tripCOSearchCriteria";
 import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
+import { tripPlanningService } from "@/api/services/tripPlanningService";
 
 export const TripCOHub = () => {
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
@@ -34,11 +35,11 @@ export const TripCOHub = () => {
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
 
-  // console.log('filtersForThisGrid: ', filtersForThisGrid);
+  console.log('filtersForThisGrid: ', filtersForThisGrid);
 
   const initialColumns: GridColumnConfig[] = [
     {
-      key: "CustomerOrder",
+      key: "CustomerOrderID",
       label: "Customer Order",
       type: "Link",
       sortable: true,
@@ -48,7 +49,7 @@ export const TripCOHub = () => {
       order: 1
     },
     {
-      key: "COStatus",
+      key: "CustomerOrderStatus",
       label: "CO Status",
       type: "Badge",
       sortable: true,
@@ -75,7 +76,7 @@ export const TripCOHub = () => {
       order: 4
     },
     {
-      key: "LegFromTo",
+      key: "LegFromDescription",
       label: "Leg From & To",
       type: "Text",
       sortable: true,
@@ -95,7 +96,7 @@ export const TripCOHub = () => {
     {
       key: "ArrivalDate",
       label: "Arrival Date",
-      type: "Date",
+      type: "Text",
       sortable: true,
       editable: false,
       subRow: false,
@@ -140,22 +141,24 @@ export const TripCOHub = () => {
       if (Object.keys(filtersForThisGrid).length > 0) {
         // ✅ Build criteria from store filters
         searchCriteria = buildSearchCriteria(filtersForThisGrid);
-      } else {
+      } 
+      else {
         // ✅ Fallback defaults
-        searchCriteria = buildSearchCriteria({
-          PlannedExecutionDate: {
-            value: {
-              from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
-              to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
-            }
-          }
-        });
+        searchCriteria = buildSearchCriteria(
+          // PlannedExecutionDate: {
+          //   value: {
+          //     from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
+          //     to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
+          //   }
+          //
+          tripCOSearchCriteria
+      );
       }
-
+      console.log('searchCriteria: ', searchCriteria);
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
-      const response: any = await tripService.getTrips({ searchCriteria });
+      const response: any = await tripService.getCOs({ searchCriteria });
       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-      const data = parsedResponse;
+      const data = parsedResponse.COResult;
 
       if (!data || !Array.isArray(data)) {
         gridState.setGridData([]);
@@ -377,22 +380,49 @@ export const TripCOHub = () => {
     );
   };
 
-  const buildSearchCriteria: any = (latestFilters: any) => {
-    const criteria: SearchCriteria = { ...defaultSearchCriteria };
-    if (Object.keys(latestFilters).length > 0) {
-      Object.entries(latestFilters).forEach(([key, value]): any => {
-        const filter: any = value; // 👈 cast to any
-        if (key === "PlannedExecutionDate") {
-          criteria.PlannedExecutionDateFrom = filter?.value?.from.replace(/-/g, "/");
-          criteria.PlannedExecutionDateTo = filter?.value?.to.replace(/-/g, "/");
-        } else {
-          // all other keys map directly
-          criteria[key] = filter.value;
-        }
-      });
-      return criteria;
+  // const buildSearchCriteria: any = (latestFilters: any) => {
+  //   const criteria: SearchCriteria = { ...tripCOSearchCriteria };
+  //   if (Object.keys(latestFilters).length > 0) {
+  //     Object.entries(latestFilters).forEach(([key, value]): any => {
+  //       const filter: any = value; // 👈 cast to any
+  //       if (key === "PlannedExecutionDate") {
+  //         // criteria.PlannedExecutionDateFrom = filter?.value?.from.replace(/-/g, "/");
+  //         // criteria.PlannedExecutionDateTo = filter?.value?.to.replace(/-/g, "/");
+  //       } else {
+  //         // all other keys map directly
+  //         criteria[key] = filter.value;
+  //       }
+  //     });
+  //     return criteria;
+  //   }
+  //   return criteria;
+  // }
+
+  const buildSearchCriteria = (latestFilters: Record<string, any> = {}): SearchCriteria => {
+  const criteria: SearchCriteria = { ...tripCOSearchCriteria };
+
+  // If incoming filters are already a flat criteria object (like your defaults)
+  const isAlreadyCriteria = Object.values(latestFilters).every(
+    (val) => typeof val === "string" || typeof val === "number" || val === ""
+  );
+
+  if (isAlreadyCriteria) {
+    // Directly merge and return
+    return { ...criteria, ...latestFilters };
+  }
+
+  // Otherwise, treat it like filter objects
+  for (const [key, value] of Object.entries(latestFilters)) {
+    const filter: any = value;
+    if (filter && typeof filter === "object" && "value" in filter) {
+      (criteria as any)[key] = filter.value;
+    } else {
+      (criteria as any)[key] = value;
     }
   }
+
+  return criteria;
+};
 
   const handleServerSideSearch = async () => {
     // // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
@@ -403,14 +433,14 @@ export const TripCOHub = () => {
     console.log('LatestFilters Trip log: ', latestFilters);
     console.log('buildSearchCriteria: ', buildSearchCriteria(latestFilters));
     const plannedDate = latestFilters["PlannedExecutionDate"];
-    if (!plannedDate?.value?.from || !plannedDate?.value?.to) {
-      toast({
-        title: "Planned Execution Date Range",
-        description: "Please select a Planned Execution Date before searching.",
-        variant: "destructive", // 👈 makes it red/error style
-      });
-      return;
-    }
+    // if (!plannedDate?.value?.from || !plannedDate?.value?.to) {
+    //   toast({
+    //     title: "Planned Execution Date Range",
+    //     description: "Please select a Planned Execution Date before searching.",
+    //     variant: "destructive", // 👈 makes it red/error style
+    //   });
+    //   return;
+    // }
 
     const finalSearchCriteria = buildSearchCriteria(latestFilters);
 
@@ -418,14 +448,14 @@ export const TripCOHub = () => {
       gridState.setLoading(true);
       setApiStatus('loading');
 
-      const response: any = await tripService.getTrips({
+      const response: any = await tripService.getCOs({
         searchCriteria: finalSearchCriteria
       });
 
       console.log('Server-side Search API Response:', response);
 
       const parsedResponse = JSON.parse(response?.data?.ResponseData || '{}');
-      const data = parsedResponse;
+      const data = parsedResponse.COResult;
 
       if (!data || !Array.isArray(data)) {
         console.warn('API returned invalid data format:', response);
@@ -571,7 +601,7 @@ export const TripCOHub = () => {
       key: 'Contract Description', label: 'Contract Description', type: 'text'
     },
     {
-      key: 'Customer Order ID', label: 'Customer Order ID', type: 'lazyselect',
+      key: 'CustomerOrderProfileID', label: 'Customer Order ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CustomerOrder Number Init")
     },
     {
