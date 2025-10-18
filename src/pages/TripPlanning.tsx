@@ -19,6 +19,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { EquipmentSelectionDrawer } from '@/components/EquipmentSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,6 +41,8 @@ const TripPlanning = () => {
   const [arrivalLocation, setArrivalLocation] = useState('Frankfurt Station');
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
   const [consolidatedTrip, setConsolidatedTrip] = useState(true);
+  const [isEquipmentDrawerOpen, setIsEquipmentDrawerOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<any[]>([]);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
 
@@ -102,6 +105,21 @@ const TripPlanning = () => {
   // Handle Manage Trips button click
   const handleManageTripsClick = () => {
     navigate('/trip-hub?createTripPlan=true');
+  };
+
+  // Handle equipment selection
+  const handleAddEquipment = (equipment: any[]) => {
+    setSelectedEquipment(equipment);
+    console.log('Selected equipment:', equipment);
+  };
+
+  // Handle equipment drawer open/close
+  const handleOpenEquipmentDrawer = () => {
+    setIsEquipmentDrawerOpen(true);
+  };
+
+  const handleCloseEquipmentDrawer = () => {
+    setIsEquipmentDrawerOpen(false);
   };
 
   //BreadCrumb data
@@ -189,7 +207,7 @@ const TripPlanning = () => {
 
           {/* Planning Details Card */}
           <div className="bg-card border border-border rounded-lg px-6 pt-3 pb-6 mb-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-medium">Planning Details</h2>
                 {/* <div className="flex items-center gap-1 text-muted-foreground">
@@ -625,7 +643,11 @@ const TripPlanning = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <Button variant="ghost" size="icon">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={resource.title === 'Equipment' ? handleOpenEquipmentDrawer : undefined}
+                                  >
                                     <Plus className="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -672,6 +694,13 @@ const TripPlanning = () => {
           )}
         </main>
       </div>
+      
+      {/* Equipment Selection Drawer */}
+      <EquipmentSelectionDrawer
+        isOpen={isEquipmentDrawerOpen}
+        onClose={handleCloseEquipmentDrawer}
+        onAddEquipment={handleAddEquipment}
+      />
     </AppLayout>
   );
 };

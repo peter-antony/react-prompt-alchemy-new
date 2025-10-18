@@ -80,6 +80,7 @@ export function SmartGrid({
   onToggleServersideFilter,
   hideAdvancedFilter = false,
   hideCheckboxToggle = false,
+  hideToolbar = false,
   serverFilters = [],
   showFilterTypeDropdown = false,
   gridId,
@@ -843,7 +844,8 @@ export function SmartGrid({
   return (
     <div className="space-y-4 w-full">
       {/* Toolbar */}
-      <GridToolbar
+      {!hideToolbar && (
+        <GridToolbar
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
         showColumnFilters={showColumnFilters}
@@ -884,6 +886,7 @@ export function SmartGrid({
         selectedRowsCount={currentSelectedRows.size}
         onClearSelection={handleClearSelection}
       />
+      )}
 
       {/* Server-side Filter */}
       {showServersideFilter && (
