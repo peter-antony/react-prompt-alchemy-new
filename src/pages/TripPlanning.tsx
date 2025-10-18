@@ -168,6 +168,10 @@ const TripPlanning = () => {
   const fetchSchedule = fetchMasterData("Container Type Init");
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
+  const handleCustomerOrderSelect = (customerOrderId: any) => {
+    console.log("✅ Received from child:", customerOrderId);
+  }
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -588,7 +592,7 @@ const TripPlanning = () => {
                       <div className='flex gap-6'>
                         <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
                           {/* Trip Planning Customer Order Hub */}
-                          <TripCOHub />
+                          <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
                         </div>
                         {/* Resources Cards - Right */}
                         <div className="w-1/4 space-y-3">

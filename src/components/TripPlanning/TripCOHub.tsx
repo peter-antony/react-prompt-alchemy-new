@@ -19,7 +19,7 @@ import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
 
-export const TripCOHub = () => {
+export const TripCOHub = ({onCustomerOrderClick }) => {
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
@@ -266,6 +266,9 @@ export const TripCOHub = () => {
     console.log("Link clicked:", value, columnKey);
     if (columnKey === 'TripPlanID') {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
+    }
+    if(columnKey == "CustomerOrderID") {
+      onCustomerOrderClick(value.CustomerOrderID);
     }
   };
 
