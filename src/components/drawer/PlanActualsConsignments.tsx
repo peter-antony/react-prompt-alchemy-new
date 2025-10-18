@@ -99,6 +99,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const fetchLocations = fetchMasterData("Location Init");
   const fetchActivities = fetchMasterData("Activity Init");
   const fetchNhmTypes = fetchMasterData("NHM Init");
+  const fetchClassOfStore = fetchMasterData("Class Of Stores Init");
 
   const [expandedSections, setExpandedSections] = useState({
     wagon: true,
@@ -1282,9 +1283,15 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Wagon ID</div>
                             <div className="text-sm font-medium">
-                              <Input type='text' 
+                              {/* <Input type='text' 
                               value={wagonDetailsId}
                               onChange={(e) => {setWagonDetailsId(e.target.value)}}
+                              /> */}
+                              <DynamicLazySelect
+                                fetchOptions={fetchWagonIds}
+                                value={wagonDetailsId}
+                                onChange={(value) => setWagonDetailsId(value as string)}
+                                placeholder="Select Wagon ID"
                               />
                             </div>
                           </div>
@@ -1497,7 +1504,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">NHM</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchNhmTypes}
                                 value={productNHM}
                                 onChange={(value) => setProductNHM(value as string)}
                                 placeholder="Select NHM"
@@ -1508,10 +1515,10 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">Product ID</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchProductIds}
                                 value={productId}
                                 onChange={(value) => setProductId(value as string)}
-                                placeholder="Select NHM"
+                                placeholder="Select Product ID"
                               />
                             </div>
                           </div>
@@ -1530,7 +1537,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">Class of Stores</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchClassOfStore}
                                 value={classOfStores}
                                 onChange={(value) => setClassOfStores(value as string)}
                                 placeholder="Select Class of Stores"
@@ -1541,7 +1548,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">UN Code</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchUnCodes}
                                 value={unCode}
                                 onChange={(value) => setUnCode(value as string)}
                                 placeholder="Select UN Code"
@@ -1552,7 +1559,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">DG Class</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchDgClasses}
                                 value={dgClass}
                                 onChange={(value) => setDgClass(value as string)}
                                 placeholder="Select DG Class"
@@ -1603,7 +1610,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                             <div className="text-xs text-muted-foreground mb-1">THU ID</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchThuTypes}
                                 value={thuDetailsId}
                                 onChange={(value) => setThuDetailsId(value as string)}
                                 placeholder="Select THU ID"
