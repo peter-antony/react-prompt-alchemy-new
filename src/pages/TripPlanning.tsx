@@ -23,6 +23,7 @@ import { ResourceSelectionDrawer } from '@/components/ResourceSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
+import { useToast } from '@/hooks/use-toast';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ const TripPlanning = () => {
   const [isLoadingResource, setIsLoadingResource] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
+  const { toast } = useToast();
 
   // Customer Orders Grid Configuration
   const customerOrdersColumns: GridColumnConfig[] = [
@@ -177,7 +179,7 @@ const TripPlanning = () => {
           setResourceData(resourceDetails.Equipments || []);
           break;
         case 'Supplier':
-          setResourceData(resourceDetails.Agents || []);
+          setResourceData(resourceDetails.Supplier || []);
           break;
         case 'Driver':
           setResourceData(resourceDetails.Drivers || []);
@@ -255,8 +257,125 @@ const TripPlanning = () => {
   const fetchSchedule = fetchMasterData("Container Type Init");
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
+  const [customerOrderId, setCustomerOrderId] = useState<string | undefined>();
   const handleCustomerOrderSelect = (customerOrderId: any) => {
     console.log("✅ Received from child:", customerOrderId);
+    setCustomerOrderId(customerOrderId);
+  }
+
+  const splitAtPipe = (value: string | null | undefined) => {
+    if (typeof value === "string" && value.includes("||")) {
+      const [first, ...rest] = value.split("||");
+      return {
+        value: first.trim(),
+        label: rest.join("||").trim()
+      };
+    }
+    return value;
+  };
+
+  // Helper to recursively process all dropdown fields in an object, splitting at "||"
+  const splitDropdowns = (obj: any) => {
+    if (!obj || typeof obj !== "object") return obj;
+    const newObj: any = Array.isArray(obj) ? [] : {};
+    for (const key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+      const val = obj[key];
+      // If value is an object with a dropdown property, split it
+      if (val && typeof val === "object" && "dropdown" in val) {
+        newObj[key] = {
+          ...val,
+          dropdown: splitAtPipe(val.dropdown)
+        };
+        // If input property exists, keep as is
+        if ("input" in val) {
+          newObj[key].input = val.input;
+        }
+      } else if (typeof val === "string") {
+        // If value is a string, split if it has a pipe
+        newObj[key] = splitAtPipe(val);
+      } else if (typeof val === "object" && val !== null) {
+        // Recursively process nested objects
+        newObj[key] = splitDropdowns(val);
+      } else {
+        newObj[key] = val;
+      }
+    }
+    console.log("splitDropdowns ===", newObj);
+    return newObj;
+  };
+
+  const createTripData = async () => {
+    // Process location data using splitDropdowns to get the code value
+    const processedLocation = splitDropdowns(location);
+    
+    console.log("createTripData", customerOrderId);
+    console.log("selectedResources", selectedResources);
+    
+    // Transform selectedResources into the required ResourceDetails format
+    const transformedResourceDetails = selectedResources.map(resource => ({
+      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+      "ResourceType": resource.resourceType || resource.ResourceType || 
+        (resource.EquipmentID ? 'Equipment' : 
+         resource.VendorID ? 'Agent' : 
+         resource.DriverCode ? 'Driver' : 
+         resource.HandlerID ? 'Handler' : 
+         resource.VehicleID ? 'Vehicle' : 'Unknown'),
+      "Service": resource.Service || "",
+      "ServiceDescription": resource.ServiceDescription || "",
+      "SubService": resource.SubService || "",
+      "SubServiceDescription": resource.SubServiceDescription || "",
+      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
+      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+      "ModeFlag": "Insert"
+    }));
+    
+    // Push selectedResources into customerOrderId object
+    const updatedCustomerOrderId = {
+      ...(typeof customerOrderId === 'object' && customerOrderId !== null ? customerOrderId : {}),
+      "ResourceDetails": transformedResourceDetails,
+      "ModeFlag": "Insert",
+    };
+    
+    const tripData = {
+      "Header": {
+        "TripType": tripType,
+        "PlanningProfileID": "General-GMBH",
+        "Location": processedLocation?.value || processedLocation,
+        "Cluster": cluster,
+        "PlanDate": format(planDate, "yyyy-MM-dd")
+      },
+      "CustomerOrders": [
+        updatedCustomerOrderId
+      ]
+    }
+    
+    console.log("createTripData", tripData);
+    console.log("Updated customerOrderId with ResourceDetails:", updatedCustomerOrderId);
+    try {
+      const response: any = await tripPlanningService.createTripPlan(tripData);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Save Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating nested data:", error);
+    }
   }
 
   return (
@@ -772,6 +891,10 @@ const TripPlanning = () => {
                         <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
                           Create single trip with consolidated orders
                         </Label>
+                      </div>
+
+                      <div className=''>
+                        <button onClick={createTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">Create Trip</button>
                       </div>
 
                       {/* Grid */}

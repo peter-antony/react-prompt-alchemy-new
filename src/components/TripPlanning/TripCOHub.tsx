@@ -269,7 +269,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
     if(columnKey == "CustomerOrderID") {
-      onCustomerOrderClick(value.CustomerOrderID);
+      onCustomerOrderClick(value);
     }
   };
 
