@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
-import { SmartGrid } from '@/components/SmartGrid';
+import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
 
 interface ResourceSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddResource: (selectedResources: any[]) => void;
+  onAddResource: (formattedData?: { ResourceID: string; ResourceType: string }[]) => void;
   resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle';
   resourceData?: any[];
   isLoading?: boolean;
@@ -25,46 +25,47 @@ const resourceConfigs = {
     title: 'Select Equipment',
     buttonText: 'Add Equipment to CO',
     gridTitle: 'Equipment',
+    idField: 'EquipmentID', // Primary ID field for this resource type
     columns: [
       {
         key: 'EquipmentType',
         label: 'Equipment Type',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'EquipmentID',
         label: 'Equipment ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 200,
         editable: false
       },
       {
         key: 'OwnerID',
         label: 'Owner ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'EquipmentCategory',
         label: 'Wagon/Container',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'Ownership',
         label: 'Ownership',
-        type: 'Badge',
+        type: 'Badge' as GridColumnType,
         width: 120,
         editable: false
       },
       {
         key: 'Keeper',
         label: 'Keeper',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 120,
         editable: false
       }
@@ -75,46 +76,47 @@ const resourceConfigs = {
     title: 'Select Supplier',
     buttonText: 'Add Supplier to CO',
     gridTitle: 'Supplier',
+    idField: 'VendorID', // Primary ID field for this resource type
     columns: [
       {
         key: 'VendorID',
         label: 'Vendor ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'VendorName',
         label: 'Vendor Name',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 200,
         editable: false
       },
       {
         key: 'ServiceType',
         label: 'Service Type',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'SubServiceType',
         label: 'Sub Service Type',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'ContractID',
         label: 'Contract ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 120,
         editable: false
       },
       {
         key: 'RatingOnTime',
         label: 'Rating',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 100,
         editable: false
       }
@@ -125,25 +127,26 @@ const resourceConfigs = {
     title: 'Select Driver',
     buttonText: 'Add Driver to CO',
     gridTitle: 'Driver',
+    idField: 'DriverCode', // Primary ID field for this resource type
     columns: [
       {
         key: 'DriverCode',
         label: 'Driver ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'DriverName',
         label: 'Driver Name',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 200,
         editable: false
       },
       {
         key: 'DriverStatus',
         label: 'Status',
-        type: 'Badge',
+        type: 'Badge' as GridColumnType,
         width: 120,
         editable: false
       },
@@ -154,46 +157,47 @@ const resourceConfigs = {
     title: 'Select Handler',
     buttonText: 'Add Handler to CO',
     gridTitle: 'Handler',
+    idField: 'HandlerID', // Primary ID field for this resource type
     columns: [
       {
         key: 'HandlerID',
         label: 'Handler ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'HandlerName',
         label: 'Handler Name',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 200,
         editable: false
       },
       {
         key: 'HandlerGrade',
         label: 'Handler Grade',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'Supplier',
         label: 'Supplier',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'ContractID',
         label: 'ContractID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 120,
         editable: false
       },
       {
         key: 'TarifID',
         label: 'TarifID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 100,
         editable: false
       }
@@ -204,39 +208,40 @@ const resourceConfigs = {
     title: 'Select Vehicle',
     buttonText: 'Add Vehicle to CO',
     gridTitle: 'Vehicle',
+    idField: 'VehicleID', // Primary ID field for this resource type
     columns: [
       {
         key: 'VehicleID',
         label: 'Vehicle ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'VehicleType',
         label: 'Vehicle Type',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 200,
         editable: false
       },
       {
         key: 'ContractID',
         label: 'Contract ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 120,
         editable: false
       },
       {
         key: 'OwnerID',
         label: 'Owner ID',
-        type: 'Text',
+        type: 'Text' as GridColumnType,
         width: 150,
         editable: false
       },
       {
         key: 'VehicleStatus',
         label: 'Vehicle Status',
-        type: 'Badge',
+        type: 'Badge' as GridColumnType,
         width: 120,
         editable: false
       },
@@ -259,12 +264,18 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
+  const [rowTripId, setRowTripId] = useState<any>([]);
 
   // Get configuration for current resource type
   const config = resourceConfigs[resourceType];
 
   // Use prop data if provided, otherwise use local data
   const currentResourceData = propResourceData || resourceData;
+
+  // Get the ID field for the current resource type
+  const getIdField = () => config.idField;
 
   // Service Type options fetch function
   // const fetchServiceTypeOptions = async (params: { searchTerm: string; offset: number; limit: number }) => {
@@ -344,6 +355,17 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   };
 
+  // Clear selection when drawer opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedRows(new Set());
+      setSelectedRowIds(new Set());
+      setSelectedRowObjects([]);
+      setRowTripId([]);
+      console.log('Selection cleared on drawer open');
+    }
+  }, [isOpen]);
+
   // Load resource data only if no prop data is provided
   useEffect(() => {
     console.log("propResourceData ===", propResourceData);
@@ -357,18 +379,33 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   }, [propResourceData]);
 
-  // Handle resource selection
-  const handleResourceSelection = (resourceId: string, isSelected: boolean) => {
-    console.log("==== resourceId", resourceId);
-    console.log("==== isSelected", isSelected);
-    console.log("==== selectedRows", selectedRows);
-    const newSelection = new Set(selectedRows);
-    if (isSelected) {
-      newSelection.add(Number(resourceId));
-    } else {
-      newSelection.delete(Number(resourceId));
-    }
-    setSelectedRows(newSelection);
+  // Handle row selection from checkbox
+  const handleRowSelection = (selectedRowIndices: Set<number>) => {
+    console.log('Selected rows changed via checkbox:', selectedRowIndices);
+    setSelectedRows(selectedRowIndices);
+    
+    const currentData = currentResourceData.length > 0 ? currentResourceData : [];
+    const selectedObjects = Array.from(selectedRowIndices)
+      .map(index => currentData[index])
+      .filter(Boolean);
+
+    // Get the ID field for current resource type
+    const idField = getIdField();
+    
+    // Create a new Set of unique row IDs using dynamic ID field
+    const newSelectedRowIds = new Set(selectedObjects.map(row => row[idField]));
+
+    // Update selected row objects to ensure uniqueness by ID
+    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
+      self.findIndex(r => r[idField] === row[idField]) === index
+    );
+
+    setSelectedRowIds(newSelectedRowIds);
+    setSelectedRowObjects(uniqueSelectedObjects);
+    setRowTripId(Array.from(newSelectedRowIds));
+    
+    console.log('Selected row objects:', uniqueSelectedObjects);
+    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
   };
 
   // Handle select all
@@ -381,10 +418,121 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   };
 
+  // Handle row click
+  const handleRowClick = (row: any, index: number) => {
+    console.log('Row clicked:', row, index);
+
+    // Get the ID field for current resource type
+    const idField = getIdField();
+    const rowId = row[idField];
+
+    // Toggle row selection
+    const newSelectedRows = new Set(selectedRows);
+    const newSelectedRowIds = new Set(selectedRowIds);
+    const newSelectedRowObjects = [...selectedRowObjects];
+
+    // Check if this row is already selected by ID (not index)
+    const isRowSelected = newSelectedRowIds.has(rowId);
+
+    if (isRowSelected) {
+      // Remove row: remove from all tracking sets/arrays
+      newSelectedRows.delete(index);
+      newSelectedRowIds.delete(rowId);
+      const objectIndex = newSelectedRowObjects.findIndex(obj => obj[idField] === rowId);
+      if (objectIndex > -1) {
+        newSelectedRowObjects.splice(objectIndex, 1);
+      }
+      console.log('Removed row:', rowId);
+    }
+    else {
+      // Add row: add to all tracking sets/arrays (ensure uniqueness)
+      newSelectedRows.add(index);
+      newSelectedRowIds.add(rowId);
+      // Only add if not already in objects array (double-check uniqueness)
+      if (!newSelectedRowObjects.some(obj => obj[idField] === rowId)) {
+        newSelectedRowObjects.push(row);
+      }
+      console.log('Added row:', rowId);
+    }
+
+    // Update all state
+    setSelectedRows(newSelectedRows);
+    setSelectedRowIds(newSelectedRowIds);
+    setSelectedRowObjects(newSelectedRowObjects);
+    setRowTripId(Array.from(newSelectedRowIds));
+
+    console.log('Selected row objects after click:', newSelectedRowObjects);
+    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+  };
+
   // Handle add resource
   const handleAddResource = () => {
-    const selectedItems = currentResourceData.filter(item => selectedResources.has(item.id));
-    onAddResource(selectedItems);
+    const idField = getIdField();
+    const selectedItems = currentResourceData.filter(item => selectedRowIds.has(item[idField]));
+    
+    // Map ResourceType based on idField
+    const getResourceTypeFromIdField = (idField: string) => {
+      switch (idField) {
+        case 'EquipmentID':
+          return 'Equipment';
+        case 'VendorID':
+          return 'Supplier';
+        case 'DriverCode':
+          return 'Driver';
+        case 'HandlerID':
+          return 'Handler';
+        case 'VehicleID':
+          return 'Vehicle';
+        default:
+          return resourceType; // fallback to prop value
+      }
+    };
+    
+    // Parse serviceType to extract Service and ServiceDescription
+    const parseServiceType = (serviceTypeValue: string | undefined) => {
+      if (!serviceTypeValue) {
+        return { Service: "", ServiceDescription: "" };
+      }
+      
+      const parts = serviceTypeValue.split(' || ');
+      return {
+        Service: (parts[0] || "").trim(),
+        ServiceDescription: (parts[1] || "").trim()
+      };
+    };
+    
+    // Parse subServiceType to extract SubService and SubServiceDescription
+    const parseSubServiceType = (subServiceTypeValue: string | undefined) => {
+      if (!subServiceTypeValue) {
+        return { SubService: "", SubServiceDescription: "" };
+      }
+      
+      const parts = subServiceTypeValue.split(' || ');
+      return {
+        SubService: (parts[0] || "").trim(),
+        SubServiceDescription: (parts[1] || "").trim()
+      };
+    };
+    
+    const { Service, ServiceDescription } = parseServiceType(serviceType);
+    const { SubService, SubServiceDescription } = parseSubServiceType(subServiceType);
+    
+    // Format the data based on resource type - loop through all selected IDs
+    const formattedDataArray: any = rowTripId.map(resourceId => ({
+      ResourceID: resourceId,
+      ResourceType: getResourceTypeFromIdField(idField),
+      Service: Service,
+      ServiceDescription: ServiceDescription,
+      SubService: SubService,
+      SubServiceDescription: SubServiceDescription,
+    }));
+    
+    console.log('handle resource click', idField, serviceType, subServiceType);
+    console.log('rowTripId"s===========', rowTripId);
+    console.log('formattedDataArray===========', formattedDataArray);
+    
+    // Pass both original selected items and formatted data array to parent
+    onAddResource(formattedDataArray);
     onClose();
   };
 
@@ -401,7 +549,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           label: config.buttonText,
           variant: 'default',
           action: handleAddResource,
-          disabled: selectedResources.size === 0
+          disabled: selectedRowIds.size === 0
         }
       ]}
     >
@@ -458,6 +606,45 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
           {/* Resource Grid */}
           <div className="border rounded-lg overflow-hidden">
+            {selectedRowObjects.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
+                <div className="text-sm text-blue-700">
+                  <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
+                  <span className="ml-2 text-xs">
+                    ({selectedRowObjects.map(row => row[getIdField()]).join(', ')})
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedRows(new Set());
+                    setSelectedRowIds(new Set());
+                    setSelectedRowObjects([]);
+                    setRowTripId([]);
+                  }}
+                  title="Clear row selection"
+                  className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+            
+            <style>{`
+              ${Array.from(selectedRowIds).map((rowId) => {
+                return `
+                tr[data-row-id="${rowId}"] {
+                  background-color: #eff6ff !important;
+                  border-left: 4px solid #3b82f6 !important;
+                }
+                tr[data-row-id="${rowId}"]:hover {
+                  background-color: #dbeafe !important;
+                }
+              `;
+              }).join('\n')}
+            `}</style>
+            
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center space-y-3">
@@ -466,37 +653,39 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                 </div>
               </div>
             ) : (
-              <SmartGrid
+              <SmartGridWithGrouping
                 columns={config.columns}
                 data={currentResourceData}
-                gridTitle=""
-                recordCount={currentResourceData.length}
-                showCreateButton={false}
-                searchPlaceholder=""
+                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                showGroupingDropdown={true}
+                editableColumns={['plannedStartEndDateTime']}
                 paginationMode="pagination"
-                clientSideSearch={false}
-                showSubHeaders={false}
-                hideAdvancedFilter={false}
-                hideCheckboxToggle={false}
-                hideToolbar={true}
-                showServersideFilter={false}
                 selectedRows={selectedRows}
-                onSelectionChange={(selectedRows) => {
-                  const newSelection = new Set<number>();
-                  selectedRows.forEach(index => {
-                    const item = currentResourceData[index];
-                    if (item) {
-                      newSelection.add(Number(item.id));
-                    }
-                  });
-                  setSelectedRows(newSelection);
+                onSelectionChange={handleRowSelection}
+                onRowClick={handleRowClick}
+                hideToolbar={true}
+                onClearAll={() => {
+                  setSelectedRows(new Set());
+                  setSelectedRowIds(new Set());
+                  setSelectedRowObjects([]);
+                  setRowTripId([]);
                 }}
-                onRowClick={(row, index) => {
-                  const item = currentResourceData[index];
-                  if (item) {
-                    handleResourceSelection(item.id, !selectedResources.has(item.id));
-                  }
+                rowClassName={(row: any, index: number) => {
+                  const idField = getIdField();
+                  return selectedRowIds.has(row[idField]) ? 'selected' : '';
                 }}
+                showDefaultConfigurableButton={false}
+                gridTitle="Planning Equipments"
+                recordCount={currentResourceData.length}
+                showCreateButton={true}
+                searchPlaceholder="Search"
+                clientSideSearch={true}
+                showSubHeaders={false}
+                hideAdvancedFilter={true}
+                hideCheckboxToggle={true}
+                showFilterTypeDropdown={false}
+                showServersideFilter={false}
+                userId="current-user"
               />
             )}
           </div>

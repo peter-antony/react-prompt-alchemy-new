@@ -41,7 +41,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
   const initialColumns: GridColumnConfig[] = [
     {
       key: "CustomerOrderID",
-      label: "Customer Order",
+      label: "Customer Order ID",
       type: "Link",
       sortable: true,
       editable: false,
