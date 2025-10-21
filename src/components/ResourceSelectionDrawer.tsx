@@ -476,7 +476,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         case 'EquipmentID':
           return 'Equipment';
         case 'VendorID':
-          return 'Supplier';
+          return 'Agent';
         case 'DriverCode':
           return 'Driver';
         case 'HandlerID':
