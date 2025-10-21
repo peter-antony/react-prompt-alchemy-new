@@ -1620,11 +1620,16 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">THU Serial No.</div>
                             <div className="text-sm font-medium">
-                            <DynamicLazySelect
+                            {/* <DynamicLazySelect
                                 fetchOptions={fetchWagonTypes}
                                 value={thuDetailsSerialNo}
                                 onChange={(value) => setThuDetailsSerialNo(value as string)}
                                 placeholder="Select THU Serial No."
+                              /> */}
+                              <Input
+                                value={thuDetailsSerialNo}
+                                onChange={(e) => setThuDetailsSerialNo(e.target.value)}
+                                // placeholder="Enter THU Serial No."
                               />
                             </div>
                           </div>
