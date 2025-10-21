@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
 
 export const TripCOHub = ({onCustomerOrderClick }) => {
+  const pageSize = 15;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
@@ -709,13 +710,14 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
                 nestedRowRenderer={renderSubRow}
                 // configurableButtons={gridConfigurableButtons}
                 showDefaultConfigurableButton={false}
-                gridTitle="Customer Orders"
+                gridTitle="Trip Customer Orders"
                 recordCount={gridState.gridData.length}
                 showCreateButton={true}
                 searchPlaceholder="Search"
                 clientSideSearch={true}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
+                customPageSize={pageSize}
                 hideCheckboxToggle={true}
                 serverFilters={dynamicServerFilters}
                 showFilterTypeDropdown={false}

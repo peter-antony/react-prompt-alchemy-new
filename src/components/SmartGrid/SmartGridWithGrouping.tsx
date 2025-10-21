@@ -27,6 +27,7 @@ interface SmartGridWithGroupingProps extends SmartGridProps {
   api?: any; // FilterSystemAPI
   gridId?: string;
   userId?: string;
+  customPageSize?: number | any;
 }
 
 export function SmartGridWithGrouping({
@@ -45,6 +46,7 @@ export function SmartGridWithGrouping({
   api,
   gridId,
   userId,
+  customPageSize,
   ...props
 }: SmartGridWithGroupingProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -262,6 +264,7 @@ export function SmartGridWithGrouping({
         onToggleServersideFilter={onToggleServersideFilter}
         hideAdvancedFilter={hideAdvancedFilter}
         hideCheckboxToggle={hideCheckboxToggle}
+        customPageSize={customPageSize}
         serverFilters={serverFilters}
         showFilterTypeDropdown={showFilterTypeDropdown}
         gridId={gridId || props.gridTitle || 'default'}

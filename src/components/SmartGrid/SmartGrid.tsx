@@ -86,6 +86,7 @@ export function SmartGrid({
   gridId,
   userId,
   api,
+  customPageSize,
   onSearch,
   onClearAll,
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`
@@ -142,7 +143,7 @@ export function SmartGrid({
     handleSubRowEditCancel
   } = useSmartGridState();
 
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(customPageSize || 10);
   const [showFilterRow, setShowFilterRow] = useState(false);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [filterSystemFilters, setFilterSystemFilters] = useState<Record<string, any>>({});
@@ -1178,10 +1179,18 @@ export function SmartGrid({
                     colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)}
                     className="text-center py-12 text-gray-500"
                   >
-                    <div className="space-y-2">
+                    {gridTitle == 'Trip Customer Orders' ? 
+                    (<div className="space-y-2">
+                      <div className="text-lg font-medium">
+                      <div className="text-lg font-medium">No data available</div>
+                        {/* <img src="../../../assets/images/customer_orders.png" alt="" /> */}
+                      </div>
+                      <div className="text-sm">There are no customer orders to display. Please use the “search” to find orders.</div>
+                    </div>) : (<div className="space-y-2">
                       <div className="text-lg font-medium">No data available</div>
                       <div className="text-sm">Try adjusting your search or filters</div>
-                    </div>
+                    </div>)
+                    }
                   </TableCell>
                 </TableRow>
               ) : (

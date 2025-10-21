@@ -15,7 +15,8 @@ import {
   Zap,
   EllipsisVertical,
   SlidersHorizontal,
-  Calendar
+  Calendar,
+  Package
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -168,7 +169,13 @@ export function GridToolbar({
                   <Calendar color="#0058AF" strokeWidth={1.2} />
                 </span>
               )}
-              {gridTitle == 'Leg Details' ? 'Activities & Consignment' : gridTitle}
+              {gridTitle === "Trip Customer Orders" && (
+                <span className='p-3 rounded-xl bg-[#EBE9FE] mr-4'>
+                  <Package color="#7a5af8" strokeWidth={2} />
+                </span>
+              )}
+              {gridTitle == 'Leg Details' ? 'Activities & Consignment' 
+                : gridTitle == 'Trip Customer Orders' ? 'Customer Orders' : gridTitle}
             </span>
             {recordCount !== undefined && (gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
               <span

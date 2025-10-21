@@ -225,6 +225,7 @@ export interface SmartGridProps {
   hideCheckboxToggle?: boolean;
   // Control whether to show the toolbar
   hideToolbar?: boolean;
+  customPageSize?: number | any;
 }
 
 // Legacy interface for backward compatibility
