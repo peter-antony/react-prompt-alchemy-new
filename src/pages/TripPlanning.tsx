@@ -19,7 +19,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
-import { EquipmentSelectionDrawer } from '@/components/EquipmentSelectionDrawer';
+import { ResourceSelectionDrawer } from '@/components/ResourceSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
@@ -42,10 +42,12 @@ const TripPlanning = () => {
   const [arrivalLocation, setArrivalLocation] = useState('Frankfurt Station');
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
   const [consolidatedTrip, setConsolidatedTrip] = useState(true);
-  const [isEquipmentDrawerOpen, setIsEquipmentDrawerOpen] = useState(false);
-  const [selectedEquipment, setSelectedEquipment] = useState<any[]>([]);
-  const [equipmentData, setEquipmentData] = useState<any[]>([]);
-  const [isLoadingEquipment, setIsLoadingEquipment] = useState(false);
+  // Generic resource drawer state
+  const [isResourceDrawerOpen, setIsResourceDrawerOpen] = useState(false);
+  const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle'>('Equipment');
+  const [selectedResources, setSelectedResources] = useState<any[]>([]);
+  const [resourceData, setResourceData] = useState<any[]>([]);
+  const [isLoadingResource, setIsLoadingResource] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
 
@@ -111,16 +113,13 @@ const TripPlanning = () => {
   };
 
   // Handle equipment selection
-  const handleAddEquipment = (equipment: any[]) => {
-    setSelectedEquipment(equipment);
-    console.log('Selected equipment:', equipment);
-  };
 
-  // Handle equipment drawer open/close
-  const handleOpenEquipmentDrawer = async () => {
-    console.log('Opening equipment drawer');
-    setIsLoadingEquipment(true); // Show loader
-    setIsEquipmentDrawerOpen(true);
+  // Handle resource drawer open/close
+  const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle') => {
+    console.log(`Opening ${resourceType.toLowerCase()} drawer`);
+    setCurrentResourceType(resourceType);
+    setIsLoadingResource(true); // Show loader
+    setIsResourceDrawerOpen(true);
     
     const finalSearchCriteria = {
       "PlanningProfileID": "General-GMBH",
@@ -134,26 +133,80 @@ const TripPlanning = () => {
     }
     
     try {
-      const response: any = await tripPlanningService.getEquipmentList({
-        searchCriteria: finalSearchCriteria
-      });
+      let response: any;
+      
+      // Call appropriate API based on resource type
+      switch (resourceType) {
+        case 'Equipment':
+          response = await tripPlanningService.getEquipmentList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Supplier':
+          response = await tripPlanningService.getAgentsList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Driver':
+          response = await tripPlanningService.getDriversList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Handler':
+          response = await tripPlanningService.getHandlersList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Vehicle':
+          response = await tripPlanningService.getVehicleList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        default:
+          throw new Error(`Unknown resource type: ${resourceType}`);
+      }
+      
       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
       console.log('Response:', JSON.parse(response?.data?.ResponseData));
-      const equipmentData = parsedResponse.ResourceDetails;
-      console.log("data ====", equipmentData);
-      setEquipmentData(equipmentData.Equipments);
-      console.log("data ==== after set", equipmentData.Equipments);
+      const resourceDetails = parsedResponse.ResourceDetails;
+      console.log("data ====", resourceDetails);
+      
+      // Set data based on resource type
+      switch (resourceType) {
+        case 'Equipment':
+          setResourceData(resourceDetails.Equipments || []);
+          break;
+        case 'Supplier':
+          setResourceData(resourceDetails.Agents || []);
+          break;
+        case 'Driver':
+          setResourceData(resourceDetails.Drivers || []);
+          break;
+        case 'Handler':
+          setResourceData(resourceDetails.Handlers || []);
+          break;
+        case 'Vehicle':
+          setResourceData(resourceDetails.Vehicles || []);
+          break;
+      }
+      
+      console.log("data ==== after set", resourceDetails);
     }
     catch (error) {
       console.error('Server-side search failed:', error);
     }
     finally {
-      setIsLoadingEquipment(false); // Hide loader
+      setIsLoadingResource(false); // Hide loader
     }
   };
 
-  const handleCloseEquipmentDrawer = () => {
-    setIsEquipmentDrawerOpen(false);
+  const handleCloseResourceDrawer = () => {
+    setIsResourceDrawerOpen(false);
+  };
+
+  const handleAddResource = (resources: any[]) => {
+    setSelectedResources(resources);
+    console.log('Selected resources:', resources);
   };
 
   //BreadCrumb data
@@ -684,7 +737,20 @@ const TripPlanning = () => {
                                   <Button 
                                     variant="ghost" 
                                     size="icon"
-                                    onClick={resource.title === 'Equipment' ? handleOpenEquipmentDrawer : undefined}
+                                    onClick={() => {
+                                      if (resource.title === 'Equipment') {
+                                        handleOpenResourceDrawer('Equipment');
+                                      } else if (resource.title === 'Supplier') {
+                                        handleOpenResourceDrawer('Supplier');
+                                      } else if (resource.title === 'Driver') {
+                                        handleOpenResourceDrawer('Driver');
+                                      } else if (resource.title === 'Handler') {
+                                        handleOpenResourceDrawer('Handler');
+                                      } else if (resource.title === 'Vehicle') {
+                                        handleOpenResourceDrawer('Vehicle');
+                                      }
+                                    }}
+                                    className={resource.title === 'Resources' ? 'hidden' : ''}
                                   >
                                     <Plus className="h-4 w-4" />
                                   </Button>
@@ -733,21 +799,22 @@ const TripPlanning = () => {
         </main>
       </div>
       
-      {/* Equipment Selection Drawer */}
-      <EquipmentSelectionDrawer
-        isOpen={isEquipmentDrawerOpen}
-        onClose={handleCloseEquipmentDrawer}
-        onAddEquipment={handleAddEquipment}
-        equipmentData={equipmentData}
-        isLoading={isLoadingEquipment}
+      {/* Resource Selection Drawer */}
+      <ResourceSelectionDrawer
+        isOpen={isResourceDrawerOpen}
+        onClose={handleCloseResourceDrawer}
+        onAddResource={handleAddResource}
+        resourceType={currentResourceType}
+        resourceData={resourceData}
+        isLoading={isLoadingResource}
       />
 
       {/* Loading Overlay */}
-      {isLoadingEquipment && (
+      {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
-          <div className="text-lg font-semibold text-blue-700">Loading...</div>
-          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+          <div className="text-lg font-semibold text-blue-700">Loading {currentResourceType}...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching {currentResourceType.toLowerCase()} data from server, please wait.</div>
         </div>
       )}
     </AppLayout>
