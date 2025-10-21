@@ -14,6 +14,8 @@ interface EquipmentSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onAddEquipment: (selectedEquipment: any[]) => void;
+  equipmentData?: EquipmentItem[];
+  isLoading?: boolean;
 }
 
 interface EquipmentItem {
@@ -35,7 +37,9 @@ interface EquipmentItem {
 export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> = ({
   isOpen,
   onClose,
-  onAddEquipment
+  onAddEquipment,
+  equipmentData: propEquipmentData,
+  isLoading = false
 }) => {
   const [serviceType, setServiceType] = useState<string>('Service Type 1');
   const [subServiceType, setSubServiceType] = useState<string>('Subservice Type 1');
@@ -44,183 +48,63 @@ export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> =
   const [selectedEquipment, setSelectedEquipment] = useState<Set<string>>(new Set());
   const [equipmentData, setEquipmentData] = useState<EquipmentItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+
+  // Use prop data if provided, otherwise use mock data
+  const currentEquipmentData = propEquipmentData || equipmentData;
 
   // Grid columns configuration
   const equipmentColumns: GridColumnConfig[] = [
+    // {
+    //   key: 'select',
+    //   label: '',
+    //   type: 'Checkbox' as GridColumnType,
+    //   width: 50,
+    //   editable: false,
+    //   sortable: false,
+    //   filterable: false
+    // },
     {
-      key: 'select',
-      label: '',
-      type: 'Checkbox' as GridColumnType,
-      width: 50,
-      editable: false,
-      sortable: false,
-      filterable: false
-    },
-    {
-      key: 'equipmentType',
+      key: 'EquipmentType',
       label: 'Equipment Type',
       type: 'Text',
       width: 150,
       editable: false
     },
     {
-      key: 'equipmentId',
+      key: 'EquipmentID',
       label: 'Equipment ID',
       type: 'Text',
       width: 200,
       editable: false
     },
     {
-      key: 'ownerId',
+      key: 'OwnerID',
       label: 'Owner ID',
       type: 'Text',
       width: 150,
       editable: false
     },
     {
-      key: 'wagonContainer',
+      key: 'EquipmentCategory',
       label: 'Wagon/Container',
       type: 'Text',
       width: 150,
       editable: false
     },
     {
-      key: 'ownership',
+      key: 'Ownership',
       label: 'Ownership',
       type: 'Badge',
       width: 120,
       editable: false
     },
     {
-      key: 'keeper',
+      key: 'Keeper',
       label: 'Keeper',
       type: 'Text',
       width: 120,
       editable: false
-    }
-  ];
-
-  // Mock data for equipment
-  const mockEquipmentData: EquipmentItem[] = [
-    {
-      id: '1',
-      equipmentType: 'Equipment Type 1',
-      equipmentId: 'EQP-ID-000001',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00001',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00001',
-      wagonContainerDescription: 'Description',
-      ownership: 'Owned',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '2',
-      equipmentType: 'Equipment Type 2',
-      equipmentId: 'EQP-ID-000002',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00002',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00002',
-      wagonContainerDescription: 'Description',
-      ownership: 'Leased',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '3',
-      equipmentType: 'Equipment Type 3',
-      equipmentId: 'EQP-ID-000003',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00003',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00003',
-      wagonContainerDescription: 'Description',
-      ownership: 'Owned',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '4',
-      equipmentType: 'Equipment Type 4',
-      equipmentId: 'EQP-ID-000004',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00004',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00004',
-      wagonContainerDescription: 'Description',
-      ownership: 'Owned',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '5',
-      equipmentType: 'Equipment Type 5',
-      equipmentId: 'EQP-ID-000005',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00005',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00005',
-      wagonContainerDescription: 'Description',
-      ownership: 'Leased',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '6',
-      equipmentType: 'Equipment Type 6',
-      equipmentId: 'EQP-ID-000006',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00006',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00006',
-      wagonContainerDescription: 'Description',
-      ownership: 'Owned',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '7',
-      equipmentType: 'Equipment Type 7',
-      equipmentId: 'EQP-ID-000007',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00007',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00007',
-      wagonContainerDescription: 'Description',
-      ownership: 'Owned',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
-    },
-    {
-      id: '8',
-      equipmentType: 'Equipment Type 8',
-      equipmentId: 'EQP-ID-000008',
-      equipmentDescription: 'Description',
-      ownerId: 'OWN00008',
-      ownerDescription: 'Description',
-      wagonContainer: 'WAG00008',
-      wagonContainerDescription: 'Description',
-      ownership: 'Leased',
-      keeper: 'Keeper',
-      status: 'Active',
-      effectiveFromDate: '2024-01-01',
-      effectiveToDate: '2024-12-31'
     }
   ];
 
@@ -252,25 +136,32 @@ export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> =
     );
   };
 
-  // Load equipment data
+  // Load equipment data only if no prop data is provided
   useEffect(() => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setEquipmentData(mockEquipmentData);
-      setLoading(false);
-    }, 500);
-  }, []);
+    console.log("propEquipmentData ===", propEquipmentData);
+    console.log("propEquipmentData 111 ", currentEquipmentData)
+    if (!propEquipmentData) {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        // setEquipmentData(mockEquipmentData);
+        setLoading(false);
+      }, 500);
+    }
+  }, [propEquipmentData]);
 
   // Handle equipment selection
   const handleEquipmentSelection = (equipmentId: string, isSelected: boolean) => {
-    const newSelection = new Set(selectedEquipment);
+    console.log("==== equipmentId", equipmentId);
+    console.log("==== isSelected", isSelected);
+    console.log("==== selectedRows", selectedRows);
+    const newSelection = new Set(selectedRows);
     if (isSelected) {
-      newSelection.add(equipmentId);
+      newSelection.add(Number(equipmentId));
     } else {
-      newSelection.delete(equipmentId);
+      newSelection.delete(Number(equipmentId));
     }
-    setSelectedEquipment(newSelection);
+    setSelectedRows(newSelection);
   };
 
   // Handle select all
@@ -285,24 +176,24 @@ export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> =
 
   // Handle add equipment
   const handleAddEquipment = () => {
-    const selectedItems = equipmentData.filter(item => selectedEquipment.has(item.id));
+    const selectedItems = currentEquipmentData.filter(item => selectedEquipment.has(item.id));
     onAddEquipment(selectedItems);
     onClose();
   };
 
   // Filter equipment data based on search
-  const filteredEquipmentData = equipmentData.filter(item =>
-    item.equipmentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.equipmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.ownerId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+//   const filteredEquipmentData = currentEquipmentData.filter(item =>
+//     item.equipmentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     item.equipmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     item.ownerId.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
 
   // Process data for grid with selection state
-  const processedData = filteredEquipmentData.map(item => ({
-    ...item,
-    select: selectedEquipment.has(item.id),
-    ownership: item.ownership
-  }));
+//   const processedData = filteredEquipmentData.map(item => ({
+//     ...item,
+//     select: selectedEquipment.has(item.id),
+//     ownership: item.ownership
+//   }));
 
   return (
     <SideDrawer
@@ -377,9 +268,9 @@ export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> =
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <h3 className="text-lg font-semibold text-gray-900">Equipment</h3>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {equipmentData.length}
-              </Badge>
+               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                 {currentEquipmentData.length}
+               </Badge>
             </div>
             
             {/* Search */}
@@ -396,37 +287,47 @@ export const EquipmentSelectionDrawer: React.FC<EquipmentSelectionDrawerProps> =
 
           {/* Equipment Grid */}
           <div className="border rounded-lg overflow-hidden">
-             <SmartGrid
-               columns={equipmentColumns}
-               data={processedData}
-               gridTitle=""
-               recordCount={processedData.length}
-               showCreateButton={false}
-               searchPlaceholder=""
-               clientSideSearch={false}
-               showSubHeaders={false}
-               hideAdvancedFilter={false}
-               hideCheckboxToggle={false}
-               hideToolbar={true}
-               showServersideFilter={false}
-            //   selectedRows={selectedEquipment}
-              onSelectionChange={(selectedRows) => {
-                const newSelection = new Set<string>();
-                selectedRows.forEach(index => {
-                  const item = processedData[index];
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
+                  <div className="text-sm text-gray-600">Loading equipment data...</div>
+                </div>
+              </div>
+            ) : (
+              <SmartGrid
+                columns={equipmentColumns}
+                data={currentEquipmentData}
+                gridTitle=""
+                recordCount={currentEquipmentData.length}
+                showCreateButton={false}
+                searchPlaceholder=""
+                paginationMode="pagination"
+                clientSideSearch={false}
+                showSubHeaders={false}
+                hideAdvancedFilter={false}
+                hideCheckboxToggle={false}
+                hideToolbar={true}
+                showServersideFilter={false}
+                selectedRows={selectedRows}
+                onSelectionChange={(selectedRows) => {
+                  const newSelection = new Set<number>();
+                  selectedRows.forEach(index => {
+                    const item = currentEquipmentData[index];
+                    if (item) {
+                      newSelection.add(Number(item.id));
+                    }
+                  });
+                  setSelectedRows(newSelection);
+                }}
+                onRowClick={(row, index) => {
+                  const item = currentEquipmentData[index];
                   if (item) {
-                    newSelection.add(item.id);
+                    handleEquipmentSelection(item.id, !selectedEquipment.has(item.id));
                   }
-                });
-                setSelectedEquipment(newSelection);
-              }}
-              onRowClick={(row, index) => {
-                const item = processedData[index];
-                if (item) {
-                  handleEquipmentSelection(item.id, !selectedEquipment.has(item.id));
-                }
-              }}
-            />
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

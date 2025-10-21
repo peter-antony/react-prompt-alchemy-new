@@ -22,6 +22,7 @@ import { quickOrderService } from '@/api/services/quickOrderService';
 import { EquipmentSelectionDrawer } from '@/components/EquipmentSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate } from 'react-router-dom';
+import { tripPlanningService } from '@/api/services/tripPlanningService';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -43,6 +44,8 @@ const TripPlanning = () => {
   const [consolidatedTrip, setConsolidatedTrip] = useState(true);
   const [isEquipmentDrawerOpen, setIsEquipmentDrawerOpen] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<any[]>([]);
+  const [equipmentData, setEquipmentData] = useState<any[]>([]);
+  const [isLoadingEquipment, setIsLoadingEquipment] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
 
@@ -114,8 +117,39 @@ const TripPlanning = () => {
   };
 
   // Handle equipment drawer open/close
-  const handleOpenEquipmentDrawer = () => {
+  const handleOpenEquipmentDrawer = async () => {
+    console.log('Opening equipment drawer');
+    setIsLoadingEquipment(true); // Show loader
     setIsEquipmentDrawerOpen(true);
+    
+    const finalSearchCriteria = {
+      "PlanningProfileID": "General-GMBH",
+      "Location": "10-00004",
+      "PlanDate": "",
+      "ResourceProfileID": "",
+      "Service": "",
+      "ServiceDescription":"",
+      "SubServiceType": "",
+      "SubServiceDescription":""
+    }
+    
+    try {
+      const response: any = await tripPlanningService.getEquipmentList({
+        searchCriteria: finalSearchCriteria
+      });
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      console.log('Response:', JSON.parse(response?.data?.ResponseData));
+      const equipmentData = parsedResponse.ResourceDetails;
+      console.log("data ====", equipmentData);
+      setEquipmentData(equipmentData.Equipments);
+      console.log("data ==== after set", equipmentData.Equipments);
+    }
+    catch (error) {
+      console.error('Server-side search failed:', error);
+    }
+    finally {
+      setIsLoadingEquipment(false); // Hide loader
+    }
   };
 
   const handleCloseEquipmentDrawer = () => {
@@ -125,7 +159,7 @@ const TripPlanning = () => {
   //BreadCrumb data
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
-    { label: 'Transport Execution Management', href: '/trip-hub', active: false }, // Updated breadcrumb
+    { label: 'Transport Planning and Execution', href: '/trip-hub', active: false }, // Updated breadcrumb
     { label: 'Trip Planning', active: true } // Updated breadcrumb
   ];
 
@@ -704,7 +738,18 @@ const TripPlanning = () => {
         isOpen={isEquipmentDrawerOpen}
         onClose={handleCloseEquipmentDrawer}
         onAddEquipment={handleAddEquipment}
+        equipmentData={equipmentData}
+        isLoading={isLoadingEquipment}
       />
+
+      {/* Loading Overlay */}
+      {isLoadingEquipment && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
     </AppLayout>
   );
 };
