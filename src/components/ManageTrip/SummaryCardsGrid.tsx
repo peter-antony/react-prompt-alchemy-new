@@ -180,7 +180,7 @@ export const SummaryCardsGrid = () => {
         title: 'VAS',
         icon: Settings,
         values: [
-          { label: 'Total VAS', value: vasLoading ? "..." : vasData.length },
+          { label: 'Total VAS', value: vasLoading ? "..." : (vasData?.length ?? 0), },
           // { label: 'Total Consumables', value: vas.length || 0 },
         ],
         iconColor: 'brown',

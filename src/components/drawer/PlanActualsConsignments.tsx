@@ -1691,7 +1691,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={otherDetailsQcUserdefined1 as InputDropdownValue}
                                 onChange={setOtherDetailsQcUserdefined1}
-                                options={quantityUnitOptions}
+                                options={qcList1}
                                 placeholder="Select QC Userdefined 1"
                               />
                             </div>
@@ -1702,7 +1702,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={otherDetailsQcUserdefined2}
                                 onChange={setOtherDetailsQcUserdefined2}
-                                options={quantityUnitOptions}
+                                options={qcList2}
                                 placeholder="Select QC Userdefined 2"
                               />
                             </div>
@@ -1713,7 +1713,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <InputDropdown
                                 value={otherDetailsQcUserdefined3}
                                 onChange={setOtherDetailsQcUserdefined3}
-                                options={quantityUnitOptions}
+                                options={qcList3}
                                 placeholder="Select QC Userdefined 3"
                               />
                             </div>
