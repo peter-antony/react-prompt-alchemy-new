@@ -42,7 +42,7 @@ const TripPlanning = () => {
   const [arrivalCode, setArrivalCode] = useState('52115');
   const [arrivalLocation, setArrivalLocation] = useState('Frankfurt Station');
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
-  const [consolidatedTrip, setConsolidatedTrip] = useState(true);
+  const [consolidatedTrip, setConsolidatedTrip] = useState(false);
   // Generic resource drawer state
   const [isResourceDrawerOpen, setIsResourceDrawerOpen] = useState(false);
   const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle'>('Equipment');
@@ -263,51 +263,50 @@ const TripPlanning = () => {
     setCustomerOrderId(customerOrderId);
   }
 
-  const splitAtPipe = (value: string | null | undefined) => {
-    if (typeof value === "string" && value.includes("||")) {
-      const [first, ...rest] = value.split("||");
-      return {
-        value: first.trim(),
-        label: rest.join("||").trim()
-      };
-    }
-    return value;
-  };
-
-  // Helper to recursively process all dropdown fields in an object, splitting at "||"
-  const splitDropdowns = (obj: any) => {
-    if (!obj || typeof obj !== "object") return obj;
-    const newObj: any = Array.isArray(obj) ? [] : {};
-    for (const key in obj) {
-      if (!obj.hasOwnProperty(key)) continue;
-      const val = obj[key];
-      // If value is an object with a dropdown property, split it
-      if (val && typeof val === "object" && "dropdown" in val) {
-        newObj[key] = {
-          ...val,
-          dropdown: splitAtPipe(val.dropdown)
-        };
-        // If input property exists, keep as is
-        if ("input" in val) {
-          newObj[key].input = val.input;
-        }
-      } else if (typeof val === "string") {
-        // If value is a string, split if it has a pipe
-        newObj[key] = splitAtPipe(val);
-      } else if (typeof val === "object" && val !== null) {
-        // Recursively process nested objects
-        newObj[key] = splitDropdowns(val);
-      } else {
-        newObj[key] = val;
-      }
-    }
-    console.log("splitDropdowns ===", newObj);
-    return newObj;
-  };
-
   const createTripData = async () => {
-    // Process location data using splitDropdowns to get the code value
-    const processedLocation = splitDropdowns(location);
+    const splitAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        const [first, ...rest] = value.split("||");
+        return first.trim(); // Return only the value part (before pipe)
+      }
+      return value;
+    };
+  
+    // Helper to recursively process all dropdown fields in an object, splitting at "||"
+    const splitDropdowns = (obj: any) => {
+      if (!obj || typeof obj !== "object") return obj;
+      const newObj: any = Array.isArray(obj) ? [] : {};
+      for (const key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+        const val = obj[key];
+        // If value is an object with a dropdown property, split it
+        if (val && typeof val === "object" && "dropdown" in val) {
+          newObj[key] = {
+            ...val,
+            dropdown: splitAtPipe(val.dropdown)
+          };
+          // If input property exists, keep as is
+          if ("input" in val) {
+            newObj[key].input = val.input;
+          }
+        } else if (typeof val === "string") {
+          // If value is a string, split if it has a pipe
+          newObj[key] = splitAtPipe(val);
+        } else if (typeof val === "object" && val !== null) {
+          // Recursively process nested objects
+          newObj[key] = splitDropdowns(val);
+        } else {
+          newObj[key] = val;
+        }
+      }
+      console.log("splitDropdowns ===", newObj);
+      return newObj;
+    };
+    // Process location data using splitAtPipe to get the code value
+    console.log("location ====", location);
+    const processedLocation = splitAtPipe(location);
+    const processedCluster = splitAtPipe(cluster);
+    console.log("processedLocation ====", processedLocation);
     
     console.log("createTripData", customerOrderId);
     console.log("selectedResources", selectedResources);
@@ -341,8 +340,8 @@ const TripPlanning = () => {
       "Header": {
         "TripType": tripType,
         "PlanningProfileID": "General-GMBH",
-        "Location": processedLocation?.value || processedLocation,
-        "Cluster": cluster,
+        "Location": processedLocation, // Now processedLocation is already just the code
+        "Cluster": processedCluster,
         "PlanDate": format(planDate, "yyyy-MM-dd")
       },
       "CustomerOrders": [
@@ -735,18 +734,18 @@ const TripPlanning = () => {
                   {/* Trip Creation Controls */}
                   <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
                     <div className="flex items-center gap-4">
-                      <Label htmlFor="consolidated-trip" className="cursor-pointer text-foreground font-medium">
-                        Create Single trip with Consolidated COs
-                      </Label>
                       <Switch 
                         id="consolidated-trip"
                         checked={consolidatedTrip}
                         onCheckedChange={setConsolidatedTrip}
                         className="data-[state=checked]:bg-orange-500"
                       />
-                      <span className="text-sm text-muted-foreground">
+                      <Label htmlFor="consolidated-trip" className="cursor-pointer text-foreground font-medium">
+                        Create Single trip with Consolidated COs
+                      </Label>
+                      {/* <span className="text-sm text-muted-foreground">
                         {consolidatedTrip ? 'Switch off' : 'Switch on'}
-                      </span>
+                      </span> */}
                     </div>
                     <Button className="bg-primary hover:bg-primary/90">
                       Create Trip
@@ -881,21 +880,22 @@ const TripPlanning = () => {
                       </div>
 
                       {/* Toggle */}
-                      <div className="flex items-center gap-3 mt-3 p-3 bg-muted/30 rounded-lg">
-                        <Switch 
-                          id="consolidated-trip-inline"
-                          checked={consolidatedTrip}
-                          onCheckedChange={setConsolidatedTrip}
-                          className="data-[state=checked]:bg-orange-500"
-                        />
-                        <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
-                          Create single trip with consolidated orders
-                        </Label>
-                      </div>
-
-                      <div className=''>
-                        <button onClick={createTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">Create Trip</button>
-                      </div>
+                      <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
+                        <div className="flex items-center gap-4">
+                          <Switch 
+                            id="consolidated-trip-inline"
+                            checked={consolidatedTrip}
+                            onCheckedChange={setConsolidatedTrip}
+                            className="data-[state=checked]:bg-orange-500"
+                          />
+                          <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
+                            Create single trip with consolidated orders
+                          </Label>
+                        </div>
+                        <div className=''>
+                          <button onClick={createTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">Create Trip</button>
+                        </div>
+                      </div>                      
 
                       {/* Grid */}
                       {/* <SmartGrid
