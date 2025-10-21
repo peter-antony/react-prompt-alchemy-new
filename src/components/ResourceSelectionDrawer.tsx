@@ -252,8 +252,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   resourceData: propResourceData,
   isLoading = false
 }) => {
-  const [serviceType, setServiceType] = useState<string>('Service Type 1');
-  const [subServiceType, setSubServiceType] = useState<string>('Subservice Type 1');
+  const [serviceType, setServiceType] = useState<string>();
+  const [subServiceType, setSubServiceType] = useState<string>();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set());
   const [resourceData, setResourceData] = useState<any[]>([]);
@@ -267,31 +267,81 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const currentResourceData = propResourceData || resourceData;
 
   // Service Type options fetch function
-  const fetchServiceTypeOptions = async (params: { searchTerm: string; offset: number; limit: number }) => {
-    // Mock API call - replace with actual API
-    const mockOptions = [
-      { label: 'Service Type 1', value: 'Service Type 1' },
-      { label: 'Service Type 2', value: 'Service Type 2' },
-      { label: 'Service Type 3', value: 'Service Type 3' }
-    ];
+  // const fetchServiceTypeOptions = async (params: { searchTerm: string; offset: number; limit: number }) => {
+  //   // Mock API call - replace with actual API
+  //   const mockOptions = [
+  //     { label: 'Service Type 1', value: 'Service Type 1' },
+  //     { label: 'Service Type 2', value: 'Service Type 2' },
+  //     { label: 'Service Type 3', value: 'Service Type 3' }
+  //   ];
     
-    return mockOptions.filter(option => 
-      option.label.toLowerCase().includes(params.searchTerm.toLowerCase())
-    );
+  //   return mockOptions.filter(option => 
+  //     option.label.toLowerCase().includes(params.searchTerm.toLowerCase())
+  //   );
+  // };
+
+  // Service Type options fetch function (real API)
+  const fetchServiceTypeOptions = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: "Service type Init",
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      const rr: any = response.data;
+      const parsedData = JSON.parse(rr.ResponseData) || [];
+
+      return parsedData
+        .filter((item: any) => item.id && item.name)
+        .map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: `${item.id} || ${item.name}`,
+        }));
+    } catch (error) {
+      console.error("Error fetching service type options:", error);
+      return [];
+    }
   };
 
   // Sub Service Type options fetch function
-  const fetchSubServiceTypeOptions = async (params: { searchTerm: string; offset: number; limit: number }) => {
-    // Mock API call - replace with actual API
-    const mockOptions = [
-      { label: 'Subservice Type 1', value: 'Subservice Type 1' },
-      { label: 'Subservice Type 2', value: 'Subservice Type 2' },
-      { label: 'Subservice Type 3', value: 'Subservice Type 3' }
-    ];
+  // const fetchSubServiceTypeOptions = async (params: { searchTerm: string; offset: number; limit: number }) => {
+  //   // Mock API call - replace with actual API
+  //   const mockOptions = [
+  //     { label: 'Subservice Type 1', value: 'Subservice Type 1' },
+  //     { label: 'Subservice Type 2', value: 'Subservice Type 2' },
+  //     { label: 'Subservice Type 3', value: 'Subservice Type 3' }
+  //   ];
     
-    return mockOptions.filter(option => 
-      option.label.toLowerCase().includes(params.searchTerm.toLowerCase())
-    );
+  //   return mockOptions.filter(option => 
+  //     option.label.toLowerCase().includes(params.searchTerm.toLowerCase())
+  //   );
+  // };
+
+  // Sub Service Type options fetch function (real API)
+  const fetchSubServiceTypeOptions = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: "Sub Service type Init",
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      const rr: any = response.data;
+      const parsedData = JSON.parse(rr.ResponseData) || [];
+
+      return parsedData
+        .filter((item: any) => item.id && item.name)
+        .map((item: any) => ({
+          label: `${item.id} || ${item.name}`,
+          value: `${item.id} || ${item.name}`,
+        }));
+    } catch (error) {
+      console.error("Error fetching sub service type options:", error);
+      return [];
+    }
   };
 
   // Load resource data only if no prop data is provided
