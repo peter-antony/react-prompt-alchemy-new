@@ -28,10 +28,10 @@ import { useToast } from '@/hooks/use-toast';
 const TripPlanning = () => {
   const navigate = useNavigate();
   const [tripNo, setTripNo] = useState('');
-  const [location, setLocation] = useState('Forwardis GMBH');
-  const [cluster, setCluster] = useState('10000406');
+  const [location, setLocation] = useState('');
+  const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
-  const [planDate, setPlanDate] = useState<Date>(new Date(2023, 9, 12));
+  const [planDate, setPlanDate] = useState<Date>(new Date());
   const [requestSupplier, setRequestSupplier] = useState(false);
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');
   const [referenceDocType, setReferenceDocType] = useState('');
@@ -257,13 +257,19 @@ const TripPlanning = () => {
   const fetchSchedule = fetchMasterData("Container Type Init");
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
+  const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
   const [customerOrderId, setCustomerOrderId] = useState<string | undefined>();
   const handleCustomerOrderSelect = (customerOrderId: any) => {
     console.log("✅ Received from child:", customerOrderId);
     setCustomerOrderId(customerOrderId);
+    setAddResourcesFlag(true);
   }
 
-  const createTripData = async () => {
+  const createBulkTripData = async () => {
+    console.log("createBulkTripData");
+  }
+
+  const createSingleTripData = async () => {
     const splitAtPipe = (value: string | null | undefined) => {
       if (typeof value === "string" && value.includes("||")) {
         const [first, ...rest] = value.split("||");
@@ -308,7 +314,7 @@ const TripPlanning = () => {
     const processedCluster = splitAtPipe(cluster);
     console.log("processedLocation ====", processedLocation);
     
-    console.log("createTripData", customerOrderId);
+    console.log("createSingleTripData", customerOrderId);
     console.log("selectedResources", selectedResources);
     
     // Transform selectedResources into the required ResourceDetails format
@@ -349,7 +355,7 @@ const TripPlanning = () => {
       ]
     }
     
-    console.log("createTripData", tripData);
+    console.log("createSingleTripData", tripData);
     console.log("Updated customerOrderId with ResourceDetails:", updatedCustomerOrderId);
     try {
       const response: any = await tripPlanningService.createTripPlan(tripData);
@@ -676,60 +682,80 @@ const TripPlanning = () => {
           ) : (
             /* Customer Orders Section */
             <>
-              {!consolidatedTrip ? (
+              {consolidatedTrip ? (
                 /* Default View - Single Customer Orders Card */
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Package className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-medium">Customer Orders</h2>
-                        <Badge variant="secondary" className="rounded-full">0</Badge>
-                      </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <div className='flex gap-6'>
+                    <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
+                      {/* Trip Planning Customer Order Hub */}
+                      <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Search"
-                          value={customerOrderSearch}
-                          onChange={(e) => setCustomerOrderSearch(e.target.value)}
-                          className="pl-9 w-64"
-                        />
+                    {/* Resources Cards - Right */}
+                    <div className="w-1/4 space-y-3">
+                     
+                      {/* Resources - Right Panel */}
+                      <div className="bg-card border border-border rounded-lg overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-emerald-500 text-white p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="p-3 rounded-xl bg-[#EBE9FE] mr-3">
+                                <Truck className="h-5 w-5" />
+                              </span>
+                              <h2 className="text-lg font-semibold">Resources</h2>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 space-y-4">
+                          {/* Supplier Section */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Supplier</label>
+                            <DynamicLazySelect
+                              fetchOptions={fetchSupplier}
+                              value={supplier}
+                              onChange={(value) => setSupplier(value as string)}
+                              placeholder=""
+                            />
+                          </div>
+
+                          {/* Schedule Section */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Schedule</label>
+                            <DynamicLazySelect
+                              fetchOptions={fetchSchedule}
+                              value={schedule}
+                              onChange={(value) => setSchedule(value as string)}
+                              placeholder=""
+                            />
+                          </div>
+
+                          {/* More Resources Button */}
+                          <Button variant="outline" className="w-full text-emerald-600 border-emerald-300 hover:bg-emerald-50">
+                            <Plus className="h-4 w-4 mr-2" />
+                            More Resources
+                          </Button>
+
+                          {/* Statistics */}
+                          <div className="border-t border-border pt-4 mt-6 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Total Orders:</span>
+                              <span className="font-semibold">12</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Assigned:</span>
+                              <span className="font-semibold text-emerald-600">5</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Unassigned:</span>
+                              <span className="font-semibold text-orange-600">7</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <Button variant="ghost" size="icon">
-                        <Settings className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Search className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <ExternalLink className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Settings className="h-5 w-5" />
-                      </Button>
                     </div>
                   </div>
-
-                  {/* SmartGrid */}
-                  {/* <div className="mt-4">
-                    <SmartGrid
-                      columns={customerOrdersColumns}
-                      data={customerOrdersData}
-                      onUpdate={async (row) => {
-                        console.log('Data changed:', row);
-                      }}
-                      selectedRows={selectedOrders}
-                      onSelectionChange={(rows) => {
-                        setSelectedOrders(rows);
-                        console.log('Selection changed:', rows);
-                      }}
-                      paginationMode="pagination"
-                    />
-                  </div> */}
 
                   {/* Trip Creation Controls */}
                   <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
@@ -747,9 +773,9 @@ const TripPlanning = () => {
                         {consolidatedTrip ? 'Switch off' : 'Switch on'}
                       </span> */}
                     </div>
-                    <Button className="bg-primary hover:bg-primary/90">
+                    <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                       Create Trip
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -795,88 +821,99 @@ const TripPlanning = () => {
                       </div> */}
 
                       <div className='flex gap-6'>
-                        <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
-                          {/* Trip Planning Customer Order Hub */}
-                          <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
-                        </div>
-                        {/* Resources Cards - Right */}
-                        <div className="w-1/4 space-y-3">
-                          <div className=''>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Supplier</div>
-                              <div className="text-sm font-medium">
-                                <DynamicLazySelect
-                                  fetchOptions={fetchSupplier}
-                                  value={supplier}
-                                  onChange={(value) => setSupplier(value as string)}
-                                  placeholder="VEN0000001-Supplier Name"
-                                />
-                              </div>
+                        {addResourcesFlag ? (
+                          <>
+                            <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
+                              {/* Trip Planning Customer Order Hub */}
+                              <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>
-
-                            <div className='mt-3'>
-                              <div className="text-xs text-muted-foreground mb-1">Schedule</div>
-                              <div className="text-sm font-medium">
-                                <DynamicLazySelect
-                                  fetchOptions={fetchSchedule}
-                                  value={schedule}
-                                  onChange={(value) => setSchedule(value as string)}
-                                  placeholder="SCH-0000001-Schedule Name"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {[
-                            { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                            { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
-                            { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
-                            { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
-                            { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
-                            { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
-                            { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
-                          ].map((resource) => {
-                            const Icon = resource.icon;
-                            return (
-                              <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
-                                      <Icon className={cn("h-5 w-5", resource.iconColor)} />
-                                    </div>
-                                    <div>
-                                      <h3 className="font-medium text-sm">{resource.title} 
-                                        <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
-                                      </h3>
-                                      {resource.subtitle && (
-                                        <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                      )}
-                                    </div>
+                            {/* Resources Cards - Right */}
+                            <div className="w-1/4 space-y-3">
+                              <div className=''>
+                                <div>
+                                  <div className="text-xs text-muted-foreground mb-1">Supplier</div>
+                                  <div className="text-sm font-medium">
+                                    <DynamicLazySelect
+                                      fetchOptions={fetchSupplier}
+                                      value={supplier}
+                                      onChange={(value) => setSupplier(value as string)}
+                                      placeholder="VEN0000001-Supplier Name"
+                                    />
                                   </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => {
-                                      if (resource.title === 'Equipment') {
-                                        handleOpenResourceDrawer('Equipment');
-                                      } else if (resource.title === 'Supplier') {
-                                        handleOpenResourceDrawer('Supplier');
-                                      } else if (resource.title === 'Driver') {
-                                        handleOpenResourceDrawer('Driver');
-                                      } else if (resource.title === 'Handler') {
-                                        handleOpenResourceDrawer('Handler');
-                                      } else if (resource.title === 'Vehicle') {
-                                        handleOpenResourceDrawer('Vehicle');
-                                      }
-                                    }}
-                                    className={resource.title === 'Resources' ? 'hidden' : ''}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
                                 </div>
-                              </Card>
-                            );
-                          })}
-                        </div>
+
+                                <div className='mt-3'>
+                                  <div className="text-xs text-muted-foreground mb-1">Schedule</div>
+                                  <div className="text-sm font-medium">
+                                    <DynamicLazySelect
+                                      fetchOptions={fetchSchedule}
+                                      value={schedule}
+                                      onChange={(value) => setSchedule(value as string)}
+                                      placeholder="SCH-0000001-Schedule Name"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              {[
+                                { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
+                                { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
+                                { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
+                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
+                              ].map((resource) => {
+                                const Icon = resource.icon;
+                                return (
+                                  <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+                                          <Icon className={cn("h-5 w-5", resource.iconColor)} />
+                                        </div>
+                                        <div>
+                                          <h3 className="font-medium text-sm">{resource.title} 
+                                            <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
+                                          </h3>
+                                          {resource.subtitle && (
+                                            <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => {
+                                          if (resource.title === 'Equipment') {
+                                            handleOpenResourceDrawer('Equipment');
+                                          } else if (resource.title === 'Supplier') {
+                                            handleOpenResourceDrawer('Supplier');
+                                          } else if (resource.title === 'Driver') {
+                                            handleOpenResourceDrawer('Driver');
+                                          } else if (resource.title === 'Handler') {
+                                            handleOpenResourceDrawer('Handler');
+                                          } else if (resource.title === 'Vehicle') {
+                                            handleOpenResourceDrawer('Vehicle');
+                                          }
+                                        }}
+                                        className={resource.title === 'Resources' ? 'hidden' : ''}
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className='flex-1 bg-card'>
+                              {/* Trip Planning Customer Order Hub */}
+                              <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Toggle */}
@@ -893,7 +930,9 @@ const TripPlanning = () => {
                           </Label>
                         </div>
                         <div className=''>
-                          <button onClick={createTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">Create Trip</button>
+                          <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Create Trip
+                          </button>
                         </div>
                       </div>                      
 
@@ -913,8 +952,6 @@ const TripPlanning = () => {
                       /> */}
                     </div>
                   </div>
-
-                  
                 </div>
               )}
             </>
