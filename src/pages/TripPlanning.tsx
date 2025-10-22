@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,10 +48,18 @@ const TripPlanning = () => {
   const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle'>('Equipment');
   const [selectedResources, setSelectedResources] = useState<any[]>([]);
   const [resourceData, setResourceData] = useState<any[]>([]);
+  const [newCustomerData, setNewCustomerData] = useState<any[]>([]);
+  const [selectedArrCOData, setSelectedArrCOData] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
+
+  // Debug useEffect to track selectedArrCOData changes
+  useEffect(() => {
+    console.log("🔍 selectedArrCOData changed:", selectedArrCOData);
+    console.log("🔍 selectedArrCOData length:", selectedArrCOData?.length);
+  }, [selectedArrCOData]);
 
   // Customer Orders Grid Configuration
   const customerOrdersColumns: GridColumnConfig[] = [
@@ -209,6 +217,75 @@ const TripPlanning = () => {
   const handleAddResource = (resources: any[]) => {
     setSelectedResources(resources);
     console.log('Selected resources:', resources);
+    console.log('Selected customerOrderList:', customerOrderList);
+
+    // Transform the new resources into the required ResourceDetails format
+    const transformedResourceDetails = resources.map(resource => ({
+      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+      "ResourceType": resource.resourceType || resource.ResourceType || 
+        (resource.EquipmentID ? 'Equipment' : 
+         resource.VendorID ? 'Agent' : 
+         resource.DriverCode ? 'Driver' : 
+         resource.HandlerID ? 'Handler' : 
+         resource.VehicleID ? 'Vehicle' : 'Unknown'),
+      "Service": resource.Service || "",
+      "ServiceDescription": resource.ServiceDescription || "",
+      "SubService": resource.SubService || "",
+      "SubServiceDescription": resource.SubServiceDescription || "",
+      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
+      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+      "ModeFlag": "Insert"
+    }));    
+    
+    // Create updated customer order list object with ResourceDetails
+    const updatedCustomerList = {
+      ...(typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList : {}),
+      "ResourceDetails": transformedResourceDetails,
+      "ModeFlag": "Insert",
+    };
+    
+    // Get existing customer order array or initialize empty array
+    const existingCustomerOrderArray = selectedArrCOData || [];
+    
+    // Check if this customer order already exists in the array
+    const existingIndex = existingCustomerOrderArray.findIndex(item => 
+      item.CustomerOrderID === (typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList?.CustomerOrderID : '')
+    );
+    
+    let updatedCustomerOrderArray;
+    if (existingIndex !== -1) {
+      // Update existing customer order by merging resources
+      updatedCustomerOrderArray = [...existingCustomerOrderArray];
+      const existingCustomerOrder = updatedCustomerOrderArray[existingIndex];
+      
+      // Merge existing ResourceDetails with new ones
+      const existingResourceDetails = existingCustomerOrder.ResourceDetails || [];
+      const mergedResourceDetails = [...existingResourceDetails, ...transformedResourceDetails];
+      
+      // Update the existing customer order with merged resources
+      updatedCustomerOrderArray[existingIndex] = {
+        ...existingCustomerOrder,
+        "ResourceDetails": mergedResourceDetails,
+        "ModeFlag": "Insert"
+      };
+    } else {
+      // Add new customer order to the array
+      updatedCustomerOrderArray = [...existingCustomerOrderArray, updatedCustomerList];
+    }
+    
+    // Update the customer order array state
+    setSelectedArrCOData(updatedCustomerOrderArray);
+    
+    console.log("Updated selectedArrCOData:", selectedArrCOData);
+    console.log("Updated customer order array:", updatedCustomerOrderArray);
+    console.log("Total customer orders in array:", updatedCustomerOrderArray.length);
+    
+    // Show success toast
+    toast({
+      title: "✅ Resources Added",
+      description: `Successfully added ${resources.length} resources to customer order. Total customer orders: ${updatedCustomerOrderArray.length}`,
+      variant: "default",
+    });
   };
 
   //BreadCrumb data
@@ -258,10 +335,10 @@ const TripPlanning = () => {
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
-  const [customerOrderId, setCustomerOrderId] = useState<string | undefined>();
-  const handleCustomerOrderSelect = (customerOrderId: any) => {
-    console.log("✅ Received from child:", customerOrderId);
-    setCustomerOrderId(customerOrderId);
+  const [customerOrderList, setcustomerOrderList] = useState<string | undefined>();
+  const handleCustomerOrderSelect = (customerOrderList: any) => {
+    console.log("✅ Received from child:", customerOrderList);
+    setcustomerOrderList(customerOrderList);
     setAddResourcesFlag(true);
   }
 
@@ -314,33 +391,43 @@ const TripPlanning = () => {
     const processedCluster = splitAtPipe(cluster);
     console.log("processedLocation ====", processedLocation);
     
-    console.log("createSingleTripData", customerOrderId);
-    console.log("selectedResources", selectedResources);
+    console.log("selectedArrCOData", selectedArrCOData);
+    
+    // Check if selectedArrCOData is empty and show warning
+    // if (!selectedArrCOData || selectedArrCOData.length === 0) {
+    //   console.warn("⚠️ selectedArrCOData is empty! Make sure to add resources first using the resource selection drawer.");
+    //   toast({
+    //     title: "⚠️ No Resources Selected",
+    //     description: "Please select resources using the resource selection drawer before creating trip data.",
+    //     variant: "destructive",
+    //   });
+    //   return; // Exit early if no data
+    // }
     
     // Transform selectedResources into the required ResourceDetails format
-    const transformedResourceDetails = selectedResources.map(resource => ({
-      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
-      "ResourceType": resource.resourceType || resource.ResourceType || 
-        (resource.EquipmentID ? 'Equipment' : 
-         resource.VendorID ? 'Agent' : 
-         resource.DriverCode ? 'Driver' : 
-         resource.HandlerID ? 'Handler' : 
-         resource.VehicleID ? 'Vehicle' : 'Unknown'),
-      "Service": resource.Service || "",
-      "ServiceDescription": resource.ServiceDescription || "",
-      "SubService": resource.SubService || "",
-      "SubServiceDescription": resource.SubServiceDescription || "",
-      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
-      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
-      "ModeFlag": "Insert"
-    }));
+    // const transformedResourceDetails = selectedResources.map(resource => ({
+    //   "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+    //   "ResourceType": resource.resourceType || resource.ResourceType || 
+    //     (resource.EquipmentID ? 'Equipment' : 
+    //      resource.VendorID ? 'Agent' : 
+    //      resource.DriverCode ? 'Driver' : 
+    //      resource.HandlerID ? 'Handler' : 
+    //      resource.VehicleID ? 'Vehicle' : 'Unknown'),
+    //   "Service": resource.Service || "",
+    //   "ServiceDescription": resource.ServiceDescription || "",
+    //   "SubService": resource.SubService || "",
+    //   "SubServiceDescription": resource.SubServiceDescription || "",
+    //   "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
+    //   "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+    //   "ModeFlag": "Insert"
+    // }));
     
-    // Push selectedResources into customerOrderId object
-    const updatedCustomerOrderId = {
-      ...(typeof customerOrderId === 'object' && customerOrderId !== null ? customerOrderId : {}),
-      "ResourceDetails": transformedResourceDetails,
-      "ModeFlag": "Insert",
-    };
+    // Push selectedResources into customerOrderList object
+    // const updatedcustomerOrderList = {
+    //   ...(typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList : {}),
+    //   "ResourceDetails": transformedResourceDetails,
+    //   "ModeFlag": "Insert",
+    // };
     
     const tripData = {
       "Header": {
@@ -350,13 +437,11 @@ const TripPlanning = () => {
         "Cluster": processedCluster,
         "PlanDate": format(planDate, "yyyy-MM-dd")
       },
-      "CustomerOrders": [
-        updatedCustomerOrderId
-      ]
+      "CustomerOrders": selectedArrCOData || []
     }
     
     console.log("createSingleTripData", tripData);
-    console.log("Updated customerOrderId with ResourceDetails:", updatedCustomerOrderId);
+    console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
     try {
       const response: any = await tripPlanningService.createTripPlan(tripData);
       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
@@ -929,7 +1014,11 @@ const TripPlanning = () => {
                             Create single trip with consolidated orders
                           </Label>
                         </div>
-                        <div className=''>
+                        <div className='flex items-center gap-4'>
+                          {/* Debug Info */}
+                          {/* <div className="text-xs text-gray-600">
+                            Customer Orders: {selectedArrCOData?.length || 0}
+                          </div> */}
                           <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                             Create Trip
                           </button>
