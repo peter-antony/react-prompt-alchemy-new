@@ -17,6 +17,7 @@ import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearch
 import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
+import { tripPlanningService } from "@/api/services/tripPlanningService";
 
 export const TripExecutionHub = () => {
   const [searchParams] = useSearchParams();
@@ -648,7 +649,41 @@ export const TripExecutionHub = () => {
           iconName: 'EllipsisVertical'
         },
       ],
-      rightButtons: [
+      rightButtons: createTripPlan === 'true' ? [
+        {
+          label: "Cancel",
+          onClick: () => {
+            console.log("Cancel clicked");
+            setPopupOpen(true);
+          },
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        },
+        {
+          label: "Confirm",
+          onClick: () => {
+            console.log("Confirm clicked");
+            confirmTripPlanning();
+          },
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        },
+        {
+          label: "Release",
+          onClick: () => {
+            console.log("Release clicked");          },
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        },
+        {
+          label: "Amend",
+          onClick: () => {
+            console.log("Amend clicked");
+          },
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        },
+      ] : [
         {
           label: "Cancel",
           onClick: () => {
@@ -661,7 +696,7 @@ export const TripExecutionHub = () => {
       ],
     });
     return () => resetFooter();
-  }, [setFooter, resetFooter, selectedRows]);
+  }, [setFooter, resetFooter, selectedRows, createTripPlan]);
 
   // Navigate to the create new quick order page
   const navigate = useNavigate();
@@ -1240,6 +1275,26 @@ export const TripExecutionHub = () => {
 
   const clearAllFilters = async () => {
     console.log('Clear all filters');
+  }
+
+  const confirmTripPlanning = async () => {
+    console.log("confirmTripPlanning ===", selectedRowObjects);
+    let payload = {
+      "TripPlanID": selectedRowObjects.map(row => row.TripPlanID),
+      "ConfirmationDate": new Date().toISOString(),
+      "ConfirmationBy": "ramcouser",
+      "ConfirmationReason": "Trip confirmed by user",
+    }
+    const response = await tripPlanningService.confirmTripPlanning(payload);
+    console.log("response ===", response);
+  }
+  const releseTripPlanning = async () => {
+    console.log("releaseTripPlanning ===");
+
+  }
+  const amendTripPlanning = async () => {
+    console.log("amendTripPlanning ===");
+
   }
 
   return (
