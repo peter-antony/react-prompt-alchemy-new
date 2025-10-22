@@ -51,6 +51,7 @@ const TripPlanning = () => {
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [newCustomerData, setNewCustomerData] = useState<any[]>([]);
   const [selectedArrCOData, setSelectedArrCOData] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
@@ -356,6 +357,7 @@ const TripPlanning = () => {
     
     // Handle non-empty selection
     console.log('Selected Customer Orders:', selectedRows);
+    setSelectedRows(selectedRows);
     
     // You can process the selected rows here
     // For example:
@@ -372,7 +374,75 @@ const TripPlanning = () => {
   }
 
   const createBulkTripData = async () => {
-    console.log("createBulkTripData");
+    console.log("createBulkTripData", selectedRows);
+    console.log("createBulkTripData", selectedResources);
+    const splitAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        const [first, ...rest] = value.split("||");
+        return first.trim(); // Return only the value part (before pipe)
+      }
+      return value;
+    };
+
+    const processedLocation = splitAtPipe(location);
+    const processedCluster = splitAtPipe(cluster);
+
+    const transformedResourceDetails = selectedResources.map(resource => ({
+      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+      "ResourceType": resource.resourceType || resource.ResourceType || 
+        (resource.EquipmentID ? 'Equipment' : 
+         resource.VendorID ? 'Agent' : 
+         resource.DriverCode ? 'Driver' : 
+         resource.HandlerID ? 'Handler' : 
+         resource.VehicleID ? 'Vehicle' : 'Unknown'),
+      "Service": resource.Service || "",
+      "ServiceDescription": resource.ServiceDescription || "",
+      "SubService": resource.SubService || "",
+      "SubServiceDescription": resource.SubServiceDescription || "",
+      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
+      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+      "ModeFlag": "Insert"
+    }));
+
+    const tripData = {
+      "Header": {
+        "TripType": tripType,
+        "PlanningProfileID": "General-GMBH",
+        "Location": processedLocation, // Now processedLocation is already just the code
+        "Cluster": processedCluster,
+        "PlanDate": format(planDate, "yyyy-MM-dd")
+      },
+      "CustomerOrders": selectedRows || [],
+      "ResourceDetails": transformedResourceDetails || []
+    }
+    
+    console.log("createSingleTripData", tripData);
+    console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
+    try {
+      const response: any = await tripPlanningService.createMultipleCOTripPlan(tripData);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Save Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating nested data:", error);
+    }
+
   }
 
   const createSingleTripData = async () => {
@@ -809,9 +879,8 @@ const TripPlanning = () => {
                     <div className="w-1/4 space-y-3">
                      
                       {/* Resources - Right Panel */}
-                      <div className="bg-card border border-border rounded-lg overflow-hidden">
-                        {/* Header */}
-                        <div className="bg-emerald-500 text-white p-4">
+                      {/* <div className="bg-card border border-border rounded-lg overflow-hidden">
+                        <div className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="p-3 rounded-xl bg-[#EBE9FE] mr-3">
@@ -822,9 +891,7 @@ const TripPlanning = () => {
                           </div>
                         </div>
 
-                        {/* Content */}
                         <div className="p-4 space-y-4">
-                          {/* Supplier Section */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Supplier</label>
                             <DynamicLazySelect
@@ -835,7 +902,6 @@ const TripPlanning = () => {
                             />
                           </div>
 
-                          {/* Schedule Section */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Schedule</label>
                             <DynamicLazySelect
@@ -846,13 +912,11 @@ const TripPlanning = () => {
                             />
                           </div>
 
-                          {/* More Resources Button */}
                           <Button variant="outline" className="w-full text-emerald-600 border-emerald-300 hover:bg-emerald-50">
                             <Plus className="h-4 w-4 mr-2" />
                             More Resources
                           </Button>
 
-                          {/* Statistics */}
                           <div className="border-t border-border pt-4 mt-6 space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-muted-foreground">Total Orders:</span>
@@ -868,7 +932,86 @@ const TripPlanning = () => {
                             </div>
                           </div>
                         </div>
+                      </div> */}
+
+                      <div className="bg-card overflow-hidden">
+                        <div className=''>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Supplier</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchSupplier}
+                                value={supplier}
+                                onChange={(value) => setSupplier(value as string)}
+                                placeholder="VEN0000001-Supplier Name"
+                              />
+                            </div>
+                          </div>
+
+                          <div className='mt-3'>
+                            <div className="text-xs text-muted-foreground mb-1">Schedule</div>
+                            <div className="text-sm font-medium">
+                              <DynamicLazySelect
+                                fetchOptions={fetchSchedule}
+                                value={schedule}
+                                onChange={(value) => setSchedule(value as string)}
+                                placeholder="SCH-0000001-Schedule Name"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        {[
+                          { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
+                          { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
+                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
+                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
+                        ].map((resource) => {
+                          const Icon = resource.icon;
+                          return (
+                            <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+                                    <Icon className={cn("h-5 w-5", resource.iconColor)} />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-sm">{resource.title} 
+                                      <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
+                                    </h3>
+                                    {resource.subtitle && (
+                                      <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => {
+                                    if (resource.title === 'Equipment') {
+                                      handleOpenResourceDrawer('Equipment');
+                                    } else if (resource.title === 'Supplier') {
+                                      handleOpenResourceDrawer('Supplier');
+                                    } else if (resource.title === 'Driver') {
+                                      handleOpenResourceDrawer('Driver');
+                                    } else if (resource.title === 'Handler') {
+                                      handleOpenResourceDrawer('Handler');
+                                    } else if (resource.title === 'Vehicle') {
+                                      handleOpenResourceDrawer('Vehicle');
+                                    }
+                                  }}
+                                  className={resource.title === 'Resources' ? 'hidden' : ''}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </Card>
+                          );
+                        })}
                       </div>
+
                     </div>
                   </div>
 
