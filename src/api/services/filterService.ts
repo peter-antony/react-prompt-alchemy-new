@@ -8,13 +8,17 @@ let lastAppliedFilters: Record<string, any> | null = null;
 export const filterService = {
 
   getUserFilterSets: async (userId: string, gridId: string): Promise<FilterPreset[]> => {
-    try {
-      const response = await apiClient.get(API_ENDPOINTS.FILTERS.LIST(userId, gridId));
-      return response.data.data;
-    } catch (error) {
-      console.warn('Failed to fetch filter sets, using localStorage fallback:', error);
-      return getLocalFilterSets(userId, gridId);
-    }
+    // try {
+    //   const response = await apiClient.get(API_ENDPOINTS.FILTERS.LIST(userId, gridId));
+    //   return response.data.data;
+    // } catch (error) {
+    //   console.warn('Failed to fetch filter sets, using localStorage fallback:', error);
+    //   return getLocalFilterSets(userId, gridId);
+    // }
+    // Skip API call to prevent /v1/users/current-user/filters/trip-CO
+    console.log(`Skipping API call for getUserFilterSets(${userId}, ${gridId}) - using localStorage fallback`);
+    return getLocalFilterSets(userId, gridId);
+
   },
 
   // Save new filter preset
