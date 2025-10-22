@@ -24,6 +24,7 @@ import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
 import { useToast } from '@/hooks/use-toast';
+import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -340,6 +341,34 @@ const TripPlanning = () => {
     console.log("✅ Received from child:", customerOrderList);
     setcustomerOrderList(customerOrderList);
     setAddResourcesFlag(true);
+  }
+
+  const handleMultipleCustomerOrders = (selectedRows: any[]) => {
+    console.log('Customer Orders selection changed:', selectedRows);
+    console.log('Number of selected rows:', selectedRows.length);
+    
+    if (selectedRows.length === 0) {
+      console.log('All selections cleared');
+      // Handle empty selection case
+      // For example: hide bulk actions, reset state, etc.
+      return;
+    }
+    
+    // Handle non-empty selection
+    console.log('Selected Customer Orders:', selectedRows);
+    
+    // You can process the selected rows here
+    // For example:
+    // - Store them in state for further processing
+    // - Send them to an API
+    // - Update UI based on selection
+    
+    // Example: Extract CustomerOrderIDs
+    const customerOrderIds = selectedRows.map(row => row.CustomerOrderID);
+    console.log('Customer Order IDs:', customerOrderIds);
+    
+    // Example: Store in state (if needed)
+    // setSelectedCustomerOrders(selectedRows);
   }
 
   const createBulkTripData = async () => {
@@ -773,7 +802,8 @@ const TripPlanning = () => {
                   <div className='flex gap-6'>
                     <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
                       {/* Trip Planning Customer Order Hub */}
-                      <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
+                      {/* <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/> */}
+                      <TripCOHubMultiple onCustomerOrderClick={handleMultipleCustomerOrders}/>
                     </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">

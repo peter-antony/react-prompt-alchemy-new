@@ -1179,7 +1179,7 @@ export function SmartGrid({
                     colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)}
                     className="text-center py-12 text-gray-500"
                   >
-                    {gridTitle == 'Trip Customer Orders' ? 
+                    {(gridTitle == 'Trip Customer Orders' || gridTitle == 'Trip Customer Orders Multi') ? 
                     (<div className="space-y-2">
                       <div className="text-lg font-medium flex items-center justify-center">
                         {/* <div className="text-lg font-medium">No data available</div> */}
@@ -1198,7 +1198,7 @@ export function SmartGrid({
                 paginatedData.flatMap((row, rowIndex) => {
                   const rows = [
                     <TableRow key={rowIndex}
-                      data-row-id={ (gridTitle == 'Trip Plans' ?  row.TripPlanID : gridTitle == 'Planning Equipments' ? (row.EquipmentID || row.VehicleID || row.HandlerID || row.DriverCode || row.VendorID) : rowIndex) || rowIndex}
+                      data-row-id={ (gridTitle == 'Trip Plans' ?  row.TripPlanID : gridTitle == 'Planning Equipments' ? (row.EquipmentID || row.VehicleID || row.HandlerID || row.DriverCode || row.VendorID) : (gridTitle == 'Trip Customer Orders Multi' ? row.CustomerOrderID : rowIndex)) || rowIndex}
                       className={cn(
                         "hover:bg-gray-100 transition-colors duration-150 border-b border-gray-100 cursor-pointer",
                         rowClassName ? rowClassName(row, rowIndex) : ''
