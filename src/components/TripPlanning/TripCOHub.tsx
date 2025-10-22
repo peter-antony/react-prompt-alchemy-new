@@ -682,7 +682,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
         <div className="">
           <div className="container-fluid mx-auto space-y-6">
             {/* Grid Container */}
-            <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
+            <div className={`rounded-lg ${config.visible ? 'pb-4' : ''}`}>
               {/* Selected rows indicator */}
               <SmartGridWithGrouping
                 key={`grid-${gridState.forceUpdate}`}

@@ -5,18 +5,35 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
 
 interface TripFormProps {
-  tripExecutionRef: React.RefObject<DynamicPanelRef>;
+  // Optional QC lists to avoid duplicate API calls
+  qcList1?: any[];
+  qcList2?: any[];
+  qcList3?: any[];
+  co2List?: any[];
 }
 
-export const TripForm: React.FC<TripFormProps> = ({
-  tripExecutionRef,
-}) => {
+export interface TripFormRef {
+  getFormData: () => Record<string, any>;
+  syncFormDataToStore: () => Record<string, any>;
+}
+
+export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref) => {
+  // Create internal ref for DynamicPanel
+  const tripExecutionRef = useRef<DynamicPanelRef>(null);
   const { tripData, fetchTrip, updateHeaderField } = manageTripStore();
   const [tripType, setTripType] = useState(tripData?.Header?.IsRoundTrip);
-  const [qcList1, setqcList1] = useState<any>();
-  const [qcList2, setqcList2] = useState<any>();
-  const [qcList3, setqcList3] = useState<any>();
-  const [co2List, setCo2List] = useState<any>();
+
+  // Use props if provided, otherwise use local state
+  const [localQcList1, setLocalQcList1] = useState<any>();
+  const [localQcList2, setLocalQcList2] = useState<any>();
+  const [localQcList3, setLocalQcList3] = useState<any>();
+  const [localCo2List, setLocalCo2List] = useState<any>();
+
+  // Use props if available, otherwise use local state
+  const qcList1 = props.qcList1 || localQcList1;
+  const qcList2 = props.qcList2 || localQcList2;
+  const qcList3 = props.qcList3 || localQcList3;
+  const co2List = props.co2List || localCo2List;
 
   // Removed formData state as DynamicPanel is not fully controlled by TripForm's local state
   // const [formData, setFormData] = useState<Record<string, any>>(() => buildTripExecutionFormData(tripData));
@@ -35,6 +52,7 @@ export const TripForm: React.FC<TripFormProps> = ({
   }
 
   // Trip Execution form configuration for editable fields only
+  // Using uncontrolled approach - DynamicPanel manages its own state
   const tripExecutionPanelConfig: PanelConfig = useMemo(() => {
     return {
       IsRoundTrip: {
@@ -68,27 +86,22 @@ export const TripForm: React.FC<TripFormProps> = ({
         label: 'Train No.',
         fieldType: 'text',
         width: 'half',
-        value: tripData?.Header?.TrainNo ?? "", // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
         order: 2,
         maxLength: 40,
         placeholder: 'Enter Train No.',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('train no change: ', val.value);
-            updateHeaderField("TrainNo", val.value, "Update");
-          },
-        }
+        // Removed onBlur events - using uncontrolled approach
+        // Data will be synced on save/submit instead of on every field change
       },
       Cluster: {
         id: 'Cluster',
         label: 'Cluster',
         fieldType: 'lazyselect',
         width: 'half',
-        value: formatFieldWithName(tripData?.Header?.Cluster, tripData?.Header?.ClusterDescription), // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
@@ -112,55 +125,36 @@ export const TripForm: React.FC<TripFormProps> = ({
               : {})
           }));
         },
-        events: {
-          onChange: (val: any) => {
-            if (!val) return;
-            const [clusterId, clusterDesc] = val?.value?.split('||').map((s) => s.trim());
-            console.log('Cluster no change: ', val);
-            updateHeaderField("Cluster", clusterId, "Update");
-            updateHeaderField("ClusterDescription", clusterDesc, "Update");
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
+        // Data will be synced on save/submit instead of on every field change
       },
       ForwardTripID: {
         id: 'ForwardTripID',
         label: 'Forward Trip Plan ID',
         fieldType: 'text',
         width: 'half',
-        value: tripData?.Header?.ForwardTripID || "", // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: String(tripType) === "1", // Ensure comparison is always with string "1"
         editable: true,
         order: 4,
         maxLength: 40,
         placeholder: 'Enter Forward Trip ID',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('ForwardTripID change: ', val.value);
-            updateHeaderField("ForwardTripID", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
       ReturnTripID: {
         id: 'ReturnTripID',
         label: 'Return Trip Plan ID',
         fieldType: 'text',
         width: 'half',
-        value: tripData?.Header?.ReturnTripID || "", // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: String(tripType) === "1", // Ensure comparison is always with string "1"
         editable: true,
-        order: 4,
+        order: 5,
         maxLength: 40,
         placeholder: 'Enter Return Trip ID',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('ReturnTripID change: ', val.value);
-            updateHeaderField("ReturnTripID", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
       // CO2Emisions: {
       //   id: 'CO2Emisions',
@@ -183,36 +177,19 @@ export const TripForm: React.FC<TripFormProps> = ({
       //   }
       // },
       CO2Emisions: {
-  id: 'CO2Emisions',
-  label: 'CO2 Emissions',
-  fieldType: 'inputdropdown',
-  width: 'full',
-  value: (() => {
-    const header = tripData?.Header as any;
-    const emissionValue = header?.CO2Emisions;
-    const emissionUOM = header?.CO2EmisionsUOM;
-    if (emissionValue && typeof emissionValue === "object") {
-      return { input: emissionValue.input ?? emissionValue ?? "", dropdown: emissionValue.dropdown ?? emissionUOM ?? "" };
-    }
-    return { input: emissionValue ?? "", dropdown: emissionUOM ?? "" };
-  })(),
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 4,
-  maxLength: 255,
-  options: co2List?.filter((u: any) => u.id).map((u: any) => ({ label: u.name, value: u.id })),
-  events: {
-    onChange: (val: any) => {
-      console.log('CO2Emisions change: ', val);
-      if (val && typeof val === "object") {
-        const { input, dropdown } = val;
-        updateHeaderField("CO2Emisions", input, "Update");
-        updateHeaderField("CO2EmisionsUOM", dropdown, "Update");
-      }
-    }
-  }
-},
+        id: 'CO2Emisions',
+        label: 'CO2 Emissions',
+        fieldType: 'inputdropdown',
+        width: 'full',
+        value: '', // Uncontrolled - DynamicPanel manages its own state
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 6,
+        maxLength: 255,
+        options: co2List?.filter((u: any) => u.id).map((u: any) => ({ label: u.name, value: u.id })),
+        // Removed onChange events - using uncontrolled approach
+      },
 
 
       // CO2EmisionsUOM: {
@@ -240,62 +217,39 @@ export const TripForm: React.FC<TripFormProps> = ({
         label: 'Supplier Ref. No.',
         fieldType: 'text',
         width: 'full',
-        value: tripData?.Header?.SupplierRefNo || "", // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 4,
+        order: 7,
         maxLength: 40,
         placeholder: 'Enter Supplier Ref. No.',
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('SupplierRefNo change: ', val.value);
-            updateHeaderField("SupplierRefNo", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
       QCUserDefined1: {
         id: 'QCUserDefined1',
         label: 'QC Userdefined 1',
         fieldType: 'inputdropdown',
         width: 'full',
-        value: (() => {
-          const header = tripData?.Header as any;
-          const qc = header?.QCUserDefined1;
-          const qcValue = header?.QuickCodeValue1;
-          if (qc && typeof qc === "object") {
-            return { input: qc.input ?? qcValue ?? "", dropdown: qc.dropdown ?? qc ?? "" };
-          }
-          return { input: qcValue ?? "", dropdown: qc ?? "" };
-        })(), // Revert to original logic, bind directly to tripData.Header
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 5,
+        order: 8,
         maxLength: 255,
         options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
-        events: {
-          onChange: (val: any) => {
-            console.log('QCUserDefined1 no change: ', val);
-            if (val && typeof val === "object") {
-              const { input, dropdown } = val;
-              updateHeaderField("QuickCodeValue1", input, "Update");
-              updateHeaderField("QuickCode1", dropdown, "Update");
-            }
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       ServiceType: {
         id: 'ServiceType',
         label: 'Service',
         fieldType: 'lazyselect',
         width: 'half',
-        value: formatFieldWithName(tripData?.Header?.ServiceType, tripData?.Header?.ServiceTypeDescription), // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 6,
+        order: 9,
         hideSearch: true,
         disableLazyLoading: false,
         fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -315,25 +269,18 @@ export const TripForm: React.FC<TripFormProps> = ({
               : {})
           }));
         },
-        events: {
-          onChange: (val: any) => {
-            console.log('ServiceType no change: ', val);
-            const [serviceTypeId, serviceTypeDesc] = val?.value?.split('||').map((s) => s.trim());
-            updateHeaderField("ServiceType", serviceTypeId, "Update");
-            updateHeaderField("ServiceTypeDescription", serviceTypeDesc, "Update");
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       SubServiceType: {
         id: 'SubServiceType',
         label: 'Sub Service',
         fieldType: 'lazyselect',
         width: 'half',
-        value: formatFieldWithName(tripData?.Header?.SubServiceType, tripData?.Header?.SubServiceTypeDescription), // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 7,
+        order: 10,
         hideSearch: true,
         disableLazyLoading: false,
         fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -353,25 +300,18 @@ export const TripForm: React.FC<TripFormProps> = ({
               : {})
           }));
         },
-        events: {
-          onChange: (val: any) => {
-            console.log('SubServiceType no change: ', val);
-            const [subServiceTypeId, subServiceTypeDesc] = val?.value?.split('||').map((s) => s.trim());
-            updateHeaderField("SubServiceType", subServiceTypeId, "Update");
-            updateHeaderField("SubServiceTypeDescription", subServiceTypeDesc, "Update");
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       LoadType: {
         id: 'LoadType',
         label: 'Load Type',
         fieldType: 'lazyselect',
         width: 'full',
-        value: tripData?.Header?.LoadType || "", // Bind directly to tripData.Header
+        value: "", // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 7,
+        order: 11,
         hideSearch: true,
         disableLazyLoading: false,
         fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -391,144 +331,240 @@ export const TripForm: React.FC<TripFormProps> = ({
               : {})
           }));
         },
-        events: {
-          onChange: (val: any) => {
-            console.log('Load type Init no change: ', val);
-            const [loadTypeId] = val?.value?.split('||').map((s) => s.trim());
-            updateHeaderField("LoadType", loadTypeId, "Update");
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       QCUserDefined2: {
         id: 'QCUserDefined2',
         label: 'QC Userdefined 2',
         fieldType: 'inputdropdown',
         width: 'full',
-        value: (() => {
-          const header = tripData?.Header as any;
-          const qc = header?.QCUserDefined2;
-          const qcValue = header?.QuickCodeValue2;
-          if (qc && typeof qc === "object") {
-            return { input: qc.input ?? qcValue ?? "", dropdown: qc.dropdown ?? qc ?? "" };
-          }
-          return { input: qcValue ?? "", dropdown: qc ?? "" };
-        })(), // Revert to original logic, bind directly to tripData.Header
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 8,
+        order: 12,
         maxLength: 255,
         options: qcList2?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
-        events: {
-          onChange: (val: any) => {
-            console.log('QCUserDefined2 no change: ', val);
-            if (val && typeof val === "object") {
-              const { input, dropdown } = val;
-              updateHeaderField("QuickCodeValue2", input, "Update");
-              updateHeaderField("QuickCode2", dropdown, "Update");
-            }
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       QCUserDefined3: {
         id: 'QCUserDefined3',
         label: 'QC Userdefined 3',
         fieldType: 'inputdropdown',
         width: 'full',
-        value: (() => {
-          const header = tripData?.Header as any;
-          const qc = header?.QCUserDefined3;
-          const qcValue = header?.QuickCodeValue3;
-          if (qc && typeof qc === "object") {
-            return { input: qc.input ?? qcValue ?? "", dropdown: qc.dropdown ?? qc ?? "" };
-          }
-          return { input: qcValue ?? "", dropdown: qc ?? "" };
-        })(), // Revert to original logic, bind directly to tripData.Header
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 9,
+        order: 13,
         maxLength: 255,
         options: qcList3?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
-        events: {
-          onChange: (val: any) => {
-            console.log('QCUserDefined3 no change: ', val);
-            if (val && typeof val === "object") {
-              const { input, dropdown } = val;
-              updateHeaderField("QuickCodeValue3", input, "Update");
-              updateHeaderField("QuickCode3", dropdown, "Update");
-            }
-          }
-        }
+        // Removed onChange events - using uncontrolled approach
       },
       Remarks1: {
         id: 'Remarks1',
         label: 'Remarks 1',
         fieldType: 'text',
         width: 'full',
-        value: tripData?.Header?.Remarks1 || '',
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 10,
+        order: 14,
         placeholder: 'Enter Remarks',
         maxLength: 500,
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('Remarks1 change: ', val.value);
-            updateHeaderField("Remarks1", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
       Remarks2: {
         id: 'Remarks2',
         label: 'Remarks 2',
         fieldType: 'text',
         width: 'full',
-        value: tripData?.Header?.Remarks2 || '',
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 11,
+        order: 15,
         placeholder: 'Enter Remarks',
         maxLength: 500,
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('Remarks2 change: ', val.value);
-            updateHeaderField("Remarks2", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
       Remarks3: {
         id: 'Remarks3',
         label: 'Remarks 3',
         fieldType: 'text',
         width: 'full',
-        value: tripData?.Header?.Remarks3 || '',
+        value: '', // Uncontrolled - DynamicPanel manages its own state
         mandatory: false,
         visible: true,
         editable: true,
-        order: 12,
+        order: 16,
         placeholder: 'Enter Remarks',
         maxLength: 500,
-        events: {
-          onBlur: (event: React.FocusEvent) => {
-            const val = event.target as HTMLInputElement;
-            console.log('Remarks3 change: ', val.value);
-            updateHeaderField("Remarks3", val.value, "Update");
-          }
-        }
+        // Removed onBlur events - using uncontrolled approach
       },
-    }; // Dependencies for useMemo (removed formData, added tripData for values)
-  }, [tripType, tripData, updateHeaderField, qcList1, qcList2, qcList3, co2List]);
+    }; // Dependencies for useMemo - removed tripData to prevent re-renders on every field change
+  }, [tripType, updateHeaderField, qcList1, qcList2, qcList3, co2List]);
 
-  // Map IsRoundTrip -> TripType - Moved from TripExecutionLanding.tsx
+  // Create initial data for DynamicPanel - populate with actual data
+  const initialFormData = useMemo(() => {
+    if (!tripData?.Header) {
+      return {
+        IsRoundTrip: "0",
+        TrainNo: '',
+        Cluster: '',
+        ForwardTripID: '',
+        ReturnTripID: '',
+        CO2Emisions: { input: "", dropdown: "" },
+        SupplierRefNo: '',
+        QCUserDefined1: { input: "", dropdown: "" },
+        ServiceType: '',
+        SubServiceType: '',
+        LoadType: '',
+        QCUserDefined2: { input: "", dropdown: "" },
+        QCUserDefined3: { input: "", dropdown: "" },
+        Remarks1: '',
+        Remarks2: '',
+        Remarks3: '',
+      };
+    }
+
+    return {
+      IsRoundTrip: tripData.Header.IsRoundTrip || "0",
+      TrainNo: tripData.Header.TrainNo || '',
+      Cluster: formatFieldWithName(tripData.Header.Cluster, tripData.Header.ClusterDescription),
+      ForwardTripID: tripData.Header.ForwardTripID || '',
+      ReturnTripID: tripData.Header.ReturnTripID || '',
+      CO2Emisions: (() => {
+        const emissionValue = tripData.Header.CO2Emisions;
+        const emissionUOM = tripData.Header.CO2EmisionsUOM;
+        // API returns simple string values, convert to inputdropdown format
+        return { input: emissionValue ?? "", dropdown: emissionUOM ?? "" };
+      })(),
+      SupplierRefNo: tripData.Header.SupplierRefNo || '',
+      QCUserDefined1: (() => {
+        const qcId = tripData.Header.QuickCode1;
+        const qcValue = tripData.Header.QuickCodeValue1;
+        return { input: qcValue ?? "", dropdown: qcId ?? "" };
+      })(),
+      ServiceType: formatFieldWithName(tripData.Header.ServiceType, tripData.Header.ServiceTypeDescription),
+      SubServiceType: formatFieldWithName(tripData.Header.SubServiceType, tripData.Header.SubServiceTypeDescription),
+      LoadType: formatFieldWithName(tripData.Header.LoadType, (tripData.Header as any).LoadTypeDescription),
+      QCUserDefined2: (() => {
+        const qcId = tripData.Header.QuickCode2;
+        const qcValue = tripData.Header.QuickCodeValue2;
+        return { input: qcValue ?? "", dropdown: qcId ?? "" };
+      })(),
+      QCUserDefined3: (() => {
+        const qcId = tripData.Header.QuickCode3;
+        const qcValue = tripData.Header.QuickCodeValue3;
+        return { input: qcValue ?? "", dropdown: qcId ?? "" };
+      })(),
+      Remarks1: tripData.Header.Remarks1 || '',
+      Remarks2: tripData.Header.Remarks2 || '',
+      Remarks3: tripData.Header.Remarks3 || '',
+    };
+  }, [tripData?.Header]); // Include tripData.Header dependency
+
+  // Debug logging
+  useEffect(() => {
+    console.log('TripForm: tripData.Header changed:', tripData?.Header);
+    console.log('TripForm: initialFormData:', initialFormData);
+
+    // Debug QC fields and CO2Emisions specifically
+    if (tripData?.Header) {
+      console.log('TripForm: QC Fields Debug:');
+      console.log('QuickCode1:', tripData.Header.QuickCode1, 'QuickCodeValue1:', tripData.Header.QuickCodeValue1);
+      console.log('QuickCode2:', tripData.Header.QuickCode2, 'QuickCodeValue2:', tripData.Header.QuickCodeValue2);
+      console.log('QuickCode3:', tripData.Header.QuickCode3, 'QuickCodeValue3:', tripData.Header.QuickCodeValue3);
+
+      console.log('TripForm: CO2Emisions Debug:');
+      console.log('CO2Emisions:', tripData.Header.CO2Emisions, 'CO2EmisionsUOM:', tripData.Header.CO2EmisionsUOM);
+      console.log('CO2Emisions processed:', { input: tripData.Header.CO2Emisions ?? "", dropdown: tripData.Header.CO2EmisionsUOM ?? "" });
+    }
+  }, [tripData?.Header, initialFormData]);
+
+  // Function to get form data from DynamicPanel ref (for save operation)
+  const getFormData = () => {
+    if (!tripExecutionRef.current) {
+      console.warn('TripForm: tripExecutionRef is not available');
+      return {};
+    }
+
+    try {
+      // Get form data from DynamicPanel ref
+      const formData = tripExecutionRef.current.getFormValues();
+      console.log('TripForm: Retrieved form data:', formData);
+      return formData || {};
+    } catch (error) {
+      console.error('TripForm: Error getting form data:', error);
+      return {};
+    }
+  };
+
+  // Function to sync form data to store (call this on save/submit)
+  const syncFormDataToStore = (formData: Record<string, any>) => {
+    console.log('Syncing form data to store:', formData);
+
+    // Sync each field to the store
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'IsRoundTrip') {
+        updateHeaderField("IsRoundTrip", value, "Update");
+        updateHeaderField("IsOneWay", value === "1" ? "0" : "1", "Update");
+      } else if (key === 'Cluster' && typeof value === 'string') {
+        const [clusterId, clusterDesc] = value.split('||').map((s) => s.trim());
+        updateHeaderField("Cluster", clusterId, "Update");
+        updateHeaderField("ClusterDescription", clusterDesc, "Update");
+      } else if (key === 'CO2Emisions' && typeof value === 'object') {
+        const { input, dropdown } = value;
+        updateHeaderField("CO2Emisions", input, "Update");
+        updateHeaderField("CO2EmisionsUOM", dropdown, "Update");
+      } else if (key === 'QCUserDefined1' && typeof value === 'object') {
+        const { input, dropdown } = value;
+        updateHeaderField("QuickCodeValue1", input, "Update");
+        updateHeaderField("QuickCode1", dropdown, "Update");
+      } else if (key === 'QCUserDefined2' && typeof value === 'object') {
+        const { input, dropdown } = value;
+        updateHeaderField("QuickCodeValue2", input, "Update");
+        updateHeaderField("QuickCode2", dropdown, "Update");
+      } else if (key === 'QCUserDefined3' && typeof value === 'object') {
+        const { input, dropdown } = value;
+        updateHeaderField("QuickCodeValue3", input, "Update");
+        updateHeaderField("QuickCode3", dropdown, "Update");
+      } else if (key === 'ServiceType' && typeof value === 'string') {
+        const [serviceTypeId, serviceTypeDesc] = value.split('||').map((s) => s.trim());
+        updateHeaderField("ServiceType", serviceTypeId, "Update");
+        updateHeaderField("ServiceTypeDescription", serviceTypeDesc, "Update");
+      } else if (key === 'SubServiceType' && typeof value === 'string') {
+        const [subServiceTypeId, subServiceTypeDesc] = value.split('||').map((s) => s.trim());
+        updateHeaderField("SubServiceType", subServiceTypeId, "Update");
+        updateHeaderField("SubServiceTypeDescription", subServiceTypeDesc, "Update");
+      } else if (key === 'LoadType' && typeof value === 'string') {
+        const [loadTypeId, loadTypeDesc] = value.split('||').map((s) => s.trim());
+        updateHeaderField("LoadType", loadTypeId, "Update");
+        updateHeaderField("LoadTypeDescription" as any, loadTypeDesc, "Update");
+      } else {
+        // For simple text fields
+        updateHeaderField(key as any, value, "Update");
+      }
+    });
+  };
+
+  // Expose functions to parent component for save operation
+  React.useImperativeHandle(ref, () => ({
+    getFormData,
+    syncFormDataToStore: () => {
+      const formData = getFormData();
+      syncFormDataToStore(formData);
+      return formData;
+    }
+  }));
+
+  // Map IsRoundTrip -> TripType when tripData changes
   useEffect(() => {
     if (tripData?.Header) {
-      const roundTripValue = String(tripData.Header.IsRoundTrip); // Explicitly cast to string
-      setTripType(roundTripValue === "1" ? "1" : "0"); // Simplify comparison as it's now always a string
+      const roundTripValue = String(tripData.Header.IsRoundTrip);
+      setTripType(roundTripValue === "1" ? "1" : "0");
     }
   }, [tripData?.Header?.IsRoundTrip]);
 
@@ -550,9 +586,14 @@ export const TripForm: React.FC<TripFormProps> = ({
   //   setFormData(prev => ({ ...prev, ...data })); // No longer needed with uncontrolled approach
   // };
 
-  // New useEffect to fetch qcList1, qcList2, qcList3 (if needed, otherwise remove)
-  // Assuming qcLists are fetched internally by TripForm if not passed
+  // Only fetch QC data if not provided as props (to avoid duplication)
   useEffect(() => {
+    // Only fetch if props are not provided
+    if (props.qcList1 && props.qcList2 && props.qcList3 && props.co2List) {
+      console.log('TripForm: Using QC lists from props, skipping API calls');
+      return;
+    }
+
     const fetchQcData = async (messageType: string, setQcList: React.Dispatch<React.SetStateAction<any>>) => {
       try {
         const data: any = await quickOrderService.getMasterCommonData({ messageType });
@@ -564,22 +605,33 @@ export const TripForm: React.FC<TripFormProps> = ({
       }
     };
 
-    fetchQcData("Trip Log QC1 Combo Init", setqcList1);
-    fetchQcData("Trip Log QC2 Combo Init", setqcList2);
-    fetchQcData("Trip Log QC3 Combo Init", setqcList3);
-    fetchQcData("Container Qty UOM Init", setCo2List);
-  }, []); // Only run once on mount
+    // Only fetch missing data
+    if (!props.qcList1) fetchQcData("Trip Log QC1 Combo Init", setLocalQcList1);
+    if (!props.qcList2) fetchQcData("Trip Log QC2 Combo Init", setLocalQcList2);
+    if (!props.qcList3) fetchQcData("Trip Log QC3 Combo Init", setLocalQcList3);
+    if (!props.co2List) fetchQcData("Container Qty UOM Init", setLocalCo2List);
+  }, [props.qcList1, props.qcList2, props.qcList3, props.co2List]); // Depend on props
+
+  // Debug QC lists
+  useEffect(() => {
+    console.log('TripForm: QC Lists Debug:');
+    console.log('qcList1:', qcList1);
+    console.log('qcList2:', qcList2);
+    console.log('qcList3:', qcList3);
+    console.log('co2List:', co2List);
+  }, [qcList1, qcList2, qcList3, co2List]);
 
   return (
     <>
       <DynamicPanel
-        key={`${tripType}-${qcList1?.length || 0}-${qcList2?.length || 0}-${qcList3?.length || 0}`}  // include QC list loading state
+        key={`${tripType}-${qcList1?.length || 0}-${qcList2?.length || 0}-${qcList3?.length || 0}-${tripData?.Header?.TrainNo || 'empty'}`}  // include tripData to force re-render when data changes
         ref={tripExecutionRef}
         panelId="trip-execution-panel"
         panelTitle="Trip Details"
         panelConfig={tripExecutionPanelConfig} // Use the memoized config
-      // initialData={formData} // Removed initialData prop
-      // onDataChange={handleDataChange} // Confirming it's commented out as per user
+        initialData={initialFormData} // Provide initial values for uncontrolled form
+      // Removed onDataChange to prevent re-renders
+      // Form data will be accessed via ref on save/submit
       />
       {/* Debug JSON View */}
       {/* <div className="mt-4 p-4 border rounded-md bg-gray-50">
@@ -590,4 +642,6 @@ export const TripForm: React.FC<TripFormProps> = ({
       </div> */}
     </>
   );
-};
+});
+
+TripForm.displayName = 'TripForm';

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
 import { TripExecutionLanding } from '@/components/ManageTrip/TripExecutionLanding';
+import { TripFormRef } from '@/components/ManageTrip/TripForm';
 import { useFooterStore } from '@/stores/footerStore';
 import { useToast } from '@/hooks/use-toast';
 import { manageTripStore } from '@/stores/mangeTripStore';
@@ -22,11 +23,25 @@ import { TripAmendModal } from '@/components/ManageTrip/TripAmendModal';
 
 
 const ManageTripExecution = () => {
-  const { loading, tripData, fetchTrip, saveTrip, confirmTrip } = manageTripStore();
+  const { loading, tripData, fetchTrip, saveTrip, confirmTrip, setTrip } = manageTripStore();
   const { config, setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditTrip = !!searchParams.get("id");
   const tripUniqueID = searchParams.get("id");
+  
+  // Ref to access TripForm data from main component
+  const tripFormRef = useRef<TripFormRef>(null);
+  
+  // Function to get current form data without saving
+  const getCurrentFormData = useCallback(() => {
+    if (tripFormRef.current) {
+      const formData = tripFormRef.current.getFormData();
+      console.log('Current TripForm data:', formData);
+      return formData;
+    }
+    console.warn('TripForm ref not available');
+    return {};
+  }, []);
   const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +137,20 @@ const ManageTripExecution = () => {
   // Handlers
   const tripSaveDraftHandler = useCallback(async () => {
     try {
+      // First, sync TripForm data to store before saving
+      if (tripFormRef.current) {
+        console.log('Syncing TripForm data before save...');
+        const formData = tripFormRef.current.syncFormDataToStore();
+        console.log('TripForm data synced:', formData);
+      }
+      
+      // Debug current trip data before save
+      console.log('Current tripData before save:', {
+        TripNo: tripData?.Header?.TripNo,
+        tripUniqueID: tripUniqueID,
+        isEditTrip: isEditTrip
+      });
+      
       let result: any = await saveTrip();
       if (result?.data?.IsSuccess) {
         // ✅ Show success message
@@ -132,8 +161,9 @@ const ManageTripExecution = () => {
         });
 
         // ✅ Re-fetch the trip data fresh from server
-        if (tripData?.Header?.TripNo) {
-          await fetchTrip(tripData.Header.TripNo);
+        let resp = JSON.parse(result?.data?.ResponseData);
+        if (resp?.TripID) {
+          await fetchTrip(resp?.TripID);
           console.log("🔄 Trip data refreshed after save.");
         }
       } else {
@@ -353,7 +383,7 @@ const ManageTripExecution = () => {
       ],
     });
     return () => resetFooter();
-  }, [tripData, setFooter, resetFooter, tripAmendHandler, tripConfirmHandler, tripSaveDraftHandler, isConfirmButtonDisabled]);
+  }, [tripData, setFooter, resetFooter, tripAmendHandler, tripConfirmHandler, tripSaveDraftHandler, isConfirmButtonDisabled, tripFormRef]);
 
   return (
     <AppLayout>
@@ -366,7 +396,8 @@ const ManageTripExecution = () => {
             {!loading && (
               <TripExecutionLanding
                 isEditTrip={isEditTrip}
-                tripData={tripData} // Pass dataset to child/>
+                tripData={tripData} // Pass dataset to child
+                tripFormRef={tripFormRef} // Pass ref to access TripForm
               />
             )}
             {/* Debug JSON View for tripData in ManageTripExecution */}

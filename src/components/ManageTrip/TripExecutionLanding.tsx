@@ -12,15 +12,16 @@ import { EnhancedSmartGrid } from './EnhancedSmartGrid';
 import { SummaryCardsGrid } from './SummaryCardsGrid';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
-import { TripForm } from './TripForm'; // Updated import for TripFormRef
+import { TripForm, TripFormRef } from './TripForm'; // Updated import for TripFormRef
 import { TripNavButtons } from './TripNavButtons';
 
 interface NewCreateTripProps {
   isEditTrip?: boolean;
   tripData?: any;
+  tripFormRef?: React.RefObject<any>; // Add ref prop
 }
 
-export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProps) => {
+export const TripExecutionLanding = ({ isEditTrip, tripData, tripFormRef }: NewCreateTripProps) => {
   const { fetchTrip, updateHeaderField } = manageTripStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +30,9 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
     "Trip Log QC2 Combo Init",
     "Trip Log QC3 Combo Init",
   ];
-  // Removed formData, tripType, qcList1, qcList2, qcList3 states
-  const tripExecutionRef = useRef<any>(null); // Updated ref type
+  // Use passed ref or create local one as fallback
+  const localTripFormRef = useRef<TripFormRef>(null);
+  const formRef = tripFormRef || localTripFormRef;
 
   // utils/formMappers.ts - Moved to TripForm.tsx
   // function buildTripExecutionFormData(tripData: any) {
@@ -85,9 +87,9 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
   //   // console.log('Panel config will be:', getTripExecutionConfig(tripType));
   // }, [tripType]);
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  // useEffect(() => {
+  //   fetchAll();
+  // }, []);
 
   // during Mount call the necessery apis
   const fetchAll = async () => {
@@ -282,6 +284,7 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
     console.log('tripData', tripData);
   };
 
+
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     sections: {
       top: {
@@ -312,8 +315,12 @@ export const TripExecutionLanding = ({ isEditTrip, tripData }: NewCreateTripProp
                  console.log('ReturnTripID config:', config.ReturnTripID);
                  return ( */}
               <TripForm
-                // tripData={tripData} // Now managed internally by TripForm
-                tripExecutionRef={tripExecutionRef}
+                ref={formRef}
+                // Optional: Pass QC lists as props to avoid duplicate API calls
+                // qcList1={qcList1}
+                // qcList2={qcList2}
+                // qcList3={qcList3}
+                // co2List={co2List}
               />
               <TripNavButtons
                 previousTrips={tripData?.Header?.PreviousTrip}
