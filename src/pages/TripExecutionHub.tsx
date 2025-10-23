@@ -54,6 +54,7 @@ export const TripExecutionHub = () => {
   const [popupBGColor, setPopupBGColor] = useState('');
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const [tripNo, setTripNo] = useState<string>('');
   const [fields, setFields] = useState([
     {
       type: "date",
@@ -176,8 +177,6 @@ export const TripExecutionHub = () => {
       }
     }
   };
-
-
 
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
@@ -671,7 +670,9 @@ export const TripExecutionHub = () => {
         {
           label: "Release",
           onClick: () => {
-            console.log("Release clicked");          },
+            console.log("Release clicked");
+            releseTripPlanning();
+          },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
         },
@@ -679,6 +680,7 @@ export const TripExecutionHub = () => {
           label: "Amend",
           onClick: () => {
             console.log("Amend clicked");
+            
           },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
@@ -799,11 +801,42 @@ export const TripExecutionHub = () => {
     setRowTripId(Array.from(newSelectedRowIds));
     console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
     console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+
+    // if(createTripPlan === 'true') {
+    //   getTripDataByID(newSelectedRowObjects?.[0].TripPlanID);
+    // }
   };
+
+  // const getTripDataByID = async (tripID: string) => {
+  //   const response: any = await tripPlanningService.getTripDataByID(tripID);
+  //   console.log("response ===", JSON.parse(response?.data?.ResponseData || "{}"));
+  //   const data = JSON.parse(response?.data?.ResponseData || "{}");
+  //   const tripNoFromAPI = data?.Header?.TripNo;
+  //   console.log("data ===", tripNoFromAPI);
+  //   setTripNo(tripNoFromAPI);
+    
+  //   // Also update the selected row objects with the TripNo if available
+  //   if (tripNoFromAPI && selectedRowObjects?.[0]) {
+  //     const updatedSelectedRowObjects = [...selectedRowObjects];
+  //     updatedSelectedRowObjects[0] = {
+  //       ...updatedSelectedRowObjects[0],
+  //       TripNo: tripNoFromAPI
+  //     };
+  //     setSelectedRowObjects(updatedSelectedRowObjects);
+  //     console.log("Updated selectedRowObjects with TripNo:", updatedSelectedRowObjects);
+  //   }
+    
+  //   return tripNoFromAPI;
+  // }
 
   useEffect(() => {
     console.log("rowTripId updated:", rowTripId);
   }, [rowTripId]);
+
+  // Debug useEffect to track tripNo changes
+  useEffect(() => {
+    console.log("🔍 tripNo updated:", tripNo);
+  }, [tripNo]);
 
   const handleSearchDataChange = (data: Record<string, any>) => {
     setSearchData(data);
@@ -1279,22 +1312,108 @@ export const TripExecutionHub = () => {
 
   const confirmTripPlanning = async () => {
     console.log("confirmTripPlanning ===", selectedRowObjects);
+    console.log("confirmTripPlanning ===", tripNo);
+    const messageType = "Manage Trip Plan - Confirm Trip";
+    
+    // Get TripNo from selected row data or state
+    // let currentTripNo = selectedRowObjects?.[0]?.TripNo || tripNo;
+    // console.log("Using TripNo:", currentTripNo);
+    
+    // // If TripNo is not available, try to get it from the API
+    // if (!currentTripNo && selectedRowObjects?.[0]?.TripPlanID) {
+    //   console.log("TripNo not available, fetching from API...");
+    //   try {
+    //     currentTripNo = await getTripDataByID(selectedRowObjects[0].TripPlanID);
+    //     console.log("Fetched TripNo from API:", currentTripNo);
+    //   } catch (error) {
+    //     console.error("Error fetching TripNo:", error);
+    //   }
+    // }
+        
     let payload = {
-      "TripPlanID": selectedRowObjects.map(row => row.TripPlanID),
-      "ConfirmationDate": new Date().toISOString(),
-      "ConfirmationBy": "ramcouser",
-      "ConfirmationReason": "Trip confirmed by user",
+      "Header": {
+        "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+        // "TripOU": selectedRowObjects[0].TripOU,
+        // "TripStatus": selectedRowObjects[0].TripStatus,
+        // "TripStatusDescription": selectedRowObjects[0].TripStatusDescription,
+        // "Modeflag": "Nochange",
+        "Cancellation": null,
+        "ShortClose": null,
+        "Amendment": null
+      }
     }
-    const response = await tripPlanningService.confirmTripPlanning(payload);
-    console.log("response ===", response);
+    console.log("Payload:", payload);
+    
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Confirmed",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Confirmation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    }    
   }
   const releseTripPlanning = async () => {
     console.log("releaseTripPlanning ===");
-
+    const messageType = "Manage Trip Plan - Release Trip";
+    let payload = {
+      "Header": {
+        "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+        "Cancellation": null,
+        "ShortClose": null,
+        "Amendment": null
+      }
+    }
+    console.log("Payload:", payload);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Released",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Release Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    } 
   }
   const amendTripPlanning = async () => {
     console.log("amendTripPlanning ===");
-
+    const messageType = "Manage Trip Plan - Amend Trip";
+    let payload = {
+      "Header": {
+        "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+        "Cancellation": null,
+        "ShortClose": null,
+        "Amendment": null
+      }
+    }
+    console.log("Payload:", payload);
   }
 
   return (

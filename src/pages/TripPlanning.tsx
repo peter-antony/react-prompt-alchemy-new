@@ -333,7 +333,7 @@ const TripPlanning = () => {
   const fetchRefDocType = fetchMasterData("Ref Doc Type(Tug) Init");
 
   const fetchSupplier = fetchMasterData("Supplier Init");
-  const fetchSchedule = fetchMasterData("Container Type Init");
+  const fetchSchedule = fetchMasterData("Schedule ID Init");
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
@@ -943,7 +943,7 @@ const TripPlanning = () => {
                                 fetchOptions={fetchSupplier}
                                 value={supplier}
                                 onChange={(value) => setSupplier(value as string)}
-                                placeholder="VEN0000001-Supplier Name"
+                                placeholder=""
                               />
                             </div>
                           </div>
@@ -955,7 +955,7 @@ const TripPlanning = () => {
                                 fetchOptions={fetchSchedule}
                                 value={schedule}
                                 onChange={(value) => setSchedule(value as string)}
-                                placeholder="SCH-0000001-Schedule Name"
+                                placeholder=""
                               />
                             </div>
                           </div>
@@ -1095,7 +1095,7 @@ const TripPlanning = () => {
                                       fetchOptions={fetchSupplier}
                                       value={supplier}
                                       onChange={(value) => setSupplier(value as string)}
-                                      placeholder="VEN0000001-Supplier Name"
+                                      placeholder=""
                                     />
                                   </div>
                                 </div>
@@ -1107,7 +1107,7 @@ const TripPlanning = () => {
                                       fetchOptions={fetchSchedule}
                                       value={schedule}
                                       onChange={(value) => setSchedule(value as string)}
-                                      placeholder="SCH-0000001-Schedule Name"
+                                      placeholder=""
                                     />
                                   </div>
                                 </div>

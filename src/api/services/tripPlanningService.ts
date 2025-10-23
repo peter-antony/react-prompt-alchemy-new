@@ -214,26 +214,49 @@ export const tripPlanningService = {
 
     confirmTripPlanning: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
+      
+      // Remove messageType from RequestPayload
+      const { messageType, ...requestPayloadData } = params || {};
+      
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
           Role: "ramcorole",
           OUID: 4,
           MessageID: "12345",
-          MessageType: "Manage Trip Plan - Confirm Trip",
+          MessageType: messageType,
         },
-        RequestPayload: params,
-        // Pagination: {
-        //   PageNumber: 1,
-        //   PageSize: 10,
-        //   TotalRecords: 200,
-        // },
+        RequestPayload: requestPayloadData,
       });
       const requestBody = {
         RequestData: requestPayload,
       };
       const response = await apiClient.post(
         `${API_ENDPOINTS.TRIPS.CREATE_TRIP_CO}`,
+        requestBody
+      );
+      return response.data;
+    },
+
+    getTripDataByID: async (params?: any): Promise<ApiResponse<Trip>> => {
+      console.log("params ", params);
+      const requestPayload = JSON.stringify({
+        context: {
+          UserID: "ramcouser",
+          Role: "ramcorole",
+          OUID: 4,
+          MessageID: "12345",
+          MessageType: "TripLog GetTripID",
+        },
+        SearchCriteria: {
+          TripID: params,
+        },
+      });
+      const requestBody = {
+        RequestData: requestPayload,
+      };
+      const response = await apiClient.post(
+        `${API_ENDPOINTS.TRIPS.GET_TRIP}`,
         requestBody
       );
       return response.data;
