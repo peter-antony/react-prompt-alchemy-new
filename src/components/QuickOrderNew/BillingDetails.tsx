@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { DynamicPanelProps, PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { InputDropDown } from '../Common/InputDropDown';
+import { convertDotToComma } from '@/utils/formatter';
 
 interface BillingDetailsPanelProps {
   panelId: string;
@@ -183,7 +184,7 @@ export const BillingDetailsPanel: React.FC<BillingDetailsPanelProps> = ({
         </Card>
         <Card className="p-4 border-0 bg-indigo-50">
           <p className="text-sm text-gray-600">Net Amount</p>
-          <p className="text-lg font-semibold text-[#7C3AED]">€ {formData.NetAmount}</p>
+          <p className="text-lg font-semibold text-[#7C3AED]">€ {convertDotToComma(formData.NetAmount)}</p>
         </Card>
       </div>
 

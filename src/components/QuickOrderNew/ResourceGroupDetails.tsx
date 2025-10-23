@@ -45,6 +45,7 @@ import { json } from 'stream/consumers';
 import { quickOrderService } from '@/api/services/quickOrderService';
 // import { combineInputDropdownValue } from '@/utils/inputDropdown';
 import { useToast } from '@/hooks/use-toast';
+import { convertCommaToDot, convertDotToComma } from '@/utils/formatter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ResourceGroupDetailsFormProps {
@@ -130,6 +131,12 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             newObj[key] = val;
           }
         }
+
+        // convert NetAmount from comma to dot format for backend
+        if (newObj.NetAmount !== undefined) {
+          newObj.NetAmount = convertCommaToDot(newObj.NetAmount);
+        }
+
         console.log("splitDropdowns ===", newObj);
         return newObj;
       };
@@ -727,6 +734,12 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             newObj[key] = val;
           }
         }
+
+        // convert NetAmount from comma to dot format for backend
+        if (newObj.NetAmount !== undefined) {
+          newObj.NetAmount = convertCommaToDot(newObj.NetAmount);
+        }
+
         console.log("splitDropdowns ===", newObj);
         return newObj;
       };
@@ -1567,7 +1580,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     if (!data || typeof data !== 'object') return {};
     return {
       ContractPrice: data.ContractPrice ?? 0,
-      NetAmount: data.NetAmount ?? 0,
+      NetAmount: convertDotToComma(data.NetAmount ?? 0), // convert dot to comma for display
       BillingType: data.BillingType ?? '',
       UnitPrice: data.UnitPrice ?? 0,
       BillingQty: data.BillingQty ?? 0,
