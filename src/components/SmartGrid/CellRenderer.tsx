@@ -163,6 +163,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  const getPipedValue = (row: any, descKey: string, codeKey: string) => {
+    const desc = row?.[descKey];
+    const code = row?.[codeKey];
+    if (desc && code) return `${desc} || ${code}`;
+    return desc || code || "-";
+  };
+
   const renderTextPipedData = () => {
     return (
       <div className="text-sm min-w-0">
@@ -194,6 +201,19 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
             {row?.ArrivalPointDescription && row?.ArrivalPoint
               ? `${row.ArrivalPointDescription} || ${row.ArrivalPoint}`
               : row?.ArrivalPointDescription || row?.ArrivalPoint}
+          </div>
+        )}
+        {column.key === "LegFromDescription" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {/* {row?.LegFromDescription && row?.LegFrom
+              ? `${row.LegFromDescription} || ${row.LegFrom}`
+              : row?.LegFromDescription || row?.LegFrom} */}
+              {getPipedValue(row, 'LegFromDescription', 'LegFrom')}
+          </div>
+        )}
+        {column.key === "LegToDescription" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {getPipedValue(row, 'LegToDescription', 'LegTo')}
           </div>
         )}
       </div>

@@ -70,31 +70,76 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       order: 2
     },
     {
-      key: "TripID",
-      label: "Trip ID",
-      type: "Text",
+      key: "LegBehaviour",
+      label: "Leg Behaviour",
+      type: "Badge",
       sortable: true,
       editable: false,
       subRow: false,
       order: 3
     },
+    // {
+    //   key: "TripID",
+    //   label: "Trip ID",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 3
+    // },
+    // {
+    //   key: "TripStatus",
+    //   label: "Trip Status",
+    //   type: "Badge",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 4
+    // },
     {
-      key: "TripStatus",
-      label: "Trip Status",
-      type: "Badge",
+      key: "LegFromDescription",
+      label: "Leg From",
+      type: "TextPipedData",
       sortable: true,
       editable: false,
       subRow: false,
       order: 4
     },
+    // {
+    //   key: "LegFromDescription",
+    //   label: "Leg From Description",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 5
+    // },
     {
-      key: "LegFromDescription",
-      label: "Leg From & To",
+      key: "LegToDescription",
+      label: "Leg To",
+      type: "TextPipedData",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 8
+    },
+    // {
+    //   key: "LegToDescription",
+    //   label: "Leg To Description",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 7
+    // },
+    {
+      key: "TransportMode",
+      label: "Transport Mode",
       type: "Text",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 5
+      order: 8
     },
     {
       key: "DepartureDate",
@@ -103,7 +148,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       sortable: true,
       editable: false,
       subRow: false,
-      order: 6
+      order: 9
     },
     {
       key: "ArrivalDate",
@@ -112,35 +157,275 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       sortable: true,
       editable: false,
       subRow: false,
-      order: 9
-    },
-    {
-      key: "Resources",
-      label: "Resources",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
       order: 10
     },
     {
-      key: "TrainParams",
-      label: "Train Para.",
+      key: "ShuntedOutEquipmentNo",
+      label: "Shunted out equipment No",
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: false,
-      order: 11
+      subRow: true,
     },
     {
-      key: "Actions",
-      label: "Actions",
+      key: "ShuntedOutDate",
+      label: "Shunted out date",
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: false,
-      order: 11
-    }
+      subRow: true,
+    },
+    {
+      key: "Service",
+      label: "Service",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ServiceDescription",
+      label: "Service Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SubService",
+      label: "Sub service",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SubServiceDescription",
+      label: "Sub Service Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerID",
+      label: "Customer ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerName",
+      label: "Customer Name",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ReturnOrForward",
+      label: "Return or forward",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ContractID",
+      label: "Contract ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ContractDescription",
+      label: "Contract Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ScheduleInfo",
+      label: "Schedule Info",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "OnewayOrRoundtrip",
+      label: "One way / Roundtrip",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "LoadType",
+      label: "Load Type",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CreationDate",
+      label: "Creation Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerOrderDate",
+      label: "Customer Order Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "RequiredWagonQuantity",
+      label: "Wagon quantity Required",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PlannedWagonQuantity",
+      label: "Planned wagon quantity",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PendingWagonQuantity",
+      label: "Pending wagon quantity",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "NHM",
+      label: "NHM",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ProductWeight",
+      label: "Product weight",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ProductWeightUOM",
+      label: "Product Weight UOM",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "RIDForEmptyWagon",
+      label: "RID for Empty Wagon",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SupplierID",
+      label: "Supplier ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SupplierName",
+      label: "Supplier Name",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SpecialInstruction",
+      label: "Special instructions",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "Equipment",
+      label: "Equipment",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PassNo",
+      label: "Pass No.",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ExecutiveCarrier",
+      label: "Executive carrier",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ScheduleNo",
+      label: "Schedule No.",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    // {
+    //   key: "Resources",
+    //   label: "Resources",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 10
+    // },
+    // {
+    //   key: "TrainParams",
+    //   label: "Train Para.",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 11
+    // },
+    // {
+    //   key: "Actions",
+    //   label: "Actions",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 11
+    // }
   ];
 
   const fetchTripsAgain = async () => {
@@ -199,13 +484,13 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
             'Invoice Created': 'badge-blue rounded-2xl',
             'Invoice Approved': 'badge-fresh-green rounded-2xl'
           };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
         return {
           ...row,
-          Status: {
-            value: row.Status,
-            variant: getStatusColorLocal(row.Status),
+          CustomerOrderStatus: {
+            value: row.CustomerOrderStatus,
+            variant: getStatusColorLocal(row.CustomerOrderStatus),
           },
           TripBillingStatus: {
             value: row.TripBillingStatus,
@@ -320,10 +605,10 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
 
     setSelectedRowIds(newSelectedRowIds);
     setSelectedRowObjects(uniqueSelectedObjects);
-    
+
     // Notify parent component about the selection change
     notifyParentOfSelection(uniqueSelectedObjects);
-    
+
     console.log('Selected row objects:', uniqueSelectedObjects);
     console.log('Selected row IDs:', Array.from(newSelectedRowIds));
   };
@@ -511,7 +796,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
             'Invoice Created': 'badge-blue rounded-2xl',
             'Invoice Approved': 'badge-fresh-green rounded-2xl'
           };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
 
         return {
@@ -587,7 +872,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
   const dynamicServerFilters: ServerFilter[] = [
     {
       key: 'CustomerID',
-      label: 'Customer',
+      label: 'Customer ID',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("Customer Init"),
       // multiSelect: true
@@ -605,8 +890,13 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       label: 'Location',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("Location Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
+    },
+     {
+      key: 'PlanDate',
+      label: 'Plan Date',
+      type: 'date'
     },
     {
       key: 'Customer Name',

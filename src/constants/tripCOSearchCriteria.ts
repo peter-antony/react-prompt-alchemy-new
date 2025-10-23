@@ -28,7 +28,7 @@ export interface SearchCriteria {
 
 // Default object you can import and reuse anywhere
 export const tripCOSearchCriteria: SearchCriteria = {
-  PlanningProfileID: "",
+  PlanningProfileID: "General-GMBH",
   Location: "",
   PlanDate: "",
   CustomerOrderProfileID: "",
