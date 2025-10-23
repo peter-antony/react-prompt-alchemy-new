@@ -31,7 +31,7 @@ export const tripCOSearchCriteria: SearchCriteria = {
   PlanningProfileID: "General-GMBH",
   Location: "",
   PlanDate: "",
-  CustomerOrderProfileID: "",
+  CustomerOrderProfileID: "BR-ALL",
   CustomerID: "",
   ContractID: "",
   DepartureDate: "",

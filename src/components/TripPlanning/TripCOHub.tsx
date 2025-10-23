@@ -19,7 +19,7 @@ import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
 
-export const TripCOHub = ({onCustomerOrderClick }) => {
+export const TripCOHub = ({ onCustomerOrderClick }) => {
   const pageSize = 15;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -427,7 +427,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
       if (Object.keys(filtersForThisGrid).length > 0) {
         // ✅ Build criteria from store filters
         searchCriteria = buildSearchCriteria(filtersForThisGrid);
-      } 
+      }
       else {
         // ✅ Fallback defaults
         searchCriteria = buildSearchCriteria(
@@ -438,7 +438,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
           //   }
           //
           tripCOSearchCriteria
-      );
+        );
       }
       console.log('searchCriteria: ', searchCriteria);
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
@@ -553,7 +553,7 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
     if (columnKey === 'TripPlanID') {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
-    if(columnKey == "CustomerOrderID") {
+    if (columnKey == "CustomerOrderID") {
       onCustomerOrderClick(value);
     }
   };
@@ -688,30 +688,65 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
   // }
 
   const buildSearchCriteria = (latestFilters: Record<string, any> = {}): SearchCriteria => {
-  const criteria: SearchCriteria = { ...tripCOSearchCriteria };
+    const criteria: SearchCriteria = { ...tripCOSearchCriteria };
 
-  // If incoming filters are already a flat criteria object (like your defaults)
-  const isAlreadyCriteria = Object.values(latestFilters).every(
-    (val) => typeof val === "string" || typeof val === "number" || val === ""
-  );
+    // If incoming filters are already a flat criteria object (like your defaults)
+    const isAlreadyCriteria = Object.values(latestFilters).every(
+      (val) => typeof val === "string" || typeof val === "number" || val === ""
+    );
 
-  if (isAlreadyCriteria) {
-    // Directly merge and return
-    return { ...criteria, ...latestFilters };
-  }
-
-  // Otherwise, treat it like filter objects
-  for (const [key, value] of Object.entries(latestFilters)) {
-    const filter: any = value;
-    if (filter && typeof filter === "object" && "value" in filter) {
-      (criteria as any)[key] = filter.value;
-    } else {
-      (criteria as any)[key] = value;
+    if (isAlreadyCriteria) {
+      // Directly merge and return
+      return { ...criteria, ...latestFilters };
     }
-  }
 
-  return criteria;
-};
+    // Otherwise, treat it like filter objects
+    for (const [key, value] of Object.entries(latestFilters)) {
+      const filter: any = value;
+      let filterValue;
+
+      if (filter && typeof filter === "object" && "value" in filter) {
+        filterValue = filter.value;
+      } else {
+        filterValue = value;
+      }
+
+      // Convert Yes/No values to 1/0 for specific boolean fields
+      if (key === 'IsShowForwardCustomerOrders' ||
+        key === 'IsShowReturnCustomerOrders' ||
+        key === 'IsShuntedOutWagons') {
+        if (filterValue === 'Yes') {
+          (criteria as any)[key] = '1';
+        } else if (filterValue === 'No') {
+          (criteria as any)[key] = '0';
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      // Handle date range fields - split into From/To fields
+      else if (key === 'CustomerOrderCreationDate') {
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          (criteria as any)['CustomerOrderFromCreationDate'] = filterValue.from;
+          (criteria as any)['CustomerOrderToCreationDate'] = filterValue.to;
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      else if (key === 'CustomerOrderDate') {
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          (criteria as any)['CustomerOrderDateFrom'] = filterValue.from;
+          (criteria as any)['CustomerTOrderDateTo'] = filterValue.to;
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      else {
+        (criteria as any)[key] = filterValue;
+      }
+    }
+
+    return criteria;
+  };
 
   const handleServerSideSearch = async () => {
     // // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
@@ -720,7 +755,27 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
     //   return;
     // }
     console.log('LatestFilters Trip log: ', latestFilters);
-    console.log('buildSearchCriteria: ', buildSearchCriteria(latestFilters));
+    const finalSearchCriteria = buildSearchCriteria(latestFilters);
+    console.log('buildSearchCriteria: ', finalSearchCriteria);
+
+    // Debug: Log Yes/No field conversions
+    const yesNoFields = ['IsShowForwardCustomerOrders', 'IsShowReturnCustomerOrders', 'IsShuntedOutWagons'];
+    yesNoFields.forEach(field => {
+      if (latestFilters[field]) {
+        console.log(`${field}: "${latestFilters[field]?.value || latestFilters[field]}" -> "${finalSearchCriteria[field]}"`);
+      }
+    });
+
+    // Debug: Log date range field conversions
+    const dateRangeFields = ['CustomerOrderCreationDate', 'CustomerOrderDate'];
+    dateRangeFields.forEach(field => {
+      if (latestFilters[field]) {
+        const filterValue = latestFilters[field]?.value || latestFilters[field];
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          console.log(`${field}: {from: "${filterValue.from}", to: "${filterValue.to}"} -> CustomerOrderFrom${field.replace('CustomerOrder', '')}: "${finalSearchCriteria[`CustomerOrderFrom${field.replace('CustomerOrder', '')}`]}" & CustomerOrderTo${field.replace('CustomerOrder', '')}: "${finalSearchCriteria[`CustomerOrderTo${field.replace('CustomerOrder', '')}`]}"`);
+        }
+      }
+    });
     const plannedDate = latestFilters["PlannedExecutionDate"];
     // if (!plannedDate?.value?.from || !plannedDate?.value?.to) {
     //   toast({
@@ -730,8 +785,6 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
     //   });
     //   return;
     // }
-
-    const finalSearchCriteria = buildSearchCriteria(latestFilters);
 
     try {
       gridState.setLoading(true);
@@ -880,52 +933,62 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
       label: 'Plan Date',
       type: 'date'
     },
+    // {
+    //   key: 'Customer Name',
+    //   label: 'Customer Name',
+    //   type: 'lazyselect', // lazy-loaded dropdown
+    //   fetchOptions: makeLazyFetcher("Customer Init"),
+    //   hideSearch: true,
+    //   disableLazyLoading: true
+    // },
     {
-      key: 'Customer Name',
-      label: 'Customer Name',
-      type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Customer Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      key: 'ContractID',
+      label: 'Contract ID',
+      type: 'lazyselect',
+      fetchOptions: makeLazyFetcher('Contract Init'),
     },
     {
-      key: 'Contract ID', label: 'Contract ID', type: 'text'
+      key: 'DepartureDate',
+      label: 'Departure Date',
+      type: 'date'
     },
     {
-      key: 'Contract Description', label: 'Contract Description', type: 'text'
+      key: 'ArrivalDate',
+      label: 'Arrival Date',
+      type: 'date'
     },
     {
-      key: 'CustomerOrderProfileID', label: 'Customer Order ID', type: 'lazyselect',
+      key: 'CustomerOrderID', label: 'Customer Order ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CustomerOrder Number Init")
     },
     {
-      key: 'Departurepoint', label: 'Departure Location', type: 'lazyselect',
+      key: 'DepartureLocation', label: 'Departure Location', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Departure Init")
     },
+    // {
+    //   key: 'Departure Location Description', label: 'Departure Location Description', type: 'lazyselect',
+    //   fetchOptions: makeLazyFetcher("Departure Init")
+    // },
     {
-      key: 'Departure Location Description', label: 'Departure Location Description', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Departure Init")
-    },
-    {
-      key: 'ArrivalPoint', label: 'Arrival Location', type: 'lazyselect',
+      key: 'ArrivalLocation', label: 'Arrival Location', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Arrival Init")
     },
     {
-      key: 'leg ID', label: 'leg ID', type: 'lazyselect',
+      key: 'LegID', label: 'leg ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Leg ID Init")
     },
+    // {
+    //   key: 'leg Description', label: 'leg Description', type: 'lazyselect',
+    //   fetchOptions: makeLazyFetcher("Leg ID Init")
+    // },
     {
-      key: 'leg Description', label: 'leg Description', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Leg ID Init")
-    },
-    {
-      key: 'Transport Mode', label: 'Transport Mode', type: 'lazyselect',
+      key: 'TransportMode', label: 'Transport Mode', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Transport Mode Init"),
       hideSearch: true,
       disableLazyLoading: true
     },
     {
-      key: 'CO Status', label: 'CO Status', type: 'lazyselect',
+      key: 'COStatus', label: 'CO Status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Customer Order status Init"),
       hideSearch: true,
       disableLazyLoading: true
@@ -937,7 +1000,17 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
       disableLazyLoading: true
     },
     {
-      key: 'Customer Ref. No.', label: 'Customer Ref. No.', type: 'lazyselect',
+      key: 'CustomerOrderCreationDate',
+      label: 'Creation Date Between',
+      type: 'dateRange',
+    },
+    {
+      key: 'CustomerOrderDate',
+      label: 'Customer Order Date',
+      type: 'dateRange',
+    },
+    {
+      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
       hideSearch: true,
       disableLazyLoading: true
@@ -949,17 +1022,42 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
       disableLazyLoading: true
     },
     {
-      key: 'LoadType', label: 'Trip Load Type', type: 'lazyselect',
+      key: 'LoadType', label: 'Load Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Load type Init"),
       hideSearch: true,
       disableLazyLoading: true
     },
     {
-      key: 'Shunted out equipment', label: 'Shunted out equipment', type: 'lazyselect',
+      key: 'ShuntedOutEquipment', label: 'Shunted out equipment', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Equipment ID Init")
     },
-    { key: 'Shunted out wagons', label: 'Shunted out wagons', type: 'text'},
-    { key: 'Show Forward', label: 'Show Forward', type: 'text' }
+    {
+      key: 'IsShuntedOutWagons',
+      label: 'Shunted out wagons',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    },
+    {
+      key: 'IsShowForwardCustomerOrders',
+      label: 'Show Forward',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    },
+    {
+      key: 'IsShowReturnCustomerOrders',
+      label: 'Show Return',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    }
   ];
 
   const clearAllFilters = async () => {
@@ -969,57 +1067,57 @@ export const TripCOHub = ({onCustomerOrderClick }) => {
   return (
     <>
       {/* <AppLayout> */}
-        <div className="">
-          <div className="container-fluid mx-auto space-y-6">
-            {/* Grid Container */}
-            <div className={`rounded-lg ${config.visible ? 'pb-4' : ''}`}>
-              {/* Selected rows indicator */}
-              <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
-                columns={gridState.columns}
-                data={gridState.gridData}
-                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                showGroupingDropdown={true}
-                editableColumns={['plannedStartEndDateTime']}
-                paginationMode="pagination"
-                onLinkClick={handleLinkClick}
-                onUpdate={handleUpdate}
-                onSubRowToggle={gridState.handleSubRowToggle}
-                selectedRows={selectedRows}
-                onSelectionChange={handleRowSelection}
-                onRowClick={handleRowClick}
-                // onFiltersChange={setCurrentFilters}
-                onSearch={handleServerSideSearch}
-                onClearAll={clearAllFilters}
-                // rowClassName={(row: any, index: number) =>
-                //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-                // }
-                rowClassName={(row: any, index: number) => {
-                  return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                }}
-                nestedRowRenderer={renderSubRow}
-                // configurableButtons={gridConfigurableButtons}
-                showDefaultConfigurableButton={false}
-                gridTitle="Trip Customer Orders"
-                recordCount={gridState.gridData.length}
-                showCreateButton={true}
-                searchPlaceholder="Search"
-                clientSideSearch={true}
-                showSubHeaders={false}
-                hideAdvancedFilter={true}
-                customPageSize={pageSize}
-                hideCheckboxToggle={true}
-                serverFilters={dynamicServerFilters}
-                showFilterTypeDropdown={false}
-                showServersideFilter={showServersideFilter}
-                onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                gridId={gridId}
-                userId="current-user"
-                api={filterService}
-              />
-            </div>
+      <div className="">
+        <div className="container-fluid mx-auto space-y-6">
+          {/* Grid Container */}
+          <div className={`rounded-lg ${config.visible ? 'pb-4' : ''}`}>
+            {/* Selected rows indicator */}
+            <SmartGridWithGrouping
+              key={`grid-${gridState.forceUpdate}`}
+              columns={gridState.columns}
+              data={gridState.gridData}
+              groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+              showGroupingDropdown={true}
+              editableColumns={['plannedStartEndDateTime']}
+              paginationMode="pagination"
+              onLinkClick={handleLinkClick}
+              onUpdate={handleUpdate}
+              onSubRowToggle={gridState.handleSubRowToggle}
+              selectedRows={selectedRows}
+              onSelectionChange={handleRowSelection}
+              onRowClick={handleRowClick}
+              // onFiltersChange={setCurrentFilters}
+              onSearch={handleServerSideSearch}
+              onClearAll={clearAllFilters}
+              // rowClassName={(row: any, index: number) =>
+              //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+              // }
+              rowClassName={(row: any, index: number) => {
+                return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+              }}
+              nestedRowRenderer={renderSubRow}
+              // configurableButtons={gridConfigurableButtons}
+              showDefaultConfigurableButton={false}
+              gridTitle="Trip Customer Orders"
+              recordCount={gridState.gridData.length}
+              showCreateButton={true}
+              searchPlaceholder="Search"
+              clientSideSearch={true}
+              showSubHeaders={false}
+              hideAdvancedFilter={true}
+              customPageSize={pageSize}
+              hideCheckboxToggle={true}
+              serverFilters={dynamicServerFilters}
+              showFilterTypeDropdown={false}
+              showServersideFilter={showServersideFilter}
+              onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+              gridId={gridId}
+              userId="current-user"
+              api={filterService}
+            />
           </div>
         </div>
+      </div>
       {/* </AppLayout> */}
 
       {/* Add a beautiful loading overlay when fetching data from API */}

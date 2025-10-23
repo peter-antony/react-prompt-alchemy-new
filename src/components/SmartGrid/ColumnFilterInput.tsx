@@ -418,7 +418,7 @@ export function ColumnFilterInput({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-7 text-xs justify-start text-left font-normal",
+                  "h-7 text-xs justify-start text-left font-normal w-full",
                   !localValue && "text-muted-foreground"
                 )}
               >
@@ -431,7 +431,7 @@ export function ColumnFilterInput({
                 mode="single"
                 selected={localValue ? new Date(localValue) : undefined}
                 onSelect={(date) => {
-                  handleValueChange(date ? date.toISOString() : '');
+                  handleValueChange(date ? date.toLocaleDateString('en-CA') : '');
                   setShowDatePicker(false);
                 }}
                 initialFocus

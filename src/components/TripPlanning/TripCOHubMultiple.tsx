@@ -721,10 +721,45 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
     // Otherwise, treat it like filter objects
     for (const [key, value] of Object.entries(latestFilters)) {
       const filter: any = value;
+      let filterValue;
+
       if (filter && typeof filter === "object" && "value" in filter) {
-        (criteria as any)[key] = filter.value;
+        filterValue = filter.value;
       } else {
-        (criteria as any)[key] = value;
+        filterValue = value;
+      }
+
+      // Convert Yes/No values to 1/0 for specific boolean fields
+      if (key === 'IsShowForwardCustomerOrders' ||
+        key === 'IsShowReturnCustomerOrders' ||
+        key === 'IsShuntedOutWagons') {
+        if (filterValue === 'Yes') {
+          (criteria as any)[key] = '1';
+        } else if (filterValue === 'No') {
+          (criteria as any)[key] = '0';
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      // Handle date range fields - split into From/To fields
+      else if (key === 'CustomerOrderCreationDate') {
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          (criteria as any)['CustomerOrderFromCreationDate'] = filterValue.from;
+          (criteria as any)['CustomerOrderToCreationDate'] = filterValue.to;
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      else if (key === 'CustomerOrderDate') {
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          (criteria as any)['CustomerOrderDateFrom'] = filterValue.from;
+          (criteria as any)['CustomerTOrderDateTo'] = filterValue.to;
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      else {
+        (criteria as any)[key] = filterValue;
       }
     }
 
@@ -738,7 +773,27 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
     //   return;
     // }
     console.log('LatestFilters Trip log: ', latestFilters);
-    console.log('buildSearchCriteria: ', buildSearchCriteria(latestFilters));
+    const finalSearchCriteria = buildSearchCriteria(latestFilters);
+    console.log('buildSearchCriteria: ', finalSearchCriteria);
+
+    // Debug: Log Yes/No field conversions
+    const yesNoFields = ['IsShowForwardCustomerOrders', 'IsShowReturnCustomerOrders', 'IsShuntedOutWagons'];
+    yesNoFields.forEach(field => {
+      if (latestFilters[field]) {
+        console.log(`${field}: "${latestFilters[field]?.value || latestFilters[field]}" -> "${finalSearchCriteria[field]}"`);
+      }
+    });
+
+    // Debug: Log date range field conversions
+    const dateRangeFields = ['CustomerOrderCreationDate', 'CustomerOrderDate'];
+    dateRangeFields.forEach(field => {
+      if (latestFilters[field]) {
+        const filterValue = latestFilters[field]?.value || latestFilters[field];
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          console.log(`${field}: {from: "${filterValue.from}", to: "${filterValue.to}"} -> CustomerOrderFrom${field.replace('CustomerOrder', '')}: "${finalSearchCriteria[`CustomerOrderFrom${field.replace('CustomerOrder', '')}`]}" & CustomerOrderTo${field.replace('CustomerOrder', '')}: "${finalSearchCriteria[`CustomerOrderTo${field.replace('CustomerOrder', '')}`]}"`);
+        }
+      }
+    });
     const plannedDate = latestFilters["PlannedExecutionDate"];
     // if (!plannedDate?.value?.from || !plannedDate?.value?.to) {
     //   toast({
@@ -748,8 +803,6 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
     //   });
     //   return;
     // }
-
-    const finalSearchCriteria = buildSearchCriteria(latestFilters);
 
     try {
       gridState.setLoading(true);
@@ -893,57 +946,67 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       // hideSearch: true,
       // disableLazyLoading: true
     },
-     {
+    {
       key: 'PlanDate',
       label: 'Plan Date',
       type: 'date'
     },
+    // {
+    //   key: 'Customer Name',
+    //   label: 'Customer Name',
+    //   type: 'lazyselect', // lazy-loaded dropdown
+    //   fetchOptions: makeLazyFetcher("Customer Init"),
+    //   hideSearch: true,
+    //   disableLazyLoading: true
+    // },
     {
-      key: 'Customer Name',
-      label: 'Customer Name',
-      type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Customer Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      key: 'ContractID',
+      label: 'Contract ID',
+      type: 'lazyselect',
+      fetchOptions: makeLazyFetcher('Contract Init'),
     },
     {
-      key: 'Contract ID', label: 'Contract ID', type: 'text'
+      key: 'DepartureDate',
+      label: 'Departure Date',
+      type: 'date'
     },
     {
-      key: 'Contract Description', label: 'Contract Description', type: 'text'
+      key: 'ArrivalDate',
+      label: 'Arrival Date',
+      type: 'date'
     },
     {
-      key: 'CustomerOrderProfileID', label: 'Customer Order ID', type: 'lazyselect',
+      key: 'CustomerOrderID', label: 'Customer Order ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CustomerOrder Number Init")
     },
     {
-      key: 'Departurepoint', label: 'Departure Location', type: 'lazyselect',
+      key: 'DepartureLocation', label: 'Departure Location', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Departure Init")
     },
+    // {
+    //   key: 'Departure Location Description', label: 'Departure Location Description', type: 'lazyselect',
+    //   fetchOptions: makeLazyFetcher("Departure Init")
+    // },
     {
-      key: 'Departure Location Description', label: 'Departure Location Description', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Departure Init")
-    },
-    {
-      key: 'ArrivalPoint', label: 'Arrival Location', type: 'lazyselect',
+      key: 'ArrivalLocation', label: 'Arrival Location', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Arrival Init")
     },
     {
-      key: 'leg ID', label: 'leg ID', type: 'lazyselect',
+      key: 'LegID', label: 'leg ID', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Leg ID Init")
     },
+    // {
+    //   key: 'leg Description', label: 'leg Description', type: 'lazyselect',
+    //   fetchOptions: makeLazyFetcher("Leg ID Init")
+    // },
     {
-      key: 'leg Description', label: 'leg Description', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Leg ID Init")
-    },
-    {
-      key: 'Transport Mode', label: 'Transport Mode', type: 'lazyselect',
+      key: 'TransportMode', label: 'Transport Mode', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Transport Mode Init"),
       hideSearch: true,
       disableLazyLoading: true
     },
     {
-      key: 'CO Status', label: 'CO Status', type: 'lazyselect',
+      key: 'COStatus', label: 'CO Status', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Customer Order status Init"),
       hideSearch: true,
       disableLazyLoading: true
@@ -955,7 +1018,17 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       disableLazyLoading: true
     },
     {
-      key: 'Customer Ref. No.', label: 'Customer Ref. No.', type: 'lazyselect',
+      key: 'CustomerOrderCreationDate',
+      label: 'Creation Date Between',
+      type: 'dateRange',
+    },
+    {
+      key: 'CustomerOrderDate',
+      label: 'Customer Order Date',
+      type: 'dateRange',
+    },
+    {
+      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
       hideSearch: true,
       disableLazyLoading: true
@@ -967,17 +1040,42 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       disableLazyLoading: true
     },
     {
-      key: 'LoadType', label: 'Trip Load Type', type: 'lazyselect',
+      key: 'LoadType', label: 'Load Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Load type Init"),
       hideSearch: true,
       disableLazyLoading: true
     },
     {
-      key: 'Shunted out equipment', label: 'Shunted out equipment', type: 'lazyselect',
+      key: 'ShuntedOutEquipment', label: 'Shunted out equipment', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Equipment ID Init")
     },
-    { key: 'Shunted out wagons', label: 'Shunted out wagons', type: 'text' },
-    { key: 'Show Forward', label: 'Show Forward', type: 'text' }
+    {
+      key: 'IsShuntedOutWagons',
+      label: 'Shunted out wagons',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    },
+    {
+      key: 'IsShowForwardCustomerOrders',
+      label: 'Show Forward',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    },
+    {
+      key: 'IsShowReturnCustomerOrders',
+      label: 'Show Return',
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ]
+    }
   ];
 
   const clearAllFilters = async () => {
