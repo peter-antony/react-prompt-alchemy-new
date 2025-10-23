@@ -15,6 +15,7 @@ import { filterService, quickOrderService } from '@/api/services';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { defaultSearchCriteria, SearchCriteria } from "@/constants/tripHubSearchCriteria";
 import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
+import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
@@ -54,6 +55,11 @@ export const TripExecutionHub = () => {
   const [popupBGColor, setPopupBGColor] = useState('');
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  
+  // New modal states for createTripPlan actions
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [amendModalOpen, setAmendModalOpen] = useState(false);
+  const [currentActionType, setCurrentActionType] = useState<'cancel' | 'amend'>('cancel');
   const [tripNo, setTripNo] = useState<string>('');
   const [fields, setFields] = useState([
     {
@@ -180,7 +186,7 @@ export const TripExecutionHub = () => {
 
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
-    { label: "Transport Planning and Execution", active: true },
+    { label: "Manage Trip Plan", active: true },
     // { label: 'Trip Execution Management', active: false },
   ];
 
@@ -653,7 +659,8 @@ export const TripExecutionHub = () => {
           label: "Cancel",
           onClick: () => {
             console.log("Cancel clicked");
-            setPopupOpen(true);
+            setCurrentActionType('cancel');
+            setCancelModalOpen(true);
           },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
@@ -680,7 +687,8 @@ export const TripExecutionHub = () => {
           label: "Amend",
           onClick: () => {
             console.log("Amend clicked");
-            
+            setCurrentActionType('amend');
+            setAmendModalOpen(true);
           },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
@@ -1402,6 +1410,115 @@ export const TripExecutionHub = () => {
       console.error("Error confirming trip:", error);
     } 
   }
+
+  // New submit handlers for createTripPlan actions
+  const handleCancelTripPlanSubmit = async (formFields: any) => {
+    console.log("Cancel Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Cancel API:', mappedObj);
+    const messageType = "Manage Trip Plan - cancel Trip";
+    // Create payload for cancel action
+    let payload = {
+      "Header": {
+        "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+        "Cancellation": {
+          "CancellationRequestedDateTime": mappedObj.RequestedDateTime || "",
+          "CancellationReasonCode": mappedObj.ReasonCode || "",
+          "CancellationReasonCodeDescription": mappedObj.ReasonDescription || "",
+          "CancellationRemarks": mappedObj.Remarks || ""
+        },
+        "ShortClose": null,
+        "Amendment": null
+      }
+    };
+    console.log('Cancel Payload:', payload);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Cancelled",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Cancellation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    } 
+  };
+
+  const handleAmendTripPlanSubmit = async (formFields: any) => {
+    console.log("Amend Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Amend API:', mappedObj);
+    
+    // Create payload for amend action
+    const amendPayload = {
+      "Header": {
+        "TripNo": tripNo,
+        "Cancellation": null,
+        "ShortClose": null,
+        "Amendment": {
+          "AmendmentRequestedDateTime": mappedObj.RequestedDateTime || new Date().toISOString(),
+          "AmendmentReasonCode": mappedObj.ReasonCode || "",
+          "AmendmentReasonCodeDescription": mappedObj.ReasonDescription || "",
+          "AmendmentRemarks": mappedObj.Remarks || ""
+        }
+      }
+    };
+    
+    console.log('Amend Payload:', amendPayload);
+    
+    try {
+      const response = await tripPlanningService.confirmTripPlanning({
+        payload: amendPayload,
+        messageType: "TripLog AmendTrip"
+      });
+      
+      console.log("Amend response:", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      
+      if (resourceStatus) {
+        toast({
+          title: "✅ Trip Amended",
+          description: "Trip has been amended successfully.",
+          variant: "default",
+        });
+        setAmendModalOpen(false);
+      } else {
+        toast({
+          title: "⚠️ Amendment Failed",
+          description: (response as any)?.data?.Message || "Failed to amend trip.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error amending trip:", error);
+      toast({
+        title: "⚠️ Error",
+        description: "Failed to amend trip. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const amendTripPlanning = async () => {
     console.log("amendTripPlanning ===");
     const messageType = "Manage Trip Plan - Amend Trip";
@@ -1579,6 +1696,31 @@ export const TripExecutionHub = () => {
       // submitColor={popupBGColor}
       />
 
+      {/* New TripPlan Action Modals */}
+      <TripPlanActionModal
+        open={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        title="Cancel Trip Plan"
+        icon={<Ban className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleCancelTripPlanSubmit}
+        submitLabel="Cancel Trip"
+        actionType="cancel"
+      />
+
+      <TripPlanActionModal
+        open={amendModalOpen}
+        onClose={() => setAmendModalOpen(false)}
+        title="Amend Trip Plan"
+        icon={<NotebookPen className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleAmendTripPlanSubmit}
+        submitLabel="Amend Trip"
+        actionType="amend"
+      />
+
       {/* Add a beautiful loading overlay when fetching data from API */}
       {apiStatus === 'loading' && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
@@ -1588,49 +1730,6 @@ export const TripExecutionHub = () => {
         </div>
       )}
 
-      {/* <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto p-6 space-y-6">
-          
-          <div className="bg-white rounded-lg shadow-sm">
-            <style>{`
-            .smart-grid-row-selected {
-              background-color: #eff6ff !important;
-              border-left: 4px solid #3b82f6 !important;
-            }
-            .smart-grid-row-selected:hover {
-              background-color: #dbeafe !important;
-            }
-          `}</style>
-            <SmartGrid
-              key={`grid-${gridState.forceUpdate}`}
-              columns={gridState.columns}
-              data={
-                gridState.gridData.length > 0
-                  ? gridState.gridData
-                  : processedData
-              }
-              paginationMode="pagination"
-              onLinkClick={handleLinkClick}
-              onUpdate={handleUpdate}
-              onSubRowToggle={gridState.handleSubRowToggle}
-              selectedRows={selectedRows}
-              onSelectionChange={handleRowSelection}
-              rowClassName={(row: any, index: number) =>
-                selectedRows.has(index) ? "smart-grid-row-selected" : ""
-              }
-              nestedRowRenderer={renderSubRow}
-              configurableButtons={gridConfigurableButtons}
-              showDefaultConfigurableButton={false}
-              gridTitle="Trip Plans"
-              recordCount={
-                gridState.gridData.length > 0
-                  ? gridState.gridData.length
-                  : processedData.length
-              }
-            />
-          </div>
-        </div>
-      </div> */}
     </>
   );
 };

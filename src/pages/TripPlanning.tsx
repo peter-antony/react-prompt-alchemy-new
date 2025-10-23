@@ -251,7 +251,7 @@ const TripPlanning = () => {
     
     // Check if this customer order already exists in the array
     const existingIndex = existingCustomerOrderArray.findIndex(item => 
-      item.CustomerOrderID === (typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList?.CustomerOrderID : '')
+      item.CustomerOrderID === ((customerOrderList as any)?.CustomerOrderID || '')
     );
     
     let updatedCustomerOrderArray;
@@ -337,10 +337,20 @@ const TripPlanning = () => {
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
-  const [customerOrderList, setcustomerOrderList] = useState<string | undefined>();
+  const [customerOrderList, setcustomerOrderList] = useState<any>();
   const handleCustomerOrderSelect = (customerOrderList: any) => {
     console.log("✅ Received from child:", customerOrderList);
-    setcustomerOrderList(customerOrderList);
+    
+    // Remove Status and TripBillingStatus, and add ModeFlag to the customerOrderList object
+    const { Status, TripBillingStatus, ...rest } = customerOrderList;
+    const updatedCustomerOrderList = {
+      ...rest,
+      "ModeFlag": "Insert"
+    };
+    
+    console.log("✅ Updated customerOrderList with ModeFlag (removed Status and TripBillingStatus):", updatedCustomerOrderList);
+    
+    setcustomerOrderList(updatedCustomerOrderList);
     setAddResourcesFlag(true);
   }
 
@@ -355,9 +365,17 @@ const TripPlanning = () => {
       return;
     }
     
-    // Handle non-empty selection
-    console.log('Selected Customer Orders:', selectedRows);
-    setSelectedRows(selectedRows);
+    // Add ModeFlag to each selected row and remove Status and TripBillingStatus
+    const updatedSelectedRows = selectedRows.map(row => {
+      const { Status, TripBillingStatus, ...rest } = row;
+      return {
+        ...rest,
+        "ModeFlag": "Insert"
+      };
+    });
+    
+    console.log('✅ Updated Customer Orders with ModeFlag:', updatedSelectedRows);
+    setSelectedRows(updatedSelectedRows);
     
     // You can process the selected rows here
     // For example:
@@ -631,7 +649,7 @@ const TripPlanning = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Location</label>
+                <label className="text-sm font-medium">Location <span className="text-red-500 ml-1">*</span></label>
                 <DynamicLazySelect
                   fetchOptions={fetchLocations}
                   value={location}
@@ -874,7 +892,7 @@ const TripPlanning = () => {
                       {/* Trip Planning Customer Order Hub */}
                       {/* <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/> */}
                       <TripCOHubMultiple onCustomerOrderClick={handleMultipleCustomerOrders}/>
-                    </div>
+                      </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">
                      
@@ -882,13 +900,13 @@ const TripPlanning = () => {
                       {/* <div className="bg-card border border-border rounded-lg overflow-hidden">
                         <div className="p-4">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                               <span className="p-3 rounded-xl bg-[#EBE9FE] mr-3">
                                 <Truck className="h-5 w-5" />
                               </span>
                               <h2 className="text-lg font-semibold">Resources</h2>
-                            </div>
-                          </div>
+                      </div>
+                    </div>
                         </div>
 
                         <div className="p-4 space-y-4">
@@ -899,8 +917,8 @@ const TripPlanning = () => {
                               value={supplier}
                               onChange={(value) => setSupplier(value as string)}
                               placeholder=""
-                            />
-                          </div>
+                        />
+                      </div>
 
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Schedule</label>
@@ -915,17 +933,17 @@ const TripPlanning = () => {
                           <Button variant="outline" className="w-full text-emerald-600 border-emerald-300 hover:bg-emerald-50">
                             <Plus className="h-4 w-4 mr-2" />
                             More Resources
-                          </Button>
+                      </Button>
 
                           <div className="border-t border-border pt-4 mt-6 space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-muted-foreground">Total Orders:</span>
                               <span className="font-semibold">12</span>
-                            </div>
+                    </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-muted-foreground">Assigned:</span>
                               <span className="font-semibold text-emerald-600">5</span>
-                            </div>
+                  </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-muted-foreground">Unassigned:</span>
                               <span className="font-semibold text-orange-600">7</span>
@@ -1177,15 +1195,15 @@ const TripPlanning = () => {
                       {/* Toggle */}
                       <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
                         <div className="flex items-center gap-4">
-                          <Switch 
-                            id="consolidated-trip-inline"
-                            checked={consolidatedTrip}
-                            onCheckedChange={setConsolidatedTrip}
-                            className="data-[state=checked]:bg-orange-500"
-                          />
-                          <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
-                            Create single trip with consolidated orders
-                          </Label>
+                        <Switch 
+                          id="consolidated-trip-inline"
+                          checked={consolidatedTrip}
+                          onCheckedChange={setConsolidatedTrip}
+                          className="data-[state=checked]:bg-orange-500"
+                        />
+                        <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
+                          Create single trip with consolidated orders
+                        </Label>
                         </div>
                         <div className='flex items-center gap-4'>
                           {/* Debug Info */}
@@ -1196,7 +1214,7 @@ const TripPlanning = () => {
                             Create Trip
                           </button>
                         </div>
-                      </div>                      
+                      </div>
 
                       {/* Grid */}
                       {/* <SmartGrid
