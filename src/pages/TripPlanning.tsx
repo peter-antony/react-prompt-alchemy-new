@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus } from 'lucide-react';
+import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -25,10 +25,12 @@ import { useNavigate } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
 import { useToast } from '@/hooks/use-toast';
 import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
+import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 
 const TripPlanning = () => {
   const navigate = useNavigate();
   const [tripNo, setTripNo] = useState('');
+  const [tripStatus, setTripStatus] = useState('');
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
@@ -461,6 +463,9 @@ const TripPlanning = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        console.log("parsedResponse ====", parsedResponse?.Header?.TripNo);
+        setTripNo(parsedResponse?.Header?.TripNo);
+        setTripStatus(parsedResponse?.Header?.TripStatus);
         // Reload TripCOHub component
         setTripCOMulipleHubReloadKey(prev => prev + 1);
         console.log("🔄 TripCOHub component reloaded");
@@ -605,6 +610,165 @@ const TripPlanning = () => {
     }
   }
 
+  const confirmTripPlanning = async () => {
+    // console.log("confirmTripPlanning ===", selectedRowObjects);
+    console.log("confirmTripPlanning ===", customerOrderList);
+    const messageType = "Manage Trip Plan - Confirm Trip";
+    let Header = {
+      "TripNo": customerOrderList.TripID,
+      "Cancellation": null,
+      "ShortClose": null,
+      "Amendment": null
+    }
+    console.log("Payload:", Header);
+    
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Confirmed",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Confirmation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    }    
+  }
+
+  const releseTripPlanning = async () => {
+    console.log("releaseTripPlanning ===");
+    const messageType = "Manage Trip Plan - Release Trip";
+    let Header = {
+        "TripNo": customerOrderList.TripID,
+        "Cancellation": null,
+        "ShortClose": null,
+        "Amendment": null
+      
+    }
+    console.log("Payload:", Header);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Released",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Release Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    } 
+  }
+
+  const [amendModalOpen, setAmendModalOpen] = useState(false);
+  const [currentActionType, setCurrentActionType] = useState<'cancel' | 'amend'>('cancel');
+  const [fields, setFields] = useState([
+    {
+      type: "date",
+      label: "Requested Date and Time",
+      name: "date",
+      placeholder: "Select Requested Date and Time",
+      value: "",
+      required: true,
+      mappedName: 'Canceldatetime'
+    },
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'ReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'Remarks'
+    },
+  ]);
+  const handleFieldChange = (name, value) => {
+    console.log('Field changed:', name, value);
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+  const openAmendPopup = () => {
+    setCurrentActionType('amend');
+    setAmendModalOpen(true);
+  }
+
+  const handleAmendTripPlanSubmit = async (formFields: any) => {
+    console.log("Amend Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Amend API:', mappedObj);
+    const messageType = "Manage Trip Plan - Amend Trip";
+    // Create payload for amend action
+    const Header = {
+      "TripNo": customerOrderList.TripID,
+      "Cancellation": null,
+      "ShortClose": null,
+      "Amendment": {
+        "AmendmentRequestedDateTime": mappedObj.RequestedDateTime || "",
+        "AmendmentReasonCode": mappedObj.ReasonCode || "",
+        "AmendmentReasonCodeDescription": mappedObj.ReasonDescription || "",
+        "AmendmentRemarks": mappedObj.Remarks || ""
+      }
+    };
+    console.log('Amend Payload:', Header);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Amended",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Amendment Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    } 
+  };
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -616,9 +780,25 @@ const TripPlanning = () => {
           {/* Trip No. Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-semibold">Trip No.</h1>
+              <div className='flex items-center gap-2'>
+                <h1 className="text-2xl font-semibold">Trip No.</h1>
+                <div className="relative max-w-md">
+                  <Input 
+                    placeholder="Trip No."
+                    value={tripNo}
+                    onChange={(e) => setTripNo(e.target.value)}
+                    className="pr-10"
+                  />
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+                {tripStatus && (
+                  <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">
+                    {tripStatus}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
-              <Button 
+                <Button 
                   variant="outline" 
                   className="text-primary border-primary"
                   onClick={handleManageTripsClick}
@@ -629,16 +809,6 @@ const TripPlanning = () => {
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-            
-            <div className="relative max-w-md">
-              <Input 
-                placeholder="Trip No."
-                value={tripNo}
-                onChange={(e) => setTripNo(e.target.value)}
-                className="pr-10"
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
           </div>
 
@@ -1135,31 +1305,52 @@ const TripPlanning = () => {
                               <div className=''>
                                 <div>
                                   <div className="text-xs text-muted-foreground mb-1">Supplier</div>
-                                  <div className="text-sm font-medium">
-                                    <DynamicLazySelect
-                                      fetchOptions={fetchSupplier}
-                                      value={supplier}
-                                      onChange={(value) => setSupplier(value as string)}
-                                      placeholder=""
-                                    />
+                                  <div className='flex items-center gap-2'>
+                                    <div className="text-sm font-medium w-full">
+                                      <DynamicLazySelect
+                                        fetchOptions={fetchSupplier}
+                                        value={supplier}
+                                        onChange={(value) => setSupplier(value as string)}
+                                        placeholder=""
+                                      />
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => {
+                                        handleOpenResourceDrawer('Supplier');
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </div>
-
                                 <div className='mt-3'>
                                   <div className="text-xs text-muted-foreground mb-1">Schedule</div>
-                                  <div className="text-sm font-medium">
-                                    <DynamicLazySelect
-                                      fetchOptions={fetchSchedule}
-                                      value={schedule}
-                                      onChange={(value) => setSchedule(value as string)}
-                                      placeholder=""
-                                    />
+                                  <div className='flex items-center gap-2'>
+                                    <div className="text-sm font-medium w-full">
+                                      <DynamicLazySelect
+                                        fetchOptions={fetchSchedule}
+                                        value={schedule}
+                                        onChange={(value) => setSchedule(value as string)}
+                                        placeholder=""
+                                      />
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => {
+                                        handleOpenResourceDrawer('Supplier');
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </div>
                               </div>
                               {[
                                 { title: 'Resources', subtitle: 'Selected Resources', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                                { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                                // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
                                 { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
@@ -1244,8 +1435,18 @@ const TripPlanning = () => {
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
                           </div> */}
+                          {/* {customerOrderList?.TripID} */}
                           <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                             Create Trip
+                          </button>
+                          <button onClick={confirmTripPlanning} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Confirm
+                          </button>
+                          <button onClick={releseTripPlanning} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Release
+                          </button>
+                          <button onClick={openAmendPopup} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Amend
                           </button>
                         </div>
                       </div>
@@ -1291,6 +1492,18 @@ const TripPlanning = () => {
           <div className="text-sm text-gray-500 mt-1">Fetching {currentResourceType.toLowerCase()} data from server, please wait.</div>
         </div>
       )}
+
+      <TripPlanActionModal
+        open={amendModalOpen}
+        onClose={() => setAmendModalOpen(false)}
+        title="Amend Trip Plan"
+        icon={<NotebookPen className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleAmendTripPlanSubmit}
+        submitLabel="Amend Trip"
+        actionType="amend"
+      />
     </AppLayout>
   );
 };
