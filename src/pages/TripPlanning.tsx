@@ -769,6 +769,11 @@ const TripPlanning = () => {
     } 
   };
 
+  const isDisabled = !customerOrderList?.TripID;
+  const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${
+    isDisabled ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+  }`;
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -1241,9 +1246,20 @@ const TripPlanning = () => {
                         {consolidatedTrip ? 'Switch off' : 'Switch on'}
                       </span> */}
                     </div>
-                    <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                      Create Trip
-                    </button>
+                    <div className='flex items-center gap-4'>
+                      <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                        Create Trip
+                      </button>
+                      <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
+                        Confirm
+                      </button>
+                      <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
+                        Release
+                      </button>
+                      <button onClick={openAmendPopup} disabled={!tripNo} className={buttonClass}>
+                        Amend
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -1420,32 +1436,31 @@ const TripPlanning = () => {
                       {/* Toggle */}
                       <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
                         <div className="flex items-center gap-4">
-                        <Switch 
-                          id="consolidated-trip-inline"
-                          checked={consolidatedTrip}
-                          onCheckedChange={setConsolidatedTrip}
-                          className="data-[state=checked]:bg-orange-500"
-                        />
-                        <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
-                          Create single trip with consolidated orders
-                        </Label>
+                          <Switch 
+                            id="consolidated-trip-inline"
+                            checked={consolidatedTrip}
+                            onCheckedChange={setConsolidatedTrip}
+                            className="data-[state=checked]:bg-orange-500"
+                          />
+                          <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
+                            Create single trip with consolidated orders
+                          </Label>
                         </div>
                         <div className='flex items-center gap-4'>
                           {/* Debug Info */}
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
                           </div> */}
-                          {/* {customerOrderList?.TripID} */}
                           <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                             Create Trip
                           </button>
-                          <button onClick={confirmTripPlanning} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                          <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>
-                          <button onClick={releseTripPlanning} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                          <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Release
                           </button>
-                          <button onClick={openAmendPopup} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                          <button onClick={openAmendPopup} disabled={isDisabled} className={buttonClass}>
                             Amend
                           </button>
                         </div>
