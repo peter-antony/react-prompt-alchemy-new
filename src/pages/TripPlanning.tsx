@@ -53,6 +53,8 @@ const TripPlanning = () => {
   const [selectedArrCOData, setSelectedArrCOData] = useState<any[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
+  const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
+  const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
@@ -449,6 +451,9 @@ const TripPlanning = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        // Reload TripCOHub component
+        setTripCOMulipleHubReloadKey(prev => prev + 1);
+        console.log("🔄 TripCOHub component reloaded");
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -572,6 +577,10 @@ const TripPlanning = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        
+        // Reload TripCOHub component
+        setTripCOHubReloadKey(prev => prev + 1);
+        console.log("🔄 TripCOHub component reloaded");
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -579,6 +588,7 @@ const TripPlanning = () => {
           description: (response as any)?.data?.Message || "Failed to save changes.",
           variant: "destructive",
         });
+        
       }
     } catch (error) {
       console.error("Error updating nested data:", error);
@@ -891,7 +901,7 @@ const TripPlanning = () => {
                     <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
                       {/* Trip Planning Customer Order Hub */}
                       {/* <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/> */}
-                      <TripCOHubMultiple onCustomerOrderClick={handleMultipleCustomerOrders}/>
+                      <TripCOHubMultiple key={tripCOMulipleHubReloadKey} onCustomerOrderClick={handleMultipleCustomerOrders}/>
                       </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">
@@ -1106,7 +1116,7 @@ const TripPlanning = () => {
                                 </div>
                               </div> */}
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
+                              <TripCOHub key={tripCOHubReloadKey} onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>
                             {/* Resources Cards - Right */}
                             <div className="w-1/4 space-y-3">
@@ -1196,7 +1206,7 @@ const TripPlanning = () => {
                                 </div>
                               </div> */}
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
+                              <TripCOHub key={tripCOHubReloadKey} onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>
                           </>
                         )}
