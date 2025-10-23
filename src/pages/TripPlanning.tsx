@@ -46,7 +46,7 @@ const TripPlanning = () => {
   const [consolidatedTrip, setConsolidatedTrip] = useState(false);
   // Generic resource drawer state
   const [isResourceDrawerOpen, setIsResourceDrawerOpen] = useState(false);
-  const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle'>('Equipment');
+  const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule'>('Equipment');
   const [selectedResources, setSelectedResources] = useState<any[]>([]);
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [newCustomerData, setNewCustomerData] = useState<any[]>([]);
@@ -129,7 +129,7 @@ const TripPlanning = () => {
   // Handle equipment selection
 
   // Handle resource drawer open/close
-  const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle') => {
+  const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
     console.log(`Opening ${resourceType.toLowerCase()} drawer`);
     setCurrentResourceType(resourceType);
     setIsLoadingResource(true); // Show loader
@@ -176,6 +176,11 @@ const TripPlanning = () => {
             searchCriteria: finalSearchCriteria
           });
           break;
+        case 'Schedule':
+          response = await tripPlanningService.getSchedulesList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
         default:
           throw new Error(`Unknown resource type: ${resourceType}`);
       }
@@ -202,6 +207,9 @@ const TripPlanning = () => {
         case 'Vehicle':
           setResourceData(resourceDetails.Vehicles || []);
           break;
+        case 'Schedule':
+          setResourceData(resourceDetails.Schedule || []);
+          break;
       }
       
       console.log("data ==== after set", resourceDetails);
@@ -225,13 +233,14 @@ const TripPlanning = () => {
 
     // Transform the new resources into the required ResourceDetails format
     const transformedResourceDetails = resources.map(resource => ({
-      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
       "ResourceType": resource.resourceType || resource.ResourceType || 
         (resource.EquipmentID ? 'Equipment' : 
          resource.VendorID ? 'Agent' : 
          resource.DriverCode ? 'Driver' : 
          resource.HandlerID ? 'Handler' : 
-         resource.VehicleID ? 'Vehicle' : 'Unknown'),
+         resource.VehicleID ? 'Vehicle' : 
+         resource.SupplierID ? 'Schedule' : 'Unknown'),
       "Service": resource.Service || "",
       "ServiceDescription": resource.ServiceDescription || "",
       "SubService": resource.SubService || "",
@@ -408,13 +417,14 @@ const TripPlanning = () => {
     const processedCluster = splitAtPipe(cluster);
 
     const transformedResourceDetails = selectedResources.map(resource => ({
-      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
+      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
       "ResourceType": resource.resourceType || resource.ResourceType || 
         (resource.EquipmentID ? 'Equipment' : 
          resource.VendorID ? 'Agent' : 
          resource.DriverCode ? 'Driver' : 
          resource.HandlerID ? 'Handler' : 
-         resource.VehicleID ? 'Vehicle' : 'Unknown'),
+         resource.VehicleID ? 'Vehicle' :
+         resource.SupplierID ? 'Schedule' : 'Unknown'),
       "Service": resource.Service || "",
       "ServiceDescription": resource.ServiceDescription || "",
       "SubService": resource.SubService || "",
@@ -1022,6 +1032,8 @@ const TripPlanning = () => {
                                       handleOpenResourceDrawer('Equipment');
                                     } else if (resource.title === 'Supplier') {
                                       handleOpenResourceDrawer('Supplier');
+                                    } else if (resource.title === 'Schedule') {
+                                      handleOpenResourceDrawer('Schedule');
                                     } else if (resource.title === 'Driver') {
                                       handleOpenResourceDrawer('Driver');
                                     } else if (resource.title === 'Handler') {
@@ -1179,6 +1191,8 @@ const TripPlanning = () => {
                                             handleOpenResourceDrawer('Equipment');
                                           } else if (resource.title === 'Supplier') {
                                             handleOpenResourceDrawer('Supplier');
+                                          } else if (resource.title === 'Schedule') {
+                                            handleOpenResourceDrawer('Schedule');
                                           } else if (resource.title === 'Driver') {
                                             handleOpenResourceDrawer('Driver');
                                           } else if (resource.title === 'Handler') {

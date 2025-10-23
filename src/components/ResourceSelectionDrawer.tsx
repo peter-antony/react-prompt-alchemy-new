@@ -13,7 +13,7 @@ interface ResourceSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onAddResource: (formattedData?: { ResourceID: string; ResourceType: string }[]) => void;
-  resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle';
+  resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule';
   resourceData?: any[];
   isLoading?: boolean;
 }
@@ -243,6 +243,43 @@ const resourceConfigs = {
         label: 'Vehicle Status',
         type: 'Badge' as GridColumnType,
         width: 120,
+        editable: false
+      },
+    ]
+  },
+  Schedule: {
+    messageType: 'GetSchedules-CreateTripPlan',
+    title: 'Select Schedule',
+    buttonText: 'Add Schedule to CO',
+    gridTitle: 'Schedule',
+    idField: 'SupplierID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'SupplierID',
+        label: 'Supplier ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ScheduleNo',
+        label: 'Schedule No',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'FromLocation',
+        label: 'From Location',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'ToLocation',
+        label: 'To Location',
+        type: 'Text' as GridColumnType,
+        width: 150,
         editable: false
       },
     ]
@@ -483,6 +520,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           return 'Handler';
         case 'VehicleID':
           return 'Vehicle';
+        case 'SupplierID':
+          return 'Schedule';
         default:
           return resourceType; // fallback to prop value
       }
