@@ -445,7 +445,7 @@ const TripPlanning = () => {
       if (resourceStatus) {
         console.log("Trip data updated in store");
         toast({
-          title: "✅ Saved Successfully",
+          title: "✅ Trip Created Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
@@ -568,7 +568,7 @@ const TripPlanning = () => {
       if (resourceStatus) {
         console.log("Trip data updated in store");
         toast({
-          title: "✅ Saved Successfully",
+          title: "✅ Trip Created Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
@@ -979,17 +979,17 @@ const TripPlanning = () => {
                           </div>
                         </div>
                         {[
-                          { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                          { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
-                          { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
-                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
-                          { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
+                          { title: 'Resources', subtitle: 'Selected Resources', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                          { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
+                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '', iconColor: 'text-amber-600' },
                           { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
                         ].map((resource) => {
                           const Icon = resource.icon;
                           return (
-                            <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                            <Card key={resource.title} className="p-4 hover:shadow-md mb-3 transition-shadow cursor-pointer">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
@@ -1100,6 +1100,11 @@ const TripPlanning = () => {
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
+                              {/* <div className='flex items-center justify-between px-4 py-3 bg-blue-50 mb-2'>
+                                <div className='text-sm text-blue-700'>
+                                  <span className='ml-2 text-xs'>Selected Customer Order: (TP/2021/00024908)</span>
+                                </div>
+                              </div> */}
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>
@@ -1131,12 +1136,12 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Resources', subtitle: 'Selected Resources', count: '3', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                                { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '1', iconColor: 'text-cyan-600' },
-                                { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '3', iconColor: 'text-lime-600' },
-                                { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '2', iconColor: 'text-red-600' },
-                                { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '1', iconColor: 'text-orange-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '6', iconColor: 'text-amber-600' },
+                                { title: 'Resources', subtitle: 'Selected Resources', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                                { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
+                                { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '', iconColor: 'text-amber-600' },
                                 { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
                               ].map((resource) => {
                                 const Icon = resource.icon;
@@ -1185,6 +1190,11 @@ const TripPlanning = () => {
                         ) : (
                           <>
                             <div className='flex-1 bg-card'>
+                              {/* <div className='flex items-center justify-between px-4 py-3 bg-blue-50 mb-2'>
+                                <div className='text-sm text-blue-700'>
+                                  <span className='ml-2 text-xs'>Selected Customer Order: (TP/2021/00024908)</span>
+                                </div>
+                              </div> */}
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>

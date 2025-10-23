@@ -111,9 +111,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
         if (f.type === "select") {
           try {
             // Use different messageType based on action type
-            const messageType = actionType === "cancel" 
-              ? "Cancellation Reason Init" 
-              : "Amendment Reason Init";
+            const messageType = "Cancellation Reason Init";
               
             const res: any = await quickOrderService.getMasterCommonData({
               messageType: messageType,
@@ -214,7 +212,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
                     <SelectValue placeholder={field.placeholder || "Select"} />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
-                    {selectOptions.map((opt: any, index) => (
+                    {selectOptions?.map((opt: any, index) => (
                       opt.id && opt.name ? (
                         <SelectItem key={`reason-${index}`} value={String(opt.id)}>
                           {opt.id} || {opt.name}

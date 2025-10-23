@@ -1338,8 +1338,8 @@ export const TripExecutionHub = () => {
     //   }
     // }
         
-    let payload = {
-      "Header": {
+    
+      let Header = {
         "TripNo": selectedRowObjects?.[0]?.TripPlanID,
         // "TripOU": selectedRowObjects[0].TripOU,
         // "TripStatus": selectedRowObjects[0].TripStatus,
@@ -1349,11 +1349,11 @@ export const TripExecutionHub = () => {
         "ShortClose": null,
         "Amendment": null
       }
-    }
-    console.log("Payload:", payload);
+    
+    console.log("Payload:", Header);
     
     try{
-      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1378,17 +1378,16 @@ export const TripExecutionHub = () => {
   const releseTripPlanning = async () => {
     console.log("releaseTripPlanning ===");
     const messageType = "Manage Trip Plan - Release Trip";
-    let payload = {
-      "Header": {
+    let Header = {
         "TripNo": selectedRowObjects?.[0]?.TripPlanID,
         "Cancellation": null,
         "ShortClose": null,
         "Amendment": null
-      }
+      
     }
-    console.log("Payload:", payload);
+    console.log("Payload:", Header);
     try{
-      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1421,23 +1420,21 @@ export const TripExecutionHub = () => {
     });
     console.log('Mapped Object for Cancel API:', mappedObj);
     const messageType = "Manage Trip Plan - cancel Trip";
-    // Create payload for cancel action
-    let payload = {
-      "Header": {
-        "TripNo": selectedRowObjects?.[0]?.TripPlanID,
-        "Cancellation": {
-          "CancellationRequestedDateTime": mappedObj.RequestedDateTime || "",
-          "CancellationReasonCode": mappedObj.ReasonCode || "",
-          "CancellationReasonCodeDescription": mappedObj.ReasonDescription || "",
-          "CancellationRemarks": mappedObj.Remarks || ""
-        },
-        "ShortClose": null,
-        "Amendment": null
-      }
-    };
-    console.log('Cancel Payload:', payload);
+
+    let Header = {
+      "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+      "Cancellation": {
+        "CancellationRequestedDateTime": mappedObj.RequestedDateTime || "",
+        "CancellationReasonCode": mappedObj.ReasonCode || "",
+        "CancellationReasonCodeDescription": mappedObj.ReasonDescription || "",
+        "CancellationRemarks": mappedObj.Remarks || ""
+      },
+      "ShortClose": null,
+      "Amendment": null
+    }
+    console.log("Payload:", Header);
     try{
-      const response = await tripPlanningService.confirmTripPlanning({payload, messageType});
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1457,7 +1454,7 @@ export const TripExecutionHub = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
-    } 
+    }    
   };
 
   const handleAmendTripPlanSubmit = async (formFields: any) => {
@@ -1468,55 +1465,42 @@ export const TripExecutionHub = () => {
       mappedObj[mappedName] = field.value;
     });
     console.log('Mapped Object for Amend API:', mappedObj);
-    
+    const messageType = "Manage Trip Plan - Amend Trip";
     // Create payload for amend action
-    const amendPayload = {
-      "Header": {
-        "TripNo": tripNo,
-        "Cancellation": null,
-        "ShortClose": null,
-        "Amendment": {
-          "AmendmentRequestedDateTime": mappedObj.RequestedDateTime || new Date().toISOString(),
-          "AmendmentReasonCode": mappedObj.ReasonCode || "",
-          "AmendmentReasonCodeDescription": mappedObj.ReasonDescription || "",
-          "AmendmentRemarks": mappedObj.Remarks || ""
-        }
+    const Header = {
+      "TripNo": selectedRowObjects?.[0]?.TripPlanID,
+      "Cancellation": null,
+      "ShortClose": null,
+      "Amendment": {
+        "AmendmentRequestedDateTime": mappedObj.RequestedDateTime || "",
+        "AmendmentReasonCode": mappedObj.ReasonCode || "",
+        "AmendmentReasonCodeDescription": mappedObj.ReasonDescription || "",
+        "AmendmentRemarks": mappedObj.Remarks || ""
       }
     };
-    
-    console.log('Amend Payload:', amendPayload);
-    
-    try {
-      const response = await tripPlanningService.confirmTripPlanning({
-        payload: amendPayload,
-        messageType: "TripLog AmendTrip"
-      });
-      
-      console.log("Amend response:", response);
+    console.log('Amend Payload:', Header);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+      console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
-      
       if (resourceStatus) {
+        console.log("Trip data updated in store");
         toast({
           title: "✅ Trip Amended",
-          description: "Trip has been amended successfully.",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
-        setAmendModalOpen(false);
       } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
         toast({
-          title: "⚠️ Amendment Failed",
-          description: (response as any)?.data?.Message || "Failed to amend trip.",
+          title: "⚠️ Trip Amendment Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Error amending trip:", error);
-      toast({
-        title: "⚠️ Error",
-        description: "Failed to amend trip. Please try again.",
-        variant: "destructive",
-      });
-    }
+      console.error("Error confirming trip:", error);
+    } 
   };
 
   const amendTripPlanning = async () => {
