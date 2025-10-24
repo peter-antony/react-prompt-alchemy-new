@@ -423,7 +423,7 @@ export function ColumnFilterInput({
                 )}
               >
                 <CalendarIcon className="mr-2 h-3 w-3" />
-                {localValue ? format(new Date(localValue), "dd/MM/yyyy") : "Pick date"}
+                {localValue ? format(new Date(localValue), "dd/MM/yyyy") : column.label}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-white border shadow-lg z-50" align="start">

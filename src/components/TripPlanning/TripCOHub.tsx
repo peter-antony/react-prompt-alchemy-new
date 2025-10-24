@@ -417,6 +417,8 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
     // }
   ];
 
+  const [highlightedRows, setHighlightedRows] = useState<number[]>([1,2]);
+
   const fetchTripsAgain = async () => {
     gridState.setColumns(initialColumns);
     gridState.setLoading(true);
@@ -548,13 +550,14 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
-  const handleLinkClick = (value: any, columnKey: any) => {
+  const handleLinkClick = (value: any, columnKey: any, rowIndex: any) => {
     console.log("Link clicked:", value, columnKey);
     if (columnKey === 'TripPlanID') {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
     if (columnKey == "CustomerOrderID") {
       onCustomerOrderClick(value);
+      console.log('rowIndex', rowIndex);
     }
   };
 
@@ -1118,6 +1121,7 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
               gridId={gridId}
               userId="current-user"
               api={filterService}
+              highlightedRowIndices={highlightedRows}
             />
           </div>
         </div>

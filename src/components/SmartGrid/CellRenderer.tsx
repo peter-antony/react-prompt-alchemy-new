@@ -26,7 +26,7 @@ interface CellRendererProps {
   onEdit: (rowIndex: number, columnKey: string, value: any) => void;
   onEditStart: (rowIndex: number, columnKey: string) => void;
   onEditCancel: () => void;
-  onLinkClick?: (rowData: any, columnKey: string) => void;
+  onLinkClick?: (rowData: any, columnKey: string, rowIndex: any) => void;
   loading?: boolean;
 }
 
@@ -134,7 +134,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const renderLink = () => {
     const handleClick = () => {
       if (onLinkClick) {
-        onLinkClick(row, column.key);
+        onLinkClick(row, column.key, rowIndex);
       } else if (column.onClick) {
         column.onClick(row);
       }

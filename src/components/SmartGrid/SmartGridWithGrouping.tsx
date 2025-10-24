@@ -161,14 +161,14 @@ export function SmartGridWithGrouping({
   }, []);
 
   // Handle link click for group headers (using onLinkClick prop)
-  const handleLinkClick = useCallback((row: any, columnKey: string) => {
+  const handleLinkClick = useCallback((row: any, columnKey: string, rowIndex: any) => {
     if (row.__isGroupHeader) {
       toggleGroupExpansion(row.__groupKey);
       return; // Don't proceed with regular link handling for group headers
     }
     // Call original onLinkClick if provided
     if (props.onLinkClick) {
-      props.onLinkClick(row, columnKey);
+      props.onLinkClick(row, columnKey, rowIndex);
     }
   }, [toggleGroupExpansion, props.onLinkClick]);
 

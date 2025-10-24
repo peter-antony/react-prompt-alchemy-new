@@ -174,7 +174,7 @@ export interface SmartGridProps {
   onPreferenceSave?(preferences: any): Promise<void>;
   onDataFetch?(page: number, pageSize: number): Promise<any[]>;
   onUpdate?(row: any): Promise<void>;
-  onLinkClick?(rowData: any, columnKey: string): void;
+  onLinkClick?(rowData: any, columnKey: string, rowIndex: any): void;
   onFiltersChange?(filters: Record<string, any>): void;
   onSubRowToggle?(columnKey: string): void;
   onServerFilter?(filters: FilterConfig[]): Promise<void>;
@@ -186,6 +186,7 @@ export interface SmartGridProps {
   onSelectionChange?(selectedRows: Set<number>): void;
   onRowClick?(row: any, index: number): void;
   rowClassName?: (row: any, index: number) => string;
+  highlightedRowIndices?: number[];
   configurableButtons?: ConfigurableButtonConfig[];
   showDefaultConfigurableButton?: boolean;
   defaultConfigurableButtonLabel?: string;
