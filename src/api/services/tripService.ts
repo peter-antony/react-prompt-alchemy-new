@@ -369,4 +369,30 @@ export const tripService = {
     );
     return response.data;
   },
+
+  getTripRoutes: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "Manage Execution Plan Hub Search",
+      },
+      SearchCriteria: params?.searchCriteria,
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.ROUTE_UPDATE,
+      requestBody
+    );
+    return response.data;
+  },
 };

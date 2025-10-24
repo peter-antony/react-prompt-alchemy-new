@@ -1667,7 +1667,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 {/* Leg Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-start gap-1">
                       <span>{leg.id} :</span>
                       {/* <MapPin className="h-4 w-4 text-muted-foreground" /> */}
                       <div className="flex-1 min-w-0">
@@ -1718,7 +1718,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
                 {/* API Data - Leg Sequence and Behavior */}
                 {leg.id && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground absolute bottom-3">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground bottom-3">
                     <span className="font-medium">{formatDateToDDMMYYYY(leg.PlanStartDate)} {formatTimeTo12Hour(leg.PlanStartTime)} - {formatDateToDDMMYYYY(leg.PlanEndDate)} {formatTimeTo12Hour(leg.PlanEndTime)}</span>
                     
                   </div>
