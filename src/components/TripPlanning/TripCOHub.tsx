@@ -429,16 +429,16 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
         searchCriteria = buildSearchCriteria(filtersForThisGrid);
       }
       else {
-        // ✅ Fallback defaults
-        searchCriteria = buildSearchCriteria(
-          // PlannedExecutionDate: {
-          //   value: {
-          //     from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
-          //     to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
-          //   }
-          //
-          tripCOSearchCriteria
-        );
+        // ✅ Fallback defaults with default CustomerOrderCreationDate
+        const defaultFilters = {
+          ...tripCOSearchCriteria,
+          CustomerOrderCreationDate: {
+            from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+            to: format(new Date(), 'yyyy-MM-dd')
+          }
+        };
+        searchCriteria = buildSearchCriteria(defaultFilters);
+        console.log('Using default filters with CustomerOrderCreationDate:', defaultFilters);
       }
       console.log('searchCriteria: ', searchCriteria);
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
@@ -1003,6 +1003,10 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
       key: 'CustomerOrderCreationDate',
       label: 'Creation Date Between',
       type: 'dateRange',
+      defaultValue: {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
     },
     {
       key: 'CustomerOrderDate',

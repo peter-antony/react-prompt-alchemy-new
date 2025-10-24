@@ -441,15 +441,14 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       }
       else {
         // ✅ Fallback defaults
-        searchCriteria = buildSearchCriteria(
-          // PlannedExecutionDate: {
-          //   value: {
-          //     from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
-          //     to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
-          //   }
-          //
-          tripCOSearchCriteria
-        );
+        const defaultFilters = {
+          ...tripCOSearchCriteria,
+          CustomerOrderCreationDate: {
+            from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+            to: format(new Date(), 'yyyy-MM-dd')
+          }
+        };
+        searchCriteria = buildSearchCriteria(defaultFilters);
       }
       console.log('searchCriteria: ', searchCriteria);
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
@@ -1020,6 +1019,10 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       key: 'CustomerOrderCreationDate',
       label: 'Creation Date Between',
       type: 'dateRange',
+      defaultValue: {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
     },
     {
       key: 'CustomerOrderDate',
@@ -1027,10 +1030,10 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       type: 'dateRange',
     },
     {
-      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'text',
+      // fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'Cluster', label: 'Cluster', type: 'lazyselect',
