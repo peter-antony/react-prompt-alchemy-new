@@ -417,7 +417,7 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
     // }
   ];
 
-  const [highlightedRows, setHighlightedRows] = useState<number[]>([1,2]);
+  const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
 
   const fetchTripsAgain = async () => {
     gridState.setColumns(initialColumns);
@@ -506,6 +506,11 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
     fetchTripsAgain();
   }, []); // Add dependencies if needed
 
+  // Log highlightedRows changes
+  useEffect(() => {
+    console.log('highlightedRows updated (composite keys):', highlightedRows);
+  }, [highlightedRows]);
+
   // Initialize columns and processed data in the grid state
   // useEffect(() => {
   //   console.log('Initializing columns and data in GridDemo');
@@ -558,6 +563,34 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
     if (columnKey == "CustomerOrderID") {
       onCustomerOrderClick(value);
       console.log('rowIndex', rowIndex);
+      
+      // Create composite key string from CustomerOrderID and LegBehaviour
+      const compositeKey = `${value.CustomerOrderID}-${value.LegBehaviour}`;
+      console.log('compositeKey:', compositeKey);
+      
+      // Add compositeKey to highlightedRows array (direct add, no toggle)
+      setHighlightedRows(prev => {
+        // Check if compositeKey is already in the array
+        if (prev.includes(compositeKey)) {
+          // If it's already highlighted, keep it (no toggle off)
+          return prev;
+        } else {
+          // If it's not highlighted, add it
+          return [...prev, compositeKey];
+        }
+      });
+      
+      // Toggle functionality (commented out)
+      // setHighlightedRows(prev => {
+      //   // Check if compositeKey is already in the array
+      //   if (prev.includes(compositeKey)) {
+      //     // If it's already highlighted, remove it (toggle off)
+      //     return prev.filter(key => key !== compositeKey);
+      //   } else {
+      //     // If it's not highlighted, add it (toggle on)
+      //     return [...prev, compositeKey];
+      //   }
+      // });
     }
   };
 
@@ -1083,6 +1116,7 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
               key={`grid-${gridState.forceUpdate}`}
               columns={gridState.columns}
               data={gridState.gridData}
+              highlightedRowIndices={highlightedRows}
               groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
               showGroupingDropdown={true}
               editableColumns={['plannedStartEndDateTime']}
@@ -1121,7 +1155,6 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
               gridId={gridId}
               userId="current-user"
               api={filterService}
-              highlightedRowIndices={highlightedRows}
             />
           </div>
         </div>
