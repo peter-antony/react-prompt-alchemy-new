@@ -535,23 +535,29 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
     }));
   }, []);
 
+  // Helper function to create unique row identifier
+  const getUniqueRowId = (row: any) => {
+    return `${row.CustomerOrderID}-${row.LegBehaviour}`;
+  };
+
   // Update selected row indices based on current page data to maintain selection state
   useEffect(() => {
     const currentData = gridState.gridData.length > 0 ? gridState.gridData : processedData;
     const newSelectedIndices = new Set<number>();
 
-    // Find indices of currently selected row IDs in the current page data
+    // Find indices of currently selected rows in the current page data
+    // Use composite key (CustomerOrderID + LegBehaviour) for unique identification
     currentData.forEach((row: any, index: number) => {
-      if (selectedRowIds.has(row.CustomerOrderID)) {
+      const uniqueId = getUniqueRowId(row);
+      if (selectedRowIds.has(uniqueId)) {
         newSelectedIndices.add(index);
       }
     });
 
     // Only update if there's a difference to avoid infinite loops
-    // Also prevent updates that might trigger unwanted side effects
     if (newSelectedIndices.size !== selectedRows.size ||
       !Array.from(newSelectedIndices).every(index => selectedRows.has(index))) {
-      console.log('Updating selected row indices without affecting pagination');
+      console.log('Updating selected row indices for current page:', Array.from(newSelectedIndices));
       setSelectedRows(newSelectedIndices);
     }
   }, [gridState.gridData, processedData, selectedRowIds]);
@@ -588,29 +594,25 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
     console.log('Selected rows changed via checkbox:', selectedRowIndices);
     setSelectedRows(selectedRowIndices);
-    // Update selected row objects and IDs using unique row identification
+    // Update selected row objects using composite key (CustomerOrderID + LegBehaviour)
 
     const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
     const selectedObjects = Array.from(selectedRowIndices)
       .map(index => currentData[index])
       .filter(Boolean);
 
-    // Create a new Set of unique row IDs
-    const newSelectedRowIds = new Set(selectedObjects.map(row => row.CustomerOrderID));
+    // Create a new Set of unique row IDs using composite key
+    const newSelectedRowIds = new Set(selectedObjects.map(row => getUniqueRowId(row)));
 
-    // Update selected row objects to ensure uniqueness by ID
-    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
-      self.findIndex(r => r.id === row.CustomerOrderID) === index
-    );
-
+    // Update selected row objects - no need to filter for uniqueness since we're using composite key
     setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(uniqueSelectedObjects);
+    setSelectedRowObjects(selectedObjects);
 
     // Notify parent component about the selection change
-    notifyParentOfSelection(uniqueSelectedObjects);
+    notifyParentOfSelection(selectedObjects);
 
-    console.log('Selected row objects:', uniqueSelectedObjects);
-    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
+    console.log('Selected row objects:', selectedObjects);
+    console.log('Selected row IDs (composite keys):', Array.from(newSelectedRowIds));
   };
 
   const [rowTripId, setRowTripId] = useState<any>([]);
@@ -618,34 +620,31 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
 
-    // Toggle row selection
+    // Toggle row selection using composite key (CustomerOrderID + LegBehaviour)
     const newSelectedRows = new Set(selectedRows);
-    // if (newSelectedRows.has(index)) {
     const newSelectedRowIds = new Set(selectedRowIds);
     const newSelectedRowObjects = [...selectedRowObjects];
 
-    // Check if this row is already selected by ID (not index)
-    const isRowSelected = newSelectedRowIds.has(row.CustomerOrderID);
+    // Check if this row is already selected by composite key
+    const uniqueId = getUniqueRowId(row);
+    const isRowSelected = newSelectedRowIds.has(uniqueId);
 
     if (isRowSelected) {
       // Remove row: remove from all tracking sets/arrays
       newSelectedRows.delete(index);
-      newSelectedRowIds.delete(row.CustomerOrderID);
-      const objectIndex = newSelectedRowObjects.findIndex(obj => obj.CustomerOrderID === row.CustomerOrderID);
+      newSelectedRowIds.delete(uniqueId);
+      const objectIndex = newSelectedRowObjects.findIndex(obj => getUniqueRowId(obj) === uniqueId);
       if (objectIndex > -1) {
         newSelectedRowObjects.splice(objectIndex, 1);
       }
-      console.log('Removed row:', row.CustomerOrderID);
+      console.log('Removed row with composite key:', uniqueId);
     }
     else {
-      // Add row: add to all tracking sets/arrays (ensure uniqueness)
+      // Add row: add to all tracking sets/arrays
       newSelectedRows.add(index);
-      newSelectedRowIds.add(row.CustomerOrderID);
-      // Only add if not already in objects array (double-check uniqueness)
-      if (!newSelectedRowObjects.some(obj => obj.CustomerOrderID === row.CustomerOrderID)) {
-        newSelectedRowObjects.push(row);
-      }
-      console.log('Added row:', row.CustomerOrderID);
+      newSelectedRowIds.add(uniqueId);
+      newSelectedRowObjects.push(row);
+      console.log('Added row with composite key:', uniqueId);
     }
 
     // Update all state
@@ -659,7 +658,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
     console.log('Selected row objects after click:', newSelectedRowObjects);
     setRowTripId(Array.from(newSelectedRowIds));
     console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
-    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+    console.log('Selected row IDs (composite keys) after click:', Array.from(newSelectedRowIds));
   };
 
   useEffect(() => {
@@ -1152,7 +1151,8 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
               //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
               // }
               rowClassName={(row: any, index: number) => {
-                return selectedRowIds.has(row.CustomerOrderID) ? 'selected' : '';
+                const uniqueId = getUniqueRowId(row);
+                return selectedRowIds.has(uniqueId) ? 'selected' : '';
               }}
               nestedRowRenderer={renderSubRow}
               // configurableButtons={gridConfigurableButtons}

@@ -1071,11 +1071,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Hazardous Goods</div>
-                            <div className="text-sm font-medium">Yes</div>
+                            <div className="text-sm font-medium">-</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">NHM</div>
-                            <div className="text-sm font-medium">2WQ1E32R43</div>
+                            <div className="text-sm font-medium">-</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Product ID</div>
@@ -1087,15 +1087,15 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Class of Stores</div>
-                            <div className="text-sm font-medium">Class A</div>
+                            <div className="text-sm font-medium">-</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">UN Code</div>
-                            <div className="text-sm font-medium">2432</div>
+                            <div className="text-sm font-medium">-</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">DG Class</div>
-                            <div className="text-sm font-medium">AAA</div>
+                            <div className="text-sm font-medium">-</div>
                           </div>
                         </div>
                       </div>

@@ -1010,10 +1010,10 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
       type: 'dateRange',
     },
     {
-      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      key: 'CustomerRefNo', label: 'Customer Ref. No.', type: 'text',
+      // fetchOptions: makeLazyFetcher("CustomerRefNo Init"),
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'Cluster', label: 'Cluster', type: 'lazyselect',
