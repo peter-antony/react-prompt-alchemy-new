@@ -1,5 +1,7 @@
 import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
-import { CalendarIcon, Search, CircleArrowOutUpRight, Plus, Paperclip, BookX, Link, Copy, CircleX, CheckCircle, AlertCircle, X } from 'lucide-react'; import { Button } from '@/components/ui/button';
+import { CalendarIcon, Search, CircleArrowOutUpRight, Plus, Paperclip, BookX, Link, Copy, CircleX, CheckCircle, AlertCircle, X } from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -40,6 +42,7 @@ interface OrderFormProps {
 }
 
 const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps, ref) => {
+  const navigate = useNavigate();
   const [OrderType, setOrderType] = useState('BUY');
   const [OrderDate, setOrderDate] = useState<Date>();
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -1883,6 +1886,8 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     setCopyModalOpen(true);
   }
 
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -2162,6 +2167,38 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
                 <Button onClick={openUpdateResourceGroup} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-100 text-gray-600 p-0 border border-gray-300">
                   <Plus className="w-4 h-4" />
                 </Button>
+
+                {/* Create Quick Order Button */}
+                <div className="relative inline-block">
+                <button
+                  onClick={() => {
+                    // Dynamically get the base path from the current URL
+                    const { pathname} = window.location;
+                    // Find the base path 
+                    const basePathMatch = pathname.match(/^\/[^/]+/);
+                    const basePath = basePathMatch ? basePathMatch[0] : "";
+                    window.location.href = `${basePath}/create-quick-order`;
+                  }}
+                  className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
+                  
+                  type='button'
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Quick Order
+                </button>
+
+                {/* Tooltip */}
+                {showTooltip && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
+                    Create Quick Order
+                    {/* Tooltip arrow */}
+                    <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
+                  </div>
+                )}
+                </div>
+
               </div>
             </div>
             {Array.isArray(resourceData) && resourceData.length > 0 && (
