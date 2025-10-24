@@ -174,7 +174,7 @@ export function GridToolbar({
                   <Package color="#7a5af8" strokeWidth={2} />
                 </span>
               )}
-              {gridTitle == 'Leg Details' ? 'Activities & Consignment' 
+              {gridTitle == 'Leg Details' ? 'Events & Consignment' 
                 : (gridTitle == 'Trip Customer Orders' || gridTitle == 'Trip Customer Orders Multi') ? 'Customer Orders' : gridTitle}
             </span>
             {recordCount !== undefined && (gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (

@@ -921,7 +921,7 @@ export const ConsignmentTrip = ({ legId }) => {
         <div className='space-y-2 p-4 bg-muted/30 rounded-lg'>
           {/* 🔹 CO Info Section */}
           {selectedCustomerData && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3 text-sm">
               <div>
                 <span className="font-medium text-gray-700">Departure: </span>
                 {selectedCustomerData?.CODepartureDescription || "-"}

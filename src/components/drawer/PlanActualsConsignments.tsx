@@ -99,6 +99,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const fetchLocations = fetchMasterData("Location Init");
   const fetchActivities = fetchMasterData("Activity Init");
   const fetchNhmTypes = fetchMasterData("NHM Init");
+  const fetchHazardousTypes = fetchMasterData("Hazardous Goods Init");
   const fetchClassOfStore = fetchMasterData("Class Of Stores Init");
 
   const [expandedSections, setExpandedSections] = useState({
@@ -107,7 +108,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
     product: true,
     thu: true,
     journey: true,
-    other: false,
+    other: true,
   });
   const [plannedList, setPlannedList] = useState<any[]>([]);
   const [actualList, setActualList] = useState<any[]>([]);
@@ -132,6 +133,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [containerDetailsLoadWeight, setContainerDetailsLoadWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
 
   const [productNHM, setProductNHM] = useState<string | undefined>();
+  const [hazardousGoods, setHazardousGoods] = useState<string | undefined>();
   const [productId, setProductId] = useState<string | undefined>();
   const [productQuantity, setProductQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [classOfStores, setClassOfStores] = useState<string | undefined>();
@@ -224,6 +226,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       });
 
       setProductNHM(activeList?.[0]?.NHM);
+      setHazardousGoods(activeList?.[0].ContainsHazardousGoods);
       setProductId(activeList?.[0]?.ProductID);
       setProductQuantity({
         dropdown: activeList?.[0]?.ProductQuantityUOM,
@@ -334,6 +337,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       });
 
       setProductNHM(selecteditem?.NHM);
+      setHazardousGoods(selecteditem?.ContainsHazardousGoods);
       setProductId(selecteditem?.ProductID);
       setProductQuantity({
         dropdown: selecteditem?.ProductQuantityUOM,
@@ -617,6 +621,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         ThuWeightUOM: thuDetailsWeight.dropdown || selecteditem.ThuWeightUOM,
 
         NHM: productNHM || selecteditem.NHM,
+        ContainsHazardousGoods: hazardousGoods || selecteditem.ContainsHazardousGoods,
         Product: productId || selecteditem.ProductID,
         productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
         productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
@@ -764,7 +769,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                 All Item
               </Label>
               <div className="flex-1" />
-              <Button size="icon" variant="ghost" className="h-8 w-8">
+              {/* <Button size="icon" variant="ghost" className="h-8 w-8">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                   <path d="M9 3v18M15 3v18" />
@@ -775,7 +780,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                   <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
                   <path d="M22 12A10 10 0 0 0 12 2v10z" />
                 </svg>
-              </Button>
+              </Button> */}
               {/* <Button size="icon" variant="default" className="h-8 w-8">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 5v14M5 12h14" />
@@ -1489,17 +1494,17 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                       <Separator />
                       <div className="p-4">
                         <div className="grid grid-cols-4 gap-x-6 gap-y-3">
-                          {/* <div>
+                          <div>
                             <div className="text-xs text-muted-foreground mb-1">Hazardous Goods</div>
                             <div className="text-sm font-medium">
                               <DynamicLazySelect
-                                fetchOptions={fetchWagonTypes}
+                                fetchOptions={fetchHazardousTypes}
                                 value={hazardousGoods}
                                 onChange={(value) => setHazardousGoods(value as string)}
                                 placeholder="Select Hazardous Goods"
                               />
                             </div>  
-                          </div> */}
+                          </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">NHM</div>
                             <div className="text-sm font-medium">

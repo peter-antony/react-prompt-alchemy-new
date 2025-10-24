@@ -1415,7 +1415,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     setFields([
       {
         type: "select",
-        label: "Activity Placed",
+        label: "Event Placed",
         name: "ActivityPlaced",
         placeholder: "Select Place",
         value: "",
@@ -1423,7 +1423,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       },
       {
         type: "select",
-        label: "Activity Name",
+        label: "Event Name",
         name: "ActivityName",
         placeholder: "Select Name",
         value: "",
@@ -1439,7 +1439,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     ]);
     setPopupAmendFlag('AddActivities');
     setPopupOpen(true);
-    setPopupTitle('Add Activities');
+    setPopupTitle('Add Event');
     setPopupButtonName('Confirm');
     setPopupBGColor('bg-blue-600');
     setPopupTextColor('text-blue-600');
@@ -1744,9 +1744,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         <Tabs defaultValue="activities" className="flex-1 flex flex-col">
           <div className="border-b px-6 pt-4">
             <TabsList className="h-10">
-              <TabsTrigger value="activities">Activities ({selectedLeg.activities.length})</TabsTrigger>
+              <TabsTrigger value="activities">Events ({selectedLeg.activities.length})</TabsTrigger>
               <TabsTrigger value="consignment">Consignment ({selectedLeg.consignments.length})</TabsTrigger>
-              <TabsTrigger value="transshipment">Transshipment ({selectedLeg.transshipments.length})</TabsTrigger>
+              <TabsTrigger value="transshipment">Transloading ({selectedLeg.transshipments.length})</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1755,11 +1755,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             <div className="px-6 py-4 border-b">
               <div className="flex items-center justify-between">
                 {/* <h2 className="text-lg font-semibold">Activities Details - {selectedLeg.from} to {selectedLeg.to}</h2> */}
-                <h2 className="text-lg font-semibold"></h2>
+                <h2 className="text-lg font-semibold">Trip Events</h2>
                 <div className="flex items-center gap-2">
                   <Button onClick={quickOrderAmendHandler} variant="outline" size="sm" className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Add Activities
+                    Add Events
                   </Button>
                 </div>
               </div>
@@ -1774,7 +1774,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   onClick={() => setExpandedActivities(!expandedActivities)}
                 >
                   <h3 className="text-sm font-semibold flex items-center gap-2">
-                    Activities
+                    Events
                     <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
                       {selectedLeg.activities.length}
                     </Badge>
@@ -1824,7 +1824,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               ref={tripExecutionRef}
                               key="trip-execution-panel"
                               panelId="operational-details"
-                              panelTitle="Trip Activities"
+                              panelTitle="Events"
                               panelConfig={tripExecutionPanelConfig}
                               formName="operationalDetailsForm"
                               initialData={activity}
@@ -1901,7 +1901,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   onClick={() => setExpandedAdditional(!expandedAdditional)}
                 >
                   <h3 className="text-sm font-semibold flex items-center gap-2">
-                    Additional Activities
+                    Additional Events
                     <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
                       {additionalActivities.length}
                     </Badge>
@@ -1949,7 +1949,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               ref={tripAdditionalRef}
                               key="Additional-Activities"
                               panelId="trip-additional-panel"
-                              panelTitle="Additional Activities"
+                              panelTitle="Additional Events"
                               panelConfig={tripExecutionAdditionalPanelConfig}
                               formName="operationalDetailsForm"
                               initialData={activity}
@@ -2060,7 +2060,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">Transshipment Details</h3>
+                  <h3 className="text-lg font-semibold">Transloading Details</h3>
                   <Badge variant="secondary" className="h-6 px-2">
                     {selectedLeg.transshipments.length}
                   </Badge>
@@ -2077,7 +2077,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
               </div>
 
               {/* CO Selection */}
-              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+              {/* <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
                 <Select defaultValue="CN000000001">
                   <SelectTrigger className="w-[200px] h-9">
                     <SelectValue placeholder="Select CO" />
@@ -2093,7 +2093,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                     Pickup Complete for this CO
                   </Label>
                 </div>
-              </div>
+              </div> */}
 
               {/* Summary Cards */}
               <div className="grid grid-cols-4 gap-4">
@@ -2146,7 +2146,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
               {/* Transshipment List */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">Transshipment List</h4>
+                  <h4 className="font-semibold">Transloading List</h4>
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
