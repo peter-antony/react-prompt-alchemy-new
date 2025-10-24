@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen } from 'lucide-react';
+import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -226,6 +226,48 @@ const TripPlanning = () => {
 
   const handleCloseResourceDrawer = () => {
     setIsResourceDrawerOpen(false);
+  };
+
+  const changeSupplier = (value: string) => {
+    setSupplier(value);
+    console.log("Supplier:", value);
+    const splitAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        const [first, ...rest] = value.split("||");
+        return first.trim(); // Return only the value part (before pipe)
+      }
+      return value;
+    };
+    const supplierID = splitAtPipe(value);
+    handleAddResource([{
+      "ResourceID": supplierID,
+      "ResourceType": "Agent",
+      "Service": "",
+      "ServiceDescription": "",
+      "SubService": "",
+      "SubServiceDescription": "",
+    }]);
+  };
+
+  const changeSchedule = (value: string) => {
+    setSchedule(value);
+    console.log("Schedule:", value);
+    const splitAtPipe = (value: string | null | undefined) => {
+      if (typeof value === "string" && value.includes("||")) {
+        const [first, ...rest] = value.split("||");
+        return first.trim(); // Return only the value part (before pipe)
+      }
+      return value;
+    };
+    const scheduleID = splitAtPipe(value);
+    handleAddResource([{
+      "ResourceID": scheduleID,
+      "ResourceType": "Schedule",
+      "Service": "",
+      "ServiceDescription": "",
+      "SubService": "",
+      "SubServiceDescription": "",
+    }]);
   };
 
   const handleAddResource = (resources: any[]) => {
@@ -771,7 +813,7 @@ const TripPlanning = () => {
 
   const isDisabled = !customerOrderList?.TripID;
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${
-    isDisabled ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+    isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
   }`;
 
   return (
@@ -1151,35 +1193,56 @@ const TripPlanning = () => {
                         <div className=''>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Supplier</div>
-                            <div className="text-sm font-medium">
-                              <DynamicLazySelect
-                                fetchOptions={fetchSupplier}
-                                value={supplier}
-                                onChange={(value) => setSupplier(value as string)}
-                                placeholder=""
-                              />
+                            <div className='flex items-center gap-2'>
+                              <div className="text-sm font-medium w-full">
+                                <DynamicLazySelect
+                                  fetchOptions={fetchSupplier}
+                                  value={supplier}
+                                  onChange={(value) => changeSupplier(value as string)}
+                                  placeholder=""
+                                />
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  handleOpenResourceDrawer('Supplier');
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-
-                          <div className='mt-3'>
+                          <div className='mt-3 mb-3'>
                             <div className="text-xs text-muted-foreground mb-1">Schedule</div>
-                            <div className="text-sm font-medium">
-                              <DynamicLazySelect
-                                fetchOptions={fetchSchedule}
-                                value={schedule}
-                                onChange={(value) => setSchedule(value as string)}
-                                placeholder=""
-                              />
+                            <div className='flex items-center gap-2'>
+                              <div className="text-sm font-medium w-full">
+                                <DynamicLazySelect
+                                  fetchOptions={fetchSchedule}
+                                  value={schedule}
+                                  onChange={(value) => changeSchedule(value as string)}
+                                  placeholder=""
+                                />
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  handleOpenResourceDrawer('Schedule');
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
                         {[
-                          { title: 'Resources', subtitle: 'Selected Resources', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                          { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
-                          { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
+                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                          // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
-                          { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '', iconColor: 'text-amber-600' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
                           { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
                         ].map((resource) => {
                           const Icon = resource.icon;
@@ -1217,7 +1280,7 @@ const TripPlanning = () => {
                                       handleOpenResourceDrawer('Vehicle');
                                     }
                                   }}
-                                  className={resource.title === 'Resources' ? 'hidden' : ''}
+                                  className={resource.title === 'Others' ? 'hidden' : ''}
                                 >
                                   <Plus className="h-4 w-4" />
                                 </Button>
@@ -1308,17 +1371,17 @@ const TripPlanning = () => {
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
-                              {/* <div className='flex items-center justify-between px-4 py-3 bg-blue-50 mb-2'>
-                                <div className='text-sm text-blue-700'>
-                                  <span className='ml-2 text-xs'>Selected Customer Order: (TP/2021/00024908)</span>
-                                </div>
-                              </div> */}
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub key={tripCOHubReloadKey} onCustomerOrderClick={handleCustomerOrderSelect}/>
                             </div>
                             {/* Resources Cards - Right */}
                             <div className="w-1/4 space-y-3">
                               <div className=''>
+                                <div className='flex items-center justify-between px-4 py-3 bg-blue-50 mb-2'>
+                                  <div className='text-sm text-blue-700'>
+                                    <span className='text-xs'>Selected Customer Order: {customerOrderList?.CustomerOrderID}</span>
+                                  </div>
+                                </div>
                                 <div>
                                   <div className="text-xs text-muted-foreground mb-1">Supplier</div>
                                   <div className='flex items-center gap-2'>
@@ -1326,7 +1389,7 @@ const TripPlanning = () => {
                                       <DynamicLazySelect
                                         fetchOptions={fetchSupplier}
                                         value={supplier}
-                                        onChange={(value) => setSupplier(value as string)}
+                                        onChange={(value) => changeSupplier(value as string)}
                                         placeholder=""
                                       />
                                     </div>
@@ -1348,7 +1411,7 @@ const TripPlanning = () => {
                                       <DynamicLazySelect
                                         fetchOptions={fetchSchedule}
                                         value={schedule}
-                                        onChange={(value) => setSchedule(value as string)}
+                                        onChange={(value) => changeSchedule(value as string)}
                                         placeholder=""
                                       />
                                     </div>
@@ -1356,7 +1419,7 @@ const TripPlanning = () => {
                                       variant="ghost" 
                                       size="icon"
                                       onClick={() => {
-                                        handleOpenResourceDrawer('Supplier');
+                                        handleOpenResourceDrawer('Schedule');
                                       }}
                                     >
                                       <Plus className="h-4 w-4" />
@@ -1365,12 +1428,12 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Resources', subtitle: 'Selected Resources', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
-                                { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
+                                // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
-                                { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: '', iconColor: 'text-amber-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
                                 { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
                               ].map((resource) => {
                                 const Icon = resource.icon;
@@ -1390,28 +1453,39 @@ const TripPlanning = () => {
                                           )}
                                         </div>
                                       </div>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        onClick={() => {
-                                          if (resource.title === 'Equipment') {
-                                            handleOpenResourceDrawer('Equipment');
-                                          } else if (resource.title === 'Supplier') {
-                                            handleOpenResourceDrawer('Supplier');
-                                          } else if (resource.title === 'Schedule') {
-                                            handleOpenResourceDrawer('Schedule');
-                                          } else if (resource.title === 'Driver') {
-                                            handleOpenResourceDrawer('Driver');
-                                          } else if (resource.title === 'Handler') {
-                                            handleOpenResourceDrawer('Handler');
-                                          } else if (resource.title === 'Vehicle') {
-                                            handleOpenResourceDrawer('Vehicle');
-                                          }
-                                        }}
-                                        className={resource.title === 'Resources' ? 'hidden' : ''}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                      </Button>
+                                      {resource.title === 'Others' ? (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon"
+                                          onClick={() => {
+                                            // handleOpenResourceDrawer('Others');
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      ) : (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon"
+                                          onClick={() => {
+                                            if (resource.title === 'Equipment') {
+                                              handleOpenResourceDrawer('Equipment');
+                                            } else if (resource.title === 'Supplier') {
+                                              handleOpenResourceDrawer('Supplier');
+                                            } else if (resource.title === 'Schedule') {
+                                              handleOpenResourceDrawer('Schedule');
+                                            } else if (resource.title === 'Driver') {
+                                              handleOpenResourceDrawer('Driver');
+                                            } else if (resource.title === 'Handler') {
+                                              handleOpenResourceDrawer('Handler');
+                                            } else if (resource.title === 'Vehicle') {
+                                              handleOpenResourceDrawer('Vehicle');
+                                            }
+                                          }}
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                        </Button>
+                                      )}
                                     </div>
                                   </Card>
                                 );
