@@ -269,6 +269,41 @@ const resourceConfigs = {
         editable: false
       },
       {
+        key: 'SupplierName',
+        label: 'Supplier Name',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ExecutiveCarrierID',
+        label: 'Executive Carrier ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ExecutiveCarrierName',
+        label: 'Executive Carrier Name',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      // {
+      //   key: '',
+      //   label: 'Via',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
+      // {
+      //   key: '',
+      //   label: 'Reccuring Schedule (RS)',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
+      {
         key: 'FromLocation',
         label: 'From Location',
         type: 'Text' as GridColumnType,
@@ -280,6 +315,69 @@ const resourceConfigs = {
         label: 'To Location',
         type: 'Text' as GridColumnType,
         width: 150,
+        editable: false
+      },
+      {
+        key: 'TotalTransitTime',
+        label: 'Total Transit Time',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'TransitTimeUnit',
+        label: 'Transit Time Unit',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'PathNo',
+        label: 'Path No',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'Resources',
+        label: 'Resources',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'Distance',
+        label: 'Distance',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'DistanceUOM',
+        label: 'Distance UOM',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxLength',
+        label: 'Max Length',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxGrossWeight',
+        label: 'Max Gross Weight',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxNoOfWagon',
+        label: 'Max No of Wagon',
+        type: 'Date' as GridColumnType,
+        width: 120,
         editable: false
       },
     ]
