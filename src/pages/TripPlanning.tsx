@@ -21,7 +21,7 @@ import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { ResourceSelectionDrawer } from '@/components/ResourceSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
 import { useToast } from '@/hooks/use-toast';
 import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
@@ -29,8 +29,15 @@ import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 
 const TripPlanning = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Extract URL parameters
+  const urlTripID = searchParams.get('tripID');
+  const manageFlag = searchParams.get('manage');
+  
   const [tripNo, setTripNo] = useState('');
   const [tripStatus, setTripStatus] = useState('');
+  const [createTripBtn, setCreateTripBtn] = useState(true);
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
@@ -57,9 +64,21 @@ const TripPlanning = () => {
   const [isLoadingResource, setIsLoadingResource] = useState(false);
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
+  const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
+
+  // Extract and set tripNo from URL parameters
+  useEffect(() => {
+    if (urlTripID) {
+      setTripNo(urlTripID);
+      console.log("🔗 URL TripID extracted:", urlTripID);
+    }
+    if (manageFlag) {
+      console.log("🔗 URL Manage flag extracted:", manageFlag);
+    }
+  }, [urlTripID, manageFlag]);
 
   // Debug useEffect to track selectedArrCOData changes
   useEffect(() => {
@@ -289,8 +308,8 @@ const TripPlanning = () => {
       "ServiceDescription": resource.ServiceDescription || "",
       "SubService": resource.SubService || "",
       "SubServiceDescription": resource.SubServiceDescription || "",
-      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
-      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+      "EffectiveFromDate": "",
+      "EffectiveToDate": "",
       "ModeFlag": "Insert"
     }));    
     
@@ -473,8 +492,8 @@ const TripPlanning = () => {
       "ServiceDescription": resource.ServiceDescription || "",
       "SubService": resource.SubService || "",
       "SubServiceDescription": resource.SubServiceDescription || "",
-      "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
-      "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
+      "EffectiveFromDate": "",
+      "EffectiveToDate": "",
       "ModeFlag": "Insert"
     }));
 
@@ -490,7 +509,7 @@ const TripPlanning = () => {
       "ResourceDetails": transformedResourceDetails || []
     }
     
-    console.log("createSingleTripData", tripData);
+    console.log("createBulkTripData", tripData);
     console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
     try {
       const response: any = await tripPlanningService.createMultipleCOTripPlan(tripData);
@@ -569,44 +588,7 @@ const TripPlanning = () => {
     const processedLocation = splitAtPipe(location);
     const processedCluster = splitAtPipe(cluster);
     console.log("processedLocation ====", processedLocation);
-    
     console.log("selectedArrCOData", selectedArrCOData);
-    
-    // Check if selectedArrCOData is empty and show warning
-    // if (!selectedArrCOData || selectedArrCOData.length === 0) {
-    //   console.warn("⚠️ selectedArrCOData is empty! Make sure to add resources first using the resource selection drawer.");
-    //   toast({
-    //     title: "⚠️ No Resources Selected",
-    //     description: "Please select resources using the resource selection drawer before creating trip data.",
-    //     variant: "destructive",
-    //   });
-    //   return; // Exit early if no data
-    // }
-    
-    // Transform selectedResources into the required ResourceDetails format
-    // const transformedResourceDetails = selectedResources.map(resource => ({
-    //   "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID,
-    //   "ResourceType": resource.resourceType || resource.ResourceType || 
-    //     (resource.EquipmentID ? 'Equipment' : 
-    //      resource.VendorID ? 'Agent' : 
-    //      resource.DriverCode ? 'Driver' : 
-    //      resource.HandlerID ? 'Handler' : 
-    //      resource.VehicleID ? 'Vehicle' : 'Unknown'),
-    //   "Service": resource.Service || "",
-    //   "ServiceDescription": resource.ServiceDescription || "",
-    //   "SubService": resource.SubService || "",
-    //   "SubServiceDescription": resource.SubServiceDescription || "",
-    //   "EffectiveFromDate": format(planDate, "yyyy-MM-dd"),
-    //   "EffectiveToDate": format(planDate, "yyyy-MM-dd"),
-    //   "ModeFlag": "Insert"
-    // }));
-    
-    // Push selectedResources into customerOrderList object
-    // const updatedcustomerOrderList = {
-    //   ...(typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList : {}),
-    //   "ResourceDetails": transformedResourceDetails,
-    //   "ModeFlag": "Insert",
-    // };
     
     const tripData = {
       "Header": {
@@ -629,15 +611,25 @@ const TripPlanning = () => {
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
         console.log("Trip data updated in store");
+        
+        // Extract CustomerOrders from response
+        const customerOrders = parsedResponse.CustomerOrders || [];
+        console.log("📋 CustomerOrders from API response:", customerOrders);
+        
+        // Store CustomerOrders data for TripCOHub
+        setTripCustomerOrdersData(customerOrders);
+        
         toast({
           title: "✅ Trip Created Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
-        
+        setCreateTripBtn(false);
+        setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
+        setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
         // Reload TripCOHub component
         setTripCOHubReloadKey(prev => prev + 1);
-        console.log("🔄 TripCOHub component reloaded");
+        console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -654,15 +646,20 @@ const TripPlanning = () => {
 
   const confirmTripPlanning = async () => {
     // console.log("confirmTripPlanning ===", selectedRowObjects);
-    console.log("confirmTripPlanning ===", customerOrderList);
+    console.log("confirmTripPlanning ===", customerOrderList + tripNo);
     const messageType = "Manage Trip Plan - Confirm Trip";
+    
+    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+    
     let Header = {
-      "TripNo": customerOrderList.TripID,
+      "TripNo": tripIDToUse,
       "Cancellation": null,
       "ShortClose": null,
       "Amendment": null
     }
     console.log("Payload:", Header);
+    console.log("Using TripID:", tripIDToUse);
     
     try{
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
@@ -691,14 +688,19 @@ const TripPlanning = () => {
   const releseTripPlanning = async () => {
     console.log("releaseTripPlanning ===");
     const messageType = "Manage Trip Plan - Release Trip";
+    
+    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+    
     let Header = {
-        "TripNo": customerOrderList.TripID,
+        "TripNo": tripIDToUse,
         "Cancellation": null,
         "ShortClose": null,
         "Amendment": null
       
     }
     console.log("Payload:", Header);
+    console.log("Using TripID:", tripIDToUse);
     try{
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
@@ -774,9 +776,12 @@ const TripPlanning = () => {
     });
     console.log('Mapped Object for Amend API:', mappedObj);
     const messageType = "Manage Trip Plan - Amend Trip";
+    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+    
     // Create payload for amend action
     const Header = {
-      "TripNo": customerOrderList.TripID,
+      "TripNo": tripIDToUse,
       "Cancellation": null,
       "ShortClose": null,
       "Amendment": {
@@ -787,6 +792,7 @@ const TripPlanning = () => {
       }
     };
     console.log('Amend Payload:', Header);
+    console.log("Using TripID for Amend:", tripIDToUse);
     try{
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
@@ -811,7 +817,9 @@ const TripPlanning = () => {
     } 
   };
 
-  const isDisabled = !customerOrderList?.TripID;
+  // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+  const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+  const isDisabled = !tripIDToUse;
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${
     isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
   }`;
@@ -847,7 +855,7 @@ const TripPlanning = () => {
               <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
-                  className="text-primary border-primary"
+                  className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
                   onClick={handleManageTripsClick}
                 >
                   Manage Trips
@@ -1372,7 +1380,13 @@ const TripPlanning = () => {
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub key={tripCOHubReloadKey} onCustomerOrderClick={handleCustomerOrderSelect}/>
+                              <TripCOHub 
+                                key={tripCOHubReloadKey} 
+                                onCustomerOrderClick={handleCustomerOrderSelect}
+                                tripID={urlTripID}
+                                manageFlag={manageFlag}
+                                customerOrdersData={tripCustomerOrdersData}
+                              />
                             </div>
                             {/* Resources Cards - Right */}
                             <div className="w-1/4 space-y-3">
@@ -1501,7 +1515,13 @@ const TripPlanning = () => {
                                 </div>
                               </div> */}
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub key={tripCOHubReloadKey} onCustomerOrderClick={handleCustomerOrderSelect}/>
+                              <TripCOHub 
+                                key={tripCOHubReloadKey} 
+                                onCustomerOrderClick={handleCustomerOrderSelect}
+                                tripID={urlTripID}
+                                manageFlag={manageFlag}
+                                customerOrdersData={tripCustomerOrdersData}
+                              />
                             </div>
                           </>
                         )}
@@ -1525,9 +1545,11 @@ const TripPlanning = () => {
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
                           </div> */}
-                          <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                            Create Trip
-                          </button>
+                          {createTripBtn && (
+                            <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                              Create Trip
+                            </button>
+                          )}
                           <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>

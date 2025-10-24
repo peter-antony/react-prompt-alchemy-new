@@ -19,7 +19,7 @@ import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
 
-export const TripCOHub = ({ onCustomerOrderClick }) => {
+export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData }) => {
   const pageSize = 15;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -37,6 +37,7 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
 
   console.log('filtersForThisGrid: ', filtersForThisGrid);
+  console.log('TripCOHub received props - tripID:', tripID, 'manageFlag:', manageFlag, 'customerOrdersData:', customerOrdersData);
 
   const initialColumns: GridColumnConfig[] = [
     {
@@ -489,7 +490,7 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
           },
         }
       });
-
+      console.log("processedData", processedData);
       gridState.setGridData(processedData);
       setApiStatus("success");
     } catch (error) {
@@ -501,9 +502,70 @@ export const TripCOHub = ({ onCustomerOrderClick }) => {
     }
   };
 
+  // Log when tripID or manageFlag props change
+  useEffect(() => {
+    console.log('TripCOHub props updated - tripID:', tripID, 'manageFlag:', manageFlag);
+  }, [tripID, manageFlag]);
+
+  // Handle CustomerOrders data from parent component
+  useEffect(() => {
+    console.log("customerOrdersData", customerOrdersData);
+    if (customerOrdersData && customerOrdersData.length > 0) {
+      console.log('📋 Received CustomerOrders data from parent:', customerOrdersData);
+      
+      // Process the CustomerOrders data similar to API response
+      const processedData = customerOrdersData.map((row: any) => {
+        const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Executed': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Initiated': 'badge-blue rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            'Draft Bill Raised': 'badge-orange rounded-2xl',
+            'Not Eligible': 'badge-red rounded-2xl',
+            'Revenue leakage': 'badge-red rounded-2xl',
+            'Invoice Created': 'badge-blue rounded-2xl',
+            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
+        };
+        
+        return {
+          ...row,
+          CustomerOrderStatus: {
+            value: row.CustomerOrderStatus,
+            variant: getStatusColorLocal(row.CustomerOrderStatus),
+          },
+          TripBillingStatus: {
+            value: row.TripBillingStatus,
+            variant: getStatusColorLocal(row.TripBillingStatus),
+          },
+        }
+      });
+
+      // Set the processed data to grid
+      gridState.setColumns(initialColumns);
+      gridState.setGridData(processedData);
+      setApiStatus("success");
+      console.log('✅ CustomerOrders data bound to grid:', processedData);
+    }
+  }, [customerOrdersData]);
+
   // Initialize columns and data
   useEffect(() => {
-    fetchTripsAgain();
+    // Only fetch from API if no CustomerOrders data is provided from parent
+    if (!customerOrdersData || customerOrdersData.length === 0) {
+      console.log('🔄 No CustomerOrders data from parent, fetching from API...');
+      fetchTripsAgain();
+    } else {
+      console.log('📋 Using CustomerOrders data from parent, skipping API fetch');
+    }
   }, []); // Add dependencies if needed
 
   // Log highlightedRows changes
