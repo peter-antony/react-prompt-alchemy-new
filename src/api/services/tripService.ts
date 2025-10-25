@@ -395,4 +395,28 @@ export const tripService = {
     );
     return response.data;
   },
+
+  getCOSelection: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "Manage Execution Plan CO Selection",
+      },
+      SearchCriteria: {
+        CustomerOrderNo: params.CONumber
+      }
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.CO_SELECTION,
+      requestBody
+    );
+    return response.data;
+  },
 };

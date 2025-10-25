@@ -62,7 +62,8 @@ export const API_ENDPOINTS = {
     GET_VAS: "/transportexecution/getvasfromtrip",
     SAVE_VAS: "/transportexecution/savevas",
     CREATE_TRIP_CO:"/tripplanexecution/createtripplan",
-    ROUTE_UPDATE: "manageexecution/planhubsearch"
+    ROUTE_UPDATE: "manageexecution/planhubsearch",
+    CO_SELECTION: "manageexecution/planhubselection"
   },
   // Quick Order management
   QUICK_ORDERS: {

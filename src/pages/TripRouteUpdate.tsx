@@ -17,11 +17,35 @@ import { tripRouteSearchCriteria, tripRouteSearch } from "@/constants/tripRouteS
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
+import { TransportRouteLegDrawer } from '@/components/drawer/TransportRouteLegDrawer';
+import { useTransportRouteStore } from '@/stores/transportRouteStore';
+import { SideDrawer } from "@/components/SideDrawer";
 
 export const TripRouteUpdate = () => {
   const [searchParams] = useSearchParams();
   const createTripPlan = searchParams.get('createTripPlan');
-  
+  const {
+    routes,
+    selectedOrder,
+    selectedRoute,
+    isDrawerOpen,
+    isRouteDrawerOpen,
+    highlightedIndexes,
+    fetchRoutes,
+    handleCustomerOrderClick,
+    openRouteDrawer,
+    closeDrawer,
+    closeRouteDrawer,
+    highlightRowIndexes,
+    addLegPanel,
+    removeLegPanel,
+    updateLegData,
+    saveRouteDetails,
+    fetchDepartures,
+    fetchArrivals
+  } = useTransportRouteStore();
+  // const [isRouteDrawerOpen, setIsRouteDrawerOpen] = useState(false);
+
   const gridId = "trip-route"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
@@ -34,7 +58,7 @@ export const TripRouteUpdate = () => {
   const gridState = useSmartGridState();
   const { toast } = useToast();
   const { config, setFooter, resetFooter } = useFooterStore();
-  
+
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -43,7 +67,7 @@ export const TripRouteUpdate = () => {
   const [popupBGColor, setPopupBGColor] = useState('');
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
-  
+
   // New modal states for createTripPlan actions
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [amendModalOpen, setAmendModalOpen] = useState(false);
@@ -101,7 +125,8 @@ export const TripRouteUpdate = () => {
       editable: false,
       mandatory: true,
       subRow: false,
-      order: 1
+      order: 1,
+      // onClick: (row: any) => openRouteDrawer(row)
     },
     {
       key: "COStatus",
@@ -133,7 +158,7 @@ export const TripRouteUpdate = () => {
     {
       key: "CODepartureDate",
       label: "Departure Date",
-      type: "Date",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -142,7 +167,7 @@ export const TripRouteUpdate = () => {
     {
       key: "COArrivalDate",
       label: "Arrival Date",
-      type: "Date",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -159,22 +184,22 @@ export const TripRouteUpdate = () => {
     },
     {
       key: "LegExecuted",
-      label: "LegExecuted",
-      type: "Text",
+      label: "Leg Executed",
+      type: "BadgeCombinationCount",
       sortable: true,
       editable: false,
       subRow: false,
       order: 8
     },
-    {
-      key: "TotalLegs",
-      label: "Leg Details",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 9
-    }
+    // {
+    //   key: "TotalLegs",
+    //   label: "Leg Details",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 9
+    // }
   ];
 
   const fetchTripsAgain = async () => {
@@ -187,16 +212,18 @@ export const TripRouteUpdate = () => {
       if (Object.keys(filtersForThisGrid).length > 0) {
         // ✅ Build criteria from store filters
         searchCriteria = buildSearchCriteria(filtersForThisGrid);
-      } else {
-        // ✅ Fallback defaults
-        searchCriteria = buildSearchCriteria({
-          PlannedExecutionDate: {
-            value: {
-              from: format(subMonths(new Date(), 2), "yyyy-MM-dd"),
-              to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
-            }
+      }
+      else {
+        // ✅ Fallback defaults with default CustomerOrderCreationDate
+        const defaultFilters = {
+          ...tripRouteSearchCriteria,
+          OrderDate: {
+            from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+            to: format(new Date(), 'yyyy-MM-dd')
           }
-        });
+        };
+        searchCriteria = buildSearchCriteria(defaultFilters);
+        console.log('Using default filters with CustomerOrderCreationDate:', defaultFilters);
       }
 
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
@@ -222,16 +249,16 @@ export const TripRouteUpdate = () => {
             'Save': 'badge-green rounded-2xl',
             'Under Amendment': 'badge-orange rounded-2xl',
             'Confirmed': 'badge-green rounded-2xl',
-            'Initiated': 'badge-blue rounded-2xl',
+            'Planned': 'badge-blue rounded-2xl',
             'Under Execution': 'badge-purple rounded-2xl',
             // Trip Billing Status colors
             'Draft Bill Raised': 'badge-orange rounded-2xl',
             'Not Eligible': 'badge-red rounded-2xl',
             'Revenue leakage': 'badge-red rounded-2xl',
             'Invoice Created': 'badge-blue rounded-2xl',
-            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+            'Under Planning': 'badge-fresh-green rounded-2xl'
           };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
         return {
           ...row,
@@ -303,88 +330,187 @@ export const TripRouteUpdate = () => {
     }
   }, [gridState.gridData, processedData, selectedRowIds]);
 
-  useEffect(() => {
-    setFooter({
-      visible: true,
-      pageName: 'Trip_Execution',
-      leftButtons: [
-        {
-          label: "CIM/CUV Report",
-          onClick: () => console.log("CIM/CUV Report"),
-          type: "Icon",
-          iconName: 'BookText'
-        },
-        {
-          label: "Dropdown Menu",
-          onClick: () => console.log("Menu"),
-          type: "Icon",
-          iconName: 'EllipsisVertical'
-        },
-      ],
-      rightButtons: createTripPlan === 'true' ? [
-        {
-          label: "Cancel",
-          onClick: () => {
-            console.log("Cancel clicked");
-            setCurrentActionType('cancel');
-            setCancelModalOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
-        {
-          label: "Confirm",
-          onClick: () => {
-            console.log("Confirm clicked");
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
-        {
-          label: "Release",
-          onClick: () => {
-            console.log("Release clicked");
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
-        {
-          label: "Amend",
-          onClick: () => {
-            console.log("Amend clicked");
-            setCurrentActionType('amend');
-            setAmendModalOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
-      ] : [
-        {
-          label: "Cancel",
-          onClick: () => {
-            console.log("Cancel clicked");
-            setPopupOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
-      ],
-    });
-    return () => resetFooter();
-  }, [setFooter, resetFooter, selectedRows, createTripPlan]);
+  // Footer is not required for this page
+  // useEffect(() => {
+  //   setFooter({
+  //     visible: false,
+  //     pageName: 'Trip_Execution',
+  //     leftButtons: [
+  //       {
+  //         label: "CIM/CUV Report",
+  //         onClick: () => console.log("CIM/CUV Report"),
+  //         type: "Icon",
+  //         iconName: 'BookText'
+  //       },
+  //       {
+  //         label: "Dropdown Menu",
+  //         onClick: () => console.log("Menu"),
+  //         type: "Icon",
+  //         iconName: 'EllipsisVertical'
+  //       },
+  //     ],
+  //     rightButtons: createTripPlan === 'true' ? [
+  //       {
+  //         label: "Cancel",
+  //         onClick: () => {
+  //           console.log("Cancel clicked");
+  //           setCurrentActionType('cancel');
+  //           setCancelModalOpen(true);
+  //         },
+  //         type: 'Button',
+  //         disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+  //       },
+  //       {
+  //         label: "Confirm",
+  //         onClick: () => {
+  //           console.log("Confirm clicked");
+  //         },
+  //         type: 'Button',
+  //         disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+  //       },
+  //       {
+  //         label: "Release",
+  //         onClick: () => {
+  //           console.log("Release clicked");
+  //         },
+  //         type: 'Button',
+  //         disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+  //       },
+  //       {
+  //         label: "Amend",
+  //         onClick: () => {
+  //           console.log("Amend clicked");
+  //           setCurrentActionType('amend');
+  //           setAmendModalOpen(true);
+  //         },
+  //         type: 'Button',
+  //         disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+  //       },
+  //     ] : [
+  //       {
+  //         label: "Cancel",
+  //         onClick: () => {
+  //           console.log("Cancel clicked");
+  //           setPopupOpen(true);
+  //         },
+  //         type: 'Button',
+  //         disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+  //       },
+  //     ],
+  //   });
+  //   return () => resetFooter();
+  // }, [setFooter, resetFooter, selectedRows, createTripPlan]);
 
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
-    console.log("createTripPlan: ", createTripPlan);
-    if (columnKey === 'TripPlanID' && createTripPlan !== 'true') {
-      navigate(`/manage-trip?id=${value.TripPlanID}`);
-    }else{
-      navigate(`/trip-planning?manage=true&tripId=${value.TripPlanID}`);
+    let row = {
+      "ExecutionPlanID": "EXE/2021/00005668",
+      "CustomerOrderID": "BR/2025/0259",
+      "CustomerID": "1005",
+      "CustomerName": "ramcotest",
+      "Service": "BT",
+      "ServiceDescription": "BLOCK TRAIN CONVENTIONAL",
+      "SubService": "WOW",
+      "SubServiceDescription": "WITHOUT  EQUIPMENT / SOC",
+      "CODeparture": "10-00001",
+      "CODepartureDescription": "10-00001",
+      "COArrival": "10-00004",
+      "COArrivalDescription": "10-00004",
+      "RouteID": "ROUTE 78",
+      "RouteDescription": "ROUTE 78",
+      "Status": "PLND",
+      "LoadType": "Loaded",
+      "LegDetails": [
+        {
+          "LegSequence": 1,
+          "LegID": "Leg 1",
+          "LegUniqueId": "BDAE29DB-15BD-4804-8CBD-E53771EBFC41",
+          "Departure": "10-00001",
+          "DepartureDescription": "North Chennai",
+          "Arrival": "10-00002",
+          "ArrivalDescription": "East Chennai",
+          "LegBehaviour": "Pick",
+          "LegBehaviourDescription": "Pick",
+          "TransportMode": "Rail",
+          "LegStatus": "CF",
+          "TripInfo": [
+            {
+              "TripID": "TP/2021/00024972",
+              "Departure": "10-00001",
+              "DepartureDescription": "North Chennai",
+              "Arrival": "10-00002",
+              "ArrivalDescription": "East Chennai",
+              "DepartureActualDate": null,
+              "ArrivalActualDate": null,
+              "LoadType": "Loaded",
+              "TripStatus": "Released",
+              "DraftBillNo": null,
+              "DraftBillStatus": null,
+              "DraftBillWarning": null,
+              "SupplierID": "10020296",
+              "SupplierDescription": "ZIMMERMANN SPEDITION GMBH"
+            }
+          ],
+          "ModeFlag": "Nochange",
+          "ReasonForUpdate": null,
+          "QCCode1": null,
+          "QCCode1Value": null,
+          "Remarks": null
+        },
+        {
+          "LegSequence": 2,
+          "LegID": "Leg 2",
+          "LegUniqueId": "C53AE354-E8A9-48F9-9590-6B56C5D6EDB9",
+          "Departure": "10-00002",
+          "DepartureDescription": "East Chennai",
+          "Arrival": "10-00003",
+          "ArrivalDescription": "West Chennai",
+          "LegBehaviour": "LHV",
+          "LegBehaviourDescription": "LHV",
+          "TransportMode": "Rail",
+          "LegStatus": "AC",
+          "TripInfo": null,
+          "ModeFlag": "Nochange",
+          "ReasonForUpdate": null,
+          "QCCode1": null,
+          "QCCode1Value": null,
+          "Remarks": null
+        },
+        {
+          "LegSequence": 3,
+          "LegID": "Leg 3",
+          "LegUniqueId": "DA84BAF0-A11C-471F-9A36-47F372686A06",
+          "Departure": "10-00003",
+          "DepartureDescription": "West Chennai",
+          "Arrival": "10-00004",
+          "ArrivalDescription": "10-00004",
+          "LegBehaviour": "Dvry",
+          "LegBehaviourDescription": "Dvry",
+          "TransportMode": "Rail",
+          "LegStatus": null,
+          "TripInfo": null,
+          "ModeFlag": "Nochange",
+          "ReasonForUpdate": null,
+          "QCCode1": null,
+          "QCCode1Value": null,
+          "Remarks": null
+        }
+      ],
+      "ReasonForUpdate": ""
+    }
+    if (columnKey == "CustomerOrderNo") {
+      // setIsRouteDrawerOpen(true);
+      openRouteDrawer(row);
+      console.log('row', row);
     }
   };
+
+  // const closeRouteDrawer = () => {
+  //   setIsRouteDrawerOpen(false);
+  // }
 
   const handleUpdate = async (updatedRow: any) => {
     console.log("Updating row:", updatedRow);
@@ -487,7 +613,7 @@ export const TripRouteUpdate = () => {
   //   const tripNoFromAPI = data?.Header?.TripNo;
   //   console.log("data ===", tripNoFromAPI);
   //   setTripNo(tripNoFromAPI);
-    
+
   //   // Also update the selected row objects with the TripNo if available
   //   if (tripNoFromAPI && selectedRowObjects?.[0]) {
   //     const updatedSelectedRowObjects = [...selectedRowObjects];
@@ -498,7 +624,7 @@ export const TripRouteUpdate = () => {
   //     setSelectedRowObjects(updatedSelectedRowObjects);
   //     console.log("Updated selectedRowObjects with TripNo:", updatedSelectedRowObjects);
   //   }
-    
+
   //   return tripNoFromAPI;
   // }
 
@@ -595,22 +721,46 @@ export const TripRouteUpdate = () => {
     );
   };
 
-  const buildSearchCriteria: any = (latestFilters: any) => {
+  const buildSearchCriteria = (latestFilters: Record<string, any> = {}): tripRouteSearch => {
     const criteria: tripRouteSearch = { ...tripRouteSearchCriteria };
-    if (Object.keys(latestFilters).length > 0) {
-      Object.entries(latestFilters).forEach(([key, value]): any => {
-        const filter: any = value; // 👈 cast to any
-        if (key === "PlannedExecutionDate") {
-          // criteria.PlannedExecutionDateFrom = filter?.value?.from.replace(/-/g, "/");
-          // criteria.PlannedExecutionDateTo = filter?.value?.to.replace(/-/g, "/");
-        } else {
-          // all other keys map directly
-          criteria[key] = filter.value;
-        }
-      });
-      return criteria;
+
+    // If incoming filters are already a flat criteria object (like your defaults)
+    const isAlreadyCriteria = Object.values(latestFilters).every(
+      (val) => typeof val === "string" || typeof val === "number" || val === ""
+    );
+
+    if (isAlreadyCriteria) {
+      // Directly merge and return
+      return { ...criteria, ...latestFilters };
     }
-  }
+
+    // Otherwise, treat it like filter objects
+    for (const [key, value] of Object.entries(latestFilters)) {
+      const filter: any = value;
+      let filterValue;
+
+      if (filter && typeof filter === "object" && "value" in filter) {
+        filterValue = filter.value;
+      } else {
+        filterValue = value;
+      }
+
+      // Handle date range fields - split into From/To fields
+      if (key === 'OrderDate') {
+        if (filterValue && typeof filterValue === 'object' && filterValue.from && filterValue.to) {
+          (criteria as any)['FromOrderDate'] = filterValue.from;
+          (criteria as any)['ToOrderDate'] = filterValue.to;
+        } else {
+          (criteria as any)[key] = filterValue;
+        }
+      }
+      else {
+        (criteria as any)[key] = filterValue;
+      }
+    }
+
+    return criteria;
+  };
 
   const handleServerSideSearch = async () => {
     // // console.log("Server-side search with filters:", filterService.applyGridFiltersSet());
@@ -660,16 +810,16 @@ export const TripRouteUpdate = () => {
             'Save': 'badge-green rounded-2xl',
             'Under Amendment': 'badge-orange rounded-2xl',
             'Confirmed': 'badge-green rounded-2xl',
-            'Initiated': 'badge-blue rounded-2xl',
+            'Planned': 'badge-blue rounded-2xl',
             "Revenue leakage": 'badge-red rounded-2xl',
             'Under Execution': 'badge-purple rounded-2xl',
             // Trip Billing Status colors
             'Draft Bill Raised': 'badge-orange rounded-2xl',
             'Not Eligible': 'badge-red rounded-2xl',
             'Invoice Created': 'badge-blue rounded-2xl',
-            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+            'Under Planning': 'badge-fresh-green rounded-2xl'
           };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
 
         return {
@@ -743,7 +893,7 @@ export const TripRouteUpdate = () => {
   };
 
   const dynamicServerFilters: ServerFilter[] = [
-     {
+    {
       key: 'Contract', label: 'Contract', type: 'lazyselect',
       // Pass OrderType: 'SELL' when fetching Supplier Contract options
       fetchOptions: makeLazyFetcher("Contract Init", { OrderType: 'SELL' })
@@ -763,6 +913,29 @@ export const TripRouteUpdate = () => {
       fetchOptions: makeLazyFetcher("Customer Init"),
       // multiSelect: true
     },
+    {
+      key: 'CustomerOrderStatus',
+      label: 'Customer Order Status',
+      type: 'lazyselect', // lazy-loaded dropdown
+      fetchOptions: makeLazyFetcher("Customer Order status Init"),
+      // multiSelect: true
+    },
+    {
+      key: 'CustomerOrderNo',
+      label: 'Customer Order NO',
+      type: 'lazyselect', // lazy-loaded dropdown
+      fetchOptions: makeLazyFetcher("CustomerOrder Number Init"),
+      // multiSelect: true
+    },
+    {
+      key: 'OrderDate',
+      label: 'Customer Order Date',
+      type: 'dateRange',
+      defaultValue: {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd')
+      }
+    }
     // {
     //   key: 'Supplier', label: 'Supplier', type: 'lazyselect',
     //   fetchOptions: makeLazyFetcher("Supplier Init")
@@ -901,9 +1074,9 @@ export const TripRouteUpdate = () => {
                 // rowClassName={(row: any, index: number) =>
                 //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
                 // }
-                rowClassName={(row: any, index: number) => {
-                  return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                }}
+                // rowClassName={(row: any, index: number) => {
+                //   return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                // }}
                 nestedRowRenderer={renderSubRow}
                 // configurableButtons={gridConfigurableButtons}
                 showDefaultConfigurableButton={false}
@@ -937,6 +1110,28 @@ export const TripRouteUpdate = () => {
           <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
       )}
+
+      {/* Transport Route Leg Drawer */}
+      <SideDrawer
+        isOpen={isRouteDrawerOpen}
+        onClose={closeRouteDrawer}
+        title="Transport Route Details"
+        width="100%"
+        showFooter={false}
+      >
+        {/* <TransportRouteLegDrawer /> */}
+        {selectedRoute && (
+          <TransportRouteLegDrawer
+            route={selectedRoute}
+            onAddLeg={addLegPanel}
+            onRemoveLeg={removeLegPanel}
+            onUpdateLeg={updateLegData}
+            onSave={saveRouteDetails}
+            fetchDepartures={fetchDepartures}
+            fetchArrivals={fetchArrivals}
+          />
+        )}
+      </SideDrawer>
 
     </>
   );

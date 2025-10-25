@@ -24,7 +24,8 @@ export type GridColumnType =
   | 'DateFormat'
   | 'CurrencyWithSymbol'
   | 'ActionButton'
-  | 'LegLocationFormat';        // Clickable button with SVG icon
+  | 'LegLocationFormat'        // Clickable button with SVG icon
+  | 'BadgeCombinationCount'
 
 export interface GridColumnConfig {
   key: string;

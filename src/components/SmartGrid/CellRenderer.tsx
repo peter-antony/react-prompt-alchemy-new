@@ -87,6 +87,14 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     );
   };
 
+  const renderBadgeCombinationCount = () => {
+    return (
+      <Badge className='bg-gray-100 text-gray-800 border-gray-300 rounded-2xl font-medium'>
+        {row?.LegExecuted}/{row?.TotalLegs}
+      </Badge>
+    )
+  }
+
   // Default status color mapping based on common patterns
   const getDefaultStatusColor = (status: any, columnKey: string) => {
     // Safely convert to string and handle non-string inputs
@@ -607,6 +615,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return renderLink();
       case 'Badge':
         return renderBadge();
+      case 'BadgeCombinationCount':
+        return renderBadgeCombinationCount();
       case 'DateTimeRange':
         return renderDateTimeRange();
       case 'TextWithTooltip':

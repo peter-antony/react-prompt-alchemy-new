@@ -19,7 +19,7 @@ export interface tripRouteSearch {
   ExecutionPlanID: string;
   TripPlanID: string;
   TripPlanStatus: string;
-  AdditionalFilter: AdditionalFilter[];
+  // AdditionalFilter: AdditionalFilter[];
 }
 
 export const tripRouteSearchCriteria: tripRouteSearch = {
@@ -40,27 +40,29 @@ export const tripRouteSearchCriteria: tripRouteSearch = {
   //   { Name: "", Value: "" },
   //   { Name: "", Value: "" },
   // ],
-  CustomerOrderNo: "",
+  CustomerOrderNo: null,
+  // FromOrderDate: "",
+  // ToOrderDate: "",
   FromOrderDate: "",
   ToOrderDate: "",
-  Contract: "",
-  Departure: "",
-  Arrival: "",
-  Customer: "",
-  CustomerRefNo: "",
-  CustomerName: "",
-  CustomerOrderStatus: "",
-  ExecutionPlanID: "",
-  TripPlanID: "",
-  TripPlanStatus: "",
-  AdditionalFilter: [
-    {
-      Name: "ServiceType",
-      Value: "",
-    },
-    {
-      Name: "SubServiceType",
-      Value: "",
-    },
-  ],
+  Contract: null,
+  Departure: null,
+  Arrival: null,
+  Customer: null,
+  CustomerRefNo: null,
+  CustomerName: null,
+  CustomerOrderStatus: null,
+  ExecutionPlanID: null,
+  TripPlanID: null,
+  TripPlanStatus: null
+  // AdditionalFilter: [
+  //   {
+  //     Name: "ServiceType",
+  //     Value: "",
+  //   },
+  //   {
+  //     Name: "SubServiceType",
+  //     Value: "",
+  //   },
+  // ],
 };
