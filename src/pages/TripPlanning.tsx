@@ -23,6 +23,7 @@ import { ResourceSelectionDrawer } from '@/components/ResourceSelectionDrawer';
 import { TripCOHub } from '@/components/TripPlanning/TripCOHub';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
+import { tripService } from '@/api/services';
 import { useToast } from '@/hooks/use-toast';
 import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
@@ -85,6 +86,52 @@ const TripPlanning = () => {
     console.log("🔍 selectedArrCOData changed:", selectedArrCOData);
     console.log("🔍 selectedArrCOData length:", selectedArrCOData?.length);
   }, [selectedArrCOData]);
+
+  // Fetch trip data when urlTripID is available
+  useEffect(() => {
+    const fetchTripData = async () => {
+      if (urlTripID) {
+        console.log('🔄 Fetching trip data for TripID:', urlTripID);
+        try {
+          const response: any = await tripService.getTripById({ id: urlTripID });
+          
+          // Parse the ResponseData
+          const parsedResponse = response?.data?.ResponseData 
+            ? JSON.parse(response.data.ResponseData)
+            : response?.data || {};
+          
+          console.log('📋 Parsed trip response:', parsedResponse);
+          
+          // Extract CustomerOrders from the trip response
+          const customerOrders = parsedResponse.CustomerOrders || [];
+          
+          if (customerOrders && customerOrders.length > 0) {
+            console.log('✅ CustomerOrders found:', customerOrders.length);
+            // Store CustomerOrders data for TripCOHub
+            setTripCustomerOrdersData(customerOrders);
+            
+            // Also update trip status if available
+            if (parsedResponse.Header?.TripStatus) {
+              setTripStatus(parsedResponse.Header.TripStatus);
+            }
+          } else {
+            console.log('⚠️ No CustomerOrders found in trip response');
+            setTripCustomerOrdersData([]);
+          }
+        } catch (error) {
+          console.error('❌ Failed to fetch trip data:', error);
+          setTripCustomerOrdersData([]);
+          toast({
+            title: "Error",
+            description: "Failed to fetch trip data. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    fetchTripData();
+  }, [urlTripID, toast]);
 
   // Customer Orders Grid Configuration
   const customerOrdersColumns: GridColumnConfig[] = [

@@ -418,6 +418,359 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     // }
   ];
 
+  // Copy of initialColumns for when tripID is available
+  const tripColumns: GridColumnConfig[] = [
+    {
+      key: "CustomerOrderNo",
+      label: "Customer Order ID",
+      type: "Link",
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false,
+      order: 1
+    },
+    {
+      key: "CustomerOrderStatus",
+      label: "CO Status",
+      type: "Badge",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 2
+    },
+    {
+      key: "LegBehaviour",
+      label: "Leg Behaviour",
+      type: "Badge",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 3
+    },
+    {
+      key: "TripID",
+      label: "Trip ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 4
+    },
+    {
+      key: "TripStatus",
+      label: "Trip Status",
+      type: "Badge",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 5
+    },
+    {
+      key: "LegFromDescription",
+      label: "Leg From",
+      type: "TextPipedData",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 6
+    },
+    // {
+    //   key: "LegFromDescription",
+    //   label: "Leg From Description",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 7
+    // },
+    {
+      key: "LegToDescription",
+      label: "Leg To",
+      type: "TextPipedData",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 8
+    },
+    // {
+    //   key: "LegToDescription",
+    //   label: "Leg To Description",
+    //   type: "Text",
+    //   sortable: true,
+    //   editable: false,
+    //   subRow: false,
+    //   order: 9
+    // },
+    {
+      key: "TransportMode",
+      label: "Transport Mode",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 10
+    },
+    {
+      key: "DepartureDate",
+      label: "Departure Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 11
+    },
+    {
+      key: "ArrivalDate",
+      label: "Arrival Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+      order: 12
+    },
+    {
+      key: "ShuntedOutEquipmentNo",
+      label: "Shunted out equipment No",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ShuntedOutDate",
+      label: "Shunted out date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "Service",
+      label: "Service",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ServiceDescription",
+      label: "Service Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SubService",
+      label: "Sub service",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SubServiceDescription",
+      label: "Sub Service Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerID",
+      label: "Customer ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerName",
+      label: "Customer Name",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ReturnOrForward",
+      label: "Return or forward",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ContractID",
+      label: "Contract ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ContractDescription",
+      label: "Contract Description",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ScheduleInfo",
+      label: "Schedule Info",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "OnewayOrRoundtrip",
+      label: "One way / Roundtrip",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "LoadType",
+      label: "Load Type",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CreationDate",
+      label: "Creation Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "CustomerOrderDate",
+      label: "Customer Order Date",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "RequiredWagonQuantity",
+      label: "Wagon quantity Required",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PlannedWagonQuantity",
+      label: "Planned wagon quantity",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PendingWagonQuantity",
+      label: "Pending wagon quantity",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "NHM",
+      label: "NHM",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ProductWeight",
+      label: "Product weight",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ProductWeightUOM",
+      label: "Product Weight UOM",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "RIDForEmptyWagon",
+      label: "RID for Empty Wagon",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SupplierID",
+      label: "Supplier ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SupplierName",
+      label: "Supplier Name",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "SpecialInstruction",
+      label: "Special instructions",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "Equipment",
+      label: "Equipment",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "PassNo",
+      label: "Pass No.",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ExecutiveCarrier",
+      label: "Executive carrier",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
+      key: "ScheduleNo",
+      label: "Schedule No.",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+  ];
+
   const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
 
   const fetchTripsAgain = async () => {
@@ -549,16 +902,25 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
         }
       });
 
+      // Use tripColumns if tripID is available, otherwise use initialColumns
+      const columnsToUse = tripID ? tripColumns : initialColumns;
+      
       // Set the processed data to grid
-      gridState.setColumns(initialColumns);
+      gridState.setColumns(columnsToUse);
       gridState.setGridData(processedData);
       setApiStatus("success");
       console.log('✅ CustomerOrders data bound to grid:', processedData);
     }
-  }, [customerOrdersData]);
+  }, [customerOrdersData, tripID]);
 
   // Initialize columns and data
   useEffect(() => {
+    // Don't fetch if tripID is provided (parent will handle data fetch)
+    if (tripID) {
+      console.log('📋 TripID provided, waiting for parent to fetch data...');
+      return;
+    }
+    
     // Only fetch from API if no CustomerOrders data is provided from parent
     if (!customerOrdersData || customerOrdersData.length === 0) {
       console.log('🔄 No CustomerOrders data from parent, fetching from API...');
@@ -566,7 +928,8 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     } else {
       console.log('📋 Using CustomerOrders data from parent, skipping API fetch');
     }
-  }, []); // Add dependencies if needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripID]); // Only run when tripID changes
 
   // Log highlightedRows changes
   useEffect(() => {
