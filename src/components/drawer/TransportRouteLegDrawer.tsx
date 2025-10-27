@@ -233,19 +233,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       LegID: {
         id: 'LegID',
         label: 'Leg ID',
-        fieldType: 'select',
-        value: leg.LegID || '',
+        fieldType: 'text',
+        value: leg.LegID?.toString() || 'Leg ' + (legIndex + 1).toString(),
         mandatory: true,
         visible: true,
-        editable: true,
+        editable: false,
         order: 2,
-        width: 'third',
-        options: [
-          { label: 'LEG01', value: 'LEG01' },
-          { label: 'LEG02', value: 'LEG02' },
-          { label: 'LEG03', value: 'LEG03' },
-          { label: 'LEG04', value: 'LEG04' }
-        ]
+        width: 'third'
         // Remove onChange since we're using ref-based approach
       },
       Departure: {
