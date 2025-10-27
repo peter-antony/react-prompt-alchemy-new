@@ -935,7 +935,6 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     }
   }, [loading]);
   useEffect(() => {
-
     const resourceGroups = jsonStore.getAllResourceGroups();
     console.log("+++111 2GROUPS::::: ", resourceGroups);
     if (resourceGroups.length > 0) {
@@ -948,6 +947,25 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       // }, 3000)
     }
   }, [isResourceData, isResourceGroupOpen]);
+  
+  // This effect ensures Resource Group Details remain visible after confirm button click
+  useEffect(() => {
+    const checkAndUpdateResourceData = () => {
+      const resourceGroups = jsonStore.getAllResourceGroups();
+      if (resourceGroups && resourceGroups.length > 0) {
+        setIsResourceData(true);
+        setResourceCount(resourceGroups.length);
+        setResourceData(resourceGroups);
+      }
+    };
+    
+    // Run immediately and set up an interval to check periodically
+    checkAndUpdateResourceData();
+    const intervalId = setInterval(checkAndUpdateResourceData, 500);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const closeResource = () => {
     console.log("ON CLOSE calledd")

@@ -123,6 +123,8 @@ const CreateQuickOrder = () => {
           onClick: () => {
             console.log("Confirm clicked XXXX");
             quickOrderConfirmHandler();
+            // Force refresh to ensure Resource Group Details remain visible
+            setRefreshTrigger(prev => prev + 1);
           },
         }
         ] : [
