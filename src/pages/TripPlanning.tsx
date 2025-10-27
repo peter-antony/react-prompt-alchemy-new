@@ -1365,9 +1365,11 @@ const TripPlanning = () => {
                       </span> */}
                     </div>
                     <div className='flex items-center gap-4'>
-                      <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                        Create Trip
-                      </button>
+                      { !tripNo &&
+                        <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                          Create Trip
+                        </button>
+                      }
                       <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
                         Confirm
                       </button>
@@ -1594,11 +1596,11 @@ const TripPlanning = () => {
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
                           </div> */}
-                          {createTripBtn && (
+                          { !tripNo &&
                             <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                               Create Trip
                             </button>
-                          )}
+                          }
                           <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>

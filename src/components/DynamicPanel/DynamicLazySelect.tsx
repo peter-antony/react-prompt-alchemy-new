@@ -152,6 +152,7 @@ export function DynamicLazySelect({
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     onChange(undefined);
+    setSearchTerm(''); // Clear the search box as well
   };
 
   const handleButtonClick = (e: React.MouseEvent) => {
@@ -214,12 +215,15 @@ export function DynamicLazySelect({
         >
           <span className="truncate">{getDisplayValue()}</span>
           <div className="flex items-center gap-1">
-            {/* {hasValue && (
-              <X
-                className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
+            {hasValue && (
+              <button
+                type="button"
                 onClick={handleClear}
-              />
-            )} */}
+                className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>
         </Button>
