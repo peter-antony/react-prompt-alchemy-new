@@ -119,7 +119,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [selecteditem, setSelecteditem] = useState<any>(null);
   const [selectAll, setSelectAll] = useState(false);
   const [wagonDetailsType, setWagonDetailsType] = useState<string | undefined>();
+  const [wagonDetailsTypeDescription, setWagonDetailsTypeDescription] = useState<string | undefined>();
   const [wagonDetailsId, setWagonDetailsId] = useState<string | undefined>();
+  const [wagonDetailsIdDescription, setWagonDetailsIdDescription] = useState<string | undefined>();
   const [wagonDetailsQuantity, setWagonDetailsQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [wagonDetailsTareWeight, setWagonDetailsTareWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [wagonDetailsGrossWeight, setWagonDetailsGrossWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
@@ -127,20 +129,28 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const [wagonDetailsSequence, setWagonDetailsSequence] = useState<string | undefined>();
   
   const [containerDetailsType, setContainerDetailsType] = useState<string | undefined>();
+  const [containerDetailsTypeDescription, setContainerDetailsTypeDescription] = useState<string | undefined>();
   const [containerDetailsId, setContainerDetailsId] = useState<string | undefined>();
+  const [containerDetailsIdDescription, setContainerDetailsIdDescription] = useState<string | undefined>();
   const [containerDetailsQuantity, setContainerDetailsQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [containerDetailsTareWeight, setContainerDetailsTareWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [containerDetailsLoadWeight, setContainerDetailsLoadWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
 
   const [productNHM, setProductNHM] = useState<string | undefined>();
+  const [productNHMDescription, setProductNHMDescription] = useState<string | undefined>();
   const [hazardousGoods, setHazardousGoods] = useState<string | undefined>();
   const [productId, setProductId] = useState<string | undefined>();
+  const [productIdDescription, setProductIdDescription] = useState<string | undefined>();
   const [productQuantity, setProductQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [classOfStores, setClassOfStores] = useState<string | undefined>();
+  const [classOfStoresDescription, setClassOfStoresDescription] = useState<string | undefined>();
   const [unCode, setUnCode] = useState<string | undefined>();
+  const [unCodeDescription, setUnCodeDescription] = useState<string | undefined>();
   const [dgClass, setDgClass] = useState<string | undefined>();
+  const [dgClassDescription, setDgClassDescription] = useState<string | undefined>();
 
   const [thuDetailsId, setThuDetailsId] = useState<string | undefined>();
+  const [thuDetailsIdDescription, setThuDetailsIdDescription] = useState<string | undefined>();
   const [thuDetailsSerialNo, setThuDetailsSerialNo] = useState<string | undefined>();
   const [thuDetailsQuantity, setThuDetailsQuantity] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
   const [thuDetailsWeight, setThuDetailsWeight] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
@@ -552,16 +562,6 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   if (!isOpen) return null;
 
   const handleSaveActualDetails = async () => {
-    // if (!selecteditem) {
-    //   console.log('No item selected');
-    //   toast({
-    //     title: "⚠️ No Item Selected",
-    //     description: "Please select an item to save.",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
-
     try {
       console.log("Saving actual details for item:", selecteditem);
       
@@ -587,14 +587,71 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       // Get the leg details from the store
       const fullLegDetails = getLegDetails();
       
-      
+      // We'll create a helper that, if a string contains "||", returns an object with both parts.
+      const splitAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          const [first, ...rest] = value.split("||");
+          return {
+            value: first.trim(),
+            label: rest.join("||").trim()
+          };
+        }
+        return value;
+      };
+
+      // Helper to recursively process all dropdown fields in an object, splitting at "||"
+      const splitDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, split it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: splitAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, split if it has a pipe
+            newObj[key] = splitAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = splitDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        console.log("splitDropdowns ===", newObj);
+        return newObj;
+      };
+
+      console.log("wagonDetailsType ", splitAtPipe(wagonDetailsType));
+      let wagonTypeData = splitAtPipe(wagonDetailsType) as { value: string; label: string };
+      let wagonIdData = splitAtPipe(wagonDetailsId) as { value: string; label: string };
+      let containerTypeData = splitAtPipe(containerDetailsType) as { value: string; label: string };
+      let containerIdData = splitAtPipe(containerDetailsId) as { value: string; label: string };
+      let productNHMData = splitAtPipe(productNHM) as { value: string; label: string };
+      let productIdData = splitAtPipe(productId) as { value: string; label: string };
+      let classOfStoresData = splitAtPipe(classOfStores) as { value: string; label: string };
+      let unCodeData = splitAtPipe(unCode) as { value: string; label: string };
+      let dgClassData = splitAtPipe(dgClass) as { value: string; label: string };
+      let thuDetailsIdData = splitAtPipe(thuDetailsId) as { value: string; label: string };
+      let hazardousGoodsData = splitAtPipe(hazardousGoods) as { value: string; label: string };
+      console.log("wagonTypeData ", wagonTypeData);
       // Create updated item with form data
       const updatedItem = {
         ...selecteditem, // Keep all existing data
         // Update with new form data
         ModeFlag: "Update",
-        WagonType: wagonDetailsType || selecteditem.WagonType,
-        Wagon: wagonDetailsId || selecteditem.Wagon,
+        WagonType: wagonTypeData?.value || selecteditem.WagonType,
+        WagonTypeDescription: wagonTypeData?.label || selecteditem.WagonTypeDescription,
+        Wagon: wagonIdData?.value || selecteditem.Wagon,
+        WagonDescription: wagonIdData?.label || selecteditem.WagonIdDescription,
         WagonQty: wagonDetailsQuantity.input ? parseFloat(wagonDetailsQuantity.input) : selecteditem.WagonQty,
         WagonQtyUOM: wagonDetailsQuantity.dropdown || selecteditem.WagonQtyUOM,
         WagonTareWeight: wagonDetailsTareWeight.input ? parseFloat(wagonDetailsTareWeight.input) : selecteditem.WagonTareWeight,
@@ -605,29 +662,38 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         WagonLengthUOM: wagonDetailsLength.dropdown || selecteditem.WagonLengthUOM,
         WagonSealNo: wagonDetailsSequence || selecteditem.WagonSealNo,
 
-        ContainerId: containerDetailsId || selecteditem.ContainerId,
-        ContainerType: containerDetailsType || selecteditem.ContainerType,
+        ContainerId: containerIdData?.value || selecteditem.ContainerId,
+        ContainerDescription: containerTypeData?.label || selecteditem.ContainerIdDescription,
+        ContainerType: containerTypeData?.value || selecteditem.ContainerType, 
+        ContainerTypeDescription: containerIdData?.label || selecteditem.ContainerTypeDescription,
         ContainerQty: containerDetailsQuantity.input ? parseFloat(containerDetailsQuantity.input) : selecteditem.ContainerQty,
         ContainerTareWeight: containerDetailsTareWeight.input ? parseFloat(containerDetailsTareWeight.input) : selecteditem.ContainerTareWeight,
         ContainerTareWeightUOM: containerDetailsTareWeight.dropdown || selecteditem.ContainerTareWeightUOM,
         ContainerLoadWeight: containerDetailsLoadWeight.input ? parseFloat(containerDetailsLoadWeight.input) : selecteditem.ContainerLoadWeight,
         ContainerLoadWeightUOM: containerDetailsLoadWeight.dropdown || selecteditem.ContainerLoadWeightUOM,
 
-        ThuId: thuDetailsId || selecteditem.ThuId,
+        Thu: thuDetailsIdData?.value || selecteditem.ThuId,
+        ThuDescription: thuDetailsIdData?.label || selecteditem.ThuIdDescription,
         ThuSerialNo: thuDetailsSerialNo || selecteditem.ThuSerialNo,
         ThuQty: thuDetailsQuantity.input ? parseFloat(thuDetailsQuantity.input) : selecteditem.ThuQuantity,
         ThuQtyUOM: thuDetailsQuantity.dropdown || selecteditem.ThuQuantityUOM,
         ThuWeight: thuDetailsWeight.input ? parseFloat(thuDetailsWeight.input) : selecteditem.ThuWeight,
         ThuWeightUOM: thuDetailsWeight.dropdown || selecteditem.ThuWeightUOM,
 
-        NHM: productNHM || selecteditem.NHM,
-        ContainsHazardousGoods: hazardousGoods || selecteditem.ContainsHazardousGoods,
-        Product: productId || selecteditem.ProductID,
+        NHM: productNHMData?.value || selecteditem.NHM,
+        NHMDescription: productNHMData?.label || selecteditem.NHMDescription,
+        ContainsHazardousGoods: hazardousGoodsData?.value || selecteditem.ContainsHazardousGoods,
+        // ContainsHazardousGoodsDescription: hazardousGoodsData?.label || selecteditem.ContainsHazardousGoodsDescription,
+        Product: productIdData?.value || selecteditem.ProductID,
+        ProductDescription: productIdData?.label || selecteditem.ProductIdDescription,
         productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
         productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
-        ClassOfStores: classOfStores || selecteditem.ClassofStores,
-        UNCode: unCode || selecteditem.UNCode,
-        DGClass: dgClass || selecteditem.DGClass,
+        ClassOfStores: classOfStoresData?.value || selecteditem.ClassofStores,
+        ClassOfStoresDescription: classOfStoresData?.label || selecteditem.ClassOfStoresDescription,
+        UNCode: unCodeData?.value || selecteditem.UNCode,
+        UNCodeDescription: unCodeData?.label || selecteditem.UNCodeDescription,
+        DGClass: dgClassData?.value || selecteditem.DGClass,
+        DGClassDescription: dgClassData?.label || selecteditem.DGClassDescription,
       };
 
       console.log('Updated item with form data:', updatedItem);
