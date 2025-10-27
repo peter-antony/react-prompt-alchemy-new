@@ -79,6 +79,27 @@ export interface TransportRouteLegDrawerRef {
   syncFormDataToStore: () => void;
 }
 
+
+// Helper functions for removing pipe symbols
+const splitAtPipe = (value: string | null | undefined) => {
+  if (typeof value === "string" && value.includes("||")) {
+    const [first, ...rest] = value.split("||");
+    return {
+      value: first.trim(),
+      label: rest.join("||").trim(),
+    };
+  }
+  return value;
+};
+
+const extractIdFromPipeSeparatedValue = (value: string | null | undefined): string => {
+  if (typeof value === "string" && value.includes("||")) {
+    const [id] = value.split("||");
+    return id.trim();
+  }
+  return value || "";
+};
+
 export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, TransportRouteLegDrawerProps>((props, ref) => {
   const [reasonForUpdate, setReasonForUpdate] = useState('');
   const { toast } = useToast();
@@ -158,6 +179,50 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         console.log(`🔍 Calling getFormValues for ${panelId}`);
         const panelData = panelRef.getFormValues();
         console.log(`🔍 Panel data for ${panelId}:`, panelData);
+        
+        // Check if this leg has been modified
+        const legIndex = parseInt(panelId.replace('legPanel_', ''));
+        const originalLeg = selectedRoute?.LegDetails?.[legIndex];
+        let isModified = false;
+        
+        // Process pipe-separated values for Departure and Arrival
+        if (panelData.Departure && panelData.Departure.includes('||')) {
+          const parts = panelData.Departure.split('||');
+          panelData.Departure = parts[0].trim();
+          panelData.DepartureDescription = parts[1].trim();
+          isModified = true;
+        }
+        
+        if (panelData.Arrival && panelData.Arrival.includes('||')) {
+          const parts = panelData.Arrival.split('||');
+          panelData.Arrival = parts[0].trim();
+          panelData.ArrivalDescription = parts[1].trim();
+          isModified = true;
+        }
+        
+        // Process TransportMode field
+        if (panelData.TransportMode && panelData.TransportMode.includes('||')) {
+          panelData.TransportMode = extractIdFromPipeSeparatedValue(panelData.TransportMode);
+          isModified = true;
+        }
+        
+        // Process LegBehaviour field
+        if (panelData.LegBehaviour && panelData.LegBehaviour.includes('||')) {
+          const parts = panelData.LegBehaviour.split('||');
+          panelData.LegBehaviour = parts[0].trim();
+          panelData.LegBehaviourDescription = parts[0].trim(); // Using the same value for both as per requirement
+          isModified = true;
+        }
+        
+        // Update ModeFlag if the leg was modified
+        if (isModified) {
+          panelData.ModeFlag = 'Update';
+        } else if (originalLeg) {
+          panelData.ModeFlag = originalLeg.ModeFlag || 'Nochange';
+        } else {
+          panelData.ModeFlag = 'Nochange';
+        }
+        
         formData.legDetails.push(panelData);
       } else {
         console.log(`❌ No valid ref or getFormValues method for ${panelId}`);
@@ -203,11 +268,18 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     const formData = getFormData();
     console.log('💾 Saving form data:', formData);
     console.log('💾 selectedRoute form data:', selectedRoute);
+
+    // Extract only the value before "||" for ReasonForUpdate (if present)
+    const reasonValue = typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
+      ? reasonForUpdate.split("||")[0].trim()
+      : reasonForUpdate;
+      
     const formatFinalRouteData = [
       {
         ...selectedRoute,
-        LegDetails: formData.legDetails,
-        ReasonForUpdate: reasonForUpdate
+        // LegDetails: formData.legDetails,
+        LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
+        ReasonForUpdate: reasonValue
       }
     ];
     const response = await tripService.updateCOSelection(formatFinalRouteData);
