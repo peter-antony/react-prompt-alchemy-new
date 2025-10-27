@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useTransportRouteStore } from '@/stores/transportRouteStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
+import { tripService } from '@/api/services/tripService';
 
 interface TripInfo {
   TripID: string;
@@ -80,10 +82,10 @@ export interface TransportRouteLegDrawerRef {
 export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, TransportRouteLegDrawerProps>((props, ref) => {
   const [reasonForUpdate, setReasonForUpdate] = useState('');
   const { toast } = useToast();
-  
+
   // Refs for each DynamicPanel
   const dynamicPanelRefs = useRef<{ [key: string]: any }>({});
-  
+
   // Use the store directly
   const {
     selectedRoute,
@@ -96,7 +98,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     fetchDepartures,
     fetchArrivals
   } = useTransportRouteStore();
-  
+
   console.log('selectedRoute from store: --------------- ', selectedRoute);
   console.log('isLoading: --------------- ', isLoading);
   console.log('error: --------------- ', error);
@@ -110,17 +112,17 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         offset,
         limit,
       });
-      
+
       const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-                label: `${item.id} || ${item.name}`,
-                value: `${item.id} || ${item.name}`,
-              }
-            : {})
-        }));
-      
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
       // Fallback to empty array if API call fails
       return [];
     } catch (error) {
@@ -133,6 +135,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   // Specific fetch functions for different message types
   const fetchTransportModes = fetchMasterData("Transport Mode Init");
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
+  const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
 
   // Helper function to get form data
   const getFormData = () => {
@@ -150,7 +153,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       console.log(`🔍 Processing panel: ${panelId}`);
       const panelRef = dynamicPanelRefs.current[panelId];
       console.log(`🔍 Panel ref for ${panelId}:`, panelRef);
-      
+
       if (panelRef && panelRef.getFormValues) {
         console.log(`🔍 Calling getFormValues for ${panelId}`);
         const panelData = panelRef.getFormValues();
@@ -172,7 +175,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       console.log('🔄 syncFormDataToStore called');
       const formData = getFormData();
       console.log('🔄 Form data from getFormData:', formData);
-      
+
       // Update store with form data
       if (selectedRoute && formData.legDetails.length > 0) {
         console.log('🔄 Updating store with form data...');
@@ -187,7 +190,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
             }
           });
         });
-        
+
         console.log('🔄 Form data synced to store:', formData);
       } else {
         console.log('❌ No selectedRoute or empty legDetails:', { selectedRoute, legDetailsLength: formData.legDetails.length });
@@ -199,7 +202,19 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     // Get all form data from DynamicPanels
     const formData = getFormData();
     console.log('💾 Saving form data:', formData);
-    
+    console.log('💾 selectedRoute form data:', selectedRoute);
+    const formatFinalRouteData = [
+      {
+        ...selectedRoute,
+        LegDetails: formData.legDetails,
+        ReasonForUpdate: reasonForUpdate
+      }
+    ];
+    const response = await tripService.updateCOSelection(formatFinalRouteData);
+    console.log('💾 response:', response);
+
+    console.log('💾 formatFinalRouteData:', formatFinalRouteData);
+
     // Here you can process the form data as needed
     // For now, we'll just show a success message
     toast({
@@ -215,7 +230,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       console.log(`❌ No leg found at index ${legIndex}`);
       return {};
     }
-    
+
     console.log(`✅ Leg found at index ${legIndex}:`, leg);
 
     return {
@@ -444,76 +459,76 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
           {selectedRoute?.LegDetails?.map((leg, index) => {
             console.log(`🎨 Rendering DynamicPanel for leg ${index} with config:`, createLegPanelConfig(index));
             return (
-            <Card key={leg.LegUniqueId} className="relative bg-white border border-gray-200 shadow-sm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
-                onClick={() => removeLegPanel(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <Card key={leg.LegUniqueId} className="relative bg-white border border-gray-200 shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
+                  onClick={() => removeLegPanel(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
 
-              <DynamicPanel
-                ref={(ref) => {
-                  console.log(`🔗 Setting ref for leg-${index}:`, ref);
-                  if (ref) {
-                    dynamicPanelRefs.current[`leg-${index}`] = ref;
-                    console.log(`✅ Ref set for leg-${index}, current refs:`, dynamicPanelRefs.current);
-                  }
-                }}
-                panelId={`leg-${index}`}
-                panelTitle="Leg Sequence"
-                panelConfig={createLegPanelConfig(index)}
-                initialData={leg}
-                collapsible={true}
-                panelWidth="full"
-                showPreview={false}
-                badgeValue={leg.LegSequence.toString()}
-              />
+                <DynamicPanel
+                  ref={(ref) => {
+                    console.log(`🔗 Setting ref for leg-${index}:`, ref);
+                    if (ref) {
+                      dynamicPanelRefs.current[`leg-${index}`] = ref;
+                      console.log(`✅ Ref set for leg-${index}, current refs:`, dynamicPanelRefs.current);
+                    }
+                  }}
+                  panelId={`leg-${index}`}
+                  panelTitle="Leg Sequence"
+                  panelConfig={createLegPanelConfig(index)}
+                  initialData={leg}
+                  collapsible={true}
+                  panelWidth="full"
+                  showPreview={false}
+                  badgeValue={leg.LegSequence.toString()}
+                />
 
-              {/* Trip Details with Badges */}
-              {leg.TripInfo && leg.TripInfo.length > 0 && (
-                <div className="px-6 pb-4">
-                  {leg.TripInfo.map((trip, tripIndex) => (
-                    <div key={tripIndex} className="text-sm text-gray-600 flex items-center gap-2 flex-wrap mb-2">
-                      <span className="font-medium">
-                        {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate} → {trip.ArrivalDescription}, {trip.ArrivalActualDate}
-                      </span>
-                      {trip.LoadType && (
-                        <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
-                          {trip.LoadType}
-                        </Badge>
-                      )}
-                      {trip.TripStatus && (
-                        <Badge
-                          variant="outline"
-                          className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
-                        >
-                          {trip.TripStatus}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                  {leg.TripInfo[0]?.DraftBillNo && (
-                    <div className="text-sm text-gray-600 mt-2">
-                      Draftbill: {leg.TripInfo[0].DraftBillNo}
-                    </div>
-                  )}
-                </div>
-              )}
+                {/* Trip Details with Badges */}
+                {leg.TripInfo && leg.TripInfo.length > 0 && (
+                  <div className="px-6 pb-4">
+                    {leg.TripInfo.map((trip, tripIndex) => (
+                      <div key={tripIndex} className="text-sm text-gray-600 flex items-center gap-2 flex-wrap mb-2">
+                        <span className="font-medium">
+                          {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate} → {trip.ArrivalDescription}, {trip.ArrivalActualDate}
+                        </span>
+                        {trip.LoadType && (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
+                            {trip.LoadType}
+                          </Badge>
+                        )}
+                        {trip.TripStatus && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
+                          >
+                            {trip.TripStatus}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                    {leg.TripInfo[0]?.DraftBillNo && (
+                      <div className="text-sm text-gray-600 mt-2">
+                        Draftbill: {leg.TripInfo[0].DraftBillNo}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {leg.LegStatus && (
-                <div className="px-6 pb-4">
-                  <Badge
-                    variant="outline"
-                    className={getLegStatusBadgeClass(leg.LegStatus)}
-                  >
-                    Status: {leg.LegStatus}
-                  </Badge>
-                </div>
-              )}
-            </Card>
+                {leg.LegStatus && (
+                  <div className="px-6 pb-4">
+                    <Badge
+                      variant="outline"
+                      className={getLegStatusBadgeClass(leg.LegStatus)}
+                    >
+                      Status: {leg.LegStatus}
+                    </Badge>
+                  </div>
+                )}
+              </Card>
             );
           })}
         </div>
@@ -521,7 +536,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         {/* Reason for Update */}
         <div className="mt-6">
           <Label htmlFor="reasonForUpdate">Reason For Update</Label>
-          <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
+          {/* <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
             <SelectTrigger id="reasonForUpdate" className="mt-2">
               <SelectValue placeholder="Select Reason" />
             </SelectTrigger>
@@ -532,7 +547,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
               <SelectItem value="schedule_update">Schedule Update</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
+          <DynamicLazySelect
+            fetchOptions={fetchReasonForUpdate}
+            value={reasonForUpdate}
+            onChange={(value) => setReasonForUpdate(value as string)}
+            placeholder="Select Type"
+          />
         </div>
       </div>
 
