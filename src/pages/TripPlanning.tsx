@@ -32,7 +32,7 @@ const TripPlanning = () => {
   const [searchParams] = useSearchParams();
   
   // Extract URL parameters
-  const urlTripID = searchParams.get('tripID');
+  const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
   
   const [tripNo, setTripNo] = useState('');
@@ -1327,9 +1327,11 @@ const TripPlanning = () => {
                       <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
                         Release
                       </button>
-                      <button onClick={openAmendPopup} disabled={!tripNo} className={buttonClass}>
+                      { tripNo &&
+                        (<button onClick={openAmendPopup} className={buttonClass}>
                         Amend
-                      </button>
+                      </button>)
+                      }
                     </div>
                   </div>
                 </div>
@@ -1556,9 +1558,12 @@ const TripPlanning = () => {
                           <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Release
                           </button>
-                          <button onClick={openAmendPopup} disabled={isDisabled} className={buttonClass}>
+                          { tripNo &&
+
+                            (<button onClick={openAmendPopup} className={buttonClass}>
                             Amend
-                          </button>
+                          </button>)
+                          }
                         </div>
                       </div>
 
