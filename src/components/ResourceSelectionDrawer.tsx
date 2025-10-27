@@ -517,39 +517,112 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   // Handle row selection from checkbox
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
     console.log('Selected rows changed via checkbox:', selectedRowIndices);
-    setSelectedRows(selectedRowIndices);
     
     const currentData = currentResourceData.length > 0 ? currentResourceData : [];
-    const selectedObjects = Array.from(selectedRowIndices)
-      .map(index => currentData[index])
-      .filter(Boolean);
-
+    
     // Get the ID field for current resource type
     const idField = getIdField();
     
-    // Create a new Set of unique row IDs using dynamic ID field
-    const newSelectedRowIds = new Set(selectedObjects.map(row => row[idField]));
-
-    // Update selected row objects to ensure uniqueness by ID
-    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
-      self.findIndex(r => r[idField] === row[idField]) === index
-    );
-
-    setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(uniqueSelectedObjects);
-    setRowTripId(Array.from(newSelectedRowIds));
+    // Check if this resource type should use single selection
+    const isSingleSelectionMode = config.gridTitle === 'Supplier' || config.gridTitle === 'Schedule';
     
-    console.log('Selected row objects:', uniqueSelectedObjects);
-    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
+    if (isSingleSelectionMode) {
+      // Single selection mode for Supplier and Schedule
+      if (selectedRowIndices.size > 1) {
+        const lastSelectedIndex = Math.max(...Array.from(selectedRowIndices));
+        const lastSelectedRow = currentData[lastSelectedIndex];
+        
+        if (lastSelectedRow) {
+          const rowId = lastSelectedRow[idField];
+          setSelectedRows(new Set([lastSelectedIndex]));
+          setSelectedRowIds(new Set([rowId]));
+          setSelectedRowObjects([lastSelectedRow]);
+          setRowTripId([rowId]);
+          console.log('Multiple selection detected - keeping only last selected:', rowId);
+        }
+      } else if (selectedRowIndices.size === 1) {
+        // Single row selected
+        const selectedIndex = Array.from(selectedRowIndices)[0];
+        const selectedRow = currentData[selectedIndex];
+        
+        if (selectedRow) {
+          const rowId = selectedRow[idField];
+          setSelectedRows(selectedRowIndices);
+          setSelectedRowIds(new Set([rowId]));
+          setSelectedRowObjects([selectedRow]);
+          setRowTripId([rowId]);
+          console.log('Single row selected:', rowId);
+        }
+      } else {
+        // No rows selected
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
+        console.log('No rows selected');
+      }
+    } else {
+      // Multi-selection mode for other resource types (Equipment, Driver, Handler, Vehicle)
+      setSelectedRows(selectedRowIndices);
+      
+      const selectedObjects = Array.from(selectedRowIndices)
+        .map(index => currentData[index])
+        .filter(Boolean);
+
+      // Create a new Set of unique row IDs using dynamic ID field
+      const newSelectedRowIds = new Set(selectedObjects.map(row => row[idField]));
+
+      // Update selected row objects to ensure uniqueness by ID
+      const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
+        self.findIndex(r => r[idField] === row[idField]) === index
+      );
+
+      setSelectedRowIds(newSelectedRowIds);
+      setSelectedRowObjects(uniqueSelectedObjects);
+      setRowTripId(Array.from(newSelectedRowIds));
+      
+      console.log('Multi-selection mode - selected row objects:', uniqueSelectedObjects);
+      console.log('Multi-selection mode - selected row IDs:', Array.from(newSelectedRowIds));
+    }
   };
 
   // Handle select all
   const handleSelectAll = (isSelected: boolean) => {
+    // Check if this resource type should use single selection
+    const isSingleSelectionMode = config.gridTitle === 'Supplier' || config.gridTitle === 'Schedule';
+    
     if (isSelected) {
-      const allIds = new Set(resourceData.map(item => item.id));
-      setSelectedResources(allIds);
+      if (isSingleSelectionMode) {
+        // For single selection mode, select only the first row
+        const firstRow = resourceData[0];
+        if (firstRow) {
+          const idField = getIdField();
+          const rowId = firstRow[idField];
+          setSelectedRows(new Set([0]));
+          setSelectedRowIds(new Set([rowId]));
+          setSelectedRowObjects([firstRow]);
+          setRowTripId([rowId]);
+          console.log('Select all (single mode) - keeping only first row:', rowId);
+        }
+      } else {
+        // For multi-selection mode, select all rows
+        const allIndices = new Set(resourceData.map((_, index) => index));
+        const idField = getIdField();
+        const allRowIds = new Set(resourceData.map(row => row[idField]));
+        
+        setSelectedRows(allIndices);
+        setSelectedRowIds(allRowIds);
+        setSelectedRowObjects([...resourceData]);
+        setRowTripId(Array.from(allRowIds));
+        console.log('Select all (multi mode) - selected all rows:', Array.from(allRowIds));
+      }
     } else {
-      setSelectedResources(new Set());
+      // Clear all selections
+      setSelectedRows(new Set());
+      setSelectedRowIds(new Set());
+      setSelectedRowObjects([]);
+      setRowTripId([]);
+      console.log('Select all - cleared all selections');
     }
   };
 
@@ -561,43 +634,75 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     const idField = getIdField();
     const rowId = row[idField];
 
-    // Toggle row selection
-    const newSelectedRows = new Set(selectedRows);
-    const newSelectedRowIds = new Set(selectedRowIds);
-    const newSelectedRowObjects = [...selectedRowObjects];
+    // Check if this resource type should use single selection
+    const isSingleSelectionMode = config.gridTitle === 'Supplier' || config.gridTitle === 'Schedule';
 
-    // Check if this row is already selected by ID (not index)
-    const isRowSelected = newSelectedRowIds.has(rowId);
+    if (isSingleSelectionMode) {
+      // Single selection mode for Supplier and Schedule
+      const isRowSelected = selectedRowIds.has(rowId);
 
-    if (isRowSelected) {
-      // Remove row: remove from all tracking sets/arrays
-      newSelectedRows.delete(index);
-      newSelectedRowIds.delete(rowId);
-      const objectIndex = newSelectedRowObjects.findIndex(obj => obj[idField] === rowId);
-      if (objectIndex > -1) {
-        newSelectedRowObjects.splice(objectIndex, 1);
+      if (isRowSelected) {
+        // If clicking on already selected row, deselect it (clear all)
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
+        console.log('Deselected row and cleared all selections:', rowId);
       }
-      console.log('Removed row:', rowId);
-    }
-    else {
-      // Add row: add to all tracking sets/arrays (ensure uniqueness)
-      newSelectedRows.add(index);
-      newSelectedRowIds.add(rowId);
-      // Only add if not already in objects array (double-check uniqueness)
-      if (!newSelectedRowObjects.some(obj => obj[idField] === rowId)) {
-        newSelectedRowObjects.push(row);
+      else {
+        // If clicking on new row, clear previous selections and select only this row
+        setSelectedRows(new Set([index]));
+        setSelectedRowIds(new Set([rowId]));
+        setSelectedRowObjects([row]);
+        setRowTripId([rowId]);
+        console.log('Selected only this row (cleared previous selections):', rowId);
       }
-      console.log('Added row:', rowId);
+    } else {
+      // Multi-selection mode for other resource types (Equipment, Driver, Handler, Vehicle)
+      const isRowSelected = selectedRowIds.has(rowId);
+
+      if (isRowSelected) {
+        // Remove row: remove from all tracking sets/arrays
+        const newSelectedRows = new Set(selectedRows);
+        const newSelectedRowIds = new Set(selectedRowIds);
+        const newSelectedRowObjects = [...selectedRowObjects];
+
+        newSelectedRows.delete(index);
+        newSelectedRowIds.delete(rowId);
+        const objectIndex = newSelectedRowObjects.findIndex(obj => obj[idField] === rowId);
+        if (objectIndex > -1) {
+          newSelectedRowObjects.splice(objectIndex, 1);
+        }
+
+        setSelectedRows(newSelectedRows);
+        setSelectedRowIds(newSelectedRowIds);
+        setSelectedRowObjects(newSelectedRowObjects);
+        setRowTripId(Array.from(newSelectedRowIds));
+        console.log('Removed row from multi-selection:', rowId);
+      }
+      else {
+        // Add row: add to all tracking sets/arrays (ensure uniqueness)
+        const newSelectedRows = new Set(selectedRows);
+        const newSelectedRowIds = new Set(selectedRowIds);
+        const newSelectedRowObjects = [...selectedRowObjects];
+
+        newSelectedRows.add(index);
+        newSelectedRowIds.add(rowId);
+        // Only add if not already in objects array (double-check uniqueness)
+        if (!newSelectedRowObjects.some(obj => obj[idField] === rowId)) {
+          newSelectedRowObjects.push(row);
+        }
+
+        setSelectedRows(newSelectedRows);
+        setSelectedRowIds(newSelectedRowIds);
+        setSelectedRowObjects(newSelectedRowObjects);
+        setRowTripId(Array.from(newSelectedRowIds));
+        console.log('Added row to multi-selection:', rowId);
+      }
     }
 
-    // Update all state
-    setSelectedRows(newSelectedRows);
-    setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(newSelectedRowObjects);
-    setRowTripId(Array.from(newSelectedRowIds));
-
-    console.log('Selected row objects after click:', newSelectedRowObjects);
-    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+    console.log('Selected row objects after click:', isSingleSelectionMode ? [row] : selectedRowObjects);
+    console.log('Selected row IDs after click:', isSingleSelectionMode ? [rowId] : Array.from(selectedRowIds));
   };
 
   // Handle add resource
@@ -692,7 +797,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     >
       <div className="space-y-6">
         {/* Filter Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 px-4 mt-4">
           {/* Service Type and Sub Service Type */}
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -719,7 +824,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         </div>
 
         {/* Resource Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 px-4">
           {/* Resource Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
