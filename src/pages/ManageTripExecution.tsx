@@ -237,6 +237,7 @@ const ManageTripExecution = () => {
     tripDataObj.Header.Amendment.AmendmentReasonCode = mappedObj?.ReasonCode;
     tripDataObj.Header.Amendment.AmendmentReasonCodeDescription = mappedObj?.ReasonCode;
     tripDataObj.Header.Amendment.AmendmentRemarks = mappedObj?.Remarks;
+    tripDataObj.Header.ModeFlag = "Update";
     console.log('Trip Data Object for API:', tripDataObj);
     
     try {
@@ -283,10 +284,10 @@ const ManageTripExecution = () => {
           templateId: templateId,
           status: responseData?.Status
         });
-        
+        let res = response?.data?.ResponseData ? JSON.parse(response?.data?.ResponseData) : null;
         // Optionally refresh trip data after successful amendment
-        if (tripData?.Header?.TripNo) {
-          await fetchTrip(tripData.Header.TripNo);
+        if (res?.TripID) {
+          await fetchTrip(res.TripID);
           console.log("🔄 Trip data refreshed after amendment.");
         }
       } else {

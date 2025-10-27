@@ -1668,9 +1668,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start gap-1">
-                      <span>{leg.id} :</span>
+                      <span>{leg.id}:</span>
                       {/* <MapPin className="h-4 w-4 text-muted-foreground" /> */}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1">
                         <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span>
                         {/* <div className="text-xs text-muted-foreground">Origin</div> */}
                       </div>

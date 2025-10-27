@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { tripService } from "@/api/services";
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
@@ -17,13 +17,16 @@ import { tripRouteSearchCriteria, tripRouteSearch } from "@/constants/tripRouteS
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
-import { TransportRouteLegDrawer } from '@/components/drawer/TransportRouteLegDrawer';
+import { TransportRouteLegDrawer, TransportRouteLegDrawerRef } from '@/components/drawer/TransportRouteLegDrawer';
 import { useTransportRouteStore } from '@/stores/transportRouteStore';
 import { SideDrawer } from "@/components/SideDrawer";
 
 export const TripRouteUpdate = () => {
   const [searchParams] = useSearchParams();
   const createTripPlan = searchParams.get('createTripPlan');
+  
+  // Ref for TransportRouteLegDrawer
+  const transportRouteLegDrawerRef = useRef<TransportRouteLegDrawerRef>(null);
   const {
     routes,
     selectedOrder,
@@ -31,7 +34,9 @@ export const TripRouteUpdate = () => {
     isDrawerOpen,
     isRouteDrawerOpen,
     highlightedIndexes,
-    fetchRoutes,
+    isLoading,
+    isRouteLoading,
+    error,
     handleCustomerOrderClick,
     openRouteDrawer,
     closeDrawer,
@@ -404,107 +409,26 @@ export const TripRouteUpdate = () => {
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
-  const handleLinkClick = (value: any, columnKey: any) => {
-    console.log("Link clicked:", value, columnKey);
-    let row = {
-      "ExecutionPlanID": "EXE/2021/00005668",
-      "CustomerOrderID": "BR/2025/0259",
-      "CustomerID": "1005",
-      "CustomerName": "ramcotest",
-      "Service": "BT",
-      "ServiceDescription": "BLOCK TRAIN CONVENTIONAL",
-      "SubService": "WOW",
-      "SubServiceDescription": "WITHOUT  EQUIPMENT / SOC",
-      "CODeparture": "10-00001",
-      "CODepartureDescription": "10-00001",
-      "COArrival": "10-00004",
-      "COArrivalDescription": "10-00004",
-      "RouteID": "ROUTE 78",
-      "RouteDescription": "ROUTE 78",
-      "Status": "PLND",
-      "LoadType": "Loaded",
-      "LegDetails": [
-        {
-          "LegSequence": 1,
-          "LegID": "Leg 1",
-          "LegUniqueId": "BDAE29DB-15BD-4804-8CBD-E53771EBFC41",
-          "Departure": "10-00001",
-          "DepartureDescription": "North Chennai",
-          "Arrival": "10-00002",
-          "ArrivalDescription": "East Chennai",
-          "LegBehaviour": "Pick",
-          "LegBehaviourDescription": "Pick",
-          "TransportMode": "Rail",
-          "LegStatus": "CF",
-          "TripInfo": [
-            {
-              "TripID": "TP/2021/00024972",
-              "Departure": "10-00001",
-              "DepartureDescription": "North Chennai",
-              "Arrival": "10-00002",
-              "ArrivalDescription": "East Chennai",
-              "DepartureActualDate": null,
-              "ArrivalActualDate": null,
-              "LoadType": "Loaded",
-              "TripStatus": "Released",
-              "DraftBillNo": null,
-              "DraftBillStatus": null,
-              "DraftBillWarning": null,
-              "SupplierID": "10020296",
-              "SupplierDescription": "ZIMMERMANN SPEDITION GMBH"
-            }
-          ],
-          "ModeFlag": "Nochange",
-          "ReasonForUpdate": null,
-          "QCCode1": null,
-          "QCCode1Value": null,
-          "Remarks": null
-        },
-        {
-          "LegSequence": 2,
-          "LegID": "Leg 2",
-          "LegUniqueId": "C53AE354-E8A9-48F9-9590-6B56C5D6EDB9",
-          "Departure": "10-00002",
-          "DepartureDescription": "East Chennai",
-          "Arrival": "10-00003",
-          "ArrivalDescription": "West Chennai",
-          "LegBehaviour": "LHV",
-          "LegBehaviourDescription": "LHV",
-          "TransportMode": "Rail",
-          "LegStatus": "AC",
-          "TripInfo": null,
-          "ModeFlag": "Nochange",
-          "ReasonForUpdate": null,
-          "QCCode1": null,
-          "QCCode1Value": null,
-          "Remarks": null
-        },
-        {
-          "LegSequence": 3,
-          "LegID": "Leg 3",
-          "LegUniqueId": "DA84BAF0-A11C-471F-9A36-47F372686A06",
-          "Departure": "10-00003",
-          "DepartureDescription": "West Chennai",
-          "Arrival": "10-00004",
-          "ArrivalDescription": "10-00004",
-          "LegBehaviour": "Dvry",
-          "LegBehaviourDescription": "Dvry",
-          "TransportMode": "Rail",
-          "LegStatus": null,
-          "TripInfo": null,
-          "ModeFlag": "Nochange",
-          "ReasonForUpdate": null,
-          "QCCode1": null,
-          "QCCode1Value": null,
-          "Remarks": null
-        }
-      ],
-      "ReasonForUpdate": ""
-    }
+  const handleLinkClick = (rowData: any, columnKey: any, rowIndex: any) => {
+    console.log("Link clicked:", rowData, columnKey, rowIndex);
+    
     if (columnKey == "CustomerOrderNo") {
-      // setIsRouteDrawerOpen(true);
-      openRouteDrawer(row);
-      console.log('row', row);
+      console.log('Clicked row data:', rowData);
+      console.log('CustomerOrderID:', rowData?.CustomerOrderNo);
+      console.log('Available data keys:', rowData ? Object.keys(rowData) : 'No row data');
+      
+      if (rowData?.CustomerOrderNo) {
+        // Call the API with the actual row data
+        openRouteDrawer(rowData);
+      } else {
+        console.error('No CustomerOrderID found in clicked row');
+        console.error('Available row data:', rowData);
+        toast({
+          title: "Error",
+          description: "Unable to find Customer Order ID for this row",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -1115,22 +1039,16 @@ export const TripRouteUpdate = () => {
       <SideDrawer
         isOpen={isRouteDrawerOpen}
         onClose={closeRouteDrawer}
-        title="Transport Route Details"
+        title="Leg Details"
+        titleBadge={selectedRoute?.CustomerOrderID || ''}
+        titleBadgeStyles="badge-blue rounded-2xl"
+        titleBadgeStatus={selectedRoute?.Status}
+        titleBadgeStatusStyles="badge-green rounded-2xl"
         width="100%"
         showFooter={false}
+        slideDirection="right"
       >
-        {/* <TransportRouteLegDrawer /> */}
-        {selectedRoute && (
-          <TransportRouteLegDrawer
-            route={selectedRoute}
-            onAddLeg={addLegPanel}
-            onRemoveLeg={removeLegPanel}
-            onUpdateLeg={updateLegData}
-            onSave={saveRouteDetails}
-            fetchDepartures={fetchDepartures}
-            fetchArrivals={fetchArrivals}
-          />
-        )}
+        <TransportRouteLegDrawer ref={transportRouteLegDrawerRef} />
       </SideDrawer>
 
     </>

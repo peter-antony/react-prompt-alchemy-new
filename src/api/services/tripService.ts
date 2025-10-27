@@ -407,7 +407,7 @@ export const tripService = {
         MessageType: "Manage Execution Plan CO Selection",
       },
       SearchCriteria: {
-        CustomerOrderNo: params.CONumber
+        CustomerOrderNo: params?.CONumber
       }
     });
     const requestBody = {
