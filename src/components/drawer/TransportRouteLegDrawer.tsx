@@ -132,6 +132,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
   // Specific fetch functions for different message types
   const fetchTransportModes = fetchMasterData("Transport Mode Init");
+  const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
 
   // Helper function to get form data
   const getFormData = () => {
@@ -276,18 +277,14 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       LegBehaviour: {
         id: 'LegBehaviour',
         label: 'Leg Behaviour',
-        fieldType: 'select',
+        fieldType: 'lazyselect',
         value: leg.LegBehaviour || 'Pick',
         mandatory: false,
         visible: true,
         editable: true,
         order: 5,
         width: 'third',
-        options: [
-          { label: 'Pick', value: 'Pick' },
-          { label: 'LHV', value: 'LHV' },
-          { label: 'Dvry', value: 'Dvry' }
-        ]
+        fetchOptions: fetchLegBehaviours
         // Remove onChange since we're using ref-based approach
       },
       TransportMode: {
