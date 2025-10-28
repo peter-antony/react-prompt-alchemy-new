@@ -590,7 +590,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                   </div>
                 )}
 
-                {leg.LegStatus && (
+                {/* {leg.LegStatus && (
                   <div className="px-6 pb-4">
                     <Badge
                       variant="outline"
@@ -599,7 +599,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                       Status: {leg.LegStatus}
                     </Badge>
                   </div>
-                )}
+                )} */}
               </Card>
             );
           })}
