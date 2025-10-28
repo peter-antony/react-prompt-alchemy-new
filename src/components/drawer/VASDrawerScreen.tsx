@@ -346,14 +346,15 @@ const saveCurrentFormData = () => {
     const response = await tripService.saveVASTrip(HeaderInfo, vasList);
     console.log("Save VAS response", response);
     
-    // Extract message from API response
+    // Extract message and success status from API response
     const apiMessage = response?.data?.Message || "Success";
+    const isSuccess = response?.data?.IsSuccess !== false; // Default to true if not explicitly false
     
-    // Success toast notification
+    // Toast notification with variant based on IsSuccess
     toast({
-      title: "✅ VAS Saved Successfully",
+      title: isSuccess ? "✅ VAS Saved Successfully" : "❌ Save Failed",
       description: apiMessage,
-      variant: "default",
+      variant: isSuccess ? "default" : "destructive",
     });
   } catch (error) {
     console.error("Error saving VAS:", error);
