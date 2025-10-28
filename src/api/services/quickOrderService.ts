@@ -109,7 +109,13 @@ export const quickOrderService = {
           FilterName: "Resource",
           FilterValue: params?.ResourceId,
         }
-       ]: [],
+       ]:params?.messageType === "Trip Log Incident ID Init" ? [
+        {
+          FilterName: "TripID",
+          FilterValue: params?.TripID,
+        }
+       ]:
+        [],
       Pagination: {
         PageNumber: params?.offset,
         PageSize: params?.limit,

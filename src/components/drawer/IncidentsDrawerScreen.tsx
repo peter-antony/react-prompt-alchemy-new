@@ -9,177 +9,324 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit2, Trash2, Calendar, Clock, Maximize2, Copy, Download, Car, Wrench, FileText, Users, DollarSign } from 'lucide-react';
+import { manageTripStore } from '@/stores/mangeTripStore';
+import { quickOrderService, tripService } from '@/api/services';
+import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 
 interface IncidentsDrawerScreenProps {
   onClose?: () => void;
 }
 
 interface FormData {
-  incidentId: string;
-  incidentStatus: string;
-  incidentType: string;
-  incidentDate: string;
-  incidentTime: string;
-  placeOfIncident: string;
-  createdDate: string;
-  weatherCondition: string;
-  driverFault: string;
-  vehicleFault: string;
-  detailedDescription: string;
-  maintenanceRequired: boolean;
-  accidentType: string;
-  causeCode: string;
-  incidentResolution: string;
-  maintenanceType: string;
-  wagon: string;
-  container: string;
-  workType: string;
-  workCategory: string;
-  workGroup: string;
-  maintenanceDescription: string;
-  incidentCausedBy: string;
-  incidentCauserName: string;
-  incidentReportedBy: string;
-  incidentCloseDate: string;
-  riskInvolved: string;
-  dangerousGoods: string;
-  loadTime: string;
-  refDocNo: string;
-  mobileRefIncidentId: string;
-  remarks: string;
-  workOrderNumber: string;
-  workOrderStatus: string;
-  workRequestNumber: string;
-  workRequestStatus: string;
-  errorMessage: string;
-  claimRequired: boolean;
-  claimNo: string;
-  claimStatus: string;
+  IncidentId: string;
+  IncidentStatus: string;
+  IncidentType: string;
+  IncidentDate: string;
+  IncidentTime: string;
+  PlaceOfIncident: string;
+  CreatedDate: string;
+  WeatherCondition: string;
+  ShortDescription: string;
+  RoadCondition: string;
+  DriverFault: string;
+  VehicleFault: string;
+  DetailedDescription: string;
+  MaintenanceRequired: boolean;
+  AccidentType: string;
+  CauseCode: string;
+  Attachments: string;
+  IncidentResolution: string;
+  MaintenanceType: string;
+  Wagon: string;
+  Container: string;
+  WorkType: string;
+  WorkCategory: string;
+  WorkGroup: string;
+  MaintenanceDescription: string;
+  IncidentCausedBy: string;
+  IncidentCauserName: string;
+  IncidentReportedBy: string;
+  IncidentCloseDate: string;
+  RiskInvolved: string;
+  DangerousGoods: string;
+  LoadTime: string;
+  RefDocNo: string;
+  MobileRefIncidentId: string;
+  Remarks: string;
+  WorkOrderNumber: string;
+  WorkOrderStatus: string;
+  WorkRequestNumber: string;
+  WorkRequestStatus: string;
+  ErrorMessage: string;
+  ClaimRequired: boolean;
+  ClaimNo: string;
+  ClaimStatus: string;
+  RaiseClaim: string;
+  ModeFlag: string;
 }
 
 interface Incident {
+  IncidentId: string;
   id: string;
-  status: 'Open' | 'In Progress' | 'Closed';
+  // status: 'Open' | 'In Progress' | 'Closed';
+  status: string;
   formData: FormData;
 }
 
 const initialFormData: FormData = {
-  incidentId: '',
-  incidentStatus: '',
-  incidentType: '',
-  incidentDate: '',
-  incidentTime: '',
-  placeOfIncident: '',
-  createdDate: '',
-  weatherCondition: '',
-  driverFault: '',
-  vehicleFault: '',
-  detailedDescription: '',
-  maintenanceRequired: false,
-  accidentType: '',
-  causeCode: '',
-  incidentResolution: '',
-  maintenanceType: '',
-  wagon: '',
-  container: '',
-  workType: '',
-  workCategory: '',
-  workGroup: '',
-  maintenanceDescription: '',
-  incidentCausedBy: '',
-  incidentCauserName: '',
-  incidentReportedBy: '',
-  incidentCloseDate: '',
-  riskInvolved: '',
-  dangerousGoods: '',
-  loadTime: '',
-  refDocNo: '',
-  mobileRefIncidentId: '',
-  remarks: '',
-  workOrderNumber: 'WON00000001',
-  workOrderStatus: 'In Progress',
-  workRequestNumber: 'WRN00000001',
-  workRequestStatus: 'Draft',
-  errorMessage: 'Not Applicable',
-  claimRequired: false,
-  claimNo: 'CL00000001',
-  claimStatus: 'Initiated',
+  IncidentId: '',
+  IncidentStatus: '',
+  IncidentType: '',
+  IncidentDate: '',
+  IncidentTime: '',
+  PlaceOfIncident: '',
+  CreatedDate: '',
+  WeatherCondition: '',
+  ShortDescription: '',
+  RoadCondition: '',
+  DriverFault: '',
+  VehicleFault: '',
+  DetailedDescription: '',
+  MaintenanceRequired: false,
+  AccidentType: '',
+  CauseCode: '',
+  Attachments: '',
+  IncidentResolution: '',
+  MaintenanceType: '',
+  Wagon: '',
+  Container: '',
+  WorkType: 'Incident Maintenance',
+  WorkCategory: 'Cost Charged to Forwardis',
+  WorkGroup: 'FL-Berlin',
+  MaintenanceDescription: '',
+  IncidentCausedBy: '',
+  IncidentCauserName: '',
+  IncidentReportedBy: '',
+  IncidentCloseDate: '',
+  RiskInvolved: '',
+  DangerousGoods: '',
+  LoadTime: '',
+  RefDocNo: '',
+  MobileRefIncidentId: '',
+  Remarks: '',
+  WorkOrderNumber: 'WON00000001',
+  WorkOrderStatus: 'In Progress',
+  WorkRequestNumber: 'WRN00000001',
+  WorkRequestStatus: 'Draft',
+  ErrorMessage: 'Not Applicable',
+  ClaimRequired: false,
+  ClaimNo: 'CL00000001',
+  ClaimStatus: 'Initiated',
+  RaiseClaim: '',
+  ModeFlag: 'NoChanges'
 };
 
 const initialIncidents: Incident[] = [
-  { 
-    id: 'INC000001', 
-    status: 'Open', 
-    formData: { 
-      ...initialFormData, 
-      incidentId: 'INC000001', 
-      incidentStatus: 'open',
-      incidentType: 'accident',
-      placeOfIncident: 'warehouse',
-      detailedDescription: 'First incident - Open status'
-    } 
-  },
-  { 
-    id: 'INC000002', 
-    status: 'In Progress', 
-    formData: { 
-      ...initialFormData, 
-      incidentId: 'INC000002', 
-      incidentStatus: 'in-progress',
-      incidentType: 'breakdown',
-      placeOfIncident: 'highway',
-      detailedDescription: 'Second incident - In Progress status'
-    } 
-  },
-  { 
-    id: 'INC000003', 
-    status: 'Open', 
-    formData: { 
-      ...initialFormData, 
-      incidentId: 'INC000003', 
-      incidentStatus: 'open',
-      incidentType: 'delay',
-      placeOfIncident: 'city',
-      detailedDescription: 'Third incident - Open status'
-    } 
-  },
-  { 
-    id: 'INC000004', 
-    status: 'Closed', 
-    formData: { 
-      ...initialFormData, 
-      incidentId: 'INC000004', 
-      incidentStatus: 'closed',
-      incidentType: 'theft',
-      placeOfIncident: 'warehouse',
-      detailedDescription: 'Fourth incident - Closed status'
-    } 
-  },
-  { 
-    id: 'INC000005', 
-    status: 'Open', 
-    formData: { 
-      ...initialFormData, 
-      incidentId: 'INC000005', 
-      incidentStatus: 'open',
-      incidentType: 'accident',
-      placeOfIncident: 'highway',
-      detailedDescription: 'Fifth incident - Open status'
-    } 
-  },
+  // {
+  //   id: 'INC000001',
+  //   status: 'Open',
+  //   formData: {
+  //     ...initialFormData,
+  //     IncidentId: 'INC000001',
+  //     IncidentStatus: 'open',
+  //     IncidentType: 'accident',
+  //     PlaceOfIncident: 'warehouse',
+  //     detailedDescription: 'First incident - Open status'
+  //   }
+  // },
+  // {
+  //   id: 'INC000002',
+  //   status: 'In Progress',
+  //   formData: {
+  //     ...initialFormData,
+  //     IncidentId: 'INC000002',
+  //     IncidentStatus: 'in-progress',
+  //     IncidentType: 'breakdown',
+  //     PlaceOfIncident: 'highway',
+  //     detailedDescription: 'Second incident - In Progress status'
+  //   }
+  // },
+  // {
+  //   id: 'INC000003',
+  //   status: 'Open',
+  //   formData: {
+  //     ...initialFormData,
+  //     IncidentId: 'INC000003',
+  //     IncidentStatus: 'open',
+  //     IncidentType: 'delay',
+  //     PlaceOfIncident: 'city',
+  //     detailedDescription: 'Third incident - Open status'
+  //   }
+  // },
+  // {
+  //   id: 'INC000004',
+  //   status: 'Closed',
+  //   formData: {
+  //     ...initialFormData,
+  //     IncidentId: 'INC000004',
+  //     IncidentStatus: 'closed',
+  //     IncidentType: 'theft',
+  //     PlaceOfIncident: 'warehouse',
+  //     detailedDescription: 'Fourth incident - Closed status'
+  //   }
+  // },
+  // {
+  //   id: 'INC000005',
+  //   status: 'Open',
+  //   formData: {
+  //     ...initialFormData,
+  //     IncidentId: 'INC000005',
+  //     IncidentStatus: 'open',
+  //     IncidentType: 'accident',
+  //     PlaceOfIncident: 'highway',
+  //     detailedDescription: 'Fifth incident - Open status'
+  //   }
+  // },
 ];
 
 export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ onClose }) => {
   const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  // const [incidentItems, setIncidentItems] = useState<VASItem[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { tripData } = manageTripStore();
+  const tripId: any = tripData?.Header?.TripNo;
+  // Temporary placeholder until real implementation is connected
+  const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        ...(extraParams || {}),
+      });
 
-  useEffect(() => {
-    if (incidents.length > 0) {
-      const firstIncident = incidents[0];
-      setSelectedIncident(firstIncident);
-      setFormData(firstIncident.formData);
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
     }
+  };
+  const fetchIncidentID = fetchMasterData("Trip Log Incident ID Init", { TripID: tripId });
+  const fetchIncidentStatus = fetchMasterData("Incident status Init");
+
+  //Incident Details
+  const fetchIncidentType = fetchMasterData("Incident Type Init");
+  const fetchIncidentPlace = fetchMasterData("Place of Incident Init");
+  const fetchIncidentWeather = fetchMasterData("Weather Condition Init");
+  const fetchIncidentDriver = fetchMasterData("Driver Fault Init");
+  const fetchIncidentVehicle = fetchMasterData("Vehicle Fault Init");
+
+  //Maintanence Details
+  const fetchIncidentAccident = fetchMasterData("Accident Type Init");
+  const fetchIncidentCause = fetchMasterData("Cause code init");
+  const fetchIncidentWagon = fetchMasterData("Wagon id Init");
+  const fetchIncidentContainer = fetchMasterData("Container id Init");
+
+  //MoreInfo Details
+
+  const fetchIncidentRisks = fetchMasterData("Hazardous Goods Init");
+  const fetchIncidentGoods = fetchMasterData("Hazardous Goods Init");
+
+
+  const [customerValue, setCustomerValue] = useState<string | undefined>();
+  useEffect(() => {
+    // if (incidents.length > 0) {
+    //   const firstIncident = incidents[0];
+    //   setSelectedIncident(firstIncident);
+    //   setFormData(firstIncident.formData);
+    // }
+    if (!tripId) return;
+
+    const fetchIncidentForTrip = async () => {
+      try {
+        const response = await tripService.getIncidentTrip(tripId);
+
+        // Same normalization logic as in SummaryCardsGrid
+        let incidentapi: any = JSON.parse(response?.data?.ResponseData);
+        const incidentList =
+          incidentapi?.Incident ||
+          response?.data ||
+          response?.Incident ||
+          [];
+
+        console.log("INCIDENT List (Drawer):", incidentList);
+
+        // Map API data into your local VASItem structure
+        const formattedIncidentItems: Incident[] = incidentList.map((Incident: any, index: number) => ({
+          id: Incident.IncidentId || index.toString(),
+          name: Incident.IncidentStatus || `Incident ${index + 1}`,
+          // quantity: vas.IncidentId || 1,
+          formData: {
+            IncidentId: Incident.IncidentId || '',
+            IncidentStatus: Incident.IncidentStatus,
+            IncidentType: Incident.IncidentType || '',
+            IncidentCauserName: Incident.IncidentCauserName || '',
+            IncidentCausedBy: Incident.IncidentCausedBy || '',
+            IncidentCloseDate: Incident.IncidentCloseDate,
+            IncidentDate: Incident.IncidentDate || '',
+            IncidentReportedBy: Incident.IncidentReportedBy || '',
+            IncidentResolution: Incident.IncidentResolution || '',
+            IncidentTime: Incident.IncidentTime || '',
+            LoadTime: Incident.LoadTime || '',
+            RefDocNo: Incident.RefDocNo || '',
+            PlaceOfIncident: Incident.PlaceOfIncident || '',
+            WeatherCondition: Incident.WeatherCondition || '',
+            RoadCondition: Incident.RoadCondition || '',
+            ShortDescription: Incident.ShortDescription || '',
+            CauseCode: Incident.CauseCode || '',
+            Wagon: Incident.Wagon || '',
+            Container: Incident.Container || '',
+            ClaimNo: Incident.ClaimNumber || '',
+            ClaimStatus: Incident.ClaimStatus || '',
+            RaiseClaim: Incident.RaiseClaim || '',
+            ClaimRequired: Incident.ClaimRequired || false,
+            DetailedDescription: Incident.DetailedDescription || '',
+            // WorkGroup: Incident.WorkGroup || '',
+            WorkOrderNumber: Incident.WorkOrderNumber || '',
+            WorkOrderStatus: Incident.WorkOrderStatus || '',
+            WorkRequestNumber: Incident.WorkRequestNumber,
+            WorkRequestStatus: Incident.WorkRequestStatus,
+            AccidentType: Incident.AccidentType || '',
+            // WorkType: Incident.WorkType || '',
+            // WorkCategory: Incident.WorkCategory || '',
+            MaintenanceType: Incident.MaintenanceType || '',
+            MaintenanceRequired: Incident.MaintenanceRequired || '',
+            MaintenanceDescription: Incident.MaintenanceDescription || '',
+            RiskInvolved: Incident.RiskInvolved || '',
+            DangerousGoods: Incident.DangerousGoods || '',
+            ModeFlag: Incident.ModeFlag
+          }
+        }));
+        setIncidents(formattedIncidentItems)
+        // setVasItems(formattedVasItems);
+
+        // Auto-select first VAS if available
+        if (formattedIncidentItems.length > 0) {
+          const firstVAS = formattedIncidentItems[0];
+          // setSelectedVAS(firstVAS.id);
+          setFormData(firstVAS.formData);
+        }
+      } catch (error) {
+        console.error("Error fetching VAS:", error);
+      }
+    };
+
+    fetchIncidentForTrip();
   }, []);
 
   const handleIncidentClick = (incident: Incident) => {
@@ -197,38 +344,95 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  // const handleSave = () => {
+  //   if (selectedIncident) {
+  //     const newStatus: 'Open' | 'In Progress' | 'Closed' =
+  //       formData.IncidentStatus === 'open' ? 'Open' :
+  //         formData.IncidentStatus === 'in-progress' ? 'In Progress' : 'Closed';
+
+  //     const updatedIncident: Incident = {
+  //       ...selectedIncident,
+  //       formData,
+  //       status: newStatus
+  //     };
+  //     setIncidents(prev =>
+  //       prev.map(inc =>
+  //         inc.id === selectedIncident.id ? updatedIncident : inc
+  //       )
+  //     );
+  //     setSelectedIncident(updatedIncident);
+  //   } else {
+  //     const newStatus: 'Open' | 'In Progress' | 'Closed' =
+  //       formData.IncidentStatus === 'open' ? 'Open' :
+  //         formData.IncidentStatus === 'in-progress' ? 'In Progress' : 'Closed';
+
+  //     const newIncident: Incident = {
+  //       id: `INC${String(incidents.length + 1).padStart(6, '0')}`,
+  //       status: newStatus,
+  //       formData,
+  //     };
+  //     setIncidents(prev => [...prev, newIncident]);
+  //     setSelectedIncident(newIncident);
+  //   }
+  // };
+  const handleSave = async () => {
+    let updatedIncidentItems = [...incidents];
+
     if (selectedIncident) {
-      const newStatus: 'Open' | 'In Progress' | 'Closed' = 
-        formData.incidentStatus === 'open' ? 'Open' : 
-        formData.incidentStatus === 'in-progress' ? 'In Progress' : 'Closed';
-      
-      const updatedIncident: Incident = { 
-        ...selectedIncident, 
-        formData, 
-        status: newStatus 
-      };
-      setIncidents(prev => 
-        prev.map(inc => 
-          inc.id === selectedIncident.id ? updatedIncident : inc
-        )
-      );
-      setSelectedIncident(updatedIncident);
+      // Update existing VAS → only the edited one gets ModeFlag updated
+      updatedIncidentItems = updatedIncidentItems.map(item => {
+        if (item === selectedIncident) {
+          console.log("Inside IF; ", (formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag))
+          return {
+            ...item,
+            formData: {
+              ...formData,
+              ModeFlag: formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag
+            }
+          };
+        }
+        return item;
+      });
     } else {
-      const newStatus: 'Open' | 'In Progress' | 'Closed' = 
-        formData.incidentStatus === 'open' ? 'Open' : 
-        formData.incidentStatus === 'in-progress' ? 'In Progress' : 'Closed';
-      
+      // New VAS → mark as New
+      console.log("Inside Else")
       const newIncident: Incident = {
-        id: `INC${String(incidents.length + 1).padStart(6, '0')}`,
-        status: newStatus,
-        formData,
+        id: Date.now().toString(),
+        IncidentId: '-1',
+        status: formData.IncidentStatus || "OPEN",
+        // quantity: parseInt(formData.NoOfTHUServed) || 1,
+        formData: {
+          ...formData,
+          ModeFlag: "Insert"
+        }
       };
-      setIncidents(prev => [...prev, newIncident]);
+      updatedIncidentItems.push(newIncident);
       setSelectedIncident(newIncident);
     }
-  };
 
+    setIncidents(updatedIncidentItems);
+
+    const HeaderInfo = {
+      TripNo: tripData?.Header?.TripNo,
+      TripOU: tripData?.Header?.TripOU,
+      TripStatus: tripData?.Header?.TripStatus,
+      TripStatusDescription: tripData?.Header?.TripStatusDescription
+    };
+
+    const incidentList = prepareIncidentPayload(updatedIncidentItems);
+
+    try {
+      const response = await tripService.saveIncidentTrip(HeaderInfo, incidentList);
+      console.log("Save INCIDENT response", response);
+    } catch (error) {
+      console.error("Error saving INCIDENT:", error);
+    }
+  };
+  const prepareIncidentPayload = (incidentItems) => {
+    return incidentItems
+      .filter(item => item.formData && Object.keys(item.formData).length > 0)
+      .map(item => item.formData);
+  };
   const handleClear = () => {
     setFormData(initialFormData);
     setSelectedIncident(null);
@@ -273,16 +477,15 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
           <div className="space-y-2 flex-1 overflow-y-auto">
             {incidents.map((incident, index) => {
-              const isSelected = selectedIncident ? 
-                incidents.findIndex(inc => inc === selectedIncident) === index : 
+              const isSelected = selectedIncident ?
+                incidents.findIndex(inc => inc === selectedIncident) === index :
                 false;
-              
+
               return (
                 <Card
                   key={`${incident.id}-${index}`}
-                  className={`cursor-pointer transition-colors hover:bg-accent ${
-                    isSelected ? 'bg-accent border-primary' : ''
-                  }`}
+                  className={`cursor-pointer transition-colors hover:bg-accent ${isSelected ? 'bg-accent border-primary' : ''
+                    }`}
                   onClick={() => handleIncidentClick(incident)}
                 >
                   <CardContent className="p-3 flex items-center justify-between">
@@ -291,9 +494,9 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <Badge className={`${getStatusColor(incident.status)} text-xs font-medium`}>
                         {incident.status}
                       </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={(e) => handleDeleteIncident(index, e)}
                       >
@@ -314,25 +517,27 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
             <div className="flex items-end gap-4">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="incidentId">Incident ID <span className="text-destructive">*</span></Label>
-                <Input
+                {/* <Input
                   id="incidentId"
                   value={formData.incidentId}
                   onChange={(e) => handleInputChange('incidentId', e.target.value)}
                   placeholder="Enter incident ID"
+                /> */}
+                <DynamicLazySelect
+                  fetchOptions={fetchIncidentID}
+                  value={formData.IncidentId}
+                  onChange={(value) => setFormData({ ...formData, IncidentId: value as string })}
+                  placeholder="Select Incident ID"
                 />
               </div>
               <div className="flex-1 space-y-2">
                 <Label htmlFor="incidentStatus">Incident Status <span className="text-destructive">*</span></Label>
-                <Select value={formData.incidentStatus} onValueChange={(value) => handleInputChange('incidentStatus', value)}>
-                  <SelectTrigger id="incidentStatus">
-                    <SelectValue placeholder="Select Incident Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchIncidentStatus}
+                  value={formData.IncidentStatus}
+                  onChange={(value) => setFormData({ ...formData, IncidentStatus: value as string })}
+                  placeholder="Select Incident Status"
+                />
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="icon" className="h-10 w-10">
@@ -361,8 +566,8 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   <div className="grid grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="incidentType">Incident Type <span className="text-destructive">*</span></Label>
-                      <Select value={formData.incidentType} onValueChange={(value) => handleInputChange('incidentType', value)}>
-                        <SelectTrigger id="incidentType">
+                      {/* <Select value={formData.IncidentType} onValueChange={(value) => handleInputChange('IncidentType', value)}>
+                        <SelectTrigger id="IncidentType">
                           <SelectValue placeholder="Select Incident Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -371,13 +576,24 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="delay">Delay</SelectItem>
                           <SelectItem value="theft">Theft</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentType}
+                        value={formData.IncidentType}
+                        onChange={(value) => setFormData({ ...formData, IncidentType: value as string })}
+                        placeholder="Select Incident Type"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentDate">Incident Date <span className="text-destructive">*</span></Label>
                       <div className="relative">
-                        <Input id="incidentDate" type="date" value={formData.incidentDate} onChange={(e) => handleInputChange('incidentDate', e.target.value)} />
+                        <Input
+                          type="date"
+                          value={formData.IncidentDate}
+                          onChange={(e) => setFormData({ ...formData, IncidentDate: e.target.value })}
+                          placeholder="DD-MMM-YYYY"
+                        />
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
@@ -385,14 +601,21 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                     <div className="space-y-2">
                       <Label htmlFor="incidentTime">Incident Time <span className="text-destructive">*</span></Label>
                       <div className="relative">
-                        <Input id="incidentTime" type="time" value={formData.incidentTime} onChange={(e) => handleInputChange('incidentTime', e.target.value)} />
+                        {/* <Input id="IncidentTime" type="time" value={formData.IncidentTime} onChange={(e) => handleInputChange('IncidentTime', e.target.value)} /> */}
+                        <Input
+                          type="time"
+                          id="incidentTime"
+                          value={formData.IncidentTime}
+                          onChange={(e) => setFormData({ ...formData, IncidentTime: e.target.value })}
+                          placeholder="HH:MM"
+                        />
                         <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="placeOfIncident">Place of Incident</Label>
-                      <Select value={formData.placeOfIncident} onValueChange={(value) => handleInputChange('placeOfIncident', value)}>
+                      {/* <Select value={formData.PlaceOfIncident} onValueChange={(value) => handleInputChange('PlaceOfIncident', value)}>
                         <SelectTrigger id="placeOfIncident">
                           <SelectValue placeholder="Select Place of Inc." />
                         </SelectTrigger>
@@ -401,21 +624,34 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="highway">Highway</SelectItem>
                           <SelectItem value="city">City</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentPlace}
+                        value={formData.PlaceOfIncident}
+                        onChange={(value) => setFormData({ ...formData, PlaceOfIncident: value as string })}
+                        placeholder="Select Place of Incident"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="createdDate">Created Date</Label>
                       <div className="relative">
-                        <Input id="createdDate" type="date" value={formData.createdDate} onChange={(e) => handleInputChange('createdDate', e.target.value)} />
+                        {/* <Input id="createdDate" type="date" value={formData.createdDate} onChange={(e) => handleInputChange('createdDate', e.target.value)} />
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" /> */}
+                        <Input
+                          type="date"
+                          value={formData.CreatedDate}
+                          onChange={(e) => setFormData({ ...formData, CreatedDate: e.target.value })}
+                          placeholder="DD-MMM-YYYY"
+                        />
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="weatherCondition">Weather Condition</Label>
-                      <Select value={formData.weatherCondition} onValueChange={(value) => handleInputChange('weatherCondition', value)}>
-                        <SelectTrigger id="weatherCondition">
+                      {/* <Select value={formData.WeatherCondition} onValueChange={(value) => handleInputChange('WeatherCondition', value)}>
+                        <SelectTrigger id="WeatherCondition">
                           <SelectValue placeholder="Select Weather Con." />
                         </SelectTrigger>
                         <SelectContent>
@@ -424,13 +660,19 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="foggy">Foggy</SelectItem>
                           <SelectItem value="snowy">Snowy</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentWeather}
+                        value={formData.WeatherCondition}
+                        onChange={(value) => setFormData({ ...formData, WeatherCondition: value as string })}
+                        placeholder="Select Weather Condition"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="driverFault">Driver Fault</Label>
-                      <Select value={formData.driverFault} onValueChange={(value) => handleInputChange('driverFault', value)}>
-                        <SelectTrigger id="driverFault">
+                      {/* <Select value={formData.DriverFault} onValueChange={(value) => handleInputChange('DriverFault', value)}>
+                        <SelectTrigger id="DriverFault">
                           <SelectValue placeholder="Select Driver Fault" />
                         </SelectTrigger>
                         <SelectContent>
@@ -438,13 +680,19 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="no">No</SelectItem>
                           <SelectItem value="partial">Partial</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentDriver}
+                        value={formData.DriverFault}
+                        onChange={(value) => setFormData({ ...formData, DriverFault: value as string })}
+                        placeholder="Select Driver Fault"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="vehicleFault">Vehicle Fault</Label>
-                      <Select value={formData.vehicleFault} onValueChange={(value) => handleInputChange('vehicleFault', value)}>
-                        <SelectTrigger id="vehicleFault">
+                      {/* <Select value={formData.VehicleFault} onValueChange={(value) => handleInputChange('VehicleFault', value)}>
+                        <SelectTrigger id="VehicleFault">
                           <SelectValue placeholder="Select Vehicle Fault" />
                         </SelectTrigger>
                         <SelectContent>
@@ -452,12 +700,18 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="no">No</SelectItem>
                           <SelectItem value="unknown">Unknown</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentVehicle}
+                        value={formData.VehicleFault}
+                        onChange={(value) => setFormData({ ...formData, VehicleFault: value as string })}
+                        placeholder="Select Vehicle Fault"
+                      />
                     </div>
 
                     <div className="col-span-5 space-y-2">
                       <Label htmlFor="detailedDescription">Detailed Description</Label>
-                      <Textarea id="detailedDescription" value={formData.detailedDescription} onChange={(e) => handleInputChange('detailedDescription', e.target.value)} placeholder="Enter Description" className="min-h-[80px] resize-none" />
+                      <Textarea id="detailedDescription" value={formData.DetailedDescription} onChange={(e) => handleInputChange('DetailedDescription', e.target.value)} placeholder="Enter Description" className="min-h-[80px] resize-none" />
                     </div>
                   </div>
                 </AccordionContent>
@@ -474,14 +728,14 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 <AccordionContent className="pt-4">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Switch id="maintenanceRequired" checked={formData.maintenanceRequired} onCheckedChange={(checked) => handleInputChange('maintenanceRequired', checked)} />
+                      <Switch id="maintenanceRequired" checked={formData.MaintenanceRequired} onCheckedChange={(checked) => handleInputChange('MaintenanceRequired', checked)} />
                       <Label htmlFor="maintenanceRequired" className="cursor-pointer">Maintenance Required</Label>
                     </div>
 
                     <div className="grid grid-cols-5 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="accidentType">Accident Type <span className="text-destructive">*</span></Label>
-                        <Select value={formData.accidentType} onValueChange={(value) => handleInputChange('accidentType', value)}>
+                        {/* <Select value={formData.accidentType} onValueChange={(value) => handleInputChange('accidentType', value)}>
                           <SelectTrigger id="accidentType">
                             <SelectValue placeholder="Select Accident Type" />
                           </SelectTrigger>
@@ -490,13 +744,19 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="rollover">Rollover</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchIncidentAccident}
+                          value={formData.AccidentType}
+                          onChange={(value) => setFormData({ ...formData, AccidentType: value as string })}
+                          placeholder="Select Accident Type"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="causeCode">Cause Code <span className="text-destructive">*</span></Label>
-                        <Select value={formData.causeCode} onValueChange={(value) => handleInputChange('causeCode', value)}>
-                          <SelectTrigger id="causeCode">
+                        {/* <Select value={formData.CauseCode} onValueChange={(value) => handleInputChange('CauseCode', value)}>
+                          <SelectTrigger id="CauseCode">
                             <SelectValue placeholder="Select Cause Code" />
                           </SelectTrigger>
                           <SelectContent>
@@ -504,17 +764,23 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="driver-error">Driver Error</SelectItem>
                             <SelectItem value="weather">Weather Related</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchIncidentCause}
+                          value={formData.CauseCode}
+                          onChange={(value) => setFormData({ ...formData, CauseCode: value as string })}
+                          placeholder="Select Cause Code"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="incidentResolution">Incident Resolution <span className="text-destructive">*</span></Label>
-                        <Input id="incidentResolution" value={formData.incidentResolution} onChange={(e) => handleInputChange('incidentResolution', e.target.value)} placeholder="Enter Incident Resolution" />
+                        <Input id="incidentResolution" value={formData.IncidentResolution} onChange={(e) => handleInputChange('IncidentResolution', e.target.value)} placeholder="Enter Incident Resolution" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="maintenanceType">Maintenance Type</Label>
-                        <Select value={formData.maintenanceType} onValueChange={(value) => handleInputChange('maintenanceType', value)}>
+                        <Select value={formData.MaintenanceType} onValueChange={(value) => handleInputChange('MaintenanceType', value)}>
                           <SelectTrigger id="maintenanceType">
                             <SelectValue placeholder="Select Maint. Type" />
                           </SelectTrigger>
@@ -524,21 +790,35 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="emergency">Emergency</SelectItem>
                           </SelectContent>
                         </Select>
+
+
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="wagon">Wagon <span className="text-destructive">*</span></Label>
-                        <Input id="wagon" value={formData.wagon} onChange={(e) => handleInputChange('wagon', e.target.value)} placeholder="Enter Wagon" />
+                        {/* <Input id="Wagon" value={formData.Wagon} onChange={(e) => handleInputChange('Wagon', e.target.value)} placeholder="Enter Wagon" /> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchIncidentWagon}
+                          value={formData.Wagon}
+                          onChange={(value) => setFormData({ ...formData, Wagon: value as string })}
+                          placeholder="Select Wagon"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="container">Container <span className="text-destructive">*</span></Label>
-                        <Input id="container" value={formData.container} onChange={(e) => handleInputChange('container', e.target.value)} placeholder="Enter Container" />
+                        {/* <Input id="Container" value={formData.Container} onChange={(e) => handleInputChange('Container', e.target.value)} placeholder="Enter Container" /> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchIncidentContainer}
+                          value={formData.Container}
+                          onChange={(value) => setFormData({ ...formData, Container: value as string })}
+                          placeholder="Select Container"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="workType">Work Type <span className="text-destructive">*</span></Label>
-                        <Select value={formData.workType} onValueChange={(value) => handleInputChange('workType', value)}>
+                        <Select value={formData.WorkType} onValueChange={(value) => handleInputChange('WorkType', value)}>
                           <SelectTrigger id="workType">
                             <SelectValue placeholder="Select Work Type" />
                           </SelectTrigger>
@@ -552,7 +832,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="space-y-2">
                         <Label htmlFor="workCategory">Work Category <span className="text-destructive">*</span></Label>
-                        <Select value={formData.workCategory} onValueChange={(value) => handleInputChange('workCategory', value)}>
+                        <Select value={formData.WorkCategory} onValueChange={(value) => handleInputChange('WorkCategory', value)}>
                           <SelectTrigger id="workCategory">
                             <SelectValue placeholder="Select Work Categ." />
                           </SelectTrigger>
@@ -566,7 +846,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="space-y-2">
                         <Label htmlFor="workGroup">Work Group <span className="text-destructive">*</span></Label>
-                        <Select value={formData.workGroup} onValueChange={(value) => handleInputChange('workGroup', value)}>
+                        <Select value={formData.WorkGroup} onValueChange={(value) => handleInputChange('WorkGroup', value)}>
                           <SelectTrigger id="workGroup">
                             <SelectValue placeholder="Select Work Group" />
                           </SelectTrigger>
@@ -580,7 +860,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="col-span-5 space-y-2">
                         <Label htmlFor="maintenanceDescription">Maintenance Description <span className="text-destructive">*</span></Label>
-                        <Textarea id="maintenanceDescription" value={formData.maintenanceDescription} onChange={(e) => handleInputChange('maintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." className="min-h-[80px] resize-none" />
+                        <Textarea id="maintenanceDescription" value={formData.MaintenanceDescription} onChange={(e) => handleInputChange('MaintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." className="min-h-[80px] resize-none" />
                       </div>
                     </div>
                   </div>
@@ -599,7 +879,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   <div className="grid grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="incidentCausedBy">Incident Caused By</Label>
-                      <Select value={formData.incidentCausedBy} onValueChange={(value) => handleInputChange('incidentCausedBy', value)}>
+                      <Select value={formData.IncidentCausedBy} onValueChange={(value) => handleInputChange('IncidentCausedBy', value)}>
                         <SelectTrigger id="incidentCausedBy">
                           <SelectValue placeholder="Select Inc. Caused" />
                         </SelectTrigger>
@@ -613,7 +893,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentCauserName">Incident Causer Name</Label>
-                      <Select value={formData.incidentCauserName} onValueChange={(value) => handleInputChange('incidentCauserName', value)}>
+                      <Select value={formData.IncidentCauserName} onValueChange={(value) => handleInputChange('IncidentCauserName', value)}>
                         <SelectTrigger id="incidentCauserName">
                           <SelectValue placeholder="Select Inc. Causer Name" />
                         </SelectTrigger>
@@ -627,21 +907,21 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentReportedBy">Incident Reported By</Label>
-                      <Input id="incidentReportedBy" value={formData.incidentReportedBy} onChange={(e) => handleInputChange('incidentReportedBy', e.target.value)} placeholder="Enter Inc. Reported By" />
+                      <Input id="incidentReportedBy" value={formData.IncidentReportedBy} onChange={(e) => handleInputChange('IncidentReportedBy', e.target.value)} placeholder="Enter Inc. Reported By" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentCloseDate">Incident Close Date</Label>
                       <div className="relative">
-                        <Input id="incidentCloseDate" type="date" value={formData.incidentCloseDate} onChange={(e) => handleInputChange('incidentCloseDate', e.target.value)} />
+                        <Input id="incidentCloseDate" type="date" value={formData.IncidentCloseDate} onChange={(e) => handleInputChange('IncidentCloseDate', e.target.value)} />
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="riskInvolved">Risk Involved</Label>
-                      <Select value={formData.riskInvolved} onValueChange={(value) => handleInputChange('riskInvolved', value)}>
-                        <SelectTrigger id="riskInvolved">
+                      {/* <Select value={formData.RiskInvolved} onValueChange={(value) => handleInputChange('RiskInvolved', value)}>
+                        <SelectTrigger id="RiskInvolved">
                           <SelectValue placeholder="Select Risk Involved" />
                         </SelectTrigger>
                         <SelectContent>
@@ -649,25 +929,37 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="high">High</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentRisks}
+                        value={formData.RiskInvolved}
+                        onChange={(value) => setFormData({ ...formData, RiskInvolved: value as string })}
+                        placeholder="Select Risks Involved"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="dangerousGoods">Dangerous Goods</Label>
-                      <Select value={formData.dangerousGoods} onValueChange={(value) => handleInputChange('dangerousGoods', value)}>
-                        <SelectTrigger id="dangerousGoods">
+                      {/* <Select value={formData.DangerousGoods} onValueChange={(value) => handleInputChange('DangerousGoods', value)}>
+                        <SelectTrigger id="DangerousGoods">
                           <SelectValue placeholder="Select Danger Goods" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="yes">Yes</SelectItem>
                           <SelectItem value="no">No</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchIncidentGoods}
+                        value={formData.DangerousGoods}
+                        onChange={(value) => setFormData({ ...formData, DangerousGoods: value as string })}
+                        placeholder="Select Danger Goods"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="loadTime">Load Time</Label>
-                      <Select value={formData.loadTime} onValueChange={(value) => handleInputChange('loadTime', value)}>
+                      <Select value={formData.LoadTime} onValueChange={(value) => handleInputChange('LoadTime', value)}>
                         <SelectTrigger id="loadTime">
                           <SelectValue placeholder="Select Load Time" />
                         </SelectTrigger>
@@ -681,17 +973,17 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="space-y-2">
                       <Label htmlFor="refDocNo">Ref. Doc. No.</Label>
-                      <Input id="refDocNo" value={formData.refDocNo} onChange={(e) => handleInputChange('refDocNo', e.target.value)} placeholder="Enter Ref. Doc. No." />
+                      <Input id="refDocNo" value={formData.RefDocNo} onChange={(e) => handleInputChange('RefDocNo', e.target.value)} placeholder="Enter Ref. Doc. No." />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="mobileRefIncidentId">Mobile Ref. Incident ID</Label>
-                      <Input id="mobileRefIncidentId" value={formData.mobileRefIncidentId} onChange={(e) => handleInputChange('mobileRefIncidentId', e.target.value)} placeholder="Enter Mobile Ref. Inc. ID" />
+                      <Input id="mobileRefIncidentId" value={formData.MobileRefIncidentId} onChange={(e) => handleInputChange('MobileRefIncidentId', e.target.value)} placeholder="Enter Mobile Ref. Inc. ID" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="remarks">Remarks</Label>
-                      <Input id="remarks" value={formData.remarks} onChange={(e) => handleInputChange('remarks', e.target.value)} placeholder="Enter Remarks" />
+                      <Input id="remarks" value={formData.Remarks} onChange={(e) => handleInputChange('Remarks', e.target.value)} placeholder="Enter Remarks" />
                     </div>
                   </div>
                 </AccordionContent>
@@ -709,27 +1001,27 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   <div className="grid grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <Label>Work Order Number</Label>
-                      <div className="text-sm text-primary font-medium">{formData.workOrderNumber}</div>
+                      <div className="text-sm text-primary font-medium">{formData.WorkOrderNumber}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Order Status</Label>
-                      <div className="text-sm">{formData.workOrderStatus}</div>
+                      <div className="text-sm">{formData.WorkOrderStatus}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Request Number</Label>
-                      <div className="text-sm">{formData.workRequestNumber}</div>
+                      <div className="text-sm">{formData.WorkRequestNumber}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Request Status</Label>
-                      <div className="text-sm">{formData.workRequestStatus}</div>
+                      <div className="text-sm">{formData.WorkRequestStatus}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Error Message</Label>
-                      <div className="text-sm">{formData.errorMessage}</div>
+                      <div className="text-sm">{formData.ErrorMessage}</div>
                     </div>
                   </div>
                 </AccordionContent>
@@ -746,19 +1038,19 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 <AccordionContent className="pt-4">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Switch id="claimRequired" checked={formData.claimRequired} onCheckedChange={(checked) => handleInputChange('claimRequired', checked)} />
+                      <Switch id="claimRequired" checked={formData.ClaimRequired} onCheckedChange={(checked) => handleInputChange('ClaimRequired', checked)} />
                       <Label htmlFor="claimRequired" className="cursor-pointer">Claim Required</Label>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Claim No.</Label>
-                        <div className="text-sm text-primary font-medium">{formData.claimNo}</div>
+                        <div className="text-sm text-primary font-medium">{formData.ClaimNo}</div>
                       </div>
 
                       <div className="space-y-2">
                         <Label>Claim Status</Label>
-                        <div className="text-sm">{formData.claimStatus}</div>
+                        <div className="text-sm">{formData.ClaimStatus}</div>
                       </div>
                     </div>
                   </div>

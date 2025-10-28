@@ -270,6 +270,61 @@ export const tripService = {
     );
     return response.data;
   },
+  getIncidentTrip: async (tripId: string): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "GetIncidentsFromTrip",
+      },
+      SearchCriteria: {
+        TripNo: tripId,
+      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.GET_INCIDENT}`,
+      requestBody
+    );
+    return response.data;
+  },
+  saveIncidentTrip: async (HeaderInfo: any, incidentList: any): Promise<any> => {
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "SaveIncidentsFromTrip",
+      },
+      RequestPayload: {
+        Header: HeaderInfo,
+        Incident: incidentList,
+      },
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_INCIDENT}`,
+      requestBody
+    );
+    return response.data;
+  },
 
   getPathConstraints: async (tripId: string): Promise<any> => {
     const requestPayload = JSON.stringify({
