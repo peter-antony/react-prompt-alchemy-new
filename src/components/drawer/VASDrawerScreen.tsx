@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService, tripService } from '@/api/services';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
+import { useToast } from '@/hooks/use-toast';
 
 interface FormData {
   CustomerOrderNo: string;
@@ -102,6 +103,7 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
+  const { toast } = useToast();
 
   // Temporary placeholder until real implementation is connected
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
@@ -343,8 +345,28 @@ const saveCurrentFormData = () => {
   try {
     const response = await tripService.saveVASTrip(HeaderInfo, vasList);
     console.log("Save VAS response", response);
+    
+    // Extract message from API response
+    const apiMessage = response?.data?.Message || "Success";
+    
+    // Success toast notification
+    toast({
+      title: "✅ VAS Saved Successfully",
+      description: apiMessage,
+      variant: "default",
+    });
   } catch (error) {
     console.error("Error saving VAS:", error);
+    
+    // Extract error message from API response if available
+    const errorMessage = error?.data?.Message || error?.message || "Failed to save Value Added Services";
+    
+    // Error toast notification
+    toast({
+      title: "❌ Save Failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
   }
 };
 
