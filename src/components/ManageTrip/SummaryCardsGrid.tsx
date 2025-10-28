@@ -218,50 +218,102 @@ export const SummaryCardsGrid = () => {
     ];
   }, [tripData, vasData]);
 
+  // return (
+  //   <div className="grid grid-cols-2 gap-6">
+  //     {summaryCardsData.map((card, index) => {
+  //       const Icon = card.icon;
+  //       const isClickable = card.title === 'Resources' || card.title === 'VAS' || card.title === 'Incidents' || card.title === 'Customer Orders' || card.title === 'Supplier Billing';
+  //       return (
+  //         <Card key={index} 
+  //           className={`h-fit border-[#EAECF0] rounded-sm shadow-none ${
+  //             isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
+  //           }`}
+  //           onClick={() => isClickable && handleCardClick(card.title)}
+  //         >
+  //           <CardHeader className="p-4">
+  //             <CardTitle className="text-md font-medium flex items-center gap-2">
+  //               {/* <Icon className={`h-4 w-4 ${card.iconColor}`} /> */}
+  //               {card.title == 'Customer Orders' &&
+  //                 <span className='p-3 rounded-xl bg-[#F0F3FE] mr-2'> <PackageCheck size={16} color="#1036C0" strokeWidth={1.2} /></span>
+  //               }
+  //               {card.title == 'Resources' &&
+  //                 <span className='p-3 rounded-xl bg-[#FFF1F3] mr-2'> <UserRoundCheck size={16} color="#C01048" strokeWidth={1.2} /></span>
+  //               }
+  //               {card.title == 'VAS' &&
+  //                 <span className='p-3 rounded-xl bg-[#a52a2a17] mr-2'> <Settings size={16} color="brown" strokeWidth={1.2} /></span>
+  //               }
+  //               {card.title == 'Incidents' &&
+  //                 <span className='p-3 rounded-xl bg-[#ff980012] mr-2'> <CarFront size={16} color="#cd5c5c" strokeWidth={1.25} /></span>
+  //               }
+  //               {card.title == 'Supplier Billing' &&
+  //                 <span className='p-3 rounded-xl bg-[#9774de12] mr-2'> <TicketPercent size={16} color="#9774de" strokeWidth={1.2} /></span>
+  //               }
+  //               <span className='text-md'>{card.title}</span>
+  //             </CardTitle>
+  //           </CardHeader>
+  //           <CardContent className="grid grid-cols-2 gap-y-2 text-sm p-4 pt-0">
+  //             {card.values.map((value, valueIndex) => (
+  //               <div key={valueIndex} className="flex justify-between text-sm flex-col gap-1">
+  //                 <span className="text-muted-foreground">{value.label}</span>
+  //                 <span className="font-medium">{value.value}</span>
+  //               </div>
+  //             ))}
+  //           </CardContent>
+  //         </Card>
+  //       );
+  //     })}
+  //   </div>
+  // );
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-3 gap-4">
       {summaryCardsData.map((card, index) => {
         const Icon = card.icon;
-        const isClickable = card.title === 'Resources' || card.title === 'VAS' || card.title === 'Incidents' || card.title === 'Customer Orders' || card.title === 'Supplier Billing';
+        const isClickable =
+          ['Resources', 'VAS', 'Incidents', 'Customer Orders', 'Supplier Billing'].includes(card.title);
+
+        // Build compact label/value text
+        let displayValue = '';
+        let displayLabel = '';
+
+        if (card.title === 'Incidents') {
+          const total = card.values[0]?.value ?? 0;
+          const closed = card.values[1]?.value ?? 0;
+          displayValue = `${total} / ${closed}`;
+          displayLabel = 'Total / Closed Incident';
+        } else if (card.title === 'Supplier Billing') {
+          displayValue = `${card.values[0]?.value || ''}`;
+          displayLabel = 'Supplier Billing';
+        } else {
+          displayValue = `${card.values[0]?.value || 0}`;
+          displayLabel = card.values[0]?.label || '';
+        }
+
         return (
-          <Card key={index} 
-            className={`h-fit border-[#EAECF0] rounded-sm shadow-none ${
+          <Card
+            key={index}
+            onClick={() => isClickable && handleCardClick(card.title)}
+            className={`rounded-lg border bg-card text-card-foreground shadow-sm ${
               isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
             }`}
-            onClick={() => isClickable && handleCardClick(card.title)}
           >
-            <CardHeader className="p-4">
-              <CardTitle className="text-md font-medium flex items-center gap-2">
-                {/* <Icon className={`h-4 w-4 ${card.iconColor}`} /> */}
-                {card.title == 'Customer Orders' &&
-                  <span className='p-3 rounded-xl bg-[#F0F3FE] mr-2'> <PackageCheck size={16} color="#1036C0" strokeWidth={1.2} /></span>
-                }
-                {card.title == 'Resources' &&
-                  <span className='p-3 rounded-xl bg-[#FFF1F3] mr-2'> <UserRoundCheck size={16} color="#C01048" strokeWidth={1.2} /></span>
-                }
-                {card.title == 'VAS' &&
-                  <span className='p-3 rounded-xl bg-[#a52a2a17] mr-2'> <Settings size={16} color="brown" strokeWidth={1.2} /></span>
-                }
-                {card.title == 'Incidents' &&
-                  <span className='p-3 rounded-xl bg-[#ff980012] mr-2'> <CarFront size={16} color="#cd5c5c" strokeWidth={1.25} /></span>
-                }
-                {card.title == 'Supplier Billing' &&
-                  <span className='p-3 rounded-xl bg-[#9774de12] mr-2'> <TicketPercent size={16} color="#9774de" strokeWidth={1.2} /></span>
-                }
-                <span className='text-md'>{card.title}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-y-2 text-sm p-4 pt-0">
-              {card.values.map((value, valueIndex) => (
-                <div key={valueIndex} className="flex justify-between text-sm flex-col gap-1">
-                  <span className="text-muted-foreground">{value.label}</span>
-                  <span className="font-medium">{value.value}</span>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div
+                  className="h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${card.bgColor}`, color: `${card.iconColor}` }}
+                >
+                  <Icon className="h-5 w-5" strokeWidth={1.5} />
                 </div>
-              ))}
+                <div className="flex flex-col">
+                  <p className="text-lg font-semibold">{displayValue}</p>
+                  <p className="text-sm text-muted-foreground">{displayLabel}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
       })}
     </div>
   );
+
 };
