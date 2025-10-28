@@ -221,7 +221,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
       TransportMode: 'Rail',
       LegStatus: null,
       TripInfo: null,
-      ModeFlag: 'Nochange',
+      ModeFlag: 'Insert',
       ReasonForUpdate: null,
       QCCode1: null,
       QCCode1Value: null,

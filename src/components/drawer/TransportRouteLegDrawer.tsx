@@ -181,7 +181,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         console.log(`🔍 Panel data for ${panelId}:`, panelData);
         
         // Check if this leg has been modified
-        const legIndex = parseInt(panelId.replace('legPanel_', ''));
+        // Determine leg index from panelId (supports current 'leg-<index>' format)
+        const legIndex = parseInt(panelId.replace('leg-', ''));
         const originalLeg = selectedRoute?.LegDetails?.[legIndex];
         let isModified = false;
         
@@ -214,8 +215,11 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
           isModified = true;
         }
         
-        // Update ModeFlag if the leg was modified
-        if (isModified) {
+        // Update ModeFlag based on whether this is a new leg vs modified existing
+        if (originalLeg?.ModeFlag === 'Insert') {
+          // Preserve Insert for newly added legs regardless of field edits
+          panelData.ModeFlag = 'Insert';
+        } else if (isModified) {
           panelData.ModeFlag = 'Update';
         } else if (originalLeg) {
           panelData.ModeFlag = originalLeg.ModeFlag || 'Nochange';
@@ -313,9 +317,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         value: leg.LegSequence?.toString() || (legIndex + 1).toString(),
         mandatory: true,
         visible: true,
-        editable: false,
+        editable: true,
         order: 1,
-        width: 'third'
+        width: 'six'
       },
       LegID: {
         id: 'LegID',
@@ -326,7 +330,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: false,
         order: 2,
-        width: 'third'
+        width: 'six'
         // Remove onChange since we're using ref-based approach
       },
       Departure: {
@@ -338,7 +342,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: true,
         order: 3,
-        width: 'third',
+        width: 'six',
         fetchOptions: fetchDepartures
         // Remove onChange since we're using ref-based approach
       },
@@ -351,7 +355,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: true,
         order: 4,
-        width: 'third',
+        width: 'six',
         fetchOptions: fetchArrivals
         // Remove onChange since we're using ref-based approach
       },
@@ -362,9 +366,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         value: leg.LegBehaviour || 'Pick',
         mandatory: false,
         visible: true,
-        editable: true,
+        editable: false,
         order: 5,
-        width: 'third',
+        width: 'six',
         fetchOptions: fetchLegBehaviours
         // Remove onChange since we're using ref-based approach
       },
@@ -377,7 +381,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: true,
         order: 6,
-        width: 'third',
+        width: 'six',
         fetchOptions: fetchTransportModes
         // Remove onChange since we're using ref-based approach
       }
@@ -532,14 +536,16 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
             console.log(`🎨 Rendering DynamicPanel for leg ${index} with config:`, createLegPanelConfig(index));
             return (
               <Card key={leg.LegUniqueId} className="relative bg-white border border-gray-200 shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 right-4 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
-                  onClick={() => removeLegPanel(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2.5 right-14 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
+                    onClick={() => removeLegPanel(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                
 
                 <DynamicPanel
                   ref={(ref) => {

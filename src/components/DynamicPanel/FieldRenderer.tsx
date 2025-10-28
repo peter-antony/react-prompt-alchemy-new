@@ -78,7 +78,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         render={({ field }) => (
           <div>
             {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
-            <div className="text-[13px] text-gray-700 bg-gray-50 p-2 rounded border min-h-[32px] flex items-center">
+            <div className="text-[13px] text-gray-700 bg-gray-50 p-2 rounded border h-8 flex items-center">
               {field.value || '-'}
             </div>
           </div>
