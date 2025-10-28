@@ -67,34 +67,39 @@ const columns: GridColumnConfig[] = [
   {
     key: 'productName',
     label: 'Product Name',
-    type: 'Text',
+    type: 'String',
     sortable: true,
     filterable: true,
+    editable: true,
     width: 200
   },
   {
     key: 'quantity',
     label: 'Quantity',
-    type: 'Text',
+    type: 'Integer',
     sortable: true,
     filterable: true,
+    editable: true,
     width: 100
   },
   {
     key: 'unitPrice',
     label: 'Unit Price',
-    type: 'Text',
+    type: 'Integer',
     sortable: true,
     filterable: true,
+    editable: true,
     width: 120
   },
   {
     key: 'category',
     label: 'Category',
-    type: 'Text',
+    type: 'Select',
     sortable: true,
     filterable: true,
-    width: 120
+    editable: true,
+    width: 120,
+    options: ['Electronics', 'Furniture', 'Office Supplies', 'Tools']
   },
   {
     key: 'status',
@@ -112,18 +117,34 @@ const columns: GridColumnConfig[] = [
   {
     key: 'dateAdded',
     label: 'Date Added',
-    type: 'Text',
+    type: 'Date',
     sortable: true,
     filterable: true,
+    editable: true,
     width: 120
   },
   {
     key: 'supplier',
     label: 'Supplier',
-    type: 'Text',
+    type: 'LazySelect',
     sortable: true,
     filterable: true,
-    width: 150
+    editable: true,
+    width: 150,
+    fetchOptions: async ({ searchTerm, offset, limit }) => {
+      // Mock async data fetching - simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const allSuppliers = [
+        'TechCorp', 'FurniCorp', 'MobileTech', 'OfficeMax', 
+        'ToolMasters', 'ElectroHub', 'SmartDevices', 'HomeGoods'
+      ];
+      const filtered = allSuppliers.filter(s => 
+        s.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      return filtered
+        .slice(offset, offset + limit)
+        .map(s => ({ label: s, value: s }));
+    }
   },
   {
     key: 'specifications',
@@ -294,12 +315,14 @@ export default function SmartGridPlusDemo() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h4 className="font-semibold">Inline Row Addition</h4>
+              <h4 className="font-semibold">Cell Data Types</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Click "Add Product" to create new rows</li>
-                <li>• Form validation with error messages</li>
-                <li>• Auto-focus on first editable cell</li>
-                <li>• Configurable default values</li>
+                <li>• <strong>String:</strong> Product Name - Text input</li>
+                <li>• <strong>Integer:</strong> Quantity & Price - Number input</li>
+                <li>• <strong>Select:</strong> Category - Dropdown selection</li>
+                <li>• <strong>LazySelect:</strong> Supplier - Searchable async dropdown</li>
+                <li>• <strong>Date:</strong> Date Added - Date picker</li>
+                <li>• <strong>Badge:</strong> Status - Color-coded display</li>
               </ul>
             </div>
             

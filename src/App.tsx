@@ -83,6 +83,7 @@ const App = () => (
           } />
           <Route path="manage-trip" element={<ManageTripExecution/>} />
           <Route path="/trip-planning" element={<TripPlanning />} />
+          <Route path="/smart-grid-plus-demo" element={<SmartGridPlusDemo />} />
           
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
