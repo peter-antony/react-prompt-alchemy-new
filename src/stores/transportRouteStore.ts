@@ -128,7 +128,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
           ? responseData.LegDetails.map((leg: any, index: number) => ({
               LegSequence: leg.LegSequence || index + 1,
               LegID: leg.LegID || '',
-              LegUniqueId: leg.LegUniqueId || crypto.randomUUID(),
+              LegUniqueId: leg.LegUniqueId || `${Date.now()}`,
               Departure: leg.Departure || '',
               DepartureDescription: leg.DepartureDescription || '',
               Arrival: leg.Arrival || '',
@@ -211,7 +211,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
     const newLeg: LegDetail = {
       LegSequence: (selectedRoute.LegDetails?.length || 0) + 1,
       LegID: '',
-      LegUniqueId: crypto.randomUUID(),
+      LegUniqueId: `${Date.now()}`,
       Departure: '',
       DepartureDescription: '',
       Arrival: '',
