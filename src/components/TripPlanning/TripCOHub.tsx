@@ -986,36 +986,26 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
     if (columnKey == "CustomerOrderID") {
-      onCustomerOrderClick(value);
       console.log('rowIndex', rowIndex);
       
       // Create composite key string from CustomerOrderID and LegBehaviour
       const compositeKey = `${value.CustomerOrderID}-${value.LegBehaviour}`;
       console.log('compositeKey:', compositeKey);
       
-      // Add compositeKey to highlightedRows array (direct add, no toggle)
-      setHighlightedRows(prev => {
-        // Check if compositeKey is already in the array
-        if (prev.includes(compositeKey)) {
-          // If it's already highlighted, keep it (no toggle off)
-          return prev;
-        } else {
-          // If it's not highlighted, add it
-          return [...prev, compositeKey];
-        }
-      });
+      // Check if this row is currently highlighted
+      const isCurrentlyHighlighted = highlightedRows.includes(compositeKey);
       
-      // Toggle functionality (commented out)
-      // setHighlightedRows(prev => {
-      //   // Check if compositeKey is already in the array
-      //   if (prev.includes(compositeKey)) {
-      //     // If it's already highlighted, remove it (toggle off)
-      //     return prev.filter(key => key !== compositeKey);
-      //   } else {
-      //     // If it's not highlighted, add it (toggle on)
-      //     return [...prev, compositeKey];
-      //   }
-      // });
+      if (isCurrentlyHighlighted) {
+        // If it's already highlighted, remove it (toggle off)
+        setHighlightedRows(prev => prev.filter(key => key !== compositeKey));
+        onCustomerOrderClick(value, false); // Pass false to indicate deselection
+        console.log('Row unselected:', compositeKey);
+      } else {
+        // If it's not highlighted, add it (toggle on)
+        setHighlightedRows(prev => [...prev, compositeKey]);
+        onCustomerOrderClick(value, true); // Pass true to indicate selection
+        console.log('Row selected:', compositeKey);
+      }
     }
   };
 
@@ -1529,11 +1519,34 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     console.log('Clear all filters');
   }
 
+  // Function to clear all highlighted rows
+  const clearAllSelections = () => {
+    setHighlightedRows([]);
+    // Also clear the parent component's selected data
+    onCustomerOrderClick(null, false);
+    console.log('All selections cleared');
+  }
+
   return (
     <>
       {/* <AppLayout> */}
       <div className="">
         <div className="container-fluid mx-auto space-y-6">
+          {/* Clear Selections Button */}
+          {/* {highlightedRows.length > 0 && (
+            <div className="flex justify-end mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllSelections}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear All Selections ({highlightedRows.length})
+              </Button>
+            </div>
+          )} */}
+          
           {/* Grid Container */}
           <div className={`rounded-lg ${config.visible ? 'pb-4' : ''}`}>
             {/* Selected rows indicator */}

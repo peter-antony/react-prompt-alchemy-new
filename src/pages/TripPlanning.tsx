@@ -459,9 +459,34 @@ const TripPlanning = () => {
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
   const [customerOrderList, setcustomerOrderList] = useState<any>();
-  const handleCustomerOrderSelect = (customerOrderList: any) => {
-    console.log("✅ Received from child:", customerOrderList);
+  const handleCustomerOrderSelect = (customerOrderList: any, isSelected: boolean = true) => {
+    console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
     
+    if (!isSelected) {
+      // Handle deselection - remove from selectedArrCOData
+      console.log("customerOrderList ====", customerOrderList);
+      if (customerOrderList && customerOrderList.CustomerOrderID) {
+        const customerOrderId = customerOrderList.CustomerOrderID;
+        setSelectedArrCOData(prev => {
+          const updated = prev.filter(item => item.CustomerOrderID !== customerOrderId);
+          console.log("🗑️ Removed customer order from selectedArrCOData:", customerOrderId);
+          console.log("📊 Updated selectedArrCOData length:", updated.length);
+          return updated;
+        });
+      } else {
+        // Clear all selections (when customerOrderList is null)
+        setSelectedArrCOData([]);
+        console.log("🗑️ Cleared all customer orders from selectedArrCOData");
+      }
+      
+      // Clear the customer order list and hide resources flag
+      console.log("setSelectedArrCOData remove ===", selectedArrCOData);
+      setcustomerOrderList(null);
+      // setAddResourcesFlag(false);
+      return;
+    }
+    
+    // Handle selection - add to selectedArrCOData
     // Remove Status and TripBillingStatus, and add ModeFlag to the customerOrderList object
     const { Status, TripBillingStatus, ...rest } = customerOrderList;
     const updatedCustomerOrderList = {
@@ -523,70 +548,79 @@ const TripPlanning = () => {
       return value;
     };
 
-    const processedLocation = splitAtPipe(location);
-    const processedCluster = splitAtPipe(cluster);
+    if(location === undefined || location === null || location === "") {
+      toast({
+        title: "⚠️ Location is required",
+        description: "Please select a location",
+        variant: "destructive",
+      });
+      return;
+    }else{
+      const processedLocation = splitAtPipe(location);
+      const processedCluster = splitAtPipe(cluster);
 
-    const transformedResourceDetails = selectedResources.map(resource => ({
-      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
-      "ResourceType": resource.resourceType || resource.ResourceType || 
-        (resource.EquipmentID ? 'Equipment' : 
-         resource.VendorID ? 'Agent' : 
-         resource.DriverCode ? 'Driver' : 
-         resource.HandlerID ? 'Handler' : 
-         resource.VehicleID ? 'Vehicle' :
-         resource.SupplierID ? 'Schedule' : 'Unknown'),
-      "Service": resource.Service || "",
-      "ServiceDescription": resource.ServiceDescription || "",
-      "SubService": resource.SubService || "",
-      "SubServiceDescription": resource.SubServiceDescription || "",
-      "EffectiveFromDate": "",
-      "EffectiveToDate": "",
-      "ModeFlag": "Insert"
-    }));
+      const transformedResourceDetails = selectedResources.map(resource => ({
+        "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
+        "ResourceType": resource.resourceType || resource.ResourceType || 
+          (resource.EquipmentID ? 'Equipment' : 
+          resource.VendorID ? 'Agent' : 
+          resource.DriverCode ? 'Driver' : 
+          resource.HandlerID ? 'Handler' : 
+          resource.VehicleID ? 'Vehicle' :
+          resource.SupplierID ? 'Schedule' : 'Unknown'),
+        "Service": resource.Service || "",
+        "ServiceDescription": resource.ServiceDescription || "",
+        "SubService": resource.SubService || "",
+        "SubServiceDescription": resource.SubServiceDescription || "",
+        "EffectiveFromDate": "",
+        "EffectiveToDate": "",
+        "ModeFlag": "Insert"
+      }));
 
-    const tripData = {
-      "Header": {
-        "TripType": tripType,
-        "PlanningProfileID": "General-GMBH",
-        "Location": processedLocation, // Now processedLocation is already just the code
-        "Cluster": processedCluster,
-        "PlanDate": format(planDate, "yyyy-MM-dd")
-      },
-      "CustomerOrders": selectedRows || [],
-      "ResourceDetails": transformedResourceDetails || []
-    }
-    
-    console.log("createBulkTripData", tripData);
-    console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
-    try {
-      const response: any = await tripPlanningService.createMultipleCOTripPlan(tripData);
-      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-      // const data = parsedResponse;
-      const resourceStatus = (response as any)?.data?.IsSuccess;
-      console.log("parsedResponse ====", parsedResponse);
-      if (resourceStatus) {
-        console.log("Trip data updated in store");
-        toast({
-          title: "✅ Trip Created Successfully",
-          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-          variant: "default",
-        });
-        console.log("parsedResponse ====", parsedResponse?.Header?.TripNo);
-        setTripNo(parsedResponse?.Header?.TripNo);
-        setTripStatus(parsedResponse?.Header?.TripStatus);
-        // Reload TripCOHub component
-        setTripCOMulipleHubReloadKey(prev => prev + 1);
-        console.log("🔄 TripCOHub component reloaded");
-      } else {
-        console.log("error as any ===", (response as any)?.data?.Message);
-        toast({
-          title: "⚠️ Save Failed",
-          description: (response as any)?.data?.Message || "Failed to save changes.",
-          variant: "destructive",
-        });
+      const tripData = {
+        "Header": {
+          "TripType": tripType,
+          "PlanningProfileID": "General-GMBH",
+          "Location": processedLocation, // Now processedLocation is already just the code
+          "Cluster": processedCluster,
+          "PlanDate": format(planDate, "yyyy-MM-dd")
+        },
+        "CustomerOrders": selectedRows || [],
+        "ResourceDetails": transformedResourceDetails || []
       }
-    } catch (error) {
-      console.error("Error updating nested data:", error);
+      
+      console.log("createBulkTripData", tripData);
+      console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
+      try {
+        const response: any = await tripPlanningService.createMultipleCOTripPlan(tripData);
+        const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+        // const data = parsedResponse;
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        console.log("parsedResponse ====", parsedResponse);
+        if (resourceStatus) {
+          console.log("Trip data updated in store");
+          toast({
+            title: "✅ Trip Created Successfully",
+            description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+            variant: "default",
+          });
+          console.log("parsedResponse ====", parsedResponse?.Header?.TripNo);
+          setTripNo(parsedResponse?.Header?.TripNo);
+          setTripStatus(parsedResponse?.Header?.TripStatus);
+          // Reload TripCOHub component
+          setTripCOMulipleHubReloadKey(prev => prev + 1);
+          console.log("🔄 TripCOHub component reloaded");
+        } else {
+          console.log("error as any ===", (response as any)?.data?.Message);
+          toast({
+            title: "⚠️ Save Failed",
+            description: (response as any)?.data?.Message || "Failed to save changes.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error updating nested data:", error);
+      }
     }
 
   }
@@ -630,64 +664,74 @@ const TripPlanning = () => {
       console.log("splitDropdowns ===", newObj);
       return newObj;
     };
-    // Process location data using splitAtPipe to get the code value
-    console.log("location ====", location);
-    const processedLocation = splitAtPipe(location);
-    const processedCluster = splitAtPipe(cluster);
-    console.log("processedLocation ====", processedLocation);
-    console.log("selectedArrCOData", selectedArrCOData);
-    
-    const tripData = {
-      "Header": {
-        "TripType": tripType,
-        "PlanningProfileID": "General-GMBH",
-        "Location": processedLocation, // Now processedLocation is already just the code
-        "Cluster": processedCluster,
-        "PlanDate": format(planDate, "yyyy-MM-dd")
-      },
-      "CustomerOrders": selectedArrCOData || []
-    }
-    
-    console.log("createSingleTripData", tripData);
-    console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
-    try {
-      const response: any = await tripPlanningService.createTripPlan(tripData);
-      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-      // const data = parsedResponse;
-      const resourceStatus = (response as any)?.data?.IsSuccess;
-      console.log("parsedResponse ====", parsedResponse);
-      if (resourceStatus) {
-        console.log("Trip data updated in store");
-        
-        // Extract CustomerOrders from response
-        const customerOrders = parsedResponse.CustomerOrders || [];
-        console.log("📋 CustomerOrders from API response:", customerOrders);
-        
-        // Store CustomerOrders data for TripCOHub
-        setTripCustomerOrdersData(customerOrders);
-        
-        toast({
-          title: "✅ Trip Created Successfully",
-          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-          variant: "default",
-        });
-        setCreateTripBtn(false);
-        setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
-        setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
-        // Reload TripCOHub component
-        setTripCOHubReloadKey(prev => prev + 1);
-        console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
-      } else {
-        console.log("error as any ===", (response as any)?.data?.Message);
-        toast({
-          title: "⚠️ Save Failed",
-          description: (response as any)?.data?.Message || "Failed to save changes.",
-          variant: "destructive",
-        });
-        
+
+    if(location === undefined || location === null || location === "") {
+      toast({
+        title: "⚠️ Location is required",
+        description: "Please select a location",
+        variant: "destructive",
+      });
+      return;
+    }else{
+      // Process location data using splitAtPipe to get the code value
+      console.log("location ====", location);
+      const processedLocation = splitAtPipe(location);
+      const processedCluster = splitAtPipe(cluster);
+      console.log("processedLocation ====", processedLocation);
+      console.log("selectedArrCOData", selectedArrCOData);
+      
+      const tripData = {
+        "Header": {
+          "TripType": tripType,
+          "PlanningProfileID": "General-GMBH",
+          "Location": processedLocation, // Now processedLocation is already just the code
+          "Cluster": processedCluster,
+          "PlanDate": format(planDate, "yyyy-MM-dd")
+        },
+        "CustomerOrders": selectedArrCOData || []
       }
-    } catch (error) {
-      console.error("Error updating nested data:", error);
+      
+      console.log("createSingleTripData", tripData);
+      console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
+      try {
+        const response: any = await tripPlanningService.createTripPlan(tripData);
+        const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+        // const data = parsedResponse;
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        console.log("parsedResponse ====", parsedResponse);
+        if (resourceStatus) {
+          console.log("Trip data updated in store");
+          
+          // Extract CustomerOrders from response
+          const customerOrders = parsedResponse.CustomerOrders || [];
+          console.log("📋 CustomerOrders from API response:", customerOrders);
+          
+          // Store CustomerOrders data for TripCOHub
+          setTripCustomerOrdersData(customerOrders);
+          
+          toast({
+            title: "✅ Trip Created Successfully",
+            description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+            variant: "default",
+          });
+          setCreateTripBtn(false);
+          setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
+          setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
+          // Reload TripCOHub component
+          setTripCOHubReloadKey(prev => prev + 1);
+          console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
+        } else {
+          console.log("error as any ===", (response as any)?.data?.Message);
+          toast({
+            title: "⚠️ Save Failed",
+            description: (response as any)?.data?.Message || "Failed to save changes.",
+            variant: "destructive",
+          });
+          
+        }
+      } catch (error) {
+        console.error("Error updating nested data:", error);
+      }
     }
   }
 
@@ -928,10 +972,10 @@ const TripPlanning = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
-                  Normal Trip
+                  {tripType}
                 </Badge>
                 <Badge variant="outline" className="text-muted-foreground">
-                  12-Mar-2025
+                {planDate ? format(planDate, "dd-MMM-yyyy") : ''}
                 </Badge>
                 <Button variant="ghost" size="icon">
                   <ChevronRight className="h-4 w-4" />
