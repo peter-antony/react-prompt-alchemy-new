@@ -12,6 +12,7 @@ import { Plus, Edit2, Trash2, Calendar, Clock, Maximize2, Copy, Download, Car, W
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService, tripService } from '@/api/services';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
+import { useToast } from '@/hooks/use-toast';
 
 interface IncidentsDrawerScreenProps {
   onClose?: () => void;
@@ -59,7 +60,7 @@ interface FormData {
   WorkRequestStatus: string;
   ErrorMessage: string;
   ClaimRequired: boolean;
-  ClaimNo: string;
+  ClaimNumber: string;
   ClaimStatus: string;
   RaiseClaim: string;
   ModeFlag: string;
@@ -95,9 +96,9 @@ const initialFormData: FormData = {
   MaintenanceType: '',
   Wagon: '',
   Container: '',
-  WorkType: 'Incident Maintenance',
-  WorkCategory: 'Cost Charged to Forwardis',
-  WorkGroup: 'FL-Berlin',
+  WorkType: '',
+  WorkCategory: '',
+  WorkGroup: '',
   MaintenanceDescription: '',
   IncidentCausedBy: '',
   IncidentCauserName: '',
@@ -109,14 +110,14 @@ const initialFormData: FormData = {
   RefDocNo: '',
   MobileRefIncidentId: '',
   Remarks: '',
-  WorkOrderNumber: 'WON00000001',
-  WorkOrderStatus: 'In Progress',
-  WorkRequestNumber: 'WRN00000001',
-  WorkRequestStatus: 'Draft',
-  ErrorMessage: 'Not Applicable',
+  WorkOrderNumber: '',
+  WorkOrderStatus: '',
+  WorkRequestNumber: '',
+  WorkRequestStatus: '',
+  ErrorMessage: '',
   ClaimRequired: false,
-  ClaimNo: 'CL00000001',
-  ClaimStatus: 'Initiated',
+  ClaimNumber: '',
+  ClaimStatus: '',
   RaiseClaim: '',
   ModeFlag: 'NoChanges'
 };
@@ -191,6 +192,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
+  const { toast } = useToast();
   // Temporary placeholder until real implementation is connected
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -226,7 +228,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
   //Incident Details
   const fetchIncidentType = fetchMasterData("Incident Type Init");
-  const fetchIncidentPlace = fetchMasterData("Place of Incident Init");
+  const fetchIncidentPlace = fetchMasterData("Location Init");
   const fetchIncidentWeather = fetchMasterData("Weather Condition Init");
   const fetchIncidentDriver = fetchMasterData("Driver Fault Init");
   const fetchIncidentVehicle = fetchMasterData("Vehicle Fault Init");
@@ -236,98 +238,97 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   const fetchIncidentCause = fetchMasterData("Cause code init");
   const fetchIncidentWagon = fetchMasterData("Wagon id Init");
   const fetchIncidentContainer = fetchMasterData("Container id Init");
+  const fetchMaintenanceType = fetchMasterData("Maintenance Type Init");
+  const fetchWorkType = fetchMasterData("Work Type Init");
+  const fetchWorkCategory = fetchMasterData("Work Category Init");
+  const fetchWorkGroup = fetchMasterData("Work Group Init");
+  const fetchIncidentCausedBy = fetchMasterData("Incident Caused By Init");
+  const fetchIncidentCauserName = fetchMasterData("Incident Causer Name Init");
 
   //MoreInfo Details
 
   const fetchIncidentRisks = fetchMasterData("Hazardous Goods Init");
   const fetchIncidentGoods = fetchMasterData("Hazardous Goods Init");
+  const fetchLoadTime = fetchMasterData("Load Type Init");
 
 
   const [customerValue, setCustomerValue] = useState<string | undefined>();
-  useEffect(() => {
-    // if (incidents.length > 0) {
-    //   const firstIncident = incidents[0];
-    //   setSelectedIncident(firstIncident);
-    //   setFormData(firstIncident.formData);
-    // }
+
+  // Refactored Incident fetch function
+  const fetchIncidentForTrip = async () => {
     if (!tripId) return;
 
-    const fetchIncidentForTrip = async () => {
-      try {
-        const response = await tripService.getIncidentTrip(tripId);
+    try {
+      const response = await tripService.getIncidentTrip(tripId);
 
-        // Same normalization logic as in SummaryCardsGrid
-        let incidentapi: any = JSON.parse(response?.data?.ResponseData);
-        const incidentList =
-          incidentapi?.Incident ||
-          response?.data ||
-          response?.Incident ||
-          [];
+      // Same normalization logic as in SummaryCardsGrid
+      let incidentapi: any = JSON.parse(response?.data?.ResponseData);
+      const incidentList =
+        incidentapi?.Incident ||
+        response?.data ||
+        response?.Incident ||
+        [];
 
-        console.log("INCIDENT List (Drawer):", incidentList);
+      console.log("INCIDENT List (Drawer):", incidentList);
 
-        // Map API data into your local VASItem structure
-        const formattedIncidentItems: Incident[] = incidentList.map((Incident: any, index: number) => ({
-          id: Incident.IncidentId || index.toString(),
-          name: Incident.IncidentStatus || `Incident ${index + 1}`,
-          // quantity: vas.IncidentId || 1,
-          formData: {
-            IncidentId: Incident.IncidentId || '',
-            IncidentStatus: Incident.IncidentStatus,
-            IncidentType: Incident.IncidentType || '',
-            IncidentCauserName: Incident.IncidentCauserName || '',
-            IncidentCausedBy: Incident.IncidentCausedBy || '',
-            IncidentCloseDate: Incident.IncidentCloseDate,
-            IncidentDate: Incident.IncidentDate || '',
-            IncidentReportedBy: Incident.IncidentReportedBy || '',
-            IncidentResolution: Incident.IncidentResolution || '',
-            IncidentTime: Incident.IncidentTime || '',
-            LoadTime: Incident.LoadTime || '',
-            RefDocNo: Incident.RefDocNo || '',
-            PlaceOfIncident: Incident.PlaceOfIncident || '',
-            WeatherCondition: Incident.WeatherCondition || '',
-            RoadCondition: Incident.RoadCondition || '',
-            ShortDescription: Incident.ShortDescription || '',
-            CauseCode: Incident.CauseCode || '',
-            Wagon: Incident.Wagon || '',
-            Container: Incident.Container || '',
-            ClaimNo: Incident.ClaimNumber || '',
-            ClaimStatus: Incident.ClaimStatus || '',
-            RaiseClaim: Incident.RaiseClaim || '',
-            ClaimRequired: Incident.ClaimRequired || false,
-            DetailedDescription: Incident.DetailedDescription || '',
-            // WorkGroup: Incident.WorkGroup || '',
-            WorkOrderNumber: Incident.WorkOrderNumber || '',
-            WorkOrderStatus: Incident.WorkOrderStatus || '',
-            WorkRequestNumber: Incident.WorkRequestNumber,
-            WorkRequestStatus: Incident.WorkRequestStatus,
-            AccidentType: Incident.AccidentType || '',
-            // WorkType: Incident.WorkType || '',
-            // WorkCategory: Incident.WorkCategory || '',
-            MaintenanceType: Incident.MaintenanceType || '',
-            MaintenanceRequired: Incident.MaintenanceRequired || '',
-            MaintenanceDescription: Incident.MaintenanceDescription || '',
-            RiskInvolved: Incident.RiskInvolved || '',
-            DangerousGoods: Incident.DangerousGoods || '',
-            ModeFlag: Incident.ModeFlag
-          }
-        }));
-        setIncidents(formattedIncidentItems)
-        // setVasItems(formattedVasItems);
-
-        // Auto-select first VAS if available
-        if (formattedIncidentItems.length > 0) {
-          const firstVAS = formattedIncidentItems[0];
-          // setSelectedVAS(firstVAS.id);
-          setFormData(firstVAS.formData);
+      // Map API data into your local VASItem structure
+      const formattedIncidentItems: Incident[] = incidentList.map((Incident: any, index: number) => ({
+        id: Incident.IncidentId || index.toString(),
+        name: Incident.IncidentStatus || `Incident ${index + 1}`,
+        // quantity: vas.IncidentId || 1,
+        formData: {
+          IncidentId: Incident.IncidentId || '',
+          IncidentStatus: Incident.IncidentStatus,
+          IncidentType: Incident.IncidentType || '',
+          IncidentCauserName: Incident.IncidentCauserName || '',
+          IncidentCausedBy: Incident.IncidentCausedBy || '',
+          IncidentCloseDate: Incident.IncidentCloseDate,
+          IncidentDate: Incident.IncidentDate || '',
+          IncidentReportedBy: Incident.IncidentReportedBy || '',
+          IncidentResolution: Incident.IncidentResolution || '',
+          IncidentTime: Incident.IncidentTime || '',
+          LoadTime: Incident.LoadTime || '',
+          RefDocNo: Incident.RefDocNo || '',
+          PlaceOfIncident: Incident.PlaceOfIncident || '',
+          WeatherCondition: Incident.WeatherCondition || '',
+          RoadCondition: Incident.RoadCondition || '',
+          ShortDescription: Incident.ShortDescription || '',
+          CauseCode: Incident.CauseCode || '',
+          Wagon: Incident.Wagon || '',
+          Container: Incident.Container || '',
+          ClaimNumber: Incident.ClaimNumber || '',
+          ClaimStatus: Incident.ClaimStatus || '',
+          RaiseClaim: Incident.RaiseClaim || '',
+          ClaimRequired: Incident.ClaimRequired === 'Yes' || Incident.ClaimRequired === true,
+          DetailedDescription: Incident.DetailedDescription || '',
+          WorkGroup: Incident.WorkGroup || '',
+          WorkOrderNumber: Incident.WorkOrderNumber || '',
+          WorkOrderStatus: Incident.WorkOrderStatus || '',
+          WorkRequestNumber: Incident.WorkRequestNumber,
+          WorkRequestStatus: Incident.WorkRequestStatus,
+          AccidentType: Incident.AccidentType || '',
+          Remarks: Incident.Remarks || '',
+          WorkType: Incident.WorkType || '',
+          WorkCategory: Incident.WorkCategory || '',
+          MaintenanceType: Incident.MaintenanceType || '',
+          MaintenanceRequired: Incident.MaintenanceRequired === 'Yes' || Incident.MaintenanceRequired === true,
+          MaintenanceDescription: Incident.MaintenanceDescription || '',
+          RiskInvolved: Incident.RiskInvolved || '',
+          DangerousGoods: Incident.DangerousGoods || '',
+          ModeFlag: Incident.ModeFlag
         }
-      } catch (error) {
-        console.error("Error fetching VAS:", error);
-      }
-    };
+      }));
+      setIncidents(formattedIncidentItems)
+      // setVasItems(formattedVasItems);
+    } catch (error) {
+      console.error("Error fetching Incidents:", error);
+    }
+  };
 
+  // Incident API Fetch on mount
+  useEffect(() => {
     fetchIncidentForTrip();
-  }, []);
+  }, [tripId]);
 
   const handleIncidentClick = (incident: Incident) => {
     console.log('Incident clicked:', incident);
@@ -377,28 +378,40 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   // };
   const handleSave = async () => {
     let updatedIncidentItems = [...incidents];
+    let newIncidentForApi: Incident | null = null;
+
+    const areFormDataEqual = (a: any, b: any) => {
+      if (!a || !b) return false;
+      const { ModeFlag: _aMode, ...aRest } = a;
+      const { ModeFlag: _bMode, ...bRest } = b;
+      try {
+        return JSON.stringify(aRest) === JSON.stringify(bRest);
+      } catch {
+        return false;
+      }
+    };
 
     if (selectedIncident) {
       // Update existing VAS → only the edited one gets ModeFlag updated
       updatedIncidentItems = updatedIncidentItems.map(item => {
         if (item === selectedIncident) {
-          console.log("Inside IF; ", (formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag))
+          const hasChanges = !areFormDataEqual(item.formData, formData);
           return {
             ...item,
             formData: {
               ...formData,
-              ModeFlag: formData.ModeFlag === "NoChanges" || !formData.ModeFlag ? "Update" : formData.ModeFlag
+              ModeFlag: hasChanges ? "Update" : (item.formData?.ModeFlag || "NoChanges")
             }
           };
         }
         return item;
       });
     } else {
-      // New VAS → mark as New
+      // New Incident → use entered IncidentId and mark as Insert (defer UI update until API success)
       console.log("Inside Else")
       const newIncident: Incident = {
         id: Date.now().toString(),
-        IncidentId: '-1',
+        IncidentId: (formData.IncidentId || '').toString(),
         status: formData.IncidentStatus || "OPEN",
         // quantity: parseInt(formData.NoOfTHUServed) || 1,
         formData: {
@@ -406,11 +419,8 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
           ModeFlag: "Insert"
         }
       };
-      updatedIncidentItems.push(newIncident);
-      setSelectedIncident(newIncident);
+      newIncidentForApi = newIncident;
     }
-
-    setIncidents(updatedIncidentItems);
 
     const HeaderInfo = {
       TripNo: tripData?.Header?.TripNo,
@@ -419,19 +429,102 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
       TripStatusDescription: tripData?.Header?.TripStatusDescription
     };
 
-    const incidentList = prepareIncidentPayload(updatedIncidentItems);
+    const itemsForApi = newIncidentForApi ? [...updatedIncidentItems, newIncidentForApi] : updatedIncidentItems;
+    const incidentList = prepareIncidentPayload(itemsForApi);
 
     try {
       const response = await tripService.saveIncidentTrip(HeaderInfo, incidentList);
       console.log("Save INCIDENT response", response);
-    } catch (error) {
+      const isSuccess = response?.data?.IsSuccess === true;
+      const message = response?.data?.Message || (isSuccess ? "Incident saved successfully" : "Failed to save incident");
+
+      if (isSuccess) {
+        // Success toast
+        toast({
+          title: "✅ Incident Saved Successfully",
+          description: message,
+          variant: "default",
+        });
+
+        // Re-fetch incidents after successful save
+        await fetchIncidentForTrip();
+      } else {
+        // Failure toast
+        toast({
+          title: "❌ Save Failed",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       console.error("Error saving INCIDENT:", error);
+      
+      // Error toast for exceptions
+      const errorMessage = error?.data?.Message || error?.message || "Failed to save incident";
+      toast({
+        title: "❌ Save Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
   const prepareIncidentPayload = (incidentItems) => {
+    const splitPiped = (value) => {
+      const str = (value ?? '').toString();
+      if (!str.includes('||')) return { id: str.trim(), name: '' };
+      const [id, name] = str.split('||');
+      return { id: (id ?? '').trim(), name: (name ?? '').trim() };
+    };
+
+    // Fields coming from DynamicLazySelect that can be piped
+    const FIELDS_TO_SPLIT = [
+      'IncidentStatus',
+      'IncidentType',
+      'AccidentType',
+      'CauseCode',
+      'MaintenanceType',
+      'WorkType',
+      'WorkCategory',
+      'WorkGroup',
+      'Wagon',
+      'Container',
+      'IncidentCausedBy',
+      'IncidentReportedBy',
+      'LoadTime',
+      'PlaceOfIncident',
+      'DangerousGoods'
+    ];
+
     return incidentItems
       .filter(item => item.formData && Object.keys(item.formData).length > 0)
-      .map(item => item.formData);
+      .map(item => {
+        const fd = item.formData || {};
+        const cleaned = { ...fd };
+
+        FIELDS_TO_SPLIT.forEach((field) => {
+          if (field in cleaned) {
+            const { id, name } = splitPiped(cleaned[field]);
+            cleaned[field] = id;
+            // Optionally populate a Description field if present in schema
+            const descKey = `${field}Description`;
+            if (cleaned[descKey] == null || cleaned[descKey] === '') {
+              cleaned[descKey] = name;
+            }
+          }
+        });
+
+        // Convert MaintenanceRequired boolean to "Yes"/"No" for server
+        if ('MaintenanceRequired' in cleaned) {
+          cleaned.MaintenanceRequired = cleaned.MaintenanceRequired === true || cleaned.MaintenanceRequired === 'Yes' ? 'Yes' : 'No';
+        }
+
+        // Convert ClaimRequired boolean to "Yes"/"No" for server
+        if ('ClaimRequired' in cleaned) {
+          cleaned.ClaimRequired = cleaned.ClaimRequired === true || cleaned.ClaimRequired === 'Yes' ? 'Yes' : 'No';
+        }
+
+        return cleaned;
+      });
   };
   const handleClear = () => {
     setFormData(initialFormData);
@@ -466,10 +559,10 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-sm">All Incidents</h3>
             <div className="flex gap-1">
-              <Button size="icon" variant="ghost" className="h-8 w-8">
+              {/* <Button size="icon" variant="ghost" className="h-8 w-8">
                 <Edit2 className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleAddNew}>
+              </Button> */}
+              <Button size="icon" variant="ghost" className="h-8 w-8 border" onClick={handleAddNew}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -523,12 +616,16 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   onChange={(e) => handleInputChange('incidentId', e.target.value)}
                   placeholder="Enter incident ID"
                 /> */}
-                <DynamicLazySelect
+                <Input id="incidentId" 
+                value={formData.IncidentId} 
+                onChange={(e) => setFormData({ ...formData, IncidentId: e.target.value })} 
+                placeholder="Enter Incident ID" /> 
+                {/* <DynamicLazySelect
                   fetchOptions={fetchIncidentID}
                   value={formData.IncidentId}
                   onChange={(value) => setFormData({ ...formData, IncidentId: value as string })}
                   placeholder="Select Incident ID"
-                />
+                /> */}
               </div>
               <div className="flex-1 space-y-2">
                 <Label htmlFor="incidentStatus">Incident Status <span className="text-destructive">*</span></Label>
@@ -780,7 +877,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="space-y-2">
                         <Label htmlFor="maintenanceType">Maintenance Type</Label>
-                        <Select value={formData.MaintenanceType} onValueChange={(value) => handleInputChange('MaintenanceType', value)}>
+                        {/* <Select value={formData.MaintenanceType} onValueChange={(value) => handleInputChange('MaintenanceType', value)}>
                           <SelectTrigger id="maintenanceType">
                             <SelectValue placeholder="Select Maint. Type" />
                           </SelectTrigger>
@@ -789,7 +886,13 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="corrective">Corrective</SelectItem>
                             <SelectItem value="emergency">Emergency</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchMaintenanceType}
+                          value={formData.MaintenanceType}
+                          onChange={(value) => setFormData({ ...formData, MaintenanceType: value as string })}
+                          placeholder="Select Maintenance Type"
+                        />
 
 
                       </div>
@@ -818,7 +921,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="space-y-2">
                         <Label htmlFor="workType">Work Type <span className="text-destructive">*</span></Label>
-                        <Select value={formData.WorkType} onValueChange={(value) => handleInputChange('WorkType', value)}>
+                        {/* <Select value={formData.WorkType} onValueChange={(value) => handleInputChange('WorkType', value)}>
                           <SelectTrigger id="workType">
                             <SelectValue placeholder="Select Work Type" />
                           </SelectTrigger>
@@ -827,12 +930,19 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="inspection">Inspection</SelectItem>
                             <SelectItem value="replacement">Replacement</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                         <DynamicLazySelect
+                          fetchOptions={fetchWorkType}
+                          value={formData.WorkType}
+                          onChange={(value) => setFormData({ ...formData, WorkType: value as string })}
+                          placeholder="Select Work Type"
+                        />
+
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="workCategory">Work Category <span className="text-destructive">*</span></Label>
-                        <Select value={formData.WorkCategory} onValueChange={(value) => handleInputChange('WorkCategory', value)}>
+                        {/* <Select value={formData.WorkCategory} onValueChange={(value) => handleInputChange('WorkCategory', value)}>
                           <SelectTrigger id="workCategory">
                             <SelectValue placeholder="Select Work Categ." />
                           </SelectTrigger>
@@ -841,12 +951,18 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="electrical">Electrical</SelectItem>
                             <SelectItem value="structural">Structural</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchWorkCategory}
+                          value={formData.WorkCategory}
+                          onChange={(value) => setFormData({ ...formData, WorkCategory: value as string })}
+                          placeholder="Select Work Category"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="workGroup">Work Group <span className="text-destructive">*</span></Label>
-                        <Select value={formData.WorkGroup} onValueChange={(value) => handleInputChange('WorkGroup', value)}>
+                        {/* <Select value={formData.WorkGroup} onValueChange={(value) => handleInputChange('WorkGroup', value)}>
                           <SelectTrigger id="workGroup">
                             <SelectValue placeholder="Select Work Group" />
                           </SelectTrigger>
@@ -855,7 +971,13 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="operations">Operations</SelectItem>
                             <SelectItem value="technical">Technical</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+                        <DynamicLazySelect
+                          fetchOptions={fetchWorkGroup}
+                          value={formData.WorkGroup}
+                          onChange={(value) => setFormData({ ...formData, WorkGroup: value as string })}
+                          placeholder="Select Work Group"
+                        />
                       </div>
 
                       <div className="col-span-5 space-y-2">
@@ -879,7 +1001,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   <div className="grid grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="incidentCausedBy">Incident Caused By</Label>
-                      <Select value={formData.IncidentCausedBy} onValueChange={(value) => handleInputChange('IncidentCausedBy', value)}>
+                      {/* <Select value={formData.IncidentCausedBy} onValueChange={(value) => handleInputChange('IncidentCausedBy', value)}>
                         <SelectTrigger id="incidentCausedBy">
                           <SelectValue placeholder="Select Inc. Caused" />
                         </SelectTrigger>
@@ -888,12 +1010,18 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="vehicle">Vehicle</SelectItem>
                           <SelectItem value="external">External Factors</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                          fetchOptions={fetchIncidentCausedBy}
+                          value={formData.IncidentCausedBy}
+                          onChange={(value) => setFormData({ ...formData, IncidentCausedBy: value as string })}
+                          placeholder="Select Incident Caused By"
+                        />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentCauserName">Incident Causer Name</Label>
-                      <Select value={formData.IncidentCauserName} onValueChange={(value) => handleInputChange('IncidentCauserName', value)}>
+                      {/* <Select value={formData.IncidentCauserName} onValueChange={(value) => handleInputChange('IncidentCauserName', value)}>
                         <SelectTrigger id="incidentCauserName">
                           <SelectValue placeholder="Select Inc. Causer Name" />
                         </SelectTrigger>
@@ -902,12 +1030,22 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="jane-smith">Jane Smith</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                          fetchOptions={fetchIncidentCauserName}
+                          value={formData.IncidentCauserName}
+                          onChange={(value) => setFormData({ ...formData, IncidentCauserName: value as string })}
+                          placeholder="Select Incident Causer Name"
+                        />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentReportedBy">Incident Reported By</Label>
-                      <Input id="incidentReportedBy" value={formData.IncidentReportedBy} onChange={(e) => handleInputChange('IncidentReportedBy', e.target.value)} placeholder="Enter Inc. Reported By" />
+                      <Input 
+                      id="incidentReportedBy" 
+                      value={formData.IncidentReportedBy} 
+                      onChange={(e) => handleInputChange('IncidentReportedBy', e.target.value)} 
+                      placeholder="Enter Inc. Reported By" />
                     </div>
 
                     <div className="space-y-2">
@@ -959,7 +1097,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="space-y-2">
                       <Label htmlFor="loadTime">Load Time</Label>
-                      <Select value={formData.LoadTime} onValueChange={(value) => handleInputChange('LoadTime', value)}>
+                      {/* <Select value={formData.LoadTime} onValueChange={(value) => handleInputChange('LoadTime', value)}>
                         <SelectTrigger id="loadTime">
                           <SelectValue placeholder="Select Load Time" />
                         </SelectTrigger>
@@ -968,7 +1106,13 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="afternoon">Afternoon</SelectItem>
                           <SelectItem value="evening">Evening</SelectItem>
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchLoadTime}
+                        value={formData.LoadTime}
+                        onChange={(value) => setFormData({ ...formData, LoadTime: value as string })}
+                        placeholder="Select Load Time"
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -1045,7 +1189,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Claim No.</Label>
-                        <div className="text-sm text-primary font-medium">{formData.ClaimNo}</div>
+                        <div className="text-sm text-primary font-medium">{formData.ClaimNumber}</div>
                       </div>
 
                       <div className="space-y-2">

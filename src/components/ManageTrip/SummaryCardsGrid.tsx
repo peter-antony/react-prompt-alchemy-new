@@ -69,6 +69,8 @@ export const SummaryCardsGrid = () => {
   const { tripData } = manageTripStore();
   const [vasData, setVasData] = useState<any[]>([]);
   const [vasLoading, setVasLoading] = useState(false);
+  const [incidentsData, setIncidentsData] = useState<any[]>([]);
+  const [incidentsLoading, setIncidentsLoading] = useState(false);
   
   console.log('SummaryCardsGrid tripData:', tripData);
   const tripId: any = tripData?.Header?.TripNo;
@@ -113,6 +115,34 @@ export const SummaryCardsGrid = () => {
     };
 
     fetchVas();
+  }, [tripId]);
+
+  // 🔹 Fetch Incidents data once tripId changes
+  useEffect(() => {
+    if (!tripId) return;
+
+    const fetchIncidents = async () => {
+      try {
+        setIncidentsLoading(true);
+        const response = await tripService.getIncidentTrip(tripId);
+
+        // Assuming response format like:
+        // { message: "Success", data: { Incidents: [...] } }
+        let incidentsapi: any = JSON.parse(response?.data?.ResponseData);
+        const incidentsList =
+          incidentsapi.Incident || []; // normalize structure
+          console.log('Incidents List:', incidentsList);
+
+        setIncidentsData(incidentsList);
+      } catch (error) {
+        console.error("Error fetching Incidents:", error);
+        setIncidentsData([]);
+      } finally {
+        setIncidentsLoading(false);
+      }
+    };
+
+    fetchIncidents();
   }, [tripId]);
 
    const handleCardClick = (cardTitle: string) => {
@@ -190,10 +220,10 @@ export const SummaryCardsGrid = () => {
         title: 'Incidents',
         icon: CarFront,
         values: [
-          { label: 'Total Incident', value: incidents.length || 0 },
+          { label: 'Total Incident', value: incidentsData.length || 0 },
           {
             label: 'Closed Incident',
-            value: incidents.filter((i) => i.Status === 'Closed').length || 0,
+            value: incidentsData?.filter((i) => i.IncidentStatus === 'CLSD' || i.IncidentStatus === 'CLOSED').length || 0,
           },
         ],
         iconColor: '#cd5c5c',
@@ -216,7 +246,7 @@ export const SummaryCardsGrid = () => {
         bgColor: '#9774de12',
       },
     ];
-  }, [tripData, vasData]);
+  }, [tripData, vasData, incidentsData]);
 
   // return (
   //   <div className="grid grid-cols-2 gap-6">

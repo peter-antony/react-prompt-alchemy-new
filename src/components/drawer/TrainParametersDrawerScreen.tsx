@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { tripService } from "@/api/services";
+import { useToast } from "@/hooks/use-toast";
 
 interface TrainParametersDrawerScreenProps {
   onClose: () => void;
@@ -31,6 +32,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
   tripId,
 }) => {
   const [showAlert, setShowAlert] = useState(true);
+  const { toast } = useToast();
 
   const [lengthData, setLengthData] = useState<ParameterData>({
     planned: "",
@@ -137,25 +139,71 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
       weight: weightData,
       quantity: quantityData,
     });
-    const response = await tripService.savePathConstraints(tripId, {
-      "PlannedLength": parseFloat(lengthData.planned),
-      "ActualLength": parseFloat(lengthData.actual),
-      "BalanceLength": parseFloat(lengthData.balance),
-      "LengthUOM": lengthData.unit,
-      "PlannedWeight": parseFloat(weightData.planned),
-      "ActualWeight": parseFloat(weightData.actual),
-      "BalanceWeight": parseFloat(weightData.balance),
-      "WeightUOM": weightData.unit,
-      "PlannedQuantity": parseFloat(quantityData.planned),
-      "ActualQuantity": parseFloat(quantityData.actual),
-      "BalanceQuantity": parseFloat(quantityData.balance),
-      "QuantityUOM": quantityData.unit,
-      "AllowedLength": "0",
-      "AllowedWeight": "0",
-      "AllowedQuantity": "0"
-    });
-    if (response?.data) {
-      console.log("Save successful:", response.data);
+    try {
+      const response = await tripService.savePathConstraints(tripId, {
+        "PlannedLength": parseFloat(lengthData.planned),
+        "ActualLength": parseFloat(lengthData.actual),
+        "BalanceLength": parseFloat(lengthData.balance),
+        "LengthUOM": lengthData.unit,
+        "PlannedWeight": parseFloat(weightData.planned),
+        "ActualWeight": parseFloat(weightData.actual),
+        "BalanceWeight": parseFloat(weightData.balance),
+        "WeightUOM": weightData.unit,
+        "PlannedQuantity": parseFloat(quantityData.planned),
+        "ActualQuantity": parseFloat(quantityData.actual),
+        "BalanceQuantity": parseFloat(quantityData.balance),
+        "QuantityUOM": quantityData.unit,
+        "AllowedLength": "0",
+        "AllowedWeight": "0",
+        "AllowedQuantity": "0"
+      });
+
+      const isSuccess = response?.data?.IsSuccess !== false;
+      const message = response?.data?.Message || (isSuccess ? "Saved successfully" : "Save failed");
+
+      toast({
+        title: isSuccess ? "✅ Path Constraints Saved" : "❌ Save Failed",
+        description: message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+
+      if (isSuccess) {
+        // Optionally re-fetch latest constraints
+        try {
+          const reload = await tripService.getPathConstraints(tripId!);
+          const constraint = JSON.parse(reload?.data?.ResponseData || '{}');
+          const constraints = constraint?.PathConstraints;
+          if (constraints) {
+            setLengthData({
+              planned: constraints.PlannedLength?.toString() || "",
+              actual: constraints.ActualLength?.toString() || "",
+              balance: constraints.BalanceLength?.toString() || "",
+              unit: constraints.LengthUOM || "",
+            });
+            setWeightData({
+              planned: constraints.PlannedWeight?.toString() || "",
+              actual: constraints.ActualWeight?.toString() || "",
+              balance: constraints.BalanceWeight?.toString() || "",
+              unit: constraints.WeightUOM || "",
+            });
+            setQuantityData({
+              planned: constraints.PlannedQuantity?.toString() || "",
+              actual: constraints.ActualQuantity?.toString() || "",
+              balance: constraints.BalanceQuantity?.toString() || "",
+              unit: constraints.QuantityUOM || "",
+            });
+          }
+        } catch (e) {
+          console.error("Failed to reload PathConstraints after save", e);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error saving PathConstraints:", error);
+      toast({
+        title: "❌ Save Failed",
+        description: error?.data?.Message || error?.message || "Failed to save path constraints",
+        variant: "destructive",
+      });
     }
   };
 

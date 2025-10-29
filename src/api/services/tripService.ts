@@ -337,7 +337,7 @@ export const tripService = {
       },
       SearchCriteria: {
         RefDocNo: tripId,
-        RefDocType: "TripLog",
+        RefDocType: "Trip Log",
       },
       // Pagination: {
       //   PageNumber: 1,
@@ -367,7 +367,7 @@ export const tripService = {
       RequestPayload: {
         Header: {
           RefDocNo: tripId,
-          RefDocType: "TripLog",
+          RefDocType: "Trip Log",
         },
         PathConstraints: trainParams,
       },
