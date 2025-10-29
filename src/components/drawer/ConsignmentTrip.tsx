@@ -19,6 +19,9 @@ import { useToast } from '../ui/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
+import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
+import { quickOrderService } from '@/api/services';
+import { set } from 'date-fns';
 
 
 export const ConsignmentTrip = ({ legId }) => {
@@ -40,10 +43,24 @@ export const ConsignmentTrip = ({ legId }) => {
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
   const [selectedCustomerData, setSelectedCustomerData] = useState<any>(null);
+  const [sourceBRId, setSourceBRId] = useState<string>("");
+  const [returnBRId, setReturnBRId] = useState<string>("");
   const [plannedData, setPlannedData] = useState<any[]>([]);
   const [actualData, setActualData] = useState<any[]>([]);
   const [currentLeg, setCurrentLeg] = useState<string | null>(null);
   const [showPlanActualDrawer, setShowPlanActualDrawer] = useState(false);
+  
+  // Initialize dropdown state variables when selectedCustomerData changes
+  useEffect(() => {
+    if (selectedCustomerData) {
+      if (selectedCustomerData?.SourceBRId) {
+        setSourceBRId(selectedCustomerData?.SourceBRId || "");
+      }
+      if (selectedCustomerData?.ReturnBRId) {
+        setReturnBRId(selectedCustomerData?.ReturnBRId || "");
+      }
+    }
+  }, [selectedCustomerData]);
 
   const plannedColumns: GridColumnConfig[] = [
     {
@@ -776,6 +793,40 @@ export const ConsignmentTrip = ({ legId }) => {
     }));
   };
 
+
+  const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+      try {
+        // Call the API using the same service pattern as PlanAndActualDetails component
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: messageType,
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+  
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} `,
+              value: `${item.id} `,
+            }
+            : {})
+        }));
+  
+        // Fallback to empty array if API call fails
+        return [];
+      } catch (error) {
+        console.error(`Error fetching ${messageType}:`, error);
+        // Return empty array on error
+        return [];
+      }
+    };
+  
+    // Specific fetch functions for different message types
+    const fetchSourceBRIDOptions = fetchMasterData("CustomerOrder Number Init");
+
+
   // Step 2: Load fresh data whenever legId changes
   useEffect(() => {
     if (!legId) return;
@@ -952,11 +1003,45 @@ export const ConsignmentTrip = ({ legId }) => {
               </div>
               <div>
                 <span className="font-medium text-gray-700">Source BR ID: </span>
-                {selectedCustomerData?.SourceBRId || "-"}
+                {/* {selectedCustomerData?.SourceBRId || "-"} */}
+                <DynamicLazySelect
+                  fetchOptions={fetchSourceBRIDOptions}
+                  value={sourceBRId}
+                  onChange={(value) => {
+                    console.log("Source BR ID selected:", value);
+                    // Update local state for the dropdown display
+                    setSourceBRId(value as string);
+                    // Create a new object to ensure React detects the state change
+                    const newData = {
+                      ...selectedCustomerData,
+                      SourceBRId: value as string
+                    };
+                    // Update the selectedCustomerData with the new SourceBRId
+                    setSelectedCustomerData(newData);
+                  }}
+                  placeholder="Select Source BR ID"
+                />
               </div>
               <div>
                 <span className="font-medium text-gray-700">Return BR ID: </span>
-                {selectedCustomerData?.ReturnBRId || "-"}
+                {/* {selectedCustomerData?.ReturnBRId || "-"} */}
+                <DynamicLazySelect
+                  fetchOptions={fetchSourceBRIDOptions}
+                  value={returnBRId}
+                  onChange={(value) => {
+                    console.log("Return BR ID selected:", value);
+                    // Update local state for the dropdown display
+                    setReturnBRId(value as string);
+                    // Create a new object to ensure React detects the state change
+                    const newData = {
+                      ...selectedCustomerData,
+                      ReturnBRId: value as string
+                    };
+                    // Update the selectedCustomerData with the new ReturnBRId
+                    setSelectedCustomerData(newData);
+                  }}
+                  placeholder="Select Return BR ID"
+                />
               </div>
             </div>
           )}
