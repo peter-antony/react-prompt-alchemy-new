@@ -370,10 +370,17 @@ const TripPlanning = () => {
     // Get existing customer order array or initialize empty array
     const existingCustomerOrderArray = selectedArrCOData || [];
     
-    // Check if this customer order already exists in the array
+    // Get the current LegBehaviour from customerOrderList
+    const currentLegBehaviour = (customerOrderList as any)?.LegBehaviour || '';
+    console.log("Current LegBehaviour:", currentLegBehaviour);
+    
+    // Check if this customer order with same LegBehaviour already exists in the array
     const existingIndex = existingCustomerOrderArray.findIndex(item => 
-      item.CustomerOrderID === ((customerOrderList as any)?.CustomerOrderID || '')
+      item.CustomerOrderID === ((customerOrderList as any)?.CustomerOrderID || '') &&
+      item.LegBehaviour === currentLegBehaviour
     );
+    
+    console.log("Existing index for same CustomerOrderID + LegBehaviour:", existingIndex);
     
     let updatedCustomerOrderArray;
     if (existingIndex !== -1) {
@@ -383,8 +390,43 @@ const TripPlanning = () => {
       
       // Merge existing ResourceDetails with new ones
       const existingResourceDetails = existingCustomerOrder.ResourceDetails || [];
-      const mergedResourceDetails = [...existingResourceDetails, ...transformedResourceDetails];
+      console.log("transformedResourceDetails ===", transformedResourceDetails);
+      console.log("existingResourceDetails ===", existingResourceDetails);
       
+      // Check if any new resources are of type "Agent" or "Schedule"
+      const hasNewAgent = transformedResourceDetails.some(resource => resource.ResourceType === "Agent");
+      const hasNewSchedule = transformedResourceDetails.some(resource => resource.ResourceType === "Schedule");
+      
+      let mergedResourceDetails;
+      if (hasNewAgent || hasNewSchedule) {
+        // For Agent and Schedule, remove existing resources with same CustomerOrderID and LegBehaviour
+        const filteredExistingResources = existingResourceDetails.filter(resource => {
+          // Keep resources that are not Agent or Schedule
+          if (resource.ResourceType !== "Agent" && resource.ResourceType !== "Schedule") {
+            return true;
+          }
+          // For Agent and Schedule, check if they have different LegBehaviour
+          // If LegBehaviour is different, keep the existing resource
+          return resource.LegBehaviour !== currentLegBehaviour;
+        });
+        
+        // Add LegBehaviour to the new resources
+        const resourcesWithLegBehaviour = transformedResourceDetails.map(resource => ({
+          ...resource,
+          LegBehaviour: currentLegBehaviour
+        }));
+        
+        mergedResourceDetails = [...filteredExistingResources, ...resourcesWithLegBehaviour];
+        console.log("Agent/Schedule detected - filtered by LegBehaviour, mergedResourceDetails ===", mergedResourceDetails);
+      } else {
+        // Normal merge for other resource types (Equipment, Driver, Handler, Vehicle)
+        const resourcesWithLegBehaviour = transformedResourceDetails.map(resource => ({
+          ...resource,
+          LegBehaviour: currentLegBehaviour
+        }));
+        mergedResourceDetails = [...existingResourceDetails, ...resourcesWithLegBehaviour];
+        console.log("Other resource types - normal merge, mergedResourceDetails ===", mergedResourceDetails);
+      }
       // Update the existing customer order with merged resources
       updatedCustomerOrderArray[existingIndex] = {
         ...existingCustomerOrder,
@@ -392,10 +434,20 @@ const TripPlanning = () => {
         "ModeFlag": "Insert"
       };
     } else {
-      // Add new customer order to the array
-      updatedCustomerOrderArray = [...existingCustomerOrderArray, updatedCustomerList];
+      // Add new customer order to the array (either completely new CustomerOrderID or same CustomerOrderID with different LegBehaviour)
+      // Add LegBehaviour to the new resources
+      const updatedCustomerListWithLegBehaviour = {
+        ...updatedCustomerList,
+        "LegBehaviour": currentLegBehaviour, // Add LegBehaviour to the customer order itself
+        "ResourceDetails": updatedCustomerList.ResourceDetails.map(resource => ({
+          ...resource,
+          LegBehaviour: currentLegBehaviour
+        }))
+      };
+      updatedCustomerOrderArray = [...existingCustomerOrderArray, updatedCustomerListWithLegBehaviour];
+      console.log("Adding new customer order entry (different LegBehaviour or new CustomerOrderID)");
     }
-    
+    console.log("transformedResourceDetails ", transformedResourceDetails);
     // Update the customer order array state
     setSelectedArrCOData(updatedCustomerOrderArray);
     
@@ -463,18 +515,18 @@ const TripPlanning = () => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
     
     if (!isSelected) {
-      // Handle deselection - remove from selectedArrCOData
+      // Handle deselection - remove from selectedArrCOData using both id and legBehaviour
       console.log("customerOrderList ====", customerOrderList);
-      if (customerOrderList && customerOrderList.CustomerOrderID) {
-        const customerOrderId = customerOrderList.CustomerOrderID;
+      if (customerOrderList && customerOrderList.CustomerOrderID && customerOrderList.LegBehaviour) {
+        const { CustomerOrderID, LegBehaviour } = customerOrderList;
         setSelectedArrCOData(prev => {
-          const updated = prev.filter(item => item.CustomerOrderID !== customerOrderId);
-          console.log("🗑️ Removed customer order from selectedArrCOData:", customerOrderId);
+          const updated = prev.filter(item => !(item.CustomerOrderID === CustomerOrderID && item.LegBehaviour === LegBehaviour));
+          console.log("🗑️ Removed customer order from selectedArrCOData by id and legBehaviour:", CustomerOrderID, LegBehaviour);
           console.log("📊 Updated selectedArrCOData length:", updated.length);
           return updated;
         });
       } else {
-        // Clear all selections (when customerOrderList is null)
+        // Clear all selections (when customerOrderList is null or missing keys)
         setSelectedArrCOData([]);
         console.log("🗑️ Cleared all customer orders from selectedArrCOData");
       }
