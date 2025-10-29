@@ -105,6 +105,11 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const tripId: any = tripData?.Header?.TripNo;
   const { toast } = useToast();
 
+  // Filter VAS items based on selected CustomerOrderNo
+  const filteredVasItems = formData.CustomerOrderNo
+    ? vasItems.filter(item => item.formData.CustomerOrderNo === formData.CustomerOrderNo)
+    : vasItems;
+
   // Temporary placeholder until real implementation is connected
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -145,68 +150,84 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
 
 
 
-  // VAS API Fetch
-  useEffect(() => {
+  // Refactored VAS fetch function
+  const fetchVASForTrip = async () => {
     if (!tripId) return;
+    
+    try {
+      const response = await tripService.getVASTrip(tripId);
 
-    const fetchVASForTrip = async () => {
-      try {
-        const response = await tripService.getVASTrip(tripId);
+      // Same normalization logic as in SummaryCardsGrid
+      let vasapi: any = JSON.parse(response?.data?.ResponseData);
+      const vasList =
+        vasapi?.VAS ||
+        response?.data ||
+        response?.VAS ||
+        [];
 
-        // Same normalization logic as in SummaryCardsGrid
-        let vasapi: any = JSON.parse(response?.data?.ResponseData);
-        const vasList =
-          vasapi?.VAS ||
-          response?.data ||
-          response?.VAS ||
-          [];
+      console.log("VAS List (Drawer):", vasList);
 
-        console.log("VAS List (Drawer):", vasList);
+      // Map API data into your local VASItem structure
+      let formattedVasItems: VASItem[] = vasList?.map((vas: any, index: number) => ({
+        id: `${vas.CustomerOrderNo}_${vas.SeqNo || index}_${Date.now()}_${index}`,
+        name: vas.VASIDDescription || `VAS ${index + 1}`,
+        quantity: vas.NoOfTHUServed || 1,
+        formData: {
+          SeqNo: vas.SeqNo,
+          CustomerOrderNo: vas.CustomerOrderNo,
+          VASID: vas.VASID || '',
+          VASIDDescription: vas.VASIDDescription,
+          IsApplicableToCustomer: vas.IsApplicableToCustomer === '1',
+          IsApplicableToSupplier: vas.IsApplicableToSupplier === '1',
+          CustomerID: vas.CustomerID || '',
+          CustomerDescription: vas.CustomerDescription,
+          SupplierContract: vas.SupplierContract || '',
+          SupplierContractDescription: vas.SupplierContractDescription || '',
+          SupplierID: vas.SupplierID || '',
+          SupplierDescription: vas.SupplierDescription || '',
 
-        // Map API data into your local VASItem structure
-        const formattedVasItems: VASItem[] = vasList.map((vas: any, index: number) => ({
-          id: vas.VASID || index.toString(),
-          name: vas.VASIDDescription || `VAS ${index + 1}`,
-          quantity: vas.VASID || 1,
-          formData: {
-            SeqNo: vas.SeqNo,
-            CustomerOrderNo: vas.CustomerOrderNo,
-            VASID: vas.VASID || '',
-            VASIDDescription: vas.VASIDDescription,
-            IsApplicableToCustomer: vas.IsApplicableToCustomer === '1',
-            IsApplicableToSupplier: vas.IsApplicableToSupplier === '1',
-            CustomerID: vas.CustomerID || '',
-            CustomerDescription: vas.CustomerDescription,
-            SupplierContract: vas.SupplierContract || '',
-            SupplierContractDescription: vas.SupplierContractDescription || '',
-            SupplierID: vas.SupplierID || '',
-            SupplierDescription: vas.SupplierDescription || '',
-
-            StartDate: vas.StartDate || '',
-            StartTime: vas.StartTime || '',
-            EndDate: vas.EndDate || '',
-            EndTime: vas.EndTime || '',
-            Remarks: vas.Remarks || '',
-            QuickCode1: vas.QuickCode1,
-            QuickCodeValue1: vas.QuickCodeValue1,
-            NoOfTHUServed: vas.NoOfTHUServed || '',
-            ModeFlag: vas.ModeFlag
-          }
-        }));
-
-        setVasItems(formattedVasItems);
-
-        // Auto-select first VAS if available
-        if (formattedVasItems.length > 0) {
-          const firstVAS = formattedVasItems[0];
-          setSelectedVAS(firstVAS.id);
-          setFormData(firstVAS.formData);
+          StartDate: vas.StartDate || '',
+          StartTime: vas.StartTime || '',
+          EndDate: vas.EndDate || '',
+          EndTime: vas.EndTime || '',
+          Remarks: vas.Remarks || '',
+          QuickCode1: vas.QuickCode1,
+          QuickCodeValue1: vas.QuickCodeValue1,
+          NoOfTHUServed: vas.NoOfTHUServed || '',
+          ModeFlag: vas.ModeFlag
         }
-      } catch (error) {
-        console.error("Error fetching VAS:", error);
-      }
-    };
+      }));
 
+      // If no VAS items from API, create a default item with ModeFlag 'Insert'
+      if (formattedVasItems.length === 0) {
+        const defaultItem: VASItem = {
+          id: Date.now().toString(),
+          name: 'New VAS',
+          quantity: 1,
+          formData: {
+            ...initialFormData,
+            SeqNo: vasList.length + 1,
+            ModeFlag: 'Insert'
+          }
+        };
+        formattedVasItems = [defaultItem];
+      }
+
+      setVasItems(formattedVasItems);
+
+      // Auto-select first VAS if available
+      if (formattedVasItems.length > 0) {
+        const firstVAS = formattedVasItems[0];
+        setSelectedVAS(firstVAS.id);
+        setFormData(firstVAS.formData);
+      }
+    } catch (error) {
+      console.error("Error fetching VAS:", error);
+    }
+  };
+
+  // VAS API Fetch on mount
+  useEffect(() => {
     fetchVASForTrip();
   }, [tripId]);
 
@@ -242,9 +263,6 @@ const saveCurrentFormData = () => {
 };
 
   const handleVASClick = async (vas: VASItem) => {
-    // Save current changes before switching
-    saveCurrentFormData();
-    
     console.log(vas);
     setSelectedVAS(vas.id);
     setFormData(vas.formData);
@@ -252,7 +270,12 @@ const saveCurrentFormData = () => {
 
   const handleAddNew = () => {
     setSelectedVAS(null);
-    setFormData(initialFormData);
+    setFormData((prev) => ({
+      ...initialFormData,
+      CustomerOrderNo: prev.CustomerOrderNo,
+      CustomerID: prev.CustomerID,
+      CustomerDescription: prev.CustomerDescription,
+    }));
   };
 
   const handleDeleteItem = (id: string) => {
@@ -264,9 +287,37 @@ const saveCurrentFormData = () => {
   };
 
   const prepareVasPayload = (vasItems) => {
+    const splitPiped = (value: any): { id: string; name: string } => {
+      const str = (value ?? '').toString();
+      if (!str.includes('||')) return { id: str.trim(), name: '' };
+      const [id, name] = str.split('||');
+      return { id: (id ?? '').trim(), name: (name ?? '').trim() };
+    };
+
     return vasItems
       .filter(item => item.formData && Object.keys(item.formData).length > 0)
-      .map(item => item.formData);
+      .map(item => {
+        const fd = item.formData;
+
+        const vas = splitPiped(fd.VASID);
+        const cust = splitPiped(fd.CustomerID);
+        const sup = splitPiped(fd.SupplierID);
+        const contract = splitPiped(fd.SupplierContract);
+
+        return {
+          ...fd,
+          // IDs: send only the left side
+          VASID: vas.id,
+          CustomerID: cust.id,
+          SupplierID: sup.id,
+          SupplierContract: contract.id,
+          // Descriptions: if empty, use right side
+          VASIDDescription: fd.VASIDDescription || vas.name,
+          CustomerDescription: fd.CustomerDescription || cust.name,
+          SupplierDescription: fd.SupplierDescription || sup.name,
+          SupplierContractDescription: fd.SupplierContractDescription || contract.name,
+        };
+      });
   };
 
   // const handleSave = async () => {
@@ -324,7 +375,7 @@ const saveCurrentFormData = () => {
       quantity: parseInt(formData.NoOfTHUServed) || 1,
       formData: {
         ...formData,
-        ModeFlag: "New"
+        ModeFlag: "Insert"
       }
     };
     updatedVasItems.push(newVAS);
@@ -356,6 +407,9 @@ const saveCurrentFormData = () => {
       description: apiMessage,
       variant: isSuccess ? "default" : "destructive",
     });
+
+    // Re-fetch VAS data after successful save
+    await fetchVASForTrip();
   } catch (error) {
     console.error("Error saving VAS:", error);
     
@@ -442,7 +496,7 @@ const saveCurrentFormData = () => {
         </div>
 
         <div className="space-y-2 flex-1 overflow-y-auto">
-          {vasItems.map((item) => (
+          {filteredVasItems.map((item) => (
             <Card
               key={item.id}
               className={`cursor-pointer transition-colors hover:bg-accent ${selectedVAS === item.id ? 'bg-accent border-primary' : ''
