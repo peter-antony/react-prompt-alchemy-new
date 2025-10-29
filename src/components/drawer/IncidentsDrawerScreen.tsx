@@ -492,7 +492,11 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
       'IncidentReportedBy',
       'LoadTime',
       'PlaceOfIncident',
-      'DangerousGoods'
+      'DangerousGoods',
+      'WeatherCondition',
+      'RiskInvolved',
+      'DriverFault',
+      'VehicleFault'
     ];
 
     return incidentItems

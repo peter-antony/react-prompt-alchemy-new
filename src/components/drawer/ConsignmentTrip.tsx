@@ -1043,6 +1043,27 @@ export const ConsignmentTrip = ({ legId }) => {
                   placeholder="Select Return BR ID"
                 />
               </div>
+              <div className="flex items-end gap-2">
+                <span className="font-medium text-gray-700">
+                  </span>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8"
+                    onClick={() => {
+                      if (selectedCustomerData) {
+                        setSelectedCustomerData({
+                          ...selectedCustomerData,
+                          SourceBRId: sourceBRId,
+                          ReturnBRId: returnBRId
+                        });
+                      }
+                      console.log(selectedCustomerData);
+                    }}
+                  >
+                    Save
+                  </Button>
+              </div>
             </div>
           )}
         </div>

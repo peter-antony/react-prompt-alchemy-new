@@ -436,7 +436,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full h-8 justify-start text-left font-normal text-xs px-3",
+                          "w-full h-8 justify-start text-left font-normal text-xs px-3 pr-8",
                           !dateValue && "text-muted-foreground",
                           hasError 
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
@@ -451,7 +451,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                           ? format(dateValue, "dd/MM/yyyy") 
                           : <span>{placeholder || "Pick a date"}</span>
                         }
-                        <CalendarIcon className="mr-2 h-3 w-3 absolute right-2" />
+                        <CalendarIcon className="mr-4 h-3 w-3 absolute right-2" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -468,6 +468,21 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       />
                     </PopoverContent>
                   </Popover>
+                  {dateValue && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        field.onChange('');
+                        events?.onChange?.('', { target: { value: '' } } as any);
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             );
