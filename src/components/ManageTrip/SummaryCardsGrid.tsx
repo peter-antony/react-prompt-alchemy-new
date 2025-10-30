@@ -156,6 +156,8 @@ export const SummaryCardsGrid = () => {
       openDrawer('customer-orders');
     } else if (cardTitle === 'Supplier Billing') {
       openDrawer('supplier-billing');
+    } else if (cardTitle === 'Transport Route') {
+      openDrawer('transport-route');
     }
   };
   const summaryCardsData = useMemo(() => {
@@ -245,6 +247,18 @@ export const SummaryCardsGrid = () => {
         iconColor: '#9774de',
         bgColor: '#9774de12',
       },
+      {
+        title: 'Transport Route',
+        icon: TicketPercent,
+        values: [
+          {
+            label: 'Transport Route',
+            value: 0,
+          }
+        ],
+        iconColor: '#9774de',
+        bgColor: '#9774de12',
+      },
     ];
   }, [tripData, vasData, incidentsData]);
 
@@ -299,7 +313,7 @@ export const SummaryCardsGrid = () => {
       {summaryCardsData.map((card, index) => {
         const Icon = card.icon;
         const isClickable =
-          ['Resources', 'VAS', 'Incidents', 'Customer Orders', 'Supplier Billing'].includes(card.title);
+          ['Resources', 'VAS', 'Incidents', 'Customer Orders', 'Supplier Billing', 'Transport Route'].includes(card.title);
 
         // Build compact label/value text
         let displayValue = '';
@@ -336,7 +350,7 @@ export const SummaryCardsGrid = () => {
                 </div>
                 <div className="flex flex-col">
                   <p className="text-lg font-semibold">{displayValue}</p>
-                  <p className="text-sm text-muted-foreground">{displayLabel}</p>
+                  <p className="text-sm text-muted-foreground font-medium">{displayLabel}</p>
                 </div>
               </div>
             </CardContent>

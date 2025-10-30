@@ -20,6 +20,8 @@ import { LinkedTransactionsDrawerScreen } from '@/components/drawer/LinkedTransa
 import { tripService } from '@/api/services/tripService';
 import { NotebookPen, Search, Clock } from "lucide-react";
 import { TripAmendModal } from '@/components/ManageTrip/TripAmendModal';
+import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
+
 
 
 const ManageTripExecution = () => {
@@ -415,14 +417,13 @@ const ManageTripExecution = () => {
         <SideDrawer
           isOpen={isOpen}
           onClose={closeDrawer}
-          onBack={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' ? closeDrawer : undefined}
-          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : ''}
+          onBack={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'transport-route' ? closeDrawer : undefined}
+          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : ''}
           titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? tripUniqueID || 'TRIP0000000001' : undefined}
-          titleBadgeStyles="badge-blue rounded-2xl"
           slideDirection="right"
-          width={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'linked-transactions' || drawerType === 'train-parameters' ? '100%' : '75%'}
+          width={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'linked-transactions' || drawerType === 'train-parameters' || drawerType === 'transport-route' ? '100%' : '75%'}
           smoothness="smooth"
-          showBackButton={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create'}
+          showBackButton={drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'transport-route'}
           showCloseButton={true}
         >
           {drawerType === 'resources' && <ResourcesDrawerScreen onClose={closeDrawer} />}
@@ -433,7 +434,9 @@ const ManageTripExecution = () => {
           {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
+          {drawerType === 'transport-route' && <TripLevelUpdateDrawer  />}
         </SideDrawer>
+ 
 
         <TripAmendModal
           open={popupOpen}
