@@ -933,7 +933,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
       label: 'Planning Profile',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("PlanningProfile Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     {

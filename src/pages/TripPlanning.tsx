@@ -534,7 +534,8 @@ const TripPlanning = () => {
 
   const handleCustomerOrderSelect = (customerOrderList: any, isSelected: boolean = true) => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
-    
+    setSupplier(null);
+    setSchedule(null);
     if (!isSelected) {
       // Handle deselection - remove from selectedArrCOData using both id and legBehaviour
       console.log("customerOrderList ====", customerOrderList);
@@ -1057,6 +1058,16 @@ const TripPlanning = () => {
         const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
         const tripStatus = parsedResponse?.TripStatus;
         setTripStatus(tripStatus);
+        if (tripStatus && tripIDToUse) {
+          setTripCustomerOrdersData(prev =>
+            Array.isArray(prev)
+              ? prev.map((row: any) =>
+                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+                )
+              : prev
+          );
+        }
+        setAmendModalOpen(false);
         console.log("Trip data updated in store", tripStatus);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -1495,28 +1506,39 @@ const TripPlanning = () => {
                                     )}
                                   </div>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => {
-                                    if (resource.title === 'Equipment') {
-                                      handleOpenResourceDrawer('Equipment');
-                                    } else if (resource.title === 'Supplier') {
-                                      handleOpenResourceDrawer('Supplier');
-                                    } else if (resource.title === 'Schedule') {
-                                      handleOpenResourceDrawer('Schedule');
-                                    } else if (resource.title === 'Driver') {
-                                      handleOpenResourceDrawer('Driver');
-                                    } else if (resource.title === 'Handler') {
-                                      handleOpenResourceDrawer('Handler');
-                                    } else if (resource.title === 'Vehicle') {
-                                      handleOpenResourceDrawer('Vehicle');
-                                    }
-                                  }}
-                                  className={resource.title === 'Others' ? 'hidden' : ''}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
+                                {resource.title === 'Others' ? (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => {
+                                      // handleOpenResourceDrawer('Others');
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => {
+                                      if (resource.title === 'Equipment') {
+                                        handleOpenResourceDrawer('Equipment');
+                                      } else if (resource.title === 'Supplier') {
+                                        handleOpenResourceDrawer('Supplier');
+                                      } else if (resource.title === 'Schedule') {
+                                        handleOpenResourceDrawer('Schedule');
+                                      } else if (resource.title === 'Driver') {
+                                        handleOpenResourceDrawer('Driver');
+                                      } else if (resource.title === 'Handler') {
+                                        handleOpenResourceDrawer('Handler');
+                                      } else if (resource.title === 'Vehicle') {
+                                        handleOpenResourceDrawer('Vehicle');
+                                      }
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </Card>
                           );

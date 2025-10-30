@@ -1368,7 +1368,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       label: 'Planning Profile',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("PlanningProfile Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     {
