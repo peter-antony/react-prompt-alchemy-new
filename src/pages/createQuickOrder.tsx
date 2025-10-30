@@ -13,14 +13,15 @@ import jsonStore from '@/stores/jsonStore';
 import { initializeJsonStore } from './JsonCreater';
 import { useToast } from '@/hooks/use-toast';
 import CommonPopup from '@/components/Common/CommonPopup';
-import { NotebookPen} from 'lucide-react';
+import { NotebookPen } from 'lucide-react';
 import { json } from 'stream/consumers';
 
 const CreateQuickOrder = () => {
+  const navigate = useNavigate();
   const { setFooter, resetFooter } = useFooterStore();
   const [searchParams] = useSearchParams();
   const isEditQuickOrder = !!searchParams.get("id");
-  const quickOrderUniqueID=searchParams.get("id");
+  const quickOrderUniqueID = searchParams.get("id");
 
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -49,40 +50,40 @@ const CreateQuickOrder = () => {
     console.log("inside createQuickOrder useEffect()")
     console.log("INITIALIZING CREATE : ", isEditQuickOrder)
     setLoading(false);
-      quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
-        let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
-        console.log("screenFetchQuickOrder byId result:", JSON.parse(fetchRes?.data?.ResponseData));
-        console.log("Parsed result:", parsedData?.ResponseResult);
-        if(parsedData?.ResponseResult != undefined){
-          jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-          setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
-          console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
-          jsonStore.setQuickOrder(fetchedQuickOrderData);
-          const fullJson2 = jsonStore.getJsonData();
-          // const storedConfirmStatus = localStorage.getItem('confirmOrder');
-          const storedConfirmStatus = jsonStore.getQuickOrder().Status;
-          console.log("storedConfirmStatus ===", storedConfirmStatus);
-          if (storedConfirmStatus === 'Confirmed') {
-            setShowAmendButton(true);
-          }
-          console.log("FULL JSON 4444:: ", fullJson2);
-          if (fullJson2.ResponseResult?.quickOrder?.ResourceGroup?.length != 0) {
-            console.log("true ---");
-            console.log("document.querySelector TRUE= ",document.querySelector('[data-lov-id="src\components\AppFooter.tsx:82:8"]'))
-            setIsConfirmButtonDisabled(false);
-            setIsSaveButtonDisabled(false);
-          } else {
-            console.log("else ---");
-            console.log("document.querySelector FALSE= ",document.querySelector('[data-lov-id="src\components\AppFooter.tsx:82:8"]'))
-
-            setIsConfirmButtonDisabled(true);
-            setIsSaveButtonDisabled(true);
-          }
-          setLoading(true);
-
+    quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
+      let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
+      console.log("screenFetchQuickOrder byId result:", JSON.parse(fetchRes?.data?.ResponseData));
+      console.log("Parsed result:", parsedData?.ResponseResult);
+      if (parsedData?.ResponseResult != undefined) {
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+        setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
+        console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
+        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        const fullJson2 = jsonStore.getJsonData();
+        // const storedConfirmStatus = localStorage.getItem('confirmOrder');
+        const storedConfirmStatus = jsonStore.getQuickOrder().Status;
+        console.log("storedConfirmStatus ===", storedConfirmStatus);
+        if (storedConfirmStatus === 'Confirmed') {
+          setShowAmendButton(true);
         }
+        console.log("FULL JSON 4444:: ", fullJson2);
+        if (fullJson2.ResponseResult?.quickOrder?.ResourceGroup?.length != 0) {
+          console.log("true ---");
+          console.log("document.querySelector TRUE= ", document.querySelector('[data-lov-id="src\components\AppFooter.tsx:82:8"]'))
+          setIsConfirmButtonDisabled(false);
+          setIsSaveButtonDisabled(false);
+        } else {
+          console.log("else ---");
+          console.log("document.querySelector FALSE= ", document.querySelector('[data-lov-id="src\components\AppFooter.tsx:82:8"]'))
 
-      })
+          setIsConfirmButtonDisabled(true);
+          setIsSaveButtonDisabled(true);
+        }
+        setLoading(true);
+
+      }
+
+    })
 
     setFooter({
       visible: true,
@@ -103,6 +104,8 @@ const CreateQuickOrder = () => {
           onClick: () => {
             // console.log("Cancel clicked");
             quickOrderCancelhandler();
+            setRefreshTrigger(prev => prev + 1);
+
             // quickOrderCancelhandler();
           },
         },
@@ -113,42 +116,44 @@ const CreateQuickOrder = () => {
           onClick: () => {
             console.log("Save Draft clicked");
             quickOrderSaveDraftHandler();
+            setRefreshTrigger(prev => prev + 1);
+
           },
         },
         ...(!showAmendButton ? [
-        {
-          label: "Confirm",
-          type: "Button" as const,
-          disabled: isConfirmButtonDisabled, //isConfirmButtonDisabled,
-          onClick: () => {
-            console.log("Confirm clicked XXXX");
-            quickOrderConfirmHandler();
-            // Force refresh to ensure Resource Group Details remain visible
-            setRefreshTrigger(prev => prev + 1);
-          },
-        }
+          {
+            label: "Confirm",
+            type: "Button" as const,
+            disabled: isConfirmButtonDisabled, //isConfirmButtonDisabled,
+            onClick: () => {
+              console.log("Confirm clicked XXXX");
+              quickOrderConfirmHandler();
+              // Force refresh to ensure Resource Group Details remain visible
+              setRefreshTrigger(prev => prev + 1);
+            },
+          }
         ] : [
-        {
-          label: "Amend",
-          type: "Button" as const,
-          disabled: false,
-          onClick: () => {
-            console.log("Amend clicked");
-            quickOrderAmendHandler();
-          },
-        }
+          {
+            label: "Amend",
+            type: "Button" as const,
+            disabled: false,
+            onClick: () => {
+              console.log("Amend clicked");
+              quickOrderAmendHandler();
+            },
+          }
         ]),
       ],
     });
     return () => resetFooter();
   }, [showAmendButton, isConfirmButtonDisabled, isSaveButtonDisabled]);
-  const fetchQuickOrder= ()=>{
-    const id= jsonStore.getQuickUniqueID();
+  const fetchQuickOrder = () => {
+    const id = jsonStore.getQuickUniqueID();
     quickOrderService.getQuickOrder(id).then((fetchRes: any) => {
       let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
       console.log("screenFetchQuickOrder byId result:", JSON.parse(fetchRes?.data?.ResponseData));
       console.log("Parsed result:", parsedData?.ResponseResult);
-      if(parsedData?.ResponseResult != undefined){
+      if (parsedData?.ResponseResult != undefined) {
         // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
         setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
@@ -177,12 +182,12 @@ const CreateQuickOrder = () => {
 
     })
   }
-  const confirmHandleAlternate= async()=>{
+  const confirmHandleAlternate = async () => {
     const fullJson = jsonStore.getQuickOrder();
     const messageType = "Quick Order Confirm";
-    console.log("fullJson ^^^ ",fullJson)
-    console.log("fetchedQuickOrderData ^^^ ",fetchedQuickOrderData)
-    const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fullJson, {messageType: messageType});
+    console.log("fullJson ^^^ ", fullJson)
+    console.log("fetchedQuickOrderData ^^^ ", fetchedQuickOrderData)
+    const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fullJson, { messageType: messageType });
     console.log("updateQuickOrderResource result:", res);
     // localStorage.setItem("confirmOrder", 'true');
     //  Get OrderNumber from response
@@ -190,7 +195,7 @@ const CreateQuickOrder = () => {
     console.log("OrderNumber:", OrderNumber);
     const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
     const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
-    if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+    if (resourceStatus === "Success" || resourceStatus === "SUCCESS") {
       toast({
         title: "✅ Form submitted successfully",
         description: "Your changes have been saved.",
@@ -198,28 +203,28 @@ const CreateQuickOrder = () => {
       });
       // setCurrentStep(2);
       setShowAmendButton(true);
-      
+
       // Fetch updated QuickOrder details and update the form
       try {
         const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
         console.log("Updated QuickOrder response:", updatedQuickOrderRes);
         let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
         console.log("Updated QuickOrder data:", updatedParsedData);
-        
+
         // Update the jsonStore with fresh data
         jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
-        
+
         // Update the fetchedQuickOrderData state to trigger re-render
         setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
-        
+
         // Trigger a refresh of the OrderForm component
         setRefreshTrigger(prev => prev + 1);
-        
+
         console.log("QuickOrder details updated successfully");
       } catch (error) {
         console.error("Error fetching updated QuickOrder details:", error);
       }
-    }else{
+    } else {
       toast({
         title: "⚠️ Submission failed",
         description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
@@ -237,31 +242,31 @@ const CreateQuickOrder = () => {
     })
   }
   //API Call for dropdown data
-    const fetchData = async (messageType) => {
-      setError(null);
-      setLoading(false);
-      try {
-        const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
-        setApiData(data);
-        console.log("API Data:", data);
-        if (messageType == "Quick Order Amend Reason Code Init") {
-          setReasonCodeTypeList(JSON.parse(data?.data?.ResponseData));
-        }
-      } catch (err) {
-        setError(`Error fetching API data for ${messageType}`);
-        // setApiData(data);
-      } finally {
-        setLoading(true);
+  const fetchData = async (messageType) => {
+    setError(null);
+    setLoading(false);
+    try {
+      const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+      setApiData(data);
+      console.log("API Data:", data);
+      if (messageType == "Quick Order Amend Reason Code Init") {
+        setReasonCodeTypeList(JSON.parse(data?.data?.ResponseData));
       }
-    };
-    // Iterate through all messageTypes
-    const fetchAll = async () => {
-      setLoading(false);
-      for (const type of messageTypes) {
-        setSelectedType(type);
-        await fetchData(type);
-      }
-    };
+    } catch (err) {
+      setError(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    } finally {
+      setLoading(true);
+    }
+  };
+  // Iterate through all messageTypes
+  const fetchAll = async () => {
+    setLoading(false);
+    for (const type of messageTypes) {
+      setSelectedType(type);
+      await fetchData(type);
+    }
+  };
 
   //BreadCrumb data
   const breadcrumbItems = [
@@ -316,6 +321,7 @@ const CreateQuickOrder = () => {
   const quickOrderSaveDraftHandler = async () => {
     // Pull current OrderForm values via forwarded ref
     const orderFormValues = newQuickOrderRef.current?.getOrderValues() || {};
+    console.log('SAVE HANDLER', orderFormValues);
     console.log('OrderForm current values:', orderFormValues);
     console.log("setFetchedQuickOrderData ---", fetchedQuickOrderData);
     const truncateAtPipe = (val: any) => {
@@ -359,13 +365,35 @@ const CreateQuickOrder = () => {
       console.log("OrderNumber:", OrderNumber);
       const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
       const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
-      if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+      if (resourceStatus === "Success" || resourceStatus === "SUCCESS") {
         toast({
           title: "✅ Form submitted successfully",
           description: "Your changes have been saved.",
           variant: "default", // or "success" if you have custom variant
         });
-      }else{
+        const orderId = jsonStore.getQuickUniqueID();
+        navigate(`/create-quick-order?id=${orderId}`);
+        // Fetch updated QuickOrder details and update the form
+        try {
+          const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
+          console.log("Updated QuickOrder response:", updatedQuickOrderRes);
+          let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
+          console.log("Updated QuickOrder data:", updatedParsedData);
+
+          // Update the jsonStore with fresh data
+          jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
+
+          // Update the fetchedQuickOrderData state to trigger re-render
+          setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
+
+          // Trigger a refresh of the OrderForm component
+          setRefreshTrigger(prev => prev + 1);
+
+          console.log("QuickOrder details updated successfully");
+        } catch (error) {
+          console.error("Error fetching updated QuickOrder details:", error);
+        }
+      } else {
         toast({
           title: "⚠️ Submission failed",
           // description: JSON.parse(res?.data?.Message),
@@ -374,6 +402,7 @@ const CreateQuickOrder = () => {
           variant: "destructive", // or "success" if you have custom variant
         });
       }
+
 
     } catch (err) {
       console.log("CATCH :: ", err);
@@ -385,10 +414,10 @@ const CreateQuickOrder = () => {
       });
     }
     finally {
-      
+
     }
   }
-  
+
   const quickOrderConfirmHandler = async () => {
     console.log("quickOrderConfirmhandler ---", jsonStore.getQuickOrder());
     jsonStore.setQuickOrder({
@@ -399,10 +428,10 @@ const CreateQuickOrder = () => {
     const messageType = "Quick Order Confirm";
     try {
       //  Update resource
-      if(fetchedQuickOrderData==null){
+      if (fetchedQuickOrderData == null) {
         fetchQuickOrder();
-      }else{
-        const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fetchedQuickOrderData, {messageType: messageType});
+      } else {
+        const res: any = await quickOrderService.UpdateStatusQuickOrderResource(fetchedQuickOrderData, { messageType: messageType });
         console.log("updateQuickOrderResource result:", res);
         // localStorage.setItem("confirmOrder", 'true');
         //  Get OrderNumber from response
@@ -410,7 +439,7 @@ const CreateQuickOrder = () => {
         console.log("OrderNumber:", OrderNumber);
         const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
         const isSuccessStatus = JSON.parse(res?.data?.IsSuccess);
-        if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+        if (resourceStatus === "Success" || resourceStatus === "SUCCESS") {
           toast({
             title: "✅ Form submitted successfully",
             description: "Your changes have been saved.",
@@ -418,28 +447,28 @@ const CreateQuickOrder = () => {
           });
           // setCurrentStep(2);
           setShowAmendButton(true);
-          
+
           // Fetch updated QuickOrder details and update the form
           try {
             const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
             console.log("Updated QuickOrder response:", updatedQuickOrderRes);
             let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
             console.log("Updated QuickOrder data:", updatedParsedData);
-            
+
             // Update the jsonStore with fresh data
             jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
-            
+
             // Update the fetchedQuickOrderData state to trigger re-render
             setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
-            
+
             // Trigger a refresh of the OrderForm component
             setRefreshTrigger(prev => prev + 1);
-            
+
             console.log("QuickOrder details updated successfully");
           } catch (error) {
             console.error("Error fetching updated QuickOrder details:", error);
           }
-        }else{
+        } else {
           toast({
             title: "⚠️ Submission failed",
             description: isSuccessStatus ? JSON.parse(res?.data?.ResponseData)[0].Error_msg : JSON.parse(res?.data?.Message),
@@ -447,7 +476,7 @@ const CreateQuickOrder = () => {
             variant: "destructive", // or "success" if you have custom variant
           });
         }
-  
+
         //  Fetch the full quick order details
         quickOrderService.getQuickOrder(OrderNumber).then((fetchRes: any) => {
           console.log("fetchRes:: ", fetchRes);
@@ -456,7 +485,7 @@ const CreateQuickOrder = () => {
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
         })
       }
-    
+
 
     } catch (err) {
       console.log("CATCH :: ", err);
@@ -517,7 +546,7 @@ const CreateQuickOrder = () => {
     setPopupTitleBgColor('bg-blue-100');
   };
 
-  const quickOrderCancelhandler = () => {
+  const quickOrderCancelhandler = async () => {
     console.log('amendmend data rows:', reasonCodeTypeList);
     setFields([
       {
@@ -552,6 +581,28 @@ const CreateQuickOrder = () => {
     setPopupBGColor('bg-red-600');
     setPopupTextColor('text-red-500');
     setPopupTitleBgColor('bg-red-50');
+    setRefreshTrigger(prev => prev + 1);
+    // Fetch updated QuickOrder details and update the form
+    // try {
+    //   const OrderNumber = jsonStore.getQuickUniqueID()
+    //   const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
+    //   console.log("Updated QuickOrder response:", updatedQuickOrderRes);
+    //   let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
+    //   console.log("Updated QuickOrder data:", updatedParsedData);
+
+    //   // Update the jsonStore with fresh data
+    //   jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
+
+    //   // Update the fetchedQuickOrderData state to trigger re-render
+    //   setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
+
+    //   // Trigger a refresh of the OrderForm component
+    //   setRefreshTrigger(prev => prev + 1);
+
+    //   console.log("QuickOrder details updated successfully");
+    // } catch (error) {
+    //   console.error("Error fetching updated QuickOrder details:", error);
+    // }
   };
 
   const handleFieldChange = (name, value) => {
@@ -568,7 +619,7 @@ const CreateQuickOrder = () => {
     jsonStore.setQuickOrder(fetchedQuickOrderData);
     console.log("Amend json:", jsonStore.getQuickOrder());
     let messageType = "";
-    if(popupAmendFlag == "Amend"){
+    if (popupAmendFlag == "Amend") {
       messageType = "Quick Order Amend"; // Or appropriate message type
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
@@ -577,7 +628,7 @@ const CreateQuickOrder = () => {
         "AmendReasonDescription": fields[1].value,
         "ModeFlag": "Update" // Set ModeFlag to "Amend"
       });
-    }else{
+    } else {
       messageType = "Quick Order Cancel"; // Or appropriate message type
       jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
@@ -588,6 +639,7 @@ const CreateQuickOrder = () => {
       });
     }
     const fullJson = jsonStore.getQuickOrder();
+    const orderId = jsonStore.getQuickUniqueID();
     console.log("fullJson === amend", fullJson);
     try {
       // Call your API to submit the amended data
@@ -603,6 +655,22 @@ const CreateQuickOrder = () => {
           variant: "default",
         });
         setPopupOpen(false); // Close the popup on success
+        navigate(`/create-quick-order?id=${orderId}`);
+        // setRefreshTrigger(prev => prev + 1);
+        //Get QuickOrder
+        const OrderNumber = jsonStore.getQuickUniqueID();
+        const updatedQuickOrderRes = await quickOrderService.getQuickOrder(OrderNumber);
+            console.log("Updated QuickOrder response:", updatedQuickOrderRes);
+            let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
+            console.log("Updated QuickOrder data:", updatedParsedData);
+
+            // Update the jsonStore with fresh data
+            jsonStore.setQuickOrder((updatedParsedData?.ResponseResult)[0]);
+
+            // Update the fetchedQuickOrderData state to trigger re-render
+            setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
+            setRefreshTrigger(prev => prev + 1);
+            
       } else {
         toast({
           title: "⚠️ submission failed",
@@ -630,10 +698,10 @@ const CreateQuickOrder = () => {
           </div>
 
           <div className="">
-          {loading ?
-            <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} onConfirm={quickOrderConfirmHandler} key={refreshTrigger} />
-            : ''
-          }
+            {loading ?
+              <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} onConfirm={quickOrderConfirmHandler} onSaveDraft={quickOrderSaveDraftHandler} onCancel={quickOrderCancelhandler} key={refreshTrigger} />
+              : ''
+            }
           </div>
 
         </div>

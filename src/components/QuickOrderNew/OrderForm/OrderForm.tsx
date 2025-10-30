@@ -41,7 +41,7 @@ interface OrderFormProps {
   onOrderCreated?: () => void;
 }
 
-const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, onConfirm, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps, ref) => {
+const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSaveDraft, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps, ref) => {
   const navigate = useNavigate();
   const [OrderType, setOrderType] = useState('BUY');
   const [OrderDate, setOrderDate] = useState<Date>();
@@ -962,6 +962,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
     // Run immediately and set up an interval to check periodically
     checkAndUpdateResourceData();
     const intervalId = setInterval(checkAndUpdateResourceData, 500);
+    // alert("intervalId "+intervalId)
     
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
@@ -988,11 +989,18 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
       const confirmButton = Array.from(buttons).find(
         (btn) => btn.textContent.trim() === 'Confirm'
       );
+      const saveButton = Array.from(buttons).find(
+        (btn) => btn.textContent.trim() === 'Save'
+      );
+      const cancelButton = Array.from(buttons).find(
+        (btn) => btn.textContent.trim() === 'Cancel'
+      );
 
       // Enable it and add click listener
       if (confirmButton && confirmButton instanceof HTMLButtonElement) {
         console.log("Inside confirmButton : ", confirmButton)
         confirmButton.disabled = false;
+        
         
         // Add click event listener if not already added
         const handleConfirmClick = () => {
@@ -1001,8 +1009,31 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({ onSaveDraft, on
         };
         
         confirmButton.addEventListener('click', handleConfirmClick);
-        // confirmButton.style.backgroundColor = 'lightgreen'; // just to show it's enabled
       }
+      if (saveButton && saveButton instanceof HTMLButtonElement) {
+        console.log("Inside saveButton : ", saveButton)
+        saveButton.disabled = false;
+      
+        // Add click event listener if not already added
+        const handleSaveClick = () => {
+          console.log("Save button clicked from OrderForm");
+          onSaveDraft();
+        };
+        
+        saveButton.addEventListener('click', handleSaveClick);
+      }
+        
+        // Enable Cancel button and add handler
+
+        if (cancelButton && cancelButton instanceof HTMLButtonElement) {
+          cancelButton.disabled = false;
+          const handleCancelClick = () => {
+            console.log("Cancel button clicked from OrderForm");
+            onCancel(); // <-- Call your parent-provided handler
+          };
+          cancelButton.addEventListener('click', handleCancelClick);
+        }
+      
     }
   }
 
