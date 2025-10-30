@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen, Pencil } from 'lucide-react';
+import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, HelpCircle, InfoIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -1110,6 +1110,21 @@ const TripPlanning = () => {
                 <Button 
                   variant="outline" 
                   className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
+                   onClick={() => {
+                    // Dynamically get the base path from the current URL
+                    const { pathname} = window.location;
+                    // Find the base path 
+                    const basePathMatch = pathname.match(/^\/[^/]+/);
+                    const basePath = basePathMatch ? basePathMatch[0] : "";
+                    window.location.href = `${basePath}/trip-planning`;
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Trip
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
                   onClick={handleManageTripsClick}
                 >
                   Manage Trips
@@ -1427,7 +1442,7 @@ const TripPlanning = () => {
                                   handleOpenResourceDrawer('Supplier');
                                 }}
                               >
-                                <Plus className="h-4 w-4" />
+                                <InfoIcon className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -1449,13 +1464,13 @@ const TripPlanning = () => {
                                   handleOpenResourceDrawer('Schedule');
                                 }}
                               >
-                                <Plus className="h-4 w-4" />
+                                <InfoIcon className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
                         </div>
                         {[
-                          { title: 'Others single', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
@@ -1518,7 +1533,7 @@ const TripPlanning = () => {
                         id="consolidated-trip"
                         checked={consolidatedTrip}
                         onCheckedChange={setConsolidatedTrip}
-                        className="data-[state=checked]:bg-orange-500"
+                        className="data-[state=checked]:bg-blue-600"
                       />
                       <Label htmlFor="consolidated-trip" className="cursor-pointer text-foreground font-medium">
                         Create Single trip with Consolidated COs
@@ -1605,7 +1620,7 @@ const TripPlanning = () => {
                                         handleOpenResourceDrawer('Supplier');
                                       }}
                                     >
-                                      <Plus className="h-4 w-4" />
+                                      <InfoIcon className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
@@ -1627,13 +1642,13 @@ const TripPlanning = () => {
                                         handleOpenResourceDrawer('Schedule');
                                       }}
                                     >
-                                      <Plus className="h-4 w-4" />
+                                      <InfoIcon className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
                               </div>
                               {[
-                                { title: 'Others multiple', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
@@ -1725,7 +1740,7 @@ const TripPlanning = () => {
                             id="consolidated-trip-inline"
                             checked={consolidatedTrip}
                             onCheckedChange={setConsolidatedTrip}
-                            className="data-[state=checked]:bg-orange-500"
+                            className="data-[state=checked]:bg-Blue-600"
                           />
                           <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
                             Create single trip with consolidated orders
