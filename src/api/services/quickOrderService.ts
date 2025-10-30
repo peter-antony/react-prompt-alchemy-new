@@ -114,6 +114,15 @@ export const quickOrderService = {
           FilterName: "TripID",
           FilterValue: params?.TripID,
         }
+       ]: params?.messageType === "Incident Causer Name Init" ? [
+        {
+          FilterName: "IncidentCausedBy",
+          FilterValue: "Customer"
+        },
+        {
+          FilterName: "tripplanid_trip",
+          FilterValue: params?.IncidentTripId,
+        }
        ]:
         [],
       Pagination: {

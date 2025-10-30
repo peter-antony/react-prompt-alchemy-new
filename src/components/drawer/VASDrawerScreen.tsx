@@ -351,6 +351,26 @@ const saveCurrentFormData = () => {
   // };
 
   const handleSave = async () => {
+  // Check if CustomerOrderNo is empty when creating new VAS
+  if (!selectedVAS && !formData.CustomerOrderNo) {
+    toast({
+      title: "❌ Validation Error",
+      description: "Please select a Customer Order No before saving",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  // Check if VASID is empty when creating new VAS
+  if (!selectedVAS && !formData.VASID) {
+    toast({
+      title: "❌ Validation Error",
+      description: "Please select a VAS before saving",
+      variant: "destructive",
+    });
+    return;
+  }
+
   let updatedVasItems = [...vasItems];
 
   if (selectedVAS) {
@@ -382,8 +402,6 @@ const saveCurrentFormData = () => {
     setSelectedVAS(newVAS.id);
   }
 
-  setVasItems(updatedVasItems);
-
   const HeaderInfo = {
     TripNo: tripData?.Header?.TripNo,
     TripOU: tripData?.Header?.TripOU,
@@ -408,8 +426,10 @@ const saveCurrentFormData = () => {
       variant: isSuccess ? "default" : "destructive",
     });
 
-    // Re-fetch VAS data after successful save
-    await fetchVASForTrip();
+    // Re-fetch VAS data after successful save only if API call was successful
+    if (isSuccess) {
+      await fetchVASForTrip();
+    }
   } catch (error) {
     console.error("Error saving VAS:", error);
     
@@ -618,7 +638,7 @@ const saveCurrentFormData = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Supplier Contract <span className="text-destructive">*</span></Label>
+              <Label>Supplier Contract <span className="text-destructive"></span></Label>
               {/* <Select value={formData.supplierContract} onValueChange={(value) => setFormData({ ...formData, supplierContract: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Supplier Contract" />
