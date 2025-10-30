@@ -831,11 +831,21 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
-      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
-      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
-      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
+        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+        const tripStatus = parsedResponse?.TripStatus;
         setTripStatus(tripStatus);
+        // Optimistically update TripStatus in already loaded grid data (no full reload)
+        if (tripStatus && tripIDToUse) {
+          setTripCustomerOrdersData(prev =>
+            Array.isArray(prev)
+              ? prev.map((row: any) =>
+                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+                )
+              : prev
+          );
+        }
         toast({
           title: "✅ Trip Confirmed",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -874,11 +884,21 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
-      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
-      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
-      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
+        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+        const tripStatus = parsedResponse?.TripStatus;
         setTripStatus(tripStatus);
+        // Optimistically update TripStatus in already loaded grid data (no full reload)
+        if (tripStatus && tripIDToUse) {
+          setTripCustomerOrdersData(prev =>
+            Array.isArray(prev)
+              ? prev.map((row: any) =>
+                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+                )
+              : prev
+          );
+        }
         toast({
           title: "✅ Trip Released",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -939,6 +959,45 @@ const TripPlanning = () => {
     setAmendModalOpen(true);
   }
 
+  const splitAtPipe = (value: string | null | undefined) => {
+    if (typeof value === "string" && value.includes("||")) {
+      const [first, ...rest] = value.split("||");
+      return first.trim(); // Return only the value part (before pipe)
+    }
+    return value;
+  };
+
+  // Helper to recursively process all dropdown fields in an object, splitting at "||"
+  const splitDropdowns = (obj: any) => {
+    if (!obj || typeof obj !== "object") return obj;
+    const newObj: any = Array.isArray(obj) ? [] : {};
+    for (const key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+      const val = obj[key];
+      // If value is an object with a dropdown property, split it
+      if (val && typeof val === "object" && "dropdown" in val) {
+        newObj[key] = {
+          ...val,
+          dropdown: splitAtPipe(val.dropdown)
+        };
+        // If input property exists, keep as is
+        if ("input" in val) {
+          newObj[key].input = val.input;
+        }
+      } else if (typeof val === "string") {
+        // If value is a string, split if it has a pipe
+        newObj[key] = splitAtPipe(val);
+      } else if (typeof val === "object" && val !== null) {
+        // Recursively process nested objects
+        newObj[key] = splitDropdowns(val);
+      } else {
+        newObj[key] = val;
+      }
+    }
+    console.log("splitDropdowns ===", newObj);
+    return newObj;
+  };
+
   const handleAmendTripPlanSubmit = async (formFields: any) => {
     console.log("Amend Trip Plan Submit:", formFields);
     let mappedObj: any = {}
@@ -951,15 +1010,34 @@ const TripPlanning = () => {
     // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
     const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
     
+    // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+    let ReasonCodeValue = '';
+    let ReasonCodeLabel = '';
+
+    if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+      // If activityName is a string with '||', split it into value and label
+      const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+      ReasonCodeValue = value.trim();
+      ReasonCodeLabel = labelParts.join('||').trim();
+    } else if (typeof mappedObj.ReasonCode === 'string') {
+      ReasonCodeValue = mappedObj.ReasonCode;
+      ReasonCodeLabel = mappedObj.ReasonCode;
+    } else if (typeof mappedObj.ReasonCode === 'object' && mappedObj.ReasonCode !== null) {
+      // In case it's already an object (from dropdown)
+      const splitData = splitDropdowns(mappedObj.ReasonCode);
+      ReasonCodeValue = splitData.ReasonCodeValue || '';
+      ReasonCodeLabel = splitData.ReasonCodeLabel || '';
+    }
+
     // Create payload for amend action
     const Header = {
       "TripNo": tripIDToUse,
       "Cancellation": null,
       "ShortClose": null,
       "Amendment": {
-        "AmendmentRequestedDateTime": mappedObj.RequestedDateTime || "",
-        "AmendmentReasonCode": mappedObj.ReasonCode || "",
-        "AmendmentReasonCodeDescription": mappedObj.ReasonDescription || "",
+        "AmendmentRequestedDateTime": mappedObj.Canceldatetime || "",
+        "AmendmentReasonCode": ReasonCodeValue || "",
+        "AmendmentReasonCodeDescription": ReasonCodeLabel || "",
         "AmendmentRemarks": mappedObj.Remarks || ""
       }
     };
@@ -969,17 +1047,17 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
-      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
-      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
-      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
-        setTripStatus(tripStatus);
-        console.log("Trip data updated in store", tripStatus);
         toast({
           title: "✅ Trip Amended",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+        const tripStatus = parsedResponse?.TripStatus;
+        setTripStatus(tripStatus);
+        console.log("Trip data updated in store", tripStatus);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({

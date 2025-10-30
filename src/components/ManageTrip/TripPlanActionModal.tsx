@@ -213,8 +213,8 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
                     {selectOptions?.map((opt: any, index) => (
-                      opt.id && opt.name ? (
-                        <SelectItem key={`reason-${index}`} value={String(opt.id)}>
+                      (opt.id && opt.name) ? (
+                        <SelectItem key={`reason-${index}`} value={String((opt.id && opt.name) ? `${opt.id} || ${opt.name}` : (opt.id || opt.name))}>
                           {opt.id} || {opt.name}
                         </SelectItem>
                       ) : null
