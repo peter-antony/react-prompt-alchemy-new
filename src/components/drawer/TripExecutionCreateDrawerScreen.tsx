@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, Plus, NotebookPen, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, NotebookPen, CalendarIcon, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,10 +26,15 @@ import { ConsignmentTrip } from './ConsignmentTrip';
 import { tripService } from "@/api/services/tripService";
 import { useToast } from '@/hooks/use-toast';
 import CommonPopup from '@/components/Common/CommonPopup';
+import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DateTimePicker } from "@/components/Common/DateTimePicker";
+
 
 interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
+  onFieldChange?: (name: string, value: string) => void;
   // tripExecutionRef?: React.RefObject<DynamicPanelRef>;
   // tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
 }
@@ -51,6 +58,7 @@ interface AdditionalActivity {
 
 export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawerScreenProps> = ({
   onClose,
+  onFieldChange,
   tripId = 'TRIP00000001',
   // tripExecutionRef,
   // tripAdditionalRef
@@ -66,6 +74,19 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   
   const tripExecutionRef = useRef<DynamicPanelRef>(null);
   const tripAdditionalRef = useRef<DynamicPanelRef>(null);
+  const [resetKey, setResetKey] = useState(0);
+  const [dates, setDates] = useState<Record<string, Date | undefined>>({});
+  
+  // Refs for multiple forms - using Map to store refs by form ID
+  const formRefs = useRef<Map<string, React.RefObject<DynamicPanelRef>>>(new Map());
+  
+  // Function to get or create a ref for a specific form
+  const getFormRef = (formId: string): React.RefObject<DynamicPanelRef> => {
+    if (!formRefs.current.has(formId)) {
+      formRefs.current.set(formId, React.createRef<DynamicPanelRef>());
+    }
+    return formRefs.current.get(formId)!;
+  };
   // Add Via Points dialog state
   const [viaPointForm, setViaPointForm] = useState({
     legFromTo: '',
@@ -73,6 +94,21 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     plannedDate: '',
     plannedTime: '',
   });
+
+  // State for normal popup modal
+  const [showNormalPopup, setShowNormalPopup] = useState(false);
+  const [popupData, setPopupData] = useState({
+    eventType: '',
+    eventStatus: '',
+    eventDescription: '',
+    eventDate: '',
+    eventTime: ''
+  });
+
+  // State for managing multiple Events forms
+  const [eventsForms, setEventsForms] = useState<any[]>([]);
+  const [currentEventFormIndex, setCurrentEventFormIndex] = useState<number>(-1);
+  const [showEventsForm, setShowEventsForm] = useState(false);
 
   // Zustand store
   const { legs, selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg, loadLegsFromAPI } = useTripExecutionDrawerStore();
@@ -530,33 +566,164 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       
       console.log("Found leg at index:", legIndex, "in getLegDetails() data");
       
-      // Get form data from tripExecutionRef
-      let formData = null;
+      // Collect data from all DynamicPanel forms
+      const allFormData: any[] = [];
       
+      // Get data from the main tripExecutionRef
       if (tripExecutionRef?.current?.getFormValues) {
         try {
-          formData = tripExecutionRef.current.getFormValues();
-          console.log("Form data from tripExecutionRef:", formData);
+          const mainFormData = tripExecutionRef.current.getFormValues();
+          if (mainFormData && Object.keys(mainFormData).length > 0) {
+            allFormData.push({
+              formId: 'main-form',
+              formType: 'main',
+              data: mainFormData
+            });
+            console.log("Main form data:", mainFormData);
+          }
         } catch (error) {
           console.warn("tripExecutionRef.getFormValues() failed:", error);
         }
       }
       
-      // Fallback to state-based form data
-      if (!formData || Object.keys(formData).length === 0) {
-        formData = formDataState;
-        console.log("Using state-based form data:", formData);
-      }
+      let localFormArray = [];
+      // Get data from all individual form refs
+      formRefs.current.forEach((ref, formId) => {
+        if (ref?.current?.getFormValues) {
+          try {
+            const formData = ref.current.getFormValues();
+            if (formData && Object.keys(formData).length > 0) {
+              // Remove unwanted fields from formData before pushing to localFormArray
+              const { NetAmount, id, title, ...cleanedFormData } = formData;
+              const transformedFormData = transformQuickCodeFields(cleanedFormData, '');
+              console.log("transformedFormData ", transformedFormData);
+              console.log("formData ", cleanedFormData);
+
+              // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+              let LastIdentifiedLocationValue = '';
+              let LastIdentifiedLocationLabel = '';
+
+              if (typeof cleanedFormData.LastIdentifiedLocation === 'string' && cleanedFormData.LastIdentifiedLocation.includes('||')) {
+                // If activityName is a string with '||', split it into value and label
+                const [value, ...labelParts] = cleanedFormData.LastIdentifiedLocation.split('||');
+                LastIdentifiedLocationValue = value.trim();
+                LastIdentifiedLocationLabel = labelParts.join('||').trim();
+              } else if (typeof cleanedFormData.LastIdentifiedLocation === 'string') {
+                LastIdentifiedLocationValue = cleanedFormData.LastIdentifiedLocation;
+                LastIdentifiedLocationLabel = cleanedFormData.LastIdentifiedLocation;
+              } else if (typeof cleanedFormData.LastIdentifiedLocation === 'object' && cleanedFormData.LastIdentifiedLocation !== null) {
+                // In case it's already an object (from dropdown)
+                const splitData = splitDropdowns(cleanedFormData.LastIdentifiedLocation);
+                LastIdentifiedLocationValue = splitData.value || '';
+                LastIdentifiedLocationLabel = splitData.label || '';
+              }
+
+              // Fallback if label is empty, just use value
+              if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
+
+              const updatedFormData = {
+                ...cleanedFormData,
+                QuickCode1: transformedFormData.QuickCode1 || '',
+                QuickCode2: transformedFormData.QuickCode2 || '',
+                QuickCode3: transformedFormData.QuickCode3 || '',
+                QuickCodeValue1: transformedFormData.QuickCodeValue1 || '',
+                QuickCodeValue2: transformedFormData.QuickCodeValue2 || '',
+                QuickCodeValue3: transformedFormData.QuickCodeValue3 || '',
+                LastIdentifiedLocation: LastIdentifiedLocationValue,
+                LastIdentifiedLocationDescription: LastIdentifiedLocationLabel,
+                ModeFlag:
+                  cleanedFormData.ModeFlag === 'Insert'
+                    ? 'Insert'
+                    : (cleanedFormData.ModeFlag === 'NoChange' || !cleanedFormData.ModeFlag)
+                      ? 'Update'
+                      : cleanedFormData.ModeFlag
+              };
+              allFormData.push({
+                formId: formId,
+                formType: 'dynamic',
+                data: updatedFormData
+              });
+              
+              // Push cleaned data to localFormArray
+              localFormArray.push(updatedFormData);
+              console.log(`Form ${formId} data:`, updatedFormData);
+              console.log(`Form ${formId} cleaned data (removed NetAmount, id, title):`, cleanedFormData);
+            }
+          } catch (error) {
+            console.warn(`Form ${formId} getFormValues() failed:`, error);
+          }
+        }
+      });
+      console.log(`localFormArray:`, localFormArray);
       
-      if (!formData) {
-        console.warn("No form data available");
-        // toast.error('No form data available');
-        return null;
-      }
+      // Get data from eventsForms (popup created forms)
+      // eventsForms.forEach((eventForm, index) => {
+      //   if (eventForm.data && Object.keys(eventForm.data).length > 0) {
+      //     // Remove unwanted fields from eventForm.data before pushing to localFormArray
+      //     const { NetAmount, id, title, ...cleanedEventData } = eventForm.data;
+          
+      //     allFormData.push(eventForm.data);
+      //     // allFormData.push({
+      //     //   formId: eventForm.id,
+      //     //   formType: 'event',
+      //     //   data: eventForm.data,
+      //     //   title: eventForm.title,
+      //     //   createdAt: eventForm.createdAt
+      //     // });
+          
+      //     // Push cleaned data to localFormArray
+      //     localFormArray.push(cleanedEventData);
+      //     console.log(`Event form ${eventForm.id} data:`, eventForm.data);
+      //     console.log(`Event form ${eventForm.id} cleaned data (removed NetAmount, id, title):`, cleanedEventData);
+      //   }
+      // });
       
+      // console.log("All collected form data:", allFormData);
+      
+      // if (allFormData.length === 0) {
+      //   console.warn("No form data available from any forms");
+      //   toast({
+      //     title: "Warning",
+      //     description: "No form data available to save",
+      //     variant: "destructive",
+      //   });
+      //   return null;
+      // }
+      
+      // Display summary of collected forms
+      // console.log(`✅ Successfully collected data from ${allFormData.length} forms:`);
+      // allFormData.forEach((form, index) => {
+      //   console.log(`  ${index + 1}. ${form.formType} form (${form.formId}):`, form.data);
+      //   if (form.title) {
+      //     console.log(`     Title: ${form.title}`);
+      //   }
+      //   if (form.createdAt) {
+      //     console.log(`     Created: ${form.createdAt}`);
+      //   }
+      // });
+      
+      // Show success message with form count
+      toast({
+        title: "Forms Collected",
+        description: `Successfully collected data from ${allFormData.length} forms`,
+        variant: "default",
+      });
+      
+      // Use the first form data as the primary data for backward compatibility
+      // let formData = allFormData[0]?.data || formDataState;
+      let formData = localFormArray;
+      
+      // Remove unwanted fields from main formData
+      // if (formData && typeof formData === 'object') {
+      //   const { NetAmount, id, title, ...cleanedFormData } = formData;
+      //   formData = cleanedFormData;
+      //   console.log("Main formData cleaned (removed NetAmount, id, title):", formData);
+      // }
+      
+      console.log("formData +++++++++++++", formData);
       // Get the sequence number from form data
-      const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
-      console.log("Sequence number from form:", sequenceNumber);
+      // const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
+      // console.log("Sequence number from form:", sequenceNumber);
       
       // Get the current leg's activities
       const currentLeg = fullLegDetails[legIndex];
@@ -564,63 +731,63 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       console.log("Current activities in leg:", currentActivities);
       
       // Find the activity by sequence number
-      const activityIndex = currentActivities.findIndex((activity: any) => 
-        activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
-      );
+      // const activityIndex = currentActivities.findIndex((activity: any) => 
+      //   activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
+      // );
       
-      if (activityIndex === -1) {
-        console.warn(`Activity with sequence number ${sequenceNumber} not found`);
-        // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
-        return null;
-      }
+      // if (activityIndex === -1) {
+      //   console.warn(`Activity with sequence number ${sequenceNumber} not found`);
+      //   // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
+      //   return null;
+      // }
       
-      console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
+      // console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
       
       // Create updated activity with form data
-      const currentActivity = currentActivities[activityIndex] as any;
-      const updatedActivity = {
-        ...currentActivity,
-        // Update with form data
-        Activity: formData.ActivityName || currentActivity.Activity,
-        ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
-        CustomerID: formData.CustomerID || currentActivity.CustomerID,
-        CustomerName: formData.CustomerName || currentActivity.CustomerName,
-        ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
-        CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
-        PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
-        PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
-        RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
-        RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
-        ActualDate: formData.ActualDate || currentActivity['ActualDate'],
-        ActualTime: formData.ActualTime || currentActivity['ActualTime'],
-        DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
-        // Transform QuickCode objects to separate fields using helper function
-        ...transformQuickCodeFields(formData, currentActivity),
-        Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
-        Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
-        Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
-        EventProfile: formData.EventProfile || currentActivity['EventProfile'],
-        ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
-        DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
-        LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
-        LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
-        LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
-        LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
-        AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
-        ModeFlag: 'Update'
-        // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
-      };
+      // const currentActivity = currentActivities[activityIndex] as any;
+      // const updatedActivity = {
+      //   ...currentActivity,
+      //   // Update with form data
+      //   Activity: formData.ActivityName || currentActivity.Activity,
+      //   ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
+      //   CustomerID: formData.CustomerID || currentActivity.CustomerID,
+      //   CustomerName: formData.CustomerName || currentActivity.CustomerName,
+      //   ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
+      //   CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
+      //   PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
+      //   PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
+      //   RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
+      //   RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
+      //   ActualDate: formData.ActualDate || currentActivity['ActualDate'],
+      //   ActualTime: formData.ActualTime || currentActivity['ActualTime'],
+      //   DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
+      //   // Transform QuickCode objects to separate fields using helper function
+      //   ...transformQuickCodeFields(formData, currentActivity),
+      //   Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
+      //   Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
+      //   Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
+      //   EventProfile: formData.EventProfile || currentActivity['EventProfile'],
+      //   ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
+      //   DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
+      //   LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
+      //   LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
+      //   LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
+      //   LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
+      //   AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
+      //   ModeFlag: 'Update'
+      //   // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
+      // };
       
-      console.log("Updated activity:", updatedActivity);
+      // console.log("Updated activity:", updatedActivity);
       
       // Update the activity in the full leg details
       const updatedLegDetails = [...fullLegDetails];
       updatedLegDetails[legIndex] = {
         ...updatedLegDetails[legIndex],
         Activities: [
-          ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
-          updatedActivity,
-          ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
+          // ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
+          ...formData,
+          // ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
         ]
       };
       
@@ -759,23 +926,14 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             variant: "destructive", // or "success" if you have custom variant
           });
         }
-        // const resourceStatus = JSON.parse(response?.data?.ResponseData)[0].Status;
-        // const isSuccessStatus = JSON.parse(response?.data?.IsSuccess);
-        // if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-        //   toast({
-        //     title: "✅ Form submitted successfully",
-        //     description: "Your changes have been saved.",
-        //     variant: "default", // or "success" if you have custom variant
-        //   });
-        // }else{
-        //   toast({
-        //     title: "⚠️ Submission failed",
-        //     description: isSuccessStatus ? JSON.parse(response?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
-        //     variant: "destructive", // or "success" if you have custom variant
-        //   });
-        // }
       } catch (err) {
-
+        console.error("Error saving activities:", err);
+        toast({
+          title: "⚠️ Submission failed",
+          description: (err as any)?.data?.Message,
+          variant: "destructive", // or "success" if you have custom variant
+        });
+        // return null;
       }
       
       // Push the updated trip data back to the store
@@ -1095,6 +1253,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   ];
 
   useEffect(() => {
+    setDates({});
+    setResetKey(k => k + 1);
     console.log("Legs loaded from API:", legs);
   }, [legs]);
 
@@ -1117,8 +1277,43 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
   const [popupAmendFlag, setPopupAmendFlag] = useState('');
   const [fields, setFields] = useState([]);
-  const [activityPlaced, setActivityPlaced] = useState<any[]>([]);
-  const [activityName, setActivityName] = useState<any[]>([]);
+  const [activityPlaced, setActivityPlaced] = useState('');
+  const [activityName, setActivityName] = useState('');
+
+  // Generic fetch function for master common data using quickOrderService.getMasterCommonData
+  const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+      
+      const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+            : {})
+        }));
+      
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  const fetchActivityPlaced = fetchMasterData("Trip Log Placed Init");
+  const fetchActivityName = fetchMasterData("Activity Name Init");
+  const [planDate, setPlanDate] = useState<Date>(new Date());
+
   const messageTypes = [
     "Location Init",
     "Reason for changes Init",
@@ -1411,39 +1606,16 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   };
 
   const quickOrderAmendHandler = () => {
-    console.log('amendmend data rows:', activityPlaced);
-    setFields([
-      {
-        type: "select",
-        label: "Event Placed",
-        name: "ActivityPlaced",
-        placeholder: "Select Place",
-        value: "",
-        options: activityPlaced?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-      },
-      {
-        type: "select",
-        label: "Event Name",
-        name: "ActivityName",
-        placeholder: "Select Name",
-        value: "",
-        options: activityName?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
-      },
-      {
-        type: "date",
-        label: "Planned Date",
-        name: "PlannedDate",
-        placeholder: "",
-        value: "",
-      },
-    ]);
-    setPopupAmendFlag('AddActivities');
-    setPopupOpen(true);
-    setPopupTitle('Add Event');
-    setPopupButtonName('Confirm');
-    setPopupBGColor('bg-blue-600');
-    setPopupTextColor('text-blue-600');
-    setPopupTitleBgColor('bg-blue-100');
+    console.log('Opening normal popup modal');
+    // Reset popup data
+    setPopupData({
+      eventType: '',
+      eventStatus: '',
+      eventDescription: '',
+      eventDate: '',
+      eventTime: ''
+    });
+    setShowNormalPopup(true);
   };
 
   const handleFieldChange = (name, value) => {
@@ -1455,6 +1627,125 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const addActivitiesData = async (fields: any) => {
     console.log("Amend Fields:");
   }
+
+  // Handle popup data change
+  const handlePopupDataChange = (field: string, value: string) => {
+    setPopupData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const splitAtPipe = (value: string | null | undefined) => {
+    if (typeof value === "string" && value.includes("||")) {
+      const [first, ...rest] = value.split("||");
+      return first.trim(); // Return only the value part (before pipe)
+    }
+    return value;
+  };
+
+  const splitDropdowns = (obj: any) => {
+    if (!obj || typeof obj !== "object") return obj;
+    const newObj: any = Array.isArray(obj) ? [] : {};
+    for (const key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+      const val = obj[key];
+      // If value is an object with a dropdown property, split it
+      if (val && typeof val === "object" && "dropdown" in val) {
+        newObj[key] = {
+          ...val,
+          dropdown: splitAtPipe(val.dropdown)
+        };
+        // If input property exists, keep as is
+        if ("input" in val) {
+          newObj[key].input = val.input;
+        }
+      } else if (typeof val === "string") {
+        // If value is a string, split if it has a pipe
+        newObj[key] = splitAtPipe(val);
+      } else if (typeof val === "object" && val !== null) {
+        // Recursively process nested objects
+        newObj[key] = splitDropdowns(val);
+      } else {
+        newObj[key] = val;
+      }
+    }
+    console.log("splitDropdowns ===", newObj);
+    return newObj;
+  };
+  
+  // Handle popup save
+  const handlePopupSave = () => {
+    console.log('Saving popup data:', popupData);
+    console.log('activityPlaced:', activityPlaced);
+    console.log('activityName:', activityName);
+    console.log('planDate:', planDate);
+
+    // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+    let activityNameValue = '';
+    let activityNameLabel = '';
+
+    if (typeof activityName === 'string' && activityName.includes('||')) {
+      // If activityName is a string with '||', split it into value and label
+      const [value, ...labelParts] = activityName.split('||');
+      activityNameValue = value.trim();
+      activityNameLabel = labelParts.join('||').trim();
+    } else if (typeof activityName === 'string') {
+      activityNameValue = activityName;
+      activityNameLabel = activityName;
+    } else if (typeof activityName === 'object' && activityName !== null) {
+      // In case it's already an object (from dropdown)
+      const splitData = splitDropdowns(activityName);
+      activityNameValue = splitData.value || '';
+      activityNameLabel = splitData.label || '';
+    }
+
+    // Fallback if label is empty, just use value
+    if (!activityNameLabel) activityNameLabel = activityNameValue;
+
+    const newEventForm = {
+      id: `event-${Date.now()}`,
+      title: activityNameLabel,
+      ModeFlag: "Insert",
+      Activity: activityNameValue,
+      ActivityDescription: activityNameLabel,
+      SeqNo: -1,
+      CustomerID: null,
+			CustomerName: "",
+			ConsignmentInformation: "",
+			CustomerOrder: null,
+      PlanDate: dates.planDate,
+      PlanTime: dates.planTime,
+    };
+    
+    // Add to the events forms array
+    setEventsForms(prev => [...prev, newEventForm]);
+    
+    // Close popup
+    setShowNormalPopup(false);
+    
+    // Show success message
+    toast({
+      title: "Success",
+      description: "Event added successfully",
+      variant: "default",
+    });
+    
+    console.log('New Events form created from popup:', newEventForm);
+  };
+
+  // Handle popup cancel
+  const handlePopupCancel = () => {
+    setShowNormalPopup(false);
+    // Reset popup data
+    setPopupData({
+      eventType: '',
+      eventStatus: '',
+      eventDescription: '',
+      eventDate: '',
+      eventTime: ''
+    });
+  };
 
   const tripExecutionAdditionalPanelConfig: PanelConfig = {
     Sequence: {
@@ -1606,6 +1897,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   }; // Dependencies for useMemo
 
+  const [newActivities, setNewActivities] = useState<Array<{
+    id: string;
+    category: string;
+    subCategory: string;
+    plannedDate: string;
+    plannedTime: string;
+    location: string;
+    status: 'pending' | 'completed' | 'in-progress';
+    remarks: string;
+  }>>([]);
+  
   return (
     <>
       <motion.div
@@ -1752,9 +2054,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
           <TabsContent value="activities" className="flex-1 flex flex-col m-0">
             {/* Activities Header */}
-            <div className="px-6 py-4 border-b">
+            {/* <div className="px-6 py-4 border-b">
               <div className="flex items-center justify-between">
-                {/* <h2 className="text-lg font-semibold">Activities Details - {selectedLeg.from} to {selectedLeg.to}</h2> */}
                 <h2 className="text-lg font-semibold">Trip Events</h2>
                 <div className="flex items-center gap-2">
                   <Button onClick={quickOrderAmendHandler} variant="outline" size="sm" className="gap-2">
@@ -1763,12 +2064,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   </Button>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Activities Content */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {/* Activities Section */}
-              <div className="space-y-3">
+              <div className="space-y-3 border p-3">
                 <div 
                   className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
                   onClick={() => setExpandedActivities(!expandedActivities)}
@@ -1798,7 +2099,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                     >
                     
                       {selectedLeg.activities.map((activity) => (
-                        <div key={activity.id} className="border rounded-lg bg-card">
+                        <div key={activity.id} className="rounded-lg bg-card">
                           <div className="flex items-center justify-between p-4 bg-muted/30">
                             <div className="flex items-center gap-3"> 
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
@@ -1821,74 +2122,65 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
                           {loading ?
                             <DynamicPanel
-                              ref={tripExecutionRef}
-                              key="trip-execution-panel"
-                              panelId="operational-details"
+                              ref={getFormRef(`main-${activity.id}`)}
+                              key={`trip-execution-panel-main-${activity.id}`}
+                              panelId={`operational-details-main-${activity.id}`}
                               panelTitle="Events"
                               panelConfig={tripExecutionPanelConfig}
-                              formName="operationalDetailsForm"
+                              formName={`operationalDetailsForm-main-${activity.id}`}
                               initialData={activity}
                             /> : ''
                           }
-
-                          {/* {loading ?
-                            <DynamicPanel
-                              key="Activities" // Revert to tripType for controlled remounts on type change
-                              ref={tripExecutionRef}
-                              panelId="trip-execution-panel"
-                              panelTitle="Activities"
-                              panelConfig={tripExecutionPanelConfig} // Use the memoized config
-                              initialData={activity} // Removed initialData prop
-                            // onDataChange={handleDataChange} // Confirming it's commented out as per user
-                            /> : ''
-                          } */}
-                          {/* <div className="px-4 pb-4 pt-4 border-t space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Planned Date
-                                </Label>
-                                <Input
-                                  value={activity.plannedDate}
-                                  className="text-sm h-9"
-                                  readOnly
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Planned Time
-                                </Label>
-                                <Input
-                                  value={activity.plannedTime}
-                                  className="text-sm h-9"
-                                  readOnly
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Location
-                                </Label>
-                                <Input
-                                  value={activity.location}
-                                  className="text-sm h-9"
-                                  readOnly
-                                />
-                              </div>
-                            </div>
-
-                            {activity.remarks && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Remarks</Label>
-                                <Input
-                                  value={activity.remarks}
-                                  className="text-sm h-9"
-                                  readOnly
-                                />
-                              </div>
-                            )}
-                          </div> */}
                         </div>
                       ))}
+
+                      {/* New Activity Forms */}
+                      {eventsForms.map((activity) => (
+                        <div key={activity.id} className="rounded-lg bg-card">
+                          {/* Activity Header */}
+                          <div className="flex items-center justify-between p-4 bg-muted/30">
+                            <div className="flex items-center gap-3"> 
+                              <div className="p-2 rounded bg-blue-500/10 text-blue-600">
+                                <Package className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">{(activity as any).title} - {formatDateToDDMMYYYY((activity as any).RevisedDate)} {formatTimeTo12Hour((activity as any).RevisedTime)}</div>
+                                {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={activity.status === 'completed' ? 'default' : activity.status === 'in-progress' ? 'secondary' : 'outline'} 
+                                className="text-xs"
+                              >
+                                {activity.status}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Activity Details Form */}
+                          <div className="px-4 pb-4 pt-4 border-t space-y-4">
+                            {loading ?
+                              <DynamicPanel
+                                ref={getFormRef(activity.id)}
+                                key={`trip-execution-panel-${activity.id}`}
+                                panelId={`operational-details-${activity.id}`}
+                                panelTitle="Events"
+                                panelConfig={tripExecutionPanelConfig}
+                                formName={`operationalDetailsForm-${activity.id}`}
+                                initialData={activity}
+                              /> : ''
+                            }
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button onClick={quickOrderAmendHandler} variant="outline" size="sm" className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add Events
+                        </Button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -2041,9 +2333,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             </div>
             {/* Footer Actions */}
             <div className="sticky bottom-0 z-20 flex items-center justify-end gap-3 px-6 py-4 border-t bg-card">
-              <Button variant="outline" onClick={onClose} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-background text-blue-600 border border-blue-600 hover:bg-blue-50 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm'>
+              {/* <Button variant="outline" onClick={onClose} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-background text-blue-600 border border-blue-600 hover:bg-blue-50 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm'>
                 Close
-              </Button>
+              </Button> */}
               <Button onClick={onSaveActivities} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm' >
                 Save
               </Button>
@@ -2317,6 +2609,104 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Normal Popup Modal */}
+      {showNormalPopup && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-lg w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-semibold">Add Event</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePopupCancel}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Event Placed</label>
+                <DynamicLazySelect
+                  fetchOptions={fetchActivityPlaced}
+                  value={activityPlaced}
+                  onChange={(value) => setActivityPlaced(value as string)}
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                  placeholder=""
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Event Name</label>
+                <DynamicLazySelect
+                  fetchOptions={fetchActivityName}
+                  value={activityName}
+                  onChange={(value) => setActivityName(value as string)}
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                  placeholder=""
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Plan Date</label>
+                <DateTimePicker
+                  key={`${resetKey}-planDate`} // optional: guarantees fresh mount
+                  value={dates.planDate}
+                  onChange={(newDate) => {
+                    setDates((s) => ({ ...s, planDate: newDate }))
+                    setPlanDate(planDate)
+                    onFieldChange?.("planDate", format(newDate, "yyyy-MM-dd HH:mm:00")) // update field value
+                  }}
+                />
+                {/* <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal relative",
+                        !planDate && "text-muted-foreground"
+                      )}
+                    >
+                      {planDate ? format(planDate, "dd/MM/yyyy") : <span>Pick a date</span>}
+                      <CalendarIcon className="mr-2 h-4 w-4 absolute right-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={planDate}
+                      onSelect={(date: Date | undefined) => {
+                        if (date) setPlanDate(date);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover> */}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 p-6 border-t">
+              <Button
+                variant="outline"
+                onClick={handlePopupCancel}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handlePopupSave}
+                // disabled={!popupData.eventType || !popupData.eventStatus}
+              >
+                Save Event
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
