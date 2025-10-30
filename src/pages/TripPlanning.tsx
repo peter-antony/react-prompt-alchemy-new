@@ -42,7 +42,7 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
-  const [planDate, setPlanDate] = useState<Date>(new Date());
+  const [planDate, setPlanDate] = useState<Date | undefined>();
   const [requestSupplier, setRequestSupplier] = useState(false);
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');
   const [referenceDocType, setReferenceDocType] = useState('');
@@ -66,6 +66,7 @@ const TripPlanning = () => {
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
+  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any[]>([]);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
@@ -74,6 +75,8 @@ const TripPlanning = () => {
   useEffect(() => {
     if (urlTripID) {
       setTripNo(urlTripID);
+      setAddResourcesFlag(true);
+      // setConsolidatedTrip(true);
       console.log("🔗 URL TripID extracted:", urlTripID);
     }
     if (manageFlag) {
@@ -81,6 +84,11 @@ const TripPlanning = () => {
     }
   }, [urlTripID, manageFlag]);
 
+  useEffect(() => {
+    // Do whatever you need with the UPDATED value here!
+    console.log("Resource details data updated:", tripResourceDetailsData);
+    // API calls, calculations, etc.
+  }, [tripResourceDetailsData]);
   // Debug useEffect to track selectedArrCOData changes
   useEffect(() => {
     console.log("🔍 selectedArrCOData changed:", selectedArrCOData);
@@ -104,6 +112,8 @@ const TripPlanning = () => {
           
           // Extract CustomerOrders from the trip response
           const customerOrders = parsedResponse.CustomerOrders || [];
+
+          const resourceDetails = parsedResponse.ResourceDetails || [];
           
           if (customerOrders && customerOrders.length > 0) {
             console.log('✅ CustomerOrders found:', customerOrders.length);
@@ -117,6 +127,16 @@ const TripPlanning = () => {
           } else {
             console.log('⚠️ No CustomerOrders found in trip response');
             setTripCustomerOrdersData([]);
+          }
+
+          if (resourceDetails) {
+            console.log('✅ ResourceDetails found:', resourceDetails);
+            // Store ResourceDetails data for TripCOHub
+            setTripResourceDetailsData(() => resourceDetails);
+            console.log("tripResourceDetailsData ====", tripResourceDetailsData);
+          } else {
+            console.log('⚠️ No ResourceDetails found in trip response');
+            setTripResourceDetailsData([]);
           }
         } catch (error) {
           console.error('❌ Failed to fetch trip data:', error);
@@ -511,6 +531,7 @@ const TripPlanning = () => {
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
   const [customerOrderList, setcustomerOrderList] = useState<any>();
+
   const handleCustomerOrderSelect = (customerOrderList: any, isSelected: boolean = true) => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
     
@@ -534,6 +555,8 @@ const TripPlanning = () => {
       // Clear the customer order list and hide resources flag
       console.log("setSelectedArrCOData remove ===", selectedArrCOData);
       setcustomerOrderList(null);
+      setSupplier(null);
+      setSchedule(null);
       // setAddResourcesFlag(false);
       return;
     }
@@ -635,7 +658,7 @@ const TripPlanning = () => {
           "PlanningProfileID": "General-GMBH",
           "Location": processedLocation, // Now processedLocation is already just the code
           "Cluster": processedCluster,
-          "PlanDate": format(planDate, "yyyy-MM-dd")
+          "PlanDate": format(planDate ?? new Date(), "yyyy-MM-dd")
         },
         "CustomerOrders": selectedRows || [],
         "ResourceDetails": transformedResourceDetails || []
@@ -726,7 +749,7 @@ const TripPlanning = () => {
       return;
     }else{
       // Process location data using splitAtPipe to get the code value
-      console.log("location ====", location);
+      console.log("planDate ====", planDate);
       const processedLocation = splitAtPipe(location);
       const processedCluster = splitAtPipe(cluster);
       console.log("processedLocation ====", processedLocation);
@@ -738,7 +761,7 @@ const TripPlanning = () => {
           "PlanningProfileID": "General-GMBH",
           "Location": processedLocation, // Now processedLocation is already just the code
           "Cluster": processedCluster,
-          "PlanDate": format(planDate, "yyyy-MM-dd")
+          "PlanDate": format(planDate ?? new Date(), "yyyy-MM-dd")
         },
         "CustomerOrders": selectedArrCOData || []
       }
@@ -808,8 +831,11 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
-        console.log("Trip data updated in store");
+        setTripStatus(tripStatus);
         toast({
           title: "✅ Trip Confirmed",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -848,8 +874,11 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
-        console.log("Trip data updated in store");
+        setTripStatus(tripStatus);
         toast({
           title: "✅ Trip Released",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -940,8 +969,12 @@ const TripPlanning = () => {
       const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+      const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+      const tripStatus = parsedResponse?.TripStatus;
       if (resourceStatus) {
-        console.log("Trip data updated in store");
+        setTripStatus(tripStatus);
+        console.log("Trip data updated in store", tripStatus);
         toast({
           title: "✅ Trip Amended",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -1081,7 +1114,20 @@ const TripPlanning = () => {
                       )}
                     >
                       {planDate ? format(planDate, "dd/MM/yyyy") : <span>Pick a date</span>}
-                      <CalendarIcon className="mr-2 h-4 w-4 absolute right-0" />
+                      {planDate && (
+                        <span
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-destructive"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setPlanDate(undefined);
+                          }}
+                          aria-label="Clear date"
+                          title="Clear date"
+                        >
+                          &#10005;
+                        </span>
+                      )}
+                      <CalendarIcon className="mr-2 h-4 w-4 absolute right-8" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -1280,66 +1326,9 @@ const TripPlanning = () => {
                       {/* Trip Planning Customer Order Hub */}
                       {/* <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/> */}
                       <TripCOHubMultiple key={tripCOMulipleHubReloadKey} onCustomerOrderClick={handleMultipleCustomerOrders}/>
-                      </div>
+                    </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">
-                     
-                      {/* Resources - Right Panel */}
-                      {/* <div className="bg-card border border-border rounded-lg overflow-hidden">
-                        <div className="p-4">
-                          <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                              <span className="p-3 rounded-xl bg-[#EBE9FE] mr-3">
-                                <Truck className="h-5 w-5" />
-                              </span>
-                              <h2 className="text-lg font-semibold">Resources</h2>
-                      </div>
-                    </div>
-                        </div>
-
-                        <div className="p-4 space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Supplier</label>
-                            <DynamicLazySelect
-                              fetchOptions={fetchSupplier}
-                              value={supplier}
-                              onChange={(value) => setSupplier(value as string)}
-                              placeholder=""
-                        />
-                      </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Schedule</label>
-                            <DynamicLazySelect
-                              fetchOptions={fetchSchedule}
-                              value={schedule}
-                              onChange={(value) => setSchedule(value as string)}
-                              placeholder=""
-                            />
-                          </div>
-
-                          <Button variant="outline" className="w-full text-emerald-600 border-emerald-300 hover:bg-emerald-50">
-                            <Plus className="h-4 w-4 mr-2" />
-                            More Resources
-                      </Button>
-
-                          <div className="border-t border-border pt-4 mt-6 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Total Orders:</span>
-                              <span className="font-semibold">12</span>
-                    </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Assigned:</span>
-                              <span className="font-semibold text-emerald-600">5</span>
-                  </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Unassigned:</span>
-                              <span className="font-semibold text-orange-600">7</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div> */}
-
                       <div className="bg-card overflow-hidden">
                         <div className=''>
                           <div>
@@ -1388,7 +1377,7 @@ const TripPlanning = () => {
                           </div>
                         </div>
                         {[
-                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Others single', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
@@ -1485,29 +1474,6 @@ const TripPlanning = () => {
                 <div className="flex gap-4">
                   {/* Customer Orders - Left Panel */}
                   <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden">
-                    {/* Header */}
-                    {/* <div className="bg-blue-500 text-white p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
-                            <Package className="h-5 w-5" />
-                          </div>
-                          <h2 className="text-lg font-semibold">Customer Orders</h2>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-white/90">12 orders ready for planning</p>
-                    </div> */}
 
                     {/* Content */}
                     <div className="p-4">
@@ -1540,7 +1506,7 @@ const TripPlanning = () => {
                               <div className=''>
                                 <div className='flex items-center justify-between px-4 py-3 bg-blue-50 mb-2'>
                                   <div className='text-sm text-blue-700'>
-                                    <span className='text-xs'>Selected Customer Order: {customerOrderList?.CustomerOrderID}</span>
+                                    <span className='text-xs'>Selected Customer Order: {customerOrderList?.CustomerOrderID} - {customerOrderList?.LegBehaviour}</span>
                                   </div>
                                 </div>
                                 <div>
@@ -1589,7 +1555,7 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Others multiple', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
