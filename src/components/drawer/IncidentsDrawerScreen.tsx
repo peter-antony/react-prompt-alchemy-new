@@ -223,6 +223,36 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
       return [];
     }
   };
+
+  const fetchMasterDataForIncidents = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonDataForIncidnts({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        ...(extraParams || {}),
+      });
+
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
   const fetchIncidentID = fetchMasterData("Trip Log Incident ID Init", { TripID: tripId });
   const fetchIncidentStatus = fetchMasterData("Incident status Init");
 
@@ -236,8 +266,8 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   //Maintanence Details
   const fetchIncidentAccident = fetchMasterData("Accident Type Init");
   const fetchIncidentCause = fetchMasterData("Cause code init");
-  const fetchIncidentWagon = fetchMasterData("Wagon id Init");
-  const fetchIncidentContainer = fetchMasterData("Container id Init");
+  const fetchIncidentWagon = fetchMasterDataForIncidents("Equipment ID Init", { IncidentTripId: tripId, EquipmentType: 'Equipment' });
+  const fetchIncidentContainer = fetchMasterDataForIncidents("Equipment ID Init", { IncidentTripId: tripId, EquipmentType: 'Container' });
   const fetchMaintenanceType = fetchMasterData("Maintenance Type Init");
   const fetchWorkType = fetchMasterData("Work Type Init");
   const fetchWorkCategory = fetchMasterData("Work Category Init");

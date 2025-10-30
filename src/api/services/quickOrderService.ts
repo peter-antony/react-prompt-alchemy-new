@@ -140,6 +140,52 @@ export const quickOrderService = {
     );
     return response.data;
   },
+
+  getMasterCommonDataForIncidnts: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    console.log("params1 ---", params);
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: "4",
+        Role: "ramcorole",
+      },
+      SearchCriteria: {
+        id: params?.searchTerm || '',
+        name: params?.searchTerm || '',
+      },
+      AdditionalFilter: params?.messageType === "Equipment ID Init" ? [
+        {
+          FilterName:"EquipmentType",
+          FilterValue: params?.EquipmentType,
+        }, 
+        {
+          FilterName:"ScreenName",
+          FilterValue:"Triplog"
+        },
+        {
+          FilterName:"TripId",
+          FilterValue: params?.IncidentTripId,
+        }  
+      ]: [],
+      Pagination: {
+        PageNumber: params?.offset,
+        PageSize: params?.limit,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
   // Get master common data
   getCommonComboData: async (
     params?: any
