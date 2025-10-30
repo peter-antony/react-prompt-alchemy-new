@@ -97,6 +97,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
   // State for normal popup modal
   const [showNormalPopup, setShowNormalPopup] = useState(false);
+  const [showNormalPopupTitle, setShowNormalPopupTitle] = useState('Add Events');
   const [popupData, setPopupData] = useState({
     eventType: '',
     eventStatus: '',
@@ -107,6 +108,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
   // State for managing multiple Events forms
   const [eventsForms, setEventsForms] = useState<any[]>([]);
+  const [additionalEventsForms, setAdditionalEventsForms] = useState<any[]>([]);
   const [currentEventFormIndex, setCurrentEventFormIndex] = useState<number>(-1);
   const [showEventsForm, setShowEventsForm] = useState(false);
 
@@ -1605,7 +1607,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       }
   };
 
-  const quickOrderAmendHandler = () => {
+  const handlerModalAddEvents = () => {
+    setShowNormalPopupTitle('Add Events');
     console.log('Opening normal popup modal');
     // Reset popup data
     setPopupData({
@@ -1674,8 +1677,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     return newObj;
   };
   
-  // Handle popup save
-  const handlePopupSave = () => {
+  // Handle Add Events popup save
+  const handleAddEventsPopupSave = () => {
     console.log('Saving popup data:', popupData);
     console.log('activityPlaced:', activityPlaced);
     console.log('activityName:', activityName);
@@ -1897,16 +1900,79 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   }; // Dependencies for useMemo
 
-  const [newActivities, setNewActivities] = useState<Array<{
-    id: string;
-    category: string;
-    subCategory: string;
-    plannedDate: string;
-    plannedTime: string;
-    location: string;
-    status: 'pending' | 'completed' | 'in-progress';
-    remarks: string;
-  }>>([]);
+  const handlerModalAdditionalEvents = () => {
+    setShowNormalPopupTitle('Add Additional Events');
+    console.log('Opening normal popup modal');
+    // Reset popup data
+    setPopupData({
+      eventType: '',
+      eventStatus: '',
+      eventDescription: '',
+      eventDate: '',
+      eventTime: ''
+    });
+    setShowNormalPopup(true);
+  };
+
+  // Handle popup save
+  const handleAdditionalEventsPopupSave = () => {
+    console.log('Saving popup data:', popupData);
+    console.log('activityPlaced:', activityPlaced);
+    console.log('activityName:', activityName);
+    console.log('planDate:', planDate);
+
+    // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+    let activityNameValue = '';
+    let activityNameLabel = '';
+
+    if (typeof activityName === 'string' && activityName.includes('||')) {
+      // If activityName is a string with '||', split it into value and label
+      const [value, ...labelParts] = activityName.split('||');
+      activityNameValue = value.trim();
+      activityNameLabel = labelParts.join('||').trim();
+    } else if (typeof activityName === 'string') {
+      activityNameValue = activityName;
+      activityNameLabel = activityName;
+    } else if (typeof activityName === 'object' && activityName !== null) {
+      // In case it's already an object (from dropdown)
+      const splitData = splitDropdowns(activityName);
+      activityNameValue = splitData.value || '';
+      activityNameLabel = splitData.label || '';
+    }
+
+    // Fallback if label is empty, just use value
+    if (!activityNameLabel) activityNameLabel = activityNameValue;
+
+    const newEventForm = {
+      id: `event-${Date.now()}`,
+      title: activityNameLabel,
+      ModeFlag: "Insert",
+      Activity: activityNameValue,
+      ActivityDescription: activityNameLabel,
+      SeqNo: -1,
+      CustomerID: null,
+			CustomerName: "",
+			ConsignmentInformation: "",
+			CustomerOrder: null,
+      PlanDate: dates.planDate,
+      PlanTime: dates.planTime,
+    };
+    
+    // Add to the events forms array
+    setAdditionalEventsForms(prev => [...prev, newEventForm]);
+    
+    // Close popup
+    setShowNormalPopup(false);
+    
+    // Show success message
+    toast({
+      title: "Success",
+      description: "Event added successfully",
+      variant: "default",
+    });
+    
+    console.log('New Events form created from popup:', newEventForm);
+  };
   
   return (
     <>
@@ -2176,7 +2242,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       ))}
 
                       <div className="flex items-center gap-2 justify-end">
-                        <Button onClick={quickOrderAmendHandler} variant="outline" size="sm" className="gap-2">
+                        <Button onClick={handlerModalAddEvents} variant="outline" size="sm" className="gap-2">
                           <Plus className="h-4 w-4" />
                           Add Events
                         </Button>
@@ -2187,7 +2253,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
               </div>
 
               {/* Additional Activities Section */}
-              <div className="space-y-3">
+              <div className="space-y-3 border p-3">
                 <div
                   className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
                   onClick={() => setExpandedAdditional(!expandedAdditional)}
@@ -2214,7 +2280,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       className="space-y-3 overflow-hidden"
                     >
                       {additionalActivities.map((activity) => (
-                        <div key={activity.id} className="border rounded-lg bg-card p-4 space-y-4">
+                        <div key={activity.id} className="rounded-lg bg-card p-4 space-y-4">
                           {/* Header */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -2238,94 +2304,65 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
                           {loading ?
                             <DynamicPanel
-                              ref={tripAdditionalRef}
-                              key="Additional-Activities"
-                              panelId="trip-additional-panel"
+                              ref={getFormRef(`additional-${activity.id}`)}
+                              key={`trip-execution-panel-additional-${activity.id}`}
+                              panelId={`operational-details-additional-${activity.id}`}
                               panelTitle="Additional Events"
                               panelConfig={tripExecutionAdditionalPanelConfig}
-                              formName="operationalDetailsForm"
+                              formName={`operationalDetailsForm-additional-${activity.id}`}
                               initialData={activity}
                             /> : ''
                           }
-
-                          {/* <div className="grid grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Sequence</Label>
-                              <Input defaultValue={activity.fields.sequence} className="h-9" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Category</Label>
-                              <div className="relative">
-                                <Input defaultValue={activity.fields.category} className="pr-8 h-9" />
-                                <MapPin className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">From Location</Label>
-                              <Select defaultValue={activity.fields.fromLocation}>
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pickup">Pickup</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">To Location</Label>
-                              <Select defaultValue={activity.fields.toLocation}>
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pickup">Pickup</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div> */}
-
-                          {/* <div className="grid grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Activity (Event)</Label>
-                              <Select defaultValue={activity.fields.activity}>
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pickup">Pickup</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Revised Date and Time</Label>
-                              <div className="relative">
-                                <Input defaultValue={activity.fields.revisedDateTime} className="pr-8 h-9" />
-                                <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                Actual Date and Time <span className="text-red-500">*</span>
-                              </Label>
-                              <div className="relative">
-                                <Input defaultValue={activity.fields.actualDateTime} className="pr-8 h-9" />
-                                <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Reason for Changes</Label>
-                              <Select defaultValue={activity.fields.reasonForChanges}>
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="SevenLRC">SevenLRC</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div> */}
                         </div>
                       ))}
+
+                      {/* New Activity Forms */}
+                      {additionalEventsForms.map((activity) => (
+                        <div key={activity.id} className="rounded-lg bg-card">
+                          {/* Activity Header */}
+                          <div className="flex items-center justify-between p-4 bg-muted/30">
+                            <div className="flex items-center gap-3"> 
+                              <div className="p-2 rounded bg-blue-500/10 text-blue-600">
+                                <Package className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">{(activity as any).title} - {formatDateToDDMMYYYY((activity as any).RevisedDate)} {formatTimeTo12Hour((activity as any).RevisedTime)}</div>
+                                {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={activity.status === 'completed' ? 'default' : activity.status === 'in-progress' ? 'secondary' : 'outline'} 
+                                className="text-xs"
+                              >
+                                {activity.status}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Activity Details Form */}
+                          <div className="px-4 pb-4 pt-4 border-t space-y-4">
+                            {loading ?
+                              <DynamicPanel
+                                ref={getFormRef(`additional-${activity.id}`)}
+                                key={`trip-execution-panel-additional-${activity.id}`}
+                                panelId={`operational-details-additional-${activity.id}`}
+                                panelTitle="Additional Events"
+                                panelConfig={tripExecutionAdditionalPanelConfig}
+                                formName={`operationalDetailsForm-additional-${activity.id}`}
+                                initialData={activity}
+                              /> : ''
+                            }
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button onClick={handlerModalAdditionalEvents} variant="outline" size="sm" className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Additional Events
+                        </Button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -2616,7 +2653,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           <div className="bg-background rounded-lg shadow-lg w-full max-w-md">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-semibold">Add Event</h2>
+              <h2 className="text-lg font-semibold">{showNormalPopupTitle}</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -2662,47 +2699,32 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                     onFieldChange?.("planDate", format(newDate, "yyyy-MM-dd HH:mm:00")) // update field value
                   }}
                 />
-                {/* <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal relative",
-                        !planDate && "text-muted-foreground"
-                      )}
-                    >
-                      {planDate ? format(planDate, "dd/MM/yyyy") : <span>Pick a date</span>}
-                      <CalendarIcon className="mr-2 h-4 w-4 absolute right-0" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={planDate}
-                      onSelect={(date: Date | undefined) => {
-                        if (date) setPlanDate(date);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover> */}
               </div>
             </div>
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 p-6 border-t">
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={handlePopupCancel}
               >
                 Cancel
-              </Button>
-              <Button
-                onClick={handlePopupSave}
-                // disabled={!popupData.eventType || !popupData.eventStatus}
-              >
-                Save Event
-              </Button>
+              </Button> */}
+              {showNormalPopupTitle == 'Add Events' ? (
+                <Button
+                  onClick={handleAddEventsPopupSave}
+                  // disabled={!popupData.eventType || !popupData.eventStatus}
+                >
+                  Save Event
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleAdditionalEventsPopupSave}
+                  // disabled={!popupData.eventType || !popupData.eventStatus}
+                >
+                  Save Additional Event
+                </Button>
+              )}
             </div>
           </div>
         </div>
