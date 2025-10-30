@@ -2450,7 +2450,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     },
     {
       label: "Plan and Actuals",
-      subLabel: "Total Items : 0",
+      // subLabel: "Total Items : 0",
       count: 2,
       completed: false,
     },

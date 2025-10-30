@@ -1247,8 +1247,18 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         }));
       },
             events: {
-        onChange: (selected, event) => {
+        onChange: (selected, event:any) => {
           console.log('Customer changed:', selected);
+          console.log('WAGON ID  event:', event.target?.value);
+          if(event.target?.value!=undefined){
+            wagonDetailsRef.current.setFormValues({
+              WagonQuantity:{ dropdown: 'TON', input: 1 }
+            })
+          }else{
+            wagonDetailsRef.current.setFormValues({
+              WagonQuantity:{ dropdown: '', input: '' }
+            })
+          }
         },
         onClick: (event, value) => {
           console.log('Customer dropdown clicked:', { event, value });
