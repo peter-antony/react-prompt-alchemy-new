@@ -146,6 +146,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const fetchTransportModes = fetchMasterData("Transport Mode Init");
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
   const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
+  const fetchLegID = fetchMasterData("Leg ID Init");
 
   const handleSave = async () => {
     // await onSave();
@@ -194,10 +195,16 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegSequence', parseInt(e.target.value))}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>Leg ID</Label>
-            <Select
+            <DynamicLazySelect
+              fetchOptions={fetchLegID}
+              value={execLeg.LegID}
+              onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegID', value)}
+              placeholder="Select Leg ID"
+            />
+            {/* <Select
               value={execLeg.LegID}
               onValueChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegID', value)}
             >
@@ -209,7 +216,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 <SelectItem value="Leg 2">Leg 2</SelectItem>
                 <SelectItem value="Leg 3">Leg 3</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
 
           <div className="space-y-2">
@@ -236,7 +243,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Leg Behaviour</Label>
-            <Select
+            {/* <Select
               value={execLeg.LegBehaviour}
               onValueChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegBehaviour', value)}
             >
@@ -248,7 +255,15 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 <SelectItem value="LHV">LHV (Line Haul Vendor)</SelectItem>
                 <SelectItem value="Dvry">Dvry (Delivery)</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
+            
+            <DynamicLazySelect
+              value={execLeg.LegBehaviour}
+              onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Arrival', value)}
+              fetchOptions={fetchLegBehaviours}
+              placeholder="Select Behaviour"
+            />
+
           </div>
 
           <div className="space-y-2">
@@ -276,9 +291,9 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const formatDateTime = (dateTime: string) => {
     if (!dateTime) return '';
     const date = new Date(dateTime);
-    return date.toLocaleString('en-US', { 
-      day: '2-digit', 
-      month: 'short', 
+    return date.toLocaleString('en-US', {
+      day: '2-digit',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -318,39 +333,39 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               </Card>
             ) : (
               legDetails.map((leg, index) => (
-              <Card
-                key={index}
-                className={cn(
-                  "p-4 cursor-pointer transition-all hover:shadow-md",
-                  selectedLegIndex === index && "border-primary ring-2 ring-primary/20"
-                )}
-                onClick={() => setSelectedLegIndex(index)}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm">
-                      {String(index + 1).padStart(2, '0')} - {leg.LegID || `Leg ${index + 1}`}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {leg.CustomerOrderDetails?.length || 0}
-                    </Badge>
+                <Card
+                  key={index}
+                  className={cn(
+                    "p-4 cursor-pointer transition-all hover:shadow-md",
+                    selectedLegIndex === index && "border-primary ring-2 ring-primary/20"
+                  )}
+                  onClick={() => setSelectedLegIndex(index)}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm">
+                        {String(index + 1).padStart(2, '0')} - {leg.LegID || `Leg ${index + 1}`}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {leg.CustomerOrderDetails?.length || 0}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-start gap-2">
+                        <span className="font-medium min-w-[60px]">{leg.DeparturePointDescription}</span>
+                        <ArrowRight className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        <span className="font-medium">{leg.ArrivalPointDescription}</span>
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatDateTime(leg.DepartureDateTime)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatDateTime(leg.ArrivalDateTime)}
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-start gap-2">
-                      <span className="font-medium min-w-[60px]">{leg.DeparturePointDescription}</span>
-                      <ArrowRight className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="font-medium">{leg.ArrivalPointDescription}</span>
-                    </div>
-                    <div className="text-muted-foreground">
-                      {formatDateTime(leg.DepartureDateTime)}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {formatDateTime(leg.ArrivalDateTime)}
-                    </div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
               ))
             )}
           </div>
@@ -375,7 +390,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                   <h3 className="text-base font-semibold">Customer Order Details</h3>
                   <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-3">
                   {(!selectedLeg.CustomerOrderDetails || selectedLeg.CustomerOrderDetails.length === 0) ? (
                     <Card className="p-4">
@@ -385,48 +400,48 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                     </Card>
                   ) : (
                     selectedLeg.CustomerOrderDetails.map((order, idx) => (
-                    <Card key={idx} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">{order.CustomerOrderNo}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {order.ExecutionLegBehaviourDescription}
-                            </Badge>
+                      <Card key={idx} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm">{order.CustomerOrderNo}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {order.ExecutionLegBehaviourDescription}
+                              </Badge>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">From: </span>
-                            <span className="font-medium">{order.DeparturePointDescription}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">To: </span>
-                            <span className="font-medium">{order.ArrivalPointDescription}</span>
-                          </div>
-                        </div>
-
-                        {order.NextPlan && order.NextPlan.length > 0 && (
-                          <div className="border-t pt-2">
-                            <div className="text-xs text-muted-foreground mb-2">Next Trip:</div>
-                            <div className="flex flex-wrap gap-2">
-                              {order.NextPlan.map((plan, planIdx) => (
-                                <Badge
-                                  key={planIdx}
-                                  className={cn("text-xs", getTripStatusBadgeClass(plan.TripStatus))}
-                                >
-                                  {plan.TripID}
-                                </Badge>
-                              ))}
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">From: </span>
+                              <span className="font-medium">{order.DeparturePointDescription}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">To: </span>
+                              <span className="font-medium">{order.ArrivalPointDescription}</span>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </Card>
+
+                          {order.NextPlan && order.NextPlan.length > 0 && (
+                            <div className="border-t pt-2">
+                              <div className="text-xs text-muted-foreground mb-2">Next Trip:</div>
+                              <div className="flex flex-wrap gap-2">
+                                {order.NextPlan.map((plan, planIdx) => (
+                                  <Badge
+                                    key={planIdx}
+                                    className={cn("text-xs", getTripStatusBadgeClass(plan.TripStatus))}
+                                  >
+                                    {plan.TripID}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
                     ))
                   )}
                 </div>
@@ -455,25 +470,25 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                     </Card>
                   ) : (
                     selectedLeg.ExecutionLegDetails.map((execLeg, execIdx) => (
-                    <Card key={execIdx} className="p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium">
-                            Execution Leg {execIdx + 1}
-                          </h4>
-                          {selectedLeg.ExecutionLegDetails.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onRemoveExecutionLeg(selectedLegIndex, execIdx)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
+                      <Card key={execIdx} className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium">
+                              Execution Leg {execIdx + 1}
+                            </h4>
+                            {selectedLeg.ExecutionLegDetails.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onRemoveExecutionLeg(selectedLegIndex, execIdx)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                          {renderExecutionLegFields(selectedLegIndex, execIdx, execLeg)}
                         </div>
-                        {renderExecutionLegFields(selectedLegIndex, execIdx, execLeg)}
-                      </div>
-                    </Card>
+                      </Card>
                     ))
                   )}
                 </div>
