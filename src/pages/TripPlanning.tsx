@@ -39,6 +39,7 @@ const TripPlanning = () => {
   const [tripNo, setTripNo] = useState('');
   const [tripStatus, setTripStatus] = useState('');
   const [createTripBtn, setCreateTripBtn] = useState(true);
+  const [showConfirmReleaseBtn, setShowConfirmReleaseBtn] = useState(false);
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
@@ -683,9 +684,10 @@ const TripPlanning = () => {
           console.log("parsedResponse ====", parsedResponse?.Header?.TripNo);
           setTripNo(parsedResponse?.Header?.TripNo);
           setTripStatus(parsedResponse?.Header?.TripStatus);
-          // Reload TripCOHub component
-          setTripCOMulipleHubReloadKey(prev => prev + 1);
-          console.log("🔄 TripCOHub component reloaded");
+          // Send newly created CustomerOrders to TripCOHubMultiple without forcing reload
+          const customerOrders = parsedResponse.CustomerOrders || [];
+          setTripCustomerOrdersData(customerOrders);
+          console.log("➡️ Passing CustomerOrders to TripCOHubMultiple via state", customerOrders?.length);
         } else {
           console.log("error as any ===", (response as any)?.data?.Message);
           toast({
@@ -793,6 +795,8 @@ const TripPlanning = () => {
           setCreateTripBtn(false);
           setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
           setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
+          setShowConfirmReleaseBtn(true);
+          setcustomerOrderList(null);
           // Reload TripCOHub component
           setTripCOHubReloadKey(prev => prev + 1);
           console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
@@ -810,6 +814,11 @@ const TripPlanning = () => {
       }
     }
   }
+
+  useEffect(() => {
+    console.log("showConfirmReleaseBtn ===", showConfirmReleaseBtn);
+    console.log("customerOrderList ===", customerOrderList);
+  }, [showConfirmReleaseBtn, customerOrderList]);
 
   const confirmTripPlanning = async () => {
     // console.log("confirmTripPlanning ===", selectedRowObjects);
@@ -1428,8 +1437,7 @@ const TripPlanning = () => {
                   <div className='flex gap-6'>
                     <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
                       {/* Trip Planning Customer Order Hub */}
-                      {/* <TripCOHub onCustomerOrderClick={handleCustomerOrderSelect}/> */}
-                      <TripCOHubMultiple key={tripCOMulipleHubReloadKey} onCustomerOrderClick={handleMultipleCustomerOrders}/>
+                      <TripCOHubMultiple data={tripCustomerOrdersData} onCustomerOrderClick={handleMultipleCustomerOrders}/>
                     </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">
@@ -1778,12 +1786,17 @@ const TripPlanning = () => {
                               Create Trip
                             </button>
                           }
-                          <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
+                          { showConfirmReleaseBtn && customerOrderList != null && (
+
+                            <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>
-                          <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
+                          )}
+                          { showConfirmReleaseBtn && customerOrderList != null && (
+                            <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Release
                           </button>
+                          )}
                           { tripNo &&
 
                             (<button onClick={openAmendPopup} className={buttonClass}>

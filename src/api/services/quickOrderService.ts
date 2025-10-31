@@ -123,7 +123,12 @@ export const quickOrderService = {
           FilterName: "tripplanid_trip",
           FilterValue: params?.IncidentTripId,
         }
-       ]:
+       ]: params?.messageType === "Trip status Init" ? [
+        {
+          FilterName: "ScreenName",
+          FilterValue: params?.ScreenName,
+        },
+       ]: 
         [],
       Pagination: {
         PageNumber: params?.offset,
