@@ -256,6 +256,18 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         dropdown: activeList?.[0]?.ThuWeightUOM,
         input: activeList?.[0]?.ThuWeight
       });
+      setOtherDetailsQcUserdefined1({
+        dropdown: activeList?.[0]?.QuickCode1,
+        input: activeList?.[0]?.QuickCodeValue1
+      });
+      setOtherDetailsQcUserdefined2({
+        dropdown: activeList?.[0]?.QuickCode2,
+        input: activeList?.[0]?.QuickCodeValue2
+      })
+      setOtherDetailsQcUserdefined3({
+        dropdown: activeList?.[0]?.QuickCode3,
+        input: activeList?.[0]?.QuickCodeValue3
+      });
       setOtherDetailsRemarks1(activeList?.[0]?.Remarks1);
       setOtherDetailsRemarks2(activeList?.[0]?.Remarks2);
       setOtherDetailsRemarks3(activeList?.[0]?.Remarks3);
@@ -369,6 +381,18 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       setThuDetailsWeight({
         dropdown: selecteditem?.ThuWeightUOM,
         input: selecteditem?.ThuWeight
+      });
+      setOtherDetailsQcUserdefined1({
+        dropdown: selecteditem?.QuickCode1,
+        input: selecteditem?.QuickCodeValue1
+      });
+      setOtherDetailsQcUserdefined2({
+        dropdown: selecteditem?.QuickCode2,
+        input: selecteditem?.QuickCodeValue2
+      })
+      setOtherDetailsQcUserdefined3({
+        dropdown: selecteditem?.QuickCode3,
+        input: selecteditem?.QuickCodeValue3
       });
       setOtherDetailsRemarks1(selecteditem?.Remarks1);
       setOtherDetailsRemarks2(selecteditem?.Remarks2);
@@ -700,6 +724,15 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         UNCodeDescription: unCodeData?.label || selecteditem.UNCodeDescription,
         DGClass: dgClassData?.value || selecteditem.DGClass,
         DGClassDescription: dgClassData?.label || selecteditem.DGClassDescription,
+        QuickCode1: otherDetailsQcUserdefined1?.dropdown || selecteditem.QuickCode1,
+        QuickCodeValue1: otherDetailsQcUserdefined1?.input || selecteditem.QuickCodeValue1,
+        QuickCode2: otherDetailsQcUserdefined2?.dropdown || selecteditem.QuickCode2,
+        QuickCodeValue2: otherDetailsQcUserdefined2?.input || selecteditem.QuickCodeValue2,
+        QuickCode3: otherDetailsQcUserdefined3?.dropdown || selecteditem.QuickCode3,
+        QuickCodeValue3: otherDetailsQcUserdefined3?.input || selecteditem.QuickCodeValue3,
+        Remarks1: otherDetailsRemarks1 || selecteditem.Remarks1,
+        Remarks2: otherDetailsRemarks2 || selecteditem.Remarks2,
+        Remarks3: otherDetailsRemarks3 || selecteditem.Remarks3,
       };
 
       console.log('Updated item with form data:', updatedItem);
