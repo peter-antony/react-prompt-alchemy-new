@@ -21,9 +21,10 @@ import { tripPlanningService } from "@/api/services/tripPlanningService";
 
 interface TripCOHubMultipleProps {
   onCustomerOrderClick: (selectedRows: any[]) => void;
+  data?: any[]; // optional override data from parent
 }
 
-export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultipleProps) => {
+export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMultipleProps) => {
   const pageSize = 15;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -41,6 +42,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
 
   console.log('filtersForThisGrid: ', filtersForThisGrid);
+
 
   // Helper function to notify parent component about selected rows
   const notifyParentOfSelection = (selectedObjects: any[]) => {
@@ -511,8 +513,49 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick }: TripCOHubMultiplePro
 
   // Initialize columns and data
   useEffect(() => {
-    fetchTripsAgain();
-  }, []); // Add dependencies if needed
+    // If parent provided data, use it; else fetch from API
+    if (Array.isArray(data) && data.length > 0) {
+      gridState.setColumns(initialColumns);
+      const processedData = data.map((row: any) => {
+        const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Executed': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Initiated': 'badge-blue rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            'Draft Bill Raised': 'badge-orange rounded-2xl',
+            'Not Eligible': 'badge-red rounded-2xl',
+            'Revenue leakage': 'badge-red rounded-2xl',
+            'Invoice Created': 'badge-blue rounded-2xl',
+            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
+        };
+        return {
+          ...row,
+          CustomerOrderStatus: row.CustomerOrderStatus ? {
+            value: row.CustomerOrderStatus,
+            variant: getStatusColorLocal(row.CustomerOrderStatus),
+          } : row.CustomerOrderStatus,
+          TripBillingStatus: row.TripBillingStatus ? {
+            value: row.TripBillingStatus,
+            variant: getStatusColorLocal(row.TripBillingStatus),
+          } : row.TripBillingStatus,
+        };
+      });
+      gridState.setGridData(processedData);
+      setApiStatus('success');
+    } else {
+      fetchTripsAgain();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // Initialize columns and processed data in the grid state
   // useEffect(() => {

@@ -1140,7 +1140,8 @@ export const TripExecutionHub = () => {
     { key: 'CustomerOrderNumber', label: 'Customer Order', type: 'text' },
     {
       key: 'TripStatus', label: 'Trip Status', type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Trip status Init"),
+      fetchOptions: makeLazyFetcher("Trip status Init", { ScreenName: createTripPlan === 'true' ? 'ManageTripPlan' : 'TripExecution' }),
+      ...(createTripPlan === 'true' ? { defaultValue: ['CF', 'DR', 'RL'] } : {}),
       multiSelect: true,
       hideSearch: true,
       disableLazyLoading: true

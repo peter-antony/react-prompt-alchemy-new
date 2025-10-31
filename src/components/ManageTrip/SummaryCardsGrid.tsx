@@ -276,18 +276,18 @@ export const SummaryCardsGrid = () => {
         iconColor: '#9774de',
         bgColor: '#9774de12',
       },
-      {
-        title: 'Transport Route',
-        icon: TicketPercent,
-        values: [
-          {
-            label: 'Transport Route',
-            value: '',
-          }
-        ],
-        iconColor: '#9774de',
-        bgColor: '#9774de12',
-      },
+      // {
+      //   title: 'Transport Route',
+      //   icon: TicketPercent,
+      //   values: [
+      //     {
+      //       label: 'Transport Route',
+      //       value: '',
+      //     }
+      //   ],
+      //   iconColor: '#9774de',
+      //   bgColor: '#9774de12',
+      // },
     ];
   }, [tripData, vasData, incidentsData]);
 

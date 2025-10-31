@@ -1386,7 +1386,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 fetchOptions={fetchWagonTypes}
                                 value={wagonDetailsType}
                                 onChange={(value) => setWagonDetailsType(value as string)}
-                                placeholder="Select Type"
+                                placeholder="Select Wagon Type"
                               />
                             </div>
                           </div>
@@ -1425,7 +1425,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={wagonDetailsTareWeight}
                                 onChange={setWagonDetailsTareWeight}
                                 options={weightList}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Tare Weight"
                               />
                               {/* </div> */}
                             </div>
@@ -1438,7 +1438,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={wagonDetailsGrossWeight}
                                 onChange={setWagonDetailsGrossWeight}
                                 options={weightList}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Gross Weight"
                               />
                             </div>
                           </div>
@@ -1449,7 +1449,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={wagonDetailsLength}
                                 onChange={setWagonDetailsLength}
                                 options={weightLength}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Length"
                               />
                               {/* {selecteditem?.WagonLength ? selecteditem?.WagonLength : '-'} {selecteditem?.WagonLengthUOM ? selecteditem?.WagonLengthUOM : '-'} */}
                               </div>
@@ -1460,6 +1460,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <Input type='text' 
                               value={wagonDetailsSequence}
                               onChange={(e) => {setWagonDetailsSequence(e.target.value)}}
+                              placeholder="Enter Wagon Sequence"
                               />
                               {/* {selecteditem?.Seqno ? selecteditem?.Seqno : '-'} */}
                             </div>
@@ -1511,7 +1512,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 fetchOptions={fetchContainerTypes}
                                 value={containerDetailsType}
                                 onChange={(value) => setContainerDetailsType(value as string)}
-                                placeholder="Select Type"
+                                placeholder="Select Container Type"
                               />
                             </div>
                           </div>
@@ -1522,7 +1523,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 fetchOptions={fetchContainerIds}
                                 value={containerDetailsId}
                                 onChange={(value) => setContainerDetailsId(value as string)}
-                                placeholder="Select ID"
+                                placeholder="Select Container ID"
                               />
                             </div>
                           </div>
@@ -1544,7 +1545,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={containerDetailsTareWeight}
                                 onChange={setContainerDetailsTareWeight}
                                 options={quantityUnitOptions}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Tare Weight"
                               />
                             </div>
                           </div>
@@ -1555,7 +1556,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={containerDetailsLoadWeight}
                                 onChange={setContainerDetailsLoadWeight}
                                 options={quantityUnitOptions}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Load Weight"
                               />
                             </div>
                           </div>
@@ -1639,7 +1640,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={productQuantity}
                                 onChange={setProductQuantity}
                                 options={quantityUnitOptions}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter Product Quantity"
                               />
                             </div>
                           </div>
@@ -1739,7 +1740,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <Input
                                 value={thuDetailsSerialNo}
                                 onChange={(e) => setThuDetailsSerialNo(e.target.value)}
-                                // placeholder="Enter THU Serial No."
+                                placeholder="Enter THU Serial No."
                               />
                             </div>
                           </div>
@@ -1750,7 +1751,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={thuDetailsQuantity}
                                 onChange={setThuDetailsQuantity}
                                 options={quantityUnitOptions}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter THU Quantity"
                               />
                             </div>
                           </div>
@@ -1761,7 +1762,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                                 value={thuDetailsWeight}
                                 onChange={setThuDetailsWeight}
                                 options={quantityUnitOptions}
-                                placeholder="Enter Quantity"
+                                placeholder="Enter THU Weight"
                               />
                             </div>
                           </div>
@@ -1849,7 +1850,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <Input
                                 value={otherDetailsRemarks2}
                                 onChange={(e) => setOtherDetailsRemarks2(e.target.value)}
-                                placeholder="Enter Remarks 1"
+                                placeholder="Enter Remarks 2"
                               />
                             </div>
                           </div>
@@ -1859,7 +1860,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
                               <Input
                                 value={otherDetailsRemarks3}
                                 onChange={(e) => setOtherDetailsRemarks3(e.target.value)}
-                                placeholder="Enter Remarks 1"
+                                placeholder="Enter Remarks 3"
                               />
                             </div>
                           </div>
