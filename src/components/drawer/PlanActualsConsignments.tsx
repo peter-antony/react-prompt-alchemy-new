@@ -211,8 +211,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         input: activeList[0]?.WagonTareWeight
       });
       setWagonDetailsGrossWeight({
-        dropdown: activeList[0]?.WagonGrossWeightUOM,
-        input: activeList[0]?.WagonGrossWeight
+        dropdown: activeList[0]?.GrossWeightUOM,
+        input: activeList[0]?.GrossWeight
       });
       setWagonDetailsLength({
         dropdown: activeList[0]?.WagonLengthUOM,
@@ -237,7 +237,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
       setProductNHM(activeList?.[0]?.NHM);
       setHazardousGoods(activeList?.[0].ContainsHazardousGoods);
-      setProductId(activeList?.[0]?.ProductID);
+      setProductId(activeList?.[0]?.Product);
       setProductQuantity({
         dropdown: activeList?.[0]?.ProductQuantityUOM,
         input: activeList?.[0]?.ProductQuantity
@@ -246,7 +246,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       setUnCode(activeList?.[0]?.UNCode);
       setDgClass(activeList?.[0]?.DGClass);
 
-      setThuDetailsId(activeList?.[0]?.ThuId);
+      setThuDetailsId(activeList?.[0]?.Thu);
       setThuDetailsSerialNo(activeList?.[0]?.ThuSerialNo);
       setThuDetailsQuantity({
         dropdown: activeList?.[0]?.ThuQtyUOM,
@@ -256,6 +256,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         dropdown: activeList?.[0]?.ThuWeightUOM,
         input: activeList?.[0]?.ThuWeight
       });
+      setOtherDetailsRemarks1(activeList?.[0]?.Remarks1);
+      setOtherDetailsRemarks2(activeList?.[0]?.Remarks2);
+      setOtherDetailsRemarks3(activeList?.[0]?.Remarks3);
     } else {
       setCurrentWagon(null);
       setSelectedWagonId(null);
@@ -322,8 +325,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         input: selecteditem?.WagonTareWeight
       });
       setWagonDetailsGrossWeight({
-        dropdown: selecteditem?.WagonGrossWeightUOM,
-        input: selecteditem?.WagonGrossWeight
+        dropdown: selecteditem?.GrossWeightUOM,
+        input: selecteditem?.GrossWeight
       });
       setWagonDetailsLength({
         dropdown: selecteditem?.WagonLengthUOM,
@@ -348,7 +351,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
       setProductNHM(selecteditem?.NHM);
       setHazardousGoods(selecteditem?.ContainsHazardousGoods);
-      setProductId(selecteditem?.ProductID);
+      setProductId(selecteditem?.Product);
       setProductQuantity({
         dropdown: selecteditem?.ProductQuantityUOM,
         input: selecteditem?.ProductQuantity
@@ -357,7 +360,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
       setUnCode(selecteditem?.UNCode);
       setDgClass(selecteditem?.DGClass);
 
-      setThuDetailsId(selecteditem?.ThuId);
+      setThuDetailsId(selecteditem?.Thu);
       setThuDetailsSerialNo(selecteditem?.ThuSerialNo);
       setThuDetailsQuantity({
         dropdown: selecteditem?.ThuQtyUOM,
@@ -367,6 +370,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         dropdown: selecteditem?.ThuWeightUOM,
         input: selecteditem?.ThuWeight
       });
+      setOtherDetailsRemarks1(selecteditem?.Remarks1);
+      setOtherDetailsRemarks2(selecteditem?.Remarks2);
+      setOtherDetailsRemarks3(selecteditem?.Remarks3);
       // Do any operations that depend on selecteditem here
       // setWagonDetailsId(selecteditem.Wagon);
     }
@@ -379,9 +385,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
   const plannedData = currentWagonData?.planned || {};
 
   const messageTypes = [
-      "Quick Order Header Quick Code1 Init",
-      "Quick Order Header Quick Code2 Init",
-      "Quick Order Header Quick Code3 Init",
+      "Actual QC1 Init",
+      "Actual QC2 Init",
+      "Actual QC3 Init",
       "Weight UOM Init",
       "Wagon Length UOM Init",
       "Wagon Qty UOM Init",
@@ -425,9 +431,9 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType});
         setApiData(data);
         console.log("load inside try", data);
-        if (messageType == "Quick Order Header Quick Code1 Init") {
+        if (messageType == "Actual QC1 Init") {
           // setqcList1(JSON.parse(data?.data?.ResponseData) || []);
-          console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
+          console.log('Actual QC1 Init', JSON.parse(data?.data?.ResponseData));
           let responseData = JSON.parse(data?.data?.ResponseData) || [];
           const formattedData = responseData
             .filter((qc: any) => qc.id)
@@ -437,7 +443,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
             }));
           setqcList1(formattedData);
         }
-        if (messageType == "Quick Order Header Quick Code2 Init") {
+        if (messageType == "Actual QC2 Init") {
           // setqcList2(JSON.parse(data?.data?.ResponseData) || []);
           let responseData = JSON.parse(data?.data?.ResponseData) || [];
           const formattedData = responseData
@@ -448,7 +454,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
             }));
           setqcList2(formattedData);
         }
-        if (messageType == "Quick Order Header Quick Code3 Init") {
+        if (messageType == "Actual QC3 Init") {
           // setqcList3(JSON.parse(data?.data?.ResponseData) || []);
           let responseData = JSON.parse(data?.data?.ResponseData) || [];
           const formattedData = responseData
@@ -656,11 +662,11 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         WagonQtyUOM: wagonDetailsQuantity.dropdown || selecteditem.WagonQtyUOM,
         WagonTareWeight: wagonDetailsTareWeight.input ? parseFloat(wagonDetailsTareWeight.input) : selecteditem.WagonTareWeight,
         WagonTareWeightUOM: wagonDetailsTareWeight.dropdown || selecteditem.WagonTareWeightUOM,
-        WagonGrossWeight: wagonDetailsGrossWeight.input ? parseFloat(wagonDetailsGrossWeight.input) : selecteditem.WagonGrossWeight,
-        WagonGrossWeightUOM: wagonDetailsGrossWeight.dropdown || selecteditem.WagonGrossWeightUOM,
+        GrossWeight: wagonDetailsGrossWeight.input ? parseFloat(wagonDetailsGrossWeight.input) : selecteditem?.GrossWeight,
+        GrossWeightUOM: wagonDetailsGrossWeight.dropdown || selecteditem?.GrossWeightUOM,
         WagonLength: wagonDetailsLength.input ? parseFloat(wagonDetailsLength.input) : selecteditem.WagonLength,
         WagonLengthUOM: wagonDetailsLength.dropdown || selecteditem.WagonLengthUOM,
-        WagonSealNo: wagonDetailsSequence || selecteditem.WagonSealNo,
+        WagonSealNo: wagonDetailsSequence || selecteditem?.WagonSealNo,
 
         ContainerId: containerIdData?.value || selecteditem.ContainerId,
         ContainerDescription: containerTypeData?.label || selecteditem.ContainerIdDescription,
@@ -674,7 +680,7 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
 
         Thu: thuDetailsIdData?.value || selecteditem.ThuId,
         ThuDescription: thuDetailsIdData?.label || selecteditem.ThuIdDescription,
-        ThuSerialNo: thuDetailsSerialNo || selecteditem.ThuSerialNo,
+        ThuSerialNo: thuDetailsSerialNo || selecteditem?.ThuSerialNo,
         ThuQty: thuDetailsQuantity.input ? parseFloat(thuDetailsQuantity.input) : selecteditem.ThuQuantity,
         ThuQtyUOM: thuDetailsQuantity.dropdown || selecteditem.ThuQuantityUOM,
         ThuWeight: thuDetailsWeight.input ? parseFloat(thuDetailsWeight.input) : selecteditem.ThuWeight,
@@ -684,8 +690,8 @@ export const PlanActualDetailsDrawer: React.FC<PlanActualDetailsDrawerProps> = (
         NHMDescription: productNHMData?.label || selecteditem.NHMDescription,
         ContainsHazardousGoods: hazardousGoodsData?.value || selecteditem.ContainsHazardousGoods,
         // ContainsHazardousGoodsDescription: hazardousGoodsData?.label || selecteditem.ContainsHazardousGoodsDescription,
-        Product: productIdData?.value || selecteditem.ProductID,
-        ProductDescription: productIdData?.label || selecteditem.ProductIdDescription,
+        Product: productIdData?.value || selecteditem.Product,
+        ProductDescription: productIdData?.label || selecteditem.ProductDescription,
         productQuantity: productQuantity.input ? parseFloat(productQuantity.input) : selecteditem.ProductQuantity,
         productQuantityUOM: productQuantity.dropdown || selecteditem.ProductQuantityUOM,
         ClassOfStores: classOfStoresData?.value || selecteditem.ClassofStores,

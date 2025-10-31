@@ -66,7 +66,8 @@ export const API_ENDPOINTS = {
     CREATE_TRIP_CO:"/tripplanexecution/createtripplan",
     ROUTE_UPDATE: "manageexecution/planhubsearch",
     CO_SELECTION: "manageexecution/planhubselection",
-    UPDATE_SELECTION: "manageexecution/planhubupdate"
+    UPDATE_SELECTION: "manageexecution/planhubupdate",
+    TRIP_LEG_LEVEL_UPDATE: "manageexecution/plantriplevelupdate"
   },
   // Quick Order management
   QUICK_ORDERS: {

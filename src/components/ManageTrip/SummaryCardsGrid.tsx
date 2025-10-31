@@ -6,7 +6,9 @@ import { Package, Users, Wrench,
 import { useDrawerStore } from '@/stores/drawerStore';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { tripService } from '@/api/services';
-
+import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
+import { TripLevelUpdateDrawer } from '../drawer/TripLevelUpdateDrawer';
+import { SideDrawer } from '@/components/SideDrawer';
 // const summaryCardsData = [
 //   {
 //     title: 'Customer Orders',
@@ -67,6 +69,32 @@ import { tripService } from '@/api/services';
 export const SummaryCardsGrid = () => {
   const { openDrawer } = useDrawerStore();
   const { tripData } = manageTripStore();
+  const { routes,
+    selectedOrder,
+    selectedRoute,
+    selectedTrip,
+    isDrawerOpen,
+    isRouteDrawerOpen,
+    isTripDrawerOpen,
+    highlightedIndexes,
+    fetchRoutes,
+    handleCustomerOrderClick,
+    openRouteDrawer,
+    openTripDrawer,
+    closeDrawer,
+    closeRouteDrawer,
+    closeTripDrawer,
+    highlightRowIndexes,
+    addLegPanel,
+    removeLegPanel,
+    updateLegData,
+    addExecutionLeg,
+    removeExecutionLeg,
+    updateExecutionLeg,
+    saveRouteDetails,
+    saveTripDetails,
+    fetchDepartures,
+    fetchArrivals } = useTripLevelRouteStore();
   const [vasData, setVasData] = useState<any[]>([]);
   const [vasLoading, setVasLoading] = useState(false);
   const [incidentsData, setIncidentsData] = useState<any[]>([]);
@@ -157,7 +185,8 @@ export const SummaryCardsGrid = () => {
     } else if (cardTitle === 'Supplier Billing') {
       openDrawer('supplier-billing');
     } else if (cardTitle === 'Transport Route') {
-      openDrawer('transport-route');
+      // openDrawer('transport-route');
+      openTripDrawer(tripId);
     }
   };
   const summaryCardsData = useMemo(() => {
@@ -253,7 +282,7 @@ export const SummaryCardsGrid = () => {
         values: [
           {
             label: 'Transport Route',
-            value: 0,
+            value: '',
           }
         ],
         iconColor: '#9774de',
@@ -327,6 +356,9 @@ export const SummaryCardsGrid = () => {
         } else if (card.title === 'Supplier Billing') {
           displayValue = `${card.values[0]?.value || ''}`;
           displayLabel = 'Supplier Billing';
+        } else if (card.title === 'Transport Route') {
+          displayValue = `${card.values[0]?.value || ''}`;
+          displayLabel = 'Transport Route';
         } else {
           displayValue = `${card.values[0]?.value || 0}`;
           displayLabel = card.values[0]?.label || '';
@@ -357,6 +389,27 @@ export const SummaryCardsGrid = () => {
           </Card>
         );
       })}
+      
+      {/* Trip Level Update Drawer */}
+      <SideDrawer
+        isOpen={isTripDrawerOpen}
+        onClose={closeTripDrawer}
+        title="Trip Level Update"
+        width="100%"
+        showFooter={false}
+      >
+        {selectedTrip && (
+          <TripLevelUpdateDrawer 
+            tripData={selectedTrip}
+            onAddExecutionLeg={addExecutionLeg}
+            onRemoveExecutionLeg={removeExecutionLeg}
+            onUpdateExecutionLeg={updateExecutionLeg}
+            onSave={saveTripDetails}
+            fetchDepartures={fetchDepartures}
+            fetchArrivals={fetchArrivals}
+          />
+        )}
+      </SideDrawer>
     </div>
   );
 

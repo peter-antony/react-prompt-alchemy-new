@@ -11,7 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, Plus, ExternalLink, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
+import { quickOrderService } from '@/api/services/quickOrderService';
+import { tripService } from '@/api/services/tripService';
 interface NextPlan {
   TripID: string;
   TripStatus: string;
@@ -108,14 +109,63 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
 
-  const selectedLeg = tripData.LegDetails[selectedLegIndex];
+  // Safety check: ensure LegDetails exists and is an array
+  const legDetails = tripData?.LegDetails || [];
+  const selectedLeg = legDetails[selectedLegIndex];
+
+  const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  // Specific fetch functions for different message types
+  const fetchTransportModes = fetchMasterData("Transport Mode Init");
+  const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
+  const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
 
   const handleSave = async () => {
-    await onSave();
-    toast({
-      title: "Success",
-      description: "Trip details saved successfully",
-    });
+    // await onSave();
+    // toast({
+    //   title: "Success",
+    //   description: "Trip details saved successfully",
+    // });
+    const formatFinalRouteData = [
+      {
+        ...tripData,
+        // ...tripData.Header,
+        // ...tripData.WarnningDetails,
+        // LegDetails: formData.legDetails,
+        LegDetails: legDetails.map(({ ...rest }) => rest),
+        // ReasonForUpdate: reasonValue
+      }
+    ];
+    console.log('💾 formatFinalRouteData:', formatFinalRouteData);
+    const response = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
+    console.log('💾 response:', response);
   };
 
   const getTripStatusBadgeClass = (status: string) => {
@@ -243,10 +293,14 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold">Leg Details</h2>
-            <Badge className="border" variant="outline">{tripData.Header.TripID}</Badge>
-            <Badge className={cn("border", getTripStatusBadgeClass(tripData.Header.TripStatus))}>
-              {tripData.Header.TripStatusDescription}
-            </Badge>
+            {tripData?.Header && (
+              <>
+                <Badge className="border badge-blue rounded-2xl" variant="outline">{tripData.Header.TripID || 'N/A'}</Badge>
+                <Badge className={cn("border rounded-2xl", getTripStatusBadgeClass(tripData.Header.TripStatus || ''))}>
+                  {tripData.Header.TripStatusDescription || tripData.Header.TripStatus || 'N/A'}
+                </Badge>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -256,7 +310,14 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         {/* Left Panel - Leg List */}
         <ScrollArea className="h-full pr-4">
           <div className="space-y-3">
-            {tripData.LegDetails.map((leg, index) => (
+            {legDetails.length === 0 ? (
+              <Card className="p-4">
+                <div className="text-center text-muted-foreground">
+                  No leg details available
+                </div>
+              </Card>
+            ) : (
+              legDetails.map((leg, index) => (
               <Card
                 key={index}
                 className={cn(
@@ -268,10 +329,10 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm">
-                      {String(index + 1).padStart(2, '0')} - {leg.LegID}
+                      {String(index + 1).padStart(2, '0')} - {leg.LegID || `Leg ${index + 1}`}
                     </span>
                     <Badge variant="outline" className="text-xs">
-                      {leg.CustomerOrderDetails.length}
+                      {leg.CustomerOrderDetails?.length || 0}
                     </Badge>
                   </div>
                   
@@ -290,23 +351,40 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                   </div>
                 </div>
               </Card>
-            ))}
+              ))
+            )}
           </div>
         </ScrollArea>
 
         {/* Right Panel - Selected Leg Details */}
         <ScrollArea className="h-full">
-          {selectedLeg && (
+          {!selectedLeg ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="text-center">
+                <p>No leg selected</p>
+                {legDetails.length === 0 && (
+                  <p className="text-sm mt-2">Please wait while trip data loads...</p>
+                )}
+              </div>
+            </div>
+          ) : (
             <div className="space-y-6 pr-4">
               {/* Customer Order Details Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold">Customer Order Details</h3>
-                  <Badge variant="outline">{selectedLeg.CustomerOrderDetails.length}</Badge>
+                  <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  {selectedLeg.CustomerOrderDetails.map((order, idx) => (
+                  {(!selectedLeg.CustomerOrderDetails || selectedLeg.CustomerOrderDetails.length === 0) ? (
+                    <Card className="p-4">
+                      <div className="text-center text-muted-foreground">
+                        No customer order details available
+                      </div>
+                    </Card>
+                  ) : (
+                    selectedLeg.CustomerOrderDetails.map((order, idx) => (
                     <Card key={idx} className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -349,7 +427,8 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                         )}
                       </div>
                     </Card>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -368,7 +447,14 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 </div>
 
                 <div className="space-y-4">
-                  {selectedLeg.ExecutionLegDetails.map((execLeg, execIdx) => (
+                  {(!selectedLeg.ExecutionLegDetails || selectedLeg.ExecutionLegDetails.length === 0) ? (
+                    <Card className="p-4">
+                      <div className="text-center text-muted-foreground">
+                        No execution leg details available
+                      </div>
+                    </Card>
+                  ) : (
+                    selectedLeg.ExecutionLegDetails.map((execLeg, execIdx) => (
                     <Card key={execIdx} className="p-4">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -388,7 +474,8 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                         {renderExecutionLegFields(selectedLegIndex, execIdx, execLeg)}
                       </div>
                     </Card>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -400,7 +487,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       <div className="sticky bottom-0 z-20 px-6 py-4 border-t bg-card space-y-4">
         <div className="max-w-md">
           <label className="text-sm font-medium mb-2 block">Reason For Update</label>
-          <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
+          {/* <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
             <SelectTrigger>
               <SelectValue placeholder="Select Reason" />
             </SelectTrigger>
@@ -410,7 +497,13 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               <SelectItem value="delay">Delay</SelectItem>
               <SelectItem value="customer_request">Customer Request</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
+          <DynamicLazySelect
+            fetchOptions={fetchReasonForUpdate}
+            value={reasonForUpdate}
+            onChange={(value) => setReasonForUpdate(value as string)}
+            placeholder="Select Type"
+          />
         </div>
 
         <div className="flex justify-end">
