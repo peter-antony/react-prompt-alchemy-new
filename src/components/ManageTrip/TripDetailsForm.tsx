@@ -33,7 +33,7 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <TripCurrencyIcon />
-              <span>€ {String(Header?.BillingValueWithCurrency)}</span>
+              <span>€ {Header?.BillingValueWithCurrency != null ? String(Header.BillingValueWithCurrency) : '-'}</span>
             </span>
           </div>
           <div>

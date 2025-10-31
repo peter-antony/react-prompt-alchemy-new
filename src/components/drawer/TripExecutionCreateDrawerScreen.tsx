@@ -2109,7 +2109,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         ) : (
           <>
         {/* Tabs */}
-        <Tabs defaultValue="activities" className="flex-1 flex flex-col">
+        <Tabs defaultValue="consignment" className="flex-1 flex flex-col">
           <div className="border-b px-6 pt-4">
             <TabsList className="h-10">
               <TabsTrigger value="activities">Events ({selectedLeg.activities.length})</TabsTrigger>
