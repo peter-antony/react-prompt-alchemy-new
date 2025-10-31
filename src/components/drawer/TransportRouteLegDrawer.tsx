@@ -366,7 +366,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         value: leg.LegBehaviour || 'Pick',
         mandatory: false,
         visible: true,
-        editable: false,
+        editable: true,
         order: 5,
         width: 'six',
         fetchOptions: fetchLegBehaviours
