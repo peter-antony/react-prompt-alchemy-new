@@ -3,6 +3,7 @@ import { User, FileText, Calendar, Bookmark, Search, Filter, Camera } from "luci
 import { FilterDropdown } from "@/components/Common/FilterDropdown";
 import jsonStore from "@/stores/jsonStore";
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { format } from 'date-fns';
 
 const orders = [
   {
@@ -206,41 +207,42 @@ export default function LinkedOrders() {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {linkedOrderArr.map((order, idx) => (
-          <div key={idx} className="bg-white rounded-xl shadow-sm border p-3 min-h-[200px] flex flex-col gap-4">
+          <div key={idx} className="bg-white rounded-xl shadow-sm border p-3 min-h-[150px] flex flex-col gap-4">
             <div className="flex items-center justify-between gap-1">
               {/* <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${order.typeColor}`}> */}
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-blue-100 text-blue-600`}>
-                C
+                {order.LinkedOrderType === 'SELL' ? 'S' : 'B'}
               </div>
               <div className="ml-2 flex-1">
-                <span className="font-semibold text-gray-800 text-sm">{order.LinkedQuickUniqueID}</span>
-                <div className="text-xs text-gray-400">{order.LinkedPartyID}</div>
+                <span className="font-semibold text-gray-800 text-sm">{order.LinkedQuickOrderNo}</span>
+                <div className="text-xs text-gray-400">
+                  {order.LinkedQuickOrderDate ? format(order.LinkedQuickOrderDate, "dd-MMM-yyyy") : ''}
+                </div>
               </div>
-              <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 text-xs font-medium">{order.LinkedOrderType}</span>
+              <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 text-xs font-medium">{order.LinkedQuickOrderStatus}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <User className="w-4 h-4 text-gray-400" />
-              <span>{order.LinkedPartyName}</span>
-            </div>
+            {/* <div className="flex items-center gap-2 text-sm text-gray-700">
+              
+            </div> */}
             <div className="flex items-center gap-6 w-full text-sm text-gray-700">
               <div className="flex items-center gap-1 w-1/2">
-                <FileText className="w-4 h-4 text-gray-400" />
-                <span>{order.LinkedPartyType}</span>
+                <User className="w-4 h-4 text-gray-400" />
+                <span>{order.LinkedPartyID} - {order.LinkedPartyName}</span>
               </div>
               <div className="flex items-center gap-1 w-1/2">
                 <Camera className="w-4 h-4 text-gray-400" />
-                <span>{order.LinkedTotalNetAmount}</span>
+                <span> € {order.LinkedTotalNetAmount}</span>
               </div>
             </div>
             <div className="flex items-center gap-6 w-full text-sm text-gray-700">
-              <div className="flex items-center gap-1 w-1/2">
+              {/* <div className="flex items-center gap-1 w-1/2"> */}
                 <Bookmark className="w-4 h-4 text-gray-400" />
-                <span>{order.LinkedQuickUniqueID}</span>
-              </div>
-              <div className="flex items-center gap-1 w-1/2">
+                <span>{order.LinkedContractID} - {order.LinkedContractName}</span>
+              {/* </div> */}
+              {/* <div className="flex items-center gap-1 w-1/2">
                 <Calendar className="w-4 h-4 text-gray-400" />
-                <span>{order.LinkedQuickOrderDate}</span>
-              </div>
+                <span>{order.LinkedQuickOrderDate ? format(order.LinkedQuickOrderDate, "dd-MMM-yyyy") : ''}</span>
+              </div> */}
             </div>
           </div>
         ))}
