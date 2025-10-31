@@ -278,14 +278,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       ? reasonForUpdate.split("||")[0].trim()
       : reasonForUpdate;
       
-    const formatFinalRouteData = [
+    const formatFinalRouteData = 
       {
         ...selectedRoute,
         // LegDetails: formData.legDetails,
         LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
         ReasonForUpdate: reasonValue
-      }
-    ];
+      };
     const response = await tripService.updateCOSelection(formatFinalRouteData);
     console.log('💾 response:', response);
 

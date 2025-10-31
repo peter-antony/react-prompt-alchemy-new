@@ -10,7 +10,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, Building2, Users, Truck, Calendar as CalendarIcon2, Box, UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, HelpCircle, InfoIcon } from 'lucide-react';
+import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, 
+  Building2, Users, Truck, Calendar as CalendarIcon2, Box, 
+  UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, 
+  HelpCircle, InfoIcon, EllipsisVertical, 
+  CreditCard, Zap, FileUp, Route, TramFront } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -27,6 +31,12 @@ import { tripService } from '@/api/services';
 import { useToast } from '@/hooks/use-toast';
 import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
+import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
+import { SideDrawer } from '@/components/SideDrawer';
+import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
+import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
+import { useDrawerStore } from '@/stores/drawerStore';
+import { VASTripDrawerScreen } from '@/components/drawer/VASTripDrawerScreen';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -35,7 +45,34 @@ const TripPlanning = () => {
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
-  
+  const { routes,
+    selectedOrder,
+    selectedRoute,
+    selectedTrip,
+    isDrawerOpen,
+    isRouteDrawerOpen,
+    isTripDrawerOpen,
+    highlightedIndexes,
+    fetchRoutes,
+    handleCustomerOrderClick,
+    openRouteDrawer,
+    openTripDrawer,
+    // closeDrawer,
+    closeRouteDrawer,
+    closeTripDrawer,
+    highlightRowIndexes,
+    addLegPanel,
+    removeLegPanel,
+    updateLegData,
+    addExecutionLeg,
+    removeExecutionLeg,
+    updateExecutionLeg,
+    saveRouteDetails,
+    saveTripDetails,
+    fetchDepartures,
+    fetchArrivals } = useTripLevelRouteStore();
+  const { isOpen, drawerType, closeDrawer, openDrawer } = useDrawerStore();
+
   const [tripNo, setTripNo] = useState('');
   const [tripStatus, setTripStatus] = useState('');
   const [createTripBtn, setCreateTripBtn] = useState(true);
@@ -68,6 +105,7 @@ const TripPlanning = () => {
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any[]>([]);
+  const [listPopoverOpen, setListPopoverOpen] = useState(false);
 
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
@@ -1149,9 +1187,54 @@ const TripPlanning = () => {
                 >
                   Manage Trips
                 </Button>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className='border rounded-lg'>
                   <ExternalLink className="h-4 w-4" />
                 </Button>
+                {/* <Button variant="ghost" size="icon" className='border rounded-lg listOfOptions border-input'>
+                  <EllipsisVertical className="h-4 w-4" />
+                </Button> */}
+                <Popover open={listPopoverOpen} onOpenChange={setListPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    { urlTripID && 
+                      (<Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="More options"
+                      onClick={() => console.log('listPopoverOpen ==', listPopoverOpen)}
+                      className="listOfOptions inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
+                      <EllipsisVertical className="h-4 w-4" />
+                    </Button>)
+                    }
+                  </PopoverTrigger>
+                  <PopoverContent side="bottom" align="end" className="p-2 w-full">
+                    <div className="flex flex-col gap-1">
+                      <button onClick={() => { 
+                        console.log('VAS'); 
+                        openDrawer('vas-trip');
+                        setListPopoverOpen(false);
+                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <Settings className="h-4 w-4" />
+                        <span>VAS</span>
+                      </button>
+                      <button onClick={() => { 
+                        console.log('Supplier Billing'); 
+                        openDrawer('train-parameters');
+                        setListPopoverOpen(false);
+                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <TramFront className="h-4 w-4" />
+                        <span>Train Parameters</span>
+                      </button>
+                      <button onClick={() => { 
+                        console.log('Leg and Events'); 
+                        openTripDrawer(urlTripID);
+                        setListPopoverOpen(false);
+                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <Route className="h-4 w-4" />
+                        <span>Transport Route Update</span>
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
@@ -1859,6 +1942,43 @@ const TripPlanning = () => {
         submitLabel="Amend Trip"
         actionType="amend"
       />
+
+      {/* Trip Level Update Drawer */}
+      <SideDrawer
+        isOpen={isTripDrawerOpen}
+        onClose={closeTripDrawer}
+        title="Trip Level Update"
+        width="100%"
+        showFooter={false}
+      >
+        {selectedTrip && (
+          <TripLevelUpdateDrawer 
+            tripData={selectedTrip}
+            onAddExecutionLeg={addExecutionLeg}
+            onRemoveExecutionLeg={removeExecutionLeg}
+            onUpdateExecutionLeg={updateExecutionLeg}
+            onSave={saveTripDetails}
+            fetchDepartures={fetchDepartures}
+            fetchArrivals={fetchArrivals}
+          />
+        )}
+      </SideDrawer>
+      {/* Side Drawer */}
+      <SideDrawer
+          isOpen={isOpen}
+          onClose={closeDrawer}
+          onBack={ drawerType === 'transport-route' ? closeDrawer : undefined}
+          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : ''}
+          titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? urlTripID || 'TRIP0000000001' : undefined}
+          slideDirection="right"
+          width={drawerType === 'train-parameters' ? '100%' : '75%'}
+          smoothness="smooth"
+          showBackButton={ drawerType === 'transport-route'}
+          showCloseButton={true}
+        >
+          {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} />}
+          {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
+        </SideDrawer>
     </AppLayout>
   );
 };

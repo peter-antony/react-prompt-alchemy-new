@@ -69,40 +69,13 @@ const initialFormData: FormData = {
   ModeFlag: ''
 };
 
-// const initialVASItems: VASItem[] = [
-//   {
-//     id: '1',
-//     name: 'Bubble Wrap',
-//     quantity: 2,
-//   },
-//   {
-//     id: '1',
-//     name: 'Unloading',
-//     quantity: 2,
-//     formData: {
-//       customerOrderNo: 'CO000000001',
-//       applicableToCustomer: true,
-//       applicableToSupplier: true,
-//       vasId: 'vas1',
-//       customer: 'customer1',
-//       supplierContract: 'contract1',
-//       supplier: 'Supplier E',
-//       thuServed: '2',
-//       startDate: '2025-01-19',
-//       startTime: '11:00',
-//       endDate: '2025-01-19',
-//       endTime: '19:00',
-//       remarks: 'Careful unloading',
-//     }
-//   },
-// ];
-
-export const VASDrawerScreen = ({ tripUniqueNo }) => {
+export const VASTripDrawerScreen = ({ tripUniqueNo }) => {
   const [vasItems, setVasItems] = useState<VASItem[]>([]);
   const [selectedVAS, setSelectedVAS] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const { tripData } = manageTripStore();
-  const tripId: any = tripData?.Header?.TripNo || tripUniqueNo;
+  // const { tripData } = manageTripStore();
+  const [tripData, setTripData] = useState<any>(null);
+  const tripId: any = tripUniqueNo;
   const { toast } = useToast();
 
   // Filter VAS items based on selected CustomerOrderNo
@@ -149,6 +122,11 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const [customerValue, setCustomerValue] = useState<string | undefined>();
 
 
+  useEffect(() => {
+    if (tripData) {
+      console.log("Trip Data:", tripData);
+    }
+  }, [tripData]);
 
   // Refactored VAS fetch function
   const fetchVASForTrip = async () => {
@@ -164,6 +142,7 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
         response?.data ||
         response?.VAS ||
         [];
+        setTripData(vasapi);
 
       console.log("VAS List (Drawer):", vasList);
 
@@ -229,7 +208,8 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   // VAS API Fetch on mount
   useEffect(() => {
     fetchVASForTrip();
-  }, [tripId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]); // Only depend on tripId to avoid infinite loop
 
 
 
@@ -451,7 +431,7 @@ const saveCurrentFormData = () => {
     setFormData(initialFormData);
     setSelectedVAS(null);
   };
-  console.log("VASDrawerScreen CustomerOrderNo:", tripData.CustomerOrders);
+  console.log("VASDrawerScreen CustomerOrderNo:", tripData?.CustomerOrders);
 
   return (
     <div className="flex h-full">
@@ -488,7 +468,7 @@ const saveCurrentFormData = () => {
     </SelectTrigger>
     <SelectContent>
       {tripData?.CustomerOrders?.length > 0 ? (
-        tripData.CustomerOrders.map((order: any, idx: number) => (
+        tripData?.CustomerOrders.map((order: any, idx: number) => (
           <SelectItem key={idx} value={order.CustomerOrderNo}>
             {order.CustomerOrderNo}
           </SelectItem>
