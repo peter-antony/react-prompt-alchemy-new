@@ -227,10 +227,24 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     try {
       const response = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
       console.log('💾 response:', response);
-      toast({
-        title: "Success",
-        description: "Trip details saved successfully",
-      });
+      
+      // Access the response data safely
+      const responseData = response as any;
+      
+      if (responseData && responseData.data) {
+        // Display the message from the API response
+        toast({
+          title: responseData.data.IsSuccess === false ? "Failed" : (responseData.message || "Success"),
+          description: responseData.data.Message || "Trip details saved successfully",
+          variant: responseData.data.IsSuccess === false ? "destructive" : "default"
+        });
+      } else {
+        // Fallback toast if response structure is unexpected
+        toast({
+          title: "Success",
+          description: "Trip details saved successfully",
+        });
+      }
     } catch (error) {
       console.error('Error saving trip details:', error);
       toast({
