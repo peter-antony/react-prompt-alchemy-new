@@ -1,4 +1,4 @@
-
+ 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +13,23 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { tripService } from '@/api/services/tripService';
+ 
+// Helper functions for handling pipe-separated values
+const splitAtPipe = (value: string | null | undefined) => {
+  if (typeof value === "string" && value.includes("||")) {
+    const [first, ...rest] = value.split("||");
+    return {
+      value: first.trim(),
+      description: rest.join("||").trim(),
+    };
+  }
+  return { value, description: value };
+};
 interface NextPlan {
   TripID: string;
   TripStatus: string;
 }
-
+ 
 interface CustomerOrderDetail {
   CustomerOrderNo: string;
   ExecutionLegID: string;
@@ -31,7 +43,7 @@ interface CustomerOrderDetail {
   ArrivalPointDescription: string;
   NextPlan: NextPlan[];
 }
-
+ 
 interface ExecutionLegDetail {
   LegSequence: number;
   LegID: string;
@@ -53,7 +65,7 @@ interface ExecutionLegDetail {
     LegUniqueId: string;
   }>;
 }
-
+ 
 interface LegDetail {
   LegSeqNo: number;
   LegBehaviour: string;
@@ -72,7 +84,7 @@ interface LegDetail {
   CustomerOrderDetails: CustomerOrderDetail[];
   ExecutionLegDetails: ExecutionLegDetail[];
 }
-
+ 
 interface TripData {
   Header: {
     TripID: string;
@@ -85,7 +97,7 @@ interface TripData {
     HeaderWarningMsg: string | null;
   };
 }
-
+ 
 interface TripLevelUpdateDrawerProps {
   tripData: TripData;
   onAddExecutionLeg: (legIndex: number) => void;
@@ -95,7 +107,7 @@ interface TripLevelUpdateDrawerProps {
   fetchDepartures: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
   fetchArrivals: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
 }
-
+ 
 export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   tripData,
   onAddExecutionLeg,
@@ -108,11 +120,11 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [selectedLegIndex, setSelectedLegIndex] = useState<number>(0);
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
-
+ 
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
   const selectedLeg = legDetails[selectedLegIndex];
-
+ 
   const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
       // Call the API using the same service pattern as PlanAndActualDetails component
@@ -122,7 +134,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         offset,
         limit,
       });
-
+ 
       const rr: any = response.data
       return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
         ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
@@ -132,7 +144,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           }
           : {})
       }));
-
+ 
       // Fallback to empty array if API call fails
       return [];
     } catch (error) {
@@ -141,34 +153,94 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       return [];
     }
   };
-
+ 
   // Specific fetch functions for different message types
   const fetchTransportModes = fetchMasterData("Transport Mode Init");
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
   const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
   const fetchLegID = fetchMasterData("Leg ID Init");
-
+ 
   const handleSave = async () => {
-    // await onSave();
-    // toast({
-    //   title: "Success",
-    //   description: "Trip details saved successfully",
-    // });
-    const formatFinalRouteData = [
+    const legReasonForUpdate = splitAtPipe(reasonForUpdate);
+
+    // Process leg details to handle pipe-separated values and set ModeFlag
+    const processedLegDetails = legDetails.map(leg => {
+      // Process ExecutionLegDetails to handle pipe-separated values
+      const processedExecutionLegDetails = leg.ExecutionLegDetails.map(execLeg => {
+        // Process pipe-separated values for LegID, Departure, Arrival, LegBehaviour
+        const legIdParts = splitAtPipe(execLeg.LegID);
+        const departureParts = splitAtPipe(execLeg.Departure);
+        const arrivalParts = splitAtPipe(execLeg.Arrival);
+        const legBehaviourParts = splitAtPipe(execLeg.LegBehaviour);
+       
+        // Set ModeFlag based on the operation
+        // For newly added legs (no CustomerOrderDetails or empty array), set to Insert
+        // For existing legs that have been modified, set to Update
+        // Otherwise, keep as NoChange
+        let modeFlag = 'NoChange';
+       console.log("execLeg  == ",execLeg)
+       console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
+       console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
+        // Check if this is a newly added leg
+        if (!execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0) {
+          modeFlag = 'Insert';
+        }
+        // Check if this is an existing leg that has been modified
+        else if (
+          execLeg.LegID !== legIdParts.value||
+          execLeg.Departure !== departureParts.value ||
+          execLeg.Arrival !==  arrivalParts.value ||
+          execLeg.LegBehaviour !== legBehaviourParts.value ||
+          execLeg.Remarks // If remarks are added/modified
+        ) {
+          modeFlag = 'Update';
+        }
+       
+        return {
+          ...execLeg,
+          LegID: legIdParts.value,
+          LegIDDescription: legIdParts.description,
+          Departure: departureParts.value,
+          DepartureDescription: departureParts.description,
+          Arrival: arrivalParts.value,
+          ArrivalDescription: arrivalParts.description,
+          LegBehaviour: legBehaviourParts.value,
+          LegBehaviourDescription: legBehaviourParts.description,
+          ModeFlag: modeFlag,
+          ReasonForUpdate: legReasonForUpdate.value
+        };
+      });
+     
+      return {
+        ...leg,
+        ExecutionLegDetails: processedExecutionLegDetails
+      };
+    });
+   
+    const formatFinalRouteData = 
       {
         ...tripData,
-        // ...tripData.Header,
-        // ...tripData.WarnningDetails,
-        // LegDetails: formData.legDetails,
-        LegDetails: legDetails.map(({ ...rest }) => rest),
-        // ReasonForUpdate: reasonValue
-      }
-    ];
+        LegDetails: processedLegDetails,
+      };
+   
     console.log('💾 formatFinalRouteData:', formatFinalRouteData);
-    const response = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
-    console.log('💾 response:', response);
+    try {
+      const response = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
+      console.log('💾 response:', response);
+      toast({
+        title: "Success",
+        description: "Trip details saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving trip details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save trip details",
+        variant: "destructive"
+      });
+    }
   };
-
+ 
   const getTripStatusBadgeClass = (status: string) => {
     const statusMap: Record<string, string> = {
       'Draft': 'bg-gray-100 text-gray-800 border-gray-200',
@@ -178,7 +250,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     };
     return statusMap[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
-
+ 
   const renderExecutionLegFields = (
     legIndex: number,
     execLegIndex: number,
@@ -186,16 +258,17 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   ) => {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-6 gap-4">
           <div className="space-y-2">
             <Label>Leg Sequence</Label>
             <Input
+              className="h-10"
               type="number"
               value={execLeg.LegSequence}
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegSequence', parseInt(e.target.value))}
             />
           </div>
-
+ 
           <div className="space-y-2">
             <Label>Leg ID</Label>
             <DynamicLazySelect
@@ -218,7 +291,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               </SelectContent>
             </Select> */}
           </div>
-
+ 
           <div className="space-y-2">
             <Label>Departure</Label>
             <DynamicLazySelect
@@ -228,7 +301,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               placeholder="Select Departure"
             />
           </div>
-
+ 
           <div className="space-y-2">
             <Label>Arrival</Label>
             <DynamicLazySelect
@@ -238,9 +311,9 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               placeholder="Select Arrival"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
+        {/* </div> */}
+ 
+        {/* <div className="grid grid-cols-3 gap-4"> */}
           <div className="space-y-2">
             <Label>Leg Behaviour</Label>
             {/* <Select
@@ -256,28 +329,30 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 <SelectItem value="Dvry">Dvry (Delivery)</SelectItem>
               </SelectContent>
             </Select> */}
-            
+           
             <DynamicLazySelect
               value={execLeg.LegBehaviour}
-              onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Arrival', value)}
+              onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegBehaviour', value)}
               fetchOptions={fetchLegBehaviours}
               placeholder="Select Behaviour"
             />
-
+ 
           </div>
-
-          <div className="space-y-2">
+ 
+          {/* <div className="space-y-2">
             <Label>Reason For Update</Label>
             <Input
+              className="h-10"
               value={execLeg.ReasonForUpdate || ''}
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'ReasonForUpdate', e.target.value)}
               placeholder="Enter reason"
             />
-          </div>
-
+          </div> */}
+ 
           <div className="space-y-2">
             <Label>Remarks</Label>
             <Input
+              className="h-10"
               value={execLeg.Remarks || ''}
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Remarks', e.target.value)}
               placeholder="Enter remarks"
@@ -287,7 +362,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       </div>
     );
   };
-
+ 
   const formatDateTime = (dateTime: string) => {
     if (!dateTime) return '';
     const date = new Date(dateTime);
@@ -300,7 +375,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       hour12: false
     });
   };
-
+ 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -319,7 +394,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           </div>
         </div>
       </div>
-
+ 
       {/* Body - Two Panel Layout */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-6 overflow-hidden">
         {/* Left Panel - Leg List */}
@@ -350,7 +425,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                         {leg.CustomerOrderDetails?.length || 0}
                       </Badge>
                     </div>
-
+ 
                     <div className="space-y-1 text-xs">
                       <div className="flex items-start gap-2">
                         <span className="font-medium min-w-[60px]">{leg.DeparturePointDescription}</span>
@@ -358,11 +433,11 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                         <span className="font-medium">{leg.ArrivalPointDescription}</span>
                       </div>
                       <div className="text-muted-foreground">
-                        {formatDateTime(leg.DepartureDateTime)}
+                        {formatDateTime(leg.DepartureDateTime)} - {formatDateTime(leg.ArrivalDateTime)}
                       </div>
-                      <div className="text-muted-foreground">
+                      {/* <div className="text-muted-foreground">
                         {formatDateTime(leg.ArrivalDateTime)}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </Card>
@@ -370,7 +445,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
             )}
           </div>
         </ScrollArea>
-
+ 
         {/* Right Panel - Selected Leg Details */}
         <ScrollArea className="h-full">
           {!selectedLeg ? (
@@ -390,7 +465,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                   <h3 className="text-base font-semibold">Customer Order Details</h3>
                   <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge>
                 </div>
-
+ 
                 <div className="grid grid-cols-1 gap-3">
                   {(!selectedLeg.CustomerOrderDetails || selectedLeg.CustomerOrderDetails.length === 0) ? (
                     <Card className="p-4">
@@ -413,7 +488,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                               <ExternalLink className="h-3 w-3" />
                             </Button>
                           </div>
-
+ 
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div>
                               <span className="text-muted-foreground">From: </span>
@@ -424,7 +499,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                               <span className="font-medium">{order.ArrivalPointDescription}</span>
                             </div>
                           </div>
-
+ 
                           {order.NextPlan && order.NextPlan.length > 0 && (
                             <div className="border-t pt-2">
                               <div className="text-xs text-muted-foreground mb-2">Next Trip:</div>
@@ -446,7 +521,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                   )}
                 </div>
               </div>
-
+ 
               {/* Leg Details Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -460,7 +535,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                     Add Leg
                   </Button>
                 </div>
-
+ 
                 <div className="space-y-4">
                   {(!selectedLeg.ExecutionLegDetails || selectedLeg.ExecutionLegDetails.length === 0) ? (
                     <Card className="p-4">
@@ -497,7 +572,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           )}
         </ScrollArea>
       </div>
-
+ 
       {/* Footer */}
       <div className="sticky bottom-0 z-20 px-6 py-4 border-t bg-card space-y-4">
         <div className="max-w-md">
@@ -520,7 +595,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
             placeholder="Select Type"
           />
         </div>
-
+ 
         <div className="flex justify-end">
           <Button onClick={handleSave}>Save</Button>
         </div>
@@ -528,3 +603,4 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     </div>
   );
 };
+ 
