@@ -466,7 +466,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                   <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge>
                 </div>
  
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {(!selectedLeg.CustomerOrderDetails || selectedLeg.CustomerOrderDetails.length === 0) ? (
                     <Card className="p-4">
                       <div className="text-center text-muted-foreground">
