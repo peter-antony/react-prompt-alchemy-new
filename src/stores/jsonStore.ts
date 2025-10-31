@@ -539,6 +539,25 @@ function setResourceStatusByUniqueID(resourceUniqueID: string, newStatus: string
   }
   return false;
 }
+function getResourceStatusByUniqueID(resourceUniqueID: string) {
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.ResourceGroup)
+  ) {
+    const groupArr = jsonData.ResponseResult.QuickOrder.ResourceGroup;
+    const matchedItem = groupArr.find(
+      (item: any) => item.ResourceUniqueID === resourceUniqueID
+    );
+
+    if (matchedItem) {
+      return matchedItem.ResourceStatus; // ✅ return ResourceStatus directly
+    }
+  }
+  return null; // return null if not found
+}
+
 
 function updateResourceGroupByUniqueID(resourceUniqueID: string, updatedFields: Record<string, any>) {
   if (
@@ -1125,6 +1144,7 @@ const jsonStore = {
   getAllActualDetails,
   getAllResourceGroups,
   setResourceStatusByUniqueID,
+  getResourceStatusByUniqueID,
   updateResourceGroupByUniqueID,
   setResourceJsonData,
   getResourceJsonData,

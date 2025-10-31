@@ -2142,9 +2142,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [otherDetailsData, setOtherDetailsData] = useState(getInitialOtherDetails);
   const [isEditPlan, setIsEditPlan] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState();
+  const [resourceGroupStatus, setResourceGroupStatus] = useState("Fresh");
+
   // Sync state with jsonStore on isEditQuickOrder change
   useEffect(() => {
     setDefaultResourceId(resourceId);
+    setResourceGroupStatus(jsonStore.getResourceStatusByUniqueID(resourceId));
+
     console.log('wagonDetailsData load : ', wagonDetailsData);
     console.log('RESOURCE ID : ', resourceId, defaultResourceId);
     const planDetails = jsonStore.getPlanDetails() || {};
@@ -2918,6 +2922,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           {/* {currentStep === 1 && ( */}
           {planType === "plan" && (
             <Button
+              disabled={resourceGroupStatus == "Approved"}
               variant="outline"
               onClick={handleConvertPlanActuals}
               className="h-8 my-2 rounded border-blue-600 text-blue-600 hover:bg-blue-50"
@@ -2927,6 +2932,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           )}
           {/* )} */}
           <Button
+            disabled={resourceGroupStatus == "Approved"}
             className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
             onClick={handleSavePlanActuals}
           >
