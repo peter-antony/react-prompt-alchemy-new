@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_CONFIG, API_ENDPOINTS } from "../config";
+import { API_CONFIG, API_ENDPOINTS, getUserContext } from "../config";
 import {
   ApiResponse,
   PaginatedResponse,
@@ -10,14 +10,43 @@ import {
 } from "../types";
 
 export const tripPlanningService = {
+
+  getUserContext: () => {
+    try {
+      const selectedContext = localStorage.getItem('selectedUserContext');
+      
+      if (selectedContext) {
+        const parsedContext = JSON.parse(selectedContext);      
+        return {
+          ouId: parsedContext.ouId || 4,
+          roleName: parsedContext.roleName || "RAMCOROLE",
+          ouDescription: parsedContext.ouDescription || "",
+          userInfo: parsedContext
+        };
+      }
+    } catch (error) {
+      console.error('Error retrieving user context from localStorage:', error);
+    }
+    
+    // Default values if nothing is stored
+    const defaultContext = {
+      ouId: 4, 
+      roleName: "RAMCOROLE",
+      ouDescription: "Default OU"
+    };
+    
+    return defaultContext;
+  },
+
   // Get trips with filtering, sorting, and pagination
     getCOs: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetCustomerOrders-CreateTripPlan",
         },
@@ -34,11 +63,12 @@ export const tripPlanningService = {
     },
 
     getEquipmentList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetEquipments-CreateTripPlan",
         },
@@ -59,11 +89,12 @@ export const tripPlanningService = {
     },
 
     getAgentsList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetAgents-CreateTripPlan",
         },
@@ -84,11 +115,12 @@ export const tripPlanningService = {
     },
 
     getDriversList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetDrivers-CreateTripPlan",
         },
@@ -109,11 +141,12 @@ export const tripPlanningService = {
     },
 
     getHandlersList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetHandlers-CreateTripPlan",
         },
@@ -134,11 +167,12 @@ export const tripPlanningService = {
     },
 
     getVehicleList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetVehicle-CreateTripPlan",
         },
@@ -159,11 +193,12 @@ export const tripPlanningService = {
     },
 
     getSchedulesList: async (params?: any): Promise<PaginatedResponse<Trip>> => {
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "GetSchedules-CreateTripPlan",
         },
@@ -185,11 +220,12 @@ export const tripPlanningService = {
 
     createTripPlan: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "Create Trip-Separate Trip For Each CO",
         },
@@ -212,11 +248,12 @@ export const tripPlanningService = {
 
     createMultipleCOTripPlan: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "Create Trip - For Bulk COs",
         },
@@ -239,15 +276,15 @@ export const tripPlanningService = {
 
     confirmTripPlanning: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
-      
+      const userContext = getUserContext();
       // Remove messageType from RequestPayload
       const { messageType, ...requestPayloadData } = params || {};
       
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: messageType,
         },
@@ -265,11 +302,12 @@ export const tripPlanningService = {
 
     getTripDataByID: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
+      const userContext = getUserContext();
       const requestPayload = JSON.stringify({
         context: {
           UserID: "ramcouser",
-          Role: "ramcorole",
-          OUID: 4,
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
           MessageID: "12345",
           MessageType: "TripLog GetTripID",
         },

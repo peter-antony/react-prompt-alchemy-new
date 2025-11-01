@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_ENDPOINTS } from "../config";
+import { API_ENDPOINTS, getUserContext } from "../config";
 import { ApiResponse, PaginatedResponse, QueryParams } from "../types";
 
 // Quick Order interface
@@ -28,6 +28,34 @@ export interface QuickOrderCreateInput {
 export interface QuickOrderUpdateInput extends Partial<QuickOrderCreateInput> {}
 
 export const quickOrderService = {
+
+  getUserContext: () => {
+    try {
+      const selectedContext = localStorage.getItem('selectedUserContext');
+      
+      if (selectedContext) {
+        const parsedContext = JSON.parse(selectedContext);      
+        return {
+          ouId: parsedContext.ouId || 4,
+          roleName: parsedContext.roleName || "RAMCOROLE",
+          ouDescription: parsedContext.ouDescription || "",
+          userInfo: parsedContext
+        };
+      }
+    } catch (error) {
+      console.error('Error retrieving user context from localStorage:', error);
+    }
+    
+    // Default values if nothing is stored
+    const defaultContext = {
+      ouId: 4, 
+      roleName: "RAMCOROLE",
+      ouDescription: "Default OU"
+    };
+    
+    return defaultContext;
+  },
+
   // Get quick orders with filtering, sorting, and pagination
   getQuickOrders: async (
     params?: any
@@ -48,13 +76,15 @@ export const quickOrderService = {
     //       }))
     //     : [],
     // };
+    const userContext = getUserContext();
+    console.log("userContext =====", userContext);
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Hub Search",
         UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       AdditionalFilter: params?.filters || [],
     });
@@ -74,13 +104,14 @@ export const quickOrderService = {
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     console.log("params1 ---", params);
+    const userContext = getUserContext();
     const stringifyData: any = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
         UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
         // searchTerm: params?.searchTerm || '',
         // offset: params?.offset,
         // limit: params?.limit,
@@ -150,13 +181,14 @@ export const quickOrderService = {
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     console.log("params1 ---", params);
+    const userContext = getUserContext();
     const stringifyData: any = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
         UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       SearchCriteria: {
         id: params?.searchTerm || '',
@@ -195,13 +227,14 @@ export const quickOrderService = {
   getCommonComboData: async (
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
         UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       AdditionalFilter: [
         {
@@ -227,13 +260,14 @@ export const quickOrderService = {
   },
   // Get quick order by ID
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       AdditionalFilter: [
         {
@@ -256,14 +290,15 @@ export const quickOrderService = {
   createQuickOrder: async (
     data: QuickOrderCreateInput
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const requestBody = {
       RequestData: {
         context: {
           MessageID: "121215",
           MessageType: "n",
           UserID: "ramcouser",
-          OUID: "4",
-          Role: "ramcorole",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
         },
         RequestHeader: {
           RefDocNo: "TRIP01",
@@ -320,13 +355,14 @@ export const quickOrderService = {
     id: string,
     data: QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const requestBody = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       QuickUniqueID: id,
       data: data,
@@ -341,13 +377,14 @@ export const quickOrderService = {
 
   // Delete quick order
   deleteQuickOrder: async (id: string): Promise<ApiResponse<void>> => {
+    const userContext = getUserContext();
     const requestBody = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Delete",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       AdditionalFilter: [
         {
@@ -368,13 +405,14 @@ export const quickOrderService = {
   screenFetchQuickOrder: async (
     fetchId: any
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       AdditionalFilter: [
         {
@@ -400,13 +438,14 @@ export const quickOrderService = {
     // id: string,
     data: QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       MessageContents: [{
         UniqueID: "123455",
@@ -440,14 +479,15 @@ export const quickOrderService = {
     // id: string,
     data: QuickOrderUpdateInput, messageType
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     console.log("messageType ", messageType);
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: messageType.messageType,
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       MessageContents: [{
         UniqueID: "123455",
@@ -471,6 +511,7 @@ export const quickOrderService = {
     // data: QuickOrderUpdateInput, headers
     data: FormData | QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     // Here we are getting the file uploaded details and want to send the data to API headers
     console.log("Upload Doc---", data);
     // console.log("Upload Doc---", headers);
@@ -507,13 +548,14 @@ export const quickOrderService = {
     // id: string,
     data: QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
         UserID: "ramcouser",
-        OUID: 4,
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       MessageContents: [{
         UniqueID: "123455",
@@ -536,13 +578,14 @@ export const quickOrderService = {
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     console.log("params2 ---", params);
+    const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
         MessageID: "12345",
         MessageType: "QuickOrder-Show Linked Order",
         UserID: "ramcouser",
-        OUID: "4",
-        Role: "ramcorole",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
       },
       SearchCriteria: {
         // QuickOrderNo: "291-SELL",
@@ -567,6 +610,57 @@ export const quickOrderService = {
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.LINKEDORDERS_GET,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Get dynamic search criteria data
+  getDynamicSearchData: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    console.log("dynamic params ---", params);
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+      },
+      SearchCriteria: params?.searchCriteria || {},
+      AdditionalFilter: params?.messageType === "Contract Init" ? [
+        {
+          FilterName: "ContractType",
+          FilterValue: params?.OrderType,
+        },
+        {
+          FilterName: "ContractID",
+          FilterValue: params?.ContractId
+        }
+      ] : params?.messageType === "Equipment ID Init" ? [
+        {
+          FilterName: "EquipmentType",
+          FilterValue: params?.EquipmentType,
+        }
+      ] : params?.messageType === "ResourceType Init" ? [
+        {
+          FilterName: "Resource",
+          FilterValue: params?.ResourceId,
+        }
+       ]: params?.additionalFilter || [],
+      Pagination: {
+        PageNumber: params?.offset,
+        PageSize: params?.limit,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+ 
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
       requestBody
     );
     return response.data;

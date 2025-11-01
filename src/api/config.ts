@@ -22,19 +22,71 @@ const REACT_APP_API_URL = "http://192.168.2.92/v1"; // Local Dev url
 // const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1"; // Dev url
 
 const token: any = localStorage.getItem("token");
+// Function to set user context when user makes selection
+export const setUserContext = (ouId: number, roleName: string, ouDescription?: string) => {
+  const contextData = {
+    ouId,
+    roleName,
+    ouDescription,
+    selectedAt: new Date().toISOString()
+  };
+  
+  localStorage.setItem('selectedUserContext', JSON.stringify(contextData));
+  console.log('User context saved to localStorage:', contextData);
+};
 
+//User Context Fetch 
+export const getUserContext = () => {
+  try {
+    const selectedContext = localStorage.getItem('selectedUserContext');
+    
+    if (selectedContext) {
+      const parsedContext = JSON.parse(selectedContext);      
+      return {
+        ouId: parsedContext.ouId || 4,
+        roleName: parsedContext.roleName || "RAMCOROLE",
+        ouDescription: parsedContext.ouDescription || "",
+        userInfo: parsedContext
+      };
+    }
+  } catch (error) {
+    console.error('Error retrieving user context from localStorage:', error);
+  }
+  
+  // Default values if nothing is stored
+  const defaultContext = {
+    ouId: 4, 
+    roleName: "RAMCOROLE",
+    ouDescription: "Default OU"
+  };
+  
+  return defaultContext;
+};
+
+const createHeaders = () => {
+  const userContext = getUserContext();
+  const parsedToken = token ? JSON.parse(token) : null;
+  
+  const headers = {
+    Authorization: `Bearer ${parsedToken?.access_token}`,
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "context-lang-id": 1,
+    "context-ou-id": userContext.ouId,
+    "context-role-name": userContext.roleName,
+  };
+  
+  console.log('API Headers:', headers);
+  
+  return headers;
+};
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || REACT_APP_API_URL,
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
-  HEADERS: {
-    Authorization: `Bearer ${token?.access_token}`,
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "context-lang-id": 1,
-    "context-ou-id": 4,
-    "context-role-name": "RAMCOROLE",
+  get HEADERS() {
+    return createHeaders();
   },
 } as const;
 
@@ -45,6 +97,10 @@ export const API_ENDPOINTS = {
     REFRESH: "/auth/refresh",
     LOGOUT: "/auth/logout",
     PROFILE: "/auth/profile",
+  },
+  //Context
+  Context:{
+    CONTEXT: "/me/contexts",
   },
   // Trip management
   TRIPS: {

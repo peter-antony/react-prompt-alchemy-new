@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { Settings, User, Filter, Download, MoreHorizontal, X } from 'lucide-react';
+import { Settings, User, Filter, Download, MoreHorizontal, X, Fullscreen } from 'lucide-react';
 import { Button } from './ui/button';
 import ProfilePic from '../assets/images/Ellipse-73.png';
 import Logo from '../assets/images/logo.svg';
@@ -10,6 +10,9 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, Dialo
 import Moon from '../assets/images/moon-01.svg';
 import Bell from '../assets/images/bell-01.svg';
 import Search from '../assets/images/search-md.svg';
+import DropDown, { DropDownOption } from './ui/dropdown';
+import { apiClient } from '@/api/client';
+import { API_ENDPOINTS, setUserContext } from '@/api/config';
 
 interface AppHeaderProps {
   onToggleSidebar?: () => void;
@@ -18,7 +21,175 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
+  const [selectedRole, setSelectedRole] = React.useState<string | undefined>(undefined);
+  const [selectedOU, setSelectedOU] = React.useState<string | undefined>(undefined);
+  const [roleOptions, setRoleOptions] = React.useState<DropDownOption[]>([]);
+  const [ouOptions, setOUOptions] = React.useState<DropDownOption[]>([]);
+  const [contextApiResponse, setContextApiResponse] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [contextInitialized, setContextInitialized] = React.useState(false);
 
+  // Initialize context from localStorage or API (only once per session)
+  React.useEffect(() => {
+    const initializeContext = async () => {
+      try {
+        setIsLoading(true);
+
+        // Check if we already have user context data
+        const existingUserInfo = localStorage.getItem('ForwardisUserInfo');
+        const existingSelectedContext = localStorage.getItem('selectedUserContext');
+
+        if (existingUserInfo) {
+          console.log('Using existing user context from localStorage');
+          const parsedData = JSON.parse(existingUserInfo);
+          setContextApiResponse(parsedData);
+
+          // If user has already selected context, use it
+          if (existingSelectedContext) {
+            const selectedContext = JSON.parse(existingSelectedContext);
+            setSelectedRole(selectedContext.roleName);
+            setSelectedOU(selectedContext.ouId?.toString());
+            console.log('Restored user selection:', selectedContext);
+          }
+
+          setContextInitialized(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Only call API if no data exists in localStorage
+        console.log('Fetching user context from API (first time)');
+        const token = JSON.parse(localStorage.getItem('token') || '{}');
+        const response = await apiClient.get(API_ENDPOINTS.Context.CONTEXT, {
+          headers: {
+            Authorization: `Bearer ${token.access_token}`,
+            'Content-Type': 'application/json',
+            'context-lang-id': '1',
+            'context-ou-id': '0',
+            'context-role-name': '',
+            'context-user-id': token.profile.name
+          }
+        });
+
+        if (response?.data) {
+          const data = response.data;
+          setContextApiResponse(data);
+          localStorage.setItem('ForwardisUserInfo', JSON.stringify(data));
+          setContextInitialized(true);
+          console.log('User context fetched and stored');
+        } else {
+          console.error('Failed to fetch user context:', response?.status);
+        }
+      } catch (error) {
+        console.error('Error while fetching the user context:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Only initialize once per session
+    if (!contextInitialized) {
+      initializeContext();
+    }
+  }, [contextInitialized]);
+
+  // Set up role options when context data is available
+  React.useEffect(() => {
+    if (!contextApiResponse?.data || !contextInitialized) return;
+
+    const userData = contextApiResponse.data;
+
+    if (userData && userData.roles) {
+      const roles = userData.roles.map(role => ({
+        label: role.description,
+        value: role.name
+      }));
+      setRoleOptions(roles);
+
+      // Only set defaults if user hasn't made a selection yet
+      if (!selectedRole && userData.userDefaults && userData.userDefaults.roleName) {
+        setSelectedRole(userData.userDefaults.roleName);
+        console.log('Set default role:', userData.userDefaults.roleName);
+      }
+    }
+  }, [contextApiResponse, contextInitialized, selectedRole]);
+
+  // Set up OU options when role is selected
+  React.useEffect(() => {
+    if (!contextApiResponse?.data || !selectedRole || !contextInitialized) return;
+
+    const userData = contextApiResponse.data;
+    const selectedRoleData = userData.roles.find(role => role.name === selectedRole);
+
+    if (selectedRoleData && selectedRoleData.ous) {
+      const ous = selectedRoleData.ous.map(ou => ({
+        label: ou.description,
+        value: ou.id.toString()
+      }));
+      setOUOptions(ous);
+
+      // Only set default OU if user hasn't made a selection yet
+      if (!selectedOU) {
+        if (userData.userDefaults &&
+          userData.userDefaults.roleName === selectedRole &&
+          userData.userDefaults.ouId) {
+          setSelectedOU(userData.userDefaults.ouId.toString());
+          console.log('Set default OU:', userData.userDefaults.ouId);
+        } else if (selectedRoleData.ous.length > 0) {
+          setSelectedOU(selectedRoleData.ous[0].id.toString());
+          console.log('Set first available OU:', selectedRoleData.ous[0].id);
+        }
+      }
+    } else {
+      setOUOptions([]);
+      if (!selectedOU) {
+        setSelectedOU("");
+      }
+    }
+  }, [selectedRole, contextApiResponse, contextInitialized, selectedOU]);
+
+  // Save user context whenever role and OU are both selected
+  React.useEffect(() => {
+    if (selectedRole && selectedOU && contextApiResponse?.data && contextInitialized) {
+      const userData = contextApiResponse.data;
+      const selectedRoleData = userData.roles.find(role => role.name === selectedRole);
+      if (selectedRoleData) {
+        const selectedOUData = selectedRoleData.ous.find(ou => ou.id.toString() === selectedOU);
+        if (selectedOUData) {
+          // Use the setUserContext function from config.ts
+          setUserContext(selectedOUData.id, selectedRole, selectedOUData.description);
+          console.log('User context saved:', {
+            ouId: selectedOUData.id,
+            roleName: selectedRole,
+            ouDescription: selectedOUData.description
+          });
+        }
+      }
+    }
+  }, [selectedRole, selectedOU, contextApiResponse, contextInitialized]);
+
+  const handleRoleChange = (value: string | string[] | undefined) => {
+    const roleValue = value as string;
+    setSelectedRole(roleValue);
+    setSelectedOU(""); // Reset OU when role changes
+    console.log('Role changed to:', roleValue);
+  };
+
+  const handleOUChange = (value: string | string[] | undefined) => {
+    const ouValue = value as string;
+    const previousOU = selectedOU;
+    setSelectedOU(ouValue);
+    console.log('OU changed from:', previousOU, 'to:', ouValue);
+
+    // Reload page when OU is actually changed (not initial load)
+    if (previousOU && previousOU !== ouValue && contextInitialized) {
+      console.log('OU switched - reloading page to refresh context');
+      // Small delay to ensure context is saved before reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+  };
   const LogOut = () => {
     authUtils.removeToken();
     setOpen(false);
@@ -63,15 +234,66 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="w-8 h-8 bg-purple-200 rounded-full cursor-pointer flex items-center justify-center border-2 border-white">
-              <span className="text-xs font-bold text-purple-700">RA</span>
+              <span className="text-xs font-bold text-purple-700">
+                {contextApiResponse?.data?.name?.substring(0, 2)?.toUpperCase() || 'RA'}
+              </span>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 p-0 rounded-xl shadow-lg">
-            <div className="flex flex-col items-center pt-6 pb-4 px-6">
-              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center mb-2">
-                <span className="text-lg font-bold text-purple-700">RA</span>
+          <DropdownMenuContent
+            align="end"
+            className="p-0 rounded-xl shadow-lg w-[13.875rem]"
+          >
+            <div className='p-4'>
+              <div className="row">
+                <div className='col-md-12 col-xl-12 col-lg-12'>
+                  <div className="align-items-center justify-content-center d-flex">
+                    <span className='w-24 h-24 bg-purple-200 rounded-full'>
+                      {contextApiResponse?.data?.name?.substring(0, 2)?.toUpperCase() || 'RA'}
+                    </span>
+                    <span className="ml-2" style={{ fontSize: '13px', fontWeight: '600' }}>
+                      {contextApiResponse?.data?.fullName || 'Loading...'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="font-bold text-lg mb-1">RAMCOUSER</div>
+              <div className='row mt-3'>
+                <div className='col-md-12 col-xl-12 col-lg-12 mb-2'>
+                  <DropDown
+                    options={roleOptions}
+                    id="Role-dropdown"
+                    value={selectedRole}
+                    placeholder={isLoading ? "Loading roles..." : "Select a Role"}
+                    multiSelect={false}
+                    searchable={true}
+                    size='medium'
+                    hideCaption={true}
+                    caption='Role'
+                    tooltip="Choose from available roles"
+                    onChange={handleRoleChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className='row mt-3'>
+                <div className='col-md-12 col-xl-12 col-lg-12 mb-2'>
+                  <DropDown
+                    id="Organization-dropdown"
+                    options={ouOptions}
+                    value={selectedOU}
+                    placeholder={isLoading ? "Loading organizations..." : "Select an Organization"}
+                    multiSelect={false}
+                    searchable={true}
+                    size='medium'
+                    hideCaption={true}
+                    caption='Organization'
+                    tooltip="Choose from available organizations"
+                    onChange={handleOUChange}
+                    className="w-full"
+                    disabled={isLoading || !selectedRole || ouOptions.length === 0}
+                  />
+                </div>
+              </div>
             </div>
             <div className="border-t px-6 py-3 flex items-center cursor-pointer hover:bg-gray-50 transition" onClick={() => setOpen(true)}>
               <span className="mr-2">↩️</span>
