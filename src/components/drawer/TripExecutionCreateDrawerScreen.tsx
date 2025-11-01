@@ -1322,9 +1322,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     "DelayedReason Init",
     "Trip Log Activity (Event) Init",
     "Trip Log Custom Event Category",
-    "Quick Order Header Quick Code1 Init",
-    "Quick Order Header Quick Code2 Init",
-    "Quick Order Header Quick Code3 Init",
+    "Trip Log QC1 Combo Init",
+    "Trip Log QC2 Combo Init",
+    "Trip Log QC3 Combo Init",
     "Trip Log Placed Init",
     "Activity Name Init"
   ];
@@ -1358,15 +1358,15 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       if (messageType == "Trip Log Custom Event Category") {
         setTripLogCustomEventCategory(JSON.parse(data?.data?.ResponseData));
       }
-      if (messageType == "Quick Order Header Quick Code1 Init") {
+      if (messageType == "Trip Log QC1 Combo Init") {
         setqcList1(JSON.parse(data?.data?.ResponseData) || []);
         // console.log('Quick Order Header Quick Code1 Init', JSON.parse(data?.data?.ResponseData));
       }
-      if (messageType == "Quick Order Header Quick Code2 Init") {
+      if (messageType == "Trip Log QC2 Combo Init") {
         setqcList2(JSON.parse(data?.data?.ResponseData) || []);
         // console.log('Quick Order Header Quick Code2 Init', JSON.parse(data?.data?.ResponseData));
       }
-      if (messageType == "Quick Order Header Quick Code3 Init") {
+      if (messageType == "Trip Log QC3 Combo Init") {
         setqcList3(JSON.parse(data?.data?.ResponseData) || []);
         // console.log('Quick Order Header Quick Code3 Init', JSON.parse(data?.data?.ResponseData));
       }
