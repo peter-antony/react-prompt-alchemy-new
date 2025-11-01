@@ -5,6 +5,7 @@ import { ConfigurableButtonConfig } from '@/components/ui/configurable-button';
 export type GridColumnType =
   | 'Link'                 // Clickable cell with optional onClick or URL
   | 'Badge'                // Color-coded label based on value
+  | 'BadgeCombinationCount' // Badge showing combination count
   | 'LinkWithText'        // Clickable cell with text and optional onClick or URL
   | 'TextWithTwoRow'       // Text with two rows, useful for displaying more information
   | 'DateTimeRange'        // Two date-time values in a vertical stack
@@ -30,7 +31,10 @@ export type GridColumnType =
   | 'Integer'              // Integer number input
   | 'Time'                 // Time picker
   | 'Select'               // Select dropdown
-  | 'LazySelect';          // Lazy-loaded select with search
+  | 'LazySelect'           // Lazy-loaded select with search
+  | 'CurrencyWithSymbol'   // Currency with symbol
+  | 'ActionButton'         // Action button column
+  | 'LegLocationFormat';   // Location format for legs
 
 export interface GridColumnConfig {
   key: string;
@@ -62,10 +66,13 @@ export interface GridColumnConfig {
   
   // SubRow specific properties
   subRowColumns?: GridColumnConfig[];
+  
   // LazySelect specific properties
-  fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
+  fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<Array<{ label: string; value: string }>>;
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
+  returnType?: string;
+  onChange?: (value: any, rowData?: any, rowIndex?: number) => void;
   
   // ActionButton specific properties
   actionButtons?: Array<{
@@ -150,13 +157,13 @@ export interface ServerFilter {
   key: string;
   label: string;
   type?: 'text' | 'select' | 'date' | 'dateRange' | 'numberRange' | 'dropdownText' | 'time' | 'number' | 'boolean' | 'lazyselect';
-  options?: any[];
+  options?: string[];
   multiSelect?: boolean; // Enable multi-select for dropdown/select types
   fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
   defaultValue?: any; // Default value for the filter field
   hideSearch?: boolean; // Hide search box in lazy select
   disableLazyLoading?: boolean; // Disable infinite scroll in lazy select
-  returnType?: string; // return value from the laztselect 
+  returnType?: 'single' | 'array'; // Return type for the filter
 }
 
 export interface ExtraFilter {
@@ -183,7 +190,7 @@ export interface SmartGridProps {
   onBulkUpdate?(rows: any[]): Promise<void>;
   onPreferenceSave?(preferences: any): Promise<void>;
   onDataFetch?(page: number, pageSize: number): Promise<any[]>;
-  onUpdate?(row: any): Promise<void>;
+  onUpdate?(row: any, rowIndex?: number): Promise<void>;
   onLinkClick?(rowData: any, columnKey: string, rowIndex: any): void;
   onFiltersChange?(filters: Record<string, any>): void;
   onSubRowToggle?(columnKey: string): void;
@@ -193,6 +200,7 @@ export interface SmartGridProps {
   onRowExpansionOverride?(rowIndex: number): void;
   plugins?: GridPlugin[];
   selectedRows?: Set<number>;
+  defaultSelectedRows?: Set<number>;
   onSelectionChange?(selectedRows: Set<number>): void;
   onRowClick?(row: any, index: number): void;
   rowClassName?: (row: any, index: number) => string;

@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  ArrowUpDown, 
-  ArrowUp, 
-  ArrowDown, 
-  Edit2, 
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Edit2,
   GripVertical,
-  ChevronRight, 
+  ChevronRight,
   ChevronDown,
   Plus,
   Trash2,
@@ -25,7 +25,7 @@ import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { processGridData } from '@/utils/gridDataProcessing';
 import { calculateColumnWidths } from '@/utils/columnWidthCalculations';
 import { CellRenderer } from './CellRenderer';
-import { EnhancedCellEditor } from './EnhancedCellEditor';
+import { EnhancedCellEditor1 } from './EnhancedCellEditor1';
 import { GridToolbar } from './GridToolbar';
 import { PluginRenderer, PluginRowActions } from './PluginRenderer';
 import { ColumnFilter } from './ColumnFilter';
@@ -179,15 +179,15 @@ export function SmartGridPlus({
   // Apply preferences to get ordered and visible columns - FILTER OUT SUB-ROW COLUMNS from main table
   const orderedColumns = useMemo(() => {
     const columnMap = new Map(currentColumns.map(col => [col.key, col]));
-    
+
     const visibleColumns = preferences.columnOrder
       .map(id => columnMap.get(id))
       .filter((col): col is GridColumnConfig => col !== undefined)
       .filter(col => !preferences.hiddenColumns.includes(col.key))
       .filter(col => !col.subRow); // Filter out sub-row columns from main table
-    
+
     const calculatedWidths = calculateColumnWidthsCallback(visibleColumns);
-    
+
     return visibleColumns.map(col => ({
       ...col,
       label: preferences.columnHeaders[col.key] || col.label,
@@ -220,10 +220,10 @@ export function SmartGridPlus({
   // Handle sub-row toggle with proper column updates
   const handleSubRowToggleInternal = useCallback((columnKey: string) => {
     console.log('Internal sub-row toggle for column:', columnKey);
-    
+
     // Call the hook's toggle function
     handleSubRowToggle(columnKey);
-    
+
     // Also call the external handler if provided
     if (onSubRowToggle) {
       onSubRowToggle(columnKey);
@@ -233,7 +233,7 @@ export function SmartGridPlus({
   // Helper function to render collapsible cell values
   const renderCollapsibleCellValue = useCallback((value: any, column: GridColumnConfig) => {
     if (value == null) return '-';
-    
+
     switch (column.type) {
       case 'Badge':
         return (
@@ -321,18 +321,18 @@ export function SmartGridPlus({
       value: filterValue.value,
       operator: filterValue.operator || 'contains'
     }));
-    
+
     // Check if any filters require server-side processing
     const serverFilters = legacyFilters.filter(filter => {
       const column = currentColumns.find(col => col.key === filter.column);
       return column?.filterMode === 'server';
     });
-    
+
     const localFilters = legacyFilters.filter(filter => {
       const column = currentColumns.find(col => col.key === filter.column);
       return column?.filterMode !== 'server';
     });
-    
+
     // Apply server-side filters if any and onServerFilter is provided
     if (serverFilters.length > 0 && onServerFilter) {
       onServerFilter(serverFilters).catch(error => {
@@ -344,7 +344,7 @@ export function SmartGridPlus({
         });
       });
     }
-    
+
     // Set local filters only
     setFilters(localFilters);
   }, [setFilters, currentColumns, onServerFilter, toast]);
@@ -372,7 +372,7 @@ export function SmartGridPlus({
       subRowColumnOrder: [], // Reset sub-row column order
       filters: []
     };
-    
+
     try {
       await savePreferences(defaultPreferences);
       setSort(undefined);
@@ -380,7 +380,7 @@ export function SmartGridPlus({
       setGlobalFilter('');
       setColumnWidths({});
       setShowColumnFilters(false);
-      
+
       toast({
         title: "Success",
         description: "Column preferences have been reset to defaults"
@@ -399,20 +399,20 @@ export function SmartGridPlus({
   const handleResizeStart = useCallback((e: React.MouseEvent, columnKey: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const startX = e.clientX;
     const currentColumn = orderedColumns.find(col => col.key === columnKey);
     const startWidth = currentColumn?.width || 100;
-    
+
     setResizingColumn(columnKey);
     resizeStartRef.current = { x: startX, width: startWidth };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!resizeStartRef.current) return;
-      
+
       const deltaX = e.clientX - resizeStartRef.current.x;
       const newWidth = Math.max(80, resizeStartRef.current.width + deltaX);
-      
+
       setColumnWidths(prev => ({
         ...prev,
         [columnKey]: newWidth
@@ -471,7 +471,7 @@ export function SmartGridPlus({
   // Handle header editing
   const handleHeaderEdit = useCallback((columnKey: string, newHeader: string) => {
     if (resizingColumn) return;
-    
+
     if (newHeader.trim() && newHeader !== preferences.columnHeaders[columnKey]) {
       updateColumnHeader(columnKey, newHeader.trim());
       toast({
@@ -504,7 +504,7 @@ export function SmartGridPlus({
       e.preventDefault();
       return;
     }
-    
+
     e.preventDefault();
     e.stopPropagation();
     if (draggedColumn && draggedColumn !== targetColumnKey) {
@@ -515,7 +515,7 @@ export function SmartGridPlus({
 
   const handleColumnDragLeave = useCallback((e: React.DragEvent) => {
     if (resizingColumn) return;
-    
+
     e.stopPropagation();
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setDragOverColumn(null);
@@ -527,10 +527,10 @@ export function SmartGridPlus({
       e.preventDefault();
       return;
     }
-    
+
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!draggedColumn || draggedColumn === targetColumnKey) {
       setDraggedColumn(null);
       setDragOverColumn(null);
@@ -547,7 +547,7 @@ export function SmartGridPlus({
     updateColumnOrder(newOrder);
     setDraggedColumn(null);
     setDragOverColumn(null);
-    
+
     toast({
       title: "Success",
       description: "Column order updated"
@@ -563,11 +563,11 @@ export function SmartGridPlus({
   // Determine if a column is editable
   const isColumnEditable = useCallback((column: GridColumnConfig, columnIndex: number) => {
     if (columnIndex === 0) return false;
-    
+
     if (Array.isArray(editableColumns)) {
       return editableColumns.includes(column.key);
     }
-    
+
     return editableColumns && column.editable;
   }, [editableColumns]);
 
@@ -577,16 +577,16 @@ export function SmartGridPlus({
     const updatedData = [...gridData];
     const originalRow = updatedData[actualRowIndex];
     const updatedRow = { ...originalRow, [columnKey]: value };
-    
+
     updatedData[actualRowIndex] = updatedRow;
     setGridData(updatedData);
     setEditingCell(null);
-    
+
     if (onUpdate) {
       setLoading(true);
       setError(null);
       try {
-        await onUpdate(updatedRow);
+        await onUpdate(updatedRow, actualRowIndex);
         toast({
           title: "Success",
           description: "Row updated successfully"
@@ -620,7 +620,7 @@ export function SmartGridPlus({
   // SmartGridPlus specific functionality
   const validateRow = useCallback((values: Record<string, any>) => {
     const errors: Record<string, string> = {};
-    
+
     // Required fields validation
     if (validationRules.requiredFields) {
       validationRules.requiredFields.forEach(field => {
@@ -673,7 +673,7 @@ export function SmartGridPlus({
 
       const updatedData = [newRow, ...gridData];
       setGridData(updatedData);
-      
+
       if (onAddRow) {
         await onAddRow(newRow);
       }
@@ -681,7 +681,7 @@ export function SmartGridPlus({
       setIsAddingRow(false);
       setNewRowValues(defaultRowValues);
       setValidationErrors({});
-      
+
       toast({
         title: "Row Added",
         description: "New row has been added successfully.",
@@ -704,9 +704,23 @@ export function SmartGridPlus({
   // Edit Row functionality
   const handleStartEditRow = useCallback((rowIndex: number, row: any) => {
     setEditingRow(rowIndex);
-    setEditingValues({ ...row });
+
+    // Initialize editingValues with proper defaults for String fields
+    const initialEditingValues = { ...row };
+    stateColumns.forEach(column => {
+      if ((column.type === 'String' || column.type === 'Text') && column.editable) {
+        // Ensure String fields have a proper string value, not null/undefined
+        if (initialEditingValues[column.key] === null || initialEditingValues[column.key] === undefined) {
+          initialEditingValues[column.key] = '';
+        } else {
+          initialEditingValues[column.key] = String(initialEditingValues[column.key]);
+        }
+      }
+    });
+
+    setEditingValues(initialEditingValues);
     setValidationErrors({});
-  }, []);
+  }, [stateColumns, inlineRowEditing]);
 
   const handleSaveEditRow = useCallback(async (rowIndex: number) => {
     const errors = validateRow(editingValues);
@@ -719,7 +733,7 @@ export function SmartGridPlus({
       const updatedData = [...gridData];
       updatedData[rowIndex] = { ...editingValues };
       setGridData(updatedData);
-      
+
       if (onEditRow) {
         await onEditRow(editingValues, rowIndex);
       }
@@ -727,7 +741,7 @@ export function SmartGridPlus({
       setEditingRow(null);
       setEditingValues({});
       setValidationErrors({});
-      
+
       toast({
         title: "Row Updated",
         description: "Row has been updated successfully.",
@@ -752,7 +766,7 @@ export function SmartGridPlus({
       try {
         const updatedData = gridData.filter((_, index) => index !== rowIndex);
         setGridData(updatedData);
-        
+
         if (onDeleteRow) {
           await onDeleteRow(row, rowIndex);
         }
@@ -783,7 +797,7 @@ export function SmartGridPlus({
         ...prev,
         [columnKey]: value
       }));
-      
+
       // Clear validation error for this field
       if (validationErrors[columnKey]) {
         setValidationErrors(prev => {
@@ -889,11 +903,28 @@ export function SmartGridPlus({
     // Handle inline row editing for SmartGridPlus
     if (isRowEditing && inlineRowEditing && column.key !== 'actions') {
       const editingValue = editingValues[column.key];
+      console.log('Rendering EnhancedCellEditor1 for:', {
+        columnKey: column.key,
+        isRowEditing,
+        inlineRowEditing,
+        editingValue,
+        editingRow,
+        rowIndex
+      });
+
       return (
-        <EnhancedCellEditor
+        <EnhancedCellEditor1
           value={editingValue}
           column={column}
-          onChange={(value) => handleEditingCellChange(rowIndex, column.key, value)}
+          onChange={(value) => {
+            console.log('EnhancedCellEditor1 onChange:', { columnKey: column.key, value });
+            // Call column-specific onChange first if provided
+            if (column.onChange) {
+              column.onChange(value, row, rowIndex);
+            }
+            // Then update local editingValues
+            handleEditingCellChange(rowIndex, column.key, value);
+          }}
           error={validationErrors[column.key]}
         />
       );
@@ -952,7 +983,7 @@ export function SmartGridPlus({
               </div>
             ) : (
               <div className="space-y-1">
-                <EnhancedCellEditor
+                <EnhancedCellEditor1
                   value={newRowValues[column.key]}
                   column={column}
                   onChange={(value) => {
@@ -967,6 +998,10 @@ export function SmartGridPlus({
                         delete newErrors[column.key];
                         return newErrors;
                       });
+                    }
+                    // Call column-specific onChange if provided
+                    if (column.onChange) {
+                      column.onChange(value, newRowValues, -1);
                     }
                   }}
                   error={validationErrors[column.key]}
@@ -999,6 +1034,29 @@ export function SmartGridPlus({
     }
   }, [columns, setColumns]);
 
+  // Synchronize editingValues with updated external data when a row is being edited
+  useEffect(() => {
+    if (editingRow !== null && gridData.length > editingRow) {
+      const currentRowData = gridData[editingRow];
+      if (currentRowData) {
+        console.log('SmartGridPlus: Synchronizing editingValues for row', editingRow);
+        console.log('Current editingValues:', editingValues);
+        console.log('New row data from gridData:', currentRowData);
+
+        // Update editingValues to reflect changes from external data updates
+        // But preserve any changes the user might have made to other fields
+        setEditingValues(prev => {
+          const updated = {
+            ...prev,
+            ...currentRowData
+          };
+          console.log('Updated editingValues:', updated);
+          return updated;
+        });
+      }
+    }
+  }, [gridData, editingRow]);
+
   // Initialize plugins
   useEffect(() => {
     plugins.forEach(plugin => {
@@ -1022,8 +1080,8 @@ export function SmartGridPlus({
       <div className="p-4 border border-red-300 rounded-lg bg-red-50">
         <h3 className="text-lg font-medium text-red-800 mb-2">Error</h3>
         <p className="text-red-600 mb-4">{error}</p>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setError(null)}
           className="text-red-700 border-red-300 hover:bg-red-100"
         >
@@ -1074,10 +1132,10 @@ export function SmartGridPlus({
         gridTitle={gridTitle}
         recordCount={recordCount}
         showAdvancedFilter={false}
-        onToggleAdvancedFilter={() => {}}
+        onToggleAdvancedFilter={() => { }}
       />
 
-       {/* Advanced Filter System */}
+      {/* Advanced Filter System */}
       <FilterSystem
         columns={orderedColumns}
         subRowColumns={subRowColumns}
@@ -1088,7 +1146,7 @@ export function SmartGridPlus({
         userId="demo-user"
         api={mockFilterAPI}
       />
-      
+
       {/* Table Container with horizontal scroll prevention */}
       <div className="bg-white rounded-lg border shadow-sm">
         <ScrollArea className="w-full">
@@ -1099,9 +1157,9 @@ export function SmartGridPlus({
                   {/* Checkbox header */}
                   {showCheckboxes && (
                     <TableHead className="bg-gray-50/80 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
-                      <input 
-                        type="checkbox" 
-                        className="rounded" 
+                      <input
+                        type="checkbox"
+                        className="rounded"
                         onChange={(e) => {
                           const target = e.target as HTMLInputElement;
                           if (target.checked) {
@@ -1118,9 +1176,9 @@ export function SmartGridPlus({
                     const shouldHideIcons = resizeHoverColumn === column.key || resizingColumn === column.key;
                     const currentFilter = filters.find(f => f.column === column.key);
                     const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
-                    
+
                     return (
-                      <TableHead 
+                      <TableHead
                         key={column.key}
                         className={cn(
                           "relative group bg-gray-50/80 backdrop-blur-sm font-semibold text-gray-900 px-2 py-3 border-r border-gray-100 last:border-r-0",
@@ -1129,7 +1187,7 @@ export function SmartGridPlus({
                           resizingColumn === column.key && "bg-blue-50",
                           !resizingColumn && "cursor-move"
                         )}
-                        style={{ 
+                        style={{
                           width: `${widthPercentage}%`,
                           minWidth: `${Math.max(80, column.width * 0.8)}px`,
                           maxWidth: `${column.width * 1.5}px`
@@ -1164,7 +1222,7 @@ export function SmartGridPlus({
                                 onDragStart={(e) => e.preventDefault()}
                               />
                             ) : (
-                              <div 
+                              <div
                                 className={cn(
                                   "flex items-center gap-1 rounded px-1 py-0.5 -mx-1 -my-0.5 transition-colors group/header flex-1 min-w-0",
                                   !resizingColumn && "cursor-pointer hover:bg-gray-100/50"
@@ -1176,8 +1234,8 @@ export function SmartGridPlus({
                                 }}
                                 onDragStart={(e) => e.preventDefault()}
                               >
-                                <span 
-                                  className="select-none text-sm font-semibold flex-1 min-w-0 truncate" 
+                                <span
+                                  className="select-none text-sm font-semibold flex-1 min-w-0 truncate"
                                   title={column.label}
                                 >
                                   {column.label}
@@ -1188,7 +1246,7 @@ export function SmartGridPlus({
                               </div>
                             )}
                           </div>
-                          
+
                           <div className="flex items-center gap-1">
                             {column.sortable && !shouldHideIcons && (
                               <Button
@@ -1216,7 +1274,7 @@ export function SmartGridPlus({
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Resize Handle - Modified to only show on hover */}
                         <div
                           className="absolute top-0 right-0 w-2 h-full cursor-col-resize bg-transparent hover:bg-blue-300/50 transition-colors flex items-center justify-center group/resize z-30"
@@ -1241,7 +1299,7 @@ export function SmartGridPlus({
                     </TableHead>
                   )}
                 </TableRow>
-                
+
                 {/* Column Filter Row - Legacy support, hidden when using FilterSystem */}
                 {showColumnFilters && !showFilterRow && (
                   <TableRow className="hover:bg-transparent border-b border-gray-200">
@@ -1254,12 +1312,12 @@ export function SmartGridPlus({
                     {orderedColumns.map((column) => {
                       const currentFilter = filters.find(f => f.column === column.key);
                       const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
-                      
+
                       return (
-                        <TableHead 
+                        <TableHead
                           key={`filter-${column.key}`}
                           className="bg-gray-25 px-2 py-2 border-r border-gray-100 last:border-r-0 relative"
-                          style={{ 
+                          style={{
                             width: `${widthPercentage}%`,
                             minWidth: `${Math.max(80, column.width * 0.8)}px`,
                             maxWidth: `${column.width * 1.5}px`
@@ -1290,11 +1348,11 @@ export function SmartGridPlus({
                   </TableRow>
                 )}
               </TableHeader>
-              
+
               <TableBody>
                 {/* Add Row Form */}
                 {renderAddRowForm()}
-                
+
                 {loading && !onDataFetch ? (
                   <TableRow>
                     <TableCell colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)} className="text-center py-8">
@@ -1316,10 +1374,10 @@ export function SmartGridPlus({
                     const actualIndex = onDataFetch ? index : (currentPage - 1) * pageSize + index;
                     const isSelected = currentSelectedRows.has(index);
                     const isRowEditing = editingRow === actualIndex;
-                    
+
                     return (
                       <React.Fragment key={row.id || actualIndex}>
-                        <TableRow 
+                        <TableRow
                           className={cn(
                             "hover:bg-gray-50 border-b border-gray-100 transition-all duration-300",
                             isSelected && "bg-blue-50",
@@ -1332,9 +1390,9 @@ export function SmartGridPlus({
                           {/* Checkbox column */}
                           {showCheckboxes && (
                             <TableCell className="px-3 py-2 w-[50px]">
-                              <input 
-                                type="checkbox" 
-                                className="rounded" 
+                              <input
+                                type="checkbox"
+                                className="rounded"
                                 checked={isSelected}
                                 onChange={(e) => {
                                   const newSet = new Set(currentSelectedRows);
@@ -1350,12 +1408,12 @@ export function SmartGridPlus({
                           )}
                           {orderedColumns.map((column, columnIndex) => {
                             const widthPercentage = (column.width / orderedColumns.reduce((total, col) => total + col.width, 0)) * 100;
-                            
+
                             return (
-                              <TableCell 
+                              <TableCell
                                 key={column.key}
                                 className="px-2 py-2 border-r border-gray-100 last:border-r-0"
-                                style={{ 
+                                style={{
                                   width: `${widthPercentage}%`,
                                   minWidth: `${Math.max(80, column.width * 0.8)}px`,
                                   maxWidth: `${column.width * 1.5}px`
@@ -1365,12 +1423,12 @@ export function SmartGridPlus({
                               </TableCell>
                             );
                           })}
-                          
+
                           {/* Plugin row actions */}
                           {plugins.some(plugin => plugin.rowActions) && (
                             <TableCell className="px-3 py-2 text-center w-[100px]">
                               <div className="flex items-center justify-center space-x-1">
-                                <PluginRowActions 
+                                <PluginRowActions
                                   plugins={plugins}
                                   row={row}
                                   rowIndex={actualIndex}
@@ -1380,11 +1438,11 @@ export function SmartGridPlus({
                             </TableCell>
                           )}
                         </TableRow>
-                        
+
                         {/* Expanded row content */}
                         {isExpanded && effectiveNestedRowRenderer && (
                           <TableRow className="hover:bg-transparent border-b border-gray-200">
-                            <TableCell 
+                            <TableCell
                               colSpan={orderedColumns.length + (showCheckboxes ? 1 : 0) + (plugins.some(plugin => plugin.rowActions) ? 1 : 0)}
                               className="p-4 bg-gray-50/50"
                             >
@@ -1411,7 +1469,7 @@ export function SmartGridPlus({
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
@@ -1431,7 +1489,7 @@ export function SmartGridPlus({
                 );
               })}
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
@@ -1440,9 +1498,9 @@ export function SmartGridPlus({
           </Pagination>
         </div>
       )}
-      
+
       {/* Plugin renderers */}
-      <PluginRenderer 
+      <PluginRenderer
         plugins={plugins}
         gridAPI={gridAPI}
         type="footer"

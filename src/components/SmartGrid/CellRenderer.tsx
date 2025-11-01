@@ -646,8 +646,20 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       case 'TextCustom':
         // Custom text rendering logic can be added here
         return renderTextCustomised();
+      case 'String':
+      case 'Integer':
+      case 'Select':
+      case 'LazySelect':
+        // For these types, just render the value as text
+        return <span className="truncate" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
+      case 'SubRow':
+        // For SubRow type with array data, show count or first item
+        if (Array.isArray(value)) {
+          return <span className="text-gray-500 text-sm">{value.length} {value.length === 1 ? 'item' : 'items'}</span>;
+        }
+        return <span className="truncate" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
       default:
-        return;
+        return <span className="truncate" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
     }
   };
 

@@ -7,9 +7,10 @@ import { ChevronDown, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LazySelectOption {
-  label: string;
-  value: string;
-  name?: any
+  label?: string;
+  value?: string;
+  id?: string;
+  name?: any;
 }
 
 interface LazySelectProps {
