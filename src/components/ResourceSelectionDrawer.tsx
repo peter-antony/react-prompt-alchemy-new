@@ -558,35 +558,37 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       console.log("idField:", idField);
   
       // Extract all EquipmentIDs from selectedResourcesRq
-      const equipmentIds = selectedResourcesRq
-        ?.filter((r) => r?.ResourceType === "Equipment" && r?.EquipmentID)
-        ?.map((r) => r.EquipmentID);
-  
-      console.log("equipmentIds to match:", equipmentIds);
-  
-      if (equipmentIds?.length > 0) {
-        const newSelectedRows = new Set<number>();
-        const newSelectedRowIds = new Set<string>();
-        const newSelectedRowObjects: any[] = [];
-  
-        currentResourceData?.forEach((row: any, index: number) => {
-          const rowId = row[idField];
-          if (equipmentIds.includes(rowId)) {
-            newSelectedRows.add(index);
-            newSelectedRowIds.add(rowId);
-            newSelectedRowObjects.push(row);
+      if(selectedResourcesRq!=0){
+        const equipmentIds = selectedResourcesRq
+          ?.filter((r) => r?.ResourceType === "Equipment" && r?.EquipmentID)
+          ?.map((r) => r.EquipmentID);
+    
+        console.log("equipmentIds to match:", equipmentIds);
+    
+        if (equipmentIds?.length > 0) {
+          const newSelectedRows = new Set<number>();
+          const newSelectedRowIds = new Set<string>();
+          const newSelectedRowObjects: any[] = [];
+    
+          currentResourceData?.forEach((row: any, index: number) => {
+            const rowId = row[idField];
+            if (equipmentIds.includes(rowId)) {
+              newSelectedRows.add(index);
+              newSelectedRowIds.add(rowId);
+              newSelectedRowObjects.push(row);
+            }
+          });
+    
+          if (newSelectedRowIds.size > 0) {
+            setSelectedRows(newSelectedRows);
+            setSelectedRowIds(newSelectedRowIds);
+            setSelectedRowObjects(newSelectedRowObjects);
+            setRowTripId(Array.from(newSelectedRowIds));
+    
+            console.log("Auto-selected equipment rows:", newSelectedRowObjects);
+          } else {
+            console.log("No matching equipment rows found.");
           }
-        });
-  
-        if (newSelectedRowIds.size > 0) {
-          setSelectedRows(newSelectedRows);
-          setSelectedRowIds(newSelectedRowIds);
-          setSelectedRowObjects(newSelectedRowObjects);
-          setRowTripId(Array.from(newSelectedRowIds));
-  
-          console.log("Auto-selected equipment rows:", newSelectedRowObjects);
-        } else {
-          console.log("No matching equipment rows found.");
         }
       }
     }
