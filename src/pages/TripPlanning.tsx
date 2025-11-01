@@ -575,6 +575,10 @@ const TripPlanning = () => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
     setSupplier(null);
     setSchedule(null);
+    if(customerOrderList){
+      setTripNo(customerOrderList?.TripID);
+      setTripStatus(customerOrderList?.TripStatus);
+    }
     if (!isSelected) {
       // Handle deselection - remove from selectedArrCOData using both id and legBehaviour
       console.log("customerOrderList ====", customerOrderList);
@@ -1869,17 +1873,17 @@ const TripPlanning = () => {
                               Create Trip
                             </button>
                           }
-                          { showConfirmReleaseBtn && customerOrderList != null && (
+                          {/* { showConfirmReleaseBtn && customerOrderList != null && ( */}
 
                             <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>
-                          )}
-                          { showConfirmReleaseBtn && customerOrderList != null && (
+                          {/* )}
+                          { showConfirmReleaseBtn && customerOrderList != null && ( */}
                             <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Release
                           </button>
-                          )}
+                          {/* )} */}
                           { tripNo &&
 
                             (<button onClick={openAmendPopup} className={buttonClass}>
