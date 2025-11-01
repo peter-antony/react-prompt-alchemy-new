@@ -15,6 +15,7 @@ interface ResourceSelectionDrawerProps {
   onAddResource: (formattedData?: { ResourceID: string; ResourceType: string }[]) => void;
   resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule';
   resourceData?: any[];
+  selectedResourcesRq?: any;
   isLoading?: boolean;
 }
 
@@ -389,6 +390,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   onClose,
   onAddResource,
   resourceType,
+  selectedResourcesRq,
   resourceData: propResourceData,
   isLoading = false
 }) => {
@@ -490,16 +492,106 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   };
 
-  // Clear selection when drawer opens
+  // Clear selection when drawer opens - old code
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     11992420202020289
+  //     console.log("INSIDE Useeffect, isOpen-true",selectedResourcesRq)
+  //     setSelectedRows(new Set());
+  //     setSelectedRowIds(new Set());
+  //     setSelectedRowObjects([]);
+  //     setRowTripId([]);
+  //     console.log('Selection cleared on drawer open');
+  //   }
+  // }, [isOpen]);
+// checking with static equipment id- working
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     const rId = "0080980970707070707";
+  //     console.log("INSIDE useEffect, isOpen-true", selectedResourcesRq);
+  
+  //     // Step 1: Clear previous selections
+  //     setSelectedRows(new Set());
+  //     setSelectedRowIds(new Set());
+  //     setSelectedRowObjects([]);
+  //     setRowTripId([]);
+  //     console.log("Selection cleared on drawer open");
+  
+  //     // Step 2: Auto-select the matching row
+  //     const idField = getIdField(); // same helper you use in handleRowClick
+  //     console.log("idField : ",idField)
+  //     const matchingIndex = currentResourceData?.findIndex(
+  //       (row) => row[idField] === rId
+  //     );
+  //     console.log("matchingIndex :",matchingIndex)
+  //     if (matchingIndex !== -1) {
+  //       const matchingRow = currentResourceData[matchingIndex];
+  
+  //       // Step 3: Use the same logic as inside handleRowClick to mark it as selected
+  //       const newSelectedRows = new Set([matchingIndex]);
+  //       const newSelectedRowIds = new Set([rId]);
+  //       const newSelectedRowObjects = [matchingRow];
+  
+  //       setSelectedRows(newSelectedRows);
+  //       setSelectedRowIds(newSelectedRowIds);
+  //       setSelectedRowObjects(newSelectedRowObjects);
+  //       setRowTripId([rId]);
+  
+  //       console.log("Auto-selected row:", matchingRow);
+  //     }
+  //   }
+  // }, [isOpen]);
+  //checking with all equipment ids coming from Trip-Planning page
   useEffect(() => {
     if (isOpen) {
+      console.log("INSIDE useEffect, isOpen-true", selectedResourcesRq);
+  
+      // Step 1: Clear previous selections
       setSelectedRows(new Set());
       setSelectedRowIds(new Set());
       setSelectedRowObjects([]);
       setRowTripId([]);
-      console.log('Selection cleared on drawer open');
+      console.log("Selection cleared on drawer open");
+  
+      // Step 2: Prepare ID field and the list of EquipmentIDs to match
+      const idField = getIdField(); // e.g. "EquipmentID", "DriverID", etc.
+      console.log("idField:", idField);
+  
+      // Extract all EquipmentIDs from selectedResourcesRq
+      const equipmentIds = selectedResourcesRq
+        ?.filter((r) => r?.ResourceType === "Equipment" && r?.EquipmentID)
+        ?.map((r) => r.EquipmentID);
+  
+      console.log("equipmentIds to match:", equipmentIds);
+  
+      if (equipmentIds?.length > 0) {
+        const newSelectedRows = new Set<number>();
+        const newSelectedRowIds = new Set<string>();
+        const newSelectedRowObjects: any[] = [];
+  
+        currentResourceData?.forEach((row: any, index: number) => {
+          const rowId = row[idField];
+          if (equipmentIds.includes(rowId)) {
+            newSelectedRows.add(index);
+            newSelectedRowIds.add(rowId);
+            newSelectedRowObjects.push(row);
+          }
+        });
+  
+        if (newSelectedRowIds.size > 0) {
+          setSelectedRows(newSelectedRows);
+          setSelectedRowIds(newSelectedRowIds);
+          setSelectedRowObjects(newSelectedRowObjects);
+          setRowTripId(Array.from(newSelectedRowIds));
+  
+          console.log("Auto-selected equipment rows:", newSelectedRowObjects);
+        } else {
+          console.log("No matching equipment rows found.");
+        }
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, selectedResourcesRq, currentResourceData]);
+  
 
   // Load resource data only if no prop data is provided
   useEffect(() => {
@@ -629,6 +721,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   // Handle row click
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
+    console.log("selectedRowIds = ",)
 
     // Get the ID field for current resource type
     const idField = getIdField();

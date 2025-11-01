@@ -106,7 +106,10 @@ const TripPlanning = () => {
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any[]>([]);
   const [listPopoverOpen, setListPopoverOpen] = useState(false);
-
+  const [EquipmentCount, setEquipmentCount] = useState(0);
+  const [EquipmentData, setEquipmentData] = useState(0);
+  const [selectedSupplier, setSelectedSupplier] = useState('');
+  const [selectedSchedule, setSelectedSchedule] = useState('');
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const { toast } = useToast();
 
@@ -131,7 +134,14 @@ const TripPlanning = () => {
   // Debug useEffect to track selectedArrCOData changes
   useEffect(() => {
     console.log("🔍 selectedArrCOData changed:", selectedArrCOData);
-    console.log("🔍 selectedArrCOData length:", selectedArrCOData?.length);
+    console.log("🔍 selectedArrCOData length ^^^^:", selectedArrCOData);
+    //for updating Equipment Count after add equipment
+    // selectedArrCOData[0]?.ResourceDetails?.forEach((item) => {
+    //   console.log("ItEM = ",item)
+    //   if (item.ResourceType === "Equipment") {
+    //     setEquipmentCount((prev) => prev + 1);
+    //   }
+    // });
   }, [selectedArrCOData]);
 
   // Fetch trip data when urlTripID is available
@@ -170,8 +180,15 @@ const TripPlanning = () => {
 
           if (resourceDetails) {
             console.log('✅ ResourceDetails found:', resourceDetails);
+            console.log('✅ resourceDetails.Equipments found:', resourceDetails.Equipments);
+            console.log('✅ resourceDetails.Supplier found:', resourceDetails.Supplier[0].VendorID);
             // Store ResourceDetails data for TripCOHub
             setTripResourceDetailsData(() => resourceDetails);
+            setEquipmentData(resourceDetails.Equipments)
+            setEquipmentCount(resourceDetails.Equipments?.length)
+            setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
+            // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
+            // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
             console.log("tripResourceDetailsData ====", tripResourceDetailsData);
           } else {
             console.log('⚠️ No ResourceDetails found in trip response');
@@ -394,7 +411,7 @@ const TripPlanning = () => {
       "SubServiceDescription": "",
     }]);
   };
-
+//400--
   const handleAddResource = (resources: any[]) => {
     setSelectedResources(resources);
     console.log('Selected resources:', resources);
@@ -1486,10 +1503,10 @@ const TripPlanning = () => {
                   { title: 'Resources', subtitle: 'Selected Resources', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                   { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', iconColor: 'text-cyan-600' },
                   { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', iconColor: 'text-lime-600' },
-                  { title: 'Equipment', icon: Box, color: 'bg-red-100', iconColor: 'text-red-600' },
-                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', iconColor: 'text-orange-600' },
-                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', iconColor: 'text-amber-600' },
-                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+                  { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
+                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-orange-600' },
+                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'text-amber-600' },
+                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-600' },
                 ].map((resource) => {
                   const Icon = resource.icon;
                   return (
@@ -1579,10 +1596,11 @@ const TripPlanning = () => {
                           { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
-                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
-                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
+                          { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-cyan-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'bg-orange-600' },
+                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-100' },
+
                         ].map((resource) => {
                           const Icon = resource.icon;
                           return (
@@ -1768,10 +1786,11 @@ const TripPlanning = () => {
                                 { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                                { title: 'Equipment', icon: Box, color: 'bg-red-100', count: '', iconColor: 'text-red-600' },
-                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count: '', iconColor: 'text-orange-600' },
-                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: '', iconColor: 'text-indigo-600' },
+                                { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-cyan-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'bg-orange-100' },
+                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-100' },
+              
                               ].map((resource) => {
                                 const Icon = resource.icon;
                                 return (
@@ -1921,6 +1940,7 @@ const TripPlanning = () => {
         isOpen={isResourceDrawerOpen}
         onClose={handleCloseResourceDrawer}
         onAddResource={handleAddResource}
+        selectedResourcesRq={EquipmentData}
         resourceType={currentResourceType}
         resourceData={resourceData}
         isLoading={isLoadingResource}
