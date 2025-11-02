@@ -290,6 +290,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               value={execLeg.LegID}
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegID', value)}
               placeholder="Select Leg ID"
+              disabled
             />
             {/* <Select
               value={execLeg.LegID}
