@@ -292,10 +292,30 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
     // Here you can process the form data as needed
     // For now, we'll just show a success message
-    toast({
-      title: 'Success',
-      description: 'Route details saved successfully',
-    });
+    // toast({
+    //   title: 'Success',
+    //   description: 'Route details saved successfully',
+    // });
+
+    // Access the response data safely
+      const responseData = response as any;
+      
+      if (responseData && responseData.data) {
+        // Display the message from the API response
+        toast({
+          title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : (responseData.message || "✅ Saved Successfully"),
+          description: responseData.data.Message || "Trip details saved successfully",
+          variant: responseData.data.IsSuccess === false ? "destructive" : "default"
+        });
+      } else {
+        // Fallback toast if response structure is unexpected
+        toast({
+          title: "Success",
+          description: "Trip details saved successfully",
+        });
+      }
+
+
   };
 
   const createLegPanelConfig = (legIndex: number): PanelConfig => {
@@ -336,7 +356,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'Departure',
         label: 'Departure',
         fieldType: 'lazyselect',
-        value: leg.DepartureDescription || leg.Departure || '',
+        value: leg.Departure || leg.DepartureDescription || '',
         mandatory: true,
         visible: true,
         editable: true,
@@ -349,7 +369,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'Arrival',
         label: 'Arrival',
         fieldType: 'lazyselect',
-        value: leg.ArrivalDescription || leg.Arrival || '',
+        value: leg.Arrival || leg.ArrivalDescription || '',
         mandatory: true,
         visible: true,
         editable: true,
