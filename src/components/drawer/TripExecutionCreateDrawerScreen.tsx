@@ -280,46 +280,86 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           duration: selectedLegData.duration,
           
           // Activities array - this is the key data we want to bind
-          activities: formattedActivities,
+          // activities: formattedActivities,
           
           // Individual activity fields for easier form access
-          ...(formattedActivities.length > 0 && {
-            firstActivity: formattedActivities[0],
-            lastActivity: formattedActivities[formattedActivities.length - 1],
-            activityCount: formattedActivities.length,
+          activities: formattedActivities.map((activity, index) => ({
+          ActivitySeqNo: activity.SeqNo,
+          ActivityName: activity.Activity,
+          ActivityDescription: activity.ActivityDescription,
+          CustomerName: activity.CustomerName,
+          CustomerID: activity.CustomerID,
+          PlannedDate: activity.PlannedDate,
+          PlannedTime: activity.PlannedTime,
+          CustomerOrder: activity.CustomerOrder,
+          EventProfile: activity.EventProfile,
+          RevisedDate: activity.RevisedDate,
+          RevisedTime: activity.RevisedTime,
+          ActualDate: activity.ActualDate,
+          ActualTime: activity.ActualTime,
+          DelayedIn: activity.DelayedIn,
+          // QuickCode1: activity.QuickCode1,
+          // QuickCode2: activity.QuickCode2,
+          // QuickCode3: activity.QuickCode3,
+          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
+          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
+          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
+          QuickCodeValue1: activity.QuickCodeValue1,
+          QuickCodeValue2: activity.QuickCodeValue2,
+          QuickCodeValue3: activity.QuickCodeValue3,
+          Remarks1: activity.Remarks1,
+          Remarks2: activity.Remarks2,
+          Remarks3: activity.Remarks3,
+          ReasonForChanges: activity.ReasonForChanges,
+          DelayedReason: activity.DelayedReason,
+          LastIdentifiedLocation:
+            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
+          LastIdentifiedDate: activity.LastIdentifiedDate,
+          LastIdentifiedTime: activity.LastIdentifiedTime,
+          AmendmentNo: activity.AmendmentNo,
+          })),
+          // ...(formattedActivities.length > 0 && {
+          //   firstActivity: formattedActivities[0],
+          //   lastActivity: formattedActivities[formattedActivities.length - 1],
+          //   activityCount: formattedActivities.length,
             
-            // Bind first activity fields directly for easy access
-            ActivitySeqNo: formattedActivities[0].SeqNo,
-            ActivityName: formattedActivities[0].Activity,
-            ActivityDescription: formattedActivities[0].ActivityDescription,
-            CustomerName: formattedActivities[0].CustomerName,
-            CustomerID: formattedActivities[0].CustomerID,
-            PlannedDate: formattedActivities[0].PlannedDate,
-            PlannedTime: formattedActivities[0].PlannedTime,
-            CustomerOrder: formattedActivities[0].CustomerOrder,
-            EventProfile: formattedActivities[0].EventProfile,
-            RevisedDate: formattedActivities[0].RevisedDate,
-            RevisedTime: formattedActivities[0].RevisedTime,
-            ActualDate: formattedActivities[0].ActualDate,
-            ActualTime: formattedActivities[0].ActualTime,
-            DelayedIn: formattedActivities[0].DelayedIn,
-            QuickCode1: formattedActivities[0].QuickCode1,
-            QuickCode2: formattedActivities[0].QuickCode2,
-            QuickCode3: formattedActivities[0].QuickCode3,
-            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-            Remarks1: formattedActivities[0].Remarks1,
-            Remarks2: formattedActivities[0].Remarks2,
-            Remarks3: formattedActivities[0].Remarks3,
-            ReasonForChanges: formattedActivities[0].ReasonForChanges,
-            DelayedReason: formattedActivities[0].DelayedReason,
-            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-            AmendmentNo: formattedActivities[0].AmendmentNo,
-          }),
+          //   // Bind first activity fields directly for easy access
+          //   ActivitySeqNo: formattedActivities[0].SeqNo,
+          //   ActivityName: formattedActivities[0].Activity,
+          //   ActivityDescription: formattedActivities[0].ActivityDescription,
+          //   CustomerName: formattedActivities[0].CustomerName,
+          //   CustomerID: formattedActivities[0].CustomerID,
+          //   PlannedDate: formattedActivities[0].PlannedDate,
+          //   PlannedTime: formattedActivities[0].PlannedTime,
+          //   CustomerOrder: formattedActivities[0].CustomerOrder,
+          //   EventProfile: formattedActivities[0].EventProfile,
+          //   RevisedDate: formattedActivities[0].RevisedDate,
+          //   RevisedTime: formattedActivities[0].RevisedTime,
+          //   ActualDate: formattedActivities[0].ActualDate,
+          //   ActualTime: formattedActivities[0].ActualTime,
+          //   DelayedIn: formattedActivities[0].DelayedIn,
+          //   // QuickCode1: formattedActivities[0].QuickCode1,
+          //   QuickCode1: { dropdown: formattedActivities[0].QuickCode1 , input: formattedActivities[0].QuickCodeValue1 },
+
+          //   // QuickCode2: formattedActivities[0].QuickCode2,
+          //   // QuickCode3: formattedActivities[0].QuickCode3,
+          //   QuickCode2: { dropdown: formattedActivities[0].QuickCode2 , input: formattedActivities[0].QuickCodeValue2 },
+          //   QuickCode3: { dropdown: formattedActivities[0].QuickCode3 , input: formattedActivities[0].QuickCodeValue13 },
+
+          //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+          //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+          //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          //   Remarks1: formattedActivities[0].Remarks1,
+          //   Remarks2: formattedActivities[0].Remarks2,
+          //   Remarks3: formattedActivities[0].Remarks3,
+          //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
+          //   DelayedReason: formattedActivities[0].DelayedReason,
+          //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+          //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+          //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+          //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+          //   AmendmentNo: formattedActivities[0].AmendmentNo,
+          // }),
           
           // Consignments data
           consignments: consignmentsData,
@@ -405,46 +445,85 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           duration: selectedLegData.duration,
           
           // Activities array - this is the key data we want to bind
-          activities: formattedActivities,
+          // activities: formattedActivities,
           
           // Individual activity fields for easier form access
-          ...(formattedActivities.length > 0 && {
-            firstActivity: formattedActivities[0],
-            lastActivity: formattedActivities[formattedActivities.length - 1],
-            activityCount: formattedActivities.length,
+          activities: formattedActivities.map((activity, index) => ({
+          ActivitySeqNo: activity.SeqNo,
+          ActivityName: activity.Activity,
+          ActivityDescription: activity.ActivityDescription,
+          CustomerName: activity.CustomerName,
+          CustomerID: activity.CustomerID,
+          PlannedDate: activity.PlannedDate,
+          PlannedTime: activity.PlannedTime,
+          CustomerOrder: activity.CustomerOrder,
+          EventProfile: activity.EventProfile,
+          RevisedDate: activity.RevisedDate,
+          RevisedTime: activity.RevisedTime,
+          ActualDate: activity.ActualDate,
+          ActualTime: activity.ActualTime,
+          DelayedIn: activity.DelayedIn,
+          // QuickCode1: activity.QuickCode1,
+          // QuickCode2: activity.QuickCode2,
+          // QuickCode3: activity.QuickCode3,
+          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
+          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
+          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
+          QuickCodeValue1: activity.QuickCodeValue1,
+          QuickCodeValue2: activity.QuickCodeValue2,
+          QuickCodeValue3: activity.QuickCodeValue3,
+          Remarks1: activity.Remarks1,
+          Remarks2: activity.Remarks2,
+          Remarks3: activity.Remarks3,
+          ReasonForChanges: activity.ReasonForChanges,
+          DelayedReason: activity.DelayedReason,
+          LastIdentifiedLocation:
+            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
+          LastIdentifiedDate: activity.LastIdentifiedDate,
+          LastIdentifiedTime: activity.LastIdentifiedTime,
+          AmendmentNo: activity.AmendmentNo,
+          })),
+          // ...(formattedActivities.length > 0 && {
+          //   firstActivity: formattedActivities[0],
+          //   lastActivity: formattedActivities[formattedActivities.length - 1],
+          //   activityCount: formattedActivities.length,
             
-            // Bind first activity fields directly for easy access
-            ActivitySeqNo: formattedActivities[0].SeqNo,
-            ActivityName: formattedActivities[0].Activity,
-            ActivityDescription: formattedActivities[0].ActivityDescription,
-            CustomerName: formattedActivities[0].CustomerName,
-            CustomerID: formattedActivities[0].CustomerID,
-            PlannedDate: formattedActivities[0].PlannedDate,
-            PlannedTime: formattedActivities[0].PlannedTime,
-            CustomerOrder: formattedActivities[0].CustomerOrder,
-            EventProfile: formattedActivities[0].EventProfile,
-            RevisedDate: formattedActivities[0].RevisedDate,
-            RevisedTime: formattedActivities[0].RevisedTime,
-            ActualDate: formattedActivities[0].ActualDate,
-            ActualTime: formattedActivities[0].ActualTime,
-            DelayedIn: formattedActivities[0].DelayedIn,
-            QuickCode1: formattedActivities[0].QuickCode1,
-            QuickCode2: formattedActivities[0].QuickCode2,
-            QuickCode3: formattedActivities[0].QuickCode3,
-            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-            Remarks1: formattedActivities[0].Remarks1,
-            Remarks2: formattedActivities[0].Remarks2,
-            Remarks3: formattedActivities[0].Remarks3,
-            ReasonForChanges: formattedActivities[0].ReasonForChanges,
-            DelayedReason: formattedActivities[0].DelayedReason,
-            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-            AmendmentNo: formattedActivities[0].AmendmentNo,
-          }),
+          //   // Bind first activity fields directly for easy access
+          //   ActivitySeqNo: formattedActivities[0].SeqNo,
+          //   ActivityName: formattedActivities[0].Activity,
+          //   ActivityDescription: formattedActivities[0].ActivityDescription,
+          //   CustomerName: formattedActivities[0].CustomerName,
+          //   CustomerID: formattedActivities[0].CustomerID,
+          //   PlannedDate: formattedActivities[0].PlannedDate,
+          //   PlannedTime: formattedActivities[0].PlannedTime,
+          //   CustomerOrder: formattedActivities[0].CustomerOrder,
+          //   EventProfile: formattedActivities[0].EventProfile,
+          //   RevisedDate: formattedActivities[0].RevisedDate,
+          //   RevisedTime: formattedActivities[0].RevisedTime,
+          //   ActualDate: formattedActivities[0].ActualDate,
+          //   ActualTime: formattedActivities[0].ActualTime,
+          //   DelayedIn: formattedActivities[0].DelayedIn,
+          //   // QuickCode1: formattedActivities[0].QuickCode1,
+          //   QuickCode1: { dropdown: formattedActivities[0].QuickCode1 , input: formattedActivities[0].QuickCodeValue1 },
+          //   QuickCode2: { dropdown: formattedActivities[0].QuickCode2 , input: formattedActivities[0].QuickCodeValue2 },
+          //   QuickCode3: { dropdown: formattedActivities[0].QuickCode3 , input: formattedActivities[0].QuickCodeValue3 },
+            
+          //   // QuickCode2: formattedActivities[0].QuickCode2,
+          //   // QuickCode3: formattedActivities[0].QuickCode3,
+          //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+          //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+          //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          //   Remarks1: formattedActivities[0].Remarks1,
+          //   Remarks2: formattedActivities[0].Remarks2,
+          //   Remarks3: formattedActivities[0].Remarks3,
+          //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
+          //   DelayedReason: formattedActivities[0].DelayedReason,
+          //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+          //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+          //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+          //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+          //   AmendmentNo: formattedActivities[0].AmendmentNo,
+          // }),
           
           // Consignments data
           consignments: consignmentsData,
@@ -454,6 +533,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           transshipments: selectedLegData.transshipments || []
         };
         console.log("formData -----", formData.activities[0]);
+        console.log("Loading useeffect ends...")
 
         const additionalFormData = {
           // Basic leg information
@@ -587,12 +667,15 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           console.warn("tripExecutionRef.getFormValues() failed:", error);
         }
       }
+      console.log("allFormData Before: ",allFormData)
+      console.log("formRefs Before: ",formRefs)
       
       let localFormArray = [];
       // Get data from all individual form refs
       formRefs.current.forEach((ref, formId) => {
         if (ref?.current?.getFormValues) {
           try {
+            console.log(`ref.current.getFormValues() -- `,ref.current.getFormValues());
             const formData = ref.current.getFormValues();
             if (formData && Object.keys(formData).length > 0) {
               // Remove unwanted fields from formData before pushing to localFormArray
@@ -645,7 +728,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 formType: 'dynamic',
                 data: updatedFormData
               });
-              
+              console.log("allFormData AFter: ",allFormData)
               // Push cleaned data to localFormArray
               localFormArray.push(updatedFormData);
               console.log(`Form ${formId} data:`, updatedFormData);
@@ -722,7 +805,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       //   console.log("Main formData cleaned (removed NetAmount, id, title):", formData);
       // }
       
-      console.log("formData +++++++++++++", formData);
+      console.log("formData +++++++save++++++", formData);
       // Get the sequence number from form data
       // const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
       // console.log("Sequence number from form:", sequenceNumber);
@@ -1005,9 +1088,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       ActualDate: activity.ActualDate || '',
       ActualTime: activity.ActualTime || '',
       DelayedIn: activity.DelayedIn || '',
-      QuickCode1: activity.QuickCode1 || '',
-      QuickCode2: activity.QuickCode2 || '',
-      QuickCode3: activity.QuickCode3 || '',
+      // QuickCode1: activity.QuickCode1 || '',
+      QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
+      // QuickCode2: activity.QuickCode2 || '',
+      QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
+      // QuickCode3: activity.QuickCode3 || '',
+      QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
+
       QuickCodeValue1: activity.QuickCodeValue1 || '',
       QuickCodeValue2: activity.QuickCodeValue2 || '',
       QuickCodeValue3: activity.QuickCodeValue3 || '',
@@ -1070,6 +1157,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     selectLeg(legId);
     setLoading(false);
     // Find the selected leg data
+    console.log("Inside handleLegSelection")
     const selectedLegData = legs.find(leg => leg.id === legId);
     if (selectedLegData) {
       console.log("Selected leg data:", selectedLegData);
@@ -1079,7 +1167,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const rawActivitiesData = selectedLegData.activities || [];
       const formattedActivities = formatActivitiesForForm(rawActivitiesData);
       const consignmentsData = selectedLegData.consignments || [];
-      
+      console.log("Formatted activities for form:", formattedActivities);
       // Prepare additional activities data for form binding
       const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
       const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
@@ -1094,46 +1182,80 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         duration: selectedLegData.duration,
         
         // Activities array - this is the key data we want to bind
-        activities: formattedActivities,
-        
+        // activities: formattedActivities,
+        activities: formattedActivities.map((activity, index) => ({
+          ActivitySeqNo: activity.SeqNo,
+          ActivityName: activity.Activity,
+          ActivityDescription: activity.ActivityDescription,
+          CustomerName: activity.CustomerName,
+          CustomerID: activity.CustomerID,
+          PlannedDate: activity.PlannedDate,
+          PlannedTime: activity.PlannedTime,
+          CustomerOrder: activity.CustomerOrder,
+          EventProfile: activity.EventProfile,
+          RevisedDate: activity.RevisedDate,
+          RevisedTime: activity.RevisedTime,
+          ActualDate: activity.ActualDate,
+          ActualTime: activity.ActualTime,
+          DelayedIn: activity.DelayedIn,
+          // QuickCode1: activity.QuickCode1,
+          // QuickCode2: activity.QuickCode2,
+          // QuickCode3: activity.QuickCode3,
+          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
+          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
+          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
+          QuickCodeValue1: activity.QuickCodeValue1,
+          QuickCodeValue2: activity.QuickCodeValue2,
+          QuickCodeValue3: activity.QuickCodeValue3,
+          Remarks1: activity.Remarks1,
+          Remarks2: activity.Remarks2,
+          Remarks3: activity.Remarks3,
+          ReasonForChanges: activity.ReasonForChanges,
+          DelayedReason: activity.DelayedReason,
+          LastIdentifiedLocation:
+            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
+          LastIdentifiedDate: activity.LastIdentifiedDate,
+          LastIdentifiedTime: activity.LastIdentifiedTime,
+          AmendmentNo: activity.AmendmentNo,
+        })),
         // Individual activity fields for easier form access
-        ...(formattedActivities.length > 0 && {
-          firstActivity: formattedActivities[0],
-          lastActivity: formattedActivities[formattedActivities.length - 1],
-          activityCount: formattedActivities.length,
+        // ...(formattedActivities.length > 0 && {
+        // //   firstActivity: formattedActivities[0],
+        // //   lastActivity: formattedActivities[formattedActivities.length - 1],
+        // //   activityCount: formattedActivities.length,
           
-          // Bind first activity fields directly for easy access
-          ActivitySeqNo: formattedActivities[0].SeqNo,
-          ActivityName: formattedActivities[0].Activity,
-          ActivityDescription: formattedActivities[0].ActivityDescription,
-          CustomerName: formattedActivities[0].CustomerName,
-          CustomerID: formattedActivities[0].CustomerID,
-          PlannedDate: formattedActivities[0].PlannedDate,
-          PlannedTime: formattedActivities[0].PlannedTime,
-          CustomerOrder: formattedActivities[0].CustomerOrder,
-          EventProfile: formattedActivities[0].EventProfile,
-          RevisedDate: formattedActivities[0].RevisedDate,
-          RevisedTime: formattedActivities[0].RevisedTime,
-          ActualDate: formattedActivities[0].ActualDate,
-          ActualTime: formattedActivities[0].ActualTime,
-          DelayedIn: formattedActivities[0].DelayedIn,
-          QuickCode1: formattedActivities[0].QuickCode1,
-          QuickCode2: formattedActivities[0].QuickCode2,
-          QuickCode3: formattedActivities[0].QuickCode3,
-          QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-          QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-          QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-          Remarks1: formattedActivities[0].Remarks1,
-          Remarks2: formattedActivities[0].Remarks2,
-          Remarks3: formattedActivities[0].Remarks3,
-          ReasonForChanges: formattedActivities[0].ReasonForChanges,
-          DelayedReason: formattedActivities[0].DelayedReason,
-          LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-          // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-          LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-          LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-          AmendmentNo: formattedActivities[0].AmendmentNo,
-        }),
+        // //   // Bind first activity fields directly for easy access
+        //   ActivitySeqNo: formattedActivities[0].SeqNo,
+        //   ActivityName: formattedActivities[0].Activity,
+        //   ActivityDescription: formattedActivities[0].ActivityDescription,
+        //   CustomerName: formattedActivities[0].CustomerName,
+        //   CustomerID: formattedActivities[0].CustomerID,
+        //   PlannedDate: formattedActivities[0].PlannedDate,
+        //   PlannedTime: formattedActivities[0].PlannedTime,
+        //   CustomerOrder: formattedActivities[0].CustomerOrder,
+        //   EventProfile: formattedActivities[0].EventProfile,
+        //   RevisedDate: formattedActivities[0].RevisedDate,
+        //   RevisedTime: formattedActivities[0].RevisedTime,
+        //   ActualDate: formattedActivities[0].ActualDate,
+        //   ActualTime: formattedActivities[0].ActualTime,
+        //   DelayedIn: formattedActivities[0].DelayedIn,
+        //   QuickCode1: formattedActivities[0].QuickCode1,
+        //   QuickCode2: formattedActivities[0].QuickCode2,
+        //   QuickCode3: formattedActivities[0].QuickCode3,
+        //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+        //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+        //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+        //   Remarks1: formattedActivities[0].Remarks1,
+        //   Remarks2: formattedActivities[0].Remarks2,
+        //   Remarks3: formattedActivities[0].Remarks3,
+        //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
+        //   DelayedReason: formattedActivities[0].DelayedReason,
+        //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+        //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+        //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+        //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+        //   AmendmentNo: formattedActivities[0].AmendmentNo,
+        // }),
         
         // Consignments data
         consignments: consignmentsData,
@@ -1143,7 +1265,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         transshipments: selectedLegData.transshipments || []
       };
       
-      console.log("Form data to be bound:", formData);
+      console.log("Form data to be bound ####:", formData);
       
       // Store form data in state for later retrieval
       setFormDataState(formData);
@@ -1192,10 +1314,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       // Store additional form data in state for later retrieval
       setAdditionalFormDataState(additionalFormData);
       setAdditionalActivitiesFormData(formattedAdditionalActivities);
-      
       // Bind data to tripExecutionRef (Activities panel)
       if (tripExecutionRef?.current?.setFormValues) {
-        tripExecutionRef.current.setFormValues(formData.activities[0]);
+        // tripExecutionRef.current.setFormValues(formData.activities[0]);
+        formData.activities.forEach((activity, index) => {
+          setTimeout(() => {
+            tripExecutionRef.current.setFormValues(activity);
+          setLoading(true);
+
+            console.log(`Activity ${index + 1} bound to tripExecutionRef`);
+          }, index * 200); // 200ms gap between updates
+        });
         console.log("Data bound to tripExecutionRef");
       }
       
@@ -1204,9 +1333,21 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         tripAdditionalRef.current.setFormValues(additionalFormData);
         console.log("Additional activities data bound to tripAdditionalRef");
       }
-      setLoading(true);
+      // setLoading(true);
     }
   };
+  useEffect(() => {
+    console.log("formDataState = ",formDataState)
+    console.log("formDataState . activities= ",formDataState?.activities)
+    if (formDataState && tripExecutionRef?.current?.setFormValues) {
+      console.log("Detected new formDataState — binding to tripExecutionRef");
+      formDataState.activities?.forEach((activity, index) => {
+        setTimeout(() => {
+          tripExecutionRef.current.setFormValues(activity);
+        }, index * 200);
+      });
+    }
+  }, [formDataState])
 
   const handleAddViaPoint = () => {
     if (!viaPointForm.viaLocation) {
@@ -2164,7 +2305,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       className="space-y-3 overflow-hidden"
                     >
                     
-                      {selectedLeg.activities.map((activity) => (
+                      {selectedLeg.activities.map((activity, idx) => (
                         <div key={activity.id} className="rounded-lg bg-card">
                           <div className="flex items-center justify-between p-4 bg-muted/30">
                             <div className="flex items-center gap-3"> 
@@ -2185,10 +2326,31 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               </Badge>
                             </div>
                           </div>
-
-                          {loading ?
+                          {!loading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                          <div className="flex flex-col items-center space-y-3">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
+                                            <div className="text-sm text-gray-600">Loading data...</div>
+                                          </div>
+                                        </div>
+                                      ) : ( 
+                              <DynamicPanel
+                              // Attach tripExecutionRef to first activity panel so your useEffect can call it
+                              // ref={getFormRef(`main-${activity.id}`)} --- old lie of code
+                              ref={idx === 0 ? tripExecutionRef : getFormRef(`main-${activity.id}`)}
+                              key={`trip-execution-panel-main-${activity.id}`}
+                              panelId={`operational-details-main-${activity.id}`}
+                              panelTitle="Events"
+                              panelConfig={tripExecutionPanelConfig}
+                              formName={`operationalDetailsForm-main-${activity.id}`}
+                              initialData={activity}
+                            />
+                      )}
+                          {/* {loading ?
                             <DynamicPanel
-                              ref={getFormRef(`main-${activity.id}`)}
+                              // Attach tripExecutionRef to first activity panel so your useEffect can call it
+                              // ref={getFormRef(`main-${activity.id}`)} --- old lie of code
+                              ref={idx === 0 ? tripExecutionRef : getFormRef(`main-${activity.id}`)}
                               key={`trip-execution-panel-main-${activity.id}`}
                               panelId={`operational-details-main-${activity.id}`}
                               panelTitle="Events"
@@ -2196,7 +2358,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               formName={`operationalDetailsForm-main-${activity.id}`}
                               initialData={activity}
                             /> : ''
-                          }
+                          } */}
                         </div>
                       ))}
 
