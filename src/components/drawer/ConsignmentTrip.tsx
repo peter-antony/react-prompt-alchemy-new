@@ -25,7 +25,7 @@ import { GridColumnConfig } from '@/types/smartgrid';
 import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
-import { set } from 'date-fns';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?: any }) => {
   const gridPlanId = 'ConsignmentTripPlanGrid';
@@ -385,36 +385,36 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   ];
 
   const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-      try {
-        // Call the API using the same service pattern as PlanAndActualDetails component
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: messageType,
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-  
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} `,
-              value: `${item.id} `,
-            }
-            : {})
-        }));
-  
-        // Fallback to empty array if API call fails
-        return [];
-      } catch (error) {
-        console.error(`Error fetching ${messageType}:`, error);
-        // Return empty array on error
-        return [];
-      }
-    };
-  
-    // Specific fetch functions for different message types
-    const fetchSourceBRIDOptions = fetchMasterData("CustomerOrder Number Init");
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} `,
+            value: `${item.id} `,
+          }
+          : {})
+      }));
+
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  // Specific fetch functions for different message types
+  const fetchSourceBRIDOptions = fetchMasterData("CustomerOrder Number Init");
 
   // const actualColumns: GridColumnConfig[] = [
   //   {
@@ -904,6 +904,14 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   };
   const actualEditableColumns: GridColumnConfig[] = [
     {
+      key: 'actions',
+      label: 'Actions',
+      type: 'Text',
+      sortable: false,
+      filterable: false,
+      width: 120
+    },
+    {
       key: 'WagonPosition',
       label: 'Wagon Position',
       type: 'Integer',
@@ -922,6 +930,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       mandatory: true,
       subRow: false,
       width: 150,
+      // allowNewEntry: true, // Enable new entry functionality for Wagon field (commented temporarily due to type issue)
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Wagon id Init",
@@ -1161,6 +1170,20 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              ContainerDescription: value.split(' || ')[1] || value, // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
+      },
     },
     {
       key: 'ContainerType',
@@ -1186,7 +1209,21 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
-      }
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              ContainerType: value.split(' || ')[1] || value, // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
+      },
     },
     {
       key: 'ContainerQtyUOM',
@@ -1260,6 +1297,20 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              Thu: value.split(' || ')[1] || value, // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
       },
     },
     {
@@ -1345,6 +1396,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              NHMDescription: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'ProductDescription',
@@ -1361,7 +1424,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "ProductID On Select",
             searchCriteria: {
-              ProductID: value,
+              ProductID: value.split(' || ')[0],
             },
           });
           const rr: any = response.data;
@@ -1376,15 +1439,19 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  ...(productfetchData.Product && { Product: productfetchData.ProductID }),
-                  ...(productfetchData.ProductDescription && { ProductDescription: productfetchData.ProductDescription }),
-                  ...(productfetchData.UNCode && { UNCode: productfetchData.UNCode }),
-                  ...(productfetchData.UNDescription && { UNCodeDescription: productfetchData.UNDescription }),
-                  ...(productfetchData.DGClass && { DGClass: productfetchData.DGClass }),
-                  ...(productfetchData.DGClassDescription && { DGClassDescription: productfetchData.DGClassDescription }),
-                  ...(productfetchData.NHMCode && { NHM: productfetchData.NHMCode }),
-                  ...(productfetchData.NHMDescription && { NHMDescription: productfetchData.NHMDescription }),
-                  ...(productfetchData.ContainsHazardousGoods && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? 1 : 0 }),
+                  // Always set Product and ProductDescription from the selected dropdown value
+                  Product: value.split(' || ')[0],
+                  ProductDescription: value.split(' || ')[1] || '',
+                  // Handle UNCode fields - can be null from API
+                  UNCode: productfetchData.UNCode || '',
+                  UNCodeDescription: productfetchData.UNDescription || '',
+                  // Handle DGClass fields - set description in DGClassDescription field (the visible field)
+                  DGClass: productfetchData.DGClass || '',
+                  DGClassDescription: productfetchData.DGClassDescription || '',
+                  // Handle NHM fields
+                  NHM: productfetchData.NHMCode || '',
+                  NHMDescription: productfetchData.NHMDescription || '',
+                  ...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
                 };
               } else {
                 // API returned empty response - clear related fields
@@ -1458,6 +1525,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ClassOfStores: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'UNCodeDescription',
@@ -1474,7 +1553,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "UnCode On Select",
             searchCriteria: {
-              UNCode: value,
+              UNCode: value.split(' || ')[0],
             },
           });
           const rr: any = response.data;
@@ -1489,15 +1568,19 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  ...(unCodefetchData.Product && { Product: unCodefetchData.ProductID }),
-                  ...(unCodefetchData.ProductDescription && { ProductDescription: unCodefetchData.ProductDescription }),
-                  ...(unCodefetchData.UNCode && { UNCode: unCodefetchData.UNCode }),
-                  ...(unCodefetchData.UNDescription && { UNCodeDescription: unCodefetchData.UNDescription }),
-                  ...(unCodefetchData.DGClass && { DGClass: unCodefetchData.DGClass }),
-                  ...(unCodefetchData.DGClassDescription && { DGClassDescription: unCodefetchData.DGClassDescription }),
-                  ...(unCodefetchData.NHMCode && { NHM: unCodefetchData.NHMCode }),
-                  ...(unCodefetchData.NHMDescription && { NHMDescription: unCodefetchData.NHMDescription }),
-                  ...(unCodefetchData.ContainsHazardousGoods && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? 1 : 0 }),
+                  // Always set UNCode and UNCodeDescription from the selected dropdown value
+                  UNCode: value.split(' || ')[0],
+                  UNCodeDescription: value.split(' || ')[1] || '',
+                  // Handle Product fields from API
+                  Product: unCodefetchData.ProductID || '',
+                  ProductDescription: unCodefetchData.ProductDescription || '',
+                  // Handle DGClass fields - set description in DGClassDescription field (the visible field)
+                  DGClass: unCodefetchData.DGClass || '',
+                  DGClassDescription: unCodefetchData.DGClassDescription || '',
+                  // Handle NHM fields
+                  NHM: unCodefetchData.NHMCode || '',
+                  NHMDescription: unCodefetchData.NHMDescription || '',
+                  ...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
                 };
               } else {
                 // API returned empty response - clear related fields
@@ -1528,7 +1611,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       },
     },
     {
-      key: 'DGClass',
+      key: 'DGClassDescription',
       label: 'DG Class',
       type: 'LazySelect',
       sortable: true,
@@ -1552,6 +1635,31 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        try {
+            const rowIndex = actualRowIndex ?? 0;
+            setActualEditableData(prevData => {
+              const newData = [...prevData];
+
+            if (newData[rowIndex]) {
+              const updatedRow = {
+                ...newData[rowIndex],
+              DGClass: value.split(' || ')[0] || "" ,
+              DGClassDescription : value.split(' || ')[1] || ""
+            };
+            
+            newData[rowIndex] = updatedRow; 
+          }else {
+          console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+        }
+
+        hasUserEditsRef.current = true;
+        return newData;
+          });
+        } catch (error) {
+          console.error('Failed to fetch wagon details:', error);
+        }
+      }
     },
     {
       key: 'ShuntingOption',
@@ -1577,6 +1685,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
+      },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ShuntingOption: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
       },
     },
     {
@@ -1605,6 +1725,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ReplacedWagon: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'ShuntingReasonCode',
@@ -1630,6 +1762,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
+      },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ShuntingReasonCode: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
       },
     },
     {
@@ -1657,6 +1801,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ShuntInLocationDescription: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'ShuntOutLocationDescription',
@@ -1682,6 +1838,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
+      },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ShuntOutLocationDescription: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
       },
     },
     {
@@ -1773,6 +1941,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              QuickCode1: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'QuickCode2',
@@ -1799,6 +1979,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             : {})
         }));
       },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              QuickCode2: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
+      },
     },
     {
       key: 'QuickCode3',
@@ -1824,6 +2016,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             }
             : {})
         }));
+      },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              QuickCode3: value.split(' || ')[1] || value
+            };
+            return newData;
+          });
+        }
       },
     },
     {
@@ -1880,14 +2084,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 250
     },
-    {
-      key: 'actions',
-      label: 'Actions',
-      type: 'Text',
-      sortable: false,
-      filterable: false,
-      width: 120
-    }
+
   ];
   const { getConsignments } = useTripExecutionDrawerStore();
   const consignments = getConsignments(legId) || [];
@@ -1968,188 +2165,202 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   // Handle Save Plan Actuals - Process array of actual data from grid
   const handleSavePlanActuals = async () => {
     try {
-      console.log("Saving Plan Actuals - Array Data:", actualEditableData);
+      console.log("Saving actual details for grid data:", actualEditableData);
 
-      if (!actualEditableData || actualEditableData.length === 0) {
+      // Get the full trip data from the store - try prop first, then manageTripStore as fallback
+      const currentTripData = tripData || manageTripStore.getState().tripData;
+      if (!currentTripData) {
+        console.warn("No trip data available in store or props");
         toast({
-          title: "⚠️ No data to save",
-          description: "Please add some actual details before saving.",
+          title: "⚠️ No Trip Data",
+          description: "No trip data available to update.",
+          variant: "destructive",
+        });
+        return;
+      }      // Validate that we have actual editable data
+      if (!actualEditableData || actualEditableData.length === 0) {
+        console.warn("No actual data to save");
+        toast({
+          title: "⚠️ No Data",
+          description: "No actual details to save.",
           variant: "destructive",
         });
         return;
       }
 
-      // Helper function to truncate at pipe symbol
-      const truncateAtPipe = (value: string | null | undefined) => {
+      console.log("Current trip data:", currentTripData);
+      console.log("legId:", legId);
+      console.log("actualEditableData:", actualEditableData);
+
+      // We'll create a helper that, if a string contains "||", returns an object with both parts.
+      const splitAtPipe = (value: string | null | undefined) => {
         if (typeof value === "string" && value.includes("||")) {
-          return value.split("||")[0].trim();
+          const [first, ...rest] = value.split("||");
+          return {
+            value: first.trim(),
+            label: rest.join("||").trim()
+          };
         }
         return value;
       };
 
-      // Transform the actualEditableData array to match the Trip Log API format
-      const transformedActuals = actualEditableData.map((actualRow, index) => {
-        return {
-          "Seqno": (index + 1).toString(),
-          "PlanToActualCopy": null,
-          "WagonPosition": actualRow.WagonPosition || null,
-          "WagonType": truncateAtPipe(actualRow.WagonType) || "",
-          "Wagon": truncateAtPipe(actualRow.Wagon) || "",
-          "WagonDescription": actualRow.WagonDescription || "",
-          "WagonQty": actualRow.WagonQty || 1,
-          "WagonQtyUOM": actualRow.WagonQtyUOM || "TON",
-          "ContainerType": truncateAtPipe(actualRow.ContainerType) || null,
-          "ContainerId": truncateAtPipe(actualRow.ContainerDescription) || null,
-          "ContainerDescription": actualRow.ContainerDescription || null,
-          "ContainerQty": actualRow.ContainerQty || null,
-          "ContainerQtyUOM": actualRow.ContainerQtyUOM || "TON",
-          "Product": truncateAtPipe(actualRow.ProductDescription) || null,
-          "ProductDescription": actualRow.ProductDescription || null,
-          "ProductWeight": actualRow.ProductWeight || null,
-          "ProductWeightUOM": actualRow.ProductWeightUOM || "TON",
-          "Thu": truncateAtPipe(actualRow.Thu) || null,
-          "ThuDescription": actualRow.ThuDescription || null,
-          "ThuSerialNo": actualRow.ThuSerialNo || null,
-          "ThuQty": actualRow.ThuQty || null,
-          "ThuWeight": actualRow.ThuWeight || null,
-          "ThuWeightUOM": actualRow.ThuWeightUOM || "TON",
-          "ShuntingOption": truncateAtPipe(actualRow.ShuntingOption) || null,
-          "ReplacedWagon": truncateAtPipe(actualRow.ReplacedWagon) || null,
-          "ShuntingReasonCode": truncateAtPipe(actualRow.ShuntingReasonCode) || null,
-          "Remarks": actualRow.Remarks || null,
-          "ShuntInLocation": truncateAtPipe(actualRow.ShuntInLocationDescription) || null,
-          "ShuntInLocationDescription": actualRow.ShuntInLocationDescription || "UD",
-          "ShuntOutLocation": truncateAtPipe(actualRow.ShuntOutLocationDescription) || null,
-          "ShuntOutLocationDescription": actualRow.ShuntOutLocationDescription || "UD",
-          "ShuntInDate": actualRow.ShuntInDate || null,
-          "ShuntInTime": actualRow.ShuntInTime || null,
-          "ShuntOutDate": actualRow.ShuntOutDate || null,
-          "ShuntOutTime": actualRow.ShuntOutTime || null,
-          "ClassOfStores": truncateAtPipe(actualRow.ClassOfStores) || null,
-          "NHM": truncateAtPipe(actualRow.NHMDescription) || null,
-          "NHMDescription": actualRow.NHMDescription || null,
-          "UNCode": truncateAtPipe(actualRow.UNCodeDescription) || null,
-          "UNCodeDescription": actualRow.UNCodeDescription || null,
-          "DGClass": truncateAtPipe(actualRow.DGClass) || null,
-          "DGClassDescription": actualRow.DGClassDescription || null,
-          "ContainsHazardousGoods": actualRow.ContainsHazardousGoods || "N",
-          "WagonSealNo": actualRow.WagonSealNo || null,
-          "ContainerSealNo": actualRow.ContainerSealNo || null,
-          "ContainerTareWeight": actualRow.ContainerTareWeight || null,
-          "ContainerTareWeightUOM": actualRow.ContainerTareWeightUOM || null,
-          "LastCommodityTransported1": actualRow.LastCommodityTransported1 || null,
-          "LastCommodityTransportedDate1": null,
-          "LastCommodityTransported2": actualRow.LastCommodityTransported2 || null,
-          "LastCommodityTransportedDate2": null,
-          "LastCommodityTransported3": actualRow.LastCommodityTransported3 || null,
-          "LastCommodityTransportedDate3": null,
-          "WagonTareWeight": actualRow.WagonTareWeight || null,
-          "WagonTareWeightUOM": actualRow.WagonTareWeightUOM || null,
-          "WagonLength": actualRow.WagonLength || null,
-          "WagonLengthUOM": actualRow.WagonLengthUOM || null,
-          "GrossWeight": actualRow.GrossWeight || null,
-          "GrossWeightUOM": actualRow.GrossWeightUOM || null,
-          "QuickCode1": truncateAtPipe(actualRow.QuickCode1) || null,
-          "QuickCode2": truncateAtPipe(actualRow.QuickCode2) || null,
-          "QuickCode3": truncateAtPipe(actualRow.QuickCode3) || null,
-          "QuickCodeValue1": actualRow.QuickCodeValue1 || null,
-          "QuickCodeValue2": actualRow.QuickCodeValue2 || null,
-          "QuickCodeValue3": actualRow.QuickCodeValue3 || null,
-          "Remarks1": actualRow.Remarks1 || null,
-          "Remarks2": actualRow.Remarks2 || null,
-          "Remarks3": actualRow.Remarks3 || null,
-          "ModeFlag": actualRow.ModeFlag || "Update"
-        };
-      });
-
-      console.log("Transformed Actuals for Trip Log:", transformedActuals);
-
-      // Get trip information from props or use defaults
-      // You should pass tripData from the parent component with actual trip details
-      const currentTripData = tripData || {
-        tripNo: "TP/2021/00025030", // Default - should come from props
-        tripOU: 4,
-        tripStatus: "Initiated",
-        customerID: selectedCustomerData?.CustomerID || "1005",
-        customerName: selectedCustomerData?.CustomerName || "ramcotest"
-      };
-
-      // Build the Trip Log Save API payload
-      const tripLogPayload = {
-        Header: {
-          TripNo: currentTripData.tripNo,
-          TripOU: currentTripData.tripOU,
-          TripStatus: currentTripData.tripStatus,
-          TripStatusDescription: currentTripData.tripStatus,
-          // Add other header fields as needed from your trip data
-          ModeFlag: "Update"
-        },
-        LegDetails: [
-          {
-            LegSequence: legId || "1", // Use the legId prop
-            LegBehaviour: "Pick", // This should come from your leg data
-            LegBehaviourDescription: "Pickup",
-            // Add other leg details from your data
-            ModeFlag: "Update",
-            Consignment: [
-              {
-                TripNo: currentTripData.tripNo,
-                LegSequence: legId || "1",
-                CustomerName: currentTripData.customerName,
-                CustomerID: currentTripData.customerID,
-                CustomerOrderNo: selectedCustomerData?.CustomerOrderNo || "",
-                LoadType: selectedCustomerData?.LoadType || "Load",
-                Service: selectedCustomerData?.Service || "BT",
-                ServiceDescription: selectedCustomerData?.ServiceDescription || "BLOCK TRAIN CONVENTIONAL",
-                SubService: selectedCustomerData?.SubService || "WOW",
-                SubServiceDescription: selectedCustomerData?.SubServiceDescription || "WITHOUT EQUIPMENT / SOC",
-                CustomerReferenceNo: selectedCustomerData?.CustomerReferenceNo || null,
-                TransportMode: "Rail",
-                CODeparture: selectedCustomerData?.CODeparture || "10-00001",
-                CODepartureDescription: selectedCustomerData?.CODepartureDescription || "",
-                COArrival: selectedCustomerData?.COArrival || "10-00004",
-                COArrivalDescription: selectedCustomerData?.COArrivalDescription || "",
-                ModeFlag: "Update",
-                Actual: transformedActuals
-              }
-            ]
+      // Helper to recursively process all dropdown fields in an object, splitting at "||"
+      const splitDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, split it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: splitAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, split if it has a pipe
+            newObj[key] = splitAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = splitDropdowns(val);
+          } else {
+            newObj[key] = val;
           }
-        ]
+        }
+        console.log("splitDropdowns ===", newObj);
+        return newObj;
       };
 
-      console.log("Trip Log Payload:", tripLogPayload);
+      // Process each row in actualEditableData and update with proper ModeFlag
+      const updatedActualData = actualEditableData.map((actualRow, index) => {
+        // Determine ModeFlag based on whether the row already exists or is newly added
+        let modeFlag = "Update"; // Default for existing rows
 
-      // Make the API call to save trip
-      const response: any = await tripService.saveTrip(tripLogPayload);
-      console.log("Trip Save Response:", response);
+        // Check if this is a new row added by user (usually indicated by specific properties)
+        // New rows typically have no Seqno or have temporary/negative IDs
+        const isNewRow = !actualRow.Seqno || actualRow.Seqno === "" || actualRow.Seqno === -1 ||
+          actualRow.ActualLineUniqueID === -1 ||
+          (actualRow.hasOwnProperty('isNewRow') && actualRow.isNewRow === true);
 
-      // Check response structure - Trip Log API typically returns success in different format
-      const isSuccess = response?.IsSuccess || response?.data?.IsSuccess || response?.success || false;
-      const responseMessage = response?.Message || response?.data?.Message || response?.message || "Unknown error";
+        if (isNewRow) {
+          modeFlag = "Insert"; // New row added to grid
+        }
 
-      if (isSuccess) {
+        // Only respect explicit ModeFlag if it's "Delete" - otherwise override with Update for existing rows
+        if (actualRow.ModeFlag === "Delete") {
+          modeFlag = "Delete"; // Respect Delete flag
+        }
+
+        console.log(`Processing row ${index + 1} with Seqno: ${actualRow.Seqno}, ActualLineUniqueID: ${actualRow.ActualLineUniqueID}, determined ModeFlag: ${modeFlag}`);
+
+        return {
+          ...actualRow,
+          ModeFlag: modeFlag,
+        };
+      }); console.log('Updated actual data array:', updatedActualData);
+
+      // Create a deep copy of the trip data to avoid mutation
+      const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
+
+      // Find and update the specific nested object in trip data structure
+      try {
+        // Validate the path exists
+        if (!updatedTripData.LegDetails || !Array.isArray(updatedTripData.LegDetails)) {
+          throw new Error("LegDetails not found or not an array");
+        }
+
+        // Find the leg by matching LegSequence with legId
+        const legIndex = updatedTripData.LegDetails.findIndex(leg => leg.LegSequence === legId);
+        if (legIndex === -1) {
+          throw new Error(`Leg with LegSequence ${legId} not found`);
+        }
+
+        console.log(`Found leg at index ${legIndex} with LegSequence ${legId}`);
+
+        if (!updatedTripData.LegDetails[legIndex].Consignment) {
+          throw new Error(`Leg at index ${legIndex} has no Consignment`);
+        }
+
+        if (!Array.isArray(updatedTripData.LegDetails[legIndex].Consignment)) {
+          throw new Error("Consignment is not an array");
+        }
+
+        // For ConsignmentTrip, we need to find the right consignment and update its Actual array
+        // Since we have consignments array from the store, we can use the first one or find by criteria
+        const consignmentIndex = 0; // Assuming we're working with the first consignment or adjust logic as needed
+
+        if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]) {
+          throw new Error(`Consignment at index ${consignmentIndex} not found`);
+        }
+
+        // Replace the entire Actual array with our updated data
+        if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual) {
+          updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = [];
+        }
+
+        updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = updatedActualData;
+
+        console.log("Successfully updated the nested actual data array:");
+        console.log("Updated LegDetails:", updatedTripData.LegDetails[legIndex]);
+        console.log("Updated Consignment:", updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]);
+        console.log("Updated Actual array:", updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual);
+
+        // Save to API
+        try {
+          const response = await tripService.saveTrip(updatedTripData);
+          console.log("Trip saved response:", response);
+
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("resourceStatus ===", resourceStatus);
+
+          if (resourceStatus) {
+            // Update the trip data in the store with the updated data
+            manageTripStore.getState().setTrip(updatedTripData);
+            console.log("Trip data updated in manageTripStore");
+
+            // Update local actualEditableData state with the updated data
+            setActualEditableData(updatedActualData);
+
+            toast({
+              title: "✅ Actual Details Saved Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your actual details have been saved.",
+              variant: "default",
+            });
+          } else {
+            console.log("error response ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Save Failed",
+              description: (response as any)?.data?.Message || "Failed to save changes.",
+              variant: "destructive",
+            });
+          }
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          toast({
+            title: "⚠️ Save Failed",
+            description: "Failed to save changes. Please try again.",
+            variant: "destructive",
+          });
+        }
+
+      } catch (updateError) {
+        console.error("Error updating nested data:", updateError);
         toast({
-          title: "✅ Actual details saved successfully",
-          description: "Your actual details have been saved to the trip log.",
-          variant: "default",
-        });
-
-        // Optionally refresh the data or update the store
-        // You might want to fetch the updated trip data here
-
-      } else {
-        toast({
-          title: "⚠️ Save failed",
-          description: responseMessage,
+          title: "⚠️ Update Failed",
+          description: `Failed to update the data structure: ${updateError.message}`,
           variant: "destructive",
         });
       }
 
-    } catch (err: any) {
-      console.error("Error saving actual details:", err);
+    } catch (error) {
+      console.error("Error saving actual details:", error);
       toast({
-        title: "⚠️ Save failed",
-        description: err?.response?.data?.Message || "An error occurred while saving actual details.",
+        title: "⚠️ Save Failed",
+        description: "An error occurred while saving. Please try again.",
         variant: "destructive",
       });
     }
@@ -2483,7 +2694,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               <div>
                 <span className="font-medium text-gray-700">Source BR ID: </span>
                 {/* {selectedCustomerData?.SourceBRId || "-"} */}
-                 <DynamicLazySelect
+                <DynamicLazySelect
                   fetchOptions={fetchSourceBRIDOptions}
                   value={sourceBRId}
                   onChange={(value) => {
@@ -2524,24 +2735,24 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               </div>
               <div className="flex items-end gap-2">
                 <span className="font-medium text-gray-700">
-                  </span>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-8"
-                    onClick={() => {
-                      if (selectedCustomerData) {
-                        setSelectedCustomerData({
-                          ...selectedCustomerData,
-                          SourceBRId: sourceBRId,
-                          ReturnBRId: returnBRId
-                        });
-                      }
-                      console.log(selectedCustomerData);
-                    }}
-                  >
-                    Save
-                  </Button>
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => {
+                    if (selectedCustomerData) {
+                      setSelectedCustomerData({
+                        ...selectedCustomerData,
+                        SourceBRId: sourceBRId,
+                        ReturnBRId: returnBRId
+                      });
+                    }
+                    console.log(selectedCustomerData);
+                  }}
+                >
+                  Save
+                </Button>
               </div>
             </div>
           )}
