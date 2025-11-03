@@ -169,73 +169,101 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     console.log('dynamicPanelRefs.current:', dynamicPanelRefs.current);
     console.log('Object.keys(dynamicPanelRefs.current):', Object.keys(dynamicPanelRefs.current));
 
-    // Get data from each DynamicPanel
+    // Loop through each dynamic panel (each leg)
     Object.keys(dynamicPanelRefs.current).forEach(panelId => {
       console.log(`🔍 Processing panel: ${panelId}`);
       const panelRef = dynamicPanelRefs.current[panelId];
-      console.log(`🔍 Panel ref for ${panelId}:`, panelRef);
-
-      if (panelRef && panelRef.getFormValues) {
-        console.log(`🔍 Calling getFormValues for ${panelId}`);
-        const panelData = panelRef.getFormValues();
-        console.log(`🔍 Panel data for ${panelId}:`, panelData);
-        
-        // Check if this leg has been modified
-        // Determine leg index from panelId (supports current 'leg-<index>' format)
-        const legIndex = parseInt(panelId.replace('leg-', ''));
-        const originalLeg = selectedRoute?.LegDetails?.[legIndex];
-        let isModified = false;
-        
-        // Process pipe-separated values for Departure and Arrival
-        if (panelData.Departure && panelData.Departure.includes('||')) {
-          const parts = panelData.Departure.split('||');
-          panelData.Departure = parts[0].trim();
-          panelData.DepartureDescription = parts[1].trim();
-          isModified = true;
-        }
-        
-        if (panelData.Arrival && panelData.Arrival.includes('||')) {
-          const parts = panelData.Arrival.split('||');
-          panelData.Arrival = parts[0].trim();
-          panelData.ArrivalDescription = parts[1].trim();
-          isModified = true;
-        }
-        
-        // Process TransportMode field
-        if (panelData.TransportMode && panelData.TransportMode.includes('||')) {
-          panelData.TransportMode = extractIdFromPipeSeparatedValue(panelData.TransportMode);
-          isModified = true;
-        }
-        
-        // Process LegBehaviour field
-        if (panelData.LegBehaviour && panelData.LegBehaviour.includes('||')) {
-          const parts = panelData.LegBehaviour.split('||');
-          panelData.LegBehaviour = parts[0].trim();
-          panelData.LegBehaviourDescription = parts[0].trim(); // Using the same value for both as per requirement
-          isModified = true;
-        }
-        
-        // Update ModeFlag based on whether this is a new leg vs modified existing
-        if (originalLeg?.ModeFlag === 'Insert') {
-          // Preserve Insert for newly added legs regardless of field edits
-          panelData.ModeFlag = 'Insert';
-        } else if (isModified) {
-          panelData.ModeFlag = 'Update';
-        } else if (originalLeg) {
-          panelData.ModeFlag = originalLeg.ModeFlag || 'Nochange';
-        } else {
-          panelData.ModeFlag = 'Nochange';
-        }
-        
-        formData.legDetails.push(panelData);
-      } else {
-        console.log(`❌ No valid ref or getFormValues method for ${panelId}`);
+      if (!panelRef || !panelRef.getFormValues) {
+        console.log(`❌ No valid ref or getFormValues for ${panelId}`);
+        return;
       }
+
+      const panelData = panelRef.getFormValues();
+      const legIndex = parseInt(panelId.replace('leg-', ''));
+      const originalLeg = selectedRoute?.LegDetails?.[legIndex];
+      let isModified = false;
+      let departureChanged = false;
+      let arrivalChanged = false;
+
+      // ====== Normalize and compare Departure ======
+      if (panelData.Departure && panelData.Departure.includes('||')) {
+        const [depCode, depDesc] = panelData.Departure.split('||').map(x => x.trim());
+        panelData.Departure = depCode;
+        panelData.DepartureDescription = depDesc;
+      }
+      if (
+        originalLeg &&
+        (originalLeg.Departure !== panelData.Departure ||
+          originalLeg.DepartureDescription !== panelData.DepartureDescription)
+      ) {
+        departureChanged = true;
+        isModified = true;
+      }
+
+      // ====== Normalize and compare Arrival ======
+      if (panelData.Arrival && panelData.Arrival.includes('||')) {
+        const [arrCode, arrDesc] = panelData.Arrival.split('||').map(x => x.trim());
+        panelData.Arrival = arrCode;
+        panelData.ArrivalDescription = arrDesc;
+      }
+      if (
+        originalLeg &&
+        (originalLeg.Arrival !== panelData.Arrival ||
+          originalLeg.ArrivalDescription !== panelData.ArrivalDescription)
+      ) {
+        arrivalChanged = true;
+        isModified = true;
+      }
+
+      // ====== Normalize and compare TransportMode ======
+      if (panelData.TransportMode && panelData.TransportMode.includes('||')) {
+        const newMode = extractIdFromPipeSeparatedValue(panelData.TransportMode);
+        if (originalLeg && originalLeg.TransportMode !== newMode) {
+          isModified = true;
+        }
+        panelData.TransportMode = newMode;
+      }
+
+      // ====== Normalize and compare LegBehaviour ======
+      if (panelData.LegBehaviour && panelData.LegBehaviour.includes('||')) {
+        const [behaviour] = panelData.LegBehaviour.split('||').map(x => x.trim());
+        if (originalLeg && originalLeg.LegBehaviour !== behaviour) {
+          isModified = true;
+        }
+        panelData.LegBehaviour = behaviour;
+        panelData.LegBehaviourDescription = behaviour;
+      }
+
+      // ====== Reset LegID if location changed ======
+      if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
+        console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
+        panelData.LegID = null;
+      }
+
+      // ====== Determine ModeFlag correctly ======
+      if (originalLeg?.ModeFlag === 'Insert') {
+        panelData.ModeFlag = 'Insert'; // keep new legs as Insert
+      } else if (isModified) {
+        panelData.ModeFlag = 'Update';
+      } else {
+        panelData.ModeFlag = 'Nochange';
+      }
+
+      // Push into final array
+      formData.legDetails.push(panelData);
+
+      console.log(`✅ Processed leg ${legIndex}:`, {
+        ModeFlag: panelData.ModeFlag,
+        isModified,
+        departureChanged,
+        arrivalChanged
+      });
     });
 
-    console.log('📋 Form data collected:', formData);
+    console.log('📋 Final Form Data:', formData);
     return formData;
   };
+
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
@@ -356,7 +384,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'Departure',
         label: 'Departure',
         fieldType: 'lazyselect',
-        value: leg.Departure || leg.DepartureDescription || '',
+        value: leg.Departure && leg.DepartureDescription
+          ? `${leg.Departure} || ${leg.DepartureDescription}`
+          : (leg.Departure || leg.DepartureDescription || ''),
         mandatory: true,
         visible: true,
         editable: true,
@@ -369,7 +399,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'Arrival',
         label: 'Arrival',
         fieldType: 'lazyselect',
-        value: leg.Arrival || leg.ArrivalDescription || '',
+        value: leg.Arrival && leg.ArrivalDescription
+          ? `${leg.Arrival} || ${leg.ArrivalDescription}`
+          : (leg.Arrival || leg.ArrivalDescription || ''),
         mandatory: true,
         visible: true,
         editable: true,
@@ -382,7 +414,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'LegBehaviour',
         label: 'Leg Behaviour',
         fieldType: 'lazyselect',
-        value: leg.LegBehaviour || 'Pick',
+        value: leg.LegBehaviour && leg.LegBehaviourDescription
+          ? `${leg.LegBehaviour} || ${leg.LegBehaviourDescription}`
+          : (leg.LegBehaviour || leg.LegBehaviourDescription || ''),
         mandatory: false,
         visible: true,
         editable: true,
@@ -403,7 +437,32 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         width: 'six',
         fetchOptions: fetchTransportModes
         // Remove onChange since we're using ref-based approach
-      }
+      },
+      QCCode1: {
+        id: 'QCCode1',
+        label: 'QC Code 1',
+        fieldType: 'inputdropdown',
+        width: 'six',
+        value: '', // Uncontrolled - DynamicPanel manages its own state
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 7,
+        maxLength: 255,
+        // options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+        // Removed onChange events - using uncontrolled approach
+      },
+      Remarks: {
+        id: 'Remarks',
+        label: 'Remarks',
+        fieldType: 'text',
+        value: leg.Remarks?.toString() || '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 8,
+        width: 'six'
+      },
     };
   };
 
@@ -607,11 +666,27 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                         )}
                       </div>
                     ))}
-                    {leg.TripInfo[0]?.DraftBillNo && (
-                      <div className="text-sm text-gray-600 mt-2">
-                        Draftbill: {leg.TripInfo[0].DraftBillNo}
+                    {/* {leg.TripInfo[0]?.DraftBillNo && ( */}
+                      <div className="text-sm text-gray-600 mt-2 flex items-center gap-2">
+                        <span>Draftbill: {leg.TripInfo[0].DraftBillNo || '-'}</span>
+                        {leg.TripInfo[0]?.DraftBillStatus && (
+                          <Badge
+                            variant="outline"
+                            // className={`text-xs px-2 py-1 ${leg.TripInfo[0].DraftBillStatus === 'Approved'
+                            //     ? 'bg-green-50 text-green-700 border-green-200'
+                            //     : leg.TripInfo[0].DraftBillStatus === 'Pending'
+                            //       ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            //       : leg.TripInfo[0].DraftBillStatus === 'Rejected'
+                            //         ? 'bg-red-50 text-red-700 border-red-200'
+                            //         : 'bg-gray-50 text-gray-700 border-gray-200'
+                            //   }`}
+                          >
+                            {leg.TripInfo[0].DraftBillStatus}
+                          </Badge>
+                        )}
                       </div>
-                    )}
+                    {/* )} */}
+
                   </div>
                 )}
 
@@ -631,7 +706,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         </div>
 
         {/* Reason for Update */}
-        <div className="mt-6">
+        <div className="mt-6 max-w-md">
           <Label htmlFor="reasonForUpdate">Reason For Update</Label>
           {/* <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
             <SelectTrigger id="reasonForUpdate" className="mt-2">
