@@ -1600,7 +1600,7 @@ const TripPlanning = () => {
                                   handleOpenResourceDrawer('Supplier');
                                 }}
                               >
-                                <InfoIcon className="h-4 w-4" />
+                                <Search className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -1622,7 +1622,7 @@ const TripPlanning = () => {
                                   handleOpenResourceDrawer('Schedule');
                                 }}
                               >
-                                <InfoIcon className="h-4 w-4" />
+                                <Search className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -1790,7 +1790,7 @@ const TripPlanning = () => {
                                         handleOpenResourceDrawer('Supplier');
                                       }}
                                     >
-                                      <InfoIcon className="h-4 w-4" />
+                                      <Search className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
@@ -1812,7 +1812,7 @@ const TripPlanning = () => {
                                         handleOpenResourceDrawer('Schedule');
                                       }}
                                     >
-                                      <InfoIcon className="h-4 w-4" />
+                                      <Search className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
