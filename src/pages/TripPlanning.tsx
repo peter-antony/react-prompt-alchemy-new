@@ -37,6 +37,7 @@ import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { useDrawerStore } from '@/stores/drawerStore';
 import { VASTripDrawerScreen } from '@/components/drawer/VASTripDrawerScreen';
+import { BadgesList } from '@/components/ui/badges-list';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -139,7 +140,7 @@ const TripPlanning = () => {
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
-  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any[]>([]);
+  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
   const [listPopoverOpen, setListPopoverOpen] = useState(false);
   const [EquipmentCount, setEquipmentCount] = useState(0);
   const [EquipmentData, setEquipmentData] = useState(0);
@@ -1192,6 +1193,13 @@ const TripPlanning = () => {
     isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
   }`;
 
+  const handleRemoveEquipment = (index: number) => {
+    tripResourceDetailsData?.Equipments?.splice(index, 1);
+    console.log("handleRemoveEquipment ===", index);
+    setTripResourceDetailsData({...tripResourceDetailsData, Equipments: tripResourceDetailsData.Equipments});
+    console.log("tripResourceDetailsData ===", tripResourceDetailsData);
+  };
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -1539,9 +1547,9 @@ const TripPlanning = () => {
                   { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', iconColor: 'text-cyan-600' },
                   { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', iconColor: 'text-lime-600' },
                   { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
-                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-orange-600' },
-                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'text-amber-600' },
-                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-600' },
+                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-orange-600' },
+                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
+                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
                 ].map((resource) => {
                   const Icon = resource.icon;
                   return (
@@ -1632,9 +1640,9 @@ const TripPlanning = () => {
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
-                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'bg-orange-600' },
-                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-100' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'bg-orange-600' },
+                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-100' },
 
                         ].map((resource) => {
                           const Icon = resource.icon;
@@ -1821,10 +1829,10 @@ const TripPlanning = () => {
                                 { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                                { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
-                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData.Handlers?.length!=0)?tripResourceDetailsData.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData.Vehicle?.length!=0)?tripResourceDetailsData.Vehicle?.length:'', iconColor: 'bg-orange-100' },
-                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData.Drivers?.length!=0)?tripResourceDetailsData.Drivers?.length:'', iconColor: 'text-indigo-100' },
+                                { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(tripResourceDetailsData?.Equipments?.length !=0)? tripResourceDetailsData?.Equipments?.length :'', iconColor: 'text-red-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'bg-orange-100' },
+                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-100' },
               
                               ].map((resource) => {
                                 const Icon = resource.icon;
@@ -1837,8 +1845,15 @@ const TripPlanning = () => {
                                         </div>
                                         <div>
                                           <h3 className="font-medium text-sm">{resource.title} 
-                                            <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
+                                            <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource?.count}</span>
                                           </h3>
+                                          { resource.title == 'Equipment' && (
+                                            <BadgesList
+                                              items={tripResourceDetailsData?.Equipments}
+                                              onRemove={handleRemoveEquipment}
+                                              badgeVariant="secondary"
+                                            />
+                                          )}
                                           {resource.subtitle && (
                                             <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
                                           )}
