@@ -599,11 +599,12 @@ export const tripService = {
   },
   saveAttachments: async (params: any, tripUniqueID?: any): Promise<ApiResponse<Trip>> => {
     console.log("params = ",params)
+    const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
         UserID: "ramcouser",
         Role: "ramcorole",
-        OUID: 4,
+        OUID: userContext.ouId,
         MessageID: "12345",
         MessageType: "Save Attachment",
       },
@@ -633,13 +634,13 @@ export const tripService = {
     return response.data;
   },
   getAttachments: async ( tripUniqueID?: any): Promise<PaginatedResponse<Trip>> => {
-
+    const userContext = getUserContext();
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
         UserID: "ramcouser",
         Role: "ramcorole",
-        OUID: 4,
+        OUID: userContext.ouId,
         MessageID: "12345",
         MessageType: "Get Attachment",
       },
