@@ -280,86 +280,46 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           duration: selectedLegData.duration,
           
           // Activities array - this is the key data we want to bind
-          // activities: formattedActivities,
+          activities: formattedActivities,
           
           // Individual activity fields for easier form access
-          activities: formattedActivities.map((activity, index) => ({
-          ActivitySeqNo: activity.SeqNo,
-          ActivityName: activity.Activity,
-          ActivityDescription: activity.ActivityDescription,
-          CustomerName: activity.CustomerName,
-          CustomerID: activity.CustomerID,
-          PlannedDate: activity.PlannedDate,
-          PlannedTime: activity.PlannedTime,
-          CustomerOrder: activity.CustomerOrder,
-          EventProfile: activity.EventProfile,
-          RevisedDate: activity.RevisedDate,
-          RevisedTime: activity.RevisedTime,
-          ActualDate: activity.ActualDate,
-          ActualTime: activity.ActualTime,
-          DelayedIn: activity.DelayedIn,
-          // QuickCode1: activity.QuickCode1,
-          // QuickCode2: activity.QuickCode2,
-          // QuickCode3: activity.QuickCode3,
-          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
-          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
-          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
-          QuickCodeValue1: activity.QuickCodeValue1,
-          QuickCodeValue2: activity.QuickCodeValue2,
-          QuickCodeValue3: activity.QuickCodeValue3,
-          Remarks1: activity.Remarks1,
-          Remarks2: activity.Remarks2,
-          Remarks3: activity.Remarks3,
-          ReasonForChanges: activity.ReasonForChanges,
-          DelayedReason: activity.DelayedReason,
-          LastIdentifiedLocation:
-            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
-          LastIdentifiedDate: activity.LastIdentifiedDate,
-          LastIdentifiedTime: activity.LastIdentifiedTime,
-          AmendmentNo: activity.AmendmentNo,
-          })),
-          // ...(formattedActivities.length > 0 && {
-          //   firstActivity: formattedActivities[0],
-          //   lastActivity: formattedActivities[formattedActivities.length - 1],
-          //   activityCount: formattedActivities.length,
+          ...(formattedActivities.length > 0 && {
+            firstActivity: formattedActivities[0],
+            lastActivity: formattedActivities[formattedActivities.length - 1],
+            activityCount: formattedActivities.length,
             
-          //   // Bind first activity fields directly for easy access
-          //   ActivitySeqNo: formattedActivities[0].SeqNo,
-          //   ActivityName: formattedActivities[0].Activity,
-          //   ActivityDescription: formattedActivities[0].ActivityDescription,
-          //   CustomerName: formattedActivities[0].CustomerName,
-          //   CustomerID: formattedActivities[0].CustomerID,
-          //   PlannedDate: formattedActivities[0].PlannedDate,
-          //   PlannedTime: formattedActivities[0].PlannedTime,
-          //   CustomerOrder: formattedActivities[0].CustomerOrder,
-          //   EventProfile: formattedActivities[0].EventProfile,
-          //   RevisedDate: formattedActivities[0].RevisedDate,
-          //   RevisedTime: formattedActivities[0].RevisedTime,
-          //   ActualDate: formattedActivities[0].ActualDate,
-          //   ActualTime: formattedActivities[0].ActualTime,
-          //   DelayedIn: formattedActivities[0].DelayedIn,
-          //   // QuickCode1: formattedActivities[0].QuickCode1,
-          //   QuickCode1: { dropdown: formattedActivities[0].QuickCode1 , input: formattedActivities[0].QuickCodeValue1 },
-
-          //   // QuickCode2: formattedActivities[0].QuickCode2,
-          //   // QuickCode3: formattedActivities[0].QuickCode3,
-          //   QuickCode2: { dropdown: formattedActivities[0].QuickCode2 , input: formattedActivities[0].QuickCodeValue2 },
-          //   QuickCode3: { dropdown: formattedActivities[0].QuickCode3 , input: formattedActivities[0].QuickCodeValue13 },
-
-          //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-          //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-          //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-          //   Remarks1: formattedActivities[0].Remarks1,
-          //   Remarks2: formattedActivities[0].Remarks2,
-          //   Remarks3: formattedActivities[0].Remarks3,
-          //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
-          //   DelayedReason: formattedActivities[0].DelayedReason,
-          //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-          //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-          //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-          //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-          //   AmendmentNo: formattedActivities[0].AmendmentNo,
-          // }),
+            // Bind first activity fields directly for easy access
+            ActivitySeqNo: formattedActivities[0].SeqNo,
+            ActivityName: formattedActivities[0].Activity,
+            ActivityDescription: formattedActivities[0].ActivityDescription,
+            CustomerName: formattedActivities[0].CustomerName,
+            CustomerID: formattedActivities[0].CustomerID,
+            PlannedDate: formattedActivities[0].PlannedDate,
+            PlannedTime: formattedActivities[0].PlannedTime,
+            CustomerOrder: formattedActivities[0].CustomerOrder,
+            EventProfile: formattedActivities[0].EventProfile,
+            RevisedDate: formattedActivities[0].RevisedDate,
+            RevisedTime: formattedActivities[0].RevisedTime,
+            ActualDate: formattedActivities[0].ActualDate,
+            ActualTime: formattedActivities[0].ActualTime,
+            DelayedIn: formattedActivities[0].DelayedIn,
+            QuickCode1: formattedActivities[0].QuickCode1,
+            QuickCode2: formattedActivities[0].QuickCode2,
+            QuickCode3: formattedActivities[0].QuickCode3,
+            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+            Remarks1: formattedActivities[0].Remarks1,
+            Remarks2: formattedActivities[0].Remarks2,
+            Remarks3: formattedActivities[0].Remarks3,
+            ReasonForChanges: formattedActivities[0].ReasonForChanges,
+            DelayedReason: formattedActivities[0].DelayedReason,
+            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+            AmendmentNo: formattedActivities[0].AmendmentNo,
+          }),
           
           // Consignments data
           consignments: consignmentsData,
@@ -369,6 +329,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           transshipments: selectedLegData.transshipments || []
         };
         console.log("formData ====", formData);
+        console.log("formData ====", tripExecutionRef.current.setFormValues);
         tripExecutionRef.current.setFormValues(formData);
         // Create additional activities form data
         const additionalFormData = {
@@ -445,85 +406,46 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           duration: selectedLegData.duration,
           
           // Activities array - this is the key data we want to bind
-          // activities: formattedActivities,
+          activities: formattedActivities,
           
           // Individual activity fields for easier form access
-          activities: formattedActivities.map((activity, index) => ({
-          ActivitySeqNo: activity.SeqNo,
-          ActivityName: activity.Activity,
-          ActivityDescription: activity.ActivityDescription,
-          CustomerName: activity.CustomerName,
-          CustomerID: activity.CustomerID,
-          PlannedDate: activity.PlannedDate,
-          PlannedTime: activity.PlannedTime,
-          CustomerOrder: activity.CustomerOrder,
-          EventProfile: activity.EventProfile,
-          RevisedDate: activity.RevisedDate,
-          RevisedTime: activity.RevisedTime,
-          ActualDate: activity.ActualDate,
-          ActualTime: activity.ActualTime,
-          DelayedIn: activity.DelayedIn,
-          // QuickCode1: activity.QuickCode1,
-          // QuickCode2: activity.QuickCode2,
-          // QuickCode3: activity.QuickCode3,
-          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
-          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
-          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
-          QuickCodeValue1: activity.QuickCodeValue1,
-          QuickCodeValue2: activity.QuickCodeValue2,
-          QuickCodeValue3: activity.QuickCodeValue3,
-          Remarks1: activity.Remarks1,
-          Remarks2: activity.Remarks2,
-          Remarks3: activity.Remarks3,
-          ReasonForChanges: activity.ReasonForChanges,
-          DelayedReason: activity.DelayedReason,
-          LastIdentifiedLocation:
-            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
-          LastIdentifiedDate: activity.LastIdentifiedDate,
-          LastIdentifiedTime: activity.LastIdentifiedTime,
-          AmendmentNo: activity.AmendmentNo,
-          })),
-          // ...(formattedActivities.length > 0 && {
-          //   firstActivity: formattedActivities[0],
-          //   lastActivity: formattedActivities[formattedActivities.length - 1],
-          //   activityCount: formattedActivities.length,
+          ...(formattedActivities.length > 0 && {
+            firstActivity: formattedActivities[0],
+            lastActivity: formattedActivities[formattedActivities.length - 1],
+            activityCount: formattedActivities.length,
             
-          //   // Bind first activity fields directly for easy access
-          //   ActivitySeqNo: formattedActivities[0].SeqNo,
-          //   ActivityName: formattedActivities[0].Activity,
-          //   ActivityDescription: formattedActivities[0].ActivityDescription,
-          //   CustomerName: formattedActivities[0].CustomerName,
-          //   CustomerID: formattedActivities[0].CustomerID,
-          //   PlannedDate: formattedActivities[0].PlannedDate,
-          //   PlannedTime: formattedActivities[0].PlannedTime,
-          //   CustomerOrder: formattedActivities[0].CustomerOrder,
-          //   EventProfile: formattedActivities[0].EventProfile,
-          //   RevisedDate: formattedActivities[0].RevisedDate,
-          //   RevisedTime: formattedActivities[0].RevisedTime,
-          //   ActualDate: formattedActivities[0].ActualDate,
-          //   ActualTime: formattedActivities[0].ActualTime,
-          //   DelayedIn: formattedActivities[0].DelayedIn,
-          //   // QuickCode1: formattedActivities[0].QuickCode1,
-          //   QuickCode1: { dropdown: formattedActivities[0].QuickCode1 , input: formattedActivities[0].QuickCodeValue1 },
-          //   QuickCode2: { dropdown: formattedActivities[0].QuickCode2 , input: formattedActivities[0].QuickCodeValue2 },
-          //   QuickCode3: { dropdown: formattedActivities[0].QuickCode3 , input: formattedActivities[0].QuickCodeValue3 },
-            
-          //   // QuickCode2: formattedActivities[0].QuickCode2,
-          //   // QuickCode3: formattedActivities[0].QuickCode3,
-          //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-          //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-          //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-          //   Remarks1: formattedActivities[0].Remarks1,
-          //   Remarks2: formattedActivities[0].Remarks2,
-          //   Remarks3: formattedActivities[0].Remarks3,
-          //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
-          //   DelayedReason: formattedActivities[0].DelayedReason,
-          //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-          //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-          //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-          //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-          //   AmendmentNo: formattedActivities[0].AmendmentNo,
-          // }),
+            // Bind first activity fields directly for easy access
+            ActivitySeqNo: formattedActivities[0].SeqNo,
+            ActivityName: formattedActivities[0].Activity,
+            ActivityDescription: formattedActivities[0].ActivityDescription,
+            CustomerName: formattedActivities[0].CustomerName,
+            CustomerID: formattedActivities[0].CustomerID,
+            PlannedDate: formattedActivities[0].PlannedDate,
+            PlannedTime: formattedActivities[0].PlannedTime,
+            CustomerOrder: formattedActivities[0].CustomerOrder,
+            EventProfile: formattedActivities[0].EventProfile,
+            RevisedDate: formattedActivities[0].RevisedDate,
+            RevisedTime: formattedActivities[0].RevisedTime,
+            ActualDate: formattedActivities[0].ActualDate,
+            ActualTime: formattedActivities[0].ActualTime,
+            DelayedIn: formattedActivities[0].DelayedIn,
+            QuickCode1: formattedActivities[0].QuickCode1,
+            QuickCode2: formattedActivities[0].QuickCode2,
+            QuickCode3: formattedActivities[0].QuickCode3,
+            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+            Remarks1: formattedActivities[0].Remarks1,
+            Remarks2: formattedActivities[0].Remarks2,
+            Remarks3: formattedActivities[0].Remarks3,
+            ReasonForChanges: formattedActivities[0].ReasonForChanges,
+            DelayedReason: formattedActivities[0].DelayedReason,
+            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+            AmendmentNo: formattedActivities[0].AmendmentNo,
+          }),
           
           // Consignments data
           consignments: consignmentsData,
@@ -533,7 +455,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           transshipments: selectedLegData.transshipments || []
         };
         console.log("formData -----", formData.activities[0]);
-        console.log("Loading useeffect ends...")
+        // Make sure to bind the entire formData, not just the first activity, 
+        // so the Activities panel gets all fields it expects.
+        // The DynamicPanel usually expects a full set of fields, not just a partial activity object.
+        if (tripExecutionRef?.current?.setFormValues) {
+          tripExecutionRef.current.setFormValues(formData);
+        }
+        console.log("tripExecutionRef?.current?.setFormValues ", tripExecutionRef?.current?.setFormValues);
+        // if (tripExecutionRef?.current?.setFormValues) {
+        tripExecutionRef?.current?.setFormValues(formData.activities[0]);
+        console.log("Data automatically bound to tripExecutionRef on leg change");
+        // }
 
         const additionalFormData = {
           // Basic leg information
@@ -619,7 +551,6 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
   const { getLegDetails, tripData, setTrip } = manageTripStore();
     
-
   const onSaveActivities = async () => {
     console.log("Saving activities");
     
@@ -648,167 +579,33 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       
       console.log("Found leg at index:", legIndex, "in getLegDetails() data");
       
-      // Collect data from all DynamicPanel forms
-      const allFormData: any[] = [];
+      // Get form data from tripExecutionRef
+      let formData = null;
       
-      // Get data from the main tripExecutionRef
       if (tripExecutionRef?.current?.getFormValues) {
         try {
-          const mainFormData = tripExecutionRef.current.getFormValues();
-          if (mainFormData && Object.keys(mainFormData).length > 0) {
-            allFormData.push({
-              formId: 'main-form',
-              formType: 'main',
-              data: mainFormData
-            });
-            console.log("Main form data:", mainFormData);
-          }
+          formData = tripExecutionRef.current.getFormValues();
+          console.log("Form data from tripExecutionRef:", formData);
         } catch (error) {
           console.warn("tripExecutionRef.getFormValues() failed:", error);
         }
       }
-      console.log("allFormData Before: ",allFormData)
-      console.log("formRefs Before: ",formRefs)
       
-      let localFormArray = [];
-      // Get data from all individual form refs
-      formRefs.current.forEach((ref, formId) => {
-        if (ref?.current?.getFormValues) {
-          try {
-            console.log(`ref.current.getFormValues() -- `,ref.current.getFormValues());
-            const formData = ref.current.getFormValues();
-            if (formData && Object.keys(formData).length > 0) {
-              // Remove unwanted fields from formData before pushing to localFormArray
-              const { NetAmount, id, title, ...cleanedFormData } = formData;
-              const transformedFormData = transformQuickCodeFields(cleanedFormData, '');
-              console.log("transformedFormData ", transformedFormData);
-              console.log("formData ", cleanedFormData);
-
-              // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
-              let LastIdentifiedLocationValue = '';
-              let LastIdentifiedLocationLabel = '';
-
-              if (typeof cleanedFormData.LastIdentifiedLocation === 'string' && cleanedFormData.LastIdentifiedLocation.includes('||')) {
-                // If activityName is a string with '||', split it into value and label
-                const [value, ...labelParts] = cleanedFormData.LastIdentifiedLocation.split('||');
-                LastIdentifiedLocationValue = value.trim();
-                LastIdentifiedLocationLabel = labelParts.join('||').trim();
-              } else if (typeof cleanedFormData.LastIdentifiedLocation === 'string') {
-                LastIdentifiedLocationValue = cleanedFormData.LastIdentifiedLocation;
-                LastIdentifiedLocationLabel = cleanedFormData.LastIdentifiedLocation;
-              } else if (typeof cleanedFormData.LastIdentifiedLocation === 'object' && cleanedFormData.LastIdentifiedLocation !== null) {
-                // In case it's already an object (from dropdown)
-                const splitData = splitDropdowns(cleanedFormData.LastIdentifiedLocation);
-                LastIdentifiedLocationValue = splitData.value || '';
-                LastIdentifiedLocationLabel = splitData.label || '';
-              }
-
-              // Fallback if label is empty, just use value
-              if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
-
-              const updatedFormData = {
-                ...cleanedFormData,
-                QuickCode1: transformedFormData.QuickCode1 || '',
-                QuickCode2: transformedFormData.QuickCode2 || '',
-                QuickCode3: transformedFormData.QuickCode3 || '',
-                QuickCodeValue1: transformedFormData.QuickCodeValue1 || '',
-                QuickCodeValue2: transformedFormData.QuickCodeValue2 || '',
-                QuickCodeValue3: transformedFormData.QuickCodeValue3 || '',
-                LastIdentifiedLocation: LastIdentifiedLocationValue,
-                LastIdentifiedLocationDescription: LastIdentifiedLocationLabel,
-                ModeFlag:
-                  cleanedFormData.ModeFlag === 'Insert'
-                    ? 'Insert'
-                    : (cleanedFormData.ModeFlag === 'NoChange' || !cleanedFormData.ModeFlag)
-                      ? 'Update'
-                      : cleanedFormData.ModeFlag
-              };
-              allFormData.push({
-                formId: formId,
-                formType: 'dynamic',
-                data: updatedFormData
-              });
-              console.log("allFormData AFter: ",allFormData)
-              // Push cleaned data to localFormArray
-              localFormArray.push(updatedFormData);
-              console.log(`Form ${formId} data:`, updatedFormData);
-              console.log(`Form ${formId} cleaned data (removed NetAmount, id, title):`, cleanedFormData);
-            }
-          } catch (error) {
-            console.warn(`Form ${formId} getFormValues() failed:`, error);
-          }
-        }
-      });
-      console.log(`localFormArray:`, localFormArray);
+      // Fallback to state-based form data
+      if (!formData || Object.keys(formData).length === 0) {
+        formData = formDataState;
+        console.log("Using state-based form data:", formData);
+      }
       
-      // Get data from eventsForms (popup created forms)
-      // eventsForms.forEach((eventForm, index) => {
-      //   if (eventForm.data && Object.keys(eventForm.data).length > 0) {
-      //     // Remove unwanted fields from eventForm.data before pushing to localFormArray
-      //     const { NetAmount, id, title, ...cleanedEventData } = eventForm.data;
-          
-      //     allFormData.push(eventForm.data);
-      //     // allFormData.push({
-      //     //   formId: eventForm.id,
-      //     //   formType: 'event',
-      //     //   data: eventForm.data,
-      //     //   title: eventForm.title,
-      //     //   createdAt: eventForm.createdAt
-      //     // });
-          
-      //     // Push cleaned data to localFormArray
-      //     localFormArray.push(cleanedEventData);
-      //     console.log(`Event form ${eventForm.id} data:`, eventForm.data);
-      //     console.log(`Event form ${eventForm.id} cleaned data (removed NetAmount, id, title):`, cleanedEventData);
-      //   }
-      // });
+      if (!formData) {
+        console.warn("No form data available");
+        // toast.error('No form data available');
+        return null;
+      }
       
-      // console.log("All collected form data:", allFormData);
-      
-      // if (allFormData.length === 0) {
-      //   console.warn("No form data available from any forms");
-      //   toast({
-      //     title: "Warning",
-      //     description: "No form data available to save",
-      //     variant: "destructive",
-      //   });
-      //   return null;
-      // }
-      
-      // Display summary of collected forms
-      // console.log(`✅ Successfully collected data from ${allFormData.length} forms:`);
-      // allFormData.forEach((form, index) => {
-      //   console.log(`  ${index + 1}. ${form.formType} form (${form.formId}):`, form.data);
-      //   if (form.title) {
-      //     console.log(`     Title: ${form.title}`);
-      //   }
-      //   if (form.createdAt) {
-      //     console.log(`     Created: ${form.createdAt}`);
-      //   }
-      // });
-      
-      // Show success message with form count
-      toast({
-        title: "Forms Collected",
-        description: `Successfully collected data from ${allFormData.length} forms`,
-        variant: "default",
-      });
-      
-      // Use the first form data as the primary data for backward compatibility
-      // let formData = allFormData[0]?.data || formDataState;
-      let formData = localFormArray;
-      
-      // Remove unwanted fields from main formData
-      // if (formData && typeof formData === 'object') {
-      //   const { NetAmount, id, title, ...cleanedFormData } = formData;
-      //   formData = cleanedFormData;
-      //   console.log("Main formData cleaned (removed NetAmount, id, title):", formData);
-      // }
-      
-      console.log("formData +++++++save++++++", formData);
       // Get the sequence number from form data
-      // const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
-      // console.log("Sequence number from form:", sequenceNumber);
+      const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
+      console.log("Sequence number from form:", sequenceNumber);
       
       // Get the current leg's activities
       const currentLeg = fullLegDetails[legIndex];
@@ -816,63 +613,89 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       console.log("Current activities in leg:", currentActivities);
       
       // Find the activity by sequence number
-      // const activityIndex = currentActivities.findIndex((activity: any) => 
-      //   activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
-      // );
+      const activityIndex = currentActivities.findIndex((activity: any) => 
+        activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
+      );
       
-      // if (activityIndex === -1) {
-      //   console.warn(`Activity with sequence number ${sequenceNumber} not found`);
-      //   // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
-      //   return null;
-      // }
+      if (activityIndex === -1) {
+        console.warn(`Activity with sequence number ${sequenceNumber} not found`);
+        // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
+        return null;
+      }
+
+      console.log("formData ==========================", formData);
       
-      // console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
+      // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+      let LastIdentifiedLocationValue = '';
+      let LastIdentifiedLocationLabel = '';
+
+      if (typeof formData.LastIdentifiedLocation === 'string' && formData.LastIdentifiedLocation.includes('||')) {
+        // If activityName is a string with '||', split it into value and label
+        const [value, ...labelParts] = formData.LastIdentifiedLocation.split('||');
+        LastIdentifiedLocationValue = value.trim();
+        LastIdentifiedLocationLabel = labelParts.join('||').trim();
+      } else if (typeof formData.LastIdentifiedLocation === 'string') {
+        LastIdentifiedLocationValue = formData.LastIdentifiedLocation;
+        LastIdentifiedLocationLabel = formData.LastIdentifiedLocation;
+      } else if (typeof formData.LastIdentifiedLocation === 'object' && formData.LastIdentifiedLocation !== null) {
+        // In case it's already an object (from dropdown)
+        const splitData = splitDropdowns(formData.LastIdentifiedLocation);
+        LastIdentifiedLocationValue = splitData.value || '';
+        LastIdentifiedLocationLabel = splitData.label || '';
+      }
+
+      // Fallback if label is empty, just use value
+      if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
+      
+      console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
       
       // Create updated activity with form data
-      // const currentActivity = currentActivities[activityIndex] as any;
-      // const updatedActivity = {
-      //   ...currentActivity,
-      //   // Update with form data
-      //   Activity: formData.ActivityName || currentActivity.Activity,
-      //   ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
-      //   CustomerID: formData.CustomerID || currentActivity.CustomerID,
-      //   CustomerName: formData.CustomerName || currentActivity.CustomerName,
-      //   ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
-      //   CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
-      //   PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
-      //   PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
-      //   RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
-      //   RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
-      //   ActualDate: formData.ActualDate || currentActivity['ActualDate'],
-      //   ActualTime: formData.ActualTime || currentActivity['ActualTime'],
-      //   DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
-      //   // Transform QuickCode objects to separate fields using helper function
-      //   ...transformQuickCodeFields(formData, currentActivity),
-      //   Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
-      //   Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
-      //   Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
-      //   EventProfile: formData.EventProfile || currentActivity['EventProfile'],
-      //   ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
-      //   DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
-      //   LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
-      //   LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
-      //   LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
-      //   LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
-      //   AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
-      //   ModeFlag: 'Update'
-      //   // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
-      // };
+      const currentActivity = currentActivities[activityIndex] as any;
+      const updatedActivity = {
+        ...currentActivity,
+        // Update with form data
+        Activity: formData.ActivityName || currentActivity.Activity,
+        ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
+        CustomerID: formData.CustomerID || currentActivity.CustomerID,
+        CustomerName: formData.CustomerName || currentActivity.CustomerName,
+        ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
+        CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
+        PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
+        PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
+        RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
+        RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
+        ActualDate: formData.ActualDate || currentActivity['ActualDate'],
+        ActualTime: formData.ActualTime || currentActivity['ActualTime'],
+        DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
+        // Transform QuickCode objects to separate fields using helper function
+        ...transformQuickCodeFields(formData, currentActivity),
+        Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
+        Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
+        Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
+        EventProfile: formData.EventProfile || currentActivity['EventProfile'],
+        ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
+        DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
+        LastIdentifiedLocation: LastIdentifiedLocationValue || currentActivity['LastIdentifiedLocation'],
+        LastIdentifiedLocationDescription: LastIdentifiedLocationLabel || currentActivity['LastIdentifiedLocationDescription'],
+        // LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
+        // LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
+        LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
+        LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
+        AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
+        ModeFlag: 'Update'
+        // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
+      };
       
-      // console.log("Updated activity:", updatedActivity);
+      console.log("Updated activity:", updatedActivity);
       
       // Update the activity in the full leg details
       const updatedLegDetails = [...fullLegDetails];
       updatedLegDetails[legIndex] = {
         ...updatedLegDetails[legIndex],
         Activities: [
-          // ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
-          ...formData,
-          // ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
+          ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
+          updatedActivity,
+          ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
         ]
       };
       
@@ -1011,14 +834,23 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             variant: "destructive", // or "success" if you have custom variant
           });
         }
+        // const resourceStatus = JSON.parse(response?.data?.ResponseData)[0].Status;
+        // const isSuccessStatus = JSON.parse(response?.data?.IsSuccess);
+        // if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+        //   toast({
+        //     title: "✅ Form submitted successfully",
+        //     description: "Your changes have been saved.",
+        //     variant: "default", // or "success" if you have custom variant
+        //   });
+        // }else{
+        //   toast({
+        //     title: "⚠️ Submission failed",
+        //     description: isSuccessStatus ? JSON.parse(response?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+        //     variant: "destructive", // or "success" if you have custom variant
+        //   });
+        // }
       } catch (err) {
-        console.error("Error saving activities:", err);
-        toast({
-          title: "⚠️ Submission failed",
-          description: (err as any)?.data?.Message,
-          variant: "destructive", // or "success" if you have custom variant
-        });
-        // return null;
+
       }
       
       // Push the updated trip data back to the store
@@ -1066,6 +898,449 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     // }
   };
 
+  // const onSaveActivities = async () => {
+  //   console.log("Saving activities");
+    
+  //   // try {
+  //     // Get the selected leg data
+  //     const selectedLegData = legs.find(leg => leg.id === selectedLegId);
+  //     if (!selectedLegData) {
+  //       console.warn("No selected leg found");
+  //       // toast.error('No leg selected');
+  //       return null;
+  //     }
+      
+  //     console.log("Selected leg data:", selectedLegData);
+      
+  //     // Get the full getLegDetails() data from manageTripStore
+  //     const fullLegDetails = getLegDetails();
+  //     console.log("Full getLegDetails() data:", fullLegDetails);
+      
+  //     // Find the leg in the full data by matching the selectedLegData.id
+  //     const legIndex = fullLegDetails.findIndex((leg: any) => leg.LegSequence === selectedLegData.id);
+  //     if (legIndex === -1) {
+  //       console.warn("Leg not found in getLegDetails() data");
+  //       // toast.error('Leg not found in trip data');
+  //       return null;
+  //     }
+      
+  //     console.log("Found leg at index:", legIndex, "in getLegDetails() data");
+      
+  //     // Collect data from all DynamicPanel forms
+  //     const allFormData: any[] = [];
+      
+  //     // Get data from the main tripExecutionRef
+  //     if (tripExecutionRef?.current?.getFormValues) {
+  //       try {
+  //         const mainFormData = tripExecutionRef.current.getFormValues();
+  //         if (mainFormData && Object.keys(mainFormData).length > 0) {
+  //           allFormData.push({
+  //             formId: 'main-form',
+  //             formType: 'main',
+  //             data: mainFormData
+  //           });
+  //           console.log("Main form data:", mainFormData);
+  //         }
+  //       } catch (error) {
+  //         console.warn("tripExecutionRef.getFormValues() failed:", error);
+  //       }
+  //     }
+      
+  //     let localFormArray = [];
+  //     // Get data from all individual form refs
+  //     formRefs.current.forEach((ref, formId) => {
+  //       if (ref?.current?.getFormValues) {
+  //         try {
+  //           const formData = ref.current.getFormValues();
+  //           if (formData && Object.keys(formData).length > 0) {
+  //             // Remove unwanted fields from formData before pushing to localFormArray
+  //             const { NetAmount, id, title, ...cleanedFormData } = formData;
+  //             const transformedFormData = transformQuickCodeFields(cleanedFormData, '');
+  //             console.log("transformedFormData ", transformedFormData);
+  //             console.log("formData ", cleanedFormData);
+
+  //             // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+  //             let LastIdentifiedLocationValue = '';
+  //             let LastIdentifiedLocationLabel = '';
+
+  //             if (typeof cleanedFormData.LastIdentifiedLocation === 'string' && cleanedFormData.LastIdentifiedLocation.includes('||')) {
+  //               // If activityName is a string with '||', split it into value and label
+  //               const [value, ...labelParts] = cleanedFormData.LastIdentifiedLocation.split('||');
+  //               LastIdentifiedLocationValue = value.trim();
+  //               LastIdentifiedLocationLabel = labelParts.join('||').trim();
+  //             } else if (typeof cleanedFormData.LastIdentifiedLocation === 'string') {
+  //               LastIdentifiedLocationValue = cleanedFormData.LastIdentifiedLocation;
+  //               LastIdentifiedLocationLabel = cleanedFormData.LastIdentifiedLocation;
+  //             } else if (typeof cleanedFormData.LastIdentifiedLocation === 'object' && cleanedFormData.LastIdentifiedLocation !== null) {
+  //               // In case it's already an object (from dropdown)
+  //               const splitData = splitDropdowns(cleanedFormData.LastIdentifiedLocation);
+  //               LastIdentifiedLocationValue = splitData.value || '';
+  //               LastIdentifiedLocationLabel = splitData.label || '';
+  //             }
+
+  //             // Fallback if label is empty, just use value
+  //             if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
+
+  //             const updatedFormData = {
+  //               ...cleanedFormData,
+  //               QuickCode1: transformedFormData.QuickCode1 || '',
+  //               QuickCode2: transformedFormData.QuickCode2 || '',
+  //               QuickCode3: transformedFormData.QuickCode3 || '',
+  //               QuickCodeValue1: transformedFormData.QuickCodeValue1 || '',
+  //               QuickCodeValue2: transformedFormData.QuickCodeValue2 || '',
+  //               QuickCodeValue3: transformedFormData.QuickCodeValue3 || '',
+  //               LastIdentifiedLocation: LastIdentifiedLocationValue,
+  //               LastIdentifiedLocationDescription: LastIdentifiedLocationLabel,
+  //               ModeFlag:
+  //                 cleanedFormData.ModeFlag === 'Insert'
+  //                   ? 'Insert'
+  //                   : (cleanedFormData.ModeFlag === 'NoChange' || !cleanedFormData.ModeFlag)
+  //                     ? 'Update'
+  //                     : cleanedFormData.ModeFlag
+  //             };
+  //             allFormData.push({
+  //               formId: formId,
+  //               formType: 'dynamic',
+  //               data: updatedFormData
+  //             });
+              
+  //             // Push cleaned data to localFormArray
+  //             localFormArray.push(updatedFormData);
+  //             console.log(`Form ${formId} data:`, updatedFormData);
+  //             console.log(`Form ${formId} cleaned data (removed NetAmount, id, title):`, cleanedFormData);
+  //           }
+  //         } catch (error) {
+  //           console.warn(`Form ${formId} getFormValues() failed:`, error);
+  //         }
+  //       }
+  //     });
+  //     console.log(`localFormArray:`, localFormArray);
+      
+  //     // Get data from eventsForms (popup created forms)
+  //     // eventsForms.forEach((eventForm, index) => {
+  //     //   if (eventForm.data && Object.keys(eventForm.data).length > 0) {
+  //     //     // Remove unwanted fields from eventForm.data before pushing to localFormArray
+  //     //     const { NetAmount, id, title, ...cleanedEventData } = eventForm.data;
+          
+  //     //     allFormData.push(eventForm.data);
+  //     //     // allFormData.push({
+  //     //     //   formId: eventForm.id,
+  //     //     //   formType: 'event',
+  //     //     //   data: eventForm.data,
+  //     //     //   title: eventForm.title,
+  //     //     //   createdAt: eventForm.createdAt
+  //     //     // });
+          
+  //     //     // Push cleaned data to localFormArray
+  //     //     localFormArray.push(cleanedEventData);
+  //     //     console.log(`Event form ${eventForm.id} data:`, eventForm.data);
+  //     //     console.log(`Event form ${eventForm.id} cleaned data (removed NetAmount, id, title):`, cleanedEventData);
+  //     //   }
+  //     // });
+      
+  //     // console.log("All collected form data:", allFormData);
+      
+  //     // if (allFormData.length === 0) {
+  //     //   console.warn("No form data available from any forms");
+  //     //   toast({
+  //     //     title: "Warning",
+  //     //     description: "No form data available to save",
+  //     //     variant: "destructive",
+  //     //   });
+  //     //   return null;
+  //     // }
+      
+  //     // Display summary of collected forms
+  //     // console.log(`✅ Successfully collected data from ${allFormData.length} forms:`);
+  //     // allFormData.forEach((form, index) => {
+  //     //   console.log(`  ${index + 1}. ${form.formType} form (${form.formId}):`, form.data);
+  //     //   if (form.title) {
+  //     //     console.log(`     Title: ${form.title}`);
+  //     //   }
+  //     //   if (form.createdAt) {
+  //     //     console.log(`     Created: ${form.createdAt}`);
+  //     //   }
+  //     // });
+      
+  //     // Show success message with form count
+  //     toast({
+  //       title: "Forms Collected",
+  //       description: `Successfully collected data from ${allFormData.length} forms`,
+  //       variant: "default",
+  //     });
+      
+  //     // Use the first form data as the primary data for backward compatibility
+  //     // let formData = allFormData[0]?.data || formDataState;
+  //     let formData = localFormArray;
+      
+  //     // Remove unwanted fields from main formData
+  //     // if (formData && typeof formData === 'object') {
+  //     //   const { NetAmount, id, title, ...cleanedFormData } = formData;
+  //     //   formData = cleanedFormData;
+  //     //   console.log("Main formData cleaned (removed NetAmount, id, title):", formData);
+  //     // }
+      
+  //     console.log("formData +++++++++++++", formData);
+  //     // Get the sequence number from form data
+  //     // const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
+  //     // console.log("Sequence number from form:", sequenceNumber);
+      
+  //     // Get the current leg's activities
+  //     const currentLeg = fullLegDetails[legIndex];
+  //     const currentActivities = currentLeg.Activities || [];
+  //     console.log("Current activities in leg:", currentActivities);
+      
+  //     // Find the activity by sequence number
+  //     // const activityIndex = currentActivities.findIndex((activity: any) => 
+  //     //   activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
+  //     // );
+      
+  //     // if (activityIndex === -1) {
+  //     //   console.warn(`Activity with sequence number ${sequenceNumber} not found`);
+  //     //   // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
+  //     //   return null;
+  //     // }
+      
+  //     // console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
+      
+  //     // Create updated activity with form data
+  //     // const currentActivity = currentActivities[activityIndex] as any;
+  //     // const updatedActivity = {
+  //     //   ...currentActivity,
+  //     //   // Update with form data
+  //     //   Activity: formData.ActivityName || currentActivity.Activity,
+  //     //   ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
+  //     //   CustomerID: formData.CustomerID || currentActivity.CustomerID,
+  //     //   CustomerName: formData.CustomerName || currentActivity.CustomerName,
+  //     //   ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
+  //     //   CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
+  //     //   PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
+  //     //   PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
+  //     //   RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
+  //     //   RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
+  //     //   ActualDate: formData.ActualDate || currentActivity['ActualDate'],
+  //     //   ActualTime: formData.ActualTime || currentActivity['ActualTime'],
+  //     //   DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
+  //     //   // Transform QuickCode objects to separate fields using helper function
+  //     //   ...transformQuickCodeFields(formData, currentActivity),
+  //     //   Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
+  //     //   Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
+  //     //   Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
+  //     //   EventProfile: formData.EventProfile || currentActivity['EventProfile'],
+  //     //   ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
+  //     //   DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
+  //     //   LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
+  //     //   LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
+  //     //   LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
+  //     //   LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
+  //     //   AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
+  //     //   ModeFlag: 'Update'
+  //     //   // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
+  //     // };
+      
+  //     // console.log("Updated activity:", updatedActivity);
+      
+  //     // Update the activity in the full leg details
+  //     const updatedLegDetails = [...fullLegDetails];
+  //     updatedLegDetails[legIndex] = {
+  //       ...updatedLegDetails[legIndex],
+  //       Activities: [
+  //         // ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
+  //         ...formData,
+  //         // ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
+  //       ]
+  //     };
+      
+  //     console.log("Updated leg details:", updatedLegDetails[legIndex]);
+  //     console.log("Updated activities array:", updatedLegDetails[legIndex].Activities);
+      
+  //     // Handle Additional Activities if tripAdditionalRef is available
+  //     let updatedAdditionalActivity = null;
+  //     if (tripAdditionalRef?.current?.getFormValues) {
+  //       try {
+  //         // Get additional activities form data from tripAdditionalRef
+  //         let additionalFormData = null;
+          
+  //         if (tripAdditionalRef?.current?.getFormValues) {
+  //           try {
+  //             additionalFormData = tripAdditionalRef.current.getFormValues();
+  //             console.log("Additional activities form data from tripAdditionalRef:", additionalFormData);
+  //           } catch (error) {
+  //             console.warn("tripAdditionalRef.getFormValues() failed:", error);
+  //           }
+  //         }
+          
+  //         // Fallback to state-based form data
+  //         if (!additionalFormData || Object.keys(additionalFormData).length === 0) {
+  //           additionalFormData = additionalFormDataState;
+  //           console.log("Using state-based additional activities form data:", additionalFormData);
+  //         }
+          
+  //         if (additionalFormData && Object.keys(additionalFormData).length > 0) {
+  //           // Get the sequence number from additional activities form data
+  //           const additionalSequenceNumber = additionalFormData.firstAdditionalActivitySequence || additionalFormData.Sequence || 1;
+  //           console.log("Additional activities sequence number from form:", additionalSequenceNumber);
+            
+  //           // Get the current leg's additional activities
+  //           const currentAdditionalActivities = currentLeg.AdditionalActivities || [];
+  //           console.log("Current additional activities in leg:", currentAdditionalActivities);
+            
+  //           // Find the additional activity by sequence number
+  //           const additionalActivityIndex = currentAdditionalActivities.findIndex((activity: any) => 
+  //             activity.Sequence === additionalSequenceNumber || activity.Sequence === parseInt(additionalSequenceNumber)
+  //           );
+            
+  //           if (additionalActivityIndex !== -1) {
+  //             console.log("Found additional activity at index:", additionalActivityIndex, "with sequence number:", additionalSequenceNumber);
+  //             // Create updated additional activity with form data
+  //             const currentAdditionalActivity = currentAdditionalActivities[additionalActivityIndex] as any;
+  //             console.log("additionalFormData ===", additionalFormData);
+  //             console.log("currentAdditionalActivity ===", currentAdditionalActivity);
+  //             updatedAdditionalActivity = {
+  //               ...currentAdditionalActivity,
+  //               // Update with form data
+  //               Category: additionalFormData.Category || currentAdditionalActivity.Category,
+  //               Activity: additionalFormData.ActivityName || currentAdditionalActivity.Activity,
+  //               ActivityDescription: additionalFormData.firstAdditionalActivityDescription || currentAdditionalActivity.ActivityDescription,
+  //               PlaceIt: additionalFormData.ActivityPlaceIt || currentAdditionalActivity.PlaceIt,
+  //               ReportedBy: additionalFormData.ReportedBy || currentAdditionalActivity.ReportedBy,
+  //               CustomerOrder: additionalFormData.ActivityCustomerOrder || currentAdditionalActivity.CustomerOrder,
+  //               LocationID: additionalFormData.ActivityLocationID || currentAdditionalActivity.LocationID,
+  //               LocationDescription: additionalFormData.ActivityLocationDescription || currentAdditionalActivity.LocationDescription,
+  //               FromLocation: additionalFormData.FromLocation || currentAdditionalActivity.FromLocation,
+  //               FromLocationDescription: additionalFormData.FromLocationDescription || currentAdditionalActivity.FromLocationDescription,
+  //               ToLocation: additionalFormData.ToLocation || currentAdditionalActivity.ToLocation,
+  //               ToLocationDescription: additionalFormData.ToLocationDescription || currentAdditionalActivity.ToLocationDescription,
+  //               PlannedDate: additionalFormData.ActivityPlannedDate || currentAdditionalActivity.PlannedDate,
+  //               PlannedTime: additionalFormData.ActivityPlannedTime || currentAdditionalActivity.PlannedTime,
+  //               RevisedDate: additionalFormData.RevisedDate || currentAdditionalActivity.RevisedDate,
+  //               RevisedTime: additionalFormData.RevisedTime || currentAdditionalActivity.RevisedTime,
+  //               ActualDate: additionalFormData.ActualDate || currentAdditionalActivity.ActualDate,
+  //               ActualTime: additionalFormData.ActualTime || currentAdditionalActivity.ActualTime,
+  //               Remarks: additionalFormData.Remarks || currentAdditionalActivity.Remarks,
+  //               Remarks1: additionalFormData.Remarks1 || currentAdditionalActivity.Remarks1,
+  //               Remarks2: additionalFormData.Remarks2 || currentAdditionalActivity.Remarks2,
+  //               EventProfile: additionalFormData.ActivityEventProfile || currentAdditionalActivity.EventProfile,
+  //               ModeFlag: 'Update'
+  //             };
+              
+  //             console.log("Updated additional activity:", updatedAdditionalActivity);
+              
+  //             // Update the additional activity in the leg details
+  //             updatedLegDetails[legIndex] = {
+  //               ...updatedLegDetails[legIndex],
+  //               AdditionalActivities: [
+  //                 ...updatedLegDetails[legIndex].AdditionalActivities.slice(0, additionalActivityIndex),
+  //                 updatedAdditionalActivity,
+  //                 ...updatedLegDetails[legIndex].AdditionalActivities.slice(additionalActivityIndex + 1)
+  //               ]
+  //             };
+              
+  //             console.log("Updated additional activities array:", updatedLegDetails[legIndex].AdditionalActivities);
+  //           } else {
+  //             console.log("No additional activity found with sequence number:", additionalSequenceNumber);
+  //           }
+  //         } else {
+  //           console.log("No additional activities form data available");
+  //         }
+  //       } catch (error) {
+  //         console.warn("Error processing additional activities:", error);
+  //       }
+  //     }
+      
+  //     // Get the current trip data from the store
+  //     const currentTripData = tripData;
+  //     console.log("Current trip data:", currentTripData);
+      
+  //     if (!currentTripData) {
+  //       console.warn("No trip data available in store");
+  //       // toast.error('No trip data available');
+  //       return null;
+  //     }
+      
+  //     // Update the trip data with the modified leg details
+  //     const updatedTripData = {
+  //       ...currentTripData,
+  //       LegDetails: updatedLegDetails
+  //     };
+      
+  //     console.log("Updated trip data:", updatedTripData);
+
+  //     try{
+  //       const response = await tripService.saveTrip(updatedTripData);
+  //       console.log("Trip saved response:", response);
+  //       console.log("Trip saved response:", (response as any)?.data?.ResponseData);
+  //       const resourceStatus = (response as any)?.data?.IsSuccess;
+  //       console.log("resourceStatus ===", resourceStatus);
+  //       if(resourceStatus){
+  //         toast({
+  //           title: "✅ Trip Saved Successfully",
+  //           description: (response as any)?.data?.ResponseData.Message,
+  //           variant: "default", // or "success" if you have custom variant
+  //         });
+  //       }else{
+  //         console.log("error as any ===", (response as any)?.data?.Message);
+  //         toast({
+  //           title: "⚠️ Submission failed",
+  //           description: (response as any)?.data?.Message,
+  //           variant: "destructive", // or "success" if you have custom variant
+  //         });
+  //       }
+  //     } catch (err) {
+  //       console.error("Error saving activities:", err);
+  //       toast({
+  //         title: "⚠️ Submission failed",
+  //         description: (err as any)?.data?.Message,
+  //         variant: "destructive", // or "success" if you have custom variant
+  //       });
+  //       // return null;
+  //     }
+      
+  //     // Push the updated trip data back to the store
+  //     if (setTrip) {
+  //       setTrip(updatedTripData);
+  //       console.log("Trip data updated in store");
+  //     } else {
+  //       console.warn("setTrip method not available");
+  //     }
+      
+  //     // Create the final data structure for API submission
+  //     // const apiSubmissionData = {
+  //     //   // Updated trip data
+  //     //   updatedTripData: updatedTripData,
+        
+  //     //   // Updated leg details
+  //     //   updatedLegDetails: updatedLegDetails,
+        
+  //     //   // Specific updated leg
+  //     //   updatedLeg: updatedLegDetails[legIndex],
+        
+  //     //   // Updated activity
+  //     //   updatedActivity: updatedActivity,
+        
+  //     //   // Form data for reference
+  //     //   formData: formData,
+        
+  //     //   // Original data for comparison
+  //     //   originalTripData: currentTripData,
+  //     //   originalLeg: currentLeg,
+  //     //   originalActivity: currentActivities[activityIndex]
+  //     // };
+      
+  //     // console.log("API submission data:", apiSubmissionData);
+      
+  //     // Show success message
+  //     // toast.success('Activity updated successfully and pushed to trip data');
+      
+  //     // return apiSubmissionData;
+
+  //   // } catch (error) {
+  //   //   console.error("Error saving activities:", error);
+  //   //   toast.error('Error saving activities');
+  //   //   return null;
+  //   // }
+  // };
+
   const selectedLeg = getSelectedLeg();
 
   // Helper function to format activities data for form binding
@@ -1088,13 +1363,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       ActualDate: activity.ActualDate || '',
       ActualTime: activity.ActualTime || '',
       DelayedIn: activity.DelayedIn || '',
-      // QuickCode1: activity.QuickCode1 || '',
-      QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
-      // QuickCode2: activity.QuickCode2 || '',
-      QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
-      // QuickCode3: activity.QuickCode3 || '',
-      QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
-
+      QuickCode1: activity.QuickCode1 || '',
+      QuickCode2: activity.QuickCode2 || '',
+      QuickCode3: activity.QuickCode3 || '',
       QuickCodeValue1: activity.QuickCodeValue1 || '',
       QuickCodeValue2: activity.QuickCodeValue2 || '',
       QuickCodeValue3: activity.QuickCodeValue3 || '',
@@ -1156,8 +1427,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const handleLegSelection = (legId: string) => {
     selectLeg(legId);
     setLoading(false);
+    // Increment resetKey to force form re-render
+    setResetKey(prev => prev + 1);
     // Find the selected leg data
-    console.log("Inside handleLegSelection")
     const selectedLegData = legs.find(leg => leg.id === legId);
     if (selectedLegData) {
       console.log("Selected leg data:", selectedLegData);
@@ -1167,7 +1439,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const rawActivitiesData = selectedLegData.activities || [];
       const formattedActivities = formatActivitiesForForm(rawActivitiesData);
       const consignmentsData = selectedLegData.consignments || [];
-      console.log("Formatted activities for form:", formattedActivities);
+      
       // Prepare additional activities data for form binding
       const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
       const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
@@ -1182,80 +1454,46 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         duration: selectedLegData.duration,
         
         // Activities array - this is the key data we want to bind
-        // activities: formattedActivities,
-        activities: formattedActivities.map((activity, index) => ({
-          ActivitySeqNo: activity.SeqNo,
-          ActivityName: activity.Activity,
-          ActivityDescription: activity.ActivityDescription,
-          CustomerName: activity.CustomerName,
-          CustomerID: activity.CustomerID,
-          PlannedDate: activity.PlannedDate,
-          PlannedTime: activity.PlannedTime,
-          CustomerOrder: activity.CustomerOrder,
-          EventProfile: activity.EventProfile,
-          RevisedDate: activity.RevisedDate,
-          RevisedTime: activity.RevisedTime,
-          ActualDate: activity.ActualDate,
-          ActualTime: activity.ActualTime,
-          DelayedIn: activity.DelayedIn,
-          // QuickCode1: activity.QuickCode1,
-          // QuickCode2: activity.QuickCode2,
-          // QuickCode3: activity.QuickCode3,
-          QuickCode1: { dropdown: activity.QuickCode1 , input: activity.QuickCodeValue1 },
-          QuickCode2: { dropdown: activity.QuickCode2 , input: activity.QuickCodeValue2 },
-          QuickCode3: { dropdown: activity.QuickCode3 , input: activity.QuickCodeValue3 },
-          QuickCodeValue1: activity.QuickCodeValue1,
-          QuickCodeValue2: activity.QuickCodeValue2,
-          QuickCodeValue3: activity.QuickCodeValue3,
-          Remarks1: activity.Remarks1,
-          Remarks2: activity.Remarks2,
-          Remarks3: activity.Remarks3,
-          ReasonForChanges: activity.ReasonForChanges,
-          DelayedReason: activity.DelayedReason,
-          LastIdentifiedLocation:
-            activity.LastIdentifiedLocation + '||' + activity.LastIdentifiedLocationDescription,
-          LastIdentifiedDate: activity.LastIdentifiedDate,
-          LastIdentifiedTime: activity.LastIdentifiedTime,
-          AmendmentNo: activity.AmendmentNo,
-        })),
+        activities: formattedActivities,
+        
         // Individual activity fields for easier form access
-        // ...(formattedActivities.length > 0 && {
-        // //   firstActivity: formattedActivities[0],
-        // //   lastActivity: formattedActivities[formattedActivities.length - 1],
-        // //   activityCount: formattedActivities.length,
+        ...(formattedActivities.length > 0 && {
+          firstActivity: formattedActivities[0],
+          lastActivity: formattedActivities[formattedActivities.length - 1],
+          activityCount: formattedActivities.length,
           
-        // //   // Bind first activity fields directly for easy access
-        //   ActivitySeqNo: formattedActivities[0].SeqNo,
-        //   ActivityName: formattedActivities[0].Activity,
-        //   ActivityDescription: formattedActivities[0].ActivityDescription,
-        //   CustomerName: formattedActivities[0].CustomerName,
-        //   CustomerID: formattedActivities[0].CustomerID,
-        //   PlannedDate: formattedActivities[0].PlannedDate,
-        //   PlannedTime: formattedActivities[0].PlannedTime,
-        //   CustomerOrder: formattedActivities[0].CustomerOrder,
-        //   EventProfile: formattedActivities[0].EventProfile,
-        //   RevisedDate: formattedActivities[0].RevisedDate,
-        //   RevisedTime: formattedActivities[0].RevisedTime,
-        //   ActualDate: formattedActivities[0].ActualDate,
-        //   ActualTime: formattedActivities[0].ActualTime,
-        //   DelayedIn: formattedActivities[0].DelayedIn,
-        //   QuickCode1: formattedActivities[0].QuickCode1,
-        //   QuickCode2: formattedActivities[0].QuickCode2,
-        //   QuickCode3: formattedActivities[0].QuickCode3,
-        //   QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-        //   QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-        //   QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
-        //   Remarks1: formattedActivities[0].Remarks1,
-        //   Remarks2: formattedActivities[0].Remarks2,
-        //   Remarks3: formattedActivities[0].Remarks3,
-        //   ReasonForChanges: formattedActivities[0].ReasonForChanges,
-        //   DelayedReason: formattedActivities[0].DelayedReason,
-        //   LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-        //   // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-        //   LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-        //   LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-        //   AmendmentNo: formattedActivities[0].AmendmentNo,
-        // }),
+          // Bind first activity fields directly for easy access
+          ActivitySeqNo: formattedActivities[0].SeqNo,
+          ActivityName: formattedActivities[0].Activity,
+          ActivityDescription: formattedActivities[0].ActivityDescription,
+          CustomerName: formattedActivities[0].CustomerName,
+          CustomerID: formattedActivities[0].CustomerID,
+          PlannedDate: formattedActivities[0].PlannedDate,
+          PlannedTime: formattedActivities[0].PlannedTime,
+          CustomerOrder: formattedActivities[0].CustomerOrder,
+          EventProfile: formattedActivities[0].EventProfile,
+          RevisedDate: formattedActivities[0].RevisedDate,
+          RevisedTime: formattedActivities[0].RevisedTime,
+          ActualDate: formattedActivities[0].ActualDate,
+          ActualTime: formattedActivities[0].ActualTime,
+          DelayedIn: formattedActivities[0].DelayedIn,
+          QuickCode1: formattedActivities[0].QuickCode1,
+          QuickCode2: formattedActivities[0].QuickCode2,
+          QuickCode3: formattedActivities[0].QuickCode3,
+          QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
+          QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
+          QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          Remarks1: formattedActivities[0].Remarks1,
+          Remarks2: formattedActivities[0].Remarks2,
+          Remarks3: formattedActivities[0].Remarks3,
+          ReasonForChanges: formattedActivities[0].ReasonForChanges,
+          DelayedReason: formattedActivities[0].DelayedReason,
+          LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
+          // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
+          LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
+          LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
+          AmendmentNo: formattedActivities[0].AmendmentNo,
+        }),
         
         // Consignments data
         consignments: consignmentsData,
@@ -1265,7 +1503,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         transshipments: selectedLegData.transshipments || []
       };
       
-      console.log("Form data to be bound ####:", formData);
+      console.log("Form data to be bound:", formData);
       
       // Store form data in state for later retrieval
       setFormDataState(formData);
@@ -1314,17 +1552,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       // Store additional form data in state for later retrieval
       setAdditionalFormDataState(additionalFormData);
       setAdditionalActivitiesFormData(formattedAdditionalActivities);
+      
       // Bind data to tripExecutionRef (Activities panel)
       if (tripExecutionRef?.current?.setFormValues) {
-        // tripExecutionRef.current.setFormValues(formData.activities[0]);
-        formData.activities.forEach((activity, index) => {
-          setTimeout(() => {
-            tripExecutionRef.current.setFormValues(activity);
-          setLoading(true);
-
-            console.log(`Activity ${index + 1} bound to tripExecutionRef`);
-          }, index * 200); // 200ms gap between updates
-        });
+        tripExecutionRef.current.setFormValues(formData.activities[0]);
         console.log("Data bound to tripExecutionRef");
       }
       
@@ -1333,21 +1564,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         tripAdditionalRef.current.setFormValues(additionalFormData);
         console.log("Additional activities data bound to tripAdditionalRef");
       }
-      // setLoading(true);
+      setLoading(true);
     }
   };
-  useEffect(() => {
-    console.log("formDataState = ",formDataState)
-    console.log("formDataState . activities= ",formDataState?.activities)
-    if (formDataState && tripExecutionRef?.current?.setFormValues) {
-      console.log("Detected new formDataState — binding to tripExecutionRef");
-      formDataState.activities?.forEach((activity, index) => {
-        setTimeout(() => {
-          tripExecutionRef.current.setFormValues(activity);
-        }, index * 200);
-      });
-    }
-  }, [formDataState])
 
   const handleAddViaPoint = () => {
     if (!viaPointForm.viaLocation) {
@@ -1853,7 +2072,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       ModeFlag: "Insert",
       Activity: activityNameValue,
       ActivityDescription: activityNameLabel,
-      SeqNo: -1,
+      SeqNo: null,
       CustomerID: null,
 			CustomerName: "",
 			ConsignmentInformation: "",
@@ -2090,7 +2309,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       ModeFlag: "Insert",
       Activity: activityNameValue,
       ActivityDescription: activityNameLabel,
-      SeqNo: -1,
+      SeqNo: null,
       CustomerID: null,
 			CustomerName: "",
 			ConsignmentInformation: "",
@@ -2305,7 +2524,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       className="space-y-3 overflow-hidden"
                     >
                     
-                      {selectedLeg.activities.map((activity, idx) => (
+                      {selectedLeg.activities.map((activity) => (
                         <div key={activity.id} className="rounded-lg bg-card">
                           <div className="flex items-center justify-between p-4 bg-muted/30">
                             <div className="flex items-center gap-3"> 
@@ -2326,39 +2545,27 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               </Badge>
                             </div>
                           </div>
-                          {!loading ? (
-                                        <div className="flex items-center justify-center py-12">
-                                          <div className="flex flex-col items-center space-y-3">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
-                                            <div className="text-sm text-gray-600">Loading data...</div>
-                                          </div>
-                                        </div>
-                                      ) : ( 
-                              <DynamicPanel
-                              // Attach tripExecutionRef to first activity panel so your useEffect can call it
-                              // ref={getFormRef(`main-${activity.id}`)} --- old lie of code
-                              ref={idx === 0 ? tripExecutionRef : getFormRef(`main-${activity.id}`)}
-                              key={`trip-execution-panel-main-${activity.id}`}
-                              panelId={`operational-details-main-${activity.id}`}
-                              panelTitle="Events"
-                              panelConfig={tripExecutionPanelConfig}
-                              formName={`operationalDetailsForm-main-${activity.id}`}
-                              initialData={activity}
-                            />
-                      )}
-                          {/* {loading ?
+
+                          {loading ?
                             <DynamicPanel
-                              // Attach tripExecutionRef to first activity panel so your useEffect can call it
-                              // ref={getFormRef(`main-${activity.id}`)} --- old lie of code
-                              ref={idx === 0 ? tripExecutionRef : getFormRef(`main-${activity.id}`)}
-                              key={`trip-execution-panel-main-${activity.id}`}
-                              panelId={`operational-details-main-${activity.id}`}
-                              panelTitle="Events"
+                              ref={tripExecutionRef}
+                              key="trip-execution-panel"
+                              panelId="operational-details"
+                              panelTitle="Trip Activities"
                               panelConfig={tripExecutionPanelConfig}
-                              formName={`operationalDetailsForm-main-${activity.id}`}
+                              formName="operationalDetailsForm"
                               initialData={activity}
                             /> : ''
-                          } */}
+                            // <DynamicPanel
+                            //   ref={getFormRef(`main-${activity.id}`)}
+                            //   key={`trip-execution-panel-main-${activity.id}`}
+                            //   panelId={`operational-details-main-${activity.id}`}
+                            //   panelTitle="Events"
+                            //   panelConfig={tripExecutionPanelConfig}
+                            //   formName={`operationalDetailsForm-main-${activity.id}`}
+                            //   initialData={activity}
+                            // /> : ''
+                          }
                         </div>
                       ))}
 
@@ -2894,4 +3101,3 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     </>
   );
 };
-
