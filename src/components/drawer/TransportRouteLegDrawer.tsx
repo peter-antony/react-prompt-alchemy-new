@@ -520,7 +520,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         {/* Customer & Service Info Grid */}
         <div className="grid grid-cols-5 gap-6 text-sm">
           <div>
-            <p className="text-gray-500 mb-1 font-medium">Customer</p>
+            <p className="text-gray-500 mb-1 font-medium">Customer Order</p>
             <p className="font-semibold text-gray-900">{selectedRoute?.CustomerOrderID} - {selectedRoute?.CustomerName}</p>
           </div>
           <div>
