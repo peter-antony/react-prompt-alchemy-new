@@ -1572,7 +1572,7 @@ const TripPlanning = () => {
             <>
               {consolidatedTrip ? (
                 /* Default View - Single Customer Orders Card */
-                <div className="bg-card border border-border rounded-lg p-4">
+                <div className="bg-card border border-border rounded-lg p-4 mb-[60px]">
                   <div className='flex gap-6'>
                     <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
                       {/* Trip Planning Customer Order Hub */}
@@ -1697,7 +1697,7 @@ const TripPlanning = () => {
                   </div>
 
                   {/* Trip Creation Controls */}
-                  <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
+                  <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                     <div className="flex items-center gap-4">
                       <Switch 
                         id="consolidated-trip"
@@ -1734,7 +1734,7 @@ const TripPlanning = () => {
                 </div>
               ) : (
                 /* Split View - Customer Orders & Resources */
-                <div className="flex gap-4">
+                <div className="flex gap-4 mb-[60px]">
                   {/* Customer Orders - Left Panel */}
                   <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden">
 
@@ -1905,7 +1905,7 @@ const TripPlanning = () => {
                       </div>
 
                       {/* Toggle */}
-                      <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
+                      <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                         <div className="flex items-center gap-4">
                           <Switch 
                             id="consolidated-trip-inline"
