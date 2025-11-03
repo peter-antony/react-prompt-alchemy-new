@@ -517,7 +517,7 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
         updateHeaderField("ClusterDescription", clusterDesc, "Update");
       } else if (key === 'CO2Emisions' && typeof value === 'object') {
         const { input, dropdown } = value;
-        updateHeaderField("CO2Emisions", input, "Update");
+        updateHeaderField("CO2Emisions", input ? input : null, "Update");
         updateHeaderField("CO2EmisionsUOM", dropdown, "Update");
       } else if (key === 'QCUserDefined1' && typeof value === 'object') {
         const { input, dropdown } = value;

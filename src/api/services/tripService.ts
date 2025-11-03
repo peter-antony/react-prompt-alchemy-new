@@ -603,7 +603,7 @@ export const tripService = {
     const requestPayload = JSON.stringify({
       context: {
         UserID: "ramcouser",
-        Role: "ramcorole",
+        Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
         MessageType: "Save Attachment",
@@ -639,7 +639,7 @@ export const tripService = {
     const requestPayload = JSON.stringify({
       context: {
         UserID: "ramcouser",
-        Role: "ramcorole",
+        Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
         MessageType: "Get Attachment",
