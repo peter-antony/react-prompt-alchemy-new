@@ -134,7 +134,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -143,7 +143,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "ArrivalDate",
       label: "Arrival Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -514,7 +514,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -523,7 +523,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "ArrivalDate",
       label: "Arrival Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,

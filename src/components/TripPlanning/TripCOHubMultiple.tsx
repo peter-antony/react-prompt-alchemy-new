@@ -146,7 +146,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
@@ -155,7 +155,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
     {
       key: "ArrivalDate",
       label: "Arrival Date",
-      type: "Text",
+      type: "DateTimeRange",
       sortable: true,
       editable: false,
       subRow: false,
