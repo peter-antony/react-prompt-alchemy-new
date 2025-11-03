@@ -208,7 +208,15 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   const removeStagedFile = useCallback((fileId: string) => {
     setStagedFiles(prev => prev.filter(f => f.id !== fileId));
   }, []);
-
+  const onSubmit = (data) => {
+    console.log("Inside new onSubmit",data)
+    const filesToUpload = stagedFiles.map(file => ({
+      ...file,
+      category: selectedCategory,
+      remarks: data.remarks  // <-- Use data.remarks, not a state variable!
+    }));
+    // (upload logic here...)
+  };
   const handleUploadSubmit = useCallback(async () => {
     if (!selectedCategory) {
       toast({
@@ -240,7 +248,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
       if (onUpload) {
         await onUpload(filesToUpload);
       }
-
+      console.log("Inside HandleUpload -- filesToUpload --- ",filesToUpload)
       // Simulate successful upload by moving to uploaded files
       const newUploadedFiles: UploadedFile[] = filesToUpload.map(file => ({
         id: file.id,
@@ -292,6 +300,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     }
   }, [onDownload, toast]);
   const handleDeleteFile = useCallback(async (fileId: any) => {
+    console.log("HANDLE DELTE..",fileId)
     try {
       if (onDelete) {
         setOpenMenuId(null);
@@ -330,6 +339,8 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     <div className={`flex flex-col md:flex-row gap-6 w-full h-full bg-[#f8fafd]`}>
       {/* Left Panel - Upload Form */}
       <div className="md:w-1/3 w-full bg-white p-6 flex flex-col gap-6">
+        {/* NEW CHANGE - */}
+        <form onSubmit={handleSubmit(onSubmit)}>
 
         <div className="">
           {/* Category Selection */}
@@ -443,6 +454,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
 
           {/* Save Button */}
           <Button
+          type="submit"
             onClick={handleUploadSubmit}
             disabled={stagedFiles.length === 0 || !selectedCategory || isUploading}
             className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium mt-6"
@@ -450,6 +462,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
             {isUploading ? 'Uploading...' : 'Save'}
           </Button>
         </div>
+        </form>
       </div>
 
       {/* Right Panel - Uploaded Files List */}

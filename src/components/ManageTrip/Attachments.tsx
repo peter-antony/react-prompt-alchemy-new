@@ -80,7 +80,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
     }
     const handleUpload = async (files: StagedFile[]) => {
         // Simulate API call
-        console.log('Uploading files:', files);
+        console.log('Uploading files:i trip attachment page', files);
 
         try {
             for (const file of files) {
@@ -99,6 +99,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                 formData.append('Attachmenttype', fileType);
                 formData.append('Attachname', fileName);
                 formData.append('Filecategory', file.category);
+                formData.append('Remarks', file.remarks);
                 console.log('FINAL ## FormData:', formData)
 
                 // Add any additional context if needed
@@ -123,6 +124,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                     AttachName: data.Attachname,
                     AttachUniqueName: data.Attachuniquename,
                     AttachRelPath: data.Attachrelpath,
+                    Remarks:file.remarks,
                 };
                 console.log("uploadedFiles ZASASA", uploadedFiles);
 
@@ -133,7 +135,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                 formData.append("AttachItemID", "");
                 formData.append("AttachUniqueName", uploadedFiles.AttachUniqueName);
                 formData.append("AttachRelPath", uploadedFiles.AttachRelPath); // optional: check if it's a file or just path
-                formData.append("Remarks", remarks);
+                formData.append("Remarks", uploadedFiles.Remarks);
                 formData.append("ModeFlag", "Insert");
                 const fileData = {
                     "AttachmentType": uploadedFiles.AttachName,
@@ -142,7 +144,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                     "AttachItemID": "",
                     "AttachUniqueName": uploadedFiles.AttachUniqueName,
                     "AttachRelPath": uploadedFiles.AttachRelPath,
-                    "Remarks": remarks,
+                    "Remarks": uploadedFiles.Remarks,
                     "ModeFlag": "Insert"
 
 

@@ -150,6 +150,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         formData.append('Attachmenttype', fileType);
         formData.append('Attachname', fileName);
         formData.append('Filecategory', file.category);
+        formData.append('Remarks', file.remarks);
         console.log('FINAL ## FormData:', formData)
         
         // Add any additional context if needed
@@ -174,6 +175,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
           AttachName: data.Attachname,
           AttachUniqueName: data.Attachuniquename,
           AttachRelPath: data.Attachrelpath,
+          Remarks:file.remarks,
+
         };
         console.log("uploadedFiles", uploadedFiles);
         console.log("isResourceGroupAttchment", isResourceGroupAttchment);
@@ -238,9 +241,34 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
      if(isResourceGroupAttchment && isResourceID){
 
      }else{
-      
+      console.log("Inside else-- delete file fom QUICKORDER")
+       jsonStore.deleteQuickOrderAttachmentById(file.id);
+       jsonStore.setQuickOrder({
+        ...jsonStore.getJsonData().quickOrder,
+        // ...formValues.QuickOrder,
+        "ModeFlag": "Update",
+      });
+      // const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
+      const fullJson = jsonStore.getQuickOrder();
+      console.log("FULL Plan JSON :: ", fullJson);
+
+      setTimeout(async () => {
+        const dataRes: any = await quickOrderService.updateQuickOrderAttachment(fullJson);
+        console.log(" try", dataRes);
+        //  Get OrderNumber from response
+        const resourceGroupID = JSON.parse(dataRes?.data?.ResponseData)[0].QuickUniqueID;
+        console.log("OrderNumber:", resourceGroupID);
+        //  Fetch the full quick order details
+        quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+        let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+        console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+        console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+        // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+        jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+
+        })
+      }, 500);
      }
-    jsonStore.deleteQuickOrderAttachmentById(file.id);
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         console.log('Delete completed');
