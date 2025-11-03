@@ -80,6 +80,41 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal Trip');
+  
+  // Set default location based on OUID
+  useEffect(() => {
+    const getUserContext = () => {
+      try {
+        const selectedContext = localStorage.getItem('selectedUserContext');
+        
+        if (selectedContext) {
+          const parsedContext = JSON.parse(selectedContext);      
+          return {
+            ouId: parsedContext.ouId || 4,
+            roleName: parsedContext.roleName || "RAMCOROLE"
+          };
+        }
+      } catch (error) {
+        console.error('Error retrieving user context from localStorage:', error);
+      }
+      
+      // Default values if nothing is stored
+      return {
+        ouId: 4, 
+        roleName: "RAMCOROLE"
+      };
+    };
+    
+    const userContext = getUserContext();
+    const ouId = userContext.ouId;
+    
+    // Set default location based on OUID
+    if (ouId === 4) {
+      setLocation('FWDS_GMBH || Forwardis GMBH');
+    } else if (ouId === 2) {
+      setLocation('FWDS_SAS || Forwardis SAS');
+    }
+  }, []);
   const [planDate, setPlanDate] = useState<Date | undefined>();
   const [requestSupplier, setRequestSupplier] = useState(false);
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');
