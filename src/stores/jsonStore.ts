@@ -889,7 +889,38 @@ function pushQuickOrderAttachment(attachment: any) {
   }
   return false;
 }
+function deleteQuickOrderAttachmentById(attachItemId: string) {
+  if (!attachItemId) return false;
 
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments) &&
+    jsonData.ResponseResult.QuickOrder.Attachments.length > 0
+  ) {
+    const attachments = jsonData.ResponseResult.QuickOrder.Attachments[0];
+    if (!Array.isArray(attachments.AttachItems)) return false;
+
+    const originalLen = attachments.AttachItems.length;
+    const idKeys = ['AttachmentID', 'AttachItemID', 'id', 'attachmentId', 'fileId', 'FileID'];
+
+    attachments.AttachItems = attachments.AttachItems.filter((item: any) => {
+      const itemId = idKeys.map(k => item?.[k]).find(v => v !== undefined && v !== null);
+      return String(itemId) !== String(attachItemId);
+    });
+
+    const newLen = attachments.AttachItems.length;
+    if (newLen === originalLen) return false;
+
+    // update total (keep string format used elsewhere)
+    attachments.TotalAttachment = newLen.toString();
+    console.log("Attachments After delete : ", attachments.AttachItems);
+    return true;
+  }
+
+  return false;
+}
 function setResourceGroupFields(fields: { ServiceType?: any, OperationalLocation?: any }) {
   if (resourceJsonData) {
     if (fields.ServiceType !== undefined) {
@@ -1170,6 +1201,7 @@ const jsonStore = {
   getQuickUniqueID,
   getQuickOrderNo,
   pushQuickOrderAttachment,
+  deleteQuickOrderAttachmentById,
   setResourceGroupFields,
   setResourceType,
   setTariffFields,

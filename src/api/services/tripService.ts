@@ -597,4 +597,71 @@ export const tripService = {
     );
     return response.data;
   },
+  saveAttachments: async (params: any, tripUniqueID?: any): Promise<ApiResponse<Trip>> => {
+    console.log("params = ",params)
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "Save Attachment",
+      },
+      RequestPayload:{
+        "Attachments": {
+            "ReferenceType": "TripLog",
+            "ReferenceDocNo": tripUniqueID,
+            "TotalAttachment": 10,
+            "AttachItems":[params]
+          },
+      }
+      // RequestPayload: params,
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log("SAVE ATTACHMENT % REQUEST BODY : ",requestBody)
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_ATTACHMENT}`,
+      requestBody
+    );
+    return response.data;
+  },
+  getAttachments: async ( tripUniqueID?: any): Promise<PaginatedResponse<Trip>> => {
+
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: "ramcorole",
+        OUID: 4,
+        MessageID: "12345",
+        MessageType: "Get Attachment",
+      },
+      SearchCriteria: {
+        "ReferenceType": "TripLog",
+        "ReferenceDocNo": tripUniqueID,
+        "ExtraRef1": "",
+        "ExtraRef2": "",
+        "ExtraRef3": "",
+        "ExtraRef4": "",
+        "AdditionalFilter": []
+      },
+      
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log(" GET ATTACHMENT requestPayload ",requestPayload)
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_ATTACHMENT,
+      requestBody
+    );
+    return response.data;
+  },
 };

@@ -150,6 +150,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         formData.append('Attachmenttype', fileType);
         formData.append('Attachname', fileName);
         formData.append('Filecategory', file.category);
+        console.log('FINAL ## FormData:', formData)
         
         // Add any additional context if needed
         // formData.append('QuickOrderID', '123455'); // You might want to get this from props or state
@@ -231,9 +232,15 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
     });
   };
 
-  const handleDelete = async (fileId: string) => {
+  const handleDelete = async (file: any) => {
     // Simulate API call
-    console.log('Deleting file:', fileId);
+    console.log('Deleting %%%%file:', file);
+     if(isResourceGroupAttchment && isResourceID){
+
+     }else{
+      
+     }
+    jsonStore.deleteQuickOrderAttachmentById(file.id);
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         console.log('Delete completed');
@@ -242,10 +249,29 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
     });
   };
 
-  const handleDownload = (file: any) => {
-    console.log('Downloading file:', file);
-    // Simulate file download
-    window.open(file.downloadUrl, '_blank');
+  // const handleDownload = (file: any) => {
+  //   console.log('Downloading file:', file);
+  //   // Simulate file download
+  //   window.open(file.downloadUrl, '_blank');
+  // };
+  const handleDownload = async (file: any) => {
+    try {
+      const response = await fetch(file.downloadUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.fileName || "downloaded_file";
+      document.body.appendChild(link);
+      link.click();
+  
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   return (

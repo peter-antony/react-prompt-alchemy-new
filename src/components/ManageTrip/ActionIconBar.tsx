@@ -12,8 +12,10 @@ import {
   AlarmClockPlus,
   FileUp,
   Link,
-  TramFront
+  TramFront,
+  Paperclip
 } from 'lucide-react';
+import Attachments from './Attachments';
 import { MoreInfoPanel } from './MoreInfo';
 import { SideDrawer } from '@/components/Common/SideDrawer';
 import { useDrawerStore } from '@/stores/drawerStore';
@@ -32,6 +34,7 @@ const TripRouteIcon = () => {
 
 export const ActionIconBar = () => {
   const [moreInfo, setMoreInfo] = useState(false);
+  const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { routes,
@@ -83,14 +86,18 @@ export const ActionIconBar = () => {
         <AlarmClockPlus size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Calculate</span> */}
       </Button>
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button onClick={() => setAttachmentsOpen(true)}  variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <FileUp size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Vehicle</span> */}
       </Button>
+      {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
+              <Paperclip className="w-5 h-5 text-gray-600" />
+      </button> */}
       <Button onClick={() => openDrawer('linked-transactions')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <Link size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
+      
       <Button onClick={() => openDrawer('train-parameters')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <TramFront size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
@@ -112,6 +119,11 @@ export const ActionIconBar = () => {
           {/* <div className="mb-6"> */}
           <MoreInfoPanel data={''} />
         </div>
+      </SideDrawer>
+      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} /></div>
+            </div>
       </SideDrawer>
 
 

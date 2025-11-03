@@ -13,7 +13,8 @@ import {
   Search,
   Filter,
   Check, UploadCloud,
-  BookPlus, FileImage, BookA
+  BookPlus, FileImage, BookA,MoreVertical, Trash2,
+  DownloadCloud
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   onDelete,
   onDownload,
   className = '',
+  isTripLogAttachments,
   isEditQuickOrder,
   isResourceGroupAttchment,
   loadAttachmentData,
@@ -55,7 +57,8 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [filters, setFilters] = useState<FileFilterState>({
     searchTerm: '',
     selectedCategory: '',
@@ -69,6 +72,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     console.log("uploaded JSON :: ", isEditQuickOrder);
     console.log("uploaded JSON :: ", isResourceGroupAttchment);
     console.log("loadAttachmentData :: ", loadAttachmentData);
+    console.log("isTripLogAttachments :: ", isTripLogAttachments);
     // if(isResourceGroupAttchment){
     //   setLoadedFiles(jsonStore.getResourceGroupAttachments());    
     // }else{
@@ -230,7 +234,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
       const filesToUpload = stagedFiles.map(file => ({
         ...file,
         category: selectedCategory,
-        remarks
+        remarks:remarks
       }));
 
       if (onUpload) {
@@ -268,10 +272,29 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
       setIsUploading(false);
     }
   }, [selectedCategory, remarks, stagedFiles, onUpload, reset, toast]);
-
-  const handleDeleteFile = useCallback(async (fileId: string) => {
+  const handleDownloadFile = useCallback(async (fileId: any) => {
+    try {
+      if (onDownload) {
+        setOpenMenuId(null);
+        await onDownload(fileId);
+      }
+      // setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+      // toast({
+      //   title: "File Deleted",
+      //   description: "File deleted successfully",
+      // });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download file",
+        variant: "destructive"
+      });
+    }
+  }, [onDownload, toast]);
+  const handleDeleteFile = useCallback(async (fileId: any) => {
     try {
       if (onDelete) {
+        setOpenMenuId(null);
         await onDelete(fileId);
       }
       setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
@@ -543,11 +566,29 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
                           </Badge>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="p-1">
+                      {/* <Button variant="ghost" size="sm" className="p-1">
                         <svg className="h-4 w-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                         </svg>
-                      </Button>
+                        NNN
+                      </Button> */}
+                      <button
+                            className="p-1"
+                            onClick={() => setOpenMenuId(openMenuId === file.id ? null : file.id)}
+                        >
+                            <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
+                        </button>
+                        {openMenuId === file.id && (
+                          <div ref={menuRef} className="relative right-0 top-8 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2">
+                            <button  onClick={() => handleDownloadFile(file)} className="flex items-center w-full px-4 py-2 hover:bg-gray-50 text-xs gap-2">
+                              <span><DownloadCloud className="w-4 h-4 " /></span> Download
+                            </button>
+                            <button onClick={() => handleDeleteFile(file)} className="flex items-center w-full px-4 py-2 text-xs hover:bg-gray-50 gap-2">
+                              <span><Trash2 className="w-4 h-4" /></span> Delete
+                            </button>
+                          </div>
+                        )}
+ 
                     </div>
                     
                   </div>

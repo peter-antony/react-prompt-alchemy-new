@@ -33,6 +33,7 @@ export interface FileUploadProps {
   onDownload?: (file: UploadedFile) => void;
   className?: string;
   isEditQuickOrder?: boolean;
+  isTripLogAttachments?: boolean;
   isResourceGroupAttchment?: boolean;
   loadAttachmentData?: any;
 }

@@ -119,6 +119,8 @@ export const API_ENDPOINTS = {
     GET_INCIDENT: "/transportexecution/common",
     SAVE_VAS: "/transportexecution/savevas",
     SAVE_INCIDENT: "/transportexecution/common",
+    SAVE_ATTACHMENT: "/transportexecution/saveattachment",
+    GET_ATTACHMENT: "/transportexecution/getattachment",
     CREATE_TRIP_CO:"/tripplanexecution/createtripplan",
     ROUTE_UPDATE: "manageexecution/planhubsearch",
     CO_SELECTION: "manageexecution/planhubselection",
