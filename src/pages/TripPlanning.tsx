@@ -40,6 +40,7 @@ import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParameters
 import { useDrawerStore } from '@/stores/drawerStore';
 import { VASTripDrawerScreen } from '@/components/drawer/VASTripDrawerScreen';
 import { BadgesList } from '@/components/ui/badges-list';
+import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -1556,6 +1557,15 @@ const TripPlanning = () => {
                       </button>
                       <button onClick={() => { 
                         console.log('Leg and Events'); 
+                        openDrawer('leg-and-events');
+                        // setIsLegEventsDrawerOpen(true);
+                        setListPopoverOpen(false);
+                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <Zap className="h-4 w-4" />
+                        <span>Leg and Events</span>
+                      </button>
+                      <button onClick={() => { 
+                        console.log('Leg and Events'); 
                         openTripDrawer(urlTripID);
                         setListPopoverOpen(false);
                         }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
@@ -2350,17 +2360,18 @@ const TripPlanning = () => {
           isOpen={isOpen}
           onClose={closeDrawer}
           onBack={ drawerType === 'transport-route' ? closeDrawer : undefined}
-          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : ''}
-          titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' ? urlTripID || 'TRIP0000000001' : undefined}
+          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : drawerType === 'leg-and-events' ? 'Leg and Events' : ''}
+          titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'leg-and-events' ? urlTripID || 'TRIP0000000001' : undefined}
           slideDirection="right"
-          width={drawerType === 'train-parameters' ? '100%' : '75%'}
+          width={drawerType === 'train-parameters' || drawerType === 'leg-and-events' ? '100%' : '75%'}
           smoothness="smooth"
-          showBackButton={ drawerType === 'transport-route'}
+          showBackButton={ drawerType === 'transport-route' || drawerType === 'leg-and-events'}
           showCloseButton={true}
         >
           {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
-        </SideDrawer>
+          {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || undefined} />}
+      </SideDrawer>
     </AppLayout>
   );
 };
