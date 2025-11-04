@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Home, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import MenuIcon2 from '../assets/images/Menu-2.svg';
@@ -38,13 +39,50 @@ const RFQIcon = () => {
   )
 }
 
+// Portal-based tooltip to guarantee it overlays all UI
+const SidebarTooltipPortal: React.FC<{ content: string; rect: DOMRect }> = ({ content, rect }) => {
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        top: rect.top + rect.height / 2,
+        left: rect.right + 8,
+        transform: 'translateY(-50%)',
+        zIndex: 999999,
+        backgroundColor: '#1f2937',
+        color: '#fff',
+        fontSize: '0.75rem',
+        borderRadius: '0.25rem',
+        padding: '0.25rem 0.5rem',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+      }}
+    >
+      {content}
+      <div
+        style={{
+          position: 'absolute',
+          width: 8,
+          height: 8,
+          backgroundColor: '#1f2937',
+          left: -4,
+          top: '50%',
+          transform: 'translateY(-50%) rotate(45deg)',
+        }}
+      />
+    </div>,
+    document.body
+  );
+};
+
 
 interface AppSidebarProps {
   collapsed?: boolean;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => {
-  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<null | { label: string; tooltip: string; rect: DOMRect }>(null);
 
   // const menuItems = [
   //   { icon: Home, label: 'Home', active: true, path: '/quick-order' },
@@ -57,7 +95,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
 
   const menuItems = [
     { icon: Home, label: 'Home', path: '', tooltip: 'Home' },
-    { icon: COHubIcon, label: 'CO Hub', path: '/saasy-app/RailBr', externalURL: true, tooltip: 'CO Management' },  //  CO Management - sassy
+    { icon: COHubIcon, label: 'CO Hub', path: '/saasy-app/RailBr', externalURL: true, tooltip: 'Customer Ordrer Management' },  //  CO Management - sassy
     { icon: COIcon, label: 'Create Order', path: '/saasy-app/RailBrHUB', externalURL: true, tooltip: 'Create Order' }, // Create Order - sassy
     { icon: MenuIcon3, label: 'Route Management', path: '/trip-hub', tooltip: 'Manage Trip Plan' }, // Trip Planning
     { icon: MenuIcon2, label: 'Inventory', path: '/json-creater', tooltip: 'Quick Order Management' }, // Quick Order
@@ -81,8 +119,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
           <div
             key={index}
             className="relative flex items-center justify-center"
-            onMouseEnter={() => setHoveredLabel(item.label)}
-            onMouseLeave={() => setHoveredLabel(null)}
+            onMouseEnter={(e) =>
+              setHovered({
+                label: item.label,
+                tooltip: item.tooltip,
+                rect: (e.currentTarget as HTMLDivElement).getBoundingClientRect(),
+              })
+            }
+            onMouseLeave={() => setHovered(null)}
           >
             {item.externalURL ? (
               <a
@@ -115,16 +159,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
             )}
 
 
-            {/* Tooltip */}
-            {/* {hoveredLabel === item.label && (
-              <div className="absolute left-full ml-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
-                {item.tooltip}
-                <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 left-[-4px] top-1/2 -translate-y-1/2" />
-              </div>
-            )} */}
+            {/* Tooltip handled via portal */}
           </div>
         ))}
       </div>
+
+      {hovered && <SidebarTooltipPortal content={hovered.tooltip} rect={hovered.rect} />}
 
       {/* Bottom Icons */}
       <div className="flex flex-col space-y-3 mt-auto">
