@@ -532,12 +532,26 @@ const TripPlanning = () => {
         console.log("Agent/Schedule detected - filtered by LegBehaviour, mergedResourceDetails ===", mergedResourceDetails);
       } else {
         // Normal merge for other resource types (Equipment, Driver, Handler, Vehicle)
-        const resourcesWithLegBehaviour = transformedResourceDetails.map(resource => ({
-          ...resource,
-          LegBehaviour: currentLegBehaviour
-        }));
+        // Check for duplicates before adding - don't add if ResourceID and ResourceType already exist
+        const resourcesWithLegBehaviour = transformedResourceDetails
+          .map(resource => ({
+            ...resource,
+            LegBehaviour: currentLegBehaviour
+          }))
+          .filter(newResource => {
+            // Check if a resource with the same ResourceID and ResourceType already exists
+            const isDuplicate = existingResourceDetails.some((existing: any) => 
+              existing.ResourceID === newResource.ResourceID && 
+              existing.ResourceType === newResource.ResourceType
+            );
+            if (isDuplicate) {
+              console.log(`Skipping duplicate resource: ${newResource.ResourceType} - ${newResource.ResourceID}`);
+            }
+            return !isDuplicate; // Only include non-duplicates
+          });
+        
         mergedResourceDetails = [...existingResourceDetails, ...resourcesWithLegBehaviour];
-        console.log("Other resource types - normal merge, mergedResourceDetails ===", mergedResourceDetails);
+        console.log("Other resource types - normal merge (duplicates filtered), mergedResourceDetails ===", mergedResourceDetails);
       }
       // Update the existing customer order with merged resources
       updatedCustomerOrderArray[existingIndex] = {
@@ -547,19 +561,86 @@ const TripPlanning = () => {
       };
     } else {
       // Add new customer order to the array (either completely new CustomerOrderID or same CustomerOrderID with different LegBehaviour)
-      // Add LegBehaviour to the new resources
-      const updatedCustomerListWithLegBehaviour = {
-        ...updatedCustomerList,
-        "LegBehaviour": currentLegBehaviour, // Add LegBehaviour to the customer order itself
-        "ResourceDetails": updatedCustomerList.ResourceDetails.map(resource => ({
+      // Filter out duplicates within the new resources before adding
+      const seenResources = new Set<string>();
+      const uniqueResourceDetails = updatedCustomerList.ResourceDetails
+        .map(resource => ({
           ...resource,
           LegBehaviour: currentLegBehaviour
         }))
+        .filter(resource => {
+          const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
+          if (seenResources.has(uniqueKey)) {
+            console.log(`Skipping duplicate resource in new entry: ${resource.ResourceType} - ${resource.ResourceID}`);
+            return false;
+          }
+          seenResources.add(uniqueKey);
+          return true;
+        });
+
+      const updatedCustomerListWithLegBehaviour = {
+        ...updatedCustomerList,
+        "LegBehaviour": currentLegBehaviour, // Add LegBehaviour to the customer order itself
+        "ResourceDetails": uniqueResourceDetails
       };
       updatedCustomerOrderArray = [...existingCustomerOrderArray, updatedCustomerListWithLegBehaviour];
       console.log("Adding new customer order entry (different LegBehaviour or new CustomerOrderID)");
     }
     console.log("transformedResourceDetails ", transformedResourceDetails);
+
+    // Group transformedResourceDetails by ResourceType and update tripResourceDetailsData
+    const groupedResources = {
+      Equipments: [] as any[],
+      Handlers: [] as any[],
+      Vehicle: [] as any[],
+      Drivers: [] as any[]
+    };
+
+    // Collect all resources from selectedArrCOData (including merged ones)
+    // Use a Set to track unique ResourceID + ResourceType combinations
+    const uniqueResourceKeys = new Set<string>();
+    const allResources: any[] = [];
+
+    updatedCustomerOrderArray.forEach(co => {
+      (co.ResourceDetails || []).forEach((resource: any) => {
+        // Create a unique key combining ResourceID and ResourceType
+        const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
+        
+        // Only add if this combination doesn't already exist
+        if (!uniqueResourceKeys.has(uniqueKey)) {
+          uniqueResourceKeys.add(uniqueKey);
+          allResources.push({
+            ResourceID: resource.ResourceID,
+            ResourceType: resource.ResourceType
+          });
+        }
+      });
+    });
+
+    // Group by ResourceType (now guaranteed to be unique)
+    allResources.forEach((resource: any) => {
+      if (resource.ResourceType === 'Equipment') {
+        groupedResources.Equipments.push({ EquipmentID: resource.ResourceID });
+      } else if (resource.ResourceType === 'Handler') {
+        groupedResources.Handlers.push({ HandlerID: resource.ResourceID });
+      } else if (resource.ResourceType === 'Vehicle') {
+        groupedResources.Vehicle.push({ VehicleID: resource.ResourceID });
+      } else if (resource.ResourceType === 'Driver') {
+        groupedResources.Drivers.push({ DriverID: resource.ResourceID });
+      }
+    });
+
+    // Update tripResourceDetailsData with grouped resources
+    setTripResourceDetailsData((prev: any) => ({
+      ...prev,
+      Equipments: groupedResources.Equipments,
+      Handlers: groupedResources.Handlers,
+      Vehicle: groupedResources.Vehicle,
+      Drivers: groupedResources.Drivers
+    }));
+
+    console.log("Grouped resources:", groupedResources);
+    
     // Update the customer order array state
     setSelectedArrCOData(updatedCustomerOrderArray);
     
@@ -1194,10 +1275,83 @@ const TripPlanning = () => {
   }`;
 
   const handleRemoveEquipment = (index: number) => {
-    tripResourceDetailsData?.Equipments?.splice(index, 1);
-    console.log("handleRemoveEquipment ===", index);
-    setTripResourceDetailsData({...tripResourceDetailsData, Equipments: tripResourceDetailsData.Equipments});
-    console.log("tripResourceDetailsData ===", tripResourceDetailsData);
+    const equipmentToRemove = tripResourceDetailsData?.Equipments?.[index];
+    if (equipmentToRemove) {
+      // Remove from tripResourceDetailsData
+      const updatedEquipments = [...(tripResourceDetailsData?.Equipments || [])];
+      updatedEquipments.splice(index, 1);
+      setTripResourceDetailsData({...tripResourceDetailsData, Equipments: updatedEquipments});
+      
+      // Also remove from selectedArrCOData
+      const resourceID = equipmentToRemove.EquipmentID;
+      setSelectedArrCOData(prev => prev.map(co => ({
+        ...co,
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+          !(r.ResourceType === 'Equipment' && r.ResourceID === resourceID)
+        )
+      })));
+      console.log("handleRemoveEquipment ===", index, resourceID);
+    }
+  };
+
+  const handleRemoveHandler = (index: number) => {
+    const handlerToRemove = tripResourceDetailsData?.Handlers?.[index];
+    if (handlerToRemove) {
+      // Remove from tripResourceDetailsData
+      const updatedHandlers = [...(tripResourceDetailsData?.Handlers || [])];
+      updatedHandlers.splice(index, 1);
+      setTripResourceDetailsData({...tripResourceDetailsData, Handlers: updatedHandlers});
+      
+      // Also remove from selectedArrCOData
+      const resourceID = handlerToRemove.HandlerID;
+      setSelectedArrCOData(prev => prev.map(co => ({
+        ...co,
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+          !(r.ResourceType === 'Handler' && r.ResourceID === resourceID)
+        )
+      })));
+      console.log("handleRemoveHandler ===", index, resourceID);
+    }
+  };
+
+  const handleRemoveVehicle = (index: number) => {
+    const vehicleToRemove = tripResourceDetailsData?.Vehicle?.[index];
+    if (vehicleToRemove) {
+      // Remove from tripResourceDetailsData
+      const updatedVehicles = [...(tripResourceDetailsData?.Vehicle || [])];
+      updatedVehicles.splice(index, 1);
+      setTripResourceDetailsData({...tripResourceDetailsData, Vehicle: updatedVehicles});
+      
+      // Also remove from selectedArrCOData
+      const resourceID = vehicleToRemove.VehicleID;
+      setSelectedArrCOData(prev => prev.map(co => ({
+        ...co,
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+          !(r.ResourceType === 'Vehicle' && r.ResourceID === resourceID)
+        )
+      })));
+      console.log("handleRemoveVehicle ===", index, resourceID);
+    }
+  };
+
+  const handleRemoveDriver = (index: number) => {
+    const driverToRemove = tripResourceDetailsData?.Drivers?.[index];
+    if (driverToRemove) {
+      // Remove from tripResourceDetailsData
+      const updatedDrivers = [...(tripResourceDetailsData?.Drivers || [])];
+      updatedDrivers.splice(index, 1);
+      setTripResourceDetailsData({...tripResourceDetailsData, Drivers: updatedDrivers});
+      
+      // Also remove from selectedArrCOData
+      const resourceID = driverToRemove.DriverID;
+      setSelectedArrCOData(prev => prev.map(co => ({
+        ...co,
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+          !(r.ResourceType === 'Driver' && r.ResourceID === resourceID)
+        )
+      })));
+      console.log("handleRemoveDriver ===", index, resourceID);
+    }
   };
 
   return (
@@ -1636,7 +1790,7 @@ const TripPlanning = () => {
                           </div>
                         </div>
                         {[
-                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Others 222', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
@@ -1826,7 +1980,7 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Others 111', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(tripResourceDetailsData?.Equipments?.length !=0)? tripResourceDetailsData?.Equipments?.length :'', iconColor: 'text-red-600' },
@@ -1852,6 +2006,31 @@ const TripPlanning = () => {
                                               items={tripResourceDetailsData?.Equipments}
                                               onRemove={handleRemoveEquipment}
                                               badgeVariant="secondary"
+                                              idField="EquipmentID"
+                                            />
+                                          )}
+                                          { resource.title == 'Handler' && (
+                                            <BadgesList
+                                              items={tripResourceDetailsData?.Handlers}
+                                              onRemove={handleRemoveHandler}
+                                              badgeVariant="secondary"
+                                              idField="HandlerID"
+                                            />
+                                          )}
+                                          { resource.title == 'Vehicle' && (
+                                            <BadgesList
+                                              items={tripResourceDetailsData?.Vehicle}
+                                              onRemove={handleRemoveVehicle}
+                                              badgeVariant="secondary"
+                                              idField="VehicleID"
+                                            />
+                                          )}
+                                          { resource.title == 'Driver' && (
+                                            <BadgesList
+                                              items={tripResourceDetailsData?.Drivers}
+                                              onRemove={handleRemoveDriver}
+                                              badgeVariant="secondary"
+                                              idField="DriverID"
                                             />
                                           )}
                                           {resource.subtitle && (
