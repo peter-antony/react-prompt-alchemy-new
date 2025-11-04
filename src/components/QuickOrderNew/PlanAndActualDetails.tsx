@@ -645,8 +645,307 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     }
     
   };
-
+  const savePlanDetails = async () => {
+       // Helper function to truncate at pipe symbol
+       const truncateAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          return value.split("||")[0].trim();
+        }
+        return value;
+      };
+  
+      // Helper to recursively truncate all dropdown fields in an object
+      const truncateDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, truncate it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: truncateAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, truncate if it has a pipe
+            newObj[key] = truncateAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = truncateDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        return newObj;
+      };
+  
+      // We'll create a helper that, if a string contains "||", returns an object with both parts.
+      const splitAtPipe = (value: string | null | undefined) => {
+        if (typeof value === "string" && value.includes("||")) {
+          const [first, ...rest] = value.split("||");
+          return {
+            value: first.trim(),
+            label: rest.join("||").trim()
+          };
+        }
+        return value;
+      };
+  
+      // Helper to recursively process all dropdown fields in an object, splitting at "||"
+      const splitDropdowns = (obj: any) => {
+        if (!obj || typeof obj !== "object") return obj;
+        const newObj: any = Array.isArray(obj) ? [] : {};
+        for (const key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          const val = obj[key];
+          // If value is an object with a dropdown property, split it
+          if (val && typeof val === "object" && "dropdown" in val) {
+            newObj[key] = {
+              ...val,
+              dropdown: splitAtPipe(val.dropdown)
+            };
+            // If input property exists, keep as is
+            if ("input" in val) {
+              newObj[key].input = val.input;
+            }
+          } else if (typeof val === "string") {
+            // If value is a string, split if it has a pipe
+            newObj[key] = splitAtPipe(val);
+          } else if (typeof val === "object" && val !== null) {
+            // Recursively process nested objects
+            newObj[key] = splitDropdowns(val);
+          } else {
+            newObj[key] = val;
+          }
+        }
+        console.log("splitDropdowns ===", newObj);
+        return newObj;
+      };
+  
+      const formValues = {
+        wagonNewDetails: splitDropdowns(wagonDetailsRef.current?.getFormValues() || {}),
+        containerDetails: splitDropdowns(containerDetailsRef.current?.getFormValues() || {}),
+        productDetails: splitDropdowns(productDetailsRef.current?.getFormValues() || {}),
+        thuDetails: splitDropdowns(thuDetailsRef.current?.getFormValues() || {}),
+        journeyDetails: splitDropdowns(journeyDetailsRef.current?.getFormValues() || {}),
+        otherDetails: truncateDropdowns(otherDetailsRef.current?.getFormValues() || {}),
+      };
+      
+      // if (planType === "plan") {
+        // Add additional data to formValues.wagonNewDetails
+        console.log("formValues before ====", formValues.wagonNewDetails);
+        formValues.wagonNewDetails = {
+          ...formValues.wagonNewDetails,
+          "WagonType": formValues.wagonNewDetails?.WagonType?.value || "",
+          "WagonTypeDescription": formValues.wagonNewDetails?.WagonType?.label || "",
+          "WagonID": formValues.wagonNewDetails?.WagonID?.value || "",
+          "WagonIDDescription": formValues.wagonNewDetails?.WagonID?.label || "",
+          "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
+          "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || null,
+          "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
+          "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || null,
+          "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
+          "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || null,
+          "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
+          "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || null,
+          // Add more fields as needed
+        };
+        formValues.containerDetails = {
+          ...formValues.containerDetails,
+          "ContainerID": formValues.containerDetails?.ContainerID?.value || "",
+          "ContainerIDDescription": formValues.containerDetails?.ContainerID?.label || "",
+          "ContainerType": formValues.containerDetails?.ContainerType?.value || "",
+          "ContainerTypeDescription": formValues.containerDetails?.ContainerType?.label || "",
+          "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
+          "ContainerQuantity": formValues.containerDetails?.ContainerQuantity?.input || null,
+          "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
+          "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeight?.input || null,
+          "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
+          "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
+          // Add more fields as needed
+        };
+        formValues.productDetails = {
+          ...formValues.productDetails,
+          "NHM": formValues.productDetails?.NHM?.value || "",
+          "NHMDescription": formValues.productDetails?.NHM?.label || "",
+          "ProductID": formValues.productDetails?.ProductID?.value || "",
+          "ProductIDDescription": formValues.productDetails?.ProductID?.label || "",
+          // "ClassofStores": formValues.productDetails?.ClassofStores?.value || "",
+          // "ClassofStoresDescription": formValues.productDetails?.ClassofStores?.label || "",
+          "UNCode": formValues.productDetails?.UNCode?.value || "",
+          "UNCodeDescription": formValues.productDetails?.UNCode?.label || "",
+          "DGClass": formValues.productDetails?.DGClass?.value || "",
+          "DGClassDescription": formValues.productDetails?.DGClass?.label || "",
+          "ContainerTareWeightUOM": formValues.productDetails?.ContainerTareWeight?.dropdown || "",
+          "ContainerTareWeight": formValues.productDetails?.ContainerTareWeight?.input || null,
+          "ProductQuantityUOM": formValues.productDetails?.ProductQuantity?.dropdown || "",
+          "ProductQuantity": formValues.productDetails?.ProductQuantity?.input || null,
+          // Add more fields as needed
+        };
+        formValues.thuDetails = {
+          ...formValues.thuDetails,
+          "THUID": formValues.thuDetails?.THUID?.value || "",
+          "THUIDDescription": formValues.thuDetails?.THUID?.label || "",
+          "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
+          "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
+          "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
+          "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
+          // Add more fields as needed
+        };
+        formValues.journeyDetails = {
+          ...formValues.journeyDetails,
+          "Departure": formValues.journeyDetails?.Departure?.value || "",
+          "DepartureDescription": formValues.journeyDetails?.Departure?.label || "",
+          "Arrival": formValues.journeyDetails?.Arrival?.value || "",
+          "ArrivalDescription": formValues.journeyDetails?.Arrival?.label || "",
+          "ActivityLocation": formValues.journeyDetails?.ActivityLocation?.value || "",
+          "ActivityLocationDescription": formValues.journeyDetails?.ActivityLocation?.label || "",
+          "Activity": formValues.journeyDetails?.Activity?.value || "",
+          "ActivityDescription": formValues.journeyDetails?.Activity?.label || "",
+        },
+        formValues.otherDetails = {
+          ...formValues.otherDetails,
+          "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
+          "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || "",
+          "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
+          "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || "",
+          "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
+          "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || "",
+          // Add more fields as needed
+        };
+        console.log("INSIDE -- SAVE PLAN")
+        console.log("SAVE PLAN formValues after ====", formValues.productDetails);
+        // Prepare the updated PlanDetails by merging new form values with existing ones
+        console.log(" SAVE PLAN RESOURCE ID : ",resourceId)
+        console.log(" SAVE PLAN isEditQuickOrder: ",isEditQuickOrder)
+        console.log("SAVE PLAN selectedPlan: ",selectedPlan);
+        let  currentPlanDetails;
+        if(selectedPlan)
+          currentPlanDetails = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
+        else
+          currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
+  
+        console.log("SAVE PLAN currentPlanDetails: ",currentPlanDetails)
+  
+        let setPlanId:any;
+        // if(isEditQuickOrder && resourceId && selectedPlan){
+        //   console.log("Plan EXIST")
+        //   setPlanId=selectedPlan;
+        // }else{
+        //   console.log("Plan NOT EXIST")
+  
+          setPlanId=-1;
+        // }
+        console.log("SAVE PLAN setPlanId =====", setPlanId);
+        const updatedPlanDetails = {
+          // ...currentPlanDetails,
+          "PlanLineUniqueID": setPlanId,
+          "ModeFlag": "Insert",
+          WagonDetails: { ...currentPlanDetails.WagonDetails, ...formValues.wagonNewDetails },
+          ContainerDetails: { ...currentPlanDetails.ContainerDetails, ...formValues.containerDetails },
+          ProductDetails: { ...currentPlanDetails.ProductDetails, ...formValues.productDetails },
+          THUDetails: { ...currentPlanDetails.THUDetails, ...formValues.thuDetails },
+          JourneyAndSchedulingDetails: { ...currentPlanDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
+          OtherDetails: { ...currentPlanDetails.OtherDetails, ...formValues.otherDetails },
+        };
+        // Set the updated ActualDetails in jsonStore
+        // jsonStore.setPlanDetailsJson(updatedPlanDetails);
+        console.log(" SAVE PLAN updatedPlanDetails: ", updatedPlanDetails)
+        console.log("SAVE PLAN setPlanId: ", setPlanId)
+        if(setPlanId==-1){
+          console.log("SAVE PLAN Only if its new plan with id=-1")
+          jsonStore.pushPlanDetailsToResourceGroup(resourceId, updatedPlanDetails)
+          // jsonStore.setQuickOrder({
+          //   ...jsonStore.getJsonData().quickOrder,
+          //   "ModeFlag": "Update",
+          //   "Status": "Fresh",
+          //   // "QuickOrderNo": jsonStore.getQuickUniqueID()
+          // });
+          // const fullJson = jsonStore.getQuickOrder();
+          // console.log("SAVE PLAN FULL JSON AFTER PLAN UPDATE ----", fullJson);
+          // try {
+          //   const data: any = await quickOrderService.updateQuickOrderResource(fullJson);
+          //   console.log(" try", data);
+          //   //  Get OrderNumber from response
+          //   const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
+          //   console.log("SAVE PLAN OrderNumber:", resourceGroupID);
+          //   const resourceStatus = JSON.parse(data?.data?.ResponseData)[0].Status;
+          //   const isSuccessStatus = JSON.parse(data?.data?.IsSuccess);
+          //   if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
+          //     toast({
+          //       title: "✅ Form submitted successfully",
+          //       description: "Your changes have been saved.",
+          //       variant: "default", // or "success" if you have custom variant
+          //     });
+          //     // setCurrentStep(2);
+          //     // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+          //     const fullJson2 = jsonStore.getJsonData();
+          //     console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
+          //     onApiSuccess(true);
+          //     onCloseDrawer();
+          //   }
+          //   else {
+          //     console.log("before ---", jsonStore.getQuickOrder());
+          //     const quickOrder = jsonStore.getQuickOrder();
+          //     let resourceGroups = Array.isArray(quickOrder.ResourceGroup) ? quickOrder.ResourceGroup : [];
+          //     // Find the resource group for this resourceId
+          //     const updatedResourceGroups = resourceGroups.map((rg: any) => {
+          //       if (rg.ResourceUniqueID === resourceId) {
+          //         // Remove PlanDetails with PlanLineUniqueID: -1
+          //         const planDetailsArr = Array.isArray(rg.PlanDetails) ? rg.PlanDetails : [];
+          //         return {
+          //           ...rg,
+          //           PlanDetails: planDetailsArr.filter((plan: any) => plan.PlanLineUniqueID !== -1)
+          //         };
+          //       }
+          //       return rg;
+          //     });
+          //     console.log("updatedResourceGroups ", updatedResourceGroups);
+          //     jsonStore.setQuickOrder({
+          //       ...quickOrder,
+          //       ResourceGroup: updatedResourceGroups
+          //     });
+          //     console.log("updatedResourceGroups ", jsonStore.getQuickOrder());
+          //     const fullJsonElse = jsonStore.getQuickOrder();
+          //     console.log("Else error123 :: ", fullJsonElse);
+          //     toast({
+          //       title: "⚠️ Submission failed",
+          //       description: isSuccessStatus ? JSON.parse(data?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
+          //       variant: "destructive", // or "success" if you have custom variant
+          //     });
+          //   }
+    
+          //   //  Fetch the full quick order details
+          //   quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
+          //     let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
+          //     console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
+          //     console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          //     // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
+          //     jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+              
+          //   })
+    
+          // } catch (err) {
+          //   console.log(" catch", err);
+          //   toast({
+          //     title: "⚠️ Submission failed",
+          //     description: JSON.parse(err?.data?.Message),
+          //     variant: "destructive", // or "error"
+          //   });
+          //   onApiSuccess(false);
+          //   // setError(`Error fetching API data for Update ResourceGroup`);
+          // }
+        }
+        console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
+      // }
+  }
   const handleConvertPlanActuals = async () => {
+
     console.log("Convert Plan to Actuals");
     // Get the current ActualDetails from jsonStore
     const currentActualDetails = jsonStore.getActualDetails() || {};
@@ -813,10 +1112,13 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       console.log("Actual NOT EXIST")
 
       setActualId=-1;
+      savePlanDetails()
     }
 
     if (currentActualDetail && typeof currentActualDetail === "object") {
       if (currentActualDetail.PlanLineUniqueID === -1) {
+        console.log("=============== if");
+
         delete currentActualDetail.PlanLineUniqueID;
         delete currentActualDetail.PlanSeqNo;
         currentActualDetail.ActualLineUniqueID = -1;
@@ -945,132 +1247,12 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       onApiSuccess(false);
       // setError(`Error fetching API data for Update ResourceGroup`);
     }
+    // savePlanDetails();
     // console.log("Updated Plan Details in FULL JSON:", jsonStore.getJsonData());
     // console.log("Updated Actual Details in FULL JSON:", jsonStore.getJsonData());
     
   };
 
-  // const handleConvertPlanActuals = async () => {
-  //   const formValues = {
-  //     wagonNewDetails: wagonDetailsRef.current?.getFormValues() || {},
-  //     containerDetails: containerDetailsRef.current?.getFormValues() || {},
-  //     productDetails: productDetailsRef.current?.getFormValues() || {},
-  //     thuDetails: thuDetailsRef.current?.getFormValues() || {},
-  //     journeyDetails: journeyDetailsRef.current?.getFormValues() || {},
-  //     otherDetails: otherDetailsRef.current?.getFormValues() || {},
-  //   };
-  //   console.log("convert plan ===", formValues);
-  //   //Get the current Plan from jsonStore
-  //   let currentPlanDetails;
-  //   if(selectedPlan)
-  //       currentPlanDetails = jsonStore.getPlanDetailsByResourceAndPlanLineID(resourceId,selectedPlan);
-  //     else
-  //       currentPlanDetails = jsonStore.getPlanDetailsJson() || {};
-
-  //   // Get the current ActualDetails from jsonStore
-  //   const currentActualDetails = jsonStore.getActualDetailsByResourceAndActualLineID(resourceId,selectedPlan) || {};
-  //   formValues.wagonNewDetails = {
-  //     ...formValues.wagonNewDetails,
-  //     "WagonQuantityUOM": formValues.wagonNewDetails?.WagonQuantity?.dropdown || "",
-  //     "WagonQuantity": formValues.wagonNewDetails?.WagonQuantity?.input || "",
-  //     "WagonTareWeightUOM": formValues.wagonNewDetails?.WagonTareWeight?.dropdown || "",
-  //     "WagonTareWeight": formValues.wagonNewDetails?.WagonTareWeight?.input || "",
-  //     "WagonGrossWeightUOM": formValues.wagonNewDetails?.WagonGrossWeight?.dropdown || "",
-  //     "WagonGrossWeight": formValues.wagonNewDetails?.WagonGrossWeight?.input || "",
-  //     "WagonLengthUOM": formValues.wagonNewDetails?.WagonLength?.dropdown || "",
-  //     "WagonLength": formValues.wagonNewDetails?.WagonLength?.input || "",
-  //     // Add more fields as needed
-  //   };
-  //   formValues.containerDetails = {
-  //     ...formValues.containerDetails,
-  //     "ContainerQuantityUOM": formValues.containerDetails?.ContainerQuantity?.dropdown || "",
-  //     "ContainerQuantity": formValues.containerDetails?.ContainerQuantityUOM?.input || null,
-  //     "ContainerTareWeightUOM": formValues.containerDetails?.ContainerTareWeight?.dropdown || "",
-  //     "ContainerTareWeight": formValues.containerDetails?.ContainerTareWeightUOM?.input || null,
-  //     "ContainerLoadWeightUOM": formValues.containerDetails?.ContainerLoadWeight?.dropdown || "",
-  //     "ContainerLoadWeight": formValues.containerDetails?.ContainerLoadWeight?.input || null,
-  //     // Add more fields as needed
-  //   };
-  //   formValues.productDetails = {
-  //     ...formValues.containerDetails,
-  //     "ProductQuantityUOM": formValues.containerDetails?.ProductQuantity?.dropdown || "",
-  //     "ProductQuantity": formValues.containerDetails?.ProductQuantity?.input || null,
-  //     // Add more fields as needed
-  //   };
-  //   formValues.thuDetails = {
-  //     ...formValues.thuDetails,
-  //     "THUQuantityUOM": formValues.thuDetails?.THUQuantity?.dropdown || "",
-  //     "THUQuantity": formValues.thuDetails?.THUQuantity?.input || null,
-  //     "THUWeightUOM": formValues.thuDetails?.THUWeight?.dropdown || "",
-  //     "THUWeight": formValues.thuDetails?.THUWeight?.input || null,
-  //     // Add more fields as needed
-  //   };
-  //   formValues.otherDetails = {
-  //     ...formValues.otherDetails,
-  //     "QCUserDefined1": formValues.otherDetails?.QCUserDefined1?.dropdown || "",
-  //     "QCUserDefined1Value": formValues.otherDetails?.QCUserDefined1?.input || null,
-  //     "QCUserDefined2": formValues.otherDetails?.QCUserDefined2?.dropdown || "",
-  //     "QCUserDefined2Value": formValues.otherDetails?.QCUserDefined2?.input || null,
-  //     "QCUserDefined3": formValues.otherDetails?.QCUserDefined3?.dropdown || "",
-  //     "QCUserDefined3Value": formValues.otherDetails?.QCUserDefined3?.input || null,
-  //     // Add more fields as needed
-  //   };
-  //   // Prepare the updated ActualDetails by merging new form values with existing ones
-  //   const updatedActualDetails = {
-  //     // ...currentActualDetails,
-  //     // "ActualLineUniqueID": "A0" + ((parseInt(localStorage.getItem('actualCount')) + 1)),
-  //     "ActualLineUniqueID": -1,
-  //     "ModeFlag": "Insert",
-  //     WagonDetails: { ...currentActualDetails.WagonDetails, ...formValues.wagonNewDetails },
-  //     ContainerDetails: { ...currentActualDetails.ContainerDetails, ...formValues.containerDetails },
-  //     ProductDetails: { ...currentActualDetails.ProductDetails, ...formValues.productDetails },
-  //     THUDetails: { ...currentActualDetails.THUDetails, ...formValues.thuDetails },
-  //     JourneyAndSchedulingDetails: { ...currentActualDetails.JourneyAndSchedulingDetails, ...formValues.journeyDetails },
-  //     OtherDetails: { ...currentActualDetails.OtherDetails, ...formValues.otherDetails },
-  //   };
-  //   localStorage.setItem('actualCount', (parseInt(localStorage.getItem('actualCount'))+1).toString());
-  //   // Set the updated ActualDetails in jsonStore
-  //   console.log("RESOURCE ID : ",resourceId)
-  //   console.log("Updated Actual Details:", updatedActualDetails);
-  //   jsonStore.setActualDetailsJson(updatedActualDetails);
-  //   console.log("==========", jsonStore.getActualDetails());
-  //   jsonStore.pushActualDetailsToResourceGroup(resourceId, updatedActualDetails);
-  //   jsonStore.setQuickOrder({
-  //     ...jsonStore.getJsonData().quickOrder,
-  //     // "ModeFlag": "Update",
-  //     // "Status": "Fresh",
-  //     // "QuickOrderNo": jsonStore.getQuickUniqueID(),
-  //   });
-    
-  //   const fullJson = jsonStore.getJsonData();
-  //   console.log("FULL Plan&Actual JSON :: ", fullJson);
-  //   try {
-  //     const data: any = await quickOrderService.updateQuickOrderResource(fullJson.ResponseResult.QuickOrder);
-  //     console.log(" try", data);
-  //     //  Get OrderNumber from response
-  //     const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
-  //     console.log("OrderNumber:", resourceGroupID);
-  //     //  Fetch the full quick order details
-  //     quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-  //       let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-  //       console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-  //       console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-  //       // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-  //       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-
-  //       // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-  //       const fullJson2 = jsonStore.getJsonData();
-  //       console.log("PLAN SAVE SAVE --- FULL JSON 55:: ", fullJson2);
-  //       onApiSuccess(true);
-  //       onCloseDrawer();
-  //     })
-  //   } catch (err) {
-  //     console.log(" catch", err);
-  //     onApiSuccess(false);
-  //     // setError(`Error fetching API data for Update ResourceGroup`);
-  //   }
-    
-  // };
 
   const [billingData, setBillingData] = useState({
     billingDetail: "DB00023/42",
