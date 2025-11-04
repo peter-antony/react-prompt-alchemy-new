@@ -83,7 +83,7 @@ const TripPlanning = () => {
   const [showConfirmReleaseBtn, setShowConfirmReleaseBtn] = useState(false);
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
-  const [tripType, setTripType] = useState('Normal Trip');
+  const [tripType, setTripType] = useState('Normal');
   
   // Set default location based on OUID
   useEffect(() => {
@@ -1632,7 +1632,7 @@ const TripPlanning = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Normal Trip">Normal Trip</SelectItem>
+                    <SelectItem value="Normal">Normal</SelectItem>
                     <SelectItem value="Wagon/Container Movement">Wagon/Container Movement</SelectItem>
                   </SelectContent>
                 </Select>
@@ -1912,7 +1912,7 @@ const TripPlanning = () => {
                           </div>
                         </div>
                         {[
-                          { title: 'Others 222', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
@@ -2105,7 +2105,7 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Others 111', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(tripResourceDetailsData?.Equipments?.length !=0)? tripResourceDetailsData?.Equipments?.length :'', iconColor: 'text-red-600' },

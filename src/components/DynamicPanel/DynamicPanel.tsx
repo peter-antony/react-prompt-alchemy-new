@@ -241,7 +241,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       // Format computed net with comma as decimal separator
       const computedNetRaw = Number.isFinite(qty * unit) ? (qty * unit).toFixed(2) : '0,00';
       const computedNet = computedNetRaw.replace('.', ',');
-      console.log("computedNet (formatted)", computedNet);
+      // console.log("computedNet (formatted)", computedNet);
       if ((data?.NetAmount?.toString?.() ?? '') !== computedNet) {
         setValue('NetAmount', computedNet, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
       }
