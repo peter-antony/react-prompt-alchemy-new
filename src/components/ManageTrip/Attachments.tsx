@@ -220,7 +220,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
 
     const handleDelete = async (fileId: string) => {
         // Simulate API call
-        console.log('Deleting @@@file:', fileId);
+        console.log('Deleting TripLog file:', fileId);
         console.log("isTripLogAttachments IN TRIPLOG ATTACHMENT:", isTripLogAttachments);
         return new Promise<void>((resolve) => {
             setTimeout(() => {

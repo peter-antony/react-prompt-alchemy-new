@@ -242,7 +242,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
 
      }else{
       console.log("Inside else-- delete file fom QUICKORDER")
-       jsonStore.deleteQuickOrderAttachmentById(file.id);
+      jsonStore.markAttachmentAsDeleted(file.id)
+      //  jsonStore.deleteQuickOrderAttachmentById(file.id);
        jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         // ...formValues.QuickOrder,

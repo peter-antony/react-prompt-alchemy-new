@@ -443,7 +443,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
       fieldType: 'lazyselect',
       width: 'half',
       value: '',
-      mandatory: true,
+      mandatory: false,
       visible: true,
       editable: true,
       order: 5,

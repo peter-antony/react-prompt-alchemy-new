@@ -921,6 +921,38 @@ function deleteQuickOrderAttachmentById(attachItemId: string) {
 
   return false;
 }
+function markAttachmentAsDeleted(attachItemId: string) {
+  if (!attachItemId) return false;
+
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments) &&
+    jsonData.ResponseResult.QuickOrder.Attachments.length > 0
+  ) {
+    const attachments = jsonData.ResponseResult.QuickOrder.Attachments[0];
+    if (!Array.isArray(attachments.AttachItems)) return false;
+
+    const idKeys = ['AttachmentID', 'AttachItemID', 'id', 'attachmentId', 'fileId', 'FileID'];
+
+    // Find the matching attachment
+    const matchedItem = attachments.AttachItems.find((item: any) => {
+      const itemId = idKeys.map(k => item?.[k]).find(v => v !== undefined && v !== null);
+      return String(itemId) === String(attachItemId);
+    });
+
+    if (matchedItem) {
+      matchedItem.ModeFlag = "Delete"; // ✅ update value
+      console.log("Updated Attachment:", matchedItem);
+      return true; // success
+    }
+  }
+
+  return false; // no match found or invalid structure
+}
+
+
 function setResourceGroupFields(fields: { ServiceType?: any, OperationalLocation?: any }) {
   if (resourceJsonData) {
     if (fields.ServiceType !== undefined) {
@@ -1202,6 +1234,7 @@ const jsonStore = {
   getQuickOrderNo,
   pushQuickOrderAttachment,
   deleteQuickOrderAttachmentById,
+  markAttachmentAsDeleted,
   setResourceGroupFields,
   setResourceType,
   setTariffFields,
