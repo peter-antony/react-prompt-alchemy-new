@@ -60,6 +60,7 @@ export interface SearchCriteria {
   LoadType: string;
   LegFrom: string;
   LegTo: string;
+  ScreenName: string;
 }
 
 // Default object (all empty strings)
@@ -123,5 +124,6 @@ export const defaultSearchCriteria: SearchCriteria = {
   RefDocNo: "",
   LoadType: "",
   LegFrom: "",
-  LegTo: ""
+  LegTo: "",
+  ScreenName: 'TripExecution'
 };

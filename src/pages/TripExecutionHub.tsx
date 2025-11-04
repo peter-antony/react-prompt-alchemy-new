@@ -562,7 +562,8 @@ export const TripExecutionHub = () => {
             'Not Eligible': 'badge-red rounded-2xl',
             'Revenue leakage': 'badge-red rounded-2xl',
             'Invoice Created': 'badge-blue rounded-2xl',
-            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+            'Invoice Approved': 'badge-fresh-green rounded-2xl',
+            'Draft': 'badge-blue rounded-2xl'
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
         };
@@ -932,6 +933,8 @@ export const TripExecutionHub = () => {
 
   const buildSearchCriteria: any = (latestFilters: any) => {
     const criteria: SearchCriteria = { ...defaultSearchCriteria };
+    // Set ScreenName based on createTripPlan parameter
+    criteria.ScreenName = createTripPlan === 'true' ? 'ManageTripPlan' : 'TripExecution';
     if (Object.keys(latestFilters).length > 0) {
       Object.entries(latestFilters).forEach(([key, value]): any => {
         const filter: any = value; // 👈 cast to any
@@ -945,6 +948,7 @@ export const TripExecutionHub = () => {
       });
       return criteria;
     }
+    return criteria;
   }
 
   const handleServerSideSearch = async () => {
@@ -1010,7 +1014,8 @@ export const TripExecutionHub = () => {
             'Draft Bill Raised': 'badge-orange rounded-2xl',
             'Not Eligible': 'badge-red rounded-2xl',
             'Invoice Created': 'badge-blue rounded-2xl',
-            'Invoice Approved': 'badge-fresh-green rounded-2xl'
+            'Invoice Approved': 'badge-fresh-green rounded-2xl',
+            'Draft': 'badge-blue rounded-2xl'
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
         };
