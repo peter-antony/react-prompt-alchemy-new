@@ -8,6 +8,7 @@ interface BadgesListProps {
   onRemove: (index: number) => void;
   className?: string;
   badgeVariant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  idField?: string; // Field name to use for displaying the ID (e.g., 'EquipmentID', 'HandlerID', 'VehicleID', 'DriverID')
 }
 
 export const BadgesList: React.FC<BadgesListProps> = ({
@@ -15,6 +16,7 @@ export const BadgesList: React.FC<BadgesListProps> = ({
   onRemove,
   className,
   badgeVariant = 'default',
+  idField = 'EquipmentID', // Default to EquipmentID for backward compatibility
 }) => {
   console.log('items:::::::::::: ', items);
   return (
@@ -25,11 +27,11 @@ export const BadgesList: React.FC<BadgesListProps> = ({
           variant={badgeVariant}
           className="flex items-center gap-1 pr-1 transition-all hover:opacity-80"
         >
-          <span>{item?.EquipmentID}</span>
+          <span>{item?.[idField] || item?.ResourceID}</span>
           <button
             onClick={() => onRemove(index)}
             className="ml-1 rounded-full p-0.5 hover:bg-background/20 transition-colors"
-            aria-label={`Remove ${item}`}
+            aria-label={`Remove ${item?.[idField] || item?.ResourceID}`}
           >
             <X className="h-3 w-3" />
           </button>
