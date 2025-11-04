@@ -16,7 +16,7 @@ import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 import { SmartGridWithGrouping } from '../SmartGrid/SmartGridWithGrouping';
 // import { quickOrderService } from "@/api/services/quickOrderService";
 import { tripService } from "@/api/services/tripService";
-import { SmartGridPlus } from '../SmartGrid/SmartGridPlus';
+import { ActualSmartGridPlus } from '../SmartGrid/ActualSmartGridPlus';
 import jsonStore from '@/stores/jsonStore';
 import { useFilterStore } from '@/stores/filterStore';
 import { useToast } from '../ui/use-toast';
@@ -26,6 +26,13 @@ import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { manageTripStore } from '@/stores/mangeTripStore';
+
+// Helper function to safely split values from LazySelect
+const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
+  if (!value || typeof value !== 'string') return fallback;
+  const parts = value.split(delimiter);
+  return parts[index] || fallback;
+};
 
 export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?: any }) => {
   const gridPlanId = 'ConsignmentTripPlanGrid';
@@ -845,7 +852,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       let unCodeValue = '';
       if (currentEditingRowIndex !== null && actualEditableData[currentEditingRowIndex]) {
         unCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
-        console.log(`Getting UNCode for row ${currentEditingRowIndex}:`, unCodeValue);
       }
       const response = await quickOrderService.getDynamicSearchData({
         messageType: "Product ID Init",
@@ -876,7 +882,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       let productIDValue = '';
       if (currentEditingRowIndex !== null && actualEditableData[currentEditingRowIndex]) {
         productIDValue = actualEditableData[currentEditingRowIndex].Product || '';
-        console.log(`Getting ProductID for row ${currentEditingRowIndex}:`, productIDValue);
       }
       const response = await quickOrderService.getDynamicSearchData({
         messageType: "UN Code Init",
@@ -930,7 +935,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       mandatory: true,
       subRow: false,
       width: 150,
-      // allowNewEntry: true, // Enable new entry functionality for Wagon field (commented temporarily due to type issue)
+      allowNewEntry: true, // Enable new entry functionality for Wagon field
+      minSearchLength: 4, // Allow creating new entries with just 4 characters
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Wagon id Init",
@@ -950,6 +956,29 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Handle clear/undefined values
+          if (!value || value === undefined || value === null) {
+            setActualEditableData(prevData => {
+              const newData = [...prevData];
+              if (newData[rowIndex]) {
+                newData[rowIndex] = {
+                  ...newData[rowIndex],
+                  Wagon: '',
+                  WagonDescription: '',
+                  WagonType: '',
+                  WagonQty: '',
+                  WagonQtyUOM: '',
+                  WagonTareWeight: '',
+                  WagonLength: '',
+                };
+                hasUserEditsRef.current = true;
+              }
+              return newData;
+            });
+            return;
+          }
+
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "Wagon ID On select",
             searchCriteria: {
@@ -979,12 +1008,13 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   ...(wagonData.WagonLength && { WagonLength: wagonData.WagonLength }),
                 };
               } else {
-                // API returned empty response - clear related fields
+                // API returned empty response or this is a new entry
+                // For new entries, set WagonDescription to the same value as Wagon and WagonType to "Unknown"
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  Wagon: value.split(' || ')[0],
-                  WagonDescription: value.split(' || ')[1],
-                  WagonType: '',
+                  Wagon: value,
+                  WagonDescription: value, // Set description to same value for new entries
+                  WagonType: 'Unknown', // Set type to "Unknown" for new entries
                   WagonQty: '',
                   WagonQtyUOM: '',
                   WagonTareWeight: '',
@@ -1177,7 +1207,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           if (newData[rowIndex]) {
             newData[rowIndex] = {
               ...newData[rowIndex],
-              ContainerDescription: value.split(' || ')[1] || value, // Store description part
+              ContainerDescription: safeSplit(value, ' || ', 1, value), // Store description part
             };
             hasUserEditsRef.current = true;
           }
@@ -1217,7 +1247,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           if (newData[rowIndex]) {
             newData[rowIndex] = {
               ...newData[rowIndex],
-              ContainerType: value.split(' || ')[1] || value, // Store description part
+              ContainerType: safeSplit(value, ' || ', 1, value), // Store description part
             };
             hasUserEditsRef.current = true;
           }
@@ -1305,7 +1335,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           if (newData[rowIndex]) {
             newData[rowIndex] = {
               ...newData[rowIndex],
-              Thu: value.split(' || ')[1] || value, // Store description part
+              Thu: safeSplit(value, ' || ', 1, value), // Store description part
             };
             hasUserEditsRef.current = true;
           }
@@ -1402,7 +1432,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              NHMDescription: value.split(' || ')[1] || value
+              NHMDescription: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1424,7 +1454,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "ProductID On Select",
             searchCriteria: {
-              ProductID: value.split(' || ')[0],
+              ProductID: safeSplit(value, ' || ', 0),
             },
           });
           const rr: any = response.data;
@@ -1439,16 +1469,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  // Always set Product and ProductDescription from the selected dropdown value
-                  Product: value.split(' || ')[0],
-                  ProductDescription: value.split(' || ')[1] || '',
-                  // Handle UNCode fields - can be null from API
+                  Product: safeSplit(value, ' || ', 0),
+                  ProductDescription: safeSplit(value, ' || ', 1),
                   UNCode: productfetchData.UNCode || '',
                   UNCodeDescription: productfetchData.UNDescription || '',
-                  // Handle DGClass fields - set description in DGClassDescription field (the visible field)
                   DGClass: productfetchData.DGClass || '',
                   DGClassDescription: productfetchData.DGClassDescription || '',
-                  // Handle NHM fields
                   NHM: productfetchData.NHMCode || '',
                   NHMDescription: productfetchData.NHMDescription || '',
                   ...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
@@ -1457,8 +1483,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 // API returned empty response - clear related fields
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  Product: value.split(' || ')[0],
-                  ProductDescription: value.split(' || ')[1],
+                  Product: safeSplit(value, ' || ', 0),
+                  ProductDescription: safeSplit(value, ' || ', 1),
                   UNCode: '',
                   UNCodeDescription: '',
                   NHM: '',
@@ -1531,7 +1557,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ClassOfStores: value.split(' || ')[1] || value
+              ClassOfStores: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1553,7 +1579,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "UnCode On Select",
             searchCriteria: {
-              UNCode: value.split(' || ')[0],
+              UNCode: safeSplit(value, ' || ', 0),
             },
           });
           const rr: any = response.data;
@@ -1568,16 +1594,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  // Always set UNCode and UNCodeDescription from the selected dropdown value
-                  UNCode: value.split(' || ')[0],
-                  UNCodeDescription: value.split(' || ')[1] || '',
-                  // Handle Product fields from API
+                  UNCode: safeSplit(value, ' || ', 0),
+                  UNCodeDescription: safeSplit(value, ' || ', 1),
                   Product: unCodefetchData.ProductID || '',
                   ProductDescription: unCodefetchData.ProductDescription || '',
-                  // Handle DGClass fields - set description in DGClassDescription field (the visible field)
                   DGClass: unCodefetchData.DGClass || '',
                   DGClassDescription: unCodefetchData.DGClassDescription || '',
-                  // Handle NHM fields
                   NHM: unCodefetchData.NHMCode || '',
                   NHMDescription: unCodefetchData.NHMDescription || '',
                   ...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
@@ -1588,8 +1610,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   ...newData[rowIndex],
                   Product: '',
                   ProductDescription: '',
-                  UNCode: value.split(' || ')[0],
-                  UNCodeDescription: value.split(' || ')[1],
+                  UNCode: safeSplit(value, ' || ', 0),
+                  UNCodeDescription: safeSplit(value, ' || ', 1),
                   NHM: '',
                   NHMDescription: '',
                   ContainsHazardousGoods: '',
@@ -1637,29 +1659,29 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       },
       onChange: (value: string, rowData: any, actualRowIndex?: number) => {
         try {
-            const rowIndex = actualRowIndex ?? 0;
-            setActualEditableData(prevData => {
-              const newData = [...prevData];
+          const rowIndex = actualRowIndex ?? 0;
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
 
             if (newData[rowIndex]) {
               const updatedRow = {
                 ...newData[rowIndex],
-              DGClass: value.split(' || ')[0] || "" ,
-              DGClassDescription : value.split(' || ')[1] || ""
-            };
-            
-            newData[rowIndex] = updatedRow; 
-          }else {
-          console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
-        }
+                DGClass: safeSplit(value, ' || ', 0),
+                DGClassDescription: safeSplit(value, ' || ', 1)
+              };
 
-        hasUserEditsRef.current = true;
-        return newData;
+              newData[rowIndex] = updatedRow;
+            } else {
+              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+            }
+
+            hasUserEditsRef.current = true;
+            return newData;
           });
         } catch (error) {
           console.error('Failed to fetch wagon details:', error);
         }
-      }
+      },
     },
     {
       key: 'ShuntingOption',
@@ -1692,7 +1714,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntingOption: value.split(' || ')[1] || value
+              ShuntingOption: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1731,7 +1753,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ReplacedWagon: value.split(' || ')[1] || value
+              ReplacedWagon: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1769,7 +1791,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntingReasonCode: value.split(' || ')[1] || value
+              ShuntingReasonCode: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1807,7 +1829,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntInLocationDescription: value.split(' || ')[1] || value
+              ShuntInLocationDescription: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1845,7 +1867,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntOutLocationDescription: value.split(' || ')[1] || value
+              ShuntOutLocationDescription: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1947,7 +1969,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode1: value.split(' || ')[1] || value
+              QuickCode1: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -1985,7 +2007,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode2: value.split(' || ')[1] || value
+              QuickCode2: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -2023,7 +2045,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode3: value.split(' || ')[1] || value
+              QuickCode3: safeSplit(value, ' || ', 1, value)
             };
             return newData;
           });
@@ -2104,7 +2126,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       // Simulate API call (you can add real API call here if needed)
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      console.log('Row edited successfully:', editedRow, 'at index:', rowIndex);
     } catch (error) {
       console.error('Error editing row:', error);
       toast({
@@ -2125,9 +2146,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       // Simulate API call (you can add real API call here if needed)
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      console.log('Row added successfully:', newRow);
     } catch (error) {
-      console.error('Error adding row:', error);
       toast({
         title: "⚠️ Add failed",
         description: "An error occurred while adding the row.",
@@ -2151,9 +2170,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       // Simulate API call (you can add real API call here if needed)
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      console.log('Row deleted successfully at index:', rowIndex);
     } catch (error) {
-      console.error('Error deleting row:', error);
       toast({
         title: "⚠️ Delete failed",
         description: "An error occurred while deleting the row.",
@@ -2165,7 +2182,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   // Handle Save Plan Actuals - Process array of actual data from grid
   const handleSavePlanActuals = async () => {
     try {
-      console.log("Saving actual details for grid data:", actualEditableData);
 
       // Get the full trip data from the store - try prop first, then manageTripStore as fallback
       const currentTripData = tripData || manageTripStore.getState().tripData;
@@ -2188,9 +2204,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return;
       }
 
-      console.log("Current trip data:", currentTripData);
-      console.log("legId:", legId);
-      console.log("actualEditableData:", actualEditableData);
 
       // We'll create a helper that, if a string contains "||", returns an object with both parts.
       const splitAtPipe = (value: string | null | undefined) => {
@@ -2231,7 +2244,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             newObj[key] = val;
           }
         }
-        console.log("splitDropdowns ===", newObj);
         return newObj;
       };
 
@@ -2255,13 +2267,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           modeFlag = "Delete"; // Respect Delete flag
         }
 
-        console.log(`Processing row ${index + 1} with Seqno: ${actualRow.Seqno}, ActualLineUniqueID: ${actualRow.ActualLineUniqueID}, determined ModeFlag: ${modeFlag}`);
 
         return {
           ...actualRow,
           ModeFlag: modeFlag,
         };
-      }); console.log('Updated actual data array:', updatedActualData);
+      });
 
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
@@ -2279,7 +2290,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           throw new Error(`Leg with LegSequence ${legId} not found`);
         }
 
-        console.log(`Found leg at index ${legIndex} with LegSequence ${legId}`);
 
         if (!updatedTripData.LegDetails[legIndex].Consignment) {
           throw new Error(`Leg at index ${legIndex} has no Consignment`);
@@ -2304,23 +2314,15 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = updatedActualData;
 
-        console.log("Successfully updated the nested actual data array:");
-        console.log("Updated LegDetails:", updatedTripData.LegDetails[legIndex]);
-        console.log("Updated Consignment:", updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]);
-        console.log("Updated Actual array:", updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual);
-
         // Save to API
         try {
           const response = await tripService.saveTrip(updatedTripData);
-          console.log("Trip saved response:", response);
 
           const resourceStatus = (response as any)?.data?.IsSuccess;
-          console.log("resourceStatus ===", resourceStatus);
 
           if (resourceStatus) {
             // Update the trip data in the store with the updated data
             manageTripStore.getState().setTrip(updatedTripData);
-            console.log("Trip data updated in manageTripStore");
 
             // Update local actualEditableData state with the updated data
             setActualEditableData(updatedActualData);
@@ -2331,7 +2333,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               variant: "default",
             });
           } else {
-            console.log("error response ===", (response as any)?.data?.Message);
             toast({
               title: "⚠️ Save Failed",
               description: (response as any)?.data?.Message || "Failed to save changes.",
@@ -2339,7 +2340,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             });
           }
         } catch (apiError) {
-          console.error("API Error:", apiError);
           toast({
             title: "⚠️ Save Failed",
             description: "Failed to save changes. Please try again.",
@@ -2348,7 +2348,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         }
 
       } catch (updateError) {
-        console.error("Error updating nested data:", updateError);
         toast({
           title: "⚠️ Update Failed",
           description: `Failed to update the data structure: ${updateError.message}`,
@@ -2400,8 +2399,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const wagonQty = JSON.parse(rr.ResponseData) || [];
         const options = wagonQty
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name); // Convert to string array for Select type
-        setWagonQtyUOMOptions(options);
+          .map((qc: any) => qc.name as string); 
+        const uniqueOptions = [...new Set(options)] as string[];
+        setWagonQtyUOMOptions(uniqueOptions);
       } catch (error) {
         console.error('Failed to fetch wagon quantity UOM options:', error);
         setWagonQtyUOMOptions([]);
@@ -2416,8 +2416,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const weightData = JSON.parse(rr.ResponseData) || [];
         const options = weightData
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name);
-        setWeightList(options);
+          .map((qc: any) => qc.name as string);
+        // Remove duplicates using Set
+        const uniqueOptions = [...new Set(options)] as string[];
+        setWeightList(uniqueOptions);
       } catch (error) {
         setWeightList([]);
       }
@@ -2431,8 +2433,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const wagonLengthData = JSON.parse(rr.ResponseData) || [];
         const options = wagonLengthData
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name);
-        setWagonLengthUOMOptions(options);
+          .map((qc: any) => qc.name as string);
+        // Remove duplicates using Set
+        const uniqueOptions = [...new Set(options)] as string[];
+        setWagonLengthUOMOptions(uniqueOptions);
       } catch (error) {
         setWagonLengthUOMOptions([]);
       }
@@ -2446,8 +2450,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const containerQtyData = JSON.parse(rr.ResponseData) || [];
         const options = containerQtyData
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name);
-        setContainerQtyUOMOptions(options);
+          .map((qc: any) => qc.name as string);
+        // Remove duplicates using Set
+        const uniqueOptions = [...new Set(options)] as string[];
+        setContainerQtyUOMOptions(uniqueOptions);
       } catch (error) {
         setContainerQtyUOMOptions([]);
       }
@@ -2461,8 +2467,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const thuQtyData = JSON.parse(rr.ResponseData) || [];
         const options = thuQtyData
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name);
-        setThuQtyUOMOptions(options);
+          .map((qc: any) => qc.name as string);
+        // Remove duplicates using Set
+        const uniqueOptions = [...new Set(options)] as string[];
+        setThuQtyUOMOptions(uniqueOptions);
       } catch (error) {
         setThuQtyUOMOptions([]);
       }
@@ -2476,8 +2484,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const productQtyData = JSON.parse(rr.ResponseData) || [];
         const options = productQtyData
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name);
-        setProductQtyUomOptions(options);
+          .map((qc: any) => qc.name as string);
+        // Remove duplicates using Set
+        const uniqueOptions = [...new Set(options)] as string[];
+        setProductQtyUomOptions(uniqueOptions);
       } catch (error) {
         setProductQtyUomOptions([]);
       }
@@ -2698,7 +2708,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   fetchOptions={fetchSourceBRIDOptions}
                   value={sourceBRId}
                   onChange={(value) => {
-                    console.log("Source BR ID selected:", value);
                     // Update local state for the dropdown display
                     setSourceBRId(value as string);
                     // Create a new object to ensure React detects the state change
@@ -2719,7 +2728,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   fetchOptions={fetchSourceBRIDOptions}
                   value={returnBRId}
                   onChange={(value) => {
-                    console.log("Return BR ID selected:", value);
                     // Update local state for the dropdown display
                     setReturnBRId(value as string);
                     // Create a new object to ensure React detects the state change
@@ -2748,7 +2756,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                         ReturnBRId: returnBRId
                       });
                     }
-                    console.log(selectedCustomerData);
                   }}
                 >
                   Save
@@ -2781,6 +2788,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           <AnimatePresence>
             {expandedPlanned && (
               <motion.div
+                key="planned-section"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -2894,6 +2902,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           <AnimatePresence>
             {expandedActuals && (
               <motion.div
+                key="actuals-section"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -2949,68 +2958,46 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                 {/* Actual List */}
                 <div className="space-y-4">
-                  {/* Table */}
+                  {/* Table - Fixed width container matching planned grid with horizontal scroll */}
                   <div className="border rounded-lg overflow-hidden pt-2">
-                    {/* {actualData && (
-                      // <SmartGridWithGrouping
-                      //   columns={actualColumns}
-                      //   data={actualData}
-                      //   groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                      //   showGroupingDropdown={true}
-                      //   paginationMode="pagination"
-                      //   selectedRows={selectedRows}
-                      //   rowClassName={(row: any, index: number) => {
-                      //     return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                      //   }}
-                      //   showDefaultConfigurableButton={false}
-                      //   gridTitle="Actuals"
-                      //   recordCount={actualData.length}
-                      //   showCreateButton={false}
-                      //   searchPlaceholder="Search"
-                      //   clientSideSearch={true}
-                      //   showSubHeaders={false}
-                      //   hideAdvancedFilter={true}
-                      //   hideCheckboxToggle={true}
-                      //   gridId={gridActualId}
-                      //   userId="current-user"
-                      //   editableColumns={['plannedStartEndDateTime']}
-                      // />
-
-                    )} */}
-                    {actualEditableData && (
-                      <SmartGridPlus
-                        columns={actualEditableColumns}
-                        data={actualEditableData}
-                        gridTitle="Actuals"
-                        inlineRowAddition={true}
-                        inlineRowEditing={true}
-                        onAddRow={handleAddRow}
-                        onEditRow={handleEditRow}
-                        onDeleteRow={handleDeleteRow}
-                        //defaultRowValues={defaultRowValues}
-                        // validationRules={validationRules}
-                        addRowButtonLabel="Add Actuals"
-                        addRowButtonPosition="top-left"
-                        groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                        showGroupingDropdown={true}
-                        paginationMode="pagination"
-                        selectedRows={selectedRows}
-                        rowClassName={(row: any, index: number) => {
-                          return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                        }}
-                        showDefaultConfigurableButton={false}
-                        recordCount={actualEditableData.length}
-                        showCreateButton={false}
-                        searchPlaceholder="Search"
-                        clientSideSearch={true}
-                        showSubHeaders={false}
-                        hideAdvancedFilter={true}
-                        hideCheckboxToggle={true}
-                        gridId={gridActualId}
-                        userId="current-user"
-                        editableColumns={['plannedStartEndDateTime']}
-                      />
-                    )}
+                    <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
+                      <div style={{ width: '1290px', minWidth: '1290px' }}>
+                        {actualEditableData && (
+                          <ActualSmartGridPlus
+                            columns={actualEditableColumns}
+                            data={actualEditableData}
+                            gridTitle="Actuals"
+                            inlineRowAddition={true}
+                            inlineRowEditing={true}
+                            onAddRow={handleAddRow}
+                            onEditRow={handleEditRow}
+                            onDeleteRow={handleDeleteRow}
+                            //defaultRowValues={defaultRowValues}
+                            // validationRules={validationRules}
+                            addRowButtonLabel="Add Actuals"
+                            addRowButtonPosition="top-left"
+                            groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                            showGroupingDropdown={true}
+                            paginationMode="pagination"
+                            selectedRows={selectedRows}
+                            rowClassName={(row: any, index: number) => {
+                              return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                            }}
+                            showDefaultConfigurableButton={false}
+                            recordCount={actualEditableData.length}
+                            showCreateButton={false}
+                            searchPlaceholder="Search"
+                            clientSideSearch={true}
+                            showSubHeaders={false}
+                            hideAdvancedFilter={true}
+                            hideCheckboxToggle={true}
+                            gridId={gridActualId}
+                            userId="current-user"
+                            editableColumns={['plannedStartEndDateTime']}
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                 </div>

@@ -73,6 +73,9 @@ export interface GridColumnConfig {
   disableLazyLoading?: boolean;
   returnType?: string;
   onChange?: (value: any, rowData?: any, rowIndex?: number) => void;
+  allowNewEntry?: boolean;
+  placeholder?: string;
+  minSearchLength?: number; // Minimum characters required for new entry creation
   
   // ActionButton specific properties
   actionButtons?: Array<{
