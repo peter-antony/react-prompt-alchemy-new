@@ -14,7 +14,9 @@ import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIc
   Building2, Users, Truck, Calendar as CalendarIcon2, Box, 
   UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, 
   HelpCircle, InfoIcon, EllipsisVertical, 
-  CreditCard, Zap, FileUp, Route, TramFront } from 'lucide-react';
+  CreditCard, Zap, FileUp, Route, TramFront, 
+  ChevronLeft,
+  ChevronDown} from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -1104,36 +1106,9 @@ const TripPlanning = () => {
   }
 
   const [amendModalOpen, setAmendModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [currentActionType, setCurrentActionType] = useState<'cancel' | 'amend'>('cancel');
-  const [fields, setFields] = useState([
-    {
-      type: "date",
-      label: "Requested Date and Time",
-      name: "date",
-      placeholder: "Select Requested Date and Time",
-      value: "",
-      required: true,
-      mappedName: 'Canceldatetime'
-    },
-    {
-      type: "select",
-      label: "Reason Code and Description",
-      name: "ReasonCode",
-      placeholder: "Enter Reason Code and Description",
-      options: [],
-      value: "",
-      required: true,
-      mappedName: 'ReasonCode'
-    },
-    {
-      type: "text",
-      label: "Remarks",
-      name: "remarks",
-      placeholder: "Enter Remarks",
-      value: "",
-      mappedName: 'Remarks'
-    },
-  ]);
+  const [fields, setFields] = useState([]);
   const handleFieldChange = (name, value) => {
     console.log('Field changed:', name, value);
     setFields(fields =>
@@ -1141,8 +1116,61 @@ const TripPlanning = () => {
     );
   };
   const openAmendPopup = () => {
+    setFields([
+      {
+        type: "select",
+        label: "Reason Code and Description",
+        name: "ReasonCode",
+        placeholder: "Enter Reason Code and Description",
+        options: [],
+        value: "",
+        required: true,
+        mappedName: 'ReasonCode'
+      },
+      {
+        type: "text",
+        label: "Remarks",
+        name: "remarks",
+        placeholder: "Enter Remarks",
+        value: "",
+        mappedName: 'Remarks'
+      },
+    ]);
     setCurrentActionType('amend');
     setAmendModalOpen(true);
+  }
+  const openCancelPopup = () => {
+    setFields([
+      {
+        type: "date",
+        label: "Requested Date and Time",
+        name: "date",
+        placeholder: "Select Requested Date and Time",
+        value: "",
+        required: true,
+        mappedName: 'Canceldatetime'
+      },
+      {
+        type: "select",
+        label: "Reason Code and Description",
+        name: "ReasonCode",
+        placeholder: "Enter Reason Code and Description",
+        options: [],
+        value: "",
+        required: true,
+        mappedName: 'ReasonCode'
+      },
+      {
+        type: "text",
+        label: "Remarks",
+        name: "remarks",
+        placeholder: "Enter Remarks",
+        value: "",
+        mappedName: 'Remarks'
+      },
+    ]);
+    setCurrentActionType('cancel');
+    setCancelModalOpen(true);
   }
 
   const splitAtPipe = (value: string | null | undefined) => {
@@ -1267,12 +1295,96 @@ const TripPlanning = () => {
     } 
   };
 
+  const handleCancelTripPlanning = async (formFields: any) => {
+    console.log("Cancel Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Cancel API:', mappedObj);
+    const messageType = "Manage Trip Plan - cancel Trip";
+    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+    
+    // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
+    let ReasonCodeValue = '';
+    let ReasonCodeLabel = '';
+
+    if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+      // If activityName is a string with '||', split it into value and label
+      const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+      ReasonCodeValue = value.trim();
+      ReasonCodeLabel = labelParts.join('||').trim();
+    } else if (typeof mappedObj.ReasonCode === 'string') {
+      ReasonCodeValue = mappedObj.ReasonCode;
+      ReasonCodeLabel = mappedObj.ReasonCode;
+    } else if (typeof mappedObj.ReasonCode === 'object' && mappedObj.ReasonCode !== null) {
+      // In case it's already an object (from dropdown)
+      const splitData = splitDropdowns(mappedObj.ReasonCode);
+      ReasonCodeValue = splitData.ReasonCodeValue || '';
+      ReasonCodeLabel = splitData.ReasonCodeLabel || '';
+    }
+
+    // Create payload for amend action
+    const Header = {
+      "TripNo": tripIDToUse,
+      "Cancellation": {
+        "CancellationRequestedDateTime": mappedObj.Canceldatetime || "",
+        "CancellationReasonCode": ReasonCodeValue || "",
+        "CancellationReasonCodeDescription": ReasonCodeLabel || "",
+        "CancellationRemarks": mappedObj.Remarks || ""
+      },
+      "ShortClose": null,
+      "Amendment": null,
+    };
+    console.log('Cancel Payload:', Header);
+    console.log("Using TripID for Cancel:", tripIDToUse);
+    try{
+      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        toast({
+          title: "✅ Trip Cancelled",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+        const tripStatus = parsedResponse?.TripStatus;
+        setTripStatus(tripStatus);
+        if (tripStatus && tripIDToUse) {
+          setTripCustomerOrdersData(prev =>
+            Array.isArray(prev)
+              ? prev.map((row: any) =>
+                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+                )
+              : prev
+          );
+        }
+        setCancelModalOpen(false);
+        console.log("Trip data updated in store", tripStatus);
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Cancellation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    } 
+  };
+
   // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
   const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
   const isDisabled = !tripIDToUse;
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${
     isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
   }`;
+  const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
 
   const handleRemoveEquipment = (index: number) => {
     const equipmentToRemove = tripResourceDetailsData?.Equipments?.[index];
@@ -1405,9 +1517,9 @@ const TripPlanning = () => {
                 >
                   Manage Trips
                 </Button>
-                <Button variant="ghost" size="icon" className='border rounded-lg'>
+                {/* <Button variant="ghost" size="icon" className='border rounded-lg'>
                   <ExternalLink className="h-4 w-4" />
-                </Button>
+                </Button> */}
                 {/* <Button variant="ghost" size="icon" className='border rounded-lg listOfOptions border-input'>
                   <EllipsisVertical className="h-4 w-4" />
                 </Button> */}
@@ -1477,7 +1589,7 @@ const TripPlanning = () => {
                 {planDate ? format(planDate, "dd-MMM-yyyy") : ''}
                 </Badge>
                 <Button variant="ghost" size="icon">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1875,6 +1987,9 @@ const TripPlanning = () => {
                       </span> */}
                     </div>
                     <div className='flex items-center gap-4'>
+                      <button onClick={openCancelPopup} disabled={!tripNo} className={buttonCancel}>
+                        Cancel
+                      </button>
                       { !tripNo &&
                         <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                           Create Trip
@@ -2116,14 +2231,16 @@ const TripPlanning = () => {
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
                           </div> */}
+                          <button onClick={openCancelPopup} disabled={!tripNo} className={buttonCancel}>
+                            Cancel
+                          </button>
                           { !tripNo &&
                             <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                               Create Trip
                             </button>
                           }
                           {/* { showConfirmReleaseBtn && customerOrderList != null && ( */}
-
-                            <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
+                          <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Confirm
                           </button>
                           {/* )}
@@ -2194,6 +2311,18 @@ const TripPlanning = () => {
         onSubmit={handleAmendTripPlanSubmit}
         submitLabel="Amend Trip"
         actionType="amend"
+      />
+
+      <TripPlanActionModal
+        open={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        title="Cancel Trip Plan"
+        icon={<NotebookPen className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleCancelTripPlanning}
+        submitLabel="Cancel Trip"
+        actionType="cancel"
       />
 
       {/* Trip Level Update Drawer */}
