@@ -279,13 +279,63 @@ const saveCurrentFormData = () => {
     }));
   };
 
-  const handleDeleteItem = (id: string) => {
-    setVasItems(vasItems.filter(item => item.id !== id));
-    if (selectedVAS === id) {
-      setSelectedVAS(null);
-      setFormData(initialFormData);
-    }
+  const handleDeleteItem = async (id: string) => {
+  const vasToDelete = vasItems.find((item) => item.id === id);
+  if (!vasToDelete) return;
+
+  // Mark this one as Delete
+  const updatedVasItems = vasItems.map((item) =>
+    item.id === id
+      ? {
+          ...item,
+          formData: {
+            ...item.formData,
+            ModeFlag: "Delete",
+          },
+        }
+      : item
+  );
+
+  // Header info same as save
+  const HeaderInfo = {
+    TripNo: tripData?.Header?.TripNo,
+    TripOU: tripData?.Header?.TripOU,
+    TripStatus: tripData?.Header?.TripStatus,
+    TripStatusDescription: tripData?.Header?.TripStatusDescription,
   };
+
+  const vasList = prepareVasPayload(updatedVasItems);
+
+  try {
+    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+    console.log("Delete VAS response", response);
+
+    const apiMessage = response?.data?.Message || "Deleted Successfully";
+    const isSuccess = response?.data?.IsSuccess !== false;
+
+    toast({
+      title: isSuccess ? "✅ VAS Deleted Successfully" : "❌ Delete Failed",
+      description: apiMessage,
+      variant: isSuccess ? "default" : "destructive",
+    });
+
+    // Refresh list after delete
+    if (isSuccess) {
+      await fetchVASForTrip();
+    }
+  } catch (error) {
+    console.error("Error deleting VAS:", error);
+    const errorMessage =
+      error?.data?.Message || error?.message || "Failed to delete VAS";
+
+    toast({
+      title: "❌ Delete Failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  }
+};
+
 
   const prepareVasPayload = (vasItems) => {
     const splitPiped = (value: any): { id: string; name: string } => {
