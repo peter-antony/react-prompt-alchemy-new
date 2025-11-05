@@ -621,14 +621,14 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <Badge className={`${getStatusColor(incident.status)} text-xs font-medium`}>
                         {incident.status}
                       </Badge>
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={(e) => handleDeleteIncident(index, e)}
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </CardContent>
                 </Card>
