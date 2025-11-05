@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, Wrench, 
   AlertTriangle, Briefcase, CreditCard, 
@@ -67,7 +67,7 @@ import { SideDrawer } from '@/components/SideDrawer';
 // ];
 
 export const SummaryCardsGrid = () => {
-  const { openDrawer } = useDrawerStore();
+  const { openDrawer, isOpen, drawerType } = useDrawerStore();
   const { tripData } = manageTripStore();
   const { routes,
     selectedOrder,
@@ -99,7 +99,10 @@ export const SummaryCardsGrid = () => {
   const [vasLoading, setVasLoading] = useState(false);
   const [incidentsData, setIncidentsData] = useState<any[]>([]);
   const [incidentsLoading, setIncidentsLoading] = useState(false);
-  
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const prevIsOpenRef = useRef<boolean>(isOpen);
+  const lastDrawerTypeRef = useRef<ReturnType<typeof useDrawerStore>['drawerType']>(drawerType);
+
   console.log('SummaryCardsGrid tripData:', tripData);
   const tripId: any = tripData?.Header?.TripNo;
 
@@ -143,7 +146,7 @@ export const SummaryCardsGrid = () => {
     };
 
     fetchVas();
-  }, [tripId]);
+  }, [tripId, refreshTrigger]);
 
   // 🔹 Fetch Incidents data once tripId changes
   useEffect(() => {
@@ -171,8 +174,28 @@ export const SummaryCardsGrid = () => {
     };
 
     fetchIncidents();
-  }, [tripId]);
+  }, [tripId, refreshTrigger]);
 
+  // 🔹 Detect drawer close for VAS/Incidents and trigger refresh
+  useEffect(() => {
+    // Track last non-null drawer type while open
+    if (isOpen && drawerType) {
+      lastDrawerTypeRef.current = drawerType;
+    }
+ 
+    // On close transition, bump refresh trigger for specific drawers
+    if (prevIsOpenRef.current && !isOpen) {
+      if (lastDrawerTypeRef.current === 'vas' || lastDrawerTypeRef.current === 'incidents') {
+        setRefreshTrigger((prev) => prev + 1);
+      }
+      // Reset last drawer type after close
+      lastDrawerTypeRef.current = null;
+    }
+ 
+    // Update previous isOpen state
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, drawerType]);
+ 
    const handleCardClick = (cardTitle: string) => {
     if (cardTitle === 'Resources') {
       openDrawer('resources');
@@ -218,25 +241,25 @@ export const SummaryCardsGrid = () => {
         iconColor: '#1036C0',
         bgColor: '#F0F3FE',
       },
-      {
-        title: 'Resources',
-        icon: UserRoundCheck,
-        values: [
-          {
-            label: 'No. of Resource',
-            value:
-              (resources?.Equipments?.length || 0) +
-              (resources?.Vehicle?.length || 0) +
-              (resources?.Drivers?.length || 0),
-          },
-          // {
-          //   label: 'Total Cost',
-          //   value: `USD ${resources?.Supplier?.[0]?.Cost || 0}`,
-          // },
-        ],
-        iconColor: '#C01048',
-        bgColor: '#FFF1F3',
-      },
+      // {
+      //   title: 'Resources',
+      //   icon: UserRoundCheck,
+      //   values: [
+      //     {
+      //       label: 'No. of Resource',
+      //       value:
+      //         (resources?.Equipments?.length || 0) +
+      //         (resources?.Vehicle?.length || 0) +
+      //         (resources?.Drivers?.length || 0),
+      //     },
+      //     // {
+      //     //   label: 'Total Cost',
+      //     //   value: `USD ${resources?.Supplier?.[0]?.Cost || 0}`,
+      //     // },
+      //   ],
+      //   iconColor: '#C01048',
+      //   bgColor: '#FFF1F3',
+      // },
       {
         title: 'VAS',
         icon: Settings,
@@ -260,22 +283,22 @@ export const SummaryCardsGrid = () => {
         iconColor: '#cd5c5c',
         bgColor: '#ff980012',
       },
-      {
-        title: 'Supplier Billing',
-        icon: TicketPercent,
-        values: [
-          {
-            label: 'Total Requested',
-            value: tripData?.Header?.BillingValueWithCurrency || 'USD 0',
-          },
-          {
-            label: 'Total Approved',
-            value: tripData?.Header?.UpdatedBillingValue || 'USD 0',
-          },
-        ],
-        iconColor: '#9774de',
-        bgColor: '#9774de12',
-      },
+      // {
+      //   title: 'Supplier Billing',
+      //   icon: TicketPercent,
+      //   values: [
+      //     {
+      //       label: 'Total Requested',
+      //       value: tripData?.Header?.BillingValueWithCurrency || 'USD 0',
+      //     },
+      //     {
+      //       label: 'Total Approved',
+      //       value: tripData?.Header?.UpdatedBillingValue || 'USD 0',
+      //     },
+      //   ],
+      //   iconColor: '#9774de',
+      //   bgColor: '#9774de12',
+      // },
       // {
       //   title: 'Transport Route',
       //   icon: TicketPercent,
@@ -380,9 +403,12 @@ export const SummaryCardsGrid = () => {
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
                 </div>
-                <div className="flex flex-col">
-                  <p className="text-lg font-semibold">{displayValue}</p>
-                  <p className="text-sm text-muted-foreground font-medium">{displayLabel}</p>
+                <div className="flex flex-col w-full">
+                  <p className="text-lg flex justify-between">
+                    <span className="font-semibold">{displayLabel}</span> 
+                    <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{displayValue}</span>
+                  </p>
+                  {/* <p className="text-sm text-muted-foreground font-medium">{displayLabel}</p> */}
                 </div>
               </div>
             </CardContent>

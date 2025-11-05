@@ -1917,8 +1917,8 @@ const TripPlanning = () => {
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
                           { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'bg-orange-600' },
-                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-100' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
+                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
 
                         ].map((resource) => {
                           const Icon = resource.icon;
@@ -1933,6 +1933,38 @@ const TripPlanning = () => {
                                     <h3 className="font-medium text-sm">{resource.title} 
                                       <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
                                     </h3>
+                                    { resource.title == 'Equipment' && (
+                                      <BadgesList
+                                        items={tripResourceDetailsData?.Equipments}
+                                        onRemove={handleRemoveEquipment}
+                                        badgeVariant="secondary"
+                                        idField="EquipmentID"
+                                      />
+                                    )}
+                                    { resource.title == 'Handler' && (
+                                      <BadgesList
+                                        items={tripResourceDetailsData?.Handlers}
+                                        onRemove={handleRemoveHandler}
+                                        badgeVariant="secondary"
+                                        idField="HandlerID"
+                                      />
+                                    )}
+                                    { resource.title == 'Vehicle' && (
+                                      <BadgesList
+                                        items={tripResourceDetailsData?.Vehicle}
+                                        onRemove={handleRemoveVehicle}
+                                        badgeVariant="secondary"
+                                        idField="VehicleID"
+                                      />
+                                    )}
+                                    { resource.title == 'Driver' && (
+                                      <BadgesList
+                                        items={tripResourceDetailsData?.Drivers}
+                                        onRemove={handleRemoveDriver}
+                                        badgeVariant="secondary"
+                                        idField="DriverID"
+                                      />
+                                    )}
                                     {resource.subtitle && (
                                       <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
                                     )}
@@ -2110,8 +2142,8 @@ const TripPlanning = () => {
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(tripResourceDetailsData?.Equipments?.length !=0)? tripResourceDetailsData?.Equipments?.length :'', iconColor: 'text-red-600' },
                                 { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-orange-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'bg-orange-100' },
-                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-100' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
+                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
               
                               ].map((resource) => {
                                 const Icon = resource.icon;

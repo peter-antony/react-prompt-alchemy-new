@@ -29,6 +29,7 @@ import CommonPopup from '@/components/Common/CommonPopup';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DateTimePicker } from "@/components/Common/DateTimePicker";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface TripExecutionCreateDrawerScreenProps {
@@ -248,6 +249,20 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       ...transformQuickCode('QuickCode3', 'QuickCodeValue3')
     };
   };
+
+  // Helper function to extract QuickCode ID (handles both "id" and "id||name" formats)
+  // This is used for formatting QuickCode fields for inputdropdown components
+  // Must be defined before useEffect hooks that use it
+  const extractQuickCodeId = (value: string | null | undefined): string => {
+    if (!value || typeof value !== 'string') return '';
+    // If value contains "||", extract the ID part (before the pipe)
+    if (value.includes('||')) {
+      const [id] = value.split('||');
+      return id.trim();
+    }
+    // Otherwise, return the value as is
+    return value.trim();
+  };
   
   // Load legs from API on component mount
   useEffect(() => {
@@ -303,12 +318,26 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             ActualDate: formattedActivities[0].ActualDate,
             ActualTime: formattedActivities[0].ActualTime,
             DelayedIn: formattedActivities[0].DelayedIn,
-            QuickCode1: formattedActivities[0].QuickCode1,
-            QuickCode2: formattedActivities[0].QuickCode2,
-            QuickCode3: formattedActivities[0].QuickCode3,
-            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+            // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
+            // Keep the full format (id||name) for dropdown to ensure proper matching and display
+            QuickCode1: formattedActivities[0].QuickCode1 ? {
+              dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
+                ? formattedActivities[0].QuickCode1 
+                : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
+              input: formattedActivities[0].QuickCodeValue1 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode2: formattedActivities[0].QuickCode2 ? {
+              dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
+                ? formattedActivities[0].QuickCode2 
+                : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
+              input: formattedActivities[0].QuickCodeValue2 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode3: formattedActivities[0].QuickCode3 ? {
+              dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
+                ? formattedActivities[0].QuickCode3 
+                : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
+              input: formattedActivities[0].QuickCodeValue3 || ''
+            } : { dropdown: '', input: '' },
             Remarks1: formattedActivities[0].Remarks1,
             Remarks2: formattedActivities[0].Remarks2,
             Remarks3: formattedActivities[0].Remarks3,
@@ -429,12 +458,26 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             ActualDate: formattedActivities[0].ActualDate,
             ActualTime: formattedActivities[0].ActualTime,
             DelayedIn: formattedActivities[0].DelayedIn,
-            QuickCode1: formattedActivities[0].QuickCode1,
-            QuickCode2: formattedActivities[0].QuickCode2,
-            QuickCode3: formattedActivities[0].QuickCode3,
-            QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-            QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-            QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+            // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
+            // Keep the full format (id||name) for dropdown to ensure proper matching and display
+            QuickCode1: formattedActivities[0].QuickCode1 ? {
+              dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
+                ? formattedActivities[0].QuickCode1 
+                : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
+              input: formattedActivities[0].QuickCodeValue1 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode2: formattedActivities[0].QuickCode2 ? {
+              dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
+                ? formattedActivities[0].QuickCode2 
+                : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
+              input: formattedActivities[0].QuickCodeValue2 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode3: formattedActivities[0].QuickCode3 ? {
+              dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
+                ? formattedActivities[0].QuickCode3 
+                : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
+              input: formattedActivities[0].QuickCodeValue3 || ''
+            } : { dropdown: '', input: '' },
             Remarks1: formattedActivities[0].Remarks1,
             Remarks2: formattedActivities[0].Remarks2,
             Remarks3: formattedActivities[0].Remarks3,
@@ -1477,12 +1520,26 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           ActualDate: formattedActivities[0].ActualDate,
           ActualTime: formattedActivities[0].ActualTime,
           DelayedIn: formattedActivities[0].DelayedIn,
-          QuickCode1: formattedActivities[0].QuickCode1,
-          QuickCode2: formattedActivities[0].QuickCode2,
-          QuickCode3: formattedActivities[0].QuickCode3,
-          QuickCodeValue1: formattedActivities[0].QuickCodeValue1,
-          QuickCodeValue2: formattedActivities[0].QuickCodeValue2,
-          QuickCodeValue3: formattedActivities[0].QuickCodeValue3,
+          // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
+          // Keep the full format (id||name) for dropdown to ensure proper matching and display
+          QuickCode1: formattedActivities[0].QuickCode1 ? {
+            dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
+              ? formattedActivities[0].QuickCode1 
+              : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
+            input: formattedActivities[0].QuickCodeValue1 || ''
+          } : { dropdown: '', input: '' },
+          QuickCode2: formattedActivities[0].QuickCode2 ? {
+            dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
+              ? formattedActivities[0].QuickCode2 
+              : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
+            input: formattedActivities[0].QuickCodeValue2 || ''
+          } : { dropdown: '', input: '' },
+          QuickCode3: formattedActivities[0].QuickCode3 ? {
+            dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
+              ? formattedActivities[0].QuickCode3 
+              : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
+            input: formattedActivities[0].QuickCodeValue3 || ''
+          } : { dropdown: '', input: '' },
           Remarks1: formattedActivities[0].Remarks1,
           Remarks2: formattedActivities[0].Remarks2,
           Remarks3: formattedActivities[0].Remarks3,
@@ -2364,7 +2421,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              Total Legs
+              Execution sequence
               <Badge variant="secondary" className="rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
                 {legs.length}
               </Badge>
@@ -2388,44 +2445,54 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 key={leg.id}
                 onClick={() => handleLegSelection(leg.id)}
                 className={cn(
-                  "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2 relative min-h-[80px]",
+                  "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2 relative min-h-[50px]",
                   selectedLegId === leg.id && "border-primary bg-accent"
                 )}
               >
                 {/* Leg Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-1">
-                      <span>{leg.id}:</span>
-                      {/* <MapPin className="h-4 w-4 text-muted-foreground" /> */}
-                      <div className="flex-1">
-                        <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span>
-                        {/* <div className="text-xs text-muted-foreground">Origin</div> */}
+                      <span className="flex-shrink-0">{leg.id} </span>
+                      <div className="flex-1 min-w-0 flex items-center gap-1">
+                        <div className="flex-1 min-w-0 truncate">
+                          {/* <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span> */}
+                        </div>
                       </div>
-                      <div className="absolute right-1 top-3 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl">
-                        {leg.LegBehaviourDescription}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {/* {leg.hasInfo && (
-                          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                            <Info className="h-3 w-3" />
-                          </Badge>
-                        )} */}
-                        {/* <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-5 w-5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeLeg(leg.id);
-                            // toast.success('Leg removed successfully');
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button> */}
-                      </div>
+                      {/* <div className="text-xs text-muted-foreground">Origin</div> */}
                     </div>
                   </div>
+                  <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
+                    {leg.LegBehaviourDescription}
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center cursor-help transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 mt-1"
+                          aria-label="View location details"
+                          // onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 text-gray-600" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        className="max-w-xs p-3 text-sm bg-white border border-gray-200 shadow-lg z-50"
+                        sideOffset={5}
+                      >
+                        <div className="space-y-1 mb-2">
+                          <div><span className="font-medium"></span> {leg.from} - <span className="font-medium"></span> {leg.to}</div>
+                        </div>
+                        {leg.id && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground bottom-3">
+                            <span className="font-medium">{formatDateToDDMMYYYY(leg.PlanStartDate)} {formatTimeTo12Hour(leg.PlanStartTime)} - {formatDateToDDMMYYYY(leg.PlanEndDate)} {formatTimeTo12Hour(leg.PlanEndTime)}</span>
+                            
+                          </div>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
 
                 {/* Destination */}
@@ -2445,12 +2512,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 </div> */}
 
                 {/* API Data - Leg Sequence and Behavior */}
-                {leg.id && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground bottom-3">
-                    <span className="font-medium">{formatDateToDDMMYYYY(leg.PlanStartDate)} {formatTimeTo12Hour(leg.PlanStartTime)} - {formatDateToDDMMYYYY(leg.PlanEndDate)} {formatTimeTo12Hour(leg.PlanEndTime)}</span>
-                    
-                  </div>
-                )}
+                
               </div>
             ))}
           </div>
@@ -2472,9 +2534,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         <Tabs defaultValue="consignment" className="flex-1 flex flex-col">
           <div className="border-b px-6 pt-4">
             <TabsList className="h-10">
-              <TabsTrigger value="activities">Events ({selectedLeg.activities.length})</TabsTrigger>
-              <TabsTrigger value="consignment">Consignment ({selectedLeg.consignments.length})</TabsTrigger>
-              <TabsTrigger value="transshipment">Transloading ({selectedLeg.transshipments.length})</TabsTrigger>
+              <TabsTrigger value="activities">Events </TabsTrigger>
+              <TabsTrigger value="consignment">Consignment </TabsTrigger>
+              {/* <TabsTrigger value="transshipment">Transloading ({selectedLeg.transshipments.length})</TabsTrigger> */}
             </TabsList>
           </div>
 

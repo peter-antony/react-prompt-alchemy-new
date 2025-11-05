@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,8 +46,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [searchData, setSearchData] = useState<Record<string, any>>({});
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { toast } = useToast();
-  const [expandedPlanned, setExpandedPlanned] = useState(true);
+  const [expandedPlanned, setExpandedPlanned] = useState(false);
   const [expandedActuals, setExpandedActuals] = useState(false);
+  const [expandedCOInfo, setExpandedCOInfo] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pickupComplete, setPickupComplete] = useState(false);
   const [customerList, setCustomerList] = useState<any[]>([]);
@@ -2604,10 +2606,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Consignment Details</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
+            {/* <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
               <Plus className="h-4 w-4 mr-1" />
               Add Actuals
-            </Button>
+            </Button> */}
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -2669,10 +2671,23 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             </Label>
           </div>
         </div>
-        <div className='space-y-2 p-4 bg-muted/30 rounded-lg'>
-          {/* 🔹 CO Info Section */}
-          {selectedCustomerData && (
-            <div className="grid grid-cols-3 gap-3 text-sm">
+        <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 transition-colors rounded-t-lg">
+              {/* <span className="font-semibold text-sm">Customer Order Info</span> */}
+              <h4 className="font-semibold flex items-center gap-2">Customer Order Info</h4>
+              {expandedCOInfo ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className='px-4 pb-4'>
+              {/* 🔹 CO Info Section */}
+              {selectedCustomerData && (
+                <div className="grid grid-cols-3 gap-3 text-sm">
               <div>
                 <span className="font-medium text-gray-700">Departure: </span>
                 {selectedCustomerData?.CODepartureDescription || "-"}
@@ -2744,7 +2759,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               <div className="flex items-end gap-2">
                 <span className="font-medium text-gray-700">
                 </span>
-                <Button
+                {/* <Button
                   size="sm"
                   variant="outline"
                   className="h-8"
@@ -2759,15 +2774,17 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   }}
                 >
                   Save
-                </Button>
+                </Button> */}
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
 
         {/* Planned Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 bg-muted/50 rounded-lg">
           <div
             className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
             onClick={() => setExpandedPlanned(!expandedPlanned)}
@@ -2882,7 +2899,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         {/* Actuals Section */}
         <div className="space-y-4">
           <div
-            className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
+            className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50"
             onClick={() => setExpandedActuals(!expandedActuals)}
           >
             <h4 className="font-semibold flex items-center gap-2">
@@ -3003,12 +3020,14 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 </div>
               </motion.div>
             )}
-            <Button
-              className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
-              onClick={handleSavePlanActuals}
-            >
-              Save Actual Details
-            </Button>
+            <div className='flex justify-end'>
+              <Button
+                className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
+                onClick={handleSavePlanActuals}
+              >
+                Save Actual Details
+              </Button>
+            </div>
           </AnimatePresence>
         </div>
       </div>
