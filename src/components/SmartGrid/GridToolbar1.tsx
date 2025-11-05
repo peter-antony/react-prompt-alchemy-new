@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -6,6 +6,7 @@ import {
   Filter,
   RotateCcw,
   Download,
+  Upload,
   CheckSquare,
   Grid2x2,
   List,
@@ -50,6 +51,7 @@ interface GridToolbarProps {
   onColumnHeaderChange?: (columnId: string, header: string) => void;
   onResetToDefaults?: () => void;
   onExport?: (format: 'csv' | 'xlsx') => void;
+  onImport?: () => void;
   onSubRowToggle?: (columnKey: string) => void;
   configurableButtons?: ConfigurableButtonConfig[];
   showDefaultConfigurableButton?: boolean;
@@ -80,7 +82,7 @@ interface GridToolbarProps {
   onClearSelection?: () => void;
 }
 
-export function GridToolbar1({
+export const GridToolbar1 = React.memo(function GridToolbar1({
   globalFilter,
   setGlobalFilter,
   showColumnFilters,
@@ -97,6 +99,7 @@ export function GridToolbar1({
   onColumnHeaderChange,
   onResetToDefaults,
   onExport,
+  onImport,
   onSubRowToggle,
   configurableButtons,
   showDefaultConfigurableButton = true,
@@ -128,7 +131,7 @@ export function GridToolbar1({
     tooltipTitle: "Add new item",
     showDropdown: false,
     onClick: () => {
-      defaultConfigurableButton.onClick();
+      console.log('Default configurable button clicked');
     }
   };
 
@@ -146,10 +149,58 @@ export function GridToolbar1({
     return columns;
   }, [columns, groupableColumns]);
 
-  const handleGroupByChange = (value: string) => {
+  const handleGroupByChange = useCallback((value: string) => {
     const newGroupBy = value === 'none' ? null : value;
     onGroupByChange?.(newGroupBy);
-  };
+  }, [onGroupByChange]);
+
+  const handleImportClick = useCallback(() => {
+    console.log('Import button clicked in GridToolbar1');
+    if (onImport) {
+      onImport();
+    }
+  }, [onImport]);
+
+  const handleExportClick = useCallback((format: 'csv' | 'xlsx') => {
+    console.log('Export button clicked:', format);
+    if (onExport) {
+      onExport(format);
+    }
+  }, [onExport]);
+
+  const handleToggleColumnFilters = useCallback(() => {
+    console.log('Toggle column filters clicked');
+    if (setShowColumnFilters) {
+      setShowColumnFilters(!showColumnFilters);
+    }
+  }, [setShowColumnFilters, showColumnFilters]);
+
+  const handleToggleAdvancedFilter = useCallback(() => {
+    console.log('Toggle advanced filter clicked');
+    if (onToggleAdvancedFilter) {
+      onToggleAdvancedFilter();
+    }
+  }, [onToggleAdvancedFilter]);
+
+  const handleToggleCheckboxes = useCallback(() => {
+    console.log('Toggle checkboxes clicked');
+    if (setShowCheckboxes) {
+      setShowCheckboxes(!showCheckboxes);
+    }
+  }, [setShowCheckboxes, showCheckboxes]);
+
+  const handleResetDefaults = useCallback(() => {
+    console.log('Reset defaults clicked');
+    if (onResetToDefaults) {
+      onResetToDefaults();
+    }
+  }, [onResetToDefaults]);
+
+  const handleGlobalFilterChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (setGlobalFilter) {
+      setGlobalFilter(e.target.value);
+    }
+  }, [setGlobalFilter]);
 
   // Get active serverside filters from store
   const { activeFilters } = useFilterStore();
@@ -223,7 +274,7 @@ export function GridToolbar1({
             name='grid-search-input'
             placeholder={searchPlaceholder}
             value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            onChange={handleGlobalFilterChange}
             className="gridSearch border border-gray-300 rounded text-sm placeholder-gray-400 px-2 py-1 pl-3 w-64 h-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           />
@@ -247,7 +298,7 @@ export function GridToolbar1({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onToggleAdvancedFilter}
+          onClick={handleToggleAdvancedFilter}
           disabled={loading}
           title="Toggle Advanced Filters"
           className={cn(
@@ -259,7 +310,7 @@ export function GridToolbar1({
         </Button>
 
         {/* Server-side Filter Toggle */}
-        {onToggleServersideFilter && gridTitle !== "Leg Details" && (
+        {/* {onToggleServersideFilter && gridTitle !== "Leg Details" && (
           <div className="relative">
             <Button
               variant="ghost"
@@ -283,13 +334,13 @@ export function GridToolbar1({
               </Badge>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Icon buttons */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowColumnFilters(!showColumnFilters)}
+          onClick={handleToggleColumnFilters}
           disabled={loading}
           title="Toggle Column Filters"
           className={cn(
@@ -335,14 +386,28 @@ export function GridToolbar1({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onExport('csv')}>
+              <DropdownMenuItem onClick={() => handleExportClick('csv')}>
                 Export CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport('xlsx')}>
+              <DropdownMenuItem onClick={() => handleExportClick('xlsx')}>
                 Export Excel
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        )}
+
+        {/* Import Excel Button */}
+        {gridTitle !== "Leg Details" && onImport && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleImportClick}
+            disabled={loading}
+            title="Import Excel"
+            className="w-16 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
+          >
+            <Upload className="h-4 w-4 text-gray-600" />
+          </Button>
         )}
 
         {/* Filter System Toggle Button */}
@@ -369,7 +434,7 @@ export function GridToolbar1({
         {!hideCheckboxToggle && (<Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowCheckboxes(!showCheckboxes)}
+          onClick={handleToggleCheckboxes}
           disabled={loading}
           title="Toggle Checkboxes"
           className={cn(
@@ -427,7 +492,7 @@ export function GridToolbar1({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onResetToDefaults}
+            onClick={handleResetDefaults}
             disabled={loading}
             title="Reset All"
             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
@@ -452,7 +517,7 @@ export function GridToolbar1({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onResetToDefaults}
+            onClick={handleResetDefaults}
             disabled={loading}
             title="MoreInfo"
             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
@@ -526,4 +591,4 @@ export function GridToolbar1({
       </div>
     </div>
   );
-}
+});

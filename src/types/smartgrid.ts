@@ -310,6 +310,11 @@ export interface SmartGridPlusProps extends SmartGridProps {
   onEditRow?: (row: any, rowIndex: number) => Promise<void> | void;
   onDeleteRow?: (row: any, rowIndex: number) => Promise<void> | void;
   
+  // Import functionality
+  onImport?: () => void;
+  onImportData?: (data: any[]) => Promise<void> | void;
+  onExport?: (format: 'csv' | 'xlsx') => void;
+  
   // Default values and validation
   defaultRowValues?: Record<string, any>;
   validationRules?: {

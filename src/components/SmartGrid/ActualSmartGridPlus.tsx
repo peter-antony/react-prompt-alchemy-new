@@ -17,6 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { SmartGridPlusProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
+import { ValidationResult, UploadSummary } from '@/types/BulkUpload';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
@@ -29,6 +30,9 @@ import { GridToolbar1 } from './GridToolbar1';
 import { PluginRenderer, PluginRowActions } from './PluginRenderer';
 import { ColumnFilter } from './ColumnFilter';
 import { DraggableSubRow } from './DraggableSubRow';
+import CustomBulkUpload from '@/components/DynamicFileUpload/CustomBulkUpload';
+import { bulkUploadColumnsConfig, mapExcelDataToResponseFormat } from '@/utils/bulkUploadConfig';
+import * as XLSX from 'xlsx';
 import { cn } from '@/lib/utils';
 
 export function ActualSmartGridPlus({
@@ -62,6 +66,9 @@ export function ActualSmartGridPlus({
   onAddRow,
   onEditRow,
   onDeleteRow,
+  onImport,
+  onImportData,
+  onExport,
   defaultRowValues = {},
   validationRules = {},
   addRowButtonLabel = "Add Row",
@@ -131,6 +138,14 @@ export function ActualSmartGridPlus({
   const [isAddingRow, setIsAddingRow] = useState(false);
   const [newRowValues, setNewRowValues] = useState<Record<string, any>>(defaultRowValues);
   const [focusedColumnKey, setFocusedColumnKey] = useState<string | null>(null);
+
+  // Import functionality state
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  // Debug import state changes
+  useEffect(() => {
+    console.log('Import dialog state changed:', isImportOpen);
+  }, [isImportOpen]);
 
   // Use external selectedRows if provided, otherwise use internal state
   const currentSelectedRows = selectedRows || internalSelectedRows;
@@ -348,15 +363,237 @@ export function ActualSmartGridPlus({
 
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
   const handleExport = useCallback((format: 'csv' | 'xlsx' | 'json') => {
-    const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
-    if (format === 'xlsx') {
-      exportToExcel(processedData, orderedColumns, filename);
-    } else if (format === 'json') {
-      console.log('JSON export not yet implemented');
+    if (onExport && (format === 'csv' || format === 'xlsx')) {
+      console.log('Using external onExport handler');
+      onExport(format);
     } else {
-      exportToCSV(processedData, orderedColumns, filename);
+      console.log('Using internal export handler');
+      const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
+      if (format === 'xlsx') {
+        exportToExcel(processedData, orderedColumns, filename);
+      } else if (format === 'json') {
+        console.log('JSON export not yet implemented');
+      } else {
+        exportToCSV(processedData, orderedColumns, filename);
+      }
     }
-  }, [processedData, orderedColumns]);
+  }, [processedData, orderedColumns, onExport]);
+
+  // Import Excel functionality
+  const handleImport = useCallback(() => {
+    console.log('Import button clicked - opening dialog');
+    if (onImport) {
+      console.log('Using external onImport handler');
+      onImport();
+    } else {
+      console.log('Using internal import dialog');
+      setIsImportOpen(true);
+    }
+  }, [onImport]);
+
+  const handleUpload = useCallback(async (file: File): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          let jsonData: any[] = [];
+
+          if (file.name.endsWith('.csv')) {
+            // Parse CSV
+            const text = data as string;
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length === 0) {
+              reject(new Error('Empty file'));
+              return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const rows = lines.slice(1).map(line => {
+              const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+              const row: any = {};
+              headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+              });
+              return row;
+            });
+            jsonData = rows;
+          } else {
+            // Parse Excel
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            jsonData = XLSX.utils.sheet_to_json(worksheet);
+          }
+
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+
+      if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsBinaryString(file);
+      }
+    });
+  }, []);
+
+  const handleValidate = useCallback((data: any[], columnsConfig: any[]): ValidationResult => {
+    const errors: any[] = [];
+    const validRows: any[] = [];
+    const invalidRows: any[] = [];
+
+    data.forEach((row, index) => {
+      let hasError = false;
+
+      columnsConfig.forEach(config => {
+        const value = row[config.fieldName];
+        const rules = config.validationRules;
+
+        if (!rules) return;
+
+        // Check required fields
+        if (rules.required && (!value || value.toString().trim() === '')) {
+          errors.push({
+            row: index + 1,
+            column: config.displayName,
+            error: 'This field is required',
+            value: value
+          });
+          hasError = true;
+        }
+
+        if (value) {
+          // Type validation
+          if (rules.type === 'number' && isNaN(Number(value))) {
+            errors.push({
+              row: index + 1,
+              column: config.displayName,
+              error: 'Must be a valid number',
+              value: value
+            });
+            hasError = true;
+          }
+
+          if (rules.type === 'email' && rules.regex && !rules.regex.test(value)) {
+            errors.push({
+              row: index + 1,
+              column: config.displayName,
+              error: 'Must be a valid email address',
+              value: value
+            });
+            hasError = true;
+          }
+
+          // Length validation
+          if (rules.minLength && value.toString().length < rules.minLength) {
+            errors.push({
+              row: index + 1,
+              column: config.displayName,
+              error: `Minimum length is ${rules.minLength}`,
+              value: value
+            });
+            hasError = true;
+          }
+
+          if (rules.maxLength && value.toString().length > rules.maxLength) {
+            errors.push({
+              row: index + 1,
+              column: config.displayName,
+              error: `Maximum length is ${rules.maxLength}`,
+              value: value
+            });
+            hasError = true;
+          }
+
+          // Number range validation
+          if (rules.type === 'number') {
+            const numValue = Number(value);
+            if (rules.min !== undefined && numValue < rules.min) {
+              errors.push({
+                row: index + 1,
+                column: config.displayName,
+                error: `Minimum value is ${rules.min}`,
+                value: value
+              });
+              hasError = true;
+            }
+
+            if (rules.max !== undefined && numValue > rules.max) {
+              errors.push({
+                row: index + 1,
+                column: config.displayName,
+                error: `Maximum value is ${rules.max}`,
+                value: value
+              });
+              hasError = true;
+            }
+          }
+
+          // Custom validation
+          if (rules.customValidator) {
+            const customError = rules.customValidator(value, row);
+            if (customError) {
+              errors.push({
+                row: index + 1,
+                column: config.displayName,
+                error: customError,
+                value: value
+              });
+              hasError = true;
+            }
+          }
+        }
+      });
+
+      if (hasError) {
+        invalidRows.push(row);
+      } else {
+        validRows.push(row);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      validRows,
+      invalidRows
+    };
+  }, []);
+
+  const handleImportComplete = useCallback(async (summary: UploadSummary & { validRows?: any[] }) => {
+    try {
+      // Get the valid data from the summary
+      const importedData = summary.validRows || [];
+      const mappedData = mapExcelDataToResponseFormat(importedData);
+
+      if (onImportData) {
+        await onImportData(mappedData);
+      } else {
+        // If no onImportData handler, update the grid data directly
+        setGridData(prev => [...mappedData, ...prev]);
+      }
+
+      setIsImportOpen(false);
+      toast({
+        title: "Import Successful",
+        description: `${summary.successCount} records imported successfully`
+      });
+    } catch (error) {
+      toast({
+        title: "Import Error",
+        description: "Failed to import data",
+        variant: "destructive"
+      });
+    }
+  }, [onImportData, toast, setGridData]);
 
   const handleResetPreferences = useCallback(async () => {
     const defaultPreferences = {
@@ -1186,6 +1423,7 @@ export function ActualSmartGridPlus({
         onColumnHeaderChange={updateColumnHeader}
         onResetToDefaults={handleResetPreferences}
         onExport={handleExport}
+        onImport={handleImport}
         onSubRowToggle={handleSubRowToggleInternal}
         configurableButtons={configurableButtons}
         showDefaultConfigurableButton={showDefaultConfigurableButton}
@@ -1196,7 +1434,7 @@ export function ActualSmartGridPlus({
         onToggleAdvancedFilter={() => setShowFilterRow(!showFilterRow)}
       />
 
-      {/* Unified Grid Container with Single Horizontal Scroll */}
+      {/* Unified Grid Container with Single Horizontal Scroll - Fixed width like planned grid */}
       <div className="bg-white rounded-lg border shadow-sm">
         {/* Single Scrollable Container for All Content */}
         <div
@@ -1206,12 +1444,7 @@ export function ActualSmartGridPlus({
             minHeight: '200px'
           }}
         >
-          <div
-            className="min-w-full"
-            style={{
-              width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
-            }}
-          >
+          <div className="min-w-full">
             {/* Sticky Header Container */}
             <div className="sticky top-0 z-10 bg-white">
               {/* Layer 1: Advanced Filter Row (Toggleable) */}
@@ -1427,12 +1660,7 @@ export function ActualSmartGridPlus({
 
               {loading && !onDataFetch ? (
                 <div className="flex w-full">
-                  <div
-                    className="flex items-center justify-center py-8 text-center"
-                    style={{
-                      width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
-                    }}
-                  >
+                  <div className="flex items-center justify-center py-8 text-center w-full">
                     <div className="flex items-center justify-center space-x-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                       <span className="text-gray-500">Loading...</span>
@@ -1441,12 +1669,7 @@ export function ActualSmartGridPlus({
                 </div>
               ) : paginatedData.length === 0 ? (
                 <div className="flex w-full">
-                  <div
-                    className="text-center py-8 text-gray-500"
-                    style={{
-                      width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
-                    }}
-                  >
+                  <div className="text-center py-8 text-gray-500 w-full">
                     No data available
                   </div>
                 </div>
@@ -1468,8 +1691,7 @@ export function ActualSmartGridPlus({
                           rowClassName?.(row, actualIndex)
                         )}
                         style={{
-                          minWidth: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`,
-                          width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
+                          minWidth: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
                         }}
                         onDoubleClick={() => handleCellDoubleClick(actualIndex, row)}
                       >
@@ -1603,6 +1825,20 @@ export function ActualSmartGridPlus({
           type="footer"
         />
       </div>
+
+      {/* Import Excel Dialog */}
+      <CustomBulkUpload
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        acceptedFileTypes={['.csv', '.xlsx', '.xls']}
+        maxFileSizeMB={2}
+        columnsConfig={bulkUploadColumnsConfig}
+        onUpload={handleUpload}
+        onValidate={handleValidate}
+        onImportComplete={handleImportComplete}
+        allowMultipleFiles={false}
+        enableMapping={true}
+      />
     </div>
   );
 }
