@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { useTripLegandEventsStore } from '@/stores/tripLegandEventsStore';
+import { tripService } from '@/api/services/tripService';
 
 interface Activity {
   id: string;
@@ -117,6 +119,16 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
+  // Store bindings (destructured in a single selector to avoid multiple subscriptions)
+  const data = useTripLegandEventsStore((s) => s.data);
+  const isLoading = useTripLegandEventsStore((s) => s.isLoading);
+  const loadFromApi = useTripLegandEventsStore((s) => s.loadFromApi);
+  const updateHeaderField = useTripLegandEventsStore((s) => s.updateHeaderField);
+  const updateLegField = useTripLegandEventsStore((s) => s.updateLegField);
+  const addActivityToStore = useTripLegandEventsStore((s) => s.addActivity);
+  const updateActivityField = useTripLegandEventsStore((s) => s.updateActivityField);
+  const saveTripData = useTripLegandEventsStore((s) => s.saveTripData);
+
   const [localTripStartDate, setLocalTripStartDate] = useState(tripStartDate);
   const [localTripStartTime, setLocalTripStartTime] = useState(tripStartTime);
   const [localTripEndDate, setLocalTripEndDate] = useState(tripEndDate);
@@ -126,9 +138,97 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
   const [localLegEndDate, setLocalLegEndDate] = useState(legEndDate);
   const [localLegEndTime, setLocalLegEndTime] = useState(legEndTime);
 
+  // Helpers
+  const parseDate = (value?: string | null): Date | undefined => {
+    if (!value) return undefined;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? undefined : d;
+  };
+
+  // Derive legs and activities from store if available
+  const storeLegs = useMemo<Leg[]>(() => {
+    const legDetails = data?.LegDetails || [];
+    if (!legDetails.length) return [];
+    return legDetails.map((leg, i) => ({
+      id: String(i + 1),
+      sequence: Number(leg.LegSequence) || i + 1,
+      from: leg.DeparturePointDescription || leg.DeparturePoint || '-',
+      to: leg.ArrivalPointDescription || leg.ArrivalPoint || '-',
+      type: leg.LegBehaviourDescription || leg.LegBehaviour || '',
+      customer: 'Multiple',
+      orderNo: 'Multiple',
+    }));
+  }, [data?.LegDetails]);
+
+  const storeActivities = useMemo<Activity[]>(() => {
+    const leg = data?.LegDetails?.[selectedLegIndex];
+    const acts = leg?.Activities || [];
+    if (!acts.length) return [];
+    return acts.map((a, idx) => ({
+      id: String(idx + 1),
+      type: (a as any).ActivityDescription || (a as any).Activity || 'Activity',
+      status: undefined,
+      plannedDate: parseDate((a as any).PlannedDate) || new Date(),
+      plannedTime: (a as any).PlannedTime || '00:00',
+    }));
+  }, [data?.LegDetails, selectedLegIndex]);
+
+  const effectiveLegs = storeLegs.length ? storeLegs : [];
+  const effectiveActivities = storeActivities.length ? storeActivities : [];
+
+  // Sync initial dates from store when available
+  useEffect(() => {
+    if (!data) return;
+    const hdr = data.Header;
+    const tsd = parseDate(hdr?.PlanStartDate || undefined) || localTripStartDate;
+    const ted = parseDate(hdr?.PlanEndDate || undefined) || localTripEndDate;
+    setLocalTripStartDate(tsd);
+    setLocalTripEndDate(ted);
+    if (hdr?.PlanStartTime) setLocalTripStartTime(hdr.PlanStartTime);
+    if (hdr?.PlanEndTime) setLocalTripEndTime(hdr.PlanEndTime);
+  }, [data]);
+
+  useEffect(() => {
+    const leg = data?.LegDetails?.[selectedLegIndex];
+    if (!leg) return;
+    const lsd = parseDate(leg.PlanStartDate || undefined) || localLegStartDate;
+    const led = parseDate(leg.PlanEndDate || undefined) || localLegEndDate;
+    setLocalLegStartDate(lsd);
+    setLocalLegEndDate(led);
+    if (leg.PlanStartTime) setLocalLegStartTime(leg.PlanStartTime);
+    if (leg.PlanEndTime) setLocalLegEndTime(leg.PlanEndTime);
+  }, [data?.LegDetails, selectedLegIndex]);
+
+  // Auto-load from API by tripId when component mounts/changes
+  useEffect(() => {
+    if (!tripId) return;
+    // Load only if store is empty or different tripId
+    if (!data || (useTripLegandEventsStore.getState().lastLoadedTripId !== tripId)) {
+      loadFromApi({ tripId }).catch(() => {});
+    }
+  }, [tripId]);
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
+      // Get fresh data from store
+      const dataToSave = saveTripData();
+      console.log('dataToSave = ', dataToSave);
+      if (!dataToSave) {
+        throw new Error('No data to save');
+      }
+      // Send to API
+      const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
+      console.log('response = ', response);
+      if (response?.data?.IsSuccess) {
+        toast({
+          title: "Success",
+          description: response.data.Message || "Leg and events saved successfully",
+        });
+      } else {
+        throw new Error(response.data.Message || "Failed to save leg and events");
+      }
+      // Also call the optional onSave callback if provided
       if (onSave) {
         await onSave();
       }
@@ -136,10 +236,10 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
         title: "Success",
         description: "Leg and events saved successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save leg and events",
+        description: error?.message || "Failed to save leg and events",
         variant: "destructive",
       });
     } finally {
@@ -184,6 +284,9 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
       {/* Body */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
+          {isLoading && (
+            <div className="text-sm text-muted-foreground">Loading trip details...</div>
+          )}
           {/* Trip Level Dates */}
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -200,14 +303,18 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {localTripStartDate ? format(localTripStartDate, "dd-MMM-yyyy") : "Pick a date"}
+                          {localTripStartDate ? format(localTripStartDate, "dd-MMM-yyyy") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={localTripStartDate}
-                    onSelect={(date) => date && setLocalTripStartDate(date)}
+                          selected={localTripStartDate}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            setLocalTripStartDate(date);
+                            try { updateHeaderField('PlanStartDate', format(date, 'yyyy-MM-dd') as any); } catch {}
+                          }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -225,14 +332,18 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                     className="w-full justify-start text-left font-normal"
                   >
                     <Clock className="mr-2 h-4 w-4" />
-                    {localTripStartTime}
+                          {localTripStartTime}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2" align="start">
                   <Input
                     type="time"
-                    value={localTripStartTime}
-                    onChange={(e) => setLocalTripStartTime(e.target.value)}
+                          value={localTripStartTime}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalTripStartTime(v);
+                            try { updateHeaderField('PlanStartTime', v as any); } catch {}
+                          }}
                     className="w-full"
                   />
                 </PopoverContent>
@@ -259,8 +370,12 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={localTripEndDate}
-                    onSelect={(date) => date && setLocalTripEndDate(date)}
+                          selected={localTripEndDate}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            setLocalTripEndDate(date);
+                            try { updateHeaderField('PlanEndDate', format(date, 'yyyy-MM-dd') as any); } catch {}
+                          }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -284,8 +399,12 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                 <PopoverContent className="w-auto p-2" align="start">
                   <Input
                     type="time"
-                    value={localTripEndTime}
-                    onChange={(e) => setLocalTripEndTime(e.target.value)}
+                          value={localTripEndTime}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalTripEndTime(v);
+                            try { updateHeaderField('PlanEndTime', v as any); } catch {}
+                          }}
                     className="w-full"
                   />
                 </PopoverContent>
@@ -295,21 +414,21 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
           {/* Leg Level Section */}
           <div className="border-t pt-6">
-            <div className="grid grid-cols-[280px_1fr] gap-6">
+            <div className="grid grid-cols-[400px_1fr] gap-6">
               {/* Left Panel - Legs List */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center mb-2 gap-2">
                   <h3 className="text-sm font-semibold">Total Legs</h3>
                   <Badge variant="outline" className="rounded-full">
-                    {legs.length}
+                    {effectiveLegs?.length}
                   </Badge>
                 </div>
 
-                <ScrollArea className="h-[400px] pr-2">
+                <ScrollArea className="h-[400px]">
                   <div className="space-y-2">
-                    {legs.map((leg, index) => (
+                    {effectiveLegs.map((leg: any, index: any) => (
                       <Card
-                        key={leg.id}
+                        key={leg.id + index}
                         className={cn(
                           "p-3 cursor-pointer transition-all hover:shadow-md",
                           selectedLegIndex === index && "border-primary ring-2 ring-primary/20"
@@ -325,18 +444,21 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                               <ArrowRight className="h-3 w-3" />
                               <span className="text-sm font-semibold">{leg.to}</span>
                             </div>
+                            <Badge className={cn("text-xs rounded-2xl", getBadgeClass(leg.badge))}>
+                              {leg.type}
+                            </Badge>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Badge className={cn("text-xs", getBadgeClass(leg.badge))}>
+                            {/* <Badge className={cn("text-xs", getBadgeClass(leg.badge))}>
                               {leg.type}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            </Badge> */}
+                            {/* <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                               <div className="h-2 w-2 rounded-full bg-green-500 mr-1" />
-                            </Badge>
+                            </Badge> */}
                           </div>
 
-                          <div className="text-xs space-y-1">
+                          <div className="text-xs space-y-1 grid grid-cols-2">
                             <div className="flex items-center gap-1 text-muted-foreground">
                               <User className="h-3 w-3" />
                               <span>{leg.customer}</span>
@@ -376,7 +498,11 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                         <Calendar
                           mode="single"
                           selected={localLegStartDate}
-                          onSelect={(date) => date && setLocalLegStartDate(date)}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            setLocalLegStartDate(date);
+                            try { updateLegField(selectedLegIndex, 'PlanStartDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -399,7 +525,11 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                         <Input
                           type="time"
                           value={localLegStartTime}
-                          onChange={(e) => setLocalLegStartTime(e.target.value)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalLegStartTime(v);
+                            try { updateLegField(selectedLegIndex, 'PlanStartTime' as any, v); } catch {}
+                          }}
                           className="w-full"
                         />
                       </PopoverContent>
@@ -425,7 +555,11 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                         <Calendar
                           mode="single"
                           selected={localLegEndDate}
-                          onSelect={(date) => date && setLocalLegEndDate(date)}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            setLocalLegEndDate(date);
+                            try { updateLegField(selectedLegIndex, 'PlanEndDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -448,7 +582,11 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                         <Input
                           type="time"
                           value={localLegEndTime}
-                          onChange={(e) => setLocalLegEndTime(e.target.value)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalLegEndTime(v);
+                            try { updateLegField(selectedLegIndex, 'PlanEndTime' as any, v); } catch {}
+                          }}
                           className="w-full"
                         />
                       </PopoverContent>
@@ -463,7 +601,9 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                       <TabsTrigger value="activities">Activities</TabsTrigger>
                       <TabsTrigger value="additional">Additional Activities</TabsTrigger>
                     </TabsList>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      try { addActivityToStore(selectedLegIndex); } catch {}
+                    }}>
                       <span className="text-primary">+</span>
                       <span className="ml-1">Add</span>
                     </Button>
@@ -471,8 +611,8 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
                   <TabsContent value="activities" className="mt-0">
                     <ScrollArea className="h-[300px]">
-                      <div className="space-y-3">
-                        {activities.map((activity) => (
+                      <div className="grid grid-cols-2 gap-6">
+                        {effectiveActivities.map((activity, idx) => (
                           <Card key={activity.id} className="p-4">
                             <div className="space-y-3">
                               <div className="flex items-start justify-between">
@@ -507,7 +647,10 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                                       <Calendar
                                         mode="single"
                                         selected={activity.plannedDate}
-                                        onSelect={() => {}}
+                                        onSelect={(date) => {
+                                          if (!date) return;
+                                          try { updateActivityField(selectedLegIndex, idx, 'PlannedDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                                        }}
                                         initialFocus
                                       />
                                     </PopoverContent>
@@ -531,7 +674,10 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                                       <Input
                                         type="time"
                                         value={activity.plannedTime}
-                                        onChange={() => {}}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          try { updateActivityField(selectedLegIndex, idx, 'PlannedTime' as any, v); } catch {}
+                                        }}
                                         className="w-full"
                                       />
                                     </PopoverContent>

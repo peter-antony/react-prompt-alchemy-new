@@ -665,4 +665,30 @@ export const tripService = {
     );
     return response.data;
   },
+
+  saveLegAndEventsTripLevel: async (
+    params?: any
+  ): Promise<PaginatedResponse<Trip>> => {
+    const userContext = getUserContext();
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "SaveTripInManageTrip",
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  }
+
 };
