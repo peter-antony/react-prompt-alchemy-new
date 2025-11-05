@@ -422,7 +422,12 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
           onChange={(e) => setTempValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="w-full min-w-0 focus:ring-2 focus:ring-blue-500"
+          className="w-full min-w-0 max-w-full focus:ring-2 focus:ring-blue-500 text-xs"
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}
           autoFocus
           disabled={loading}
         />
@@ -463,7 +468,12 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
         <select
           value={value || ''}
           onChange={(e) => onEdit(rowIndex, column.key, e.target.value)}
-          className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150"
+          className="w-full max-w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 text-xs"
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}
           disabled={loading}
         >
           <option value="">Select...</option>
@@ -641,7 +651,12 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
         <select
           value={value || ''}
           onChange={(e) => onEdit(rowIndex, column.key, e.target.value)}
-          className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 text-[13px]"
+          className="w-full max-w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 text-[13px]"
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}
           disabled={loading}
         >
           <option value="">{column.placeholder || 'Select...'}</option>

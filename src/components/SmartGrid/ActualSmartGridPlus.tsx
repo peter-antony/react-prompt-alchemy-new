@@ -142,11 +142,6 @@ export function ActualSmartGridPlus({
   // Import functionality state
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  // Debug import state changes
-  useEffect(() => {
-    console.log('Import dialog state changed:', isImportOpen);
-  }, [isImportOpen]);
-
   // Use external selectedRows if provided, otherwise use internal state
   const currentSelectedRows = selectedRows || internalSelectedRows;
   const handleSelectionChange = onSelectionChange || setInternalSelectedRows;
@@ -209,6 +204,14 @@ export function ActualSmartGridPlus({
       filterable: col.filterable !== false // Enable filtering by default
     }));
   }, [currentColumns, preferences, calculateColumnWidthsCallback]);
+
+  // Calculate total grid width for consistent alignment
+  const totalGridWidth = useMemo(() => {
+    const columnsWidth = orderedColumns.reduce((acc, col) => acc + col.width, 0);
+    const checkboxWidth = showCheckboxes ? 50 : 0;
+    const pluginActionsWidth = plugins.some(plugin => plugin.rowActions) ? 120 : 0;
+    return columnsWidth + checkboxWidth + pluginActionsWidth;
+  }, [orderedColumns, showCheckboxes, plugins]);
 
   // Get sub-row columns (columns marked with subRow: true)
   const subRowColumns = useMemo(() => {
@@ -363,30 +366,109 @@ export function ActualSmartGridPlus({
 
   // Define handleExport and handleResetPreferences after processedData and orderedColumns
   const handleExport = useCallback((format: 'csv' | 'xlsx' | 'json') => {
+    // Custom headers for ActualSmartGridPlus export
+    const customHeaders = [
+      'Wagon ID', 'Tare Weight', 'Gross Weight', 'Container ID', 'Commodity ID',
+      'Commodity Actual Qty', 'Commodity Qty UOM', 'Wagon Position', 'Wagon Type',
+      'Wagon length', 'Wagon Qty', 'Wagon Qty UOM', 'Container Type', 'Container Qty',
+      'Container Qty UOM', 'Commodity Damaged Qty', 'THU ID', 'THU Serial No', 'THU Qty',
+      'THU Weight', 'THU Weight UOM', 'Commodity Description', 'Shunting Option',
+      'Replaced Wagon ID', 'Reason Code', 'Remarks', 'Shunt In Location', 'Shunt Out Location',
+      'Class Of Stores', 'NHM', 'UN Code', 'DG Class', 'Contains Hazardous Goods',
+      'Wagon Seal No.', 'Container Seal No.', 'Shunt In Date & Time', 'Shunt Out Date & Time',
+      'Remarks1', 'Remarks2', 'Remarks3'
+    ];
+
+    // Map grid column keys to custom headers
+    const columnKeyToHeaderMap: { [key: string]: string } = {
+      'wagonId': 'Wagon ID',
+      'tareWeight': 'Tare Weight',
+      'grossWeight': 'Gross Weight',
+      'containerId': 'Container ID',
+      'commodityId': 'Commodity ID',
+      'commodityActualQty': 'Commodity Actual Qty',
+      'commodityQtyUOM': 'Commodity Qty UOM',
+      'wagonPosition': 'Wagon Position',
+      'wagonType': 'Wagon Type',
+      'wagonLength': 'Wagon length',
+      'wagonQty': 'Wagon Qty',
+      'wagonQtyUOM': 'Wagon Qty UOM',
+      'containerType': 'Container Type',
+      'containerQty': 'Container Qty',
+      'containerQtyUOM': 'Container Qty UOM',
+      'commodityDamagedQty': 'Commodity Damaged Qty',
+      'thuId': 'THU ID',
+      'thuSerialNo': 'THU Serial No',
+      'thuQty': 'THU Qty',
+      'thuWeight': 'THU Weight',
+      'thuWeightUOM': 'THU Weight UOM',
+      'commodityDescription': 'Commodity Description',
+      'shuntingOption': 'Shunting Option',
+      'replacedWagonId': 'Replaced Wagon ID',
+      'reasonCode': 'Reason Code',
+      'remarks': 'Remarks',
+      'shuntInLocation': 'Shunt In Location',
+      'shuntOutLocation': 'Shunt Out Location',
+      'classOfStores': 'Class Of Stores',
+      'nhm': 'NHM',
+      'unCode': 'UN Code',
+      'dgClass': 'DG Class',
+      'containsHazardousGoods': 'Contains Hazardous Goods',
+      'wagonSealNo': 'Wagon Seal No.',
+      'containerSealNo': 'Container Seal No.',
+      'shuntInDateTime': 'Shunt In Date & Time',
+      'shuntOutDateTime': 'Shunt Out Date & Time',
+      'remarks1': 'Remarks1',
+      'remarks2': 'Remarks2',
+      'remarks3': 'Remarks3'
+    };
+
     if (onExport && (format === 'csv' || format === 'xlsx')) {
-      console.log('Using external onExport handler');
       onExport(format);
     } else {
-      console.log('Using internal export handler');
-      const filename = `export-${new Date().toISOString().split('T')[0]}.${format}`;
+      const filename = `actuals-export-${new Date().toISOString().split('T')[0]}.${format}`;
+
+      // Create custom columns config with mapped headers
+      const customColumnsConfig = customHeaders.map(header => {
+        // Find the column key that maps to this header
+        const columnKey = Object.keys(columnKeyToHeaderMap).find(key =>
+          columnKeyToHeaderMap[key] === header
+        );
+
+        // If column exists in our data, use it; otherwise create empty column
+        const existingColumn = orderedColumns.find(col => col.key === columnKey);
+
+        return {
+          key: columnKey || header.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
+          label: header,
+          type: existingColumn?.type || 'Text'
+        };
+      });
+
+      // Prepare data with all custom headers (fill missing fields with empty values)
+      const exportData = processedData.map(row => {
+        const exportRow: any = {};
+        customColumnsConfig.forEach(col => {
+          exportRow[col.key] = row[col.key] || '';
+        });
+        return exportRow;
+      });
+
       if (format === 'xlsx') {
-        exportToExcel(processedData, orderedColumns, filename);
+        exportToExcel(exportData, customColumnsConfig, filename);
       } else if (format === 'json') {
         console.log('JSON export not yet implemented');
       } else {
-        exportToCSV(processedData, orderedColumns, filename);
+        exportToCSV(exportData, customColumnsConfig, filename);
       }
     }
   }, [processedData, orderedColumns, onExport]);
 
   // Import Excel functionality
   const handleImport = useCallback(() => {
-    console.log('Import button clicked - opening dialog');
     if (onImport) {
-      console.log('Using external onImport handler');
       onImport();
     } else {
-      console.log('Using internal import dialog');
       setIsImportOpen(true);
     }
   }, [onImport]);
@@ -1238,10 +1320,16 @@ export function ActualSmartGridPlus({
     if (!isAddingRow) return null;
 
     return (
-      <TableRow className="bg-blue-50 border-2 border-blue-200">
+      <div
+        className="flex bg-blue-50 border-2 border-blue-200 transition-all duration-300"
+        style={{
+          minWidth: `${totalGridWidth}px`,
+          width: `${totalGridWidth}px`
+        }}
+      >
+        {/* Checkbox column */}
         {showCheckboxes && (
-          <TableCell
-            className="p-2"
+          <div className="px-3 py-3 border-r border-gray-100 flex items-center justify-center"
             style={{
               width: '50px',
               minWidth: '50px',
@@ -1249,16 +1337,17 @@ export function ActualSmartGridPlus({
             }}
           >
             {/* Empty space for checkbox column */}
-          </TableCell>
+          </div>
         )}
         {orderedColumns.map((column) => (
-          <TableCell
+          <div
             key={column.key}
-            className="p-2 overflow-hidden"
+            className="px-2 py-3 border-r border-gray-100 last:border-r-0 text-[13px] flex-shrink-0 relative"
             style={{
               width: `${column.width}px`,
-              minWidth: `${Math.max(120, column.width * 0.8)}px`,
-              maxWidth: `${column.width * 1.5}px`
+              minWidth: `${column.width}px`,
+              maxWidth: `${column.width}px`,
+              position: 'relative'
             }}
           >
             {column.key === 'actions' ? (
@@ -1280,15 +1369,22 @@ export function ActualSmartGridPlus({
                 </Button>
               </div>
             ) : (
-              <div className="space-y-1 w-full overflow-hidden">
+              <div
+                className="w-full h-full"
+                style={{
+                  maxWidth: '100%',
+                  overflow: 'hidden'
+                }}
+              >
                 <EnhancedCellEditor1
                   value={newRowValues[column.key]}
                   column={column}
                   onChange={(value) => {
-                    setNewRowValues(prev => ({
-                      ...prev,
+                    const updatedRowValues = {
+                      ...newRowValues,
                       [column.key]: value
-                    }));
+                    };
+                    setNewRowValues(updatedRowValues);
                     // Clear validation error for this field
                     if (validationErrors[column.key]) {
                       setValidationErrors(prev => {
@@ -1298,30 +1394,24 @@ export function ActualSmartGridPlus({
                       });
                     }
                     // Call column-specific onChange if provided
+                    // Pass -1 as rowIndex and a callback to update new row values
                     if (column.onChange) {
-                      column.onChange(value, newRowValues, -1);
+                      column.onChange(value, updatedRowValues, -1, setNewRowValues);
                     }
                   }}
                   error={validationErrors[column.key]}
                 />
               </div>
             )}
-          </TableCell>
+          </div>
         ))}
         {/* Plugin row actions column */}
         {plugins.some(plugin => plugin.rowActions) && (
-          <TableCell
-            className="p-2"
-            style={{
-              width: '120px',
-              minWidth: '120px',
-              maxWidth: '120px'
-            }}
-          >
+          <div className="px-3 py-2 text-center w-[120px]">
             {/* Empty space for plugin actions */}
-          </TableCell>
+          </div>
         )}
-      </TableRow>
+      </div>
     );
   };
 
@@ -1444,13 +1534,13 @@ export function ActualSmartGridPlus({
             minHeight: '200px'
           }}
         >
-          <div className="min-w-full">
+          <div className="min-w-full" style={{ minWidth: `${totalGridWidth}px` }}>
             {/* Sticky Header Container */}
             <div className="sticky top-0 z-10 bg-white">
               {/* Layer 1: Advanced Filter Row (Toggleable) */}
               {showFilterRow && (
                 <div className="border-b border-gray-200 bg-gray-50">
-                  <div className="flex w-full">
+                  <div className="flex w-full" style={{ minWidth: `${totalGridWidth}px`, width: `${totalGridWidth}px` }}>
                     {/* Checkbox column placeholder for alignment */}
                     {showCheckboxes && (
                       <div className="bg-gray-50 px-3 py-2 border-r border-gray-200 flex-shrink-0"
@@ -1470,7 +1560,8 @@ export function ActualSmartGridPlus({
                           className="bg-gray-50 px-2 py-2 border-r border-gray-200 last:border-r-0 flex-shrink-0"
                           style={{
                             width: `${column.width}px`,
-                            minWidth: `${column.width}px`
+                            minWidth: `${column.width}px`,
+                            maxWidth: `${column.width}px`
                           }}
                         >
                           {column.filterable && (
@@ -1501,7 +1592,7 @@ export function ActualSmartGridPlus({
 
               {/* Layer 2: Header Row (Always Visible) */}
               <div className="bg-white border-b border-gray-200">
-                <div className="flex w-full">
+                <div className="flex w-full" style={{ minWidth: `${totalGridWidth}px`, width: `${totalGridWidth}px` }}>
                   {/* Checkbox header */}
                   {showCheckboxes && (
                     <div className="bg-gray-50/80 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 flex items-center justify-center flex-shrink-0"
@@ -1541,7 +1632,8 @@ export function ActualSmartGridPlus({
                         )}
                         style={{
                           width: `${column.width}px`,
-                          minWidth: `${column.width}px`
+                          minWidth: `${column.width}px`,
+                          maxWidth: `${column.width}px`
                         }}
                         draggable={!editingHeader && !resizingColumn}
                         onDragStart={(e) => handleColumnDragStart(e, column.key)}
@@ -1659,7 +1751,7 @@ export function ActualSmartGridPlus({
               {renderAddRowForm()}
 
               {loading && !onDataFetch ? (
-                <div className="flex w-full">
+                <div className="flex w-full" style={{ minWidth: `${totalGridWidth}px`, width: `${totalGridWidth}px` }}>
                   <div className="flex items-center justify-center py-8 text-center w-full">
                     <div className="flex items-center justify-center space-x-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -1668,7 +1760,7 @@ export function ActualSmartGridPlus({
                   </div>
                 </div>
               ) : paginatedData.length === 0 ? (
-                <div className="flex w-full">
+                <div className="flex w-full" style={{ minWidth: `${totalGridWidth}px`, width: `${totalGridWidth}px` }}>
                   <div className="text-center py-8 text-gray-500 w-full">
                     No data available
                   </div>
@@ -1691,7 +1783,8 @@ export function ActualSmartGridPlus({
                           rowClassName?.(row, actualIndex)
                         )}
                         style={{
-                          minWidth: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
+                          minWidth: `${totalGridWidth}px`,
+                          width: `${totalGridWidth}px`
                         }}
                         onDoubleClick={() => handleCellDoubleClick(actualIndex, row)}
                       >
@@ -1725,14 +1818,23 @@ export function ActualSmartGridPlus({
                           return (
                             <div
                               key={column.key}
-                              className="px-2 py-3 border-r border-gray-100 last:border-r-0 whitespace-nowrap overflow-hidden text-ellipsis text-[13px]"
+                              className="px-2 py-3 border-r border-gray-100 last:border-r-0 whitespace-nowrap overflow-hidden text-ellipsis text-[13px] flex-shrink-0 relative"
                               style={{
                                 width: `${column.width}px`,
-                                minWidth: `${Math.max(120, column.width * 0.8)}px`,
-                                maxWidth: `${column.width * 1.5}px`
+                                minWidth: `${column.width}px`,
+                                maxWidth: `${column.width}px`,
+                                position: 'relative'
                               }}
                             >
-                              {renderCell(row, column, actualIndex, columnIndex)}
+                              <div
+                                className="w-full h-full"
+                                style={{
+                                  maxWidth: '100%',
+                                  overflow: 'hidden'
+                                }}
+                              >
+                                {renderCell(row, column, actualIndex, columnIndex)}
+                              </div>
                             </div>
                           );
                         })}
@@ -1757,14 +1859,13 @@ export function ActualSmartGridPlus({
                         <div
                           className="hover:bg-transparent border-b border-gray-200"
                           style={{
-                            minWidth: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`,
-                            width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
+                            /* Removed calculated width to prevent parent container expansion */
                           }}
                         >
                           <div
                             className="p-4 bg-gray-50/50"
                             style={{
-                              width: `${(showCheckboxes ? 50 : 0) + orderedColumns.reduce((sum, col) => sum + col.width, 0) + (plugins.some(plugin => plugin.rowActions) ? 120 : 0)}px`
+                              /* Removed calculated width to prevent parent container expansion */
                             }}
                           >
                             {effectiveNestedRowRenderer(row, actualIndex)}

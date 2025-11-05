@@ -306,38 +306,21 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
             showAdvancedFilter && "bg-blue-50 text-blue-600"
           )}
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          {/* <SlidersHorizontal className="h-4 w-4" /> */}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clipPath="url(#clip0_34673_3253)">
+              <path d="M2.25758 3.7779C1.75336 3.21435 1.50125 2.93258 1.49174 2.69311C1.48348 2.48509 1.57287 2.28514 1.73341 2.15259C1.91821 2 2.29631 2 3.0525 2H12.9477C13.7039 2 14.082 2 14.2668 2.15259C14.4273 2.28514 14.5167 2.48509 14.5085 2.69311C14.4989 2.93258 14.2468 3.21436 13.7426 3.7779L9.93849 8.02957C9.83798 8.1419 9.78772 8.19807 9.75189 8.26199C9.72011 8.31869 9.69679 8.37973 9.68267 8.44317C9.66675 8.5147 9.66675 8.59007 9.66675 8.74081V12.3055C9.66675 12.4359 9.66675 12.501 9.64572 12.5574C9.62714 12.6072 9.59692 12.6518 9.55759 12.6876C9.51307 12.728 9.45254 12.7523 9.33149 12.8007L7.06485 13.7073C6.81982 13.8053 6.69731 13.8543 6.59896 13.8339C6.51295 13.816 6.43748 13.7649 6.38895 13.6917C6.33345 13.608 6.33345 13.476 6.33345 13.2121V8.74081C6.33345 8.59007 6.33345 8.5147 6.31753 8.44317C6.30341 8.37973 6.28009 8.31869 6.24831 8.26199C6.21247 8.19807 6.16222 8.1419 6.06171 8.02957L2.25758 3.7779Z" stroke="#475467" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+            <defs>
+              <clipPath id="clip0_34673_3253">
+                <rect width="15.9999" height="15.9999" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
         </Button>
 
-        {/* Server-side Filter Toggle */}
-        {/* {onToggleServersideFilter && gridTitle !== "Leg Details" && (
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleServersideFilter}
-              disabled={loading}
-              title="Toggle Server-side Filters"
-              className={cn(
-                "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
-                showServersideFilter && "bg-blue-100 text-blue-600"
-              )}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-            {!showServersideFilter && hasActiveServersideFilters && (
-              <Badge
-                variant="secondary"
-                className="absolute -top-1 -right-1 h-5 min-w-5 text-xs bg-purple-500 text-white rounded-full flex items-center justify-center p-0"
-              >
-                {Object.keys(currentActiveFilters).length}
-              </Badge>
-            )}
-          </div>
-        )} */}
-
         {/* Icon buttons */}
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           onClick={handleToggleColumnFilters}
@@ -359,13 +342,12 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
             </defs>
           </svg>
 
-          {/* <Filter className="h-4 w-4 text-gray-600" /> */}
           {filters.length > 0 && (
             <span className="absolute -top-1 -right-1 text-xs bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
               {filters.length}
             </span>
           )}
-        </Button>
+        </Button> */}
 
         {/* Export Dropdown Button */}
         {gridTitle !== "Leg Details" && (

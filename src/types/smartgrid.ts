@@ -72,7 +72,7 @@ export interface GridColumnConfig {
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
   returnType?: string;
-  onChange?: (value: any, rowData?: any, rowIndex?: number) => void;
+  onChange?: (value: any, rowData?: any, rowIndex?: number, setNewRowValues?: Function) => void;
   allowNewEntry?: boolean;
   placeholder?: string;
   minSearchLength?: number; // Minimum characters required for new entry creation

@@ -197,9 +197,14 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
                 value={editValue}
                 onChange={(e) => handleChange(e.target.value)}
                 className={cn(
-                    'w-full max-w-full',
+                    'w-full max-w-full text-xs',
                     error && 'border-destructive focus-visible:ring-destructive'
                 )}
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box'
+                }}
                 step={column.type === 'Integer' ? '1' : undefined}
                 autoFocus={shouldFocus}
                 // Special handling for time inputs

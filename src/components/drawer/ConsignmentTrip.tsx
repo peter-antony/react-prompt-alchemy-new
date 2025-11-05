@@ -1,15 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '../ui/card';
@@ -27,6 +27,9 @@ import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { manageTripStore } from '@/stores/mangeTripStore';
+import CustomBulkUpload from '@/components/DynamicFileUpload/CustomBulkUpload';
+import { exportToCSV, exportToExcel } from '@/utils/gridExport';
+import * as XLSX from 'xlsx';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -47,13 +50,13 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { toast } = useToast();
   const [expandedPlanned, setExpandedPlanned] = useState(false);
-  const [expandedActuals, setExpandedActuals] = useState(false);
   const [expandedCOInfo, setExpandedCOInfo] = useState(true);
+  const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pickupComplete, setPickupComplete] = useState(false);
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
-  const [selectedCustomerData, setSelectedCustomerData] = useState<any>(null);
+  const [selectedCustomerData, setSelectedCustomerData] = useState<any>({});
   const [sourceBRId, setSourceBRId] = useState<string>("");
   const [returnBRId, setReturnBRId] = useState<string>("");
   const [plannedData, setPlannedData] = useState<any[]>([]);
@@ -69,6 +72,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [thuQtyUOMOptions, setThuQtyUOMOptions] = useState<string[]>([]);
   const [containerQtyUOMOptions, setContainerQtyUOMOptions] = useState<string[]>([]);
   const [wagonlengthUOMOptions, setWagonLengthUOMOptions] = useState<string[]>([]);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [deletedDataFromImport, setDeletedDataFromImport] = useState<any[]>([]);
+
   // Initialize dropdown state variables when selectedCustomerData changes
   useEffect(() => {
     if (selectedCustomerData) {
@@ -90,7 +96,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: false,
       mandatory: true,
       subRow: false,
-      width: 120
+      width: 150
     },
     {
       key: 'WagonType',
@@ -100,7 +106,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: false,
       mandatory: true,
       subRow: false,
-      width: 140
+      width: 200
     },
     {
       key: 'WagonQty',
@@ -110,7 +116,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: false,
       mandatory: true,
       subRow: false,
-      width: 150
+      width: 200
     },
     {
       key: 'ContainerType',
@@ -119,7 +125,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: false,
       subRow: false,
-      width: 150
+      width: 200
     },
     {
       key: 'ContainerId',
@@ -128,7 +134,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: false,
       subRow: false,
-      width: 140
+      width: 200
     },
     {
       key: 'ContainerQty',
@@ -137,7 +143,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: false,
       subRow: false,
-      width: 140
+      width: 200
     },
     {
       key: 'Product',
@@ -146,7 +152,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: false,
       subRow: false,
-      width: 120
+      width: 250
     },
     {
       key: 'ProductWeight',
@@ -155,7 +161,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: false,
       subRow: false,
-      width: 150
+      width: 160
     },
     {
       key: 'ProductWeightUOM',
@@ -919,14 +925,65 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       width: 120
     },
     {
-      key: 'WagonPosition',
-      label: 'Wagon Position',
-      type: 'Integer',
+      key: 'WagonType',
+      label: 'Wagon Type',
+      type: 'LazySelect',
       sortable: true,
-      editable: false,
+      editable: true,
       mandatory: true,
       subRow: false,
-      width: 120
+      width: 200,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Wagon type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        const rr: any = response.data;
+        const wagonTypeList = JSON.parse(rr.ResponseData) || [];
+        return wagonTypeList
+          .filter((item: any) => item.id && item.name)
+          .map((item: any) => ({
+            label: String(item.name),
+            value: String(item.name),
+          }));
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0; // Default to 0 if undefined
+
+          // Handle new row case (rowIndex = -1)
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonType: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+
+            if (newData[rowIndex]) {
+              const updatedRow = {
+                ...newData[rowIndex],
+                WagonType: value,
+              };
+
+              newData[rowIndex] = updatedRow;
+
+            } else {
+              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+            }
+
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon type:', error);
+        }
+      },
     },
     {
       key: 'Wagon',
@@ -937,8 +994,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       mandatory: true,
       subRow: false,
       width: 150,
-      allowNewEntry: true, // Enable new entry functionality for Wagon field
-      minSearchLength: 4, // Allow creating new entries with just 4 characters
+      allowNewEntry: true,
+      minSearchLength: 4,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
         const response = await quickOrderService.getMasterCommonData({
           messageType: "Wagon id Init",
@@ -955,9 +1012,65 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             value: item.id,
           }));
       },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+      onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Handle new row case (rowIndex = -1)
+          if (actualRowIndex === -1 && setNewRowValues) {
+            // Handle clear/undefined values for new row
+            if (!value || value === undefined || value === null) {
+              setNewRowValues((prev: any) => ({
+                ...prev,
+                Wagon: '',
+                WagonDescription: '',
+                WagonType: '',
+                WagonQty: '',
+                WagonQtyUOM: '',
+                WagonTareWeight: '',
+                WagonLength: '',
+              }));
+              return;
+            }
+
+            // Fetch wagon details for new row
+            const response = await quickOrderService.getDynamicSearchData({
+              messageType: "Wagon ID On select",
+              searchCriteria: {
+                WagonID: value,
+              },
+            });
+            const rr: any = response.data;
+            const payload = JSON.parse(rr.ResponseData);
+
+            if (payload && payload.ResponsePayload) {
+              // API returned data - update the new row values
+              const wagonData = payload.ResponsePayload;
+              setNewRowValues((prev: any) => ({
+                ...prev,
+                ...(wagonData.WagonID && { Wagon: wagonData.WagonID }),
+                ...(wagonData.WagonIDDescription && { WagonDescription: wagonData.WagonIDDescription }),
+                ...(wagonData.WagonTypeDescription && { WagonType: wagonData.WagonTypeDescription }),
+                ...(wagonData.WagonQty && { WagonQty: wagonData.WagonQty }),
+                ...(wagonData.WagonUOM && { WagonQtyUOM: wagonData.WagonUOM }),
+                ...(wagonData.TareWeight && { WagonTareWeight: wagonData.TareWeight }),
+                ...(wagonData.WagonLength && { WagonLength: wagonData.WagonLength }),
+              }));
+            } else {
+              // API returned empty response or this is a new entry
+              setNewRowValues((prev: any) => ({
+                ...prev,
+                Wagon: value,
+                WagonDescription: value, // Set description to same value for new entries
+                WagonType: 'Unknown', // Set type to "Unknown" for new entries
+                WagonQty: '',
+                WagonQtyUOM: '',
+                WagonTareWeight: '',
+                WagonLength: '',
+              }));
+            }
+            return;
+          }
 
           // Handle clear/undefined values
           if (!value || value === undefined || value === null) {
@@ -1037,59 +1150,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       },
     },
     {
-      key: 'WagonType',
-      label: 'Wagon Type',
-      type: 'LazySelect',
-      sortable: true,
-      editable: true,
-      mandatory: true,
-      subRow: false,
-      width: 200,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Wagon type Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data;
-        const wagonTypeList = JSON.parse(rr.ResponseData) || [];
-        return wagonTypeList
-          .filter((item: any) => item.id && item.name)
-          .map((item: any) => ({
-            label: String(item.name),
-            value: String(item.name),
-          }));
-      },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
-        try {
-
-          const rowIndex = actualRowIndex ?? 0; // Default to 0 if undefined
-
-          setActualEditableData(prevData => {
-            const newData = [...prevData];
-
-            if (newData[rowIndex]) {
-              const updatedRow = {
-                ...newData[rowIndex],
-                WagonType: value,
-              };
-
-              newData[rowIndex] = updatedRow;
-
-            } else {
-              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
-            }
-
-            hasUserEditsRef.current = true;
-            return newData;
-          });
-        } catch (error) {
-          console.error('Error updating wagon type:', error);
-        }
-      },
-    },
-    {
       key: 'WagonQtyUOM',
       label: 'Wagon Qty UOM',
       type: 'Select',
@@ -1109,298 +1169,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       mandatory: true,
       subRow: false,
       width: 200
-    },
-    {
-      key: 'WagonTareWeightUOM',
-      label: 'Wagon Tare weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200,
-      options: weightList
-    },
-    {
-      key: 'WagonTareWeight',
-      label: 'Wagon Tare weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 180
-    },
-    {
-      key: 'GrossWeightUOM',
-      label: 'Wagon Gross Weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      options: weightList,
-      width: 200
-    },
-    {
-      key: 'GrossWeight',
-      label: 'Wagon Gross Weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'WagonLengthUOM',
-      label: 'Wagon length UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      options: wagonlengthUOMOptions,
-      width: 200
-    },
-    {
-      key: 'WagonLength',
-      label: 'Wagon Length',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'WagonSealNo',
-      label: 'Wagon Seal No.',
-      type: 'String',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ContainerDescription',
-      label: 'Container ID',
-      type: 'LazySelect',
-      sortable: true,
-      editable: true,
-      mandatory: true,
-      subRow: false,
-      width: 200,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Container ID Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} || ${item.name}`,
-              value: `${item.id} || ${item.name}`,
-            }
-            : {})
-        }));
-      },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
-        const rowIndex = actualRowIndex ?? 0;
-        setActualEditableData(prevData => {
-          const newData = [...prevData];
-          if (newData[rowIndex]) {
-            newData[rowIndex] = {
-              ...newData[rowIndex],
-              ContainerDescription: safeSplit(value, ' || ', 1, value), // Store description part
-            };
-            hasUserEditsRef.current = true;
-          }
-          return newData;
-        });
-      },
-    },
-    {
-      key: 'ContainerType',
-      label: 'Container Type',
-      type: 'LazySelect',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Container Type Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} || ${item.name}`,
-              value: `${item.id} || ${item.name}`,
-            }
-            : {})
-        }));
-      },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
-        const rowIndex = actualRowIndex ?? 0;
-        setActualEditableData(prevData => {
-          const newData = [...prevData];
-          if (newData[rowIndex]) {
-            newData[rowIndex] = {
-              ...newData[rowIndex],
-              ContainerType: safeSplit(value, ' || ', 1, value), // Store description part
-            };
-            hasUserEditsRef.current = true;
-          }
-          return newData;
-        });
-      },
-    },
-    {
-      key: 'ContainerQtyUOM',
-      label: 'Container Qty UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      mandatory: true,
-      subRow: false,
-      width: 180,
-      options: containerQtyUOMOptions,
-    },
-    {
-      key: 'ContainerQty',
-      label: 'Container Qty',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ContainerTareWeightUOM',
-      label: 'Container Tare Weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 220,
-      options: weightList
-    },
-    {
-      key: 'ContainerTareWeight',
-      label: 'Container Tare Weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ContainerSealNo',
-      label: 'Container Seal No.',
-      type: 'String',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'Thu',
-      label: 'THU ID',
-      type: 'LazySelect',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 250,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "THU Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} || ${item.name}`,
-              value: `${item.id} || ${item.name}`,
-            }
-            : {})
-        }));
-      },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
-        const rowIndex = actualRowIndex ?? 0;
-        setActualEditableData(prevData => {
-          const newData = [...prevData];
-          if (newData[rowIndex]) {
-            newData[rowIndex] = {
-              ...newData[rowIndex],
-              Thu: safeSplit(value, ' || ', 1, value), // Store description part
-            };
-            hasUserEditsRef.current = true;
-          }
-          return newData;
-        });
-      },
-    },
-    {
-      key: 'ThuSerialNo',
-      label: 'THU Serial No',
-      type: 'String',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ThuQtyUOM',
-      label: 'THU Qty UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200,
-      options: thuQtyUOMOptions,
-    },
-    {
-      key: 'ThuQty',
-      label: 'THU Qty',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ThuWeightUOM',
-      label: 'THU Weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200,
-      options: weightList
-    },
-    {
-      key: 'ThuWeight',
-      label: 'THU Weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'ContainsHazardousGoods',
-      label: 'Contains Hazardous Goods',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 220,
-      options: ['Yes', 'No'],
     },
     {
       key: 'NHMDescription',
@@ -1529,44 +1297,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       width: 160
     },
     {
-      key: 'ClassOfStores',
-      label: 'Class Of Stores',
-      type: 'LazySelect',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 250,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Class Of Stores Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} || ${item.name}`,
-              value: `${item.id} || ${item.name}`,
-            }
-            : {})
-        }));
-      },
-      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
-        if (actualRowIndex !== undefined) {
-          setActualEditableData(prev => {
-            const newData = [...prev];
-            newData[actualRowIndex] = {
-              ...newData[actualRowIndex],
-              ClassOfStores: safeSplit(value, ' || ', 1, value)
-            };
-            return newData;
-          });
-        }
-      },
-    },
-    {
       key: 'UNCodeDescription',
       label: 'UN Code',
       type: 'LazySelect',
@@ -1684,6 +1414,73 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           console.error('Failed to fetch wagon details:', error);
         }
       },
+    },
+    {
+      key: 'ContainsHazardousGoods',
+      label: 'Contains Hazardous Goods',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 220,
+      options: ['Yes', 'No'],
+    },
+    {
+      key: 'WagonTareWeightUOM',
+      label: 'Wagon Tare weight UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200,
+      options: weightList
+    },
+    {
+      key: 'WagonTareWeight',
+      label: 'Wagon Tare weight',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 180
+    },
+    {
+      key: 'GrossWeightUOM',
+      label: 'Wagon Gross Weight UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      options: weightList,
+      width: 200
+    },
+    {
+      key: 'GrossWeight',
+      label: 'Wagon Gross Weight',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'WagonLengthUOM',
+      label: 'Wagon length UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      options: wagonlengthUOMOptions,
+      width: 200
+    },
+    {
+      key: 'WagonLength',
+      label: 'Wagon Length',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
     },
     {
       key: 'ShuntingOption',
@@ -1913,13 +1710,286 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       width: 160
     },
     {
+      key: 'WagonPosition',
+      label: 'Wagon Position',
+      type: 'Integer',
+      sortable: true,
+      editable: false,
+      mandatory: true,
+      subRow: false,
+      width: 120
+    },
+    {
+      key: 'WagonSealNo',
+      label: 'Wagon Seal No.',
+      type: 'String',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ContainerDescription',
+      label: 'Container ID',
+      type: 'LazySelect',
+      sortable: true,
+      editable: true,
+      mandatory: true,
+      subRow: false,
+      width: 200,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Container ID Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              ContainerDescription: safeSplit(value, ' || ', 1, value), // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
+      },
+    },
+    {
+      key: 'ContainerType',
+      label: 'Container Type',
+      type: 'LazySelect',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Container Type Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              ContainerType: safeSplit(value, ' || ', 1, value), // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
+      },
+    },
+    {
+      key: 'ContainerQtyUOM',
+      label: 'Container Qty UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      mandatory: true,
+      subRow: false,
+      width: 180,
+      options: containerQtyUOMOptions,
+    },
+    {
+      key: 'ContainerQty',
+      label: 'Container Qty',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ContainerTareWeightUOM',
+      label: 'Container Tare Weight UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 220,
+      options: weightList
+    },
+    {
+      key: 'ContainerTareWeight',
+      label: 'Container Tare Weight',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ContainerSealNo',
+      label: 'Container Seal No.',
+      type: 'String',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'Thu',
+      label: 'THU ID',
+      type: 'LazySelect',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 250,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "THU Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+        const rowIndex = actualRowIndex ?? 0;
+        setActualEditableData(prevData => {
+          const newData = [...prevData];
+          if (newData[rowIndex]) {
+            newData[rowIndex] = {
+              ...newData[rowIndex],
+              Thu: safeSplit(value, ' || ', 1, value), // Store description part
+            };
+            hasUserEditsRef.current = true;
+          }
+          return newData;
+        });
+      },
+    },
+    {
+      key: 'ThuSerialNo',
+      label: 'THU Serial No',
+      type: 'String',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ThuQtyUOM',
+      label: 'THU Qty UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200,
+      options: thuQtyUOMOptions,
+    },
+    {
+      key: 'ThuQty',
+      label: 'THU Qty',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ThuWeightUOM',
+      label: 'THU Weight UOM',
+      type: 'Select',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200,
+      options: weightList
+    },
+    {
+      key: 'ThuWeight',
+      label: 'THU Weight',
+      type: 'Integer',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 200
+    },
+    {
+      key: 'ClassOfStores',
+      label: 'Class Of Stores',
+      type: 'LazySelect',
+      sortable: true,
+      editable: true,
+      subRow: false,
+      width: 250,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Class Of Stores Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      onChange: (value: string, rowData: any, actualRowIndex?: number) => {
+        if (actualRowIndex !== undefined) {
+          setActualEditableData(prev => {
+            const newData = [...prev];
+            newData[actualRowIndex] = {
+              ...newData[actualRowIndex],
+              ClassOfStores: safeSplit(value, ' || ', 1, value)
+            };
+            return newData;
+          });
+        }
+      },
+    },
+    {
       key: 'LastCommodityTransported1',
       label: 'Last Commodity Transported 1',
       type: 'String',
       sortable: true,
       editable: true,
       subRow: false,
-      width: 220
+      width: 320
     },
     {
       key: 'LastCommodityTransported2',
@@ -1928,7 +1998,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 220
+      width: 320
     },
     {
       key: 'LastCommodityTransported3',
@@ -1937,9 +2007,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 220
+      width: 320
     },
-
     {
       key: 'QuickCode1',
       label: 'Quick code 1',
@@ -2110,6 +2179,24 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
     },
 
   ];
+
+  // Calculate consistent grid width based on planned columns only (not subrow columns)
+  const gridTotalWidth = useMemo(() => {
+    // Get main columns from planned grid only (ignore subrow columns)
+    const plannedMainColumns = plannedColumns.filter(col => !col.subRow);
+
+    // Calculate width based on planned columns only
+    const plannedWidth = plannedMainColumns.reduce((total, col) => total + (col.width || 150), 0);
+
+    // Use planned width as the fixed width for both grids to ensure consistency
+    const fixedContentWidth = plannedWidth;
+
+    // Add extra space for checkboxes, actions, and padding
+    const totalWidth = fixedContentWidth + 150; // Extra space for UI elements
+
+    return totalWidth;
+  }, [plannedColumns]);
+
   const { getConsignments } = useTripExecutionDrawerStore();
   const consignments = getConsignments(legId) || [];
 
@@ -2176,6 +2263,298 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       toast({
         title: "⚠️ Delete failed",
         description: "An error occurred while deleting the row.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle import dialog open/close
+  const handleImportData = () => {
+    setIsImportDialogOpen(true);
+  };
+
+  const handleImportComplete = (summary: any) => {
+
+    if (summary.validRows && summary.validRows.length > 0) {
+      // Store existing data as deleted (to be sent with Delete mode flag)
+      const existingDataWithDeleteFlag = actualEditableData.map(row => ({
+        ...row,
+        ModeFlag: 'Delete'
+      }));
+
+      // Set the deleted data for later use in save
+      setDeletedDataFromImport(existingDataWithDeleteFlag);
+
+      // Process imported data with Insert mode flag, and also normalize column headers
+      const importedDataWithInsertFlag = summary.validRows.map((row: any, index: number) => {
+        // Create a normalized version of the row with trimmed keys
+        const normalizedRow: any = {};
+        Object.keys(row).forEach(key => {
+          const trimmedKey = key.trim();
+          normalizedRow[trimmedKey] = row[key];
+          // Also create alternative keys without spaces and special characters
+          const normalizedKey = trimmedKey.replace(/[^\w]/g, '').toLowerCase();
+          normalizedRow[normalizedKey] = row[key];
+        });
+
+        // Convert Excel column names to grid field names
+        const gridMappedRow = {
+          // Map Excel columns to grid field names
+          Wagon: normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
+          WagonDescription: normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
+          WagonType: normalizedRow['Wagon Type'] || normalizedRow.wagontype || "",
+          WagonPosition: normalizedRow['Wagon Position'] || normalizedRow.wagonposition || "",
+          WagonQty: normalizedRow['Wagon Qty'] || normalizedRow.wagonqty || 1,
+          WagonQtyUOM: normalizedRow['Wagon Qty UOM'] || normalizedRow.wagonqtyuom || "",
+          WagonLength: normalizedRow['Wagon length'] || normalizedRow.wagonlength || "",
+          WagonTareWeight: normalizedRow['Tare Weight'] || normalizedRow.tareweight || "",
+          GrossWeight: normalizedRow['Gross Weight'] || normalizedRow.grossweight || 0,
+
+          ContainerId: normalizedRow['Container ID'] || normalizedRow.containerid || "",
+          ContainerDescription: normalizedRow['Container ID'] || normalizedRow.containerid || "",
+          ContainerType: normalizedRow['Container Type'] || normalizedRow.containertype || "",
+          ContainerQty: normalizedRow['Container Qty'] || normalizedRow.containerqty || "",
+          ContainerQtyUOM: normalizedRow['Container Qty UOM'] || normalizedRow.containerqtyuom || "",
+          ContainerSealNo: normalizedRow['Container Seal No.'] || normalizedRow.containersealn || normalizedRow.containerseal || "",
+
+          Product: normalizedRow['Commodity ID'] || normalizedRow.commodityid || "",
+          ProductDescription: normalizedRow['Commodity Description'] || normalizedRow.commoditydescription || "",
+          ProductWeight: normalizedRow['Commodity Actual Qty'] || normalizedRow.commodityactualqty || "",
+          ProductWeightUOM: normalizedRow['Commodity Qty UOM'] || normalizedRow.commodityqtyuom || "",
+          CommodityDamagedQty: normalizedRow['Commodity Damaged Qty'] || normalizedRow.commoditydamagedqty || "",
+
+          Thu: normalizedRow['THU ID'] || normalizedRow.thuid || "",
+          ThuDescription: normalizedRow['THU ID'] || normalizedRow.thuid || "",
+          ThuSerialNo: normalizedRow['THU Serial No'] || normalizedRow.thuserialno || "",
+          ThuQty: normalizedRow['THU Qty'] || normalizedRow.thuqty || "",
+          ThuWeight: normalizedRow['THU Weight'] || normalizedRow.thuweight || "",
+          ThuWeightUOM: normalizedRow['THU Weight UOM'] || normalizedRow.thuweightuom || "",
+
+          ShuntingOption: normalizedRow['Shunting Option'] || normalizedRow.shuntingoption || "",
+          ReplacedWagon: normalizedRow['Replaced Wagon ID'] || normalizedRow.replacedwagonid || "",
+          ShuntingReasonCode: normalizedRow['Reason Code'] || normalizedRow.reasoncode || "",
+          Remarks: normalizedRow['Remarks'] || normalizedRow.remarks || "",
+          ShuntInLocation: normalizedRow['Shunt In Location'] || normalizedRow.shuntinlocation || "",
+          ShuntOutLocation: normalizedRow['Shunt Out Location'] || normalizedRow.shuntoutlocation || "",
+          ShuntInDate: normalizedRow['Shunt In Date & Time'] ? normalizedRow['Shunt In Date & Time'].split(' ')[0] : (normalizedRow.shuntindatetime ? normalizedRow.shuntindatetime.split(' ')[0] : ""),
+          ShuntInTime: normalizedRow['Shunt In Date & Time'] ? normalizedRow['Shunt In Date & Time'].split(' ')[1] : (normalizedRow.shuntindatetime ? normalizedRow.shuntindatetime.split(' ')[1] : ""),
+          ShuntOutDate: normalizedRow['Shunt Out Date & Time'] ? normalizedRow['Shunt Out Date & Time'].split(' ')[0] : (normalizedRow.shuntoutdatetime ? normalizedRow.shuntoutdatetime.split(' ')[0] : ""),
+          ShuntOutTime: normalizedRow['Shunt Out Date & Time'] ? normalizedRow['Shunt Out Date & Time'].split(' ')[1] : (normalizedRow.shuntoutdatetime ? normalizedRow.shuntoutdatetime.split(' ')[1] : ""),
+
+          ClassOfStores: normalizedRow['Class Of Stores'] || normalizedRow.classofstores || "",
+          NHM: normalizedRow['NHM'] || normalizedRow.nhm || "",
+          NHMDescription: normalizedRow['NHM'] || normalizedRow.nhm || "",
+          UNCode: normalizedRow['UN Code'] || normalizedRow.uncode || "",
+          UNCodeDescription: normalizedRow['UN Code'] || normalizedRow.uncode || "",
+          DGClass: normalizedRow['DG Class'] || normalizedRow.dgclass || "",
+          DGClassDescription: normalizedRow['DG Class'] || normalizedRow.dgclass || "",
+          ContainsHazardousGoods: normalizedRow['Contains Hazardous Goods'] || normalizedRow.containshazardousgoods || "",
+          WagonSealNo: normalizedRow['Wagon Seal No.'] || normalizedRow.wagonsealn || normalizedRow.wagonseal || "",
+
+          Remarks1: normalizedRow['Remarks1'] || normalizedRow.remarks1 || "",
+          Remarks2: normalizedRow['Remarks2'] || normalizedRow.remarks2 || "",
+          Remarks3: normalizedRow['Remarks3'] || normalizedRow.remarks3 || "",
+
+          // Add required system fields
+          ModeFlag: 'Insert',
+          isNewRow: true,
+          Seqno: '',
+          ActualLineUniqueID: -1
+        };
+
+        return gridMappedRow;
+      });
+
+      // Replace existing data with imported data (not append)
+      setActualEditableData(importedDataWithInsertFlag);
+
+      hasUserEditsRef.current = true;
+
+      // Show success toast with actual count
+      toast({
+        title: "Import Successful",
+        description: `Successfully imported ${summary.validRows.length} records. Previous ${existingDataWithDeleteFlag.length} records will be deleted.`,
+      });
+    } else {
+      // Show warning if no valid rows
+      toast({
+        title: "Import Warning",
+        description: "No valid rows found in the imported file.",
+        variant: "destructive",
+      });
+    }
+    setIsImportDialogOpen(false);
+  };
+
+  // Handle export functionality
+  const handleExportData = (format: 'csv' | 'xlsx') => {
+    try {
+      // Debug: Log the actual data structure
+      console.log('actualEditableData for export:', actualEditableData);
+      console.log('First row keys:', actualEditableData.length > 0 ? Object.keys(actualEditableData[0]) : 'No data');
+
+      // Define custom headers for export
+      const customHeaders = [
+        'Wagon ID',
+        'Tare Weight',
+        'Gross Weight',
+        'Container ID',
+        'Commodity ID',
+        'Commodity Actual Qty',
+        'Commodity Qty UOM',
+        'Wagon Position',
+        'Wagon Type',
+        'Wagon length',
+        'Wagon Qty',
+        'Wagon Qty UOM',
+        'Container Type',
+        'Container Qty',
+        'Container Qty UOM',
+        'Commodity Damaged Qty',
+        'THU ID',
+        'THU Serial No',
+        'THU Qty',
+        'THU Weight',
+        'THU Weight UOM',
+        'Commodity Description',
+        'Shunting Option',
+        'Replaced Wagon ID',
+        'Reason Code',
+        'Remarks',
+        'Shunt In Location',
+        'Shunt Out Location',
+        'Class Of Stores',
+        'NHM',
+        'UN Code',
+        'DG Class',
+        'Contains Hazardous Goods',
+        'Wagon Seal No.',
+        'Container Seal No.',
+        'Shunt In Date & Time',
+        'Shunt Out Date & Time',
+        'Remarks1',
+        'Remarks2',
+        'Remarks3'
+      ];
+
+      // Map grid column keys to export headers
+      const columnKeyMapping = {
+        'Wagon': 'Wagon ID',
+        'WagonTareWeight': 'Tare Weight',
+        'GrossWeight': 'Gross Weight',
+        'ContainerDescription': 'Container ID',
+        'Product': 'Commodity ID',
+        'ProductWeight': 'Commodity Actual Qty',
+        'ProductWeightUOM': 'Commodity Qty UOM',
+        'WagonPosition': 'Wagon Position',
+        'WagonType': 'Wagon Type',
+        'WagonLength': 'Wagon length',
+        'WagonQty': 'Wagon Qty',
+        'WagonQtyUOM': 'Wagon Qty UOM',
+        'ContainerType': 'Container Type',
+        'ContainerQty': 'Container Qty',
+        'ContainerQtyUOM': 'Container Qty UOM',
+        'CommodityDamagedQty': 'Commodity Damaged Qty',
+        'Thu': 'THU ID',
+        'ThuSerialNo': 'THU Serial No',
+        'ThuQty': 'THU Qty',
+        'ThuWeight': 'THU Weight',
+        'ThuWeightUOM': 'THU Weight UOM',
+        'ProductDescription': 'Commodity Description',
+        'ShuntingOption': 'Shunting Option',
+        'ReplacedWagon': 'Replaced Wagon ID',
+        'ShuntingReasonCode': 'Reason Code',
+        'Remarks': 'Remarks',
+        'ShuntInLocationDescription': 'Shunt In Location',
+        'ShuntOutLocationDescription': 'Shunt Out Location',
+        'ClassOfStores': 'Class Of Stores',
+        'NHM': 'NHM',
+        'UNCode': 'UN Code',
+        'DGClass': 'DG Class',
+        'ContainsHazardousGoods': 'Contains Hazardous Goods',
+        'WagonSealNo': 'Wagon Seal No.',
+        'ContainerSealNo': 'Container Seal No.',
+        'ShuntInDateTime': 'Shunt In Date & Time',
+        'ShuntOutDateTime': 'Shunt Out Date & Time',
+        'Remarks1': 'Remarks1',
+        'Remarks2': 'Remarks2',
+        'Remarks3': 'Remarks3'
+      };
+
+      // Create temporary GridColumnConfig array for export
+      const exportColumns: GridColumnConfig[] = customHeaders.map((header, index) => ({
+        key: `col_${index}`,
+        label: header,
+        type: 'Text' as any,
+        sortable: false,
+        filterable: false,
+        width: 150
+      }));
+
+      // Prepare data for export with custom headers - transform to match export column keys
+      const exportData = actualEditableData.map(row => {
+        const exportRow: any = {};
+
+        // Map each custom header to the corresponding data
+        customHeaders.forEach((header, index) => {
+          const columnKey = `col_${index}`;
+
+          // Handle special cases for combined date/time fields
+          if (header === 'Shunt In Date & Time') {
+            const date = row['ShuntInDate'] || '';
+            const time = row['ShuntInTime'] || '';
+            exportRow[columnKey] = date && time ? `${date} ${time}` : (date || time || '');
+          } else if (header === 'Shunt Out Date & Time') {
+            const date = row['ShuntOutDate'] || '';
+            const time = row['ShuntOutTime'] || '';
+            exportRow[columnKey] = date && time ? `${date} ${time}` : (date || time || '');
+          } else {
+            // Find the corresponding original column key
+            const originalColumnKey = Object.keys(columnKeyMapping).find(key => columnKeyMapping[key] === header);
+
+            if (originalColumnKey && row[originalColumnKey] !== undefined) {
+              exportRow[columnKey] = row[originalColumnKey];
+            } else {
+              // If no mapping found, try to find a similar key in the row data
+              const similarKey = Object.keys(row).find(key =>
+                key.toLowerCase().replace(/[^a-z0-9]/g, '') ===
+                header.toLowerCase().replace(/[^a-z0-9]/g, '')
+              );
+
+              exportRow[columnKey] = similarKey ? row[similarKey] : '';
+            }
+          }
+        });
+
+        return exportRow;
+      });
+
+      // Debug: Log the mapped export data
+      console.log('Export data mapped:', exportData);
+      console.log('Column key mapping used:', columnKeyMapping);
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `Consignment_Details_${timestamp}`;
+
+      // Export based on format
+      if (format === 'csv') {
+        exportToCSV(exportData, exportColumns, filename);
+      } else if (format === 'xlsx') {
+        exportToExcel(exportData, exportColumns, filename);
+      }
+
+      // Show success toast
+      toast({
+        title: "Export Successful",
+        description: `Data exported successfully as ${format.toUpperCase()}`,
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data. Please try again.",
         variant: "destructive",
       });
     }
@@ -2249,32 +2628,211 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return newObj;
       };
 
-      // Process each row in actualEditableData and update with proper ModeFlag
-      const updatedActualData = actualEditableData.map((actualRow, index) => {
-        // Determine ModeFlag based on whether the row already exists or is newly added
-        let modeFlag = "Update"; // Default for existing rows
+      // Process data for save with proper mode flags based on requirements:
+      // 1. Send newly imported data with Insert mode flag
+      // 2. Send existing data that was removed during import with Delete mode flag  
+      // 3. Send existing data that has been edited with Update mode flag
+      // 4. If user has made edits, include all current data
 
-        // Check if this is a new row added by user (usually indicated by specific properties)
-        // New rows typically have no Seqno or have temporary/negative IDs
-        const isNewRow = !actualRow.Seqno || actualRow.Seqno === "" || actualRow.Seqno === -1 ||
-          actualRow.ActualLineUniqueID === -1 ||
-          (actualRow.hasOwnProperty('isNewRow') && actualRow.isNewRow === true);
+      let currentGridData = [];
 
-        if (isNewRow) {
-          modeFlag = "Insert"; // New row added to grid
+      if (hasUserEditsRef.current) {
+        // If user has made edits, include all current actual data
+        currentGridData = actualEditableData.map((actualRow, index) => {
+          // Determine the appropriate mode flag
+          let modeFlag = "Update"; // Default to Update for existing data
+
+          // If row has Insert flag or isNewRow marker, keep it as Insert
+          if (actualRow.ModeFlag === 'Insert' || actualRow.isNewRow === true) {
+            modeFlag = "Insert";
+          }
+          // Map the data to match the expected API format, removing extra parameters
+          const mappedRow = {
+            Seqno: (index + 1).toString(), // Sequential number starting from 1
+            PlanToActualCopy: "",
+            WagonPosition: actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition || "",
+            WagonType: actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype || "",
+            Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
+            WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
+            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || 1,
+            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "TON",
+            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || "",
+            ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
+            ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid || "",
+            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || "",
+            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "TON",
+            Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
+            ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription || "",
+            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || "",
+            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "TON",
+            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || "",
+            Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
+            ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid || "",
+            ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
+            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || "",
+            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || "",
+            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "TON",
+            ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
+            ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
+            ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
+            Remarks: actualRow['Remarks'] || actualRow.Remarks || actualRow.remarks || "",
+            ShuntInLocation: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
+            ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
+            ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
+            ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
+            ShuntInDate: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
+            ShuntInTime: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
+            ShuntOutDate: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
+            ShuntOutTime: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
+            ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores || "",
+            NHM: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
+            NHMDescription: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
+            UNCode: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
+            UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
+            DGClass: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
+            DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
+            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "No",
+            WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
+            ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
+            ContainerTareWeight: "",
+            ContainerTareWeightUOM: "",
+            LastCommodityTransported1: "",
+            LastCommodityTransportedDate1: "",
+            LastCommodityTransported2: "",
+            LastCommodityTransportedDate2: "",
+            LastCommodityTransported3: "",
+            LastCommodityTransportedDate3: "",
+            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || "",
+            WagonTareWeightUOM: "TON",
+            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || "",
+            WagonLengthUOM: "M",
+            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || 0,
+            GrossWeightUOM: "TON",
+            QuickCode1: "",
+            QuickCode2: "",
+            QuickCode3: "",
+            QuickCodeValue1: "",
+            QuickCodeValue2: "",
+            QuickCodeValue3: "",
+            Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
+            Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
+            Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
+            ModeFlag: modeFlag // Set appropriate mode flag
+          };
+
+          return mappedRow;
+        });
+      } else {
+        // If no user edits, only include new/imported data (original logic)
+        currentGridData = actualEditableData.filter(row => {
+          // Only include rows that are newly imported (have Insert mode flag or isNewRow marker)
+          return row.ModeFlag === 'Insert' || row.isNewRow === true;
+        }).map((actualRow, index) => {
+          // Map the data to match the expected API format, removing extra parameters
+          return {
+            Seqno: (index + 1).toString(), // Sequential number starting from 1
+            PlanToActualCopy: "",
+            WagonPosition: actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition || "",
+            WagonType: actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype || "",
+            Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
+            WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
+            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || 1,
+            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "TON",
+            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || "",
+            ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
+            ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid || "",
+            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || "",
+            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "TON",
+            Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
+            ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription || "",
+            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || "",
+            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "TON",
+            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || "",
+            Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
+            ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid || "",
+            ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
+            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || "",
+            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || "",
+            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "TON",
+            ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
+            ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
+            ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
+            Remarks: actualRow['Remarks'] || actualRow.Remarks || actualRow.remarks || "",
+            ShuntInLocation: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
+            ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
+            ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
+            ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
+            ShuntInDate: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
+            ShuntInTime: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
+            ShuntOutDate: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
+            ShuntOutTime: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
+            ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores || "",
+            NHM: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
+            NHMDescription: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
+            UNCode: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
+            UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
+            DGClass: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
+            DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
+            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "No",
+            WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
+            ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
+            ContainerTareWeight: "",
+            ContainerTareWeightUOM: "",
+            LastCommodityTransported1: "",
+            LastCommodityTransportedDate1: "",
+            LastCommodityTransported2: "",
+            LastCommodityTransportedDate2: "",
+            LastCommodityTransported3: "",
+            LastCommodityTransportedDate3: "",
+            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || "",
+            WagonTareWeightUOM: "TON",
+            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || "",
+            WagonLengthUOM: "M",
+            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || 0,
+            GrossWeightUOM: "TON",
+            QuickCode1: "",
+            QuickCode2: "",
+            QuickCode3: "",
+            QuickCodeValue1: "",
+            QuickCodeValue2: "",
+            QuickCodeValue3: "",
+            Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
+            Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
+            Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
+            ModeFlag: "Insert" // All newly imported data gets Insert mode
+          };
+        });
+      }
+
+      // Include deleted data from import operations (existing data removed during import)
+      const deletedDataToInclude = deletedDataFromImport.map((deletedRow, index) => ({
+        ...deletedRow,
+        ModeFlag: "Delete" // Existing records that were removed during import
+      }));
+
+      // Combine only the data that needs to be sent to API
+      const allDataToSave = [...currentGridData, ...deletedDataToInclude];
+
+      // If no data to save, return early
+      if (allDataToSave.length === 0) {
+        // Check if user has edited data but no valid data to save
+        if (hasUserEditsRef.current) {
+          console.warn("User has made edits but no valid data to save");
+          toast({
+            title: "⚠️ Invalid Data",
+            description: "Please ensure all required fields are filled correctly.",
+            variant: "destructive",
+          });
+        } else {
+          console.warn("No data to save");
+          toast({
+            title: "⚠️ No Changes",
+            description: "No changes to save.",
+            variant: "default",
+          });
         }
-
-        // Only respect explicit ModeFlag if it's "Delete" - otherwise override with Update for existing rows
-        if (actualRow.ModeFlag === "Delete") {
-          modeFlag = "Delete"; // Respect Delete flag
-        }
-
-
-        return {
-          ...actualRow,
-          ModeFlag: modeFlag,
-        };
-      });
+        return;
+      }
 
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
@@ -2314,7 +2872,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = [];
         }
 
-        updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = updatedActualData;
+        updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = allDataToSave;
 
         // Save to API
         try {
@@ -2323,17 +2881,49 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           const resourceStatus = (response as any)?.data?.IsSuccess;
 
           if (resourceStatus) {
-            // Update the trip data in the store with the updated data
             manageTripStore.getState().setTrip(updatedTripData);
+            setDeletedDataFromImport([]);
 
-            // Update local actualEditableData state with the updated data
-            setActualEditableData(updatedActualData);
+            // Reset the user edits flag after successful save
+            hasUserEditsRef.current = false;
 
             toast({
               title: "✅ Actual Details Saved Successfully",
               description: (response as any)?.data?.ResponseData?.Message || "Your actual details have been saved.",
               variant: "default",
             });
+
+            // After successful save, immediately fetch updated trip data and refresh actuals
+            try {
+              const tripId = updatedTripData.TripId || updatedTripData.TripID;
+              if (tripId) {
+                const refreshResponse = await tripService.getTripById({ id: tripId });
+
+                if ((refreshResponse as any)?.data?.IsSuccess) {
+                  const refreshedTripData = JSON.parse((refreshResponse as any).data.ResponseData);
+
+                  // Update the trip store with fresh data
+                  manageTripStore.getState().setTrip(refreshedTripData);
+
+                  // Find the current leg and update actual data
+                  const legDetails = refreshedTripData.LegDetails;
+                  if (legDetails && Array.isArray(legDetails)) {
+                    const currentLegData = legDetails.find(leg => leg.LegSequence === legId);
+                    if (currentLegData?.Consignment?.[0]?.Actual) {
+                      // Update actualEditableData with fresh data from API
+                      setActualEditableData(currentLegData.Consignment[0].Actual);
+                      console.log("✅ Actual data refreshed successfully after save");
+                    }
+                  }
+                } else {
+                  console.warn("Failed to refresh trip data after save");
+                }
+              }
+            } catch (refreshError) {
+              console.error("Error refreshing trip data after save:", refreshError);
+              // Don't show error toast for refresh failure as save was successful
+            }
+
           } else {
             toast({
               title: "⚠️ Save Failed",
@@ -2401,7 +2991,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const wagonQty = JSON.parse(rr.ResponseData) || [];
         const options = wagonQty
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name as string); 
+          .map((qc: any) => qc.name as string);
         const uniqueOptions = [...new Set(options)] as string[];
         setWagonQtyUOMOptions(uniqueOptions);
       } catch (error) {
@@ -2516,21 +3106,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       if (cons.length > 0) {
         const list = buildCustomerOrderList(cons);
         setCustomerList(list);
-        // Built customer list for dropdown
 
-        // ✅ reset selection to 0 for new leg
         setSelectedCustomerIndex('0');
         const selected = cons[0];
         setSelectedCustomerData(selected); // Use raw consignment data
         setPlannedData(selected?.Planned ?? []);
         setActualData(selected?.Actual ?? []);
         setActualEditableData(selected?.Actual ?? []);
-        // Initial leg data loaded successfully
       } else {
         // reset everything if no consignment for new leg
         setCustomerList([]);
         setSelectedCustomerIndex('');
-        setSelectedCustomerData(null);
+        setSelectedCustomerData({});
         setPlannedData([]);
         setActualData([]);
         setActualEditableData([]);
@@ -2591,41 +3178,115 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   };
 
   return (
-    <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
-      {/* Warning Alert */}
-      {/* <Alert className="mx-6 mt-4 mb-2 border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
+    <>
+      <style>{`
+        .grid-container-fix {
+          pointer-events: auto !important;
+          z-index: 1;
+        }
+        .grid-wrapper {
+          pointer-events: auto !important;
+          overflow: visible !important;
+        }
+        .grid-content {
+          pointer-events: auto !important;
+        }
+        .grid-container-fix button {
+          pointer-events: auto !important;
+          z-index: 10;
+        }
+        .grid-container-fix .toolbar {
+          pointer-events: auto !important;
+          z-index: 20;
+        }
+        
+        /* CSS to ensure consistent column widths across headers, filters, and data cells */
+        .consignment-grid-container table {
+          table-layout: fixed !important;
+          width: 100% !important;
+        }
+        
+        .consignment-grid-container table th,
+        .consignment-grid-container table td {
+          min-width: unset !important;
+          max-width: unset !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+        
+        /* Override percentage-based widths with fixed pixel widths from column config */
+        .consignment-grid-container table th[style*="width"],
+        .consignment-grid-container table td[style*="width"] {
+          width: auto !important;
+          min-width: auto !important;
+          max-width: auto !important;
+        }
+        
+        /* Force each column to use its defined width from the column configuration */
+        .consignment-grid-container table th:nth-child(1),
+        .consignment-grid-container table td:nth-child(1) { width: 120px !important; }
+        .consignment-grid-container table th:nth-child(2),
+        .consignment-grid-container table td:nth-child(2) { width: 150px !important; }
+        .consignment-grid-container table th:nth-child(3),
+        .consignment-grid-container table td:nth-child(3) { width: 200px !important; }
+        .consignment-grid-container table th:nth-child(4),
+        .consignment-grid-container table td:nth-child(4) { width: 200px !important; }
+        .consignment-grid-container table th:nth-child(5),
+        .consignment-grid-container table td:nth-child(5) { width: 200px !important; }
+        .consignment-grid-container table th:nth-child(6),
+        .consignment-grid-container table td:nth-child(6) { width: 200px !important; }
+        .consignment-grid-container table th:nth-child(7),
+        .consignment-grid-container table td:nth-child(7) { width: 200px !important; }
+        .consignment-grid-container table th:nth-child(8),
+        .consignment-grid-container table td:nth-child(8) { width: 250px !important; }
+        .consignment-grid-container table th:nth-child(9),
+        .consignment-grid-container table td:nth-child(9) { width: 160px !important; }
+        .consignment-grid-container table th:nth-child(10),
+        .consignment-grid-container table td:nth-child(10) { width: 180px !important; }
+        
+        /* Ensure column filter inputs respect the same width */
+        .consignment-grid-container .column-filter-input {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+      `}</style>
+      <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
+        {/* Warning Alert */}
+        {/* <Alert className="mx-6 mt-4 mb-2 border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
         <AlertCircle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-sm text-orange-800 dark:text-orange-200">
           Kindly take note that the Actual {'<<'} weight/length/wagon quantity {'>>'} is higher than the allowed limit. Please check path constraints for more details.
         </AlertDescription>
       </Alert> */}
 
-      {/* Consignment Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Consignment Details</h3>
-          <div className="flex items-center gap-2">
-            {/* <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Actuals
-            </Button> */}
-            {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-              </svg>
-            </Button> */}
+        {/* Consignment Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Consignment Details</h3>
+            <div className="flex items-center gap-2">
+              {/* <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Actuals
+              </Button> */}
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                </svg>
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* CO Selection */}
-        {/* <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+          {/* CO Selection */}
+          {/* <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
           <Select defaultValue="CO000000001">
             <SelectTrigger className="w-[200px] h-9">
               <SelectValue placeholder="Select CO" />
@@ -2646,120 +3307,120 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             </Label>
           </div>
         </div> */}
-        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-          <Select value={selectedCustomerIndex} onValueChange={handleCustomerChange}>
-            <SelectTrigger className="w-[240px] h-9">
-              <SelectValue placeholder="Select Customer Order" />
-            </SelectTrigger>
-            <SelectContent>
-              {customerList.map((cust) => (
-                <SelectItem key={cust.value} value={cust.value}>
-                  {cust.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+            <Select value={selectedCustomerIndex} onValueChange={handleCustomerChange}>
+              <SelectTrigger className="w-[240px] h-9">
+                <SelectValue placeholder="Select Customer Order" />
+              </SelectTrigger>
+              <SelectContent>
+                {customerList.map((cust) => (
+                  <SelectItem key={cust.value} value={cust.value}>
+                    {cust.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="pickup-complete-consignment"
-              checked={pickupComplete}
-              onCheckedChange={(checked) => setPickupComplete(checked as boolean)}
-            />
-            <Label htmlFor="pickup-complete-consignment" className="text-sm font-normal cursor-pointer">
-              Pickup Complete for this CO
-            </Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="pickup-complete-consignment"
+                checked={pickupComplete}
+                onCheckedChange={(checked) => setPickupComplete(checked as boolean)}
+              />
+              <Label htmlFor="pickup-complete-consignment" className="text-sm font-normal cursor-pointer">
+                Pickup Complete for this CO
+              </Label>
+            </div>
           </div>
-        </div>
-        <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
-          <CollapsibleTrigger asChild>
-            <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 transition-colors rounded-t-lg">
-              {/* <span className="font-semibold text-sm">Customer Order Info</span> */}
-              <h4 className="font-semibold flex items-center gap-2">Customer Order Info</h4>
-              {expandedCOInfo ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className='px-4 pb-4'>
-              {/* 🔹 CO Info Section */}
-              {selectedCustomerData && (
-                <div className="grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <span className="font-medium text-gray-700">Departure: </span>
-                {selectedCustomerData?.CODepartureDescription || "-"}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Arrival: </span>
-                {selectedCustomerData?.COArrivalDescription || "-"}
-              </div>
-              {/* <div>
+          <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 transition-colors rounded-t-lg">
+                {/* <span className="font-semibold text-sm">Customer Order Info</span> */}
+                <h4 className="font-semibold flex items-center gap-2">Customer Order Info</h4>
+                {expandedCOInfo ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className='px-4 pb-4'>
+                {/* 🔹 CO Info Section */}
+                {selectedCustomerData && (
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Departure: </span>
+                      {selectedCustomerData?.CODepartureDescription || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Arrival: </span>
+                      {selectedCustomerData?.COArrivalDescription || "-"}
+                    </div>
+                    {/* <div>
                 <span className="font-medium text-gray-700">Customer Order No: </span>
                 {selectedCustomerData?.CustomerOrderNo || "-"}
               </div> */}
-              <div>
-                <span className="font-medium text-gray-700">Load Type: </span>
-                {selectedCustomerData?.LoadType || "-"}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Service: </span>
-                {selectedCustomerData?.ServiceDescription || "-"}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Sub Service: </span>
-                {selectedCustomerData?.SubServiceDescription || "-"}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Customer Ref No: </span>
-                {selectedCustomerData?.CustomerReferenceNo || "-"}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Source BR ID: </span>
-                {/* {selectedCustomerData?.SourceBRId || "-"} */}
-                <DynamicLazySelect
-                  fetchOptions={fetchSourceBRIDOptions}
-                  value={sourceBRId}
-                  onChange={(value) => {
-                    // Update local state for the dropdown display
-                    setSourceBRId(value as string);
-                    // Create a new object to ensure React detects the state change
-                    const newData = {
-                      ...selectedCustomerData,
-                      SourceBRId: value as string
-                    };
-                    // Update the selectedCustomerData with the new SourceBRId
-                    setSelectedCustomerData(newData);
-                  }}
-                  placeholder="Select Source BR ID"
-                />
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Return BR ID: </span>
-                {/* {selectedCustomerData?.ReturnBRId || "-"} */}
-                <DynamicLazySelect
-                  fetchOptions={fetchSourceBRIDOptions}
-                  value={returnBRId}
-                  onChange={(value) => {
-                    // Update local state for the dropdown display
-                    setReturnBRId(value as string);
-                    // Create a new object to ensure React detects the state change
-                    const newData = {
-                      ...selectedCustomerData,
-                      ReturnBRId: value as string
-                    };
-                    // Update the selectedCustomerData with the new ReturnBRId
-                    setSelectedCustomerData(newData);
-                  }}
-                  placeholder="Select Return BR ID"
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <span className="font-medium text-gray-700">
-                </span>
-                {/* <Button
+                    <div>
+                      <span className="font-medium text-gray-700">Load Type: </span>
+                      {selectedCustomerData?.LoadType || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Service: </span>
+                      {selectedCustomerData?.ServiceDescription || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Sub Service: </span>
+                      {selectedCustomerData?.SubServiceDescription || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Customer Ref No: </span>
+                      {selectedCustomerData?.CustomerReferenceNo || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Source BR ID: </span>
+                      {/* {selectedCustomerData?.SourceBRId || "-"} */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchSourceBRIDOptions}
+                        value={sourceBRId}
+                        onChange={(value) => {
+                          // Update local state for the dropdown display
+                          setSourceBRId(value as string);
+                          // Create a new object to ensure React detects the state change
+                          const newData = {
+                            ...selectedCustomerData,
+                            SourceBRId: value as string
+                          };
+                          // Update the selectedCustomerData with the new SourceBRId
+                          setSelectedCustomerData(newData);
+                        }}
+                        placeholder="Select Source BR ID"
+                      />
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Return BR ID: </span>
+                      {/* {selectedCustomerData?.ReturnBRId || "-"} */}
+                      <DynamicLazySelect
+                        fetchOptions={fetchSourceBRIDOptions}
+                        value={returnBRId}
+                        onChange={(value) => {
+                          // Update local state for the dropdown display
+                          setReturnBRId(value as string);
+                          // Create a new object to ensure React detects the state change
+                          const newData = {
+                            ...selectedCustomerData,
+                            ReturnBRId: value as string
+                          };
+                          // Update the selectedCustomerData with the new ReturnBRId
+                          setSelectedCustomerData(newData);
+                        }}
+                        placeholder="Select Return BR ID"
+                      />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <span className="font-medium text-gray-700">
+                      </span>
+                      {/* <Button
                   size="sm"
                   variant="outline"
                   className="h-8"
@@ -2775,220 +3436,231 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 >
                   Save
                 </Button> */}
-              </div>
-            </div>
-          )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-
-        {/* Planned Section */}
-        <div className="space-y-4 bg-muted/50 rounded-lg">
-          <div
-            className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
-            onClick={() => setExpandedPlanned(!expandedPlanned)}
-          >
-            <h4 className="font-semibold flex items-center gap-2">
-              Planned
-              <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                {plannedData.length}
-              </Badge>
-            </h4>
-            {expandedPlanned ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-
-          <AnimatePresence>
-            {expandedPlanned && (
-              <motion.div
-                key="planned-section"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="space-y-4 overflow-hidden"
-              >
-                {/* Summary Cards */}
-                <div className="grid grid-cols-4 gap-4">
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <Truck className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData.TotalWagons : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">Wagon Quantity</div>
-                      </div>
                     </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                        <Container className="h-5 w-5 text-purple-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">Container Quantity</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                        <Box className="h-5 w-5 text-pink-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
-                        <div className="text-xs text-muted-foreground">Product Weight</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                        <PackageCheck className="h-5 w-5 text-cyan-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">THU Quantity</div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-
-                {/* Plan List */}
-                <div className="space-y-4">
-                  {/* Table */}
-                  <div className="border rounded-lg overflow-hidden pt-2">
-                    {/* Planned Grid */}
-                    {plannedData && (
-                      <SmartGridWithGrouping
-                        columns={plannedColumns}
-                        data={plannedData}
-                        groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                        showGroupingDropdown={true}
-                        editableColumns={['plannedStartEndDateTime']}
-                        paginationMode="pagination"
-                        selectedRows={selectedRows}
-                        rowClassName={(row: any, index: number) => {
-                          return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                        }}
-                        showDefaultConfigurableButton={false}
-                        gridTitle="Planned"
-                        recordCount={plannedData.length}
-                        searchPlaceholder="Search"
-                        clientSideSearch={true}
-                        showSubHeaders={false}
-                        hideAdvancedFilter={true}
-                        gridId={gridPlanId}
-                        userId="current-user"
-                      />
-                    )}
-
-                    {/* Actual Grid */}
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-        {/* Actuals Section */}
-        <div className="space-y-4">
-          <div
-            className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50"
-            onClick={() => setExpandedActuals(!expandedActuals)}
-          >
-            <h4 className="font-semibold flex items-center gap-2">
-              Actuals
-              <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                {/* {actualData.length} */}
-                {actualEditableData.length}
-              </Badge>
-            </h4>
-            {expandedActuals ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
+          {/* Planned Section */}
+          <div className="space-y-4 bg-muted/50 rounded-lg">
+            <div
+              className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
+              onClick={() => setExpandedPlanned(!expandedPlanned)}
+            >
+              <h4 className="font-semibold flex items-center gap-2">
+                Planned
+                <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
+                  {plannedData.length}
+                </Badge>
+              </h4>
+              {expandedPlanned ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+
+            <AnimatePresence>
+              {expandedPlanned && (
+                <motion.div
+                  key="planned-section"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-4 overflow-hidden"
+                >
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-4 gap-4">
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <Truck className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData.TotalWagons : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">Wagon Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Container className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">Container Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                          <Box className="h-5 w-5 text-pink-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
+                          <div className="text-xs text-muted-foreground">Product Weight</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                          <PackageCheck className="h-5 w-5 text-cyan-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">THU Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* Plan List */}
+                  <div className="space-y-4">
+                    {/* Table */}
+                    <div className="border rounded-lg overflow-x-auto overflow-y-hidden pt-2 w-full consignment-grid-container" style={{ minWidth: '800px' }}>
+                      {/* Planned Grid */}
+                      {plannedData && (
+                        <div style={{ width: `${gridTotalWidth}px`, minWidth: `${gridTotalWidth}px` }}>
+                          <SmartGridWithGrouping
+                            columns={plannedColumns}
+                            data={plannedData}
+                            groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                            showGroupingDropdown={true}
+                            editableColumns={['plannedStartEndDateTime']}
+                            paginationMode="pagination"
+                            selectedRows={selectedRows}
+                            rowClassName={(row: any, index: number) => {
+                              return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                            }}
+                            showDefaultConfigurableButton={false}
+                            gridTitle="Planned"
+                            recordCount={plannedData.length}
+                            searchPlaceholder="Search"
+                            clientSideSearch={true}
+                            showSubHeaders={false}
+                            hideAdvancedFilter={true}
+                            gridId={gridPlanId}
+                            userId="current-user"
+                          />
+                        </div>
+                      )}
+
+                      {/* Actual Grid */}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <AnimatePresence>
-            {expandedActuals && (
-              <motion.div
-                key="actuals-section"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="space-y-4 overflow-hidden"
-              >
-                {/* Summary Cards */}
-                <div className="grid grid-cols-4 gap-4">
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <Truck className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData?.TotalWagons : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">Wagon Quantity</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                        <Container className="h-5 w-5 text-purple-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">Container Quantity</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                        <Box className="h-5 w-5 text-pink-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
-                        <div className="text-xs text-muted-foreground">Product Weight</div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                        <PackageCheck className="h-5 w-5 text-cyan-500" />
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
-                        <div className="text-xs text-muted-foreground">THU Quantity</div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
+          {/* Actuals Section */}
+          <div className="space-y-4">
+            <div
+              className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50"
+              onClick={() => setExpandedActuals(!expandedActuals)}
+            >
+              <h4 className="font-semibold flex items-center gap-2">
+                Actuals
+                <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
+                  {/* {actualData.length} */}
+                  {actualEditableData.length}
+                </Badge>
+              </h4>
+              {expandedActuals ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
 
-                {/* Actual List */}
-                <div className="space-y-4">
-                  {/* Table - Fixed width container matching planned grid with horizontal scroll */}
-                  <div className="border rounded-lg overflow-hidden pt-2">
-                    <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
-                      <div style={{ width: '1290px', minWidth: '1290px' }}>
-                        {actualEditableData && (
+            <AnimatePresence>
+              {expandedActuals && (
+                <motion.div
+                  key="actuals-section"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-4 overflow-hidden"
+                >
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-4 gap-4">
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <Truck className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalWagons ? selectedCustomerData?.TotalWagons : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">Wagon Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Container className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalContainer ? selectedCustomerData?.TotalContainer : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">Container Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                          <Box className="h-5 w-5 text-pink-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalProductWeight ? selectedCustomerData?.TotalProductWeight : '-'} Ton</div>
+                          <div className="text-xs text-muted-foreground">Product Weight</div>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                          <PackageCheck className="h-5 w-5 text-cyan-500" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{selectedCustomerData?.TotalTHU ? selectedCustomerData?.TotalTHU : '-'} Nos</div>
+                          <div className="text-xs text-muted-foreground">THU Quantity</div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* Actual List */}
+                  <div className="space-y-4">
+                    {/* Table - Fixed width container with horizontal scroll for many columns */}
+                    <div className="border rounded-lg overflow-x-auto overflow-y-hidden pt-2 w-full consignment-grid-container" style={{ minWidth: '800px' }}>
+                      {actualEditableData && (
+                        <div style={{ width: `${gridTotalWidth}px`, minWidth: `${gridTotalWidth}px` }}>
                           <ActualSmartGridPlus
+                            key={`actual-grid-${legId}-${selectedCustomerIndex}`}
                             columns={actualEditableColumns}
-                            data={actualEditableData}
+                            data={[...actualEditableData]}
                             gridTitle="Actuals"
                             inlineRowAddition={true}
                             inlineRowEditing={true}
                             onAddRow={handleAddRow}
                             onEditRow={handleEditRow}
                             onDeleteRow={handleDeleteRow}
+                            onImport={handleImportData}
+                            onExport={handleExportData}
+                            onImportData={(importedData) => {
+                              setActualEditableData(prev => {
+                                const newData = [...prev, ...importedData];
+                                return newData;
+                              });
+                              // Set flag to indicate user has made edits
+                              hasUserEditsRef.current = true;
+                            }}
                             //defaultRowValues={defaultRowValues}
                             // validationRules={validationRules}
                             addRowButtonLabel="Add Actuals"
@@ -3006,40 +3678,122 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                             searchPlaceholder="Search"
                             clientSideSearch={true}
                             showSubHeaders={false}
-                            hideAdvancedFilter={true}
+                            hideAdvancedFilter={false}
                             hideCheckboxToggle={true}
                             gridId={gridActualId}
                             userId="current-user"
                             editableColumns={['plannedStartEndDateTime']}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                </div>
-              </motion.div>
-            )}
-            <div className='flex justify-end'>
-              <Button
-                className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
-                onClick={handleSavePlanActuals}
-              >
-                Save Actual Details
-              </Button>
-            </div>
-          </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+              <div className='flex justify-end'>
+                <Button
+                  className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
+                  onClick={handleSavePlanActuals}
+                >
+                  Save Actual Details
+                </Button>
+              </div>
+
+              {/* Debug button for testing - can be removed in production */}
+              {/* {process.env.NODE_ENV === 'development' && (
+                <Button
+                  className="h-8 my-2 ml-2 bg-orange-600 rounded hover:bg-orange-700"
+                  onClick={() => {
+                    console.log("Force save - setting hasUserEdits to true");
+                    hasUserEditsRef.current = true;
+                    handleSavePlanActuals();
+                  }}
+                >
+                  Force Save (Debug)
+                </Button>
+              )} */}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-      {/* Plan and Actual Details Drawer */}
-      {showPlanActualDrawer && (
-        <PlanActualDetailsDrawer
-          legId={legId}
-          consignmentIndex={selectedCustomerIndex}
-          isOpen={showPlanActualDrawer}
-          onClose={() => setShowPlanActualDrawer(false)}
+        {/* Plan and Actual Details Drawer */}
+        {showPlanActualDrawer && (
+          <PlanActualDetailsDrawer
+            legId={legId}
+            consignmentIndex={selectedCustomerIndex}
+            isOpen={showPlanActualDrawer}
+            onClose={() => setShowPlanActualDrawer(false)}
+          />
+        )}
+
+        {/* Import Dialog */}
+        <CustomBulkUpload
+          isOpen={isImportDialogOpen}
+          onClose={() => setIsImportDialogOpen(false)}
+          acceptedFileTypes={['.csv', '.xlsx', '.xls']}
+          maxFileSizeMB={2}
+          columnsConfig={[]}
+          onUpload={async (file: File) => {
+
+            // Process Excel/CSV file and return the data
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+
+              reader.onload = (e) => {
+                try {
+                  const data = e.target?.result;
+                  let jsonData: any[] = [];
+
+                  if (file.name.endsWith('.csv')) {
+                    // Parse CSV
+                    const text = data as string;
+                    const lines = text.split('\n').filter(line => line.trim());
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const rows = lines.slice(1).map(line => {
+                      const values = line.split(',').map(v => v.trim());
+                      const row: any = {};
+                      headers.forEach((header, index) => {
+                        row[header] = values[index] || '';
+                      });
+                      return row;
+                    });
+                    jsonData = rows;
+                  } else {
+                    // Parse Excel using XLSX
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    jsonData = XLSX.utils.sheet_to_json(worksheet);
+                  }
+
+                  resolve(jsonData);
+                } catch (error) {
+                  console.error('Error processing file:', error);
+                  reject(error);
+                }
+              };
+
+              reader.onerror = () => {
+                reject(new Error('Failed to read file'));
+              };
+
+              if (file.name.endsWith('.csv')) {
+                reader.readAsText(file);
+              } else {
+                reader.readAsBinaryString(file);
+              }
+            });
+          }}
+          onValidate={(data: any[], columnsConfig: any[]) => ({
+            isValid: true,
+            errors: [],
+            validRows: data,
+            invalidRows: []
+          })}
+          onImportComplete={handleImportComplete}
+          allowMultipleFiles={false}
         />
-      )}
-    </TabsContent>
+      </TabsContent>
+    </>
   );
 };
