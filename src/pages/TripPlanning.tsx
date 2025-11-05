@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { OthersSelectionDrawer } from '@/components/OthersSelectionDrawer';
 import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, 
   Building2, Users, Truck, Calendar as CalendarIcon2, Box, 
   UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, 
@@ -150,6 +151,7 @@ const TripPlanning = () => {
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [selectedSchedule, setSelectedSchedule] = useState('');
   const isWagonContainer = tripType === 'Wagon/Container Movement';
+  const [othersDrawerOpen, setOthersDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   // Extract and set tripNo from URL parameters
@@ -309,8 +311,13 @@ const TripPlanning = () => {
     navigate('/trip-hub?createTripPlan=true');
   };
 
-  // Handle equipment selection
+  // Handle Others selection
 
+  const handleOthersClick = () => {
+    console.log("Opening OtherDetails Drawer");
+
+    setOthersDrawerOpen(true);
+  };
   // Handle resource drawer open/close
   const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
     console.log(`Opening ${resourceType.toLowerCase()} drawer`);
@@ -371,7 +378,7 @@ const TripPlanning = () => {
       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
       console.log('Response:', JSON.parse(response?.data?.ResponseData));
       const resourceDetails = parsedResponse.ResourceDetails;
-      console.log("data ====", resourceDetails);
+      console.log("resourceDetails data ====", resourceDetails);
       
       // Set data based on resource type
       switch (resourceType) {
@@ -1975,7 +1982,7 @@ const TripPlanning = () => {
                                     variant="ghost" 
                                     size="icon"
                                     onClick={() => {
-                                      // handleOpenResourceDrawer('Others');
+                                      handleOthersClick()
                                     }}
                                   >
                                     <Pencil className="h-4 w-4" />
@@ -2200,7 +2207,7 @@ const TripPlanning = () => {
                                           variant="ghost" 
                                           size="icon"
                                           onClick={() => {
-                                            // handleOpenResourceDrawer('Others');
+                                            handleOthersClick();
                                           }}
                                         >
                                           <Pencil className="h-4 w-4" />
@@ -2333,7 +2340,19 @@ const TripPlanning = () => {
         resourceData={resourceData}
         isLoading={isLoadingResource}
       />
-
+     { /* Others Selection Drawer */}
+     <OthersSelectionDrawer
+        tripNo={tripNo}
+        tripStatus={tripStatus}
+        isOpen={othersDrawerOpen}
+        resourceType='Others'
+        onClose={() => setOthersDrawerOpen(false)}
+        onSubmit={(data) => {
+          // handle/save data from drawer here
+          setOthersDrawerOpen(false);
+          console.log("Drawer form data:", data);
+        }}
+      />
       {/* Loading Overlay */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">

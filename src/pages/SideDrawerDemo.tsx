@@ -43,7 +43,7 @@ const SideDrawerDemo = () => {
 
   const handleSave = () => {
     console.log('Saving form data:', formData);
-    alert('Form data saved!');
+    // alert('Form data saved!');
     handleCloseDrawer();
   };
 

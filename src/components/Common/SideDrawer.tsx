@@ -12,6 +12,8 @@ interface SideDrawerProps {
     onScrollPanel?: boolean;
     badgeContent?: string;
     isBadgeRequired?: boolean;
+    statusBadgeContent?: string;
+    isStatusBadgeRquired?: boolean;
     children: React.ReactNode;
     contentBgColor?: string;
 }
@@ -25,8 +27,10 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
     onScrollPanel,
     badgeContent,
     isBadgeRequired,
+    statusBadgeContent,
+    isStatusBadgeRquired,
     children,
-    contentBgColor
+    contentBgColor,
 }) => {
     return (
         <AnimatePresence>
@@ -65,9 +69,27 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                                 <h2 className={`text-lg font-semibold text-gray-800 ${isBack ? 'ml-4' : ''}`}>
                                     {title}
                                 </h2>
-                                {isBadgeRequired && (
+                                {(isBadgeRequired && badgeContent != null) && (
                                     <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-xs font-medium ml-4">
                                         {badgeContent}
+                                    </span>
+                                )}
+                                {/* {(isStatusBadgeRquired && statusBadgeContent != null) && (
+                                    <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full border border-orange-200 text-xs font-medium ml-4">
+                                        {statusBadgeContent}
+                                    </span>
+                                )} */}
+                                {(isStatusBadgeRquired && statusBadgeContent) && (
+                                    <span
+                                        className={`px-3 py-1 rounded-full border text-xs font-medium ml-4 ${{
+                                                Draft: 'bg-gray-100 text-gray-800 border-gray-200',
+                                                DR: 'bg-gray-100 text-gray-800 border-gray-200',
+                                                Initiated: 'bg-blue-100 text-blue-800 border-blue-200',
+                                                Confirmed: 'bg-green-100 text-green-800 border-green-200',
+                                            }[statusBadgeContent] || 'bg-orange-50 text-orange-600 border-orange-200' // default fallback
+                                            }`}
+                                    >
+                                        {statusBadgeContent}
                                     </span>
                                 )}
                             </div>
@@ -80,7 +102,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                             </button>
                         </div>
                         {/* Content */}
-                        <div 
+                        <div
                             className={`h-full ${onScrollPanel ? 'content-scroll' : ''}`}
                             style={{ backgroundColor: contentBgColor }}>
                             {children}
