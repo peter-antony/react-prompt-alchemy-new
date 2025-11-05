@@ -27,6 +27,7 @@ interface CustomerOrder {
   id: string;
   CustomerID: string;
   CustomerName: string;
+  CustomerOrderNo: string;
   ExecutionPlanID: string;
   LegBehaviour: string;
   DeparturePoint: string;
@@ -49,6 +50,15 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
   {
     key: 'CustomerID',
     label: 'Customer ID',
+    type: 'Text',
+    width: 150,
+    sortable: true,
+    filterable: true,
+    editable: false,
+  },
+  {
+    key: 'CustomerOrderNo',
+    label: 'Customer Order No',
     type: 'Text',
     width: 150,
     sortable: true,
@@ -201,6 +211,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
         id: co.CustomerOrderNo,
         CustomerID: co.CustomerID,
         CustomerName: co.CustomerName,
+        CustomerOrderNo: co.CustomerOrderNo,
         ExecutionPlanID: co.ExecutionPlanID,
         LegBehaviour: co.LegBehaviour,
         DeparturePoint: co.DeparturePoint,
