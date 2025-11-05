@@ -48,13 +48,13 @@ export const TripDetailsForm = () => {
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#0068CF" strokeWidth={1.2} />
-              <span className='truncate' title={Header?.ArrivalPointDescription + '-' + Header?.ArrivalPoint}>{Header?.ArrivalPoint}, {Header?.ArrivalPointDescription}</span>
+              <span className="truncate" title={Header?.DeparturePointDescription + '-' + Header?.DeparturePoint}>{Header?.DeparturePoint}, {Header?.DeparturePointDescription}</span>
             </span>
           </div>
           <div>
             <span className="flex items-center gap-2">
               <MapPin size={18} color="#D92D20" strokeWidth={1.2} />
-              <span className="truncate" title={Header?.DeparturePointDescription + '-' + Header?.DeparturePoint}>{Header?.DeparturePoint}, {Header?.DeparturePointDescription}</span>
+              <span className='truncate' title={Header?.ArrivalPointDescription + '-' + Header?.ArrivalPoint}>{Header?.ArrivalPoint}, {Header?.ArrivalPointDescription}</span>
             </span>
           </div>
         </div>
