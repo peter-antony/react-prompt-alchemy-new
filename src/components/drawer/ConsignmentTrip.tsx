@@ -27,8 +27,6 @@ import { PlanActualDetailsDrawer } from './PlanActualsConsignments';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { manageTripStore } from '@/stores/mangeTripStore';
-import CustomBulkUpload from '@/components/DynamicFileUpload/CustomBulkUpload';
-import * as XLSX from 'xlsx';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -55,7 +53,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [pickupComplete, setPickupComplete] = useState(false);
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
-  const [selectedCustomerData, setSelectedCustomerData] = useState<any>({});
+  const [selectedCustomerData, setSelectedCustomerData] = useState<any>(null);
   const [sourceBRId, setSourceBRId] = useState<string>("");
   const [returnBRId, setReturnBRId] = useState<string>("");
   const [plannedData, setPlannedData] = useState<any[]>([]);
@@ -71,8 +69,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [thuQtyUOMOptions, setThuQtyUOMOptions] = useState<string[]>([]);
   const [containerQtyUOMOptions, setContainerQtyUOMOptions] = useState<string[]>([]);
   const [wagonlengthUOMOptions, setWagonLengthUOMOptions] = useState<string[]>([]);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [deletedDataFromImport, setDeletedDataFromImport] = useState<any[]>([]);
   // Initialize dropdown state variables when selectedCustomerData changes
   useEffect(() => {
     if (selectedCustomerData) {
@@ -923,57 +919,14 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       width: 120
     },
     {
-      key: 'WagonType',
-      label: 'Wagon Type',
-      type: 'LazySelect',
+      key: 'WagonPosition',
+      label: 'Wagon Position',
+      type: 'Integer',
       sortable: true,
-      editable: true,
+      editable: false,
       mandatory: true,
       subRow: false,
-      width: 200,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "Wagon type Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-        });
-        const rr: any = response.data;
-        const wagonTypeList = JSON.parse(rr.ResponseData) || [];
-        return wagonTypeList
-          .filter((item: any) => item.id && item.name)
-          .map((item: any) => ({
-            label: String(item.name),
-            value: String(item.name),
-          }));
-      },
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
-        try {
-
-          const rowIndex = actualRowIndex ?? 0; // Default to 0 if undefined
-
-          setActualEditableData(prevData => {
-            const newData = [...prevData];
-
-            if (newData[rowIndex]) {
-              const updatedRow = {
-                ...newData[rowIndex],
-                WagonType: value,
-              };
-
-              newData[rowIndex] = updatedRow;
-
-            } else {
-              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
-            }
-
-            hasUserEditsRef.current = true;
-            return newData;
-          });
-        } catch (error) {
-          console.error('Error updating wagon type:', error);
-        }
-      },
+      width: 120
     },
     {
       key: 'Wagon',
@@ -1733,73 +1686,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       },
     },
     {
-      key: 'ContainsHazardousGoods',
-      label: 'Contains Hazardous Goods',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 220,
-      options: ['Yes', 'No'],
-    },
-    {
-      key: 'WagonTareWeightUOM',
-      label: 'Wagon Tare weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200,
-      options: weightList
-    },
-    {
-      key: 'WagonTareWeight',
-      label: 'Wagon Tare weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 180
-    },
-    {
-      key: 'GrossWeightUOM',
-      label: 'Wagon Gross Weight UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      options: weightList,
-      width: 200
-    },
-    {
-      key: 'GrossWeight',
-      label: 'Wagon Gross Weight',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
-      key: 'WagonLengthUOM',
-      label: 'Wagon length UOM',
-      type: 'Select',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      options: wagonlengthUOMOptions,
-      width: 200
-    },
-    {
-      key: 'WagonLength',
-      label: 'Wagon Length',
-      type: 'Integer',
-      sortable: true,
-      editable: true,
-      subRow: false,
-      width: 200
-    },
-    {
       key: 'ShuntingOption',
       label: 'Shunting Option',
       type: 'LazySelect',
@@ -2295,74 +2181,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
     }
   };
 
-// Handle import dialog open/close
-  const handleImportData = () => {
-    console.log('Opening import dialog from ConsignmentTrip');
-    console.log('Current import dialog state:', isImportDialogOpen);
-    setIsImportDialogOpen(true);
-  };
-
-  const handleImportComplete = (summary: any) => {
-    console.log('Import completed:', summary);
-    console.log('Summary details:', {
-      totalRows: summary.totalRows,
-      successCount: summary.successCount,
-      errorCount: summary.errorCount,
-      validRows: summary.validRows?.length || 0,
-      sampleData: summary.validRows?.slice(0, 2) // Show first 2 rows for debugging
-    });
-
-    if (summary.validRows && summary.validRows.length > 0) {
-      // Store existing data as deleted (to be sent with Delete mode flag)
-      const existingDataWithDeleteFlag = actualEditableData.map(row => ({
-        ...row,
-        ModeFlag: 'Delete'
-      }));
-
-      // Set the deleted data for later use in save
-      setDeletedDataFromImport(existingDataWithDeleteFlag);
-
-      // Process imported data with Insert mode flag
-      const importedDataWithInsertFlag = summary.validRows.map((row: any) => ({
-        ...row,
-        ModeFlag: 'Insert',
-        isNewRow: true, // Mark as new row for save function
-        Seqno: '', // Clear sequence number for new rows
-        ActualLineUniqueID: -1 // Mark as new
-      }));
-
-      // Replace existing data with imported data (not append)
-      setActualEditableData(importedDataWithInsertFlag);
-
-      console.log('Existing data marked for deletion:', existingDataWithDeleteFlag);
-      console.log('New imported data set with Insert flag:', importedDataWithInsertFlag);
-
-      hasUserEditsRef.current = true;
-
-      // Show success toast with actual count
-      toast({
-        title: "Import Successful",
-        description: `Successfully imported ${summary.validRows.length} records. Previous ${existingDataWithDeleteFlag.length} records will be deleted.`,
-      });
-    } else {
-      // Show warning if no valid rows
-      toast({
-        title: "Import Warning",
-        description: "No valid rows found in the imported file.",
-        variant: "destructive",
-      });
-    }
-    setIsImportDialogOpen(false);
-  };
-
-  // Handle export functionality
-  const handleExportData = (format: 'csv' | 'xlsx') => {
-    console.log('Export data clicked:', format);
-    console.log('Data to export:', actualEditableData);
-    // You can implement actual export logic here
-    // For now, just log the data
-  };
-  
   // Handle Save Plan Actuals - Process array of actual data from grid
   const handleSavePlanActuals = async () => {
     try {
@@ -2431,118 +2249,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return newObj;
       };
 
-      // Process data for save with proper mode flags based on requirements:
-      // 1. Only send newly imported data with Insert mode flag
-      // 2. Only send existing data that was removed during import with Delete mode flag  
-      // 3. Don't send data that was deleted after import (removed from grid manually)
+      // Process each row in actualEditableData and update with proper ModeFlag
+      const updatedActualData = actualEditableData.map((actualRow, index) => {
+        // Determine ModeFlag based on whether the row already exists or is newly added
+        let modeFlag = "Update"; // Default for existing rows
 
-      const currentGridData = actualEditableData.filter(row => {
-        // Only include rows that are newly imported (have Insert mode flag or isNewRow marker)
-        return row.ModeFlag === 'Insert' || row.isNewRow === true;
-      }).map((actualRow, index) => {
-        // Map the data to match the expected API format, removing extra parameters
+        // Check if this is a new row added by user (usually indicated by specific properties)
+        // New rows typically have no Seqno or have temporary/negative IDs
+        const isNewRow = !actualRow.Seqno || actualRow.Seqno === "" || actualRow.Seqno === -1 ||
+          actualRow.ActualLineUniqueID === -1 ||
+          (actualRow.hasOwnProperty('isNewRow') && actualRow.isNewRow === true);
+
+        if (isNewRow) {
+          modeFlag = "Insert"; // New row added to grid
+        }
+
+        // Only respect explicit ModeFlag if it's "Delete" - otherwise override with Update for existing rows
+        if (actualRow.ModeFlag === "Delete") {
+          modeFlag = "Delete"; // Respect Delete flag
+        }
+
+
         return {
-          Seqno: (index + 1).toString(), // Sequential number starting from 1
-          PlanToActualCopy: "",
-          WagonPosition: actualRow['Wagon Position'] || actualRow.WagonPosition || "",
-          WagonType: actualRow['Wagon Type'] || actualRow.WagonType || "",
-          Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || "",
-          WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || "",
-          WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || 1,
-          WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || "TON",
-          ContainerType: actualRow['Container Type'] || actualRow.ContainerType || "",
-          ContainerId: actualRow['Container ID'] || actualRow.ContainerId || "",
-          ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || "",
-          ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || "",
-          ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || "TON",
-          Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || "",
-          ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || "",
-          ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || "",
-          ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || "TON",
-          Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || "",
-          ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || "",
-          ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || "",
-          ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || "",
-          ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || "",
-          ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || "TON",
-          ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || "",
-          ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || "",
-          ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || "",
-          Remarks: actualRow['Remarks'] || actualRow.Remarks || "",
-          ShuntInLocation: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || "",
-          ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || "",
-          ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || "",
-          ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || "",
-          ShuntInDate: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[0] : "",
-          ShuntInTime: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[1] : "",
-          ShuntOutDate: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[0] : "",
-          ShuntOutTime: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[1] : "",
-          ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || "",
-          NHM: actualRow['NHM'] || actualRow.NHM || "",
-          NHMDescription: actualRow['NHM'] || actualRow.NHM || "",
-          UNCode: actualRow['UN Code'] || actualRow.UNCode || "",
-          UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || "",
-          DGClass: actualRow['DG Class'] || actualRow.DGClass || "",
-          DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || "",
-          ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || "No",
-          WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || "",
-          ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || "",
-          ContainerTareWeight: "",
-          ContainerTareWeightUOM: "",
-          LastCommodityTransported1: "",
-          LastCommodityTransportedDate1: "",
-          LastCommodityTransported2: "",
-          LastCommodityTransportedDate2: "",
-          LastCommodityTransported3: "",
-          LastCommodityTransportedDate3: "",
-          WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || "",
-          WagonTareWeightUOM: "TON",
-          WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || "",
-          WagonLengthUOM: "M",
-          GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || 0,
-          GrossWeightUOM: "TON",
-          QuickCode1: "",
-          QuickCode2: "",
-          QuickCode3: "",
-          QuickCodeValue1: "",
-          QuickCodeValue2: "",
-          QuickCodeValue3: "",
-          Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || "",
-          Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || "",
-          Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || "",
-          ModeFlag: "Insert" // All newly imported data gets Insert mode
+          ...actualRow,
+          ModeFlag: modeFlag,
         };
       });
-
-      // Include deleted data from import operations (existing data removed during import)
-      const deletedDataToInclude = deletedDataFromImport.map((deletedRow, index) => ({
-        ...deletedRow,
-        ModeFlag: "Delete" // Existing records that were removed during import
-      }));
-
-      // Combine only the data that needs to be sent to API
-      const allDataToSave = [...currentGridData, ...deletedDataToInclude];
-
-      console.log('Save data breakdown:', {
-        currentGridDataCount: currentGridData.length,
-        deletedDataFromImportCount: deletedDataToInclude.length,
-        totalToSaveCount: allDataToSave.length,
-        insertModeCount: allDataToSave.filter(d => d.ModeFlag === 'Insert').length,
-        deleteModeCount: allDataToSave.filter(d => d.ModeFlag === 'Delete').length,
-        sampleInsertData: currentGridData.slice(0, 2), // Show first 2 insert records
-        sampleDeleteData: deletedDataToInclude.slice(0, 2) // Show first 2 delete records
-      });
-
-      // If no data to save, return early
-      if (allDataToSave.length === 0) {
-        console.warn("No data to save");
-        toast({
-          title: "⚠️ No Changes",
-          description: "No changes to save.",
-          variant: "default",
-        });
-        return;
-      }
 
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
@@ -2669,7 +2401,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const wagonQty = JSON.parse(rr.ResponseData) || [];
         const options = wagonQty
           .filter((qc: any) => qc.id)
-          .map((qc: any) => qc.name as string);
+          .map((qc: any) => qc.name as string); 
         const uniqueOptions = [...new Set(options)] as string[];
         setWagonQtyUOMOptions(uniqueOptions);
       } catch (error) {
@@ -2798,7 +2530,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         // reset everything if no consignment for new leg
         setCustomerList([]);
         setSelectedCustomerIndex('');
-        setSelectedCustomerData({});
+        setSelectedCustomerData(null);
         setPlannedData([]);
         setActualData([]);
         setActualEditableData([]);
@@ -2859,28 +2591,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   };
 
   return (
-    <>
-      <style>{`
-        .grid-container-fix {
-          pointer-events: auto !important;
-          z-index: 1;
-        }
-        .grid-wrapper {
-          pointer-events: auto !important;
-          overflow: visible !important;
-        }
-        .grid-content {
-          pointer-events: auto !important;
-        }
-        .grid-container-fix button {
-          pointer-events: auto !important;
-          z-index: 10;
-        }
-        .grid-container-fix .toolbar {
-          pointer-events: auto !important;
-          z-index: 20;
-        }
-      `}</style>
     <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
       {/* Warning Alert */}
       {/* <Alert className="mx-6 mt-4 mb-2 border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
@@ -2900,7 +2610,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               <Plus className="h-4 w-4 mr-1" />
               Add Actuals
             </Button> */}
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+            {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
               <ChevronDown className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -2910,7 +2620,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
               </svg>
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -3266,53 +2976,46 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 {/* Actual List */}
                 <div className="space-y-4">
                   {/* Table - Fixed width container matching planned grid with horizontal scroll */}
-                  <div className="border rounded-lg overflow-x-auto pt-2">
-                     {actualEditableData && (
-                        <ActualSmartGridPlus
-                          key={`actual-grid-${legId}-${selectedCustomerIndex}`}
-                          columns={actualEditableColumns}
-                          data={[...actualEditableData]}
-                          gridTitle="Actuals"
-                          inlineRowAddition={true}
-                          inlineRowEditing={true}
-                          onAddRow={handleAddRow}
-                          onEditRow={handleEditRow}
-                          onDeleteRow={handleDeleteRow}
-                          onImport={handleImportData}
-                          onExport={handleExportData}
-                          onImportData={(importedData) => {
-                            setActualEditableData(prev => {
-                              const newData = [...prev, ...importedData];
-                              return newData;
-                            });
-                            // Set flag to indicate user has made edits
-                            hasUserEditsRef.current = true;
-                          }}
-                          //defaultRowValues={defaultRowValues}
-                          // validationRules={validationRules}
-                          addRowButtonLabel="Add Actuals"
-                          addRowButtonPosition="top-left"
-                          groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                          showGroupingDropdown={true}
-                          paginationMode="pagination"
-                          selectedRows={selectedRows}
-                          rowClassName={(row: any, index: number) => {
-                            return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                          }}
-                          showDefaultConfigurableButton={false}
-                          recordCount={actualEditableData.length}
-                          showCreateButton={false}
-                          searchPlaceholder="Search"
-                          clientSideSearch={true}
-                          showSubHeaders={false}
-                          hideAdvancedFilter={false}
-                          hideCheckboxToggle={true}
-                          gridId={gridActualId}
-                          userId="current-user"
-                          editableColumns={['plannedStartEndDateTime']}
-                        />
-                      )}
+                  <div className="border rounded-lg overflow-hidden pt-2">
+                    <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
+                      <div style={{ width: '1290px', minWidth: '1290px' }}>
+                        {actualEditableData && (
+                          <ActualSmartGridPlus
+                            columns={actualEditableColumns}
+                            data={actualEditableData}
+                            gridTitle="Actuals"
+                            inlineRowAddition={true}
+                            inlineRowEditing={true}
+                            onAddRow={handleAddRow}
+                            onEditRow={handleEditRow}
+                            onDeleteRow={handleDeleteRow}
+                            //defaultRowValues={defaultRowValues}
+                            // validationRules={validationRules}
+                            addRowButtonLabel="Add Actuals"
+                            addRowButtonPosition="top-left"
+                            groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                            showGroupingDropdown={true}
+                            paginationMode="pagination"
+                            selectedRows={selectedRows}
+                            rowClassName={(row: any, index: number) => {
+                              return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                            }}
+                            showDefaultConfigurableButton={false}
+                            recordCount={actualEditableData.length}
+                            showCreateButton={false}
+                            searchPlaceholder="Search"
+                            clientSideSearch={true}
+                            showSubHeaders={false}
+                            hideAdvancedFilter={true}
+                            hideCheckboxToggle={true}
+                            gridId={gridActualId}
+                            userId="current-user"
+                            editableColumns={['plannedStartEndDateTime']}
+                          />
+                        )}
+                      </div>
                     </div>
+                  </div>
 
                 </div>
               </motion.div>
@@ -3337,77 +3040,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           onClose={() => setShowPlanActualDrawer(false)}
         />
       )}
-      
-        {/* Import Dialog */}
-        <CustomBulkUpload
-          isOpen={isImportDialogOpen}
-          onClose={() => setIsImportDialogOpen(false)}
-          acceptedFileTypes={['.csv', '.xlsx', '.xls']}
-          maxFileSizeMB={2}
-          columnsConfig={[]}
-          onUpload={async (file: File) => {
-            console.log('Processing uploaded file:', file.name);
-
-            // Process Excel/CSV file and return the data
-            return new Promise((resolve, reject) => {
-              const reader = new FileReader();
-
-              reader.onload = (e) => {
-                try {
-                  const data = e.target?.result;
-                  let jsonData: any[] = [];
-
-                  if (file.name.endsWith('.csv')) {
-                    // Parse CSV
-                    const text = data as string;
-                    const lines = text.split('\n').filter(line => line.trim());
-                    const headers = lines[0].split(',').map(h => h.trim());
-                    const rows = lines.slice(1).map(line => {
-                      const values = line.split(',').map(v => v.trim());
-                      const row: any = {};
-                      headers.forEach((header, index) => {
-                        row[header] = values[index] || '';
-                      });
-                      return row;
-                    });
-                    jsonData = rows;
-                  } else {
-                    // Parse Excel using XLSX
-                    const workbook = XLSX.read(data, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    jsonData = XLSX.utils.sheet_to_json(worksheet);
-                  }
-
-                  console.log('Processed Excel data:', jsonData);
-                  resolve(jsonData);
-                } catch (error) {
-                  console.error('Error processing file:', error);
-                  reject(error);
-                }
-              };
-
-              reader.onerror = () => {
-                reject(new Error('Failed to read file'));
-              };
-
-              if (file.name.endsWith('.csv')) {
-                reader.readAsText(file);
-              } else {
-                reader.readAsBinaryString(file);
-              }
-            });
-          }}
-          onValidate={(data: any[], columnsConfig: any[]) => ({
-            isValid: true,
-            errors: [],
-            validRows: data,
-            invalidRows: []
-          })}
-          onImportComplete={handleImportComplete}
-          allowMultipleFiles={false}
-        />
-      </TabsContent>
-    </>
+    </TabsContent>
   );
 };
