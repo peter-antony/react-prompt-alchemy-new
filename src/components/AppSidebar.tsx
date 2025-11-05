@@ -95,7 +95,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
 
   const menuItems = [
     { icon: Home, label: 'Home', path: '', tooltip: 'Home' },
-    { icon: COHubIcon, label: 'CO Hub', path: '/saasy-app/RailBr', externalURL: true, tooltip: 'Customer Ordrer Management' },  //  CO Management - sassy
+    { icon: COHubIcon, label: 'CO Hub', path: '/saasy-app/RailBr', externalURL: true, tooltip: 'Customer Order Management' },  //  CO Management - sassy
     { icon: COIcon, label: 'Create Order', path: '/saasy-app/RailBrHUB', externalURL: true, tooltip: 'Create Order' }, // Create Order - sassy
     { icon: MenuIcon3, label: 'Route Management', path: '/trip-hub', tooltip: 'Manage Trip Plan' }, // Trip Planning
     { icon: MenuIcon2, label: 'Inventory', path: '/json-creater', tooltip: 'Quick Order Management' }, // Quick Order
