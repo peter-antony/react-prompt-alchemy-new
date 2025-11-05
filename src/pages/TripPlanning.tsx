@@ -11,13 +11,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { OthersSelectionDrawer } from '@/components/OthersSelectionDrawer';
-import { Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin, 
-  Building2, Users, Truck, Calendar as CalendarIcon2, Box, 
-  UserCog, Car, UserCircle, Plus, NotebookPen, Pencil, 
-  HelpCircle, InfoIcon, EllipsisVertical, 
-  CreditCard, Zap, FileUp, Route, TramFront, 
+import {
+  Search, Package, Settings, ExternalLink, Home, ChevronRight, CalendarIcon, MapPin,
+  Building2, Users, Truck, Calendar as CalendarIcon2, Box,
+  UserCog, Car, UserCircle, Plus, NotebookPen, Pencil,
+  HelpCircle, InfoIcon, EllipsisVertical,
+  CreditCard, Zap, FileUp, Route, TramFront,
   ChevronLeft,
-  ChevronDown} from 'lucide-react';
+  ChevronDown
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SmartGrid } from '@/components/SmartGrid';
@@ -42,11 +44,12 @@ import { useDrawerStore } from '@/stores/drawerStore';
 import { VASTripDrawerScreen } from '@/components/drawer/VASTripDrawerScreen';
 import { BadgesList } from '@/components/ui/badges-list';
 import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
@@ -77,7 +80,7 @@ const TripPlanning = () => {
     fetchDepartures,
     fetchArrivals } = useTripLevelRouteStore();
   const { isOpen, drawerType, closeDrawer, openDrawer } = useDrawerStore();
-
+  const { tripData, setTrip } = manageTripStore();
   const [tripNo, setTripNo] = useState('');
   const [tripStatus, setTripStatus] = useState('');
   const [createTripBtn, setCreateTripBtn] = useState(true);
@@ -85,15 +88,17 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal');
-  
+
   // Set default location based on OUID
   useEffect(() => {
+    console.log("TRIP STORE  :", tripData)
+    console.log("Inside TripPlanning- selected trip : ", selectedTrip)
     const getUserContext = () => {
       try {
         const selectedContext = localStorage.getItem('selectedUserContext');
-        
+
         if (selectedContext) {
-          const parsedContext = JSON.parse(selectedContext);      
+          const parsedContext = JSON.parse(selectedContext);
           return {
             ouId: parsedContext.ouId || 4,
             roleName: parsedContext.roleName || "RAMCOROLE"
@@ -102,17 +107,17 @@ const TripPlanning = () => {
       } catch (error) {
         console.error('Error retrieving user context from localStorage:', error);
       }
-      
+
       // Default values if nothing is stored
       return {
-        ouId: 4, 
+        ouId: 4,
         roleName: "RAMCOROLE"
       };
     };
-    
+
     const userContext = getUserContext();
     const ouId = userContext.ouId;
-    
+
     // Set default location based on OUID
     if (ouId === 4) {
       setLocation('FWDS_GMBH || Forwardis GMBH');
@@ -152,11 +157,16 @@ const TripPlanning = () => {
   const [selectedSchedule, setSelectedSchedule] = useState('');
   const isWagonContainer = tripType === 'Wagon/Container Movement';
   const [othersDrawerOpen, setOthersDrawerOpen] = useState(false);
+  const [otherInfo, setOtherInfo] = useState(false);
+  const [oldTripData, setOldTripData] = useState('');
+
   const { toast } = useToast();
 
   // Extract and set tripNo from URL parameters
   useEffect(() => {
+    console.log("TripPlan useeffect")
     if (urlTripID) {
+      getTripDataByID(urlTripID)
       setTripNo(urlTripID);
       setAddResourcesFlag(true);
       // setConsolidatedTrip(true);
@@ -166,7 +176,50 @@ const TripPlanning = () => {
       console.log("🔗 URL Manage flag extracted:", manageFlag);
     }
   }, [urlTripID, manageFlag]);
+  const getTripDataByID = async (tripID: string) => {
+    console.log("Inside getTripDataByID")
+    const response: any = await tripPlanningService.getTripDataByID(tripID);
+    console.log("response ===", JSON.parse(response?.data?.ResponseData || "{}"));
+    const data = JSON.parse(response?.data?.ResponseData || "{}");
+    const tripNoFromAPI = data?.Header?.TripNo;
+    setOldTripData(data)
+    console.log("data ===", data);
+    let otherInfoData: any = {};
 
+    if (data.Header?.SupplierRefNo != undefined && data.Header?.SupplierRefNo != null) {
+      otherInfoData.SupplierRefNo = data.Header?.SupplierRefNo;
+    }
+    if (data.Header?.LoadType != undefined && data.Header?.LoadType != null) {
+      otherInfoData.LoadType = data.Header?.LoadType;
+    }
+    if (data.Header?.IsRoundTrip == "1") {
+      otherInfoData.IsRoundTrip = data.Header?.IsRoundTrip;
+    }
+    if (data.Header?.IsOneWay == "1") {
+      otherInfoData.IsOneWay = data.Header?.IsOneWay;
+    }
+    if (data.Header?.PlanStartDate != undefined && data.Header?.PlanStartDate != null) {
+      otherInfoData.PlanStartDate = data.Header?.PlanStartDate;
+    }
+    if (data.Header?.PlanStartTime != undefined && data.Header?.PlanStartTime != null) {
+      otherInfoData.PlanStartTime = data.Header?.PlanStartTime;
+    }
+    if (data.Header?.PlanEndDate != undefined && data.Header?.PlanEndDate != null) {
+      otherInfoData.PlanEndDate = data.Header?.PlanEndDate;
+    }
+    if (data.Header?.PlanEndTime != undefined && data.Header?.PlanEndTime != null) {
+      otherInfoData.PlanEndTime = data.Header?.PlanEndTime;
+    }
+    if (data.Header?.Remarks != undefined && data.Header?.Remarks != null) {
+      otherInfoData.Remarks = data.Header?.Remarks;
+    }
+    setOtherInfo(otherInfoData);
+    console.log("otherInfoData == ", otherInfoData)
+
+
+    return { tripFromAPI: data };
+    // return tripNoFromAPI;
+  }
   useEffect(() => {
     // Do whatever you need with the UPDATED value here!
     console.log("Resource details data updated:", tripResourceDetailsData);
@@ -192,24 +245,24 @@ const TripPlanning = () => {
         console.log('🔄 Fetching trip data for TripID:', urlTripID);
         try {
           const response: any = await tripService.getTripById({ id: urlTripID });
-          
+
           // Parse the ResponseData
-          const parsedResponse = response?.data?.ResponseData 
+          const parsedResponse = response?.data?.ResponseData
             ? JSON.parse(response.data.ResponseData)
             : response?.data || {};
-          
+
           console.log('📋 Parsed trip response:', parsedResponse);
-          
+
           // Extract CustomerOrders from the trip response
           const customerOrders = parsedResponse.CustomerOrders || [];
 
           const resourceDetails = parsedResponse.ResourceDetails || [];
-          
+
           if (customerOrders && customerOrders.length > 0) {
             console.log('✅ CustomerOrders found:', customerOrders.length);
             // Store CustomerOrders data for TripCOHub
             setTripCustomerOrdersData(customerOrders);
-            
+
             // Also update trip status if available
             if (parsedResponse.Header?.TripStatus) {
               setTripStatus(parsedResponse.Header.TripStatus);
@@ -227,7 +280,7 @@ const TripPlanning = () => {
             setTripResourceDetailsData(() => resourceDetails);
             setEquipmentData(resourceDetails.Equipments)
             setEquipmentCount(resourceDetails.Equipments?.length)
-            setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
+            setSupplier(resourceDetails.Supplier[0]?.VendorID + " || " + resourceDetails.Supplier[0]?.VendorName);
             // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
             // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
             console.log("tripResourceDetailsData ====", tripResourceDetailsData);
@@ -260,11 +313,13 @@ const TripPlanning = () => {
     { key: 'destination', label: 'Destination', type: 'Text', width: 180, editable: false },
     { key: 'weight', label: 'Weight (kg)', type: 'Text', width: 120, editable: false },
     { key: 'volume', label: 'Volume (m³)', type: 'Text', width: 120, editable: false },
-    { key: 'status', label: 'Status', type: 'Badge', width: 120, editable: false, statusMap: {
-      'Confirmed': 'bg-green-100 text-green-800',
-      'Pending': 'bg-yellow-100 text-yellow-800',
-      'In Transit': 'bg-blue-100 text-blue-800',
-    }},
+    {
+      key: 'status', label: 'Status', type: 'Badge', width: 120, editable: false, statusMap: {
+        'Confirmed': 'bg-green-100 text-green-800',
+        'Pending': 'bg-yellow-100 text-yellow-800',
+        'In Transit': 'bg-blue-100 text-blue-800',
+      }
+    },
   ];
 
   const customerOrdersData = [
@@ -313,32 +368,126 @@ const TripPlanning = () => {
 
   // Handle Others selection
 
-  const handleOthersClick = () => {
-    console.log("Opening OtherDetails Drawer");
+  // const handleOthersClick = () => {
+  //   getTripDataByID(tripNo)
+  //   console.log("Opening OtherDetails Drawer,",otherInfo);
 
-    setOthersDrawerOpen(true);
+  //   setOthersDrawerOpen(true);
+  // };
+  const handleOthersClick = async () => {
+    try {
+      const tripNoFromAPI = await getTripDataByID(tripNo);
+      console.log("Trip No returned from API:", tripNoFromAPI);
+      setOthersDrawerOpen(true);
+    } catch (err) {
+      console.error("Failed to load other info", err);
+      // toast or show error
+    } finally {
+      // setIsLoading(false);
+    }
   };
+  const updateOtherInfo = async (data: any) => {
+    console.log("Inside Update Other Details in TripPlanning page - ", data)
+    console.log("Old TripDAta TripPlanning page - ", oldTripData)
+    const updated = updateTripHeaderImmutable(oldTripData, data);
+    console.log("AFTER UPDATE :",updated)
+    tripService.saveTrip(updated)
+  }
+  // type TripData = any; // tighten this type if you have interfaces
+
+  const updateTripHeaderImmutable = (oldTripData: any, data: any)=> {
+    if (!oldTripData || !oldTripData.Header) {
+      console.warn("Invalid oldTripData format — returning original");
+      return oldTripData;
+    }
+
+    // Safe helpers
+    const safeString = (v: any) => (v === null || v === undefined ? undefined : String(v));
+    const firstBeforeDoublePipe = (v: any) => {
+      if (v === null || v === undefined) return undefined;
+      const s = String(v);
+      return s.includes("||") ? s.split("||")[0].trim() : s;
+    };
+
+    // Build update object: only include fields when data provides a value (not undefined)
+    const headerUpdates: Record<string, any> = {};
+
+    // QC mapping
+    if (data?.QCUserDefined) {
+      if (data.QCUserDefined.dropdown !== undefined) {
+        headerUpdates.QuickCode1 = safeString(data.QCUserDefined.dropdown);
+      }
+      if (data.QCUserDefined.input !== undefined) {
+        headerUpdates.QuickCodeValue1 = safeString(data.QCUserDefined.input);
+      }
+    }
+
+    // LoadType - only first part before ||
+    if (data?.loadType !== undefined) {
+      const lt = firstBeforeDoublePipe(data.loadType);
+      headerUpdates.LoadType = lt === undefined ? null : lt;
+    }
+
+    // SupplierRefNo
+    if (data?.supplierRefNo !== undefined) {
+      headerUpdates.SupplierRefNo = data.supplierRefNo === null ? null : String(data.supplierRefNo);
+    }
+
+    // Modeflag override -> always set to "Update" if any relevant field is present
+    // (you can change the condition; here we set Update only if any update exists)
+    if (Object.keys(headerUpdates).length > 0) {
+      headerUpdates.ModeFlag = "Update";
+    }
+
+    // Optional: update other top-level header fields if provided in data
+    if (data?.tripNo !== undefined) headerUpdates.TripNo = safeString(data.tripNo);
+    if (data?.tripStatus !== undefined) headerUpdates.TripStatus = safeString(data.tripStatus);
+    if (data?.tripStartDate !== undefined) headerUpdates.PlanStartDate = safeString(data.tripStartDate);
+    if (data?.tripStartTime !== undefined) headerUpdates.PlanStartTime = safeString(data.tripStartTime);
+    if (data?.tripEndDate !== undefined) headerUpdates.PlanEndDate = safeString(data.tripEndDate);
+    if (data?.tripEndTime !== undefined) headerUpdates.PlanEndTime = safeString(data.tripEndTime);
+    if (data?.remark !== undefined) headerUpdates.Remarks = safeString(data.remark);
+    if(data?.planType=="roundTrip" ){
+      headerUpdates.IsRoundTrip = safeString('1');
+      headerUpdates.IsOneWay = safeString('0');
+    }
+    if(data?.planType=="oneWay" ){
+      headerUpdates.IsOneWay = safeString('1');
+      headerUpdates.IsRoundTrip = safeString('0');
+    }
+    // Return a new object with only Header shallow-updated (preserves all other fields)
+    const newTripData = {
+      ...oldTripData,
+      Header: {
+        ...oldTripData.Header,
+        ...headerUpdates,
+      },
+    };
+
+    return newTripData;
+  }
+
   // Handle resource drawer open/close
   const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
     console.log(`Opening ${resourceType.toLowerCase()} drawer`);
     setCurrentResourceType(resourceType);
     setIsLoadingResource(true); // Show loader
     setIsResourceDrawerOpen(true);
-    
+
     const finalSearchCriteria = {
       "PlanningProfileID": "General-GMBH",
       "Location": "10-00004",
       "PlanDate": "",
       "ResourceProfileID": "",
       "Service": "",
-      "ServiceDescription":"",
+      "ServiceDescription": "",
       "SubServiceType": "",
-      "SubServiceDescription":""
+      "SubServiceDescription": ""
     }
-    
+
     try {
       let response: any;
-      
+
       // Call appropriate API based on resource type
       switch (resourceType) {
         case 'Equipment':
@@ -374,12 +523,12 @@ const TripPlanning = () => {
         default:
           throw new Error(`Unknown resource type: ${resourceType}`);
       }
-      
+
       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
       console.log('Response:', JSON.parse(response?.data?.ResponseData));
       const resourceDetails = parsedResponse.ResourceDetails;
       console.log("resourceDetails data ====", resourceDetails);
-      
+
       // Set data based on resource type
       switch (resourceType) {
         case 'Equipment':
@@ -401,7 +550,7 @@ const TripPlanning = () => {
           setResourceData(resourceDetails.Schedule || []);
           break;
       }
-      
+
       console.log("data ==== after set", resourceDetails);
     }
     catch (error) {
@@ -457,7 +606,7 @@ const TripPlanning = () => {
       "SubServiceDescription": "",
     }]);
   };
-//400--
+  //400--
   const handleAddResource = (resources: any[]) => {
     setSelectedResources(resources);
     console.log('Selected resources:', resources);
@@ -466,13 +615,13 @@ const TripPlanning = () => {
     // Transform the new resources into the required ResourceDetails format
     const transformedResourceDetails = resources.map(resource => ({
       "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
-      "ResourceType": resource.resourceType || resource.ResourceType || 
-        (resource.EquipmentID ? 'Equipment' : 
-         resource.VendorID ? 'Agent' : 
-         resource.DriverCode ? 'Driver' : 
-         resource.HandlerID ? 'Handler' : 
-         resource.VehicleID ? 'Vehicle' : 
-         resource.SupplierID ? 'Schedule' : 'Unknown'),
+      "ResourceType": resource.resourceType || resource.ResourceType ||
+        (resource.EquipmentID ? 'Equipment' :
+          resource.VendorID ? 'Agent' :
+            resource.DriverCode ? 'Driver' :
+              resource.HandlerID ? 'Handler' :
+                resource.VehicleID ? 'Vehicle' :
+                  resource.SupplierID ? 'Schedule' : 'Unknown'),
       "Service": resource.Service || "",
       "ServiceDescription": resource.ServiceDescription || "",
       "SubService": resource.SubService || "",
@@ -480,45 +629,45 @@ const TripPlanning = () => {
       "EffectiveFromDate": "",
       "EffectiveToDate": "",
       "ModeFlag": "Insert"
-    }));    
-    
+    }));
+
     // Create updated customer order list object with ResourceDetails
     const updatedCustomerList = {
       ...(typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList : {}),
       "ResourceDetails": transformedResourceDetails,
       "ModeFlag": "Insert",
     };
-    
+
     // Get existing customer order array or initialize empty array
     const existingCustomerOrderArray = selectedArrCOData || [];
-    
+
     // Get the current LegBehaviour from customerOrderList
     const currentLegBehaviour = (customerOrderList as any)?.LegBehaviour || '';
     console.log("Current LegBehaviour:", currentLegBehaviour);
-    
+
     // Check if this customer order with same LegBehaviour already exists in the array
-    const existingIndex = existingCustomerOrderArray.findIndex(item => 
+    const existingIndex = existingCustomerOrderArray.findIndex(item =>
       item.CustomerOrderID === ((customerOrderList as any)?.CustomerOrderID || '') &&
       item.LegBehaviour === currentLegBehaviour
     );
-    
+
     console.log("Existing index for same CustomerOrderID + LegBehaviour:", existingIndex);
-    
+
     let updatedCustomerOrderArray;
     if (existingIndex !== -1) {
       // Update existing customer order by merging resources
       updatedCustomerOrderArray = [...existingCustomerOrderArray];
       const existingCustomerOrder = updatedCustomerOrderArray[existingIndex];
-      
+
       // Merge existing ResourceDetails with new ones
       const existingResourceDetails = existingCustomerOrder.ResourceDetails || [];
       console.log("transformedResourceDetails ===", transformedResourceDetails);
       console.log("existingResourceDetails ===", existingResourceDetails);
-      
+
       // Check if any new resources are of type "Agent" or "Schedule"
       const hasNewAgent = transformedResourceDetails.some(resource => resource.ResourceType === "Agent");
       const hasNewSchedule = transformedResourceDetails.some(resource => resource.ResourceType === "Schedule");
-      
+
       let mergedResourceDetails;
       if (hasNewAgent || hasNewSchedule) {
         // For Agent and Schedule, remove existing resources with same CustomerOrderID and LegBehaviour
@@ -531,13 +680,13 @@ const TripPlanning = () => {
           // If LegBehaviour is different, keep the existing resource
           return resource.LegBehaviour !== currentLegBehaviour;
         });
-        
+
         // Add LegBehaviour to the new resources
         const resourcesWithLegBehaviour = transformedResourceDetails.map(resource => ({
           ...resource,
           LegBehaviour: currentLegBehaviour
         }));
-        
+
         mergedResourceDetails = [...filteredExistingResources, ...resourcesWithLegBehaviour];
         console.log("Agent/Schedule detected - filtered by LegBehaviour, mergedResourceDetails ===", mergedResourceDetails);
       } else {
@@ -550,8 +699,8 @@ const TripPlanning = () => {
           }))
           .filter(newResource => {
             // Check if a resource with the same ResourceID and ResourceType already exists
-            const isDuplicate = existingResourceDetails.some((existing: any) => 
-              existing.ResourceID === newResource.ResourceID && 
+            const isDuplicate = existingResourceDetails.some((existing: any) =>
+              existing.ResourceID === newResource.ResourceID &&
               existing.ResourceType === newResource.ResourceType
             );
             if (isDuplicate) {
@@ -559,7 +708,7 @@ const TripPlanning = () => {
             }
             return !isDuplicate; // Only include non-duplicates
           });
-        
+
         mergedResourceDetails = [...existingResourceDetails, ...resourcesWithLegBehaviour];
         console.log("Other resource types - normal merge (duplicates filtered), mergedResourceDetails ===", mergedResourceDetails);
       }
@@ -615,7 +764,7 @@ const TripPlanning = () => {
       (co.ResourceDetails || []).forEach((resource: any) => {
         // Create a unique key combining ResourceID and ResourceType
         const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
-        
+
         // Only add if this combination doesn't already exist
         if (!uniqueResourceKeys.has(uniqueKey)) {
           uniqueResourceKeys.add(uniqueKey);
@@ -650,14 +799,14 @@ const TripPlanning = () => {
     }));
 
     console.log("Grouped resources:", groupedResources);
-    
+
     // Update the customer order array state
     setSelectedArrCOData(updatedCustomerOrderArray);
-    
+
     console.log("Updated selectedArrCOData:", selectedArrCOData);
     console.log("Updated customer order array:", updatedCustomerOrderArray);
     console.log("Total customer orders in array:", updatedCustomerOrderArray.length);
-    
+
     // Show success toast
     toast({
       title: "✅ Resources Added",
@@ -683,17 +832,17 @@ const TripPlanning = () => {
         offset,
         limit,
       });
-      
+
       const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-                label: `${item.id} || ${item.name}`,
-                value: `${item.id} || ${item.name}`,
-              }
-            : {})
-        }));
-      
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
       // Fallback to empty array if API call fails
       return [];
     } catch (error) {
@@ -719,7 +868,7 @@ const TripPlanning = () => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
     setSupplier(null);
     setSchedule(null);
-    if(customerOrderList){
+    if (customerOrderList) {
       setTripNo(customerOrderList?.TripID);
       setTripStatus(customerOrderList?.TripStatus);
     }
@@ -739,7 +888,7 @@ const TripPlanning = () => {
         setSelectedArrCOData([]);
         console.log("🗑️ Cleared all customer orders from selectedArrCOData");
       }
-      
+
       // Clear the customer order list and hide resources flag
       console.log("setSelectedArrCOData remove ===", selectedArrCOData);
       setcustomerOrderList(null);
@@ -748,7 +897,7 @@ const TripPlanning = () => {
       // setAddResourcesFlag(false);
       return;
     }
-    
+
     // Handle selection - add to selectedArrCOData
     // Remove Status and TripBillingStatus, and add ModeFlag to the customerOrderList object
     const { Status, TripBillingStatus, ...rest } = customerOrderList;
@@ -756,9 +905,9 @@ const TripPlanning = () => {
       ...rest,
       "ModeFlag": "Insert"
     };
-    
+
     console.log("✅ Updated customerOrderList with ModeFlag (removed Status and TripBillingStatus):", updatedCustomerOrderList);
-    
+
     setcustomerOrderList(updatedCustomerOrderList);
     setAddResourcesFlag(true);
   }
@@ -766,14 +915,14 @@ const TripPlanning = () => {
   const handleMultipleCustomerOrders = (selectedRows: any[]) => {
     console.log('Customer Orders selection changed:', selectedRows);
     console.log('Number of selected rows:', selectedRows.length);
-    
+
     if (selectedRows.length === 0) {
       console.log('All selections cleared');
       // Handle empty selection case
       // For example: hide bulk actions, reset state, etc.
       return;
     }
-    
+
     // Add ModeFlag to each selected row and remove Status and TripBillingStatus
     const updatedSelectedRows = selectedRows.map(row => {
       const { Status, TripBillingStatus, ...rest } = row;
@@ -782,20 +931,20 @@ const TripPlanning = () => {
         "ModeFlag": "Insert"
       };
     });
-    
+
     console.log('✅ Updated Customer Orders with ModeFlag:', updatedSelectedRows);
     setSelectedRows(updatedSelectedRows);
-    
+
     // You can process the selected rows here
     // For example:
     // - Store them in state for further processing
     // - Send them to an API
     // - Update UI based on selection
-    
+
     // Example: Extract CustomerOrderIDs
     const customerOrderIds = selectedRows.map(row => row.CustomerOrderID);
     console.log('Customer Order IDs:', customerOrderIds);
-    
+
     // Example: Store in state (if needed)
     // setSelectedCustomerOrders(selectedRows);
   }
@@ -811,26 +960,26 @@ const TripPlanning = () => {
       return value;
     };
 
-    if(location === undefined || location === null || location === "") {
+    if (location === undefined || location === null || location === "") {
       toast({
         title: "⚠️ Location is required",
         description: "Please select a location",
         variant: "destructive",
       });
       return;
-    }else{
+    } else {
       const processedLocation = splitAtPipe(location);
       const processedCluster = splitAtPipe(cluster);
 
       const transformedResourceDetails = selectedResources.map(resource => ({
         "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
-        "ResourceType": resource.resourceType || resource.ResourceType || 
-          (resource.EquipmentID ? 'Equipment' : 
-          resource.VendorID ? 'Agent' : 
-          resource.DriverCode ? 'Driver' : 
-          resource.HandlerID ? 'Handler' : 
-          resource.VehicleID ? 'Vehicle' :
-          resource.SupplierID ? 'Schedule' : 'Unknown'),
+        "ResourceType": resource.resourceType || resource.ResourceType ||
+          (resource.EquipmentID ? 'Equipment' :
+            resource.VendorID ? 'Agent' :
+              resource.DriverCode ? 'Driver' :
+                resource.HandlerID ? 'Handler' :
+                  resource.VehicleID ? 'Vehicle' :
+                    resource.SupplierID ? 'Schedule' : 'Unknown'),
         "Service": resource.Service || "",
         "ServiceDescription": resource.ServiceDescription || "",
         "SubService": resource.SubService || "",
@@ -851,7 +1000,7 @@ const TripPlanning = () => {
         "CustomerOrders": selectedRows || [],
         "ResourceDetails": transformedResourceDetails || []
       }
-      
+
       console.log("createBulkTripData", tripData);
       console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
       try {
@@ -897,7 +1046,7 @@ const TripPlanning = () => {
       }
       return value;
     };
-  
+
     // Helper to recursively process all dropdown fields in an object, splitting at "||"
     const splitDropdowns = (obj: any) => {
       if (!obj || typeof obj !== "object") return obj;
@@ -929,21 +1078,21 @@ const TripPlanning = () => {
       return newObj;
     };
 
-    if(location === undefined || location === null || location === "") {
+    if (location === undefined || location === null || location === "") {
       toast({
         title: "⚠️ Location is required",
         description: "Please select a location",
         variant: "destructive",
       });
       return;
-    }else{
+    } else {
       // Process location data using splitAtPipe to get the code value
       console.log("planDate ====", planDate);
       const processedLocation = splitAtPipe(location);
       const processedCluster = splitAtPipe(cluster);
       console.log("processedLocation ====", processedLocation);
       console.log("selectedArrCOData", selectedArrCOData);
-      
+
       const tripData = {
         "Header": {
           "TripType": tripType,
@@ -954,7 +1103,7 @@ const TripPlanning = () => {
         },
         "CustomerOrders": selectedArrCOData || []
       }
-      
+
       console.log("createSingleTripData", tripData);
       console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
       try {
@@ -965,14 +1114,14 @@ const TripPlanning = () => {
         console.log("parsedResponse ====", parsedResponse);
         if (resourceStatus) {
           console.log("Trip data updated in store");
-          
+
           // Extract CustomerOrders from response
           const customerOrders = parsedResponse.CustomerOrders || [];
           console.log("📋 CustomerOrders from API response:", customerOrders);
-          
+
           // Store CustomerOrders data for TripCOHub
           setTripCustomerOrdersData(customerOrders);
-          
+
           toast({
             title: "✅ Trip Created Successfully",
             description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -993,7 +1142,7 @@ const TripPlanning = () => {
             description: (response as any)?.data?.Message || "Failed to save changes.",
             variant: "destructive",
           });
-          
+
         }
       } catch (error) {
         console.error("Error updating nested data:", error);
@@ -1010,10 +1159,10 @@ const TripPlanning = () => {
     // console.log("confirmTripPlanning ===", selectedRowObjects);
     console.log("confirmTripPlanning ===", customerOrderList + tripNo);
     const messageType = "Manage Trip Plan - Confirm Trip";
-    
+
     // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
     const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-    
+
     let Header = {
       "TripNo": tripIDToUse,
       "Cancellation": null,
@@ -1022,9 +1171,9 @@ const TripPlanning = () => {
     }
     console.log("Payload:", Header);
     console.log("Using TripID:", tripIDToUse);
-    
-    try{
-      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+
+    try {
+      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1037,8 +1186,8 @@ const TripPlanning = () => {
           setTripCustomerOrdersData(prev =>
             Array.isArray(prev)
               ? prev.map((row: any) =>
-                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-                )
+                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+              )
               : prev
           );
         }
@@ -1057,27 +1206,27 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
-    }    
+    }
   }
 
   const releseTripPlanning = async () => {
     console.log("releaseTripPlanning ===");
     const messageType = "Manage Trip Plan - Release Trip";
-    
+
     // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
     const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-    
+
     let Header = {
-        "TripNo": tripIDToUse,
-        "Cancellation": null,
-        "ShortClose": null,
-        "Amendment": null
-      
+      "TripNo": tripIDToUse,
+      "Cancellation": null,
+      "ShortClose": null,
+      "Amendment": null
+
     }
     console.log("Payload:", Header);
     console.log("Using TripID:", tripIDToUse);
-    try{
-      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+    try {
+      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1090,8 +1239,8 @@ const TripPlanning = () => {
           setTripCustomerOrdersData(prev =>
             Array.isArray(prev)
               ? prev.map((row: any) =>
-                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-                )
+                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+              )
               : prev
           );
         }
@@ -1110,7 +1259,7 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
-    } 
+    }
   }
 
   const [amendModalOpen, setAmendModalOpen] = useState(false);
@@ -1231,7 +1380,7 @@ const TripPlanning = () => {
     const messageType = "Manage Trip Plan - Amend Trip";
     // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
     const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-    
+
     // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
     let ReasonCodeValue = '';
     let ReasonCodeLabel = '';
@@ -1265,8 +1414,8 @@ const TripPlanning = () => {
     };
     console.log('Amend Payload:', Header);
     console.log("Using TripID for Amend:", tripIDToUse);
-    try{
-      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+    try {
+      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1283,8 +1432,8 @@ const TripPlanning = () => {
           setTripCustomerOrdersData(prev =>
             Array.isArray(prev)
               ? prev.map((row: any) =>
-                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-                )
+                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+              )
               : prev
           );
         }
@@ -1300,7 +1449,7 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
-    } 
+    }
   };
 
   const handleCancelTripPlanning = async (formFields: any) => {
@@ -1314,7 +1463,7 @@ const TripPlanning = () => {
     const messageType = "Manage Trip Plan - cancel Trip";
     // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
     const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-    
+
     // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
     let ReasonCodeValue = '';
     let ReasonCodeLabel = '';
@@ -1348,8 +1497,8 @@ const TripPlanning = () => {
     };
     console.log('Cancel Payload:', Header);
     console.log("Using TripID for Cancel:", tripIDToUse);
-    try{
-      const response = await tripPlanningService.confirmTripPlanning({Header, messageType});
+    try {
+      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -1366,8 +1515,8 @@ const TripPlanning = () => {
           setTripCustomerOrdersData(prev =>
             Array.isArray(prev)
               ? prev.map((row: any) =>
-                  row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-                )
+                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+              )
               : prev
           );
         }
@@ -1383,15 +1532,14 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
-    } 
+    }
   };
 
   // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
   const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
   const isDisabled = !tripIDToUse;
-  const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${
-    isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
-  }`;
+  const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm ${isDisabled ? "bg-white text-blue-600 border border-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-not-allowed hover:bg-white hover:text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700"
+    }`;
   const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
 
   const handleRemoveEquipment = (index: number) => {
@@ -1400,13 +1548,13 @@ const TripPlanning = () => {
       // Remove from tripResourceDetailsData
       const updatedEquipments = [...(tripResourceDetailsData?.Equipments || [])];
       updatedEquipments.splice(index, 1);
-      setTripResourceDetailsData({...tripResourceDetailsData, Equipments: updatedEquipments});
-      
+      setTripResourceDetailsData({ ...tripResourceDetailsData, Equipments: updatedEquipments });
+
       // Also remove from selectedArrCOData
       const resourceID = equipmentToRemove.EquipmentID;
       setSelectedArrCOData(prev => prev.map(co => ({
         ...co,
-        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) =>
           !(r.ResourceType === 'Equipment' && r.ResourceID === resourceID)
         )
       })));
@@ -1420,13 +1568,13 @@ const TripPlanning = () => {
       // Remove from tripResourceDetailsData
       const updatedHandlers = [...(tripResourceDetailsData?.Handlers || [])];
       updatedHandlers.splice(index, 1);
-      setTripResourceDetailsData({...tripResourceDetailsData, Handlers: updatedHandlers});
-      
+      setTripResourceDetailsData({ ...tripResourceDetailsData, Handlers: updatedHandlers });
+
       // Also remove from selectedArrCOData
       const resourceID = handlerToRemove.HandlerID;
       setSelectedArrCOData(prev => prev.map(co => ({
         ...co,
-        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) =>
           !(r.ResourceType === 'Handler' && r.ResourceID === resourceID)
         )
       })));
@@ -1440,13 +1588,13 @@ const TripPlanning = () => {
       // Remove from tripResourceDetailsData
       const updatedVehicles = [...(tripResourceDetailsData?.Vehicle || [])];
       updatedVehicles.splice(index, 1);
-      setTripResourceDetailsData({...tripResourceDetailsData, Vehicle: updatedVehicles});
-      
+      setTripResourceDetailsData({ ...tripResourceDetailsData, Vehicle: updatedVehicles });
+
       // Also remove from selectedArrCOData
       const resourceID = vehicleToRemove.VehicleID;
       setSelectedArrCOData(prev => prev.map(co => ({
         ...co,
-        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) =>
           !(r.ResourceType === 'Vehicle' && r.ResourceID === resourceID)
         )
       })));
@@ -1460,13 +1608,13 @@ const TripPlanning = () => {
       // Remove from tripResourceDetailsData
       const updatedDrivers = [...(tripResourceDetailsData?.Drivers || [])];
       updatedDrivers.splice(index, 1);
-      setTripResourceDetailsData({...tripResourceDetailsData, Drivers: updatedDrivers});
-      
+      setTripResourceDetailsData({ ...tripResourceDetailsData, Drivers: updatedDrivers });
+
       // Also remove from selectedArrCOData
       const resourceID = driverToRemove.DriverID;
       setSelectedArrCOData(prev => prev.map(co => ({
         ...co,
-        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => 
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) =>
           !(r.ResourceType === 'Driver' && r.ResourceID === resourceID)
         )
       })));
@@ -1488,7 +1636,7 @@ const TripPlanning = () => {
               <div className='flex items-center gap-2'>
                 <h1 className="text-2xl font-semibold">Trip No.</h1>
                 <div className="relative max-w-md">
-                  <Input 
+                  <Input
                     placeholder="Trip No."
                     value={tripNo}
                     onChange={(e) => setTripNo(e.target.value)}
@@ -1503,12 +1651,12 @@ const TripPlanning = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
-                   onClick={() => {
+                  onClick={() => {
                     // Dynamically get the base path from the current URL
-                    const { pathname} = window.location;
+                    const { pathname } = window.location;
                     // Find the base path 
                     const basePathMatch = pathname.match(/^\/[^/]+/);
                     const basePath = basePathMatch ? basePathMatch[0] : "";
@@ -1518,8 +1666,8 @@ const TripPlanning = () => {
                   <Plus className="h-4 w-4" />
                   Create Trip
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
                   onClick={handleManageTripsClick}
                 >
@@ -1533,49 +1681,49 @@ const TripPlanning = () => {
                 </Button> */}
                 <Popover open={listPopoverOpen} onOpenChange={setListPopoverOpen}>
                   <PopoverTrigger asChild>
-                    { urlTripID && 
+                    {urlTripID &&
                       (<Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      onClick={() => console.log('listPopoverOpen ==', listPopoverOpen)}
-                      className="listOfOptions inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
-                      <EllipsisVertical className="h-4 w-4" />
-                    </Button>)
+                        variant="ghost"
+                        size="icon"
+                        aria-label="More options"
+                        onClick={() => console.log('listPopoverOpen ==', listPopoverOpen)}
+                        className="listOfOptions inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
+                        <EllipsisVertical className="h-4 w-4" />
+                      </Button>)
                     }
                   </PopoverTrigger>
                   <PopoverContent side="bottom" align="end" className="p-2 w-full">
                     <div className="flex flex-col gap-1">
-                      <button onClick={() => { 
-                        console.log('VAS'); 
+                      <button onClick={() => {
+                        console.log('VAS');
                         openDrawer('vas-trip');
                         setListPopoverOpen(false);
-                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <Settings className="h-4 w-4" />
                         <span>VAS</span>
                       </button>
-                      <button onClick={() => { 
-                        console.log('Supplier Billing'); 
+                      <button onClick={() => {
+                        console.log('Supplier Billing');
                         openDrawer('train-parameters');
                         setListPopoverOpen(false);
-                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <TramFront className="h-4 w-4" />
                         <span>Train Parameters</span>
                       </button>
-                      <button onClick={() => { 
-                        console.log('Leg and Events'); 
+                      <button onClick={() => {
+                        console.log('Leg and Events');
                         openDrawer('leg-and-events');
                         // setIsLegEventsDrawerOpen(true);
                         setListPopoverOpen(false);
-                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <Zap className="h-4 w-4" />
                         <span>Leg and Events</span>
                       </button>
-                      <button onClick={() => { 
-                        console.log('Leg and Events'); 
+                      <button onClick={() => {
+                        console.log('Leg and Events');
                         openTripDrawer(urlTripID);
                         setListPopoverOpen(false);
-                        }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <Route className="h-4 w-4" />
                         <span>Transport Route Update</span>
                       </button>
@@ -1603,7 +1751,7 @@ const TripPlanning = () => {
                   {tripType}
                 </Badge>
                 <Badge variant="outline" className="text-muted-foreground">
-                {planDate ? format(planDate, "dd-MMM-yyyy") : ''}
+                  {planDate ? format(planDate, "dd-MMM-yyyy") : ''}
                 </Badge>
                 <Button variant="ghost" size="icon">
                   <ChevronDown className="h-4 w-4" />
@@ -1700,7 +1848,7 @@ const TripPlanning = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Reference Doc. No.</label>
                   <div className="relative">
-                    <Input 
+                    <Input
                       placeholder="Enter Reference Doc. No."
                       value={referenceDocNo}
                       onChange={(e) => setReferenceDocNo(e.target.value)}
@@ -1765,7 +1913,7 @@ const TripPlanning = () => {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Departure *</label>
                       <div className="relative">
-                        <Input 
+                        <Input
                           value={`${departureCode} | ${departureLocation}`}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -1796,7 +1944,7 @@ const TripPlanning = () => {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Arrival *</label>
                       <div className="relative">
-                        <Input 
+                        <Input
                           value={`${arrivalCode} | ${arrivalLocation}`}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -1829,10 +1977,10 @@ const TripPlanning = () => {
                   { title: 'Resources', subtitle: 'Selected Resources', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                   { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', iconColor: 'text-cyan-600' },
                   { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', iconColor: 'text-lime-600' },
-                  { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
-                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-orange-600' },
-                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
-                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
+                  { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
+                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-orange-600' },
+                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
+                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
                 ].map((resource) => {
                   const Icon = resource.icon;
                   return (
@@ -1867,7 +2015,7 @@ const TripPlanning = () => {
                   <div className='flex gap-6'>
                     <div className='w-3/4 flex-1 border border-border rounded-lg p-6'>
                       {/* Trip Planning Customer Order Hub */}
-                      <TripCOHubMultiple data={tripCustomerOrdersData} onCustomerOrderClick={handleMultipleCustomerOrders}/>
+                      <TripCOHubMultiple data={tripCustomerOrdersData} onCustomerOrderClick={handleMultipleCustomerOrders} />
                     </div>
                     {/* Resources Cards - Right */}
                     <div className="w-1/4 space-y-3">
@@ -1884,8 +2032,8 @@ const TripPlanning = () => {
                                   placeholder=""
                                 />
                               </div>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => {
                                   handleOpenResourceDrawer('Supplier');
@@ -1906,8 +2054,8 @@ const TripPlanning = () => {
                                   placeholder=""
                                 />
                               </div>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => {
                                   handleOpenResourceDrawer('Schedule');
@@ -1922,10 +2070,10 @@ const TripPlanning = () => {
                           { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                          { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(EquipmentCount!=0)?EquipmentCount:'', iconColor: 'text-red-600' },
-                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
-                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
+                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
+                          { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
+                          { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
+                          { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
 
                         ].map((resource) => {
                           const Icon = resource.icon;
@@ -1937,10 +2085,10 @@ const TripPlanning = () => {
                                     <Icon className={cn("h-5 w-5", resource.iconColor)} />
                                   </div>
                                   <div>
-                                    <h3 className="font-medium text-sm">{resource.title} 
+                                    <h3 className="font-medium text-sm">{resource.title}
                                       <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
                                     </h3>
-                                    { resource.title == 'Equipment' && (
+                                    {resource.title == 'Equipment' && (
                                       <BadgesList
                                         items={tripResourceDetailsData?.Equipments}
                                         onRemove={handleRemoveEquipment}
@@ -1948,7 +2096,7 @@ const TripPlanning = () => {
                                         idField="EquipmentID"
                                       />
                                     )}
-                                    { resource.title == 'Handler' && (
+                                    {resource.title == 'Handler' && (
                                       <BadgesList
                                         items={tripResourceDetailsData?.Handlers}
                                         onRemove={handleRemoveHandler}
@@ -1956,7 +2104,7 @@ const TripPlanning = () => {
                                         idField="HandlerID"
                                       />
                                     )}
-                                    { resource.title == 'Vehicle' && (
+                                    {resource.title == 'Vehicle' && (
                                       <BadgesList
                                         items={tripResourceDetailsData?.Vehicle}
                                         onRemove={handleRemoveVehicle}
@@ -1964,7 +2112,7 @@ const TripPlanning = () => {
                                         idField="VehicleID"
                                       />
                                     )}
-                                    { resource.title == 'Driver' && (
+                                    {resource.title == 'Driver' && (
                                       <BadgesList
                                         items={tripResourceDetailsData?.Drivers}
                                         onRemove={handleRemoveDriver}
@@ -1978,8 +2126,8 @@ const TripPlanning = () => {
                                   </div>
                                 </div>
                                 {resource.title === 'Others' ? (
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="icon"
                                     onClick={() => {
                                       handleOthersClick()
@@ -1988,8 +2136,8 @@ const TripPlanning = () => {
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 ) : (
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="icon"
                                     onClick={() => {
                                       if (resource.title === 'Equipment') {
@@ -2022,7 +2170,7 @@ const TripPlanning = () => {
                   {/* Trip Creation Controls */}
                   <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                     <div className="flex items-center gap-4">
-                      <Switch 
+                      <Switch
                         id="consolidated-trip"
                         checked={consolidatedTrip}
                         onCheckedChange={setConsolidatedTrip}
@@ -2039,7 +2187,7 @@ const TripPlanning = () => {
                       <button onClick={openCancelPopup} disabled={!tripNo} className={buttonCancel}>
                         Cancel
                       </button>
-                      { !tripNo &&
+                      {!tripNo &&
                         <button onClick={createBulkTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                           Create Trip
                         </button>
@@ -2050,10 +2198,10 @@ const TripPlanning = () => {
                       <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
                         Release
                       </button>
-                      { tripNo &&
+                      {tripNo &&
                         (<button onClick={openAmendPopup} className={buttonClass}>
-                        Amend
-                      </button>)
+                          Amend
+                        </button>)
                       }
                     </div>
                   </div>
@@ -2082,8 +2230,8 @@ const TripPlanning = () => {
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub 
-                                key={tripCOHubReloadKey} 
+                              <TripCOHub
+                                key={tripCOHubReloadKey}
                                 onCustomerOrderClick={handleCustomerOrderSelect}
                                 tripID={urlTripID}
                                 manageFlag={manageFlag}
@@ -2109,8 +2257,8 @@ const TripPlanning = () => {
                                         placeholder=""
                                       />
                                     </div>
-                                    <Button 
-                                      variant="ghost" 
+                                    <Button
+                                      variant="ghost"
                                       size="icon"
                                       onClick={() => {
                                         handleOpenResourceDrawer('Supplier');
@@ -2131,8 +2279,8 @@ const TripPlanning = () => {
                                         placeholder=""
                                       />
                                     </div>
-                                    <Button 
-                                      variant="ghost" 
+                                    <Button
+                                      variant="ghost"
                                       size="icon"
                                       onClick={() => {
                                         handleOpenResourceDrawer('Schedule');
@@ -2147,11 +2295,11 @@ const TripPlanning = () => {
                                 { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                                { title: 'Equipment', icon: Box, color: 'bg-red-100',count:(tripResourceDetailsData?.Equipments?.length !=0)? tripResourceDetailsData?.Equipments?.length :'', iconColor: 'text-red-600' },
-                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length!=0)?tripResourceDetailsData?.Handlers?.length:'', iconColor: 'text-cyan-600' },
-                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count:  (tripResourceDetailsData?.Vehicle?.length!=0)?tripResourceDetailsData?.Vehicle?.length:'', iconColor: 'text-amber-600' },
-                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100',count: (tripResourceDetailsData?.Drivers?.length!=0)?tripResourceDetailsData?.Drivers?.length:'', iconColor: 'text-indigo-600' },
-              
+                                { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (tripResourceDetailsData?.Equipments?.length != 0) ? tripResourceDetailsData?.Equipments?.length : '', iconColor: 'text-red-600' },
+                                { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
+                                { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
+                                { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
+
                               ].map((resource) => {
                                 const Icon = resource.icon;
                                 return (
@@ -2162,10 +2310,10 @@ const TripPlanning = () => {
                                           <Icon className={cn("h-5 w-5", resource.iconColor)} />
                                         </div>
                                         <div>
-                                          <h3 className="font-medium text-sm">{resource.title} 
+                                          <h3 className="font-medium text-sm">{resource.title}
                                             <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource?.count}</span>
                                           </h3>
-                                          { resource.title == 'Equipment' && (
+                                          {resource.title == 'Equipment' && (
                                             <BadgesList
                                               items={tripResourceDetailsData?.Equipments}
                                               onRemove={handleRemoveEquipment}
@@ -2173,7 +2321,7 @@ const TripPlanning = () => {
                                               idField="EquipmentID"
                                             />
                                           )}
-                                          { resource.title == 'Handler' && (
+                                          {resource.title == 'Handler' && (
                                             <BadgesList
                                               items={tripResourceDetailsData?.Handlers}
                                               onRemove={handleRemoveHandler}
@@ -2181,7 +2329,7 @@ const TripPlanning = () => {
                                               idField="HandlerID"
                                             />
                                           )}
-                                          { resource.title == 'Vehicle' && (
+                                          {resource.title == 'Vehicle' && (
                                             <BadgesList
                                               items={tripResourceDetailsData?.Vehicle}
                                               onRemove={handleRemoveVehicle}
@@ -2189,7 +2337,7 @@ const TripPlanning = () => {
                                               idField="VehicleID"
                                             />
                                           )}
-                                          { resource.title == 'Driver' && (
+                                          {resource.title == 'Driver' && (
                                             <BadgesList
                                               items={tripResourceDetailsData?.Drivers}
                                               onRemove={handleRemoveDriver}
@@ -2203,8 +2351,8 @@ const TripPlanning = () => {
                                         </div>
                                       </div>
                                       {resource.title === 'Others' ? (
-                                        <Button 
-                                          variant="ghost" 
+                                        <Button
+                                          variant="ghost"
                                           size="icon"
                                           onClick={() => {
                                             handleOthersClick();
@@ -2213,8 +2361,8 @@ const TripPlanning = () => {
                                           <Pencil className="h-4 w-4" />
                                         </Button>
                                       ) : (
-                                        <Button 
-                                          variant="ghost" 
+                                        <Button
+                                          variant="ghost"
                                           size="icon"
                                           onClick={() => {
                                             if (resource.title === 'Equipment') {
@@ -2250,8 +2398,8 @@ const TripPlanning = () => {
                                 </div>
                               </div> */}
                               {/* Trip Planning Customer Order Hub */}
-                              <TripCOHub 
-                                key={tripCOHubReloadKey} 
+                              <TripCOHub
+                                key={tripCOHubReloadKey}
                                 onCustomerOrderClick={handleCustomerOrderSelect}
                                 tripID={urlTripID}
                                 manageFlag={manageFlag}
@@ -2265,7 +2413,7 @@ const TripPlanning = () => {
                       {/* Toggle */}
                       <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                         <div className="flex items-center gap-4">
-                          <Switch 
+                          <Switch
                             id="consolidated-trip-inline"
                             checked={consolidatedTrip}
                             onCheckedChange={setConsolidatedTrip}
@@ -2283,7 +2431,7 @@ const TripPlanning = () => {
                           <button onClick={openCancelPopup} disabled={!tripNo} className={buttonCancel}>
                             Cancel
                           </button>
-                          { !tripNo &&
+                          {!tripNo &&
                             <button onClick={createSingleTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                               Create Trip
                             </button>
@@ -2294,15 +2442,15 @@ const TripPlanning = () => {
                           </button>
                           {/* )}
                           { showConfirmReleaseBtn && customerOrderList != null && ( */}
-                            <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
+                          <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
                             Release
                           </button>
                           {/* )} */}
-                          { tripNo &&
+                          {tripNo &&
 
                             (<button onClick={openAmendPopup} className={buttonClass}>
-                            Amend
-                          </button>)
+                              Amend
+                            </button>)
                           }
                         </div>
                       </div>
@@ -2329,7 +2477,7 @@ const TripPlanning = () => {
           )}
         </main>
       </div>
-      
+
       {/* Resource Selection Drawer */}
       <ResourceSelectionDrawer
         isOpen={isResourceDrawerOpen}
@@ -2340,19 +2488,23 @@ const TripPlanning = () => {
         resourceData={resourceData}
         isLoading={isLoadingResource}
       />
-     { /* Others Selection Drawer */}
-     <OthersSelectionDrawer
-        tripNo={tripNo}
-        tripStatus={tripStatus}
-        isOpen={othersDrawerOpen}
-        resourceType='Others'
-        onClose={() => setOthersDrawerOpen(false)}
-        onSubmit={(data) => {
-          // handle/save data from drawer here
-          setOthersDrawerOpen(false);
-          console.log("Drawer form data:", data);
-        }}
-      />
+      { /* Others Selection Drawer */}
+      {otherInfo ?
+        <OthersSelectionDrawer
+          tripNo={tripNo}
+          tripStatus={tripStatus}
+          otherInfoData={otherInfo}
+          isOpen={othersDrawerOpen}
+          resourceType='Others'
+          onClose={() => setOthersDrawerOpen(false)}
+          onSubmit={(data) => {
+            // handle/save data from drawer here
+            setOthersDrawerOpen(false);
+            console.log("Drawer form data:", data);
+            updateOtherInfo(data);
+          }}
+        /> : ''
+      }
       {/* Loading Overlay */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
@@ -2395,7 +2547,7 @@ const TripPlanning = () => {
         showFooter={false}
       >
         {selectedTrip && (
-          <TripLevelUpdateDrawer 
+          <TripLevelUpdateDrawer
             tripData={selectedTrip}
             onAddExecutionLeg={addExecutionLeg}
             onRemoveExecutionLeg={removeExecutionLeg}
@@ -2408,20 +2560,20 @@ const TripPlanning = () => {
       </SideDrawer>
       {/* Side Drawer */}
       <SideDrawer
-          isOpen={isOpen}
-          onClose={closeDrawer}
-          onBack={ drawerType === 'transport-route' ? closeDrawer : undefined}
-          title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : drawerType === 'leg-and-events' ? 'Leg and Events' : ''}
-          titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'leg-and-events' ? urlTripID || 'TRIP0000000001' : undefined}
-          slideDirection="right"
-          width={drawerType === 'train-parameters' || drawerType === 'leg-and-events' ? '100%' : '75%'}
-          smoothness="smooth"
-          showBackButton={ drawerType === 'transport-route' || drawerType === 'leg-and-events'}
-          showCloseButton={true}
-        >
-          {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} />}
-          {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
-          {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || undefined} />}
+        isOpen={isOpen}
+        onClose={closeDrawer}
+        onBack={drawerType === 'transport-route' ? closeDrawer : undefined}
+        title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : drawerType === 'leg-and-events' ? 'Leg and Events' : ''}
+        titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'leg-and-events' ? urlTripID || 'TRIP0000000001' : undefined}
+        slideDirection="right"
+        width={drawerType === 'train-parameters' || drawerType === 'leg-and-events' ? '100%' : '75%'}
+        smoothness="smooth"
+        showBackButton={drawerType === 'transport-route' || drawerType === 'leg-and-events'}
+        showCloseButton={true}
+      >
+        {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} />}
+        {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
+        {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || undefined} />}
       </SideDrawer>
     </AppLayout>
   );
