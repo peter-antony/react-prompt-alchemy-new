@@ -1588,7 +1588,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       NetAmount: convertDotToComma(data.NetAmount ?? 0), // convert dot to comma for display
       BillingType: data.BillingType ?? '',
       UnitPrice: data.UnitPrice ?? 0,
-      BillingQty: data.BillingQty ?? 0,
+      BillingQty: data.BillingQty ?? '',
       // Tariff: data.Tariff ?? '',
       Tariff: formatFieldWithName(data.Tariff, data.TariffIDDescription),
       TariffType: formatFieldWithName(data.TariffType, data.TariffTypeDescription),
