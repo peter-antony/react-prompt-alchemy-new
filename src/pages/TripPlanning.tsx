@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -238,70 +238,94 @@ const TripPlanning = () => {
     // });
   }, [selectedArrCOData]);
 
-  // Fetch trip data when urlTripID is available
+  // Ref to track the last fetched tripID to prevent duplicate API calls
+  const lastFetchedTripIDRef = useRef<string | null>(null);
+  const isFetchingRef = useRef<boolean>(false);
+  // Fetch trip data when urlTripID is available (only once per tripID)
   useEffect(() => {
+    // Only fetch if urlTripID exists, is not empty, hasn't been fetched before, and not currently fetching
+    if (!urlTripID || urlTripID.trim() === '') {
+      return; // Don't call API if tripID is not available
+    }
+
+    // Check if this tripID has already been fetched or is currently being fetched
+    if (lastFetchedTripIDRef.current === urlTripID || isFetchingRef.current) {
+      console.log('⏭️ Skipping duplicate API call for TripID:', urlTripID);
+      return;
+    }
+
     const fetchTripData = async () => {
-      if (urlTripID) {
-        console.log('🔄 Fetching trip data for TripID:', urlTripID);
-        try {
-          const response: any = await tripService.getTripById({ id: urlTripID });
+      // Mark as fetching to prevent concurrent calls
+      isFetchingRef.current = true;
+      lastFetchedTripIDRef.current = urlTripID;
+      
+      console.log('🔄 Fetching trip data for TripID:', urlTripID);
+      
+      try {
+        const response: any = await tripService.getTripById({ id: urlTripID });
+        
+        // Parse the ResponseData
+        const parsedResponse = response?.data?.ResponseData 
+          ? JSON.parse(response.data.ResponseData)
+          : response?.data || {};
+        
+        console.log('📋 Parsed trip response:', parsedResponse);
+        
+        // Extract CustomerOrders from the trip response
+        const customerOrders = parsedResponse.CustomerOrders || [];
 
-          // Parse the ResponseData
-          const parsedResponse = response?.data?.ResponseData
-            ? JSON.parse(response.data.ResponseData)
-            : response?.data || {};
-
-          console.log('📋 Parsed trip response:', parsedResponse);
-
-          // Extract CustomerOrders from the trip response
-          const customerOrders = parsedResponse.CustomerOrders || [];
-
-          const resourceDetails = parsedResponse.ResourceDetails || [];
-
-          if (customerOrders && customerOrders.length > 0) {
-            console.log('✅ CustomerOrders found:', customerOrders.length);
-            // Store CustomerOrders data for TripCOHub
-            setTripCustomerOrdersData(customerOrders);
-
-            // Also update trip status if available
-            if (parsedResponse.Header?.TripStatus) {
-              setTripStatus(parsedResponse.Header.TripStatus);
-            }
-          } else {
-            console.log('⚠️ No CustomerOrders found in trip response');
-            setTripCustomerOrdersData([]);
+        const resourceDetails = parsedResponse.ResourceDetails || [];
+        
+        if (customerOrders && customerOrders.length > 0) {
+          console.log('✅ CustomerOrders found:', customerOrders.length);
+          // Store CustomerOrders data for TripCOHub
+          setTripCustomerOrdersData(customerOrders);
+          
+          // Also update trip status if available
+          if (parsedResponse.Header?.TripStatus) {
+            setTripStatus(parsedResponse.Header.TripStatus);
           }
-
-          if (resourceDetails) {
-            console.log('✅ ResourceDetails found:', resourceDetails);
-            console.log('✅ resourceDetails.Equipments found:', resourceDetails.Equipments);
-            console.log('✅ resourceDetails.Supplier found:', resourceDetails.Supplier[0].VendorID);
-            // Store ResourceDetails data for TripCOHub
-            setTripResourceDetailsData(() => resourceDetails);
-            setEquipmentData(resourceDetails.Equipments)
-            setEquipmentCount(resourceDetails.Equipments?.length)
-            setSupplier(resourceDetails.Supplier[0]?.VendorID + " || " + resourceDetails.Supplier[0]?.VendorName);
-            // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
-            // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
-            console.log("tripResourceDetailsData ====", tripResourceDetailsData);
-          } else {
-            console.log('⚠️ No ResourceDetails found in trip response');
-            setTripResourceDetailsData([]);
-          }
-        } catch (error) {
-          console.error('❌ Failed to fetch trip data:', error);
+        } else {
+          console.log('⚠️ No CustomerOrders found in trip response');
           setTripCustomerOrdersData([]);
-          toast({
-            title: "Error",
-            description: "Failed to fetch trip data. Please try again.",
-            variant: "destructive",
-          });
         }
+
+        if (resourceDetails) {
+          console.log('✅ ResourceDetails found:', resourceDetails);
+          console.log('✅ resourceDetails.Equipments found:', resourceDetails.Equipments);
+          console.log('✅ resourceDetails.Supplier found:', resourceDetails.Supplier?.[0]?.VendorID);
+          // Store ResourceDetails data for TripCOHub
+          setTripResourceDetailsData(() => resourceDetails);
+          setEquipmentData(resourceDetails.Equipments)
+          setEquipmentCount(resourceDetails.Equipments?.length)
+          if (resourceDetails.Supplier?.[0]) {
+            setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
+          }
+          // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
+          // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
+          console.log("tripResourceDetailsData ====", tripResourceDetailsData);
+        } else {
+          console.log('⚠️ No ResourceDetails found in trip response');
+          setTripResourceDetailsData({});
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch trip data:', error);
+        setTripCustomerOrdersData([]);
+        toast({
+          title: "Error",
+          description: "Failed to fetch trip data. Please try again.",
+          variant: "destructive",
+        });
+        // Reset the ref on error so it can retry if needed
+        lastFetchedTripIDRef.current = null;
+      } finally {
+        // Reset fetching flag
+        isFetchingRef.current = false;
       }
     };
 
     fetchTripData();
-  }, [urlTripID, toast]);
+  }, [urlTripID]); // Removed 'toast' from dependencies as it's stable
 
   // Customer Orders Grid Configuration
   const customerOrdersColumns: GridColumnConfig[] = [
