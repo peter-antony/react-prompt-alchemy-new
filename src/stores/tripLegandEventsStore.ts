@@ -478,10 +478,10 @@ export const useTripLegandEventsStore = create<TripLegAndEventsStoreState>((set,
       data: { 
         ...current, 
         LegDetails: legs,
-        Header: {
-          ...current.Header,
-          ModeFlag: 'Update' // Also update Header ModeFlag when leg is modified
-        }
+        // Header: {
+        //   ...current.Header,
+        //   ModeFlag: 'Update' // Also update Header ModeFlag when leg is modified
+        // }
       } 
     });
   },

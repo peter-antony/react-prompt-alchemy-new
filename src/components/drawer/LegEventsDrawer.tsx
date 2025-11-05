@@ -149,15 +149,19 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
   const storeLegs = useMemo<Leg[]>(() => {
     const legDetails = data?.LegDetails || [];
     if (!legDetails.length) return [];
-    return legDetails.map((leg, i) => ({
-      id: String(i + 1),
-      sequence: Number(leg.LegSequence) || i + 1,
-      from: leg.DeparturePointDescription || leg.DeparturePoint || '-',
-      to: leg.ArrivalPointDescription || leg.ArrivalPoint || '-',
-      type: leg.LegBehaviourDescription || leg.LegBehaviour || '',
-      customer: 'Multiple',
-      orderNo: 'Multiple',
-    }));
+    return legDetails.map((leg, i) => {
+      // Get first activity if exists
+      const firstActivity = leg.Activities && leg.Activities.length > 0 ? leg.Activities[0] : null;
+      return {
+        id: String(i + 1),
+        sequence: Number(leg.LegSequence) || i + 1,
+        from: leg.DeparturePointDescription || leg.DeparturePoint || '-',
+        to: leg.ArrivalPointDescription || leg.ArrivalPoint || '-',
+        type: leg.LegBehaviourDescription || leg.LegBehaviour || '',
+        customer: firstActivity?.CustomerName || firstActivity?.CustomerID || 'Unknown',
+        orderNo: firstActivity?.CustomerOrder || 'Unknown',
+      };
+    });
   }, [data?.LegDetails]);
 
   const storeActivities = useMemo<Activity[]>(() => {
@@ -225,6 +229,10 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
           title: "Success",
           description: response.data.Message || "Leg and events saved successfully",
         });
+        // Refresh data from API after successful save
+        if (tripId) {
+          await loadFromApi({ tripId });
+        }
       } else {
         throw new Error(response.data.Message || "Failed to save leg and events");
       }
@@ -232,10 +240,6 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
       if (onSave) {
         await onSave();
       }
-      toast({
-        title: "Success",
-        description: "Leg and events saved successfully",
-      });
     } catch (error: any) {
       toast({
         title: "Error",
