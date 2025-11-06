@@ -213,6 +213,9 @@ const TripPlanning = () => {
     if (data.Header?.Remarks != undefined && data.Header?.Remarks != null) {
       otherInfoData.Remarks = data.Header?.Remarks;
     }
+    if (data.Header?.PassNoFromSchedule != undefined && data.Header?.PassNoFromSchedule != null) {
+      otherInfoData.PassNoFromSchedule = data.Header?.PassNoFromSchedule;
+    }
     setOtherInfo(otherInfoData);
     console.log("otherInfoData == ", otherInfoData)
 
@@ -415,7 +418,7 @@ const TripPlanning = () => {
     console.log("Old TripDAta TripPlanning page - ", oldTripData)
     const updated = updateTripHeaderImmutable(oldTripData, data);
     console.log("AFTER UPDATE :",updated)
-    tripService.saveTrip(updated)
+    tripService.saveLegAndEventsTripLevel(updated)
   }
   // type TripData = any; // tighten this type if you have interfaces
 
@@ -471,6 +474,8 @@ const TripPlanning = () => {
     if (data?.tripEndDate !== undefined) headerUpdates.PlanEndDate = safeString(data.tripEndDate);
     if (data?.tripEndTime !== undefined) headerUpdates.PlanEndTime = safeString(data.tripEndTime);
     if (data?.remark !== undefined) headerUpdates.Remarks = safeString(data.remark);
+    if (data?.passNo !== undefined) headerUpdates.PassNoFromSchedule = safeString(data.passNo);
+    
     if(data?.planType=="roundTrip" ){
       headerUpdates.IsRoundTrip = safeString('1');
       headerUpdates.IsOneWay = safeString('0');

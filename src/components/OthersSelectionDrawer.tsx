@@ -121,7 +121,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const [supplierRefNo, setSupplierRefNo] = useState(otherInfoData.SupplierRefNo);
   const [planType, setPlanType] = useState(otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay");
   const [loadType, setLoadType] = useState(otherInfoData.LoadType);
-  const [passNo, setPassNo] = useState('');
+  const [passNo, setPassNo] = useState(otherInfoData.PassNoFromSchedule);
 
   const [tripStartDate, setTripStartDate] = useState(otherInfoData.PlanStartDate);
   const [tripStartTime, setTripStartTime] = useState(otherInfoData.PlanStartTime);
