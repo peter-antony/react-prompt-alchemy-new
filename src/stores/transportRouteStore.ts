@@ -30,6 +30,9 @@ interface LegDetail {
   LegBehaviourDescription: string;
   TransportMode: string;
   LegStatus: string | null;
+  LegStatusDescription: string | null;
+  TransitTime: number | null;
+  TransitTimeUOM: string | null;
   TripInfo: TripInfo[] | null;
   ModeFlag: string;
   ReasonForUpdate: string | null;
@@ -137,6 +140,9 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
               LegBehaviourDescription: leg.LegBehaviourDescription || 'Pick',
               TransportMode: leg.TransportMode || 'Rail',
               LegStatus: leg.LegStatus || null,
+              LegStatusDescription: leg.LegStatusDescription || null,
+              TransitTime: leg.TransitTime || null,
+              TransitTimeUOM: leg.TransitTimeUOM || null,
               TripInfo: leg.TripInfo || null,
               ModeFlag: leg.ModeFlag || 'Nochange',
               ReasonForUpdate: leg.ReasonForUpdate || null,
@@ -211,15 +217,18 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
     const newLeg: LegDetail = {
       LegSequence: (selectedRoute.LegDetails?.length || 0) + 1,
       LegID: '',
-      LegUniqueId: `${Date.now()}`,
+      LegUniqueId: null,
       Departure: '',
       DepartureDescription: '',
       Arrival: '',
       ArrivalDescription: '',
-      LegBehaviour: 'Pick',
-      LegBehaviourDescription: 'Pick',
-      TransportMode: 'Rail',
+      LegBehaviour: '',
+      LegBehaviourDescription: '',
+      TransportMode: '',
       LegStatus: null,
+      LegStatusDescription: null,
+      TransitTime: null,
+      TransitTimeUOM: null,
       TripInfo: null,
       ModeFlag: 'Insert',
       ReasonForUpdate: null,

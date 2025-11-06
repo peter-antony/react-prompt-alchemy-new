@@ -42,6 +42,9 @@ interface LegDetail {
   LegBehaviourDescription: string;
   TransportMode: string;
   LegStatus: string | null;
+  LegStatusDescription: string | null;
+  TransitTime: number | null;
+  TransitTimeUOM: string | null;
   TripInfo: TripInfo[] | null;
   ModeFlag: string;
   ReasonForUpdate: string | null;
@@ -226,19 +229,19 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
       // ====== Normalize and compare LegBehaviour ======
       if (panelData.LegBehaviour && panelData.LegBehaviour.includes('||')) {
-        const [behaviour] = panelData.LegBehaviour.split('||').map(x => x.trim());
+        const [behaviour, behaviourDesc] = panelData.LegBehaviour.split('||').map(x => x.trim());
         if (originalLeg && originalLeg.LegBehaviour !== behaviour) {
           isModified = true;
         }
         panelData.LegBehaviour = behaviour;
-        panelData.LegBehaviourDescription = behaviour;
+        panelData.LegBehaviourDescription = behaviourDesc;
       }
 
       // ====== Reset LegID if location changed ======
-      if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
-        console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
-        panelData.LegID = null;
-      }
+      // if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
+      //   console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
+      //   panelData.LegID = null;
+      // }
 
       // ====== Determine ModeFlag correctly ======
       if (originalLeg?.ModeFlag === 'Insert') {
@@ -331,7 +334,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       if (responseData && responseData.data) {
         // Display the message from the API response
         toast({
-          title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : (responseData.message || "✅ Saved Successfully"),
+          title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : "✅ Saved Successfully",
           description: responseData.data.Message || "Trip details saved successfully",
           variant: responseData.data.IsSuccess === false ? "destructive" : "default"
         });
@@ -345,6 +348,75 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
 
   };
+
+    const handleDelete = async (index: number) => {
+    try {
+      console.log(`🗑️ Deleting leg at index ${index}`);
+
+      // 1️⃣ Get the latest form data before deleting
+      const formDataBeforeDelete = getFormData();
+      console.log('🗑️ Form data before delete:', formDataBeforeDelete);
+
+      // 2️⃣ Build final payload — all legs included
+      const reasonValue = typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
+        ? reasonForUpdate.split("||")[0].trim()
+        : reasonForUpdate;
+
+      // 3️⃣ Prepare legs for payload: mark only the deleted leg with ModeFlag: "Delete"
+      const updatedLegs = (selectedRoute?.LegDetails || []).map((leg, i) => ({
+        ...leg,
+        ModeFlag: i === index ? "Delete" : "Nochange",
+      }));
+
+      const formatFinalRouteData = {
+        ...selectedRoute,
+        LegDetails: updatedLegs,
+        ReasonForUpdate: reasonValue || "Deleted Leg",
+      };
+
+      console.log("🧾 Payload for delete:", formatFinalRouteData);
+
+      // 4️⃣ Call the same API used for save
+      const response = await tripService.updateCOSelection(formatFinalRouteData);
+      console.log('🗑️ Delete response:', response);
+
+      const responseData = response as any;
+
+      // 5️⃣ Handle the toast message
+      if (responseData && responseData.data) {
+        toast({
+          title:
+            responseData.data.IsSuccess === false
+              ? "⚠️ Delete Failed"
+              : "✅ Leg Deleted Successfully",
+          description:
+            responseData.data.Message || "Leg deleted and route updated successfully",
+          variant:
+            responseData.data.IsSuccess === false ? "destructive" : "default",
+        });
+      } else {
+        toast({
+          title: "Leg Deleted",
+          description: "The selected leg was deleted successfully",
+        });
+      }
+
+      // 6️⃣ Finally, remove it visually from UI after API success
+      if (!responseData?.data?.IsSuccess === false) {
+        removeLegPanel(index);
+      }
+
+    } catch (error) {
+      console.error("❌ Error deleting leg:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while deleting the leg.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
 
   const createLegPanelConfig = (legIndex: number): PanelConfig => {
     console.log(`🔧 Creating panel config for leg ${legIndex}`);
@@ -372,7 +444,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'LegID',
         label: 'Leg ID',
         fieldType: 'text',
-        value: leg.LegID?.toString() || 'Leg ' + (legIndex + 1).toString(),
+        value: leg.LegID?.toString() || '',
         mandatory: true,
         visible: true,
         editable: false,
@@ -429,7 +501,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'TransportMode',
         label: 'Transport Mode',
         fieldType: 'lazyselect',
-        value: leg.TransportMode || 'Rail',
+        value: leg.TransportMode || '',
         mandatory: true,
         visible: true,
         editable: true,
@@ -619,7 +691,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                     variant="ghost"
                     size="icon"
                     className="absolute top-2.5 right-14 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
-                    onClick={() => removeLegPanel(index)}
+                    onClick={() => handleDelete(index)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -645,50 +717,71 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
                 {/* Trip Details with Badges */}
                 {leg.TripInfo && leg.TripInfo.length > 0 && (
-                  <div className="px-6 pb-4">
-                    {leg.TripInfo.map((trip, tripIndex) => (
-                      <div key={tripIndex} className="text-sm text-gray-600 flex items-center gap-2 flex-wrap mb-2">
-                        <span className="font-medium">
-                          {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate} → {trip.ArrivalDescription}, {trip.ArrivalActualDate}
-                        </span>
-                        {trip.LoadType && (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
-                            {trip.LoadType}
-                          </Badge>
-                        )}
-                        {trip.TripStatus && (
-                          <Badge
-                            variant="outline"
-                            className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
-                          >
-                            {trip.TripStatus}
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
-                    {/* {leg.TripInfo[0]?.DraftBillNo && ( */}
-                      <div className="text-sm text-gray-600 mt-2 flex items-center gap-2">
-                        <span>Draftbill: {leg.TripInfo[0].DraftBillNo || '-'}</span>
-                        {leg.TripInfo[0]?.DraftBillStatus && (
-                          <Badge
-                            variant="outline"
-                            // className={`text-xs px-2 py-1 ${leg.TripInfo[0].DraftBillStatus === 'Approved'
-                            //     ? 'bg-green-50 text-green-700 border-green-200'
-                            //     : leg.TripInfo[0].DraftBillStatus === 'Pending'
-                            //       ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                            //       : leg.TripInfo[0].DraftBillStatus === 'Rejected'
-                            //         ? 'bg-red-50 text-red-700 border-red-200'
-                            //         : 'bg-gray-50 text-gray-700 border-gray-200'
-                            //   }`}
-                          >
-                            {leg.TripInfo[0].DraftBillStatus}
-                          </Badge>
-                        )}
-                      </div>
-                    {/* )} */}
+  <div className="px-6 pb-4">
+    {leg.TripInfo.map((trip, tripIndex) => (
+      <div
+        key={tripIndex}
+        className="text-sm text-gray-600 flex flex-col gap-1 mb-3 border-b border-gray-100 pb-2 last:border-b-0"
+      >
+        {/* Trip Details */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium">
+            {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate || "-"} → {trip.ArrivalDescription}, {trip.ArrivalActualDate || "-"}
+          </span>
+          {trip.LoadType && (
+            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
+              {trip.LoadType}
+            </Badge>
+          )}
+          {trip.TripStatus && (
+            <Badge
+              variant="outline"
+              className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
+            >
+              {trip.TripStatus}
+            </Badge>
+          )}
+        </div>
 
-                  </div>
-                )}
+        {/* Supplier and Transit Info */}
+        <div className="flex items-center gap-4 flex-wrap text-gray-700">
+          {trip.SupplierDescription && (
+            <span>
+              Supplier: {trip.SupplierDescription}
+              {/* <span className="font-medium text-gray-900">{trip.SupplierDescription}</span> */}
+            </span>
+          )}
+
+          {(leg.TransitTime || leg.TransitTimeUOM) && (
+            <span>
+              Transit Time: {leg.TransitTime || "-"}{" "}
+                {leg.TransitTimeUOM
+                  ? leg.TransitTimeUOM.charAt(0).toUpperCase() +
+                    leg.TransitTimeUOM.slice(1).toLowerCase()
+                  : ""}
+            </span>
+          )}
+        </div>
+
+        {/* Draft Bill Info */}
+        {trip.DraftBillNo && (
+          <div className="flex items-center gap-4 flex-wrap text-gray-700">
+            <span>
+              Draftbill:{trip.DraftBillNo}
+              {/* <span className="font-medium text-gray-900">{trip.DraftBillNo}</span> */}
+            </span>
+            {trip.DraftBillStatus && (
+              <Badge variant="outline" className="text-xs px-2 py-1">
+                {trip.DraftBillStatus}
+              </Badge>
+            )}
+          </div>
+        )} 
+      </div>
+    ))}
+  </div>
+)}
+
 
                 {/* {leg.LegStatus && (
                   <div className="px-6 pb-4">
