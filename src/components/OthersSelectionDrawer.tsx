@@ -90,6 +90,7 @@ const resourceConfigs = {
 
 };
 
+
 export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   tripNo,
   tripStatus,
@@ -104,6 +105,10 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   isLoading = false
 }) => {
   const { toast } = useToast();
+  const bindQC = (): InputDropdownValue => ({
+    dropdown: otherInfoData?.QuickCode1 ?? "",
+    input: otherInfoData?.QuickCodeValue1 ?? "", // use `input`, not `value`
+  });
   const { tripData, fetchTrip,setTrip } = manageTripStore();
   const [serviceType, setServiceType] = useState<string>();
   const [subServiceType, setSubServiceType] = useState<string>();
@@ -115,7 +120,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
   const [rowTripId, setRowTripId] = useState<any>([]);
-  const [QCUserDefined, setQCUserDefined] = useState<InputDropdownValue>({ dropdown: 'KG', input: '' });
+  const [QCUserDefined, setQCUserDefined] = useState<InputDropdownValue>(bindQC());
   const [QC, setQC] = useState<any>([]);
   const [remark, setRemark] = useState(otherInfoData.Remarks);
   const [supplierRefNo, setSupplierRefNo] = useState(otherInfoData.SupplierRefNo);

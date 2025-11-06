@@ -216,6 +216,13 @@ const TripPlanning = () => {
     if (data.Header?.PassNoFromSchedule != undefined && data.Header?.PassNoFromSchedule != null) {
       otherInfoData.PassNoFromSchedule = data.Header?.PassNoFromSchedule;
     }
+    if (data.Header?.QuickCode1 != undefined && data.Header?.QuickCode1 != null) {
+      otherInfoData.QuickCode1 = data.Header?.QuickCode1;
+    }
+    if (data.Header?.QuickCodeValue1 != undefined && data.Header?.QuickCodeValue1 != null) {
+      otherInfoData.QuickCodeValue1 = data.Header?.QuickCodeValue1;
+    }
+    otherInfoData
     setOtherInfo(otherInfoData);
     console.log("otherInfoData == ", otherInfoData)
 
@@ -419,6 +426,11 @@ const TripPlanning = () => {
     const updated = updateTripHeaderImmutable(oldTripData, data);
     console.log("AFTER UPDATE :",updated)
     tripService.saveLegAndEventsTripLevel(updated)
+       toast({
+        title: "Saved Successfully",
+        description: `Other Details saved successfully`,
+        
+      });
   }
   // type TripData = any; // tighten this type if you have interfaces
 
