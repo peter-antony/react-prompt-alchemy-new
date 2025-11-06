@@ -423,8 +423,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       // Fallback to empty array if API call fails
       return [];
     } catch (error) {
-      console.error(`Error fetching ${messageType}:`, error);
-      // Return empty array on error
       return [];
     }
   };
@@ -1062,8 +1060,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               setNewRowValues((prev: any) => ({
                 ...prev,
                 Wagon: value,
-                WagonDescription: value, // Set description to same value for new entries
-                WagonType: 'Unknown Type', // Set type to "Unknown" for new entries
+                WagonDescription: value, 
+                WagonType: 'Unknown Type', 
                 WagonQty: '',
                 WagonQtyUOM: '',
                 WagonTareWeight: '',
@@ -1129,8 +1127,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 newData[rowIndex] = {
                   ...newData[rowIndex],
                   Wagon: value,
-                  WagonDescription: value, // Set description to same value for new entries
-                  WagonType: 'Unknown', // Set type to "Unknown" for new entries
+                  WagonDescription: value,
+                  WagonType: 'Unknown Type', 
                   WagonQty: '',
                   WagonQtyUOM: '',
                   WagonTareWeight: '',
@@ -2217,7 +2215,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       await new Promise(resolve => setTimeout(resolve, 100));
 
     } catch (error) {
-      console.error('Error editing row:', error);
       toast({
         title: "⚠️ Edit failed",
         description: "An error occurred while updating the row.",
@@ -2227,8 +2224,13 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   };
   const handleAddRow = async (newRow: any) => {
     try {
+
+      const newRowWithInsertFlag = {
+        ...newRow,
+        ModeFlag: 'Insert',
+      };
       // Add the new row to actualEditableData state
-      setActualEditableData(prevData => [...prevData, newRow]);
+      setActualEditableData(prevData => [...prevData, newRowWithInsertFlag]);
 
       // Set flag to indicate user has made edits
       hasUserEditsRef.current = true;
@@ -2358,7 +2360,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
           // Add required system fields
           ModeFlag: 'Insert',
-          isNewRow: true,
+          // isNewRow: true,
           Seqno: '',
           ActualLineUniqueID: -1
         };
@@ -2390,9 +2392,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   // Handle export functionality
   const handleExportData = (format: 'csv' | 'xlsx') => {
     try {
-      // Debug: Log the actual data structure
-      console.log('actualEditableData for export:', actualEditableData);
-      console.log('First row keys:', actualEditableData.length > 0 ? Object.keys(actualEditableData[0]) : 'No data');
 
       // Define custom headers for export
       const customHeaders = [
@@ -2548,10 +2547,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return exportRow;
       });
 
-      // Debug: Log the mapped export data
-      console.log('Export data mapped:', exportData);
-      console.log('Column key mapping used:', columnKeyMapping);
-
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `Consignment_Details_${timestamp}`;
@@ -2570,7 +2565,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       });
 
     } catch (error) {
-      console.error('Export error:', error);
       toast({
         title: "Export Failed",
         description: "Failed to export data. Please try again.",
@@ -2585,8 +2579,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
       // Get the full trip data from the store - try prop first, then manageTripStore as fallback
       const currentTripData = tripData || manageTripStore.getState().tripData;
+      console.log("currentTripData ++++", currentTripData);
       if (!currentTripData) {
-        console.warn("No trip data available in store or props");
         toast({
           title: "⚠️ No Trip Data",
           description: "No trip data available to update.",
@@ -2595,7 +2589,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return;
       }      // Validate that we have actual editable data
       if (!actualEditableData || actualEditableData.length === 0) {
-        console.warn("No actual data to save");
         toast({
           title: "⚠️ No Data",
           description: "No actual details to save.",
@@ -2661,7 +2654,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           try {
             // Safely access row data with null checks
             if (!actualRow || typeof actualRow !== 'object') {
-              console.warn(`Invalid row data at index ${index}:`, actualRow);
               throw new Error(`Invalid row data at index ${index}`);
             }
 
@@ -2669,7 +2661,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             let modeFlag = "Update"; // Default to Update for existing data
 
             // If row has Insert flag or isNewRow marker, keep it as Insert
-            if (actualRow.ModeFlag === 'Insert' || actualRow.isNewRow === true) {
+            if (actualRow.ModeFlag === 'Insert') {
               modeFlag = "Insert";
             }
 
@@ -2777,7 +2769,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
             return mappedRow;
           } catch (rowError) {
-            console.error(`Error processing row ${index}:`, rowError, actualRow);
             throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
           }
         });
@@ -2785,7 +2776,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         // If no user edits, only include new/imported data (original logic)
         currentGridData = actualEditableData.filter(row => {
           // Only include rows that are newly imported (have Insert mode flag or isNewRow marker)
-          return row.ModeFlag === 'Insert' || row.isNewRow === true;
+          return row.ModeFlag === 'Insert';
         }).map((actualRow, index) => {
           // Map the data to match the expected API format, removing extra parameters
           return {
@@ -2874,14 +2865,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       if (allDataToSave.length === 0) {
         // Check if user has edited data but no valid data to save
         if (hasUserEditsRef.current) {
-          console.warn("User has made edits but no valid data to save");
           toast({
             title: "⚠️ Invalid Data",
             description: "Please ensure all required fields are filled correctly.",
             variant: "destructive",
           });
         } else {
-          console.warn("No data to save");
           toast({
             title: "⚠️ No Changes",
             description: "No changes to save.",
@@ -2891,9 +2880,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return;
       }
 
+      console.log("updatedTripData 1111", allDataToSave);
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
-
+      console.log("updatedTripData 1111", updatedTripData);
       // Find and update the specific nested object in trip data structure
       try {
         // Validate the path exists
@@ -2909,22 +2899,17 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
 
         if (!updatedTripData.LegDetails[legIndex].Consignment) {
-          console.log(`Leg at index ${legIndex} has no Consignment, initializing empty array`);
           updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
         if (!Array.isArray(updatedTripData.LegDetails[legIndex].Consignment)) {
-          console.log(`Consignment is not an array, converting to array`);
           updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
-        // For ConsignmentTrip, we need to find the right consignment and update its Actual array
-        // Since we have consignments array from the store, we can use the first one or find by criteria
-        const consignmentIndex = 0; // Assuming we're working with the first consignment or adjust logic as needed
+        const consignmentIndex = 0; 
 
         // Initialize consignment object if it doesn't exist
         if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]) {
-          console.log(`Consignment at index ${consignmentIndex} not found, initializing empty object`);
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex] = {};
         }
 
@@ -2935,7 +2920,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = allDataToSave;
 
+        console.log("updatedTripData ======1", updatedTripData);
+        
         // Save to API
+        
         try {
           const response = await tripService.saveTrip(updatedTripData);
 
@@ -2954,9 +2942,15 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               variant: "default",
             });
 
-            // After successful save, immediately fetch updated trip data and refresh actuals
+            // After successful save, wait a moment before fetching updated trip data to allow backend processing
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
             try {
-              const tripId = updatedTripData.TripId || updatedTripData.TripID;
+              // Get tripId from manageTripStore Header.TripNo
+              const currentTripData = manageTripStore.getState().tripData;
+              const tripId = currentTripData?.Header?.TripNo || updatedTripData.TripId || updatedTripData.TripID;
+        
+
               if (tripId) {
                 const refreshResponse = await tripService.getTripById({ id: tripId });
 
@@ -2970,19 +2964,60 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   const legDetails = refreshedTripData.LegDetails;
                   if (legDetails && Array.isArray(legDetails)) {
                     const currentLegData = legDetails.find(leg => leg.LegSequence === legId);
-                    if (currentLegData?.Consignment?.[0]?.Actual) {
+                
+
+                    if (currentLegData?.Consignment?.[0]?.Actual && Array.isArray(currentLegData.Consignment[0].Actual)) {
                       // Update actualEditableData with fresh data from API
                       setActualEditableData(currentLegData.Consignment[0].Actual);
-                      console.log("✅ Actual data refreshed successfully after save");
+
+                      toast({
+                        title: "🔄 Data Refreshed",
+                        description: "Trip data has been refreshed successfully.",
+                        variant: "default",
+                      });
+                    } else {
+                     
+                      if (currentLegData?.Consignment?.[0]) {
+                        currentLegData.Consignment[0].Actual = allDataToSave;
+
+                        manageTripStore.getState().setTrip(refreshedTripData);
+
+                        setActualEditableData([...allDataToSave]);
+                      }
+
+                      toast({
+                        title: "✅ Data Saved & Refreshed",
+                        description: "Data saved successfully and grid has been refreshed with latest data.",
+                        variant: "default",
+                      });
                     }
+                  } else {
+                    toast({
+                      title: "⚠️ Refresh Warning",
+                      description: "Data saved but leg details not found in refreshed trip.",
+                      variant: "destructive",
+                    });
                   }
                 } else {
-                  console.warn("Failed to refresh trip data after save");
+                  toast({
+                    title: "⚠️ Refresh Failed",
+                    description: "Data saved successfully but failed to refresh trip data. Please reload the page.",
+                    variant: "destructive",
+                  });
                 }
+              } else {
+                toast({
+                  title: "⚠️ Refresh Failed",
+                  description: "Data saved successfully but no trip ID found to refresh data.",
+                  variant: "destructive",
+                });
               }
             } catch (refreshError) {
-              console.error("Error refreshing trip data after save:", refreshError);
-              // Don't show error toast for refresh failure as save was successful
+              toast({
+                title: "⚠️ Refresh Failed",
+                description: `Data saved successfully but failed to refresh: ${refreshError.message}`,
+                variant: "destructive",
+              });
             }
 
           } else {
@@ -3009,7 +3044,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       }
 
     } catch (error) {
-      console.error("Error saving actual details:", error);
       toast({
         title: "⚠️ Save Failed",
         description: "An error occurred while saving. Please try again.",
@@ -3017,6 +3051,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       });
     }
   };  // Step 1: Build Customer Order dropdown list
+
   const buildCustomerOrderList = (consignments: any[] = []) => {
     return consignments.map((item, index) => ({
       label: `${item.CustomerOrderNo} — ${item.CustomerName || "-"}`,
@@ -3056,7 +3091,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const uniqueOptions = [...new Set(options)] as string[];
         setWagonQtyUOMOptions(uniqueOptions);
       } catch (error) {
-        console.error('Failed to fetch wagon quantity UOM options:', error);
         setWagonQtyUOMOptions([]);
       }
     };
@@ -3332,7 +3366,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <Plus className="h-4 w-4 mr-1" />
                 Add Actuals
               </Button> */}
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+              {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -3342,7 +3376,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                 </svg>
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -3831,7 +3865,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
                   resolve(jsonData);
                 } catch (error) {
-                  console.error('Error processing file:', error);
                   reject(error);
                 }
               };

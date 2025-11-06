@@ -354,7 +354,7 @@ export default function CustomBulkUpload({
         </div>
     );
 
-    console.log('CustomBulkUpload rendering with isOpen:', isOpen);
+    // console.log('CustomBulkUpload rendering with isOpen:', isOpen);
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
