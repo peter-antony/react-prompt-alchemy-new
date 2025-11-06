@@ -117,6 +117,8 @@ export default function LinkedOrders() {
   const [error, setError] = useState<string | null>(null);
   const [linkedOrderArr, setLinkedOrderArray] = useState<any>([]);
   const [totalNetAmount, setTotalNetAmount] = useState<number>(0);
+  const [totalCustomerNetAmount, setTotalCustomerNetAmount] = useState<number>(0);
+  const [totalSupplierNetAmount, setTotalSupplierNetAmount] = useState<number>(0);
 
   useEffect(() => {
     fetchAll();
@@ -146,7 +148,22 @@ export default function LinkedOrders() {
           break;
         }
       }
+      let totalCustomerAmount = 0;
 
+      for (const item of linkedOrdersArr) {
+        if (item.LinkedOrderType === "SELL") {
+          totalCustomerAmount += Number(item.LinkedTotalNetAmount || 0);
+        }
+      }
+      setTotalCustomerNetAmount(totalCustomerAmount);
+      let totalSupplierAmount = 0;
+
+      for (const item of linkedOrdersArr) {
+        if (item.LinkedOrderType === "BUY") {
+          totalSupplierAmount += Number(item.LinkedTotalNetAmount || 0);
+        }
+      }
+      setTotalSupplierNetAmount(totalSupplierAmount);
       setLinkedOrderArray(linkedOrdersArr);
     } catch (err) {
       setError(`Error fetching API data`);
@@ -168,11 +185,11 @@ export default function LinkedOrders() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-3">
         <div>
           <span className="text-lg font-semibold text-gray-800">Total Net Amount</span>
-          <span className="ml-4 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>
-            Customer <span className="font-bold  rounded-full bg-white">€ {totalNetAmount}</span>
+          <span className="ml-4 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px" }}>
+            Customer <span className="font-bold  rounded-full bg-white">€ {totalCustomerNetAmount}</span>
           </span>
-          <span className="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px"}}>
-            Supplier <span className="font-bold  rounded-full bg-white">€ {totalNetAmount}</span>
+          <span className="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 text-sm font-medium cursor-pointer" style={{ fontSize: "11px" }}>
+            Supplier <span className="font-bold  rounded-full bg-white">€ {totalSupplierNetAmount}</span>
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -234,10 +251,10 @@ export default function LinkedOrders() {
                 <span> € {order.LinkedTotalNetAmount}</span>
               </div>
             </div>
-            <div className="flex items-center gap-6 w-full text-sm text-gray-700">
+            <div className="flex items-center gap-1 w-full text-sm text-gray-700">
               {/* <div className="flex items-center gap-1 w-1/2"> */}
-                <Bookmark className="w-4 h-4 text-gray-400" />
-                <span>{order.LinkedContractID} - {order.LinkedContractName}</span>
+              <Bookmark className="w-4 h-4 text-gray-400" />
+              <span>{order.LinkedQuickOrderContract} - {order.LinkedContractName}</span>
               {/* </div> */}
               {/* <div className="flex items-center gap-1 w-1/2">
                 <Calendar className="w-4 h-4 text-gray-400" />
