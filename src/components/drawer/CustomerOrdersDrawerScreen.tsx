@@ -233,18 +233,34 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
   }, [tripData]);
 
   const filteredOrders = orders
-    .filter(
-      (order) =>
-        order.CustomerID.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.CustomerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.ExecutionPlanID.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .map((order) => ({
-      ...order,
-      DepartureArrival: `${order.DeparturePoint} - ${order.ArrivalPoint}`,
-      PickupDelivery: `${order.PickupDateTime} to ${order.DeliveryDateTime}`,
-      PlanFromToDate: `${order.PlannedFromDateTime} to ${order.PlannedToDateTime}`,
-    }));
+    // .filter(
+    //   (order) =>
+    //     order.CustomerID.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //     order.CustomerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //     order.ExecutionPlanID.toLowerCase().includes(searchQuery.toLowerCase())
+    // )
+
+    // if both values are null use -, instead of " - to - " 
+    .map((order) => {
+      const formatPair = (a, b, separator = " - ") => {
+        if (!a && !b) return "-";
+        return `${a || "-"}${separator}${b || "-"}`;
+      };
+
+      const formatRange = (a, b, separator = " to ") => {
+        if (!a && !b) return "-";
+        return `${a || "-"}${separator}${b || "-"}`;
+      };
+
+      return {
+        ...order,
+        DepartureArrival: formatPair(order.DeparturePoint, order.ArrivalPoint),
+        PickupDelivery: formatRange(order.PickupDateTime, order.DeliveryDateTime),
+        PlanFromToDate: formatRange(order.PlannedFromDateTime, order.PlannedToDateTime),
+      };
+    });
+
+
 
   return (
     <div className="flex flex-col h-full bg-background">
