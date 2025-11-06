@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Search, Filter, User, FileText, Calendar, Euro } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 interface LinkedTransaction {
   id: string;
@@ -98,7 +99,32 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
   tripId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [transactions] = useState<LinkedTransaction[]>(mockTransactions);
+  // const [transactions] = useState<LinkedTransaction[]>(mockTransactions);
+
+  const { tripData } = manageTripStore();
+  console.log('linked Transactions - tripData', tripData.LinkedTransactions);
+  const LinkedTransactions = tripData?.LinkedTransactions;
+
+  const transactions = useMemo(() => {
+      if (!LinkedTransactions) return [];
+
+      const tripPlanItems =
+      LinkedTransactions.TripPlan?.map((t, index) => ({
+        id: `trip-${index}`,
+        badge: 'T',
+        badgeColor: 'bg-orange-100 text-orange-600',
+        type: t.PlanTripStatus || '',
+        transactionId: t.TripNo || '-',
+        companyName: t.TransportSupplier || '-',
+        containerNumber: '-',
+        customerOrderNumber: '-',
+        amount: 0,
+        productId: '-',
+        date: t.TripDate || '-',
+      })) || [];
+
+    return [ ...tripPlanItems];
+  }, [LinkedTransactions]);
 
   const customerTotal = transactions
     .filter(t => t.badge === 'C')
@@ -170,7 +196,7 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
                   </div>
                 </div>
                 <Badge variant={transaction.type === 'buy' ? 'default' : 'secondary'} className="text-xs">
-                  {transaction.type === 'buy' ? 'Buy' : 'Sell'}
+                  {transaction.type}
                 </Badge>
               </div>
 

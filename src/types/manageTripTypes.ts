@@ -130,10 +130,10 @@ export interface LinkedTransactionQuickOrder {
   ToDate: string;
 }
 export interface LinkedTransactionTripPlan {
-  TripID: string;
-  TripStatus: string;
-  TripDate: string;
+  PlanTripStatus: string;
   TransportSupplier: string;
+  TripDate: string;
+  TripNo: string;
 }
 
 export interface LinkedTransactions {
