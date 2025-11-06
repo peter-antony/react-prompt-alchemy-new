@@ -1,4 +1,4 @@
-import { ColumnConfig } from '@/types/bulkUpload';
+import { ColumnConfig } from '@/types/BulkUpload';
 
 // Excel header mappings to the response structure fields
 export const excelColumnMappings = {
@@ -6,9 +6,9 @@ export const excelColumnMappings = {
   'Tare Weight': 'WagonTareWeight',
   'Gross Weight': 'GrossWeight', 
   'Container ID': 'ContainerId',
-  'Commodity ID': '', // Need To Check
-  'Commodity Actual Qty': '', // Need To Check
-  'Commodity Qty UOM': '', // Need To Check
+  'Product ID': 'ProductId',
+  'Product Weight UOM': 'ProductWeightUOM',
+  'Product Weight': 'ProductWeight',
   'Wagon Position': 'WagonPosition',
   'Wagon Type': 'WagonType',
   'Wagon length': 'WagonLength',
@@ -17,13 +17,11 @@ export const excelColumnMappings = {
   'Container Type': 'ContainerType',
   'Container Qty': 'ContainerQty',
   'Container Qty UOM': 'ContainerQtyUOM',
-  'Commodity Damaged Qty': '', // Need To Check
   'THU ID': 'Thu',
   'THU Serial No': 'ThuSerialNo',
   'THU Qty': 'ThuQty',
   'THU Weight': 'ThuWeight',
   'THU Weight UOM': 'ThuWeightUOM',
-  'Commodity Description': 'ProductDescription',
   'Shunting Option': 'ShuntingOption',
   'Replaced Wagon ID': 'ReplacedWagon',
   'Reason Code': 'ShuntingReasonCode',
@@ -37,8 +35,8 @@ export const excelColumnMappings = {
   'Contains Hazardous Goods': 'ContainsHazardousGoods',
   'Wagon Seal No.': 'WagonSealNo',
   'Container Seal No.': 'ContainerSealNo',
-  'Shunt In Date & Time': 'ShuntInDate',
-  'Shunt Out Date & Time': 'ShuntOutDate',
+  'Shunt In Date & Time': 'ShuntInDate', // Doubt
+  'Shunt Out Date & Time': 'ShuntOutDate', // Doubt
   'Remarks1': 'Remarks1',
   'Remarks2': 'Remarks2',
   'Remarks3': 'Remarks3'

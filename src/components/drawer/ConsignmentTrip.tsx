@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, act } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '../ui/card';
@@ -30,6 +30,7 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 import CustomBulkUpload from '@/components/DynamicFileUpload/CustomBulkUpload';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import * as XLSX from 'xlsx';
+import { Switch } from '@/components/ui/switch';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -50,7 +51,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { toast } = useToast();
   const [expandedPlanned, setExpandedPlanned] = useState(false);
-  const [expandedCOInfo, setExpandedCOInfo] = useState(true);
+  const [expandedCOInfo, setExpandedCOInfo] = useState(false);
   const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pickupComplete, setPickupComplete] = useState(false);
@@ -1062,7 +1063,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 ...prev,
                 Wagon: value,
                 WagonDescription: value, // Set description to same value for new entries
-                WagonType: 'Unknown', // Set type to "Unknown" for new entries
+                WagonType: 'Unknown Type', // Set type to "Unknown" for new entries
                 WagonQty: '',
                 WagonQtyUOM: '',
                 WagonTareWeight: '',
@@ -2399,9 +2400,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'Tare Weight',
         'Gross Weight',
         'Container ID',
-        'Commodity ID',
-        'Commodity Actual Qty',
-        'Commodity Qty UOM',
+        'Product ID',
+        'Product Weight',
+        'Product Weight UOM',
         'Wagon Position',
         'Wagon Type',
         'Wagon length',
@@ -2410,13 +2411,11 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'Container Type',
         'Container Qty',
         'Container Qty UOM',
-        'Commodity Damaged Qty',
         'THU ID',
         'THU Serial No',
         'THU Qty',
         'THU Weight',
         'THU Weight UOM',
-        'Commodity Description',
         'Shunting Option',
         'Replaced Wagon ID',
         'Reason Code',
@@ -2428,10 +2427,21 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'UN Code',
         'DG Class',
         'Contains Hazardous Goods',
+        'Last Commodity Transported 1',
+        'Last Commodity Transported 2',
+        'Last Commodity Transported 3',
         'Wagon Seal No.',
         'Container Seal No.',
-        'Shunt In Date & Time',
-        'Shunt Out Date & Time',
+        'Shunt In Date',
+        'Shunt In Time',
+        'Shunt Out Date',
+        'Shunt Out Time',
+        'Quick code 1',
+        'Quick code 2',
+        'Quick code 3',
+        'Quick code Value 1',
+        'Quick code Value 2',
+        'Quick code Value 3',
         'Remarks1',
         'Remarks2',
         'Remarks3'
@@ -2443,9 +2453,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'WagonTareWeight': 'Tare Weight',
         'GrossWeight': 'Gross Weight',
         'ContainerDescription': 'Container ID',
-        'Product': 'Commodity ID',
-        'ProductWeight': 'Commodity Actual Qty',
-        'ProductWeightUOM': 'Commodity Qty UOM',
+        'Product': 'Product ID',
+        'ProductWeight': 'Product Weight',
+        'ProductWeightUOM': 'Product Weight UOM',
         'WagonPosition': 'Wagon Position',
         'WagonType': 'Wagon Type',
         'WagonLength': 'Wagon length',
@@ -2454,13 +2464,11 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'ContainerType': 'Container Type',
         'ContainerQty': 'Container Qty',
         'ContainerQtyUOM': 'Container Qty UOM',
-        'CommodityDamagedQty': 'Commodity Damaged Qty',
         'Thu': 'THU ID',
         'ThuSerialNo': 'THU Serial No',
         'ThuQty': 'THU Qty',
         'ThuWeight': 'THU Weight',
         'ThuWeightUOM': 'THU Weight UOM',
-        'ProductDescription': 'Commodity Description',
         'ShuntingOption': 'Shunting Option',
         'ReplacedWagon': 'Replaced Wagon ID',
         'ShuntingReasonCode': 'Reason Code',
@@ -2472,10 +2480,21 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         'UNCode': 'UN Code',
         'DGClass': 'DG Class',
         'ContainsHazardousGoods': 'Contains Hazardous Goods',
+        'LastCommodityTransported1': 'Last Commodity Transported 1',
+        'LastCommodityTransported2': 'Last Commodity Transported 2',
+        'LastCommodityTransported3': 'Last Commodity Transported 3',
         'WagonSealNo': 'Wagon Seal No.',
         'ContainerSealNo': 'Container Seal No.',
-        'ShuntInDateTime': 'Shunt In Date & Time',
-        'ShuntOutDateTime': 'Shunt Out Date & Time',
+        'ShuntInDate': 'Shunt In Date',
+        'ShuntInTime': 'Shunt In Time',
+        'ShuntOutTime': 'Shunt Out Time',
+        'ShuntOutDate': 'Shunt Out Date',
+        'QuickCode1': 'Quick code 1',
+        'QuickCode2': 'Quick code 2',
+        'QuickCode3': 'Quick code 3',
+        'QuickCodeValue1': 'Quick code Value 1',
+        'QuickCodeValue2': 'Quick code Value 2',
+        'QuickCodeValue3': 'Quick code Value 3',
         'Remarks1': 'Remarks1',
         'Remarks2': 'Remarks2',
         'Remarks3': 'Remarks3'
@@ -2654,24 +2673,24 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             WagonType: actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype || "",
             Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
             WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
-            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || 1,
-            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "TON",
-            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || "",
+            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || null,
+            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "",
+            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || null,
             ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
             ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid || "",
-            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || "",
-            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "TON",
+            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || null,
+            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "",
             Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
             ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription || "",
-            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || "",
-            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "TON",
-            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || "",
+            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || null,
+            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "",
+            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || null,
             Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
             ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid || "",
             ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
-            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || "",
-            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || "",
-            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "TON",
+            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || null,
+            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || null,
+            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "",
             ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
             ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
             ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
@@ -2691,29 +2710,29 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
             DGClass: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
             DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
-            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "No",
+            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "",
             WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
             ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
-            ContainerTareWeight: "",
-            ContainerTareWeightUOM: "",
-            LastCommodityTransported1: "",
-            LastCommodityTransportedDate1: "",
-            LastCommodityTransported2: "",
-            LastCommodityTransportedDate2: "",
-            LastCommodityTransported3: "",
-            LastCommodityTransportedDate3: "",
-            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || "",
-            WagonTareWeightUOM: "TON",
-            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || "",
-            WagonLengthUOM: "M",
-            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || 0,
-            GrossWeightUOM: "TON",
-            QuickCode1: "",
-            QuickCode2: "",
-            QuickCode3: "",
-            QuickCodeValue1: "",
-            QuickCodeValue2: "",
-            QuickCodeValue3: "",
+            ContainerTareWeight: actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight || null,
+            ContainerTareWeightUOM: actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom || "",
+            LastCommodityTransported1: actualRow['Last Commodity Transported1'] || actualRow.LastCommodityTransported1 || actualRow.lastcommoditytransported1 || "",
+            LastCommodityTransportedDate1: actualRow['Last Commodity Transported Date1'] || actualRow.LastCommodityTransportedDate1 || actualRow.lastcommoditytransporteddate1 || null,
+            LastCommodityTransported2: actualRow['Last Commodity Transported2'] || actualRow.LastCommodityTransported2 || actualRow.lastcommoditytransported2 || "",
+            LastCommodityTransportedDate2: actualRow['Last Commodity Transported Date2'] || actualRow.LastCommodityTransportedDate2 || actualRow.lastcommoditytransporteddate2 || null,
+            LastCommodityTransported3: actualRow['Last Commodity Transported3'] || actualRow.LastCommodityTransported3 || actualRow.lastcommoditytransported3 || "",
+            LastCommodityTransportedDate3: actualRow['Last Commodity Transported Date3'] || actualRow.LastCommodityTransportedDate3 || actualRow.lastcommoditytransporteddate3 || null,
+            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || null,
+            WagonTareWeightUOM: actualRow['Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom || "",
+            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || null,
+            WagonLengthUOM: actualRow['Wagon length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom || "",
+            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || null,
+            GrossWeightUOM: actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom || "",
+            QuickCode1: actualRow['QuickCode1'] || actualRow.QuickCode1 || actualRow.quickcode1 || "",
+            QuickCode2: actualRow['QuickCode2'] || actualRow.QuickCode2 || actualRow.quickcode2 || "",
+            QuickCode3: actualRow['QuickCode3'] || actualRow.QuickCode3 || actualRow.quickcode3 || "",
+            QuickCodeValue1: actualRow['QuickCodeValue1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1 || "",
+            QuickCodeValue2: actualRow['QuickCodeValue2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2 || "",
+            QuickCodeValue3: actualRow['QuickCodeValue3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3 || "",
             Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
             Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
             Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
@@ -2736,24 +2755,22 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             WagonType: actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype || "",
             Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
             WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
-            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || 1,
-            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "TON",
+            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || null,
+            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "",
             ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || "",
             ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
             ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid || "",
-            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || "",
-            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "TON",
-            Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
-            ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription || "",
-            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || "",
-            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "TON",
-            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || "",
+            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || null,
+            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "",
+            Product: actualRow['Product ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
+            ProductWeight: actualRow['Product Weight'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || null,
+            ProductWeightUOM: actualRow['Product Weight UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "",
             Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
             ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid || "",
             ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
-            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || "",
-            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || "",
-            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "TON",
+            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || null,
+            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || null,
+            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "",
             ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
             ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
             ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
@@ -2762,10 +2779,10 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
             ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
             ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
-            ShuntInDate: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
-            ShuntInTime: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
-            ShuntOutDate: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
-            ShuntOutTime: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
+            ShuntInDate: actualRow['Shunt In Date'] ? actualRow['Shunt In Date'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
+            ShuntInTime: actualRow['Shunt In Time'] ? actualRow['Shunt In Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
+            ShuntOutDate: actualRow['Shunt Out Date'] ? actualRow['Shunt Out Date'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
+            ShuntOutTime: actualRow['Shunt Out Time'] ? actualRow['Shunt Out Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
             ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores || "",
             NHM: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
             NHMDescription: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
@@ -2773,29 +2790,29 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
             DGClass: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
             DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
-            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "No",
+            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "",
             WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
             ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
-            ContainerTareWeight: "",
-            ContainerTareWeightUOM: "",
-            LastCommodityTransported1: "",
-            LastCommodityTransportedDate1: "",
-            LastCommodityTransported2: "",
-            LastCommodityTransportedDate2: "",
-            LastCommodityTransported3: "",
-            LastCommodityTransportedDate3: "",
-            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || "",
-            WagonTareWeightUOM: "TON",
-            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || "",
-            WagonLengthUOM: "M",
-            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || 0,
-            GrossWeightUOM: "TON",
-            QuickCode1: "",
-            QuickCode2: "",
-            QuickCode3: "",
-            QuickCodeValue1: "",
-            QuickCodeValue2: "",
-            QuickCodeValue3: "",
+            ContainerTareWeight: actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight || null,
+            ContainerTareWeightUOM: actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom || "",
+            LastCommodityTransported1: actualRow['Last Commodity Transported1'] || actualRow.LastCommodityTransported1 || actualRow.lastcommoditytransported1 || "",
+            LastCommodityTransportedDate1: actualRow['Last Commodity Transported Date1'] || actualRow.LastCommodityTransportedDate1 || actualRow.lastcommoditytransporteddate1 || null,
+            LastCommodityTransported2: actualRow['Last Commodity Transported2'] || actualRow.LastCommodityTransported2 || actualRow.lastcommoditytransported2 || "",
+            LastCommodityTransportedDate2: actualRow['Last Commodity Transported Date2'] || actualRow.LastCommodityTransportedDate2 || actualRow.lastcommoditytransporteddate2 || null,
+            LastCommodityTransported3: actualRow['Last Commodity Transported3'] || actualRow.LastCommodityTransported3 || actualRow.lastcommoditytransported3 || "",
+            LastCommodityTransportedDate3: actualRow['Last Commodity Transported Date3'] || actualRow.LastCommodityTransportedDate3 || actualRow.lastcommoditytransporteddate3 || null,
+            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || null,
+            WagonTareWeightUOM: actualRow['Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom || "",
+            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || null,
+            WagonLengthUOM: actualRow['Wagon length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom || "",
+            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || null,
+            GrossWeightUOM: actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom || null,
+            QuickCode1: actualRow['Quick Code1'] || actualRow.QuickCode1 || actualRow.quickcode1 || "",
+            QuickCode2: actualRow['Quick Code2'] || actualRow.QuickCode2 || actualRow.quickcode2 || "",
+            QuickCode3: actualRow['Quick Code3'] || actualRow.QuickCode3 || actualRow.quickcode3 || "",
+            QuickCodeValue1: actualRow['Quick Code Value1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1 || "",
+            QuickCodeValue2: actualRow['Quick Code Value2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2 || "",
+            QuickCodeValue3: actualRow['Quick Code Value3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3 || "",
             Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
             Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
             Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
@@ -3271,7 +3288,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <Plus className="h-4 w-4 mr-1" />
                 Add Actuals
               </Button> */}
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+              {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -3281,7 +3298,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                 </svg>
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -3307,7 +3324,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             </Label>
           </div>
         </div> */}
-          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg relative">
             <Select value={selectedCustomerIndex} onValueChange={handleCustomerChange}>
               <SelectTrigger className="w-[240px] h-9">
                 <SelectValue placeholder="Select Customer Order" />
@@ -3320,21 +3337,23 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 ))}
               </SelectContent>
             </Select>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="pickup-complete-consignment"
-                checked={pickupComplete}
-                onCheckedChange={(checked) => setPickupComplete(checked as boolean)}
-              />
-              <Label htmlFor="pickup-complete-consignment" className="text-sm font-normal cursor-pointer">
-                Pickup Complete for this CO
-              </Label>
+            <div className="flex items-center gap-2">
+              <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={(checked) => setPickupComplete(checked as boolean)} />
+              <Label htmlFor="maintenanceRequired" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
+
+            <Button
+              variant="outline"
+              className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3 absolute right-0"
+            >
+              <Plus className="h-4 w-4" />
+              Add Via Point
+            </Button>
+
           </div>
           <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
             <CollapsibleTrigger asChild>
-              <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 transition-colors rounded-t-lg">
+              <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 bg-muted/50 transition-colors rounded-t-lg">
                 {/* <span className="font-semibold text-sm">Customer Order Info</span> */}
                 <h4 className="font-semibold flex items-center gap-2">Customer Order Info</h4>
                 {expandedCOInfo ? (
@@ -3561,7 +3580,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           {/* Actuals Section */}
           <div className="space-y-4">
             <div
-              className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50"
+              className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50 mb-12"
               onClick={() => setExpandedActuals(!expandedActuals)}
             >
               <h4 className="font-semibold flex items-center gap-2">
@@ -3691,12 +3710,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   </div>
                 </motion.div>
               )}
-              <div className='flex justify-end'>
+              <div className='flex justify-end fixed bottom-0 right-[40px] bg-white w-full'>
                 <Button
                   className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
                   onClick={handleSavePlanActuals}
                 >
-                  Save Actual Details
+                  Save Consignment
                 </Button>
               </div>
 

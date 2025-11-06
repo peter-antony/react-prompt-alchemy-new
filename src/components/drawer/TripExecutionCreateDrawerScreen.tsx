@@ -2426,14 +2426,14 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 {legs.length}
               </Badge>
             </h3>
-            <Button 
+            {/* <Button 
               variant="ghost" 
               size="icon" 
               className="h-7 w-7"
               onClick={() => setShowAddViaPointsDialog(true)}
             >
               <Plus className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -2470,7 +2470,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center cursor-help transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 mt-1"
+                          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 mt-1"
                           aria-label="View location details"
                           // onClick={(e) => e.stopPropagation()}
                         >
