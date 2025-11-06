@@ -38,7 +38,12 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
   });
   const [attachmentData, setAttachmentData] = useState(null);
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    console.log("AttachmentData updated:", attachmentData);
+    const attachmentList = jsonStore.getQuickOrder();
+    setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
 
+  }, [attachmentData]);
   useEffect(() => {
     setLoading(false);
     console.log("isResourceGroupAttchment", isResourceGroupAttchment);
@@ -156,7 +161,12 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         // Add any additional context if needed
         // formData.append('QuickOrderID', '123455'); // You might want to get this from props or state
         // formData.append('ModeFlag', 'Insert');
-        
+        let FileJson: any = {};
+        FileJson.Files = file.file || fileName;
+        FileJson.Attachmenttype = fileType;
+        FileJson.Attachname = fileName;
+        FileJson.Filecategory = file.category;
+        FileJson.Remarks = file.remarks;
         console.log('Uploading file with FormData:', {
           fileName,
           fileType,
@@ -266,9 +276,15 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
         // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
         jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-
+        const attachmentList = jsonStore.getQuickOrder();
+        // setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
+        setAttachmentData(
+          attachmentList?.Attachments?.[0]
+            ? { ...attachmentList.Attachments[0] }  // clone
+            : { AttachItems: [], TotalAttachment: 0 }
+        );
         })
-      }, 500);
+      }, 1000);
      }
     return new Promise<void>((resolve) => {
       setTimeout(() => {

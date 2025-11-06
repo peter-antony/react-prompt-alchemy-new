@@ -507,9 +507,8 @@ export const quickOrderService = {
 
   // Update quick order
   updateAttachmentQuickOrderResource: async (
-    // id: string,
-    // data: QuickOrderUpdateInput, headers
     data: FormData | QuickOrderUpdateInput
+    // data: JSON | QuickOrderUpdateInput
   ): Promise<ApiResponse<QuickOrder>> => {
     const userContext = getUserContext();
     // Here we are getting the file uploaded details and want to send the data to API headers
@@ -524,14 +523,22 @@ export const quickOrderService = {
       // For file uploads, send FormData directly
       requestBody = data;
       // Set appropriate headers for file upload
-      headers = {
-        'Content-Type': 'multipart/form-data',
+      // headers = {
+      //   'Content-Type': 'multipart/form-data',
+      // };
+      headers= {
+        "accept": "text/plain",
+        "Is_JSON_Format": "true",
+        "Content-Type": "multipart/form-data",
       };
     } else {
+      
       // For regular data, wrap in RequestData
-      requestBody = {
-        RequestData: data,
-      };
+      // requestBody = {
+      //   RequestData: data,
+      // };
+      requestBody = { data}
+
     }
 
     const response = await apiClient.post(
@@ -542,6 +549,36 @@ export const quickOrderService = {
     // return response.data, headers;
     return response.data;
   },
+  // updateAttachmentQuickOrderResource: async (
+  //   // data: FormData | QuickOrderUpdateInput
+  //   data: JSON | QuickOrderUpdateInput
+  // ): Promise<ApiResponse<QuickOrder>> => {
+  //   const userContext = getUserContext();
+  //   console.log("Upload Doc---", data);
+
+  //   let requestBody: any;
+  //   let headers: any = {};
+
+  //   // if (data instanceof) {
+  //     requestBody = data;
+  //     headers = {
+  //       'Content-Type': 'application/json',
+  //     // };
+  //   // } else {
+  //   //   // For regular data, wrap in RequestData
+  //   //   requestBody = {
+  //   //     RequestData: data,
+  //   //   };
+  //   }
+
+  //   const response = await apiClient.post(
+  //     API_ENDPOINTS.QUICK_ORDERS.UPLOADFILES,
+  //     requestBody,
+  //     { headers }
+  //   );
+  //   // return response.data, headers;
+  //   return response.data;
+  // },
 
   // Update quick order
   updateQuickOrderAttachment: async (
