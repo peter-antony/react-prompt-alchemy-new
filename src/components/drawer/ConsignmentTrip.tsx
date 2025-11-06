@@ -125,7 +125,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       type: 'Text',
       sortable: true,
       editable: false,
-      subRow: false,
+      subRow: true,
       width: 200
     },
     {
@@ -134,7 +134,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       type: 'Text',
       sortable: true,
       editable: false,
-      subRow: false,
+      subRow: true,
       width: 200
     },
     {
@@ -143,7 +143,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       type: 'Text',
       sortable: true,
       editable: false,
-      subRow: false,
+      subRow: true,
       width: 200
     },
     {
@@ -2658,88 +2658,128 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       if (hasUserEditsRef.current) {
         // If user has made edits, include all current actual data
         currentGridData = actualEditableData.map((actualRow, index) => {
-          // Determine the appropriate mode flag
-          let modeFlag = "Update"; // Default to Update for existing data
+          try {
+            // Safely access row data with null checks
+            if (!actualRow || typeof actualRow !== 'object') {
+              console.warn(`Invalid row data at index ${index}:`, actualRow);
+              throw new Error(`Invalid row data at index ${index}`);
+            }
 
-          // If row has Insert flag or isNewRow marker, keep it as Insert
-          if (actualRow.ModeFlag === 'Insert' || actualRow.isNewRow === true) {
-            modeFlag = "Insert";
+            // Determine the appropriate mode flag
+            let modeFlag = "Update"; // Default to Update for existing data
+
+            // If row has Insert flag or isNewRow marker, keep it as Insert
+            if (actualRow.ModeFlag === 'Insert' || actualRow.isNewRow === true) {
+              modeFlag = "Insert";
+            }
+
+            // Helper function to safely get numeric values
+            const safeNumeric = (value: any) => {
+              if (value === null || value === undefined || value === '') {
+                return null;
+              }
+              const num = Number(value);
+              return isNaN(num) ? null : num;
+            };
+
+            // Helper function to safely get string values  
+            const safeString = (value: any) => {
+              if (value === null || value === undefined) {
+                return "";
+              }
+              return String(value);
+            };
+
+            // Helper function to safely split date-time fields
+            const safeDateTimeSplit = (value: any, part: number) => {
+              try {
+                if (!value || typeof value !== 'string') return "";
+                const parts = value.split(' ');
+                return parts[part] || "";
+              } catch (e) {
+                return "";
+              }
+            };
+
+            // Map the data to match the expected API format, removing extra parameters
+            const mappedRow = {
+              Seqno: (index + 1).toString(), // Sequential number starting from 1
+              PlanToActualCopy: "",
+              WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
+              WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
+              Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
+              WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
+              WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
+              WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
+              ContainerType: safeString(actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype),
+              ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
+              ContainerDescription: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid),
+              ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
+              ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
+              Product: safeString(actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid),
+              ProductDescription: safeString(actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription),
+              ProductWeight: safeNumeric(actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty),
+              ProductWeightUOM: safeString(actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom),
+              CommodityDamagedQty: safeNumeric(actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty),
+              Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
+              ThuDescription: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid),
+              ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
+              ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
+              ThuWeight: safeNumeric(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
+              ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
+              ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
+              ReplacedWagon: safeString(actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
+              ShuntingReasonCode: safeString(actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
+              Remarks: safeString(actualRow['Remarks'] || actualRow.Remarks || actualRow.remarks),
+              ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
+              ShuntInLocationDescription: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
+              ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
+              ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
+              ShuntInDate: safeDateTimeSplit(actualRow['Shunt In Date & Time'] || actualRow.shuntindatetime, 0),
+              ShuntInTime: safeDateTimeSplit(actualRow['Shunt In Date & Time'] || actualRow.shuntindatetime, 1),
+              ShuntOutDate: safeDateTimeSplit(actualRow['Shunt Out Date & Time'] || actualRow.shuntoutdatetime, 0),
+              ShuntOutTime: safeDateTimeSplit(actualRow['Shunt Out Date & Time'] || actualRow.shuntoutdatetime, 1),
+              ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
+              NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
+              NHMDescription: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
+              UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
+              UNCodeDescription: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
+              DGClass: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
+              DGClassDescription: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
+              ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
+              WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
+              ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
+              ContainerTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight),
+              ContainerTareWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom),
+              LastCommodityTransported1: safeString(actualRow['Last Commodity Transported1'] || actualRow.LastCommodityTransported1 || actualRow.lastcommoditytransported1),
+              LastCommodityTransportedDate1: safeString(actualRow['Last Commodity Transported Date1'] || actualRow.LastCommodityTransportedDate1 || actualRow.lastcommoditytransporteddate1),
+              LastCommodityTransported2: safeString(actualRow['Last Commodity Transported2'] || actualRow.LastCommodityTransported2 || actualRow.lastcommoditytransported2),
+              LastCommodityTransportedDate2: safeString(actualRow['Last Commodity Transported Date2'] || actualRow.LastCommodityTransportedDate2 || actualRow.lastcommoditytransporteddate2),
+              LastCommodityTransported3: safeString(actualRow['Last Commodity Transported3'] || actualRow.LastCommodityTransported3 || actualRow.lastcommoditytransported3),
+              LastCommodityTransportedDate3: safeString(actualRow['Last Commodity Transported Date3'] || actualRow.LastCommodityTransportedDate3 || actualRow.lastcommoditytransporteddate3),
+              WagonTareWeight: safeNumeric(actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight),
+              WagonTareWeightUOM: safeString(actualRow['Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
+              WagonLength: safeNumeric(actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength),
+              WagonLengthUOM: safeString(actualRow['Wagon length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
+              GrossWeight: safeNumeric(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
+              GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
+              QuickCode1: safeString(actualRow['QuickCode1'] || actualRow.QuickCode1 || actualRow.quickcode1),
+              QuickCode2: safeString(actualRow['QuickCode2'] || actualRow.QuickCode2 || actualRow.quickcode2),
+              QuickCode3: safeString(actualRow['QuickCode3'] || actualRow.QuickCode3 || actualRow.quickcode3),
+              QuickCodeValue1: safeString(actualRow['QuickCodeValue1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
+              QuickCodeValue2: safeString(actualRow['QuickCodeValue2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
+              QuickCodeValue3: safeString(actualRow['QuickCodeValue3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
+              Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
+              Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
+              Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
+              ModeFlag: modeFlag // Set appropriate mode flag
+            };
+
+            return mappedRow;
+          } catch (rowError) {
+            console.error(`Error processing row ${index}:`, rowError, actualRow);
+            throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
           }
-          // Map the data to match the expected API format, removing extra parameters
-          const mappedRow = {
-            Seqno: (index + 1).toString(), // Sequential number starting from 1
-            PlanToActualCopy: "",
-            WagonPosition: actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition || "",
-            WagonType: actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype || "",
-            Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
-            WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
-            WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || null,
-            WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "",
-            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || null,
-            ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
-            ContainerDescription: actualRow['Container ID'] || actualRow.ContainerId || actualRow.ContainerDescription || actualRow.containerid || "",
-            ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || null,
-            ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "",
-            Product: actualRow['Commodity ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
-            ProductDescription: actualRow['Commodity Description'] || actualRow.CommodityDescription || actualRow.ProductDescription || actualRow.commoditydescription || "",
-            ProductWeight: actualRow['Commodity Actual Qty'] || actualRow.CommodityActualQty || actualRow.ProductWeight || actualRow.commodityactualqty || null,
-            ProductWeightUOM: actualRow['Commodity Qty UOM'] || actualRow.CommodityQtyUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "",
-            CommodityDamagedQty: actualRow['Commodity Damaged Qty'] || actualRow.CommodityDamagedQty || actualRow.commoditydamagedqty || null,
-            Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
-            ThuDescription: actualRow['THU ID'] || actualRow.ThuId || actualRow.ThuDescription || actualRow.thuid || "",
-            ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
-            ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || null,
-            ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || null,
-            ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "",
-            ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
-            ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
-            ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
-            Remarks: actualRow['Remarks'] || actualRow.Remarks || actualRow.remarks || "",
-            ShuntInLocation: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
-            ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
-            ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
-            ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
-            ShuntInDate: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
-            ShuntInTime: actualRow['Shunt In Date & Time'] ? actualRow['Shunt In Date & Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
-            ShuntOutDate: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
-            ShuntOutTime: actualRow['Shunt Out Date & Time'] ? actualRow['Shunt Out Date & Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
-            ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores || "",
-            NHM: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
-            NHMDescription: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
-            UNCode: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
-            UNCodeDescription: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
-            DGClass: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
-            DGClassDescription: actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass || "",
-            ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "",
-            WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
-            ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
-            ContainerTareWeight: actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight || null,
-            ContainerTareWeightUOM: actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom || "",
-            LastCommodityTransported1: actualRow['Last Commodity Transported1'] || actualRow.LastCommodityTransported1 || actualRow.lastcommoditytransported1 || "",
-            LastCommodityTransportedDate1: actualRow['Last Commodity Transported Date1'] || actualRow.LastCommodityTransportedDate1 || actualRow.lastcommoditytransporteddate1 || null,
-            LastCommodityTransported2: actualRow['Last Commodity Transported2'] || actualRow.LastCommodityTransported2 || actualRow.lastcommoditytransported2 || "",
-            LastCommodityTransportedDate2: actualRow['Last Commodity Transported Date2'] || actualRow.LastCommodityTransportedDate2 || actualRow.lastcommoditytransporteddate2 || null,
-            LastCommodityTransported3: actualRow['Last Commodity Transported3'] || actualRow.LastCommodityTransported3 || actualRow.lastcommoditytransported3 || "",
-            LastCommodityTransportedDate3: actualRow['Last Commodity Transported Date3'] || actualRow.LastCommodityTransportedDate3 || actualRow.lastcommoditytransporteddate3 || null,
-            WagonTareWeight: actualRow['Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight || null,
-            WagonTareWeightUOM: actualRow['Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom || "",
-            WagonLength: actualRow['Wagon length'] || actualRow.WagonLength || actualRow.wagonlength || null,
-            WagonLengthUOM: actualRow['Wagon length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom || "",
-            GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || null,
-            GrossWeightUOM: actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom || "",
-            QuickCode1: actualRow['QuickCode1'] || actualRow.QuickCode1 || actualRow.quickcode1 || "",
-            QuickCode2: actualRow['QuickCode2'] || actualRow.QuickCode2 || actualRow.quickcode2 || "",
-            QuickCode3: actualRow['QuickCode3'] || actualRow.QuickCode3 || actualRow.quickcode3 || "",
-            QuickCodeValue1: actualRow['QuickCodeValue1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1 || "",
-            QuickCodeValue2: actualRow['QuickCodeValue2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2 || "",
-            QuickCodeValue3: actualRow['QuickCodeValue3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3 || "",
-            Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
-            Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
-            Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
-            ModeFlag: modeFlag // Set appropriate mode flag
-          };
-
-          return mappedRow;
         });
       } else {
         // If no user edits, only include new/imported data (original logic)
@@ -2869,19 +2909,23 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
 
         if (!updatedTripData.LegDetails[legIndex].Consignment) {
-          throw new Error(`Leg at index ${legIndex} has no Consignment`);
+          console.log(`Leg at index ${legIndex} has no Consignment, initializing empty array`);
+          updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
         if (!Array.isArray(updatedTripData.LegDetails[legIndex].Consignment)) {
-          throw new Error("Consignment is not an array");
+          console.log(`Consignment is not an array, converting to array`);
+          updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
         // For ConsignmentTrip, we need to find the right consignment and update its Actual array
         // Since we have consignments array from the store, we can use the first one or find by criteria
         const consignmentIndex = 0; // Assuming we're working with the first consignment or adjust logic as needed
 
+        // Initialize consignment object if it doesn't exist
         if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]) {
-          throw new Error(`Consignment at index ${consignmentIndex} not found`);
+          console.log(`Consignment at index ${consignmentIndex} not found, initializing empty object`);
+          updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex] = {};
         }
 
         // Replace the entire Actual array with our updated data
@@ -3288,7 +3332,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <Plus className="h-4 w-4 mr-1" />
                 Add Actuals
               </Button> */}
-              {/* <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -3298,7 +3342,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                 </svg>
-              </Button> */}
+              </Button>
             </div>
           </div>
 
@@ -3578,7 +3622,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           </div>
 
           {/* Actuals Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 mb-8">
             <div
               className="flex items-center justify-between cursor-pointer p-2 -mx-2 bg-muted/50 rounded-lg hover:bg-muted/50 mb-12"
               onClick={() => setExpandedActuals(!expandedActuals)}

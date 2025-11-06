@@ -712,8 +712,8 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
       case 'String':
       case 'Integer':
       case 'Select':
-        // For these types, just render the value as text
-        return <span className="truncate text-[13px]" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
+        // For these types, just render the value as text with start alignment
+        return <span className="truncate text-[13px] text-left w-full block" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
       case 'LazySelect':
         return renderLazySelect();
       case 'SubRow':
@@ -721,15 +721,15 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
         if (Array.isArray(value)) {
           return <span className="text-gray-500 text-[13px]">{value.length} {value.length === 1 ? 'item' : 'items'}</span>;
         }
-        return <span className="truncate text-[13px]" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
+        return <span className="truncate text-[13px] text-left w-full block" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
       default:
-        return <span className="truncate text-[13px]" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
+        return <span className="truncate text-[13px] text-left w-full block" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
     }
   };
 
   return (
     <TooltipProvider>
-      <div className={`flex items-center min-w-0 w-full ${column.type === 'ActionButton' ? 'justify-center' : ''}`}>
+      <div className={`flex items-start justify-start min-w-0 w-full ${column.type === 'ActionButton' ? 'justify-center' : ''}`}>
         {renderCellContent()}
       </div>
     </TooltipProvider>

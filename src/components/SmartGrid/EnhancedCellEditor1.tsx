@@ -75,8 +75,25 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
                 if (newValue === '' || newValue === null || newValue === undefined) {
                     finalValue = null;
                 } else {
-                    const parsed = parseInt(newValue, 10);
-                    finalValue = isNaN(parsed) ? null : parsed;
+                    // Check if this is a product weight field that should allow decimals
+                    const isProductWeightField = column.key?.toLowerCase().includes('productweight') ||
+                        column.label?.toLowerCase().includes('product weight');
+
+                    let parsed;
+                    if (isProductWeightField) {
+                        // Use parseFloat for product weight fields to allow decimals
+                        parsed = parseFloat(newValue);
+                    } else {
+                        // Use parseInt for other integer fields to maintain whole numbers
+                        parsed = parseInt(newValue, 10);
+                    }
+
+                    // Prevent negative values for all integer fields
+                    if (isNaN(parsed) || parsed < 0) {
+                        finalValue = null;
+                    } else {
+                        finalValue = parsed;
+                    }
                 }
                 break;
             case 'String':
@@ -150,7 +167,7 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
                     value={editValue}
                     onChange={(e) => handleChange(e.target.value)}
                     className={cn(
-                        "w-full max-w-full px-3 py-2 text-sm border rounded-md bg-background overflow-hidden",
+                        "w-full max-w-full px-3 py-2 text-sm border rounded-md bg-background overflow-hidden text-left",
                         error && 'border-destructive focus-visible:ring-destructive'
                     )}
                     autoFocus={shouldFocus}
@@ -174,9 +191,17 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
 
     // Input type determination
     let inputType = 'text';
+    let inputStep = undefined;
+    let inputMin = undefined;
+
     switch (column.type) {
         case 'Integer':
             inputType = 'number';
+            inputMin = '0'; // Prevent negative values
+            // Check if this is a product weight field that should allow decimals
+            const isProductWeightField = column.key?.toLowerCase().includes('productweight') ||
+                column.label?.toLowerCase().includes('product weight');
+            inputStep = isProductWeightField ? 'any' : '1';
             break;
         case 'Date':
             inputType = 'date';
@@ -197,7 +222,7 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
                 value={editValue}
                 onChange={(e) => handleChange(e.target.value)}
                 className={cn(
-                    'w-full max-w-full text-xs',
+                    'w-full max-w-full text-xs text-left',
                     error && 'border-destructive focus-visible:ring-destructive'
                 )}
                 style={{
@@ -205,7 +230,8 @@ export function EnhancedCellEditor1({ value, column, onChange, error, shouldFocu
                     maxWidth: '100%',
                     boxSizing: 'border-box'
                 }}
-                step={column.type === 'Integer' ? '1' : undefined}
+                step={inputStep}
+                min={inputMin}
                 autoFocus={shouldFocus}
                 // Special handling for time inputs
                 {...(column.type === 'Time' && {
