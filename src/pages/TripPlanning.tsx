@@ -2249,7 +2249,7 @@ const TripPlanning = () => {
                         />
                       </div> */}
 
-                      <div className='flex gap-6'>
+                      <div className={`${addResourcesFlag ? 'flex' : ''} gap-6`}>
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
