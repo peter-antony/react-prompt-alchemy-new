@@ -130,7 +130,7 @@ const TripOdometer = () => {
       </div>
 
       {/* Fixed Footer Save Button */}
-      <div className="sticky bottom-0 left-0 right-0 border-t border-gray-200 bg-white px-6 py-4 flex justify-end">
+      <div className="sticky bottom-0 left-0 right-0 bg-white px-6 py-4 flex justify-end">
         <Button
           onClick={handleSave}
           // disabled={saving}

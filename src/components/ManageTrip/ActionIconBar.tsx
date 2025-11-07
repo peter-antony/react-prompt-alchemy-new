@@ -24,7 +24,7 @@ import { TripLevelUpdateDrawer } from '../drawer/TripLevelUpdateDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { TripTrackTrace } from '../drawer/tripTrackTrace';
 import TripOdometer from './TripOdometer';
-// import TripVendorFeedback from './TripVendorFeedback';
+import TripVendorFeedback from './TripVendorFeedback';
 
 
 const TripRouteIcon = () => {
@@ -146,11 +146,11 @@ export const ActionIconBar = () => {
             </div>
       </SideDrawer>
 
-      {/* <SideDrawer isOpen={isVendorFeedbackOpen} onClose={() => setVendorFeedbackOpen(false)} width="40%" title="Vendor Performance Feedback" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
+      <SideDrawer isOpen={isVendorFeedbackOpen} onClose={() => setVendorFeedbackOpen(false)} width="40%" title="Vendor Performance Feedback" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
             <div className="">
               <div className="mt-0 text-sm text-gray-600"><TripVendorFeedback /></div>
             </div>
-      </SideDrawer> */}
+      </SideDrawer>
 
 
       {/* Trip Level Update Drawer */}
