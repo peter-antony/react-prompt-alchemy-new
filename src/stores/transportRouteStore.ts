@@ -35,7 +35,7 @@ interface LegDetail {
   TransitTimeUOM: string | null;
   TripInfo: TripInfo[] | null;
   ModeFlag: string;
-  ReasonForUpdate: string | null;
+  // ReasonForUpdate: string | null;
   QCCode1: string | null;
   QCCode1Value: string | null;
   Remarks: string | null;
@@ -231,7 +231,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
       TransitTimeUOM: null,
       TripInfo: null,
       ModeFlag: 'Insert',
-      ReasonForUpdate: null,
+      // ReasonForUpdate: null,
       QCCode1: null,
       QCCode1Value: null,
       Remarks: null

@@ -238,10 +238,11 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       }
 
       // ====== Reset LegID if location changed ======
-      // if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
-      //   console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
-      //   panelData.LegID = null;
-      // }
+      if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
+        console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
+        panelData.LegID = null;
+        // panelData.LegUniqueId = null;
+      }
 
       // ====== Determine ModeFlag correctly ======
       if (originalLeg?.ModeFlag === 'Insert') {
