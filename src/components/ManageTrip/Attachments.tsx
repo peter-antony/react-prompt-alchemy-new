@@ -100,7 +100,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                 formData.append('Attachmenttype', fileType);
                 formData.append('Attachname', fileName);
                 formData.append('Filecategory', file.category);
-                formData.append('Remarks', file.remarks);
+                // formData.append('Remarks', file.remarks);
                 console.log('FINAL ## FormData:', formData)
 
                 // Add any additional context if needed
@@ -125,7 +125,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                     AttachName: data.Attachname,
                     AttachUniqueName: data.Attachuniquename,
                     AttachRelPath: data.Attachrelpath,
-                    Remarks:file.remarks,
+                    Remarks: file.remarks,
                 };
                 console.log("uploadedFiles ZASASA", uploadedFiles);
 
@@ -161,31 +161,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
                 // Send to API with FormData containing binary file
                 const response: any = await tripService.saveAttachments(fileData, tripUniqueID);
                 console.log("Upload Trip attachments response:", response);
-                // const uploadedFiles = {
-                //     AttachItemID: -1,
-                //     ModeFlag: "Insert",
-                //     AttachmentType: data.Attachmenttype,
-                //     FileCategory: data.Filecategory,
-                //     AttachName: data.Attachname,
-                //     AttachUniqueName: data.Attachuniquename,
-                //     AttachRelPath: data.Attachrelpath,
-                // };
-                // console.log("uploadedFilesVV77", uploadedFiles);
-                // console.log("isResourceGroupAttchment", isResourceGroupAttchment);
-                // if (isResourceGroupAttchment) {
-                //     console.log("if");
-                //     jsonStore.pushResourceGroupAttachmentsByUniqueID(isResourceID, uploadedFiles);
-                //     // Refresh attachment data for ResourceGroup
-                //     const updatedResourceGroupAttachmentData = jsonStore.getResourceGroupAttachmentDataByUniqueID(isResourceID);
-                //     setAttachmentData(updatedResourceGroupAttachmentData);
-                // } else {
-                //     console.log("else");
-                //     jsonStore.pushQuickOrderAttachment(uploadedFiles);
-                //     // Refresh attachment data for QuickOrder
-                //     const attachmentList = jsonStore.getQuickOrder();
-                //     setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
-                // }
-
+                getAttachments();
 
 
                 // setTimeout(async () => {
@@ -235,11 +211,11 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
 
 
         }
-        console.log("fileData for delete : ",fileData)
+        console.log("fileData for delete : ", fileData)
         const response: any = await tripService.saveAttachments(fileData, tripUniqueID);
         const responseData = response as any;
         if (responseData && responseData.data) {
-            console.log("TRIPLOG FILE DELETE RESPONSE : ",response)
+            console.log("TRIPLOG FILE DELETE RESPONSE : ", response)
             getAttachments();
             // setReloadKey(prev => prev + 1);
             return new Promise<void>((resolve) => {
@@ -251,25 +227,112 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
         }
     };
 
-    const handleDownload = async (file: any) => {
+    // const handleDownload = async (file: any) => {
+    //     try {
+    //       const response = await fetch(file.downloadUrl);
+    //       const blob = await response.blob();
+    //       const url = window.URL.createObjectURL(blob);
+
+    //       const link = document.createElement("a");
+    //       link.href = url;
+    //       link.download = file.fileName || "downloaded_file";
+    //       document.body.appendChild(link);
+    //       link.click();
+
+    //       // Cleanup
+    //       document.body.removeChild(link);
+    //       window.URL.revokeObjectURL(url);
+    //     } catch (error) {
+    //       console.error("Error downloading file:", error);
+    //     }
+    //   };
+    async function handleDownload(file) {
         try {
-          const response = await fetch(file.downloadUrl);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-      
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = file.fileName || "downloaded_file";
-          document.body.appendChild(link);
-          link.click();
-      
-          // Cleanup
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error("Error downloading file:", error);
+            // adjust headers/credentials if your API requires auth/cookies
+            const resp = await fetch(file.downloadUrl, {
+                credentials: 'include',
+                // headers: { Authorization: `Bearer ${token}` },
+            });
+
+            console.log('HTTP status:', resp.status, resp.statusText);
+            const contentType = resp.headers.get('content-type') || '';
+            const contentDisp = resp.headers.get('content-disposition') || '';
+            console.log('Content-Type:', contentType);
+            console.log('Content-Disposition:', contentDisp);
+
+            // peek at start of body to see if it's HTML or JSON (clone so we can still read blob)
+            const peek = await resp.clone().text();
+            console.log('Response body preview (first 300 chars):', peek.slice(0, 300));
+
+            if (!resp.ok) {
+                throw new Error(`Server returned ${resp.status}`);
+            }
+
+            // If server returned JSON containing base64 file data
+            if (contentType.includes('application/json')) {
+                const json = await resp.json();
+                // try common fields where base64 might be found
+                const b64 = json.base64 || json.data || json.file || json.fileBase64 || null;
+                const mime = json.contentType || json.mime || 'application/octet-stream';
+                if (!b64) throw new Error('JSON response but no base64 field found');
+
+                // decode base64 -> blob
+                const byteChars = atob(b64);
+                const byteNumbers = new Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: mime });
+                const filename = file.fileName || (json.fileName || 'downloaded_file');
+                downloadBlob(blob, filename);
+                return;
+            }
+
+            // Otherwise assume binary blob
+            const blob = await resp.blob();
+            console.log('Blob type:', blob.type, 'size:', blob.size);
+
+            // Determine filename:
+            let filename = file.fileName || 'downloaded_file';
+            // try extract from content-disposition: e.g. attachment; filename="abc.pdf"
+            const fnameFromHeader = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/i.exec(contentDisp);
+            if (fnameFromHeader) {
+                filename = decodeURIComponent((fnameFromHeader[1] || fnameFromHeader[2] || fnameFromHeader[3] || '').trim());
+            } else {
+                // add extension based on blob.type if missing
+                if (!filename.includes('.') && blob.type) {
+                    const ext = mimeToExt(blob.type);
+                    if (ext) filename = `${filename}.${ext}`;
+                }
+            }
+
+            downloadBlob(blob, filename);
+        } catch (err) {
+            console.error('download error:', err);
         }
-      };
+    }
+
+    function downloadBlob(blob, filename = 'downloaded_file') {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        console.log('Downloaded as:', filename);
+    }
+
+    function mimeToExt(mime) {
+        mime = (mime || '').toLowerCase();
+        if (mime.includes('pdf')) return 'pdf';
+        if (mime.includes('png')) return 'png';
+        if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+        if (mime.includes('zip')) return 'zip';
+        if (mime.includes('excel') || mime.includes('spreadsheet') || mime.includes('xlsx')) return 'xlsx';
+        if (mime.includes('word') || mime.includes('msword') || mime.includes('doc')) return 'docx';
+        return '';
+    }
 
     return (
         <div className="flex flex-col md:flex-row gap-6 w-full h-full pr-6 bg-[#f8fafd]">
@@ -279,7 +342,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
             {loading && attachmentData ?
                 <DynamicFileUpload
                     // key={attachmentData?.TotalAttachment} 
-                    key={reloadKey} 
+                    key={reloadKey}
                     config={{
                         categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
                         maxFiles: 10,
