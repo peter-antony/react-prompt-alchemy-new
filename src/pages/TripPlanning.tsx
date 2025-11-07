@@ -1169,8 +1169,8 @@ const TripPlanning = () => {
             variant: "default",
           });
           setCreateTripBtn(false);
-          setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
-          setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
+          // setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
+          // setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
           setShowConfirmReleaseBtn(true);
           setcustomerOrderList(null);
           // Reload TripCOHub component
@@ -1199,108 +1199,330 @@ const TripPlanning = () => {
   const confirmTripPlanning = async () => {
     // console.log("confirmTripPlanning ===", selectedRowObjects);
     console.log("confirmTripPlanning ===", customerOrderList + tripNo);
+    console.log("confirmTripPlanning ===", tripCustomerOrdersData);
+    
     const messageType = "Manage Trip Plan - Confirm Trip";
-
-    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
-    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-
-    let Header = {
-      "TripNo": tripIDToUse,
-      "Cancellation": null,
-      "ShortClose": null,
-      "Amendment": null
-    }
-    console.log("Payload:", Header);
-    console.log("Using TripID:", tripIDToUse);
-
-    try {
-      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
-      console.log("response ===", response);
-      const resourceStatus = (response as any)?.data?.IsSuccess;
-      if (resourceStatus) {
-        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
-        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
-        const tripStatus = parsedResponse?.TripStatus;
-        setTripStatus(tripStatus);
-        // Optimistically update TripStatus in already loaded grid data (no full reload)
-        if (tripStatus && tripIDToUse) {
-          setTripCustomerOrdersData(prev =>
-            Array.isArray(prev)
-              ? prev.map((row: any) =>
-                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-              )
-              : prev
-          );
+    
+    // Check if a single customer order is selected
+    let tripIDsToProcess: string[] = [];
+    
+    if (customerOrderList && customerOrderList.TripID) {
+      // Single selection: use only the selected TripID
+      tripIDsToProcess = [customerOrderList.TripID];
+      console.log("✅ Single customer order selected, using TripID:", customerOrderList.TripID);
+    } else {
+      // No selection: extract all unique TripIDs from tripCustomerOrdersData
+      const allTripIDs = tripCustomerOrdersData
+        .map((order: any) => order?.TripID)
+        .filter((tripID: any) => tripID != null && tripID !== ''); // Filter out null/undefined/empty values
+      
+      // Get unique TripIDs using Set
+      const uniqueTripIDs = Array.from(new Set(allTripIDs));
+      
+      // Get the count/length of unique TripIDs
+      const uniqueTripIDsCount = uniqueTripIDs.length;
+      
+      console.log("All TripIDs from tripCustomerOrdersData:", allTripIDs);
+      console.log("Unique TripIDs:", uniqueTripIDs);
+      console.log("Count of unique TripIDs:", uniqueTripIDsCount);
+      
+      // If no unique TripIDs found, use fallback
+      if (uniqueTripIDs.length === 0) {
+        const fallbackTripID = urlTripID || tripNo;
+        if (fallbackTripID) {
+          tripIDsToProcess = [fallbackTripID];
+        } else {
+          toast({
+            title: "⚠️ No Trip ID Found",
+            description: "No Trip ID available to confirm.",
+            variant: "destructive",
+          });
+          return;
         }
-        toast({
-          title: "✅ Trip Confirmed",
-          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-          variant: "default",
-        });
       } else {
-        console.log("error as any ===", (response as any)?.data?.Message);
+        tripIDsToProcess = uniqueTripIDs;
+      }
+    }
+    
+    // Track success and failure counts
+    let successCount = 0;
+    let failureCount = 0;
+    const errors: string[] = [];
+
+    // Call confirm API for each TripID
+    for (const tripID of tripIDsToProcess) {
+      try {
+        console.log(`🔄 Confirming Trip ID: ${tripID}`);
+        
+        let Header = {
+          "TripNo": tripID,
+          "Cancellation": null,
+          "ShortClose": null,
+          "Amendment": null
+        };
+        
+        console.log("Payload for TripID:", tripID, Header);
+        
+        const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
+        console.log("Response for TripID:", tripID, response);
+        
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        
+        if (resourceStatus) {
+          console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+          const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+          const tripStatus = parsedResponse?.TripStatus;
+          
+          // Update trip status for this specific TripID in the grid data
+          if (tripStatus && tripID) {
+            setTripCustomerOrdersData(prev =>
+              Array.isArray(prev)
+                ? prev.map((row: any) =>
+                    row?.TripID === tripID ? { ...row, TripStatus: tripStatus } : row
+                  )
+                : prev
+            );
+          }
+          
+          successCount++;
+          console.log(`✅ Trip ${tripID} confirmed successfully`);
+          toast({
+            title: "✅ Trip Confirmed",
+            description: parsedResponse?.Message,
+            variant: "default",
+          });
+        } else {
+          const errorMessage = (response as any)?.data?.Message || "Failed to confirm trip";
+          errors.push(`${tripID}: ${errorMessage}`);
+          failureCount++;
+          console.log(`❌ Trip ${tripID} confirmation failed:`, errorMessage);
+          toast({
+            title: "⚠️ Trip Confirmation Failed",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`${tripID}: ${errorMessage}`);
+        failureCount++;
+        console.error(`❌ Error confirming trip ${tripID}:`, error);
         toast({
           title: "⚠️ Trip Confirmation Failed",
-          description: (response as any)?.data?.Message || "Failed to save changes.",
+          description: error,
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error confirming trip:", error);
     }
+    
+    // Show summary toast based on results
+    // if (successCount > 0 && failureCount === 0) {
+    //   toast({
+    //     title: "✅ All Trips Confirmed",
+    //     description: `Successfully confirmed ${successCount} trip(s).`,
+    //     variant: "default",
+    //   });
+    // } else if (successCount > 0 && failureCount > 0) {
+    //   toast({
+    //     title: "⚠️ Partial Success",
+    //     description: `Confirmed ${successCount} trip(s), but ${failureCount} trip(s) failed. ${errors.join('; ')}`,
+    //     variant: "destructive",
+    //   });
+    // } else {
+    //   toast({
+    //     title: "⚠️ Trip Confirmation Failed",
+    //     description: `Failed to confirm all trips. ${errors.join('; ')}`,
+    //     variant: "destructive",
+    //   });
+    // }
   }
 
   const releseTripPlanning = async () => {
-    console.log("releaseTripPlanning ===");
+    console.log("releaseTripPlanning ===", tripCustomerOrdersData);
+    
     const messageType = "Manage Trip Plan - Release Trip";
+    
+    // Check if a single customer order is selected
+    let tripIDsToProcess: string[] = [];
+    
+    if (customerOrderList && customerOrderList.TripID) {
+      // Single selection: use only the selected TripID
+      tripIDsToProcess = [customerOrderList.TripID];
+      console.log("✅ Single customer order selected, using TripID:", customerOrderList.TripID);
+    } else {
+      // No selection: extract all unique TripIDs from tripCustomerOrdersData
+      const allTripIDs = tripCustomerOrdersData
+        .map((order: any) => order?.TripID)
+        .filter((tripID: any) => tripID != null && tripID !== ''); // Filter out null/undefined/empty values
+      
+      // Get unique TripIDs using Set
+      const uniqueTripIDs = Array.from(new Set(allTripIDs));
+      
+      // Get the count/length of unique TripIDs
+      const uniqueTripIDsCount = uniqueTripIDs.length;
+      
+      console.log("All TripIDs from tripCustomerOrdersData:", allTripIDs);
+      console.log("Unique TripIDs:", uniqueTripIDs);
+      console.log("Count of unique TripIDs:", uniqueTripIDsCount);
 
-    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
-    const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
-
-    let Header = {
-      "TripNo": tripIDToUse,
-      "Cancellation": null,
-      "ShortClose": null,
-      "Amendment": null
-
-    }
-    console.log("Payload:", Header);
-    console.log("Using TripID:", tripIDToUse);
-    try {
-      const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
-      console.log("response ===", response);
-      const resourceStatus = (response as any)?.data?.IsSuccess;
-      if (resourceStatus) {
-        console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
-        const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
-        const tripStatus = parsedResponse?.TripStatus;
-        setTripStatus(tripStatus);
-        // Optimistically update TripStatus in already loaded grid data (no full reload)
-        if (tripStatus && tripIDToUse) {
-          setTripCustomerOrdersData(prev =>
-            Array.isArray(prev)
-              ? prev.map((row: any) =>
-                row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
-              )
-              : prev
-          );
+      // If no unique TripIDs found, use fallback
+      if (uniqueTripIDs.length === 0) {
+        const fallbackTripID = urlTripID || tripNo;
+        if (fallbackTripID) {
+          tripIDsToProcess = [fallbackTripID];
+        } else {
+          toast({
+            title: "⚠️ No Trip ID Found",
+            description: "No Trip ID available to release.",
+            variant: "destructive",
+          });
+          return;
         }
-        toast({
-          title: "✅ Trip Released",
-          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-          variant: "default",
-        });
       } else {
-        console.log("error as any ===", (response as any)?.data?.Message);
+        tripIDsToProcess = uniqueTripIDs;
+      }
+    }
+    
+    // Track success and failure counts
+    let successCount = 0;
+    let failureCount = 0;
+    const errors: string[] = [];
+
+    // Call release API for each TripID
+    for (const tripID of tripIDsToProcess) {
+      try {
+        console.log(`🔄 release Trip ID: ${tripID}`);
+        
+        let Header = {
+          "TripNo": tripID,
+          "Cancellation": null,
+          "ShortClose": null,
+          "Amendment": null
+        };
+        
+        console.log("Payload for TripID:", tripID, Header);
+        
+        const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
+        console.log("Response for TripID:", tripID, response);
+        
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        
+        if (resourceStatus) {
+          console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+          const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+          const tripStatus = parsedResponse?.TripStatus;
+          
+          // Update trip status for this specific TripID in the grid data
+          if (tripStatus && tripID) {
+            setTripCustomerOrdersData(prev =>
+              Array.isArray(prev)
+                ? prev.map((row: any) =>
+                    row?.TripID === tripID ? { ...row, TripStatus: tripStatus } : row
+                  )
+                : prev
+            );
+          }
+          
+          successCount++;
+          console.log(`✅ Trip ${tripID} released successfully`);
+          toast({
+            title: "✅ Trip Released",
+            description: parsedResponse?.Message,
+            variant: "default",
+          });
+        } else {
+          const errorMessage = (response as any)?.data?.Message || "Failed to release trip";
+          errors.push(`${tripID}: ${errorMessage}`);
+          failureCount++;
+          console.log(`❌ Trip ${tripID} release failed:`, errorMessage);
+          toast({
+            title: "⚠️ Trip Release Failed",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`${tripID}: ${errorMessage}`);
+        failureCount++;
+        console.error(`❌ Error release trip ${tripID}:`, error);
         toast({
           title: "⚠️ Trip Release Failed",
-          description: (response as any)?.data?.Message || "Failed to save changes.",
+          description: error,
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error confirming trip:", error);
     }
+
+    // Show summary toast based on results
+    // if (successCount > 0 && failureCount === 0) {
+    //   toast({
+    //     title: "✅ All Trips Released",
+    //     description: `Successfully released ${successCount} trip(s).`,
+    //     variant: "default",
+    //   });
+    // } else if (successCount > 0 && failureCount > 0) {
+    //   toast({
+    //     title: "⚠️ Partial Success",
+    //     description: `Released ${successCount} trip(s), but ${failureCount} trip(s) failed. ${errors.join('; ')}`,
+    //     variant: "destructive",
+    //   });
+    // } else {
+    //   toast({
+    //     title: "⚠️ Trip Release Failed",
+    //     description: `Failed to release all trips. ${errors.join('; ')}`,
+    //     variant: "destructive",
+    //   });
+    // }
+
+    // Use URL tripID if available, otherwise fallback to customerOrderList.TripID
+    // const tripIDToUse = urlTripID || customerOrderList?.TripID || tripNo;
+
+    // let Header = {
+    //   "TripNo": tripIDToUse,
+    //   "Cancellation": null,
+    //   "ShortClose": null,
+    //   "Amendment": null
+
+    // }
+    // console.log("Payload:", Header);
+    // console.log("Using TripID:", tripIDToUse);
+
+    // try {
+    //   const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
+    //   console.log("response ===", response);
+    //   const resourceStatus = (response as any)?.data?.IsSuccess;
+    //   if (resourceStatus) {
+    //     console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
+    //     const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
+    //     const tripStatus = parsedResponse?.TripStatus;
+    //     setTripStatus(tripStatus);
+    //     // Optimistically update TripStatus in already loaded grid data (no full reload)
+    //     if (tripStatus && tripIDToUse) {
+    //       setTripCustomerOrdersData(prev =>
+    //         Array.isArray(prev)
+    //           ? prev.map((row: any) =>
+    //             row?.TripID === tripIDToUse ? { ...row, TripStatus: tripStatus } : row
+    //           )
+    //           : prev
+    //       );
+    //     }
+    //     toast({
+    //       title: "✅ Trip Released",
+    //       description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+    //       variant: "default",
+    //     });
+    //   } else {
+    //     console.log("error as any ===", (response as any)?.data?.Message);
+    //     toast({
+    //       title: "⚠️ Trip Release Failed",
+    //       description: (response as any)?.data?.Message || "Failed to save changes.",
+    //       variant: "destructive",
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error("Error confirming trip:", error);
+    // }
   }
 
   const [amendModalOpen, setAmendModalOpen] = useState(false);
