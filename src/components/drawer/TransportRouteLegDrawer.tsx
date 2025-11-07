@@ -3,7 +3,7 @@ import { DynamicPanel } from '@/components/DynamicPanel/DynamicPanel';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PanelConfig } from '@/types/dynamicPanel';
-import { Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -105,6 +105,7 @@ const extractIdFromPipeSeparatedValue = (value: string | null | undefined): stri
 
 export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, TransportRouteLegDrawerProps>((props, ref) => {
   const [reasonForUpdate, setReasonForUpdate] = useState('');
+  const [hoveredTooltipIndex, setHoveredTooltipIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Refs for each DynamicPanel
@@ -309,14 +310,14 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     const reasonValue = typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
       ? reasonForUpdate.split("||")[0].trim()
       : reasonForUpdate;
-      
-    const formatFinalRouteData = 
-      {
-        ...selectedRoute,
-        // LegDetails: formData.legDetails,
-        LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
-        ReasonForUpdate: reasonValue
-      };
+
+    const formatFinalRouteData =
+    {
+      ...selectedRoute,
+      // LegDetails: formData.legDetails,
+      LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
+      ReasonForUpdate: reasonValue
+    };
     const response = await tripService.updateCOSelection(formatFinalRouteData);
     console.log('💾 response:', response);
 
@@ -330,27 +331,27 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     // });
 
     // Access the response data safely
-      const responseData = response as any;
-      
-      if (responseData && responseData.data) {
-        // Display the message from the API response
-        toast({
-          title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : "✅ Saved Successfully",
-          description: responseData.data.Message || "Trip details saved successfully",
-          variant: responseData.data.IsSuccess === false ? "destructive" : "default"
-        });
-      } else {
-        // Fallback toast if response structure is unexpected
-        toast({
-          title: "Success",
-          description: "Trip details saved successfully",
-        });
-      }
+    const responseData = response as any;
+
+    if (responseData && responseData.data) {
+      // Display the message from the API response
+      toast({
+        title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : "✅ Saved Successfully",
+        description: responseData.data.Message || "Trip details saved successfully",
+        variant: responseData.data.IsSuccess === false ? "destructive" : "default"
+      });
+    } else {
+      // Fallback toast if response structure is unexpected
+      toast({
+        title: "Success",
+        description: "Trip details saved successfully",
+      });
+    }
 
 
   };
 
-    const handleDelete = async (index: number) => {
+  const handleDelete = async (index: number) => {
     try {
       console.log(`🗑️ Deleting leg at index ${index}`);
 
@@ -687,16 +688,16 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
             console.log(`🎨 Rendering DynamicPanel for leg ${index} with config:`, createLegPanelConfig(index));
             return (
               <Card key={leg.LegUniqueId} className="relative bg-white border border-gray-200 shadow-sm">
-                
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2.5 right-14 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
-                    onClick={() => handleDelete(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2.5 right-14 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 z-10"
+                  onClick={() => handleDelete(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+
 
                 <DynamicPanel
                   ref={(ref) => {
@@ -718,58 +719,98 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
                 {/* Trip Details with Badges */}
                 {leg.TripInfo && leg.TripInfo.length > 0 && (
-  <div className="px-6 pb-4">
-    {leg.TripInfo.map((trip, tripIndex) => (
-      <div
-        key={tripIndex}
-        className="text-sm text-gray-600 flex flex-col gap-1 mb-3 border-b border-gray-100 pb-2 last:border-b-0"
-      >
-        {/* Trip Details */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium">
-            {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate || "-"} → {trip.ArrivalDescription}, {trip.ArrivalActualDate || "-"}
-          </span>
-          {trip.LoadType && (
-            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
-              {trip.LoadType}
-            </Badge>
-          )}
-          {trip.TripStatus && (
-            <Badge
-              variant="outline"
-              className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
-            >
-              {trip.TripStatus}
-            </Badge>
-          )}
-        </div>
+                  <div className="px-6 pb-4">
+                    {leg.TripInfo.map((trip, tripIndex) => (
+                      <div
+                        key={tripIndex}
+                        className="text-sm text-gray-600 flex flex-col gap-1 mb-3 border-b border-gray-100 pb-2 last:border-b-0"
+                      >
+                        {/* Trip Details */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">
+                            {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate || "-"} → {trip.ArrivalDescription}, {trip.ArrivalActualDate || "-"}
+                          </span>
+                          {trip.LoadType && (
+                            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
+                              {trip.LoadType}
+                            </Badge>
+                          )}
+                          {trip.TripStatus && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs px-2 py-1 ${getLegStatusBadgeClass(trip.TripStatus)}`}
+                              >
+                                {trip.TripStatus}
+                              </Badge>
 
-        {/* Supplier and Transit Info */}
-        <div className="flex items-center gap-4 flex-wrap text-gray-700">
-          {trip.SupplierDescription && (
-            <span>
-              Supplier: {trip.SupplierDescription}
-              {/* <span className="font-medium text-gray-900">{trip.SupplierDescription}</span> */}
-            </span>
-          )}
+                              {trip.DraftBillNo && (
+                              <>
+                                <span className="text-gray-400 font-semibold">|</span>
+                                <div className="flex items-center gap-2 text-gray-700">
+                                  <span>Draft Bill: {trip.DraftBillNo}</span>
+                                  {trip.DraftBillStatus && (
+                                    <Badge variant="outline" className="text-xs px-2 py-1">
+                                      {trip.DraftBillStatus}
+                                    </Badge>
+                                  )}
+                                  {/* Alert icon with per-icon tooltip */}
+                                  <div
+                                    className="relative"
+                                  >
+                                    {/** Use a unique numeric key per leg+trip to control tooltip visibility */}
+                                    {/** Tooltip */}
+                                    {hoveredTooltipIndex === (index * 1000 + tripIndex) && (
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
+                                        Based on the route updates, kindly rerun the draft bill: {trip.DraftBillNo || "-"}.
+                                        {/* Tooltip arrow */}
+                                        <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
+                                      </div>
+                                    )}
+                                    <AlertTriangle
+                                      className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5"
+                                      onMouseEnter={() => setHoveredTooltipIndex(index * 1000 + tripIndex)}
+                                      onMouseLeave={() => setHoveredTooltipIndex(null)}
+                                      onFocus={() => setHoveredTooltipIndex(index * 1000 + tripIndex)}
+                                      onBlur={() => setHoveredTooltipIndex(null)}
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                              )}
+                            </div>
+                          )}
 
-          {(leg.TransitTime || leg.TransitTimeUOM) && (
-            <span>
-              Transit Time: {leg.TransitTime || "-"}{" "}
-                {leg.TransitTimeUOM
-                  ? leg.TransitTimeUOM.charAt(0).toUpperCase() +
-                    leg.TransitTimeUOM.slice(1).toLowerCase()
-                  : ""}
-            </span>
-          )}
-        </div>
+                        </div>
 
-        {/* Draft Bill Info */}
-        {trip.DraftBillNo && (
+
+
+                        {/* Supplier and Transit Info */}
+                        <div className="flex items-center gap-4 flex-wrap text-gray-700">
+                          {trip.SupplierDescription && (
+                            <span>
+                              Supplier: {trip.SupplierDescription}
+                              {/* <span className="font-medium text-gray-900">{trip.SupplierDescription}</span> */}
+                            </span>
+                          )}
+
+                          {(leg.TransitTime || leg.TransitTimeUOM) && (
+                            <span>
+                              Transit Time: {leg.TransitTime || "-"}{" "}
+                              {leg.TransitTimeUOM
+                                ? leg.TransitTimeUOM.charAt(0).toUpperCase() +
+                                leg.TransitTimeUOM.slice(1).toLowerCase()
+                                : ""}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Draft Bill Info */}
+                        {/* {trip.DraftBillNo && (
           <div className="flex items-center gap-4 flex-wrap text-gray-700">
             <span>
               Draftbill:{trip.DraftBillNo}
-              {/* <span className="font-medium text-gray-900">{trip.DraftBillNo}</span> */}
+              
             </span>
             {trip.DraftBillStatus && (
               <Badge variant="outline" className="text-xs px-2 py-1">
@@ -777,11 +818,11 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
               </Badge>
             )}
           </div>
-        )} 
-      </div>
-    ))}
-  </div>
-)}
+        )}  */}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
 
                 {/* {leg.LegStatus && (
