@@ -173,6 +173,15 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       width: 250
     },
     {
+      key: 'ProductDescription',
+      label: 'Product Description',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250
+    },
+    {
       key: 'ProductWeight',
       label: 'Product Weight',
       type: 'Text',
