@@ -143,7 +143,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   };
   const [apiData, setApiData] = useState(null);
   const messageTypes = [
-    "QC Userdefined"
+    "QC Userdefined Init"
   ];
 
   const config = resourceConfigs[resourceType];

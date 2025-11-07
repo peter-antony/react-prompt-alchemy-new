@@ -38,6 +38,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
   });
   const [attachmentData, setAttachmentData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
     console.log("AttachmentData updated:", attachmentData);
     const attachmentList = jsonStore.getQuickOrder();
@@ -254,6 +255,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
       console.log("Inside else-- delete file fom QUICKORDER")
       jsonStore.markAttachmentAsDeleted(file.id)
       //  jsonStore.deleteQuickOrderAttachmentById(file.id);
+      console.log("FULL Plan JSON :: ", jsonStore.getQuickOrder());
+
        jsonStore.setQuickOrder({
         ...jsonStore.getJsonData().quickOrder,
         // ...formValues.QuickOrder,
@@ -277,12 +280,16 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
         jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
         const attachmentList = jsonStore.getQuickOrder();
-        // setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
-        setAttachmentData(
-          attachmentList?.Attachments?.[0]
-            ? { ...attachmentList.Attachments[0] }  // clone
-            : { AttachItems: [], TotalAttachment: 0 }
-        );
+        console.log("AFTER DELETE JSON STORE- AttachmetList: ",attachmentList?.Attachments?.[0])
+       jsonStore.deleteQuickOrderAttachmentById(file.id);
+
+        setAttachmentData(attachmentList?.Attachments?.[0] || { AttachItems: [], TotalAttachment: 0 });
+        setReloadKey(prev => prev + 1);
+        // setAttachmentData(
+        //   attachmentList?.Attachments?.[0]
+        //     ? { ...attachmentList.Attachments[0] }  // clone
+        //     : { AttachItems: [], TotalAttachment: 0 }
+        // );
         })
       }, 1000);
      }
@@ -409,6 +416,7 @@ function mimeToExt(mime) {
       {/* Main Component */}
       {loading ? 
         <DynamicFileUpload
+          key={attachmentData?.TotalAttachment}  
           config={{
             categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
             maxFiles: 10,
