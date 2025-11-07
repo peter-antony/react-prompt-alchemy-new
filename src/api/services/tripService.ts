@@ -689,6 +689,33 @@ export const tripService = {
       requestBody
     );
     return response.data;
+  },
+
+  GetTrackAndTraceEvents: async (
+    params?: any
+  ): Promise<PaginatedResponse<Trip>> => {
+    const userContext = getUserContext();
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "GetTrackAndTraceFromTrip",
+      },
+      SearchCriteria: {
+        TripNo: params?.tripId
+      }
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_INCIDENT,
+      requestBody
+    );
+    return response.data;
   }
 
 };

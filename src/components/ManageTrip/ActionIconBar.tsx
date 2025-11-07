@@ -22,6 +22,7 @@ import { useDrawerStore } from '@/stores/drawerStore';
 import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
 import { TripLevelUpdateDrawer } from '../drawer/TripLevelUpdateDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
+import { TripTrackTrace } from '../drawer/tripTrackTrace';
 
 
 const TripRouteIcon = () => {
@@ -35,6 +36,7 @@ const TripRouteIcon = () => {
 export const ActionIconBar = () => {
   const [moreInfo, setMoreInfo] = useState(false);
   const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
+  const [trackTraceOpen, setTrackTraceOpen] = useState(false);
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { routes,
@@ -74,35 +76,35 @@ export const ActionIconBar = () => {
         <CircleArrowOutUpRight size={16} strokeWidth={1.2} />
         <span className="text-xs">Location</span>
       </Button> */}
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Vendor Performance Feedback' variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <MessageSquareText size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Map</span> */}
       </Button>
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Odometer' variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <MapPin size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Documents</span> */}
       </Button>
-      <Button variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Track and Trace' onClick={() => setTrackTraceOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <AlarmClockPlus size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Calculate</span> */}
       </Button>
-      <Button onClick={() => setAttachmentsOpen(true)}  variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Attachments' onClick={() => setAttachmentsOpen(true)}  variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <FileUp size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Vehicle</span> */}
       </Button>
       {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
               <Paperclip className="w-5 h-5 text-gray-600" />
       </button> */}
-      <Button onClick={() => openDrawer('linked-transactions')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Linked Transactions' onClick={() => openDrawer('linked-transactions')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <Link size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
       
-      <Button onClick={() => openDrawer('train-parameters')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Train Parameters' onClick={() => openDrawer('train-parameters')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <TramFront size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
-      <Button onClick={() => openTripDrawer(tripId)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Transport Route Update' onClick={() => openTripDrawer(tripId)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <TripRouteIcon  />
         {/* <span className="text-xs">Print</span> */}
       </Button>
@@ -123,6 +125,14 @@ export const ActionIconBar = () => {
       <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
             <div className="">
               <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} /></div>
+            </div>
+      </SideDrawer>
+      <SideDrawer isOpen={trackTraceOpen} onClose={() => setTrackTraceOpen(false)} width="100%" title="Trace and Trace" isBack={false} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600">
+                {/* <Attachments isTripLogAttachments={true} /> */}
+                <TripTrackTrace tripId={tripId} />
+              </div>
             </div>
       </SideDrawer>
 
