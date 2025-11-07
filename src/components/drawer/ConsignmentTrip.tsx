@@ -31,6 +31,7 @@ import CustomBulkUpload from '@/components/DynamicFileUpload/CustomBulkUpload';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import * as XLSX from 'xlsx';
 import { Switch } from '@/components/ui/switch';
+import { set } from 'date-fns';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -75,6 +76,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   const [wagonlengthUOMOptions, setWagonLengthUOMOptions] = useState<string[]>([]);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [deletedDataFromImport, setDeletedDataFromImport] = useState<any[]>([]);
+  const [productChangeTracker, setProductChangeTracker] = useState<{ rowIndex: number, productId: string } | null>(null);
+  const [unCodeChangeTracker, setUnCodeChangeTracker] = useState<{ rowIndex: number, unCode: string } | null>(null);
 
   // Initialize dropdown state variables when selectedCustomerData changes
   useEffect(() => {
@@ -87,6 +90,20 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       }
     }
   }, [selectedCustomerData]);
+
+  useEffect(() => {
+    if (productChangeTracker) {
+      productOnSelectUncodeLoad();
+      setProductChangeTracker(null);
+    }
+  }, [productChangeTracker]);
+
+  useEffect(() => {
+    if (unCodeChangeTracker) {
+      unCodeOnSelectProductLoad();
+      setUnCodeChangeTracker(null);
+    }
+  }, [unCodeChangeTracker]);
 
   const plannedColumns: GridColumnConfig[] = [
     {
@@ -884,6 +901,56 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       }));
     };
   };
+  const productOnSelectUncodeLoad = async () => {
+    let productIDValue = '';
+    if (currentEditingRowIndex !== null && actualEditableData[currentEditingRowIndex]) {
+      productIDValue = actualEditableData[currentEditingRowIndex].Product || '';
+    }
+    const response = await quickOrderService.getDynamicSearchData({
+      messageType: "UN Code Init",
+      searchTerm: '',
+      additionalFilter: [
+        {
+          FilterName: "ProductId",
+          FilterValue: productIDValue
+        }
+      ]
+    });
+    const rr: any = response.data
+    return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+      ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+        ? {
+          label: `${item.id} || ${item.name}`,
+          value: `${item.id} || ${item.name}`,
+        }
+        : {})
+    }));
+  };
+  const unCodeOnSelectProductLoad = async () => {
+    let unCodeValue = '';
+    if (currentEditingRowIndex !== null && actualEditableData[currentEditingRowIndex]) {
+      unCodeValue = actualEditableData[currentEditingRowIndex].Uncode || '';
+    }
+    const response = await quickOrderService.getDynamicSearchData({
+      messageType: "Product ID Init",
+      searchTerm: '',
+      additionalFilter: [
+        {
+          FilterName: "Uncode",
+          FilterValue: unCodeValue
+        }
+      ]
+    });
+    const rr: any = response.data
+    return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+      ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+        ? {
+          label: `${item.id} || ${item.name}`,
+          value: `${item.id} || ${item.name}`,
+        }
+        : {})
+    }));
+  };
   const createUnCodeFetchOptions = () => {
     return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
       let productIDValue = '';
@@ -1052,6 +1119,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                 ...(wagonData.WagonTypeDescription && { WagonType: wagonData.WagonTypeDescription }),
                 ...(wagonData.WagonQty && { WagonQty: wagonData.WagonQty }),
                 ...(wagonData.WagonUOM && { WagonQtyUOM: wagonData.WagonUOM }),
+                ...(wagonData.WagonLengthUOM && { WagonLengthUOM: wagonData.WagonLengthUOM }),
+                ...(wagonData.TareWeightUOM && { WagonTareWeightUOM: wagonData.TareWeightUOM }),
                 ...(wagonData.TareWeight && { WagonTareWeight: wagonData.TareWeight }),
                 ...(wagonData.WagonLength && { WagonLength: wagonData.WagonLength }),
               }));
@@ -1060,8 +1129,8 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               setNewRowValues((prev: any) => ({
                 ...prev,
                 Wagon: value,
-                WagonDescription: value, 
-                WagonType: 'Unknown Type', 
+                WagonDescription: value,
+                WagonType: 'Unknown Type',
                 WagonQty: '',
                 WagonQtyUOM: '',
                 WagonTareWeight: '',
@@ -1128,7 +1197,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   ...newData[rowIndex],
                   Wagon: value,
                   WagonDescription: value,
-                  WagonType: 'Unknown Type', 
+                  WagonType: 'Unknown Type',
                   WagonQty: '',
                   WagonQtyUOM: '',
                   WagonTareWeight: '',
@@ -1158,6 +1227,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 180,
       options: wagonQtyUOMOptions,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonQtyUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonQtyUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon qty UOM:', error);
+        }
+      },
     },
     {
       key: 'WagonQty',
@@ -1167,7 +1262,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       mandatory: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonQty: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonQty: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon qty:', error);
+        }
+      },
     },
     {
       key: 'NHMDescription',
@@ -1217,9 +1338,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 250,
       fetchOptions: createProductFetchOptions(),
-      onChange: async (value: string, rowData: any, actualRowIndex?: number) => {
+      onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // createUnCodeFetchOptions();
+          setCurrentEditingRowIndex(rowIndex);
           const response = await quickOrderService.getDynamicSearchData({
             messageType: "ProductID On Select",
             searchCriteria: {
@@ -1240,13 +1364,15 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   ...newData[rowIndex],
                   Product: safeSplit(value, ' || ', 0),
                   ProductDescription: safeSplit(value, ' || ', 1),
-                  UNCode: productfetchData.UNCode || '',
-                  UNCodeDescription: productfetchData.UNDescription || '',
-                  DGClass: productfetchData.DGClass || '',
-                  DGClassDescription: productfetchData.DGClassDescription || '',
-                  NHM: productfetchData.NHMCode || '',
-                  NHMDescription: productfetchData.NHMDescription || '',
-                  ...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
+                  UNCode: productfetchData[0].UNCode || '',
+                  UNCodeDescription: productfetchData[0].UNDescription || '',
+                  DGClass: productfetchData[0].DGClass && productfetchData[0].DGClassDescription
+                    ? `${productfetchData[0].DGClass} || ${productfetchData[0].DGClassDescription}`
+                    : (productfetchData[0].DGClass || ''),
+                  DGClassDescription: productfetchData[0].DGClassDescription || '',
+                  // NHM: productfetchData.NHMCode || '',
+                  // NHMDescription: productfetchData.NHMDescription || '', // Stand Alone
+                  //...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
                 };
               } else {
                 // API returned empty response - clear related fields
@@ -1256,9 +1382,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   ProductDescription: safeSplit(value, ' || ', 1),
                   UNCode: '',
                   UNCodeDescription: '',
-                  NHM: '',
-                  NHMDescription: '',
-                  ContainsHazardousGoods: '',
+                  // NHM: '',
+                  // NHMDescription: '',
+                  // ContainsHazardousGoods: '',
                   DGClass: '',
                   DGClassDescription: '',
                 };
@@ -1271,6 +1397,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             hasUserEditsRef.current = true;
             return newData;
           });
+
+          setProductChangeTracker({
+            rowIndex: rowIndex,
+            productId: safeSplit(value, ' || ', 0)
+          });
+
         } catch (error) {
           console.error('Failed to fetch wagon details:', error);
         }
@@ -1285,6 +1417,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 180,
       options: productQtyUomOptions,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ProductWeightUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ProductWeightUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating product weight UOM:', error);
+        }
+      },
     },
     {
       key: 'ProductWeight',
@@ -1293,7 +1451,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 160
+      width: 160,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ProductWeight: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ProductWeight: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating product weight:', error);
+        }
+      },
     },
     {
       key: 'UNCodeDescription',
@@ -1329,11 +1513,13 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   UNCodeDescription: safeSplit(value, ' || ', 1),
                   Product: unCodefetchData.ProductID || '',
                   ProductDescription: unCodefetchData.ProductDescription || '',
-                  DGClass: unCodefetchData.DGClass || '',
+                  DGClass: unCodefetchData.DGClass && unCodefetchData.DGClassDescription
+                    ? `${unCodefetchData.DGClass} || ${unCodefetchData.DGClassDescription}`
+                    : (unCodefetchData.DGClass || ''),
                   DGClassDescription: unCodefetchData.DGClassDescription || '',
-                  NHM: unCodefetchData.NHMCode || '',
-                  NHMDescription: unCodefetchData.NHMDescription || '',
-                  ...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
+                  // NHM: unCodefetchData.NHMCode || '',
+                  // NHMDescription: unCodefetchData.NHMDescription || '',
+                  //...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
                 };
               } else {
                 // API returned empty response - clear related fields
@@ -1358,13 +1544,19 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             hasUserEditsRef.current = true;
             return newData;
           });
+
+          setUnCodeChangeTracker({
+            rowIndex: rowIndex,
+            unCode: safeSplit(value, ' || ', 0)
+          });
         } catch (error) {
           console.error('Failed to fetch wagon details:', error);
         }
+
       },
     },
     {
-      key: 'DGClassDescription',
+      key: 'DGClass',
       label: 'DG Class',
       type: 'LazySelect',
       sortable: true,
@@ -1391,6 +1583,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       onChange: (value: string, rowData: any, actualRowIndex?: number) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
           setActualEditableData(prevData => {
             const newData = [...prevData];
 
@@ -1423,6 +1616,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 220,
       options: ['Yes', 'No'],
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainsHazardousGoods: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainsHazardousGoods: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating contains hazardous goods:', error);
+        }
+      },
     },
     {
       key: 'WagonTareWeightUOM',
@@ -1432,7 +1651,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       subRow: false,
       width: 200,
-      options: weightList
+      options: weightList,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonTareWeightUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonTareWeightUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'WagonTareWeight',
@@ -1441,7 +1686,37 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 180
+      width: 180,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonTareWeight: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonTareWeight: value,
+              };
+            } else {
+              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+            }
+
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon tare weight:', error);
+        }
+      },
     },
     {
       key: 'GrossWeightUOM',
@@ -1451,7 +1726,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       subRow: false,
       options: weightList,
-      width: 200
+      width: 200,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              GrossWeightUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                GrossWeightUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'GrossWeight',
@@ -1460,7 +1761,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              GrossWeight: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                GrossWeight: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon gross weight:', error);
+        }
+      },
     },
     {
       key: 'WagonLengthUOM',
@@ -1470,7 +1797,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       subRow: false,
       options: wagonlengthUOMOptions,
-      width: 200
+      width: 200,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonLengthUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonLengthUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon length UOM:', error);
+        }
+      },
     },
     {
       key: 'WagonLength',
@@ -1479,7 +1832,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonLength: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonLength: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon length:', error);
+        }
+      },
     },
     {
       key: 'ShuntingOption',
@@ -1679,7 +2058,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 180
+      width: 180,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ShuntInDate: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ShuntInDate: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'ShuntInTime',
@@ -1688,7 +2093,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 160
+      width: 160,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ShuntInTime: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ShuntInTime: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'ShuntOutDate',
@@ -1697,7 +2128,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 180
+      width: 180,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ShuntOutDate: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ShuntOutDate: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'ShuntOutTime',
@@ -1706,17 +2163,69 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 160
+      width: 160,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ShuntOutTime: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ShuntOutTime: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'WagonPosition',
       label: 'Wagon Position',
       type: 'Integer',
       sortable: true,
-      editable: false,
+      editable: true,
       mandatory: true,
       subRow: false,
-      width: 120
+      width: 120,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonPosition: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonPosition: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon position:', error);
+        }
+      },
     },
     {
       key: 'WagonSealNo',
@@ -1725,7 +2234,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              WagonSealNo: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                WagonSealNo: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating wagon seal no:', error);
+        }
+      },
     },
     {
       key: 'ContainerDescription',
@@ -1818,6 +2353,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 180,
       options: containerQtyUOMOptions,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainerQtyUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainerQtyUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating container qty UOM:', error);
+        }
+      },
     },
     {
       key: 'ContainerQty',
@@ -1826,7 +2387,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainerQty: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainerQty: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating container qty:', error);
+        }
+      },
     },
     {
       key: 'ContainerTareWeightUOM',
@@ -1836,7 +2423,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       subRow: false,
       width: 220,
-      options: weightList
+      options: weightList,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainerTareWeightUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainerTareWeightUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'ContainerTareWeight',
@@ -1845,7 +2458,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainerTareWeight: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainerTareWeight: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating container tare weight:', error);
+        }
+      },
     },
     {
       key: 'ContainerSealNo',
@@ -1854,7 +2493,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ContainerSealNo: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ContainerSealNo: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating container seal no:', error);
+        }
+      },
     },
     {
       key: 'Thu',
@@ -1903,7 +2568,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ThuSerialNo: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ThuSerialNo: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating THU serial no:', error);
+        }
+      },
     },
     {
       key: 'ThuQtyUOM',
@@ -1914,6 +2605,32 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       subRow: false,
       width: 200,
       options: thuQtyUOMOptions,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ThuQtyUOM: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ThuQtyUOM: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating THU qty UOM:', error);
+        }
+      },
     },
     {
       key: 'ThuQty',
@@ -1922,7 +2639,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ThuQty: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ThuQty: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating THU qty:', error);
+        }
+      },
     },
     {
       key: 'ThuWeightUOM',
@@ -1932,7 +2675,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       editable: true,
       subRow: false,
       width: 200,
-      options: weightList
+      options: weightList,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              LastCommodityTransported3: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                LastCommodityTransported3: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'ThuWeight',
@@ -1941,7 +2710,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 200
+      width: 200,
+      onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              ThuWeight: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                ThuWeight: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating THU weight:', error);
+        }
+      },
     },
     {
       key: 'ClassOfStores',
@@ -1988,7 +2783,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 320
+      width: 320,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              LastCommodityTransported1: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                LastCommodityTransported1: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'LastCommodityTransported2',
@@ -1997,7 +2818,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 320
+      width: 320,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              LastCommodityTransported2: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                LastCommodityTransported2: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'LastCommodityTransported3',
@@ -2006,7 +2853,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 320
+      width: 320,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              LastCommodityTransported3: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                LastCommodityTransported3: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'QuickCode1',
@@ -2129,7 +3002,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              QuickCodeValue1: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                QuickCodeValue1: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'QuickCodeValue2',
@@ -2138,7 +3037,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              QuickCodeValue2: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                QuickCodeValue2: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'QuickCodeValue3',
@@ -2147,7 +3072,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              QuickCodeValue3: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                QuickCodeValue3: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'Remarks1',
@@ -2156,7 +3107,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              Remarks1: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                Remarks1: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks1:', error);
+        }
+      },
     },
     {
       key: 'Remarks2',
@@ -2165,7 +3142,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              Remarks2: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                Remarks2: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks2:', error);
+        }
+      },
     },
     {
       key: 'Remarks3',
@@ -2174,7 +3177,33 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       sortable: true,
       editable: true,
       subRow: false,
-      width: 250
+      width: 250,
+      onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+        try {
+          const rowIndex = actualRowIndex ?? 0;
+          if (actualRowIndex === -1 && setNewRowValues) {
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              Remarks3: value,
+            }));
+            return;
+          }
+
+          setActualEditableData(prevData => {
+            const newData = [...prevData];
+            if (newData[rowIndex]) {
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                Remarks3: value,
+              };
+            }
+            hasUserEditsRef.current = true;
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error updating remarks3:', error);
+        }
+      },
     },
 
   ];
@@ -2224,11 +3253,12 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
   };
   const handleAddRow = async (newRow: any) => {
     try {
-
+      // Mark the new row with Insert mode flag for proper save handling
       const newRowWithInsertFlag = {
         ...newRow,
         ModeFlag: 'Insert',
       };
+
       // Add the new row to actualEditableData state
       setActualEditableData(prevData => [...prevData, newRowWithInsertFlag]);
 
@@ -2579,7 +3609,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
 
       // Get the full trip data from the store - try prop first, then manageTripStore as fallback
       const currentTripData = tripData || manageTripStore.getState().tripData;
-      console.log("currentTripData ++++", currentTripData);
       if (!currentTripData) {
         toast({
           title: "⚠️ No Trip Data",
@@ -2640,12 +3669,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return newObj;
       };
 
-      // Process data for save with proper mode flags based on requirements:
-      // 1. Send newly imported data with Insert mode flag
-      // 2. Send existing data that was removed during import with Delete mode flag  
-      // 3. Send existing data that has been edited with Update mode flag
-      // 4. If user has made edits, include all current data
-
       let currentGridData = [];
 
       if (hasUserEditsRef.current) {
@@ -2656,11 +3679,9 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
             if (!actualRow || typeof actualRow !== 'object') {
               throw new Error(`Invalid row data at index ${index}`);
             }
+            let modeFlag = "Update";
 
-            // Determine the appropriate mode flag
-            let modeFlag = "Update"; // Default to Update for existing data
-
-            // If row has Insert flag or isNewRow marker, keep it as Insert
+            // If row has Insert flag or isNewRow marker, keep it as Insert || actualRow.isNewRow === true
             if (actualRow.ModeFlag === 'Insert') {
               modeFlag = "Insert";
             }
@@ -2775,7 +3796,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       } else {
         // If no user edits, only include new/imported data (original logic)
         currentGridData = actualEditableData.filter(row => {
-          // Only include rows that are newly imported (have Insert mode flag or isNewRow marker)
+          // Only include rows that are newly imported (have Insert mode flag or isNewRow marker) || row.isNewRow === true
           return row.ModeFlag === 'Insert';
         }).map((actualRow, index) => {
           // Map the data to match the expected API format, removing extra parameters
@@ -2855,7 +3876,7 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       // Include deleted data from import operations (existing data removed during import)
       const deletedDataToInclude = deletedDataFromImport.map((deletedRow, index) => ({
         ...deletedRow,
-        ModeFlag: "Delete" // Existing records that were removed during import
+        ModeFlag: "Delete"
       }));
 
       // Combine only the data that needs to be sent to API
@@ -2880,23 +3901,18 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         return;
       }
 
-      console.log("updatedTripData 1111", allDataToSave);
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
-      console.log("updatedTripData 1111", updatedTripData);
-      // Find and update the specific nested object in trip data structure
+
       try {
-        // Validate the path exists
         if (!updatedTripData.LegDetails || !Array.isArray(updatedTripData.LegDetails)) {
           throw new Error("LegDetails not found or not an array");
         }
 
-        // Find the leg by matching LegSequence with legId
         const legIndex = updatedTripData.LegDetails.findIndex(leg => leg.LegSequence === legId);
         if (legIndex === -1) {
           throw new Error(`Leg with LegSequence ${legId} not found`);
         }
-
 
         if (!updatedTripData.LegDetails[legIndex].Consignment) {
           updatedTripData.LegDetails[legIndex].Consignment = [];
@@ -2906,24 +3922,19 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
-        const consignmentIndex = 0; 
+        const consignmentIndex = 0;
 
-        // Initialize consignment object if it doesn't exist
         if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]) {
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex] = {};
         }
 
-        // Replace the entire Actual array with our updated data
         if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual) {
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = [];
         }
 
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = allDataToSave;
 
-        console.log("updatedTripData ======1", updatedTripData);
-        
         // Save to API
-        
         try {
           const response = await tripService.saveTrip(updatedTripData);
 
@@ -2932,8 +3943,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
           if (resourceStatus) {
             manageTripStore.getState().setTrip(updatedTripData);
             setDeletedDataFromImport([]);
-
-            // Reset the user edits flag after successful save
             hasUserEditsRef.current = false;
 
             toast({
@@ -2941,15 +3950,11 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
               description: (response as any)?.data?.ResponseData?.Message || "Your actual details have been saved.",
               variant: "default",
             });
-
-            // After successful save, wait a moment before fetching updated trip data to allow backend processing
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             try {
-              // Get tripId from manageTripStore Header.TripNo
               const currentTripData = manageTripStore.getState().tripData;
               const tripId = currentTripData?.Header?.TripNo || updatedTripData.TripId || updatedTripData.TripID;
-        
 
               if (tripId) {
                 const refreshResponse = await tripService.getTripById({ id: tripId });
@@ -2964,19 +3969,19 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                   const legDetails = refreshedTripData.LegDetails;
                   if (legDetails && Array.isArray(legDetails)) {
                     const currentLegData = legDetails.find(leg => leg.LegSequence === legId);
-                
+
 
                     if (currentLegData?.Consignment?.[0]?.Actual && Array.isArray(currentLegData.Consignment[0].Actual)) {
                       // Update actualEditableData with fresh data from API
                       setActualEditableData(currentLegData.Consignment[0].Actual);
 
-                      toast({
-                        title: "🔄 Data Refreshed",
-                        description: "Trip data has been refreshed successfully.",
-                        variant: "default",
-                      });
+                      // toast({
+                      //   title: "🔄 Data Refreshed",
+                      //   description: "Trip data has been refreshed successfully.",
+                      //   variant: "default",
+                      // });
                     } else {
-                     
+
                       if (currentLegData?.Consignment?.[0]) {
                         currentLegData.Consignment[0].Actual = allDataToSave;
 
@@ -2985,11 +3990,11 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
                         setActualEditableData([...allDataToSave]);
                       }
 
-                      toast({
-                        title: "✅ Data Saved & Refreshed",
-                        description: "Data saved successfully and grid has been refreshed with latest data.",
-                        variant: "default",
-                      });
+                      // toast({
+                      //   title: "✅ Data Saved & Refreshed",
+                      //   description: "Data saved successfully and grid has been refreshed with latest data.",
+                      //   variant: "default",
+                      // });
                     }
                   } else {
                     toast({
@@ -3051,7 +4056,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
       });
     }
   };  // Step 1: Build Customer Order dropdown list
-
   const buildCustomerOrderList = (consignments: any[] = []) => {
     return consignments.map((item, index) => ({
       label: `${item.CustomerOrderNo} — ${item.CustomerName || "-"}`,
@@ -3121,7 +4125,6 @@ export const ConsignmentTrip = ({ legId, tripData }: { legId: string, tripData?:
         const options = wagonLengthData
           .filter((qc: any) => qc.id)
           .map((qc: any) => qc.name as string);
-        // Remove duplicates using Set
         const uniqueOptions = [...new Set(options)] as string[];
         setWagonLengthUOMOptions(uniqueOptions);
       } catch (error) {
