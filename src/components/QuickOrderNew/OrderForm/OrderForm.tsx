@@ -680,6 +680,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
         setOrderType(OrderType)
         // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
         // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+        console.log("contract.Currency = ",contract.Currency)
         jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency });
         jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
         const additionalInfo = contract.ContractTariff;
@@ -1840,6 +1841,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     clonedData.AmendReasonDescription = null;
     clonedData.CanceReasonCode = null;
     clonedData.CanceReasonDescription = null;
+    clonedData.Status = "Fresh";
 
     // Update ResourceGroup fields
     if (Array.isArray(clonedData.ResourceGroup)) {
@@ -1848,7 +1850,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
         resource.ResourceUniqueID = -1;
         resource.ModeFlag = "Insert";
         resource.Attachments = null;
-
+        resource.ResourceStatus = "Fresh";
         // Update BillingDetails
         resource.BillingDetails = {
           ...resource.BillingDetails,

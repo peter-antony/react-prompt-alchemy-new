@@ -155,7 +155,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         formData.append('Attachmenttype', fileType);
         formData.append('Attachname', fileName);
         formData.append('Filecategory', file.category);
-        formData.append('Remarks', file.remarks);
+        // formData.append('Remarks', file.remarks);
         console.log('FINAL ## FormData:', formData)
         
         // Add any additional context if needed
@@ -166,7 +166,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         FileJson.Attachmenttype = fileType;
         FileJson.Attachname = fileName;
         FileJson.Filecategory = file.category;
-        FileJson.Remarks = file.remarks;
+        // FileJson.Remarks = file.remarks;
         console.log('Uploading file with FormData:', {
           fileName,
           fileType,

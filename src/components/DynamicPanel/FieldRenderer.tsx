@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Search, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import jsonStore from '@/stores/jsonStore';
 
 interface FieldRendererProps {
   config: FieldConfig;
@@ -222,7 +223,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 {fieldId === "UnitPrice" ? (
                   <div className="flex items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
                     {/* Fixed currency label */}
-                    <span className="px-2 text-gray-700 font-normal font-[13px]">EUR</span>
+                   
+                    <span className="px-2 text-gray-700 font-normal font-[13px]">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'}</span>
                     {/* Editable input */}
                     <input
                       type="text"
