@@ -18,6 +18,7 @@ export { FilterSetModal } from './FilterSetModal';
 export { FilterSetDropdown } from './FilterSetDropdown';
 export { FilterFieldSettings } from './FilterFieldSettings';
 export { EnhancedCellEditor } from './EnhancedCellEditor';
+export { SmartGridWithNestedRows } from './SmartGridWithNestedRows';
 export * from '@/types/smartgrid';
 export * from '@/hooks/useSmartGridData';
 export * from '@/hooks/useGridPreferences';

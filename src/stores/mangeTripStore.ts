@@ -3,6 +3,7 @@ import {
   Header,
   Incident,
   LegDetail,
+  LegActivity,
   ModeFlag,
   TripData,
 } from "@/types/manageTripTypes";
@@ -24,6 +25,7 @@ interface TripState {
   addLeg?: (leg: LegDetail) => void;
   updateLeg?: (legId: string, updates: Partial<LegDetail>) => void;
   removeLeg?: (legId: string) => void;
+  updateActivity?: (legIndex: number, activityIndex: number, updates: Partial<LegActivity>) => void;
   addIncident?: (incident: Incident) => void;
   updateIncident?: (incidentId: string, updates: Partial<Incident>) => void;
   removeIncident?: (incidentId: string) => void;
@@ -78,6 +80,55 @@ export const manageTripStore = create<TripState>((set, get) => ({
   getLegDetails: () => {
     const state = get();
     return state.tripData?.LegDetails || [];
+  },
+
+  // Update Activity based on LegDetails index and Activity index
+  updateActivity: (legIndex: number, activityIndex: number, updates: Partial<LegActivity>) => {
+    set((state) => {
+      if (!state.tripData?.LegDetails) {
+        console.warn("No LegDetails found in tripData");
+        return state;
+      }
+
+      const legDetails = [...state.tripData.LegDetails];
+      
+      // Validate legIndex
+      if (legIndex < 0 || legIndex >= legDetails.length) {
+        console.warn(`Invalid legIndex: ${legIndex}. LegDetails length: ${legDetails.length}`);
+        return state;
+      }
+
+      const leg = { ...legDetails[legIndex] };
+      
+      // Ensure Activities array exists
+      if (!leg.Activities) {
+        leg.Activities = [];
+      }
+
+      // Validate activityIndex
+      if (activityIndex < 0 || activityIndex >= leg.Activities.length) {
+        console.warn(`Invalid activityIndex: ${activityIndex}. Activities length: ${leg.Activities.length}`);
+        return state;
+      }
+
+      // Update the specific activity
+      const activities = [...leg.Activities];
+      activities[activityIndex] = {
+        ...activities[activityIndex],
+        ...updates,
+        ModeFlag: "Update" as ModeFlag, // Set ModeFlag to Update if not specified
+      };
+
+      leg.Activities = activities;
+      legDetails[legIndex] = leg;
+
+      return {
+        tripData: {
+          ...state.tripData,
+          LegDetails: legDetails,
+        },
+      };
+    });
   },
 
   // save trip action
