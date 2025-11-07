@@ -32,6 +32,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
     // export default function Attachments() {
     const [fileCategory, setFileCategory] = useState("BR Ammend");
     const [remarks, setRemarks] = useState("");
+    const [reloadKey, setReloadKey] = useState(0);
     const [uploadedFile, setUploadedFile] = useState({
         name: "Routine Check.pdf",
         type: "pdf",
@@ -75,7 +76,7 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
         console.log("GET ALL ATTACHMENTS : ", JSON.parse(res?.ResponseData))
 
         setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
-
+        setReloadKey(prev => prev + 1);
         // set({ tripList: response.data, loading: false });
     }
     const handleUpload = async (files: StagedFile[]) => {
@@ -218,16 +219,36 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
         });
     };
 
-    const handleDelete = async (fileId: string) => {
+    const handleDelete = async (fileId: any) => {
         // Simulate API call
         console.log('Deleting TripLog file:', fileId);
         console.log("isTripLogAttachments IN TRIPLOG ATTACHMENT:", isTripLogAttachments);
-        return new Promise<void>((resolve) => {
-            setTimeout(() => {
-                console.log('Delete completed');
-                resolve();
-            }, 1000);
-        });
+        const fileData = {
+            "AttachmentType": fileId.fileName,
+            "AttachName": fileId.fileName,
+            "FileCategory": fileId.category,
+            "AttachItemID": fileId.id,
+            "AttachUniqueName": fileId.AttachUniqueName,
+            "AttachRelPath": fileId.downloadUrl,
+            "Remarks": fileId.remarks,
+            "ModeFlag": "Delete"
+
+
+        }
+        console.log("fileData for delete : ",fileData)
+        const response: any = await tripService.saveAttachments(fileData, tripUniqueID);
+        const responseData = response as any;
+        if (responseData && responseData.data) {
+            console.log("TRIPLOG FILE DELETE RESPONSE : ",response)
+            getAttachments();
+            // setReloadKey(prev => prev + 1);
+            return new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    console.log('Delete completed');
+                    resolve();
+                }, 1000);
+            });
+        }
     };
 
     const handleDownload = async (file: any) => {
@@ -257,6 +278,8 @@ const Attachments = ({ isTripLogAttachments, isEditQuickOrder, isResourceGroupAt
             {/* Main Component */}
             {loading && attachmentData ?
                 <DynamicFileUpload
+                    // key={attachmentData?.TotalAttachment} 
+                    key={reloadKey} 
                     config={{
                         categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
                         maxFiles: 10,
