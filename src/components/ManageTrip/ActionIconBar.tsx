@@ -23,6 +23,8 @@ import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripL
 import { TripLevelUpdateDrawer } from '../drawer/TripLevelUpdateDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { TripTrackTrace } from '../drawer/tripTrackTrace';
+import TripOdometer from './TripOdometer';
+import TripVendorFeedback from './TripVendorFeedback';
 
 
 const TripRouteIcon = () => {
@@ -37,6 +39,8 @@ export const ActionIconBar = () => {
   const [moreInfo, setMoreInfo] = useState(false);
   const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
   const [trackTraceOpen, setTrackTraceOpen] = useState(false);
+  const [isOdometerOpen, setOdometerOpen] = useState(false);
+  const [isVendorFeedbackOpen, setVendorFeedbackOpen] = useState(false);
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { routes,
@@ -76,11 +80,11 @@ export const ActionIconBar = () => {
         <CircleArrowOutUpRight size={16} strokeWidth={1.2} />
         <span className="text-xs">Location</span>
       </Button> */}
-      <Button title='Vendor Performance Feedback' variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Vendor Performance Feedback' onClick={() => setVendorFeedbackOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <MessageSquareText size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Map</span> */}
       </Button>
-      <Button title='Odometer' variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Odometer' onClick={() => setOdometerOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <MapPin size={16} strokeWidth={1.2} />
         {/* <span className="text-xs">Documents</span> */}
       </Button>
@@ -133,6 +137,18 @@ export const ActionIconBar = () => {
                 {/* <Attachments isTripLogAttachments={true} /> */}
                 <TripTrackTrace tripId={tripId} />
               </div>
+            </div>
+      </SideDrawer>
+
+      <SideDrawer isOpen={isOdometerOpen} onClose={() => setOdometerOpen(false)} width="40%" title="Odometer" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><TripOdometer /></div>
+            </div>
+      </SideDrawer>
+
+      <SideDrawer isOpen={isVendorFeedbackOpen} onClose={() => setVendorFeedbackOpen(false)} width="40%" title="Vendor Performance Feedback" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><TripVendorFeedback /></div>
             </div>
       </SideDrawer>
 
