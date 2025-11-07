@@ -1,42 +1,59 @@
-import { ColumnConfig } from '@/types/BulkUpload';
+import { ColumnConfig } from '@/types/bulkUpload';
 
-// Excel header mappings to the response structure fields
+// Excel header mappings to  {
+    
 export const excelColumnMappings = {
+  'Wagon Type': 'WagonType',
   'Wagon ID': 'Wagon',
-  'Tare Weight': 'WagonTareWeight',
-  'Gross Weight': 'GrossWeight', 
-  'Container ID': 'ContainerId',
-  'Product ID': 'ProductId',
+  'Wagon Qty UOM': 'WagonQtyUOM',
+  'Wagon Qty': 'WagonQty',
+  'NHM': 'NHM',
+  'Product ID': 'Product',
   'Product Weight UOM': 'ProductWeightUOM',
   'Product Weight': 'ProductWeight',
-  'Wagon Position': 'WagonPosition',
-  'Wagon Type': 'WagonType',
-  'Wagon length': 'WagonLength',
-  'Wagon Qty': 'WagonQty',
-  'Wagon Qty UOM': 'WagonQtyUOM',
-  'Container Type': 'ContainerType',
-  'Container Qty': 'ContainerQty',
-  'Container Qty UOM': 'ContainerQtyUOM',
-  'THU ID': 'Thu',
-  'THU Serial No': 'ThuSerialNo',
-  'THU Qty': 'ThuQty',
-  'THU Weight': 'ThuWeight',
-  'THU Weight UOM': 'ThuWeightUOM',
-  'Shunting Option': 'ShuntingOption',
-  'Replaced Wagon ID': 'ReplacedWagon',
-  'Reason Code': 'ShuntingReasonCode',
-  'Remarks': 'Remarks',
-  'Shunt In Location': 'ShuntInLocation',
-  'Shunt Out Location': 'ShuntOutLocation',
-  'Class Of Stores': 'ClassOfStores',
-  'NHM': 'NHM',
   'UN Code': 'UNCode',
   'DG Class': 'DGClass',
   'Contains Hazardous Goods': 'ContainsHazardousGoods',
+  'Wagon Tare Weight UOM': 'WagonTareWeightUOM',
+  'Wagon Tare Weight': 'WagonTareWeight',
+  'Wagon Gross Weight UOM': 'GrossWeightUOM',
+  'Wagon Gross Weight': 'GrossWeight',
+  'Wagon Length UOM': 'WagonLengthUOM',
+  'Wagon Length': 'WagonLength',
+  'Shunting Option': 'ShuntingOption',
+  'Replaced Wagon': 'ReplacedWagon',
+  'Shunting Reason Code': 'ShuntingReasonCode',
+  'Shunt In Location': 'ShuntInLocationDescription',
+  'Shunt Out Location': 'ShuntOutLocationDescription',
+  'Shunt In Date': 'ShuntInDate',
+  'Shunt In Time': 'ShuntInTime',
+  'Shunt Out Date': 'ShuntOutDate',
+  'Shunt Out Time': 'ShuntOutTime',
+  'Wagon Position': 'WagonPosition',
   'Wagon Seal No.': 'WagonSealNo',
+  'Container ID': 'ContainerId',
+  'Container Type': 'ContainerType',
+  'Container Qty UOM': 'ContainerQtyUOM',
+  'Container Qty': 'ContainerQty',
+  'Container Tare Weight UOM': 'ContainerTareWeightUOM',
+  'Container Tare Weight': 'ContainerTareWeight',
   'Container Seal No.': 'ContainerSealNo',
-  'Shunt In Date & Time': 'ShuntInDate', // Doubt
-  'Shunt Out Date & Time': 'ShuntOutDate', // Doubt
+  'THU ID': 'Thu',
+  'THU Serial No': 'ThuSerialNo',
+  'THU Qty UOM': 'ThuQtyUOM',
+  'THU Qty': 'ThuQty',
+  'THU Weight UOM': 'ThuWeightUOM',
+  'THU Weight': 'ThuWeight',
+  'Class Of Stores': 'ClassOfStores',
+  'Last Product Transported 1': 'LastProductTransported1',
+  'Last Product Transported 2': 'LastProductTransported2',
+  'Last Product Transported 3': 'LastProductTransported3',
+  'Quick Code 1': 'QuickCode1',
+  'Quick Code 2': 'QuickCode2',
+  'Quick Code 3': 'QuickCode3',
+  'Quick Code Value 1': 'QuickCodeValue1',
+  'Quick Code Value 2': 'QuickCodeValue2',
+  'Quick Code Value 3': 'QuickCodeValue3',
   'Remarks1': 'Remarks1',
   'Remarks2': 'Remarks2',
   'Remarks3': 'Remarks3'
@@ -55,8 +72,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Tare Weight',
-    displayName: 'Tare Weight',
+    fieldName: 'Wagon Tare Weight',
+    displayName: 'Wagon Tare Weight',
     validationRules: {
       type: 'number',
       required: false,
@@ -64,8 +81,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Gross Weight',
-    displayName: 'Gross Weight',
+    fieldName: 'Wagon Gross Weight',
+    displayName: 'Wagon Gross Weight',
     validationRules: {
       type: 'number',
       required: false,
@@ -82,8 +99,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Commodity ID',
-    displayName: 'Commodity ID',
+    fieldName: 'Product ID',
+    displayName: 'Product ID',
     validationRules: {
       type: 'string',
       required: false,
@@ -91,8 +108,17 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Commodity Actual Qty',
-    displayName: 'Commodity Actual Qty',
+    fieldName: 'Product Description',
+    displayName: 'Product Description',
+    validationRules: {
+      type: 'string',
+      required: false,
+      maxLength: 255
+    }
+  },
+  {
+    fieldName: 'Product Weight Qty',
+    displayName: 'Product Weight Qty',
     validationRules: {
       type: 'number',
       required: false,
@@ -100,8 +126,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Commodity Qty UOM',
-    displayName: 'Commodity Qty UOM',
+    fieldName: 'Product Weight Qty UOM',
+    displayName: 'Product Weight Qty UOM',
     validationRules: {
       type: 'string',
       required: false,
@@ -127,7 +153,7 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Wagon length',
+    fieldName: 'Wagon Length',
     displayName: 'Wagon Length',
     validationRules: {
       type: 'number',
@@ -181,15 +207,6 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Commodity Damaged Qty',
-    displayName: 'Commodity Damaged Qty',
-    validationRules: {
-      type: 'number',
-      required: false,
-      min: 0
-    }
-  },
-  {
     fieldName: 'THU ID',
     displayName: 'THU ID',
     validationRules: {
@@ -234,15 +251,7 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
       maxLength: 10
     }
   },
-  {
-    fieldName: 'Commodity Description',
-    displayName: 'Commodity Description',
-    validationRules: {
-      type: 'string',
-      required: false,
-      maxLength: 255
-    }
-  },
+
   {
     fieldName: 'Shunting Option',
     displayName: 'Shunting Option',
@@ -253,8 +262,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Replaced Wagon ID',
-    displayName: 'Replaced Wagon ID',
+    fieldName: 'Replaced Wagon',
+    displayName: 'Replaced Wagon',
     validationRules: {
       type: 'string',
       required: false,
@@ -262,21 +271,12 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Reason Code',
-    displayName: 'Reason Code',
+    fieldName: 'Shunting Reason Code',
+    displayName: 'Shunting Reason Code',
     validationRules: {
       type: 'string',
       required: false,
       maxLength: 50
-    }
-  },
-  {
-    fieldName: 'Remarks',
-    displayName: 'Remarks',
-    validationRules: {
-      type: 'string',
-      required: false,
-      maxLength: 500
     }
   },
   {
@@ -363,22 +363,6 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
       type: 'string',
       required: false,
       maxLength: 50
-    }
-  },
-  {
-    fieldName: 'Shunt In Date & Time',
-    displayName: 'Shunt In Date & Time',
-    validationRules: {
-      type: 'date',
-      required: false
-    }
-  },
-  {
-    fieldName: 'Shunt Out Date & Time',
-    displayName: 'Shunt Out Date & Time',
-    validationRules: {
-      type: 'date',
-      required: false
     }
   },
   {

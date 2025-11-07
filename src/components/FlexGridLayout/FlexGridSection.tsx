@@ -145,16 +145,14 @@ const FlexGridSection: React.FC<SectionProps> = ({
         </div>
       )}
 
-      {/* Content area - hide when collapsed */}
-      {!section.collapsed && (
-        <div className="p-4 h-full overflow-auto">
-          {children || section.content || (
-            <div className="text-gray-500 text-sm">
-              {section.id.charAt(0).toUpperCase() + section.id.slice(1)} content area
-            </div>
-          )}
-        </div>
-      )}
+      {/* Content area - hide when collapsed but keep mounted to preserve state */}
+      <div className={cn("p-4 h-full overflow-auto", section.collapsed && "hidden")}>
+        {children || section.content || (
+          <div className="text-gray-500 text-sm">
+            {section.id.charAt(0).toUpperCase() + section.id.slice(1)} content area
+          </div>
+        )}
+      </div>
 
       {/* Toggle handle - always show for collapsible sections */}
       {section.collapsible && (

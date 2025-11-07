@@ -115,6 +115,39 @@ export function exportToExcel(
       worksheet = XLSX.utils.json_to_sheet(processedData);
     }
 
+    // Make headers bold
+    const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    const headerRowNum = headerRange.s.r; // First row (0-based)
+    
+    for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: headerRowNum, c: col });
+      const cell = worksheet[cellAddress];
+      
+      if (cell) {
+        // Initialize cell style if it doesn't exist
+        if (!cell.s) {
+          cell.s = {};
+        }
+        
+        // Set cell style for bold headers with proper formatting
+        cell.s = {
+          ...cell.s,
+          font: {
+            bold: true,
+            name: 'Arial',
+            sz: 11
+          },
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center'
+          },
+          fill: {
+            fgColor: { rgb: 'D3D3D3' }  // Light gray background for headers
+          }
+        };
+      }
+    }
+
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
 
