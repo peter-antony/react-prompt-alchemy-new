@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { tripService } from '@/api/services/tripService';
+import { InputDropdown } from '../ui/input-dropdown';
  
 // Helper functions for handling pipe-separated values
 const splitAtPipe = (value: string | null | undefined) => {
@@ -168,7 +169,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
 
 
       // <-- Without null while updating the legs arrival and departure -->
-      
+
       // const processedExecutionLegDetails = leg.ExecutionLegDetails.map(execLeg => {
       //   // Process pipe-separated values for LegID, Departure, Arrival, LegBehaviour
       //   const legIdParts = splitAtPipe(execLeg.LegID);
@@ -423,6 +424,16 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               placeholder="Enter reason"
             />
           </div> */}
+
+          <div className="space-y-2">
+            <Label>QC Code 1</Label>
+            <InputDropdown
+              // value={execLeg.QuickCodeValue1}
+              // onChange={setWagonDetailsLength}
+              // options={weightLength}
+              placeholder=""
+            />
+          </div>
  
           <div className="space-y-2">
             <Label>Remarks</Label>
