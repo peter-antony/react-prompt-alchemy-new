@@ -143,7 +143,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   };
   const [apiData, setApiData] = useState(null);
   const messageTypes = [
-    "QC Userdefined Init"
+    "QCUserDefined Init"
   ];
 
   const config = resourceConfigs[resourceType];
@@ -166,6 +166,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   //API Call for dropdown data
   const fetchData = async (messageType) => {
     console.log("fetch data");
+    console.log("OTHER INFO : ",otherInfoData)
     setLoading(false);
     // setError(null);
     try {
@@ -174,8 +175,16 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       setApiData(data);
       console.log("load inside try", data);
 
-      if (messageType == "QC Userdefined") {
-        setQC(JSON.parse(data?.data?.ResponseData) || []);
+      if (messageType == "QCUserDefined Init") {
+        console.log("JSON.parse(data?.data?.ResponseData = ",JSON.parse(data?.data?.ResponseData))
+        let responseData = JSON.parse(data?.data?.ResponseData) || [];
+          const formattedData = responseData
+            .filter((qc: any) => qc.id)
+            .map((qc: any) => ({
+              label: qc.name,
+              value: qc.id,
+            }));
+        setQC(formattedData || []);
       }
       // if (messageType == "Load type Init") {
       //   setLoadType(JSON.parse(data?.data?.ResponseData) || []);
