@@ -1063,8 +1063,8 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       label: 'Creation Date Between',
       type: 'dateRange',
       defaultValue: {
-        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-        to: format(new Date(), 'yyyy-MM-dd')
+        from: format(subMonths(new Date(), 3), "yyyy-MM-dd"), // 2 months back
+        to: format(addMonths(new Date(), 3), "yyyy-MM-dd"),   // 1 month ahead
       }
     },
     {
