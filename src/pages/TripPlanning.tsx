@@ -1169,8 +1169,8 @@ const TripPlanning = () => {
             variant: "default",
           });
           setCreateTripBtn(false);
-          // setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
-          // setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
+          setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
+          setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
           setShowConfirmReleaseBtn(true);
           setcustomerOrderList(null);
           // Reload TripCOHub component
