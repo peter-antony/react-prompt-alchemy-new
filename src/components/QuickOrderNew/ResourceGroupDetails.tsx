@@ -335,7 +335,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+                console.log("Parsed result: handle Proceed if", (parsedData?.ResponseResult)[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 const parsedResource=parsedData?.ResponseResult[0].ResourceGroup;
@@ -483,7 +483,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)?.[0]);
+                console.log("Parsed result:  handle Proceed else", (parsedData?.ResponseResult)?.[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 const parsedResource=parsedData?.ResponseResult?.[0].ResourceGroup;
@@ -610,7 +610,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)?.[0]);
+                console.log("Parsed result:  handle Proceed22:", (parsedData?.ResponseResult)?.[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 const parsedResource=parsedData?.ResponseResult?.[0].ResourceGroup;
@@ -985,7 +985,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+                console.log("Parsed result: save RG", (parsedData?.ResponseResult)[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
@@ -1157,7 +1157,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+                console.log("Parsed result: save RG 2", (parsedData?.ResponseResult)[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
@@ -1321,7 +1321,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
                 let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
                 console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-                console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+                console.log("Parsed result: save RG 3", (parsedData?.ResponseResult)[0]);
                 // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
                 jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
@@ -1664,6 +1664,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   const [error, setError] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState("");
   const [resourceGroupStatus, setResourceGroupStatus] = useState("Fresh");
+  const [currency, setCurrency] = useState("EUR");
   const messageTypes = [
     // "Quick Order Resource Combo Init",
     // "ResourceType Init",
@@ -1683,17 +1684,21 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   useEffect(() => {
     setLoading(false);
     console.log("load data=== ", jsonStore.getQuickUniqueID());
-    console.log("load data getQuickOrder=== ", jsonStore.getQuickOrder());
+    console.log("load % data getQuickOrder=== ", jsonStore.getQuickOrder().Currency);
+    setCurrency(jsonStore.getQuickOrder().Currency)
+    const cur=jsonStore.getQuickOrder().Currency;
     console.log("jsonStore.getResourceGroupBasicDetails() == ", jsonStore.getResourceGroupBasicDetails())
 
     console.log("load isEditQuickOrder ", isEditQuickOrder);
     quickOrderService.getQuickOrder(jsonStore.getQuickUniqueID()).then((fetchRes: any) => {
       console.log("fetchRes:: ", fetchRes);
       let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-      console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-      console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+      console.log("screenFetchQuickOrder result USE EFFECts:", JSON.parse(fetchRes?.data?.ResponseData));
+      console.log("Parsed result: useeffect", (parsedData?.ResponseResult)[0]);
       console.log("Parsed id:", (parsedData?.ResponseResult)[0]);
       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
+      jsonStore.setQuickOrderFields({  Currency: cur });
+
       const fullJson2 = jsonStore.getJsonData();
       console.log("FULL JSON --RESOURCE GROUP 33:: ", fullJson2?.ResourceGroup);
     })
@@ -1763,7 +1768,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
     try {
       const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
       setApiData(data);
-      console.log("API Data:", data);
+      console.log("API Data: RG ", data);
       // if (messageType == "Service type Init") {
       //   setServiceTypeList(JSON.parse(data?.data?.ResponseData));
       //   console.log("ServiceType data:", apiData.data.ResponseData);
