@@ -165,51 +165,103 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
 
     // Process leg details to handle pipe-separated values and set ModeFlag
     const processedLegDetails = legDetails.map(leg => {
+
+
+      // <-- Without null while updating the legs arrival and departure -->
+      
+      // const processedExecutionLegDetails = leg.ExecutionLegDetails.map(execLeg => {
+      //   // Process pipe-separated values for LegID, Departure, Arrival, LegBehaviour
+      //   const legIdParts = splitAtPipe(execLeg.LegID);
+      //   const departureParts = splitAtPipe(execLeg.Departure);
+      //   const arrivalParts = splitAtPipe(execLeg.Arrival);
+      //   const legBehaviourParts = splitAtPipe(execLeg.LegBehaviour);
+       
+      //   // Set ModeFlag based on the operation
+      //   // For newly added legs (no CustomerOrderDetails or empty array), set to Insert
+      //   // For existing legs that have been modified, set to Update
+      //   // Otherwise, keep as NoChange
+      //   let modeFlag = 'NoChange';
+      //  console.log("execLeg  == ",execLeg)
+      //  console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
+      //  console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
+      //   // Check if this is a newly added leg
+      //   if (!execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0) {
+      //     modeFlag = 'Insert';
+      //   }
+      //   // Check if this is an existing leg that has been modified
+      //   else if (
+      //     execLeg.LegID !== legIdParts.value||
+      //     execLeg.Departure !== departureParts.value ||
+      //     execLeg.Arrival !==  arrivalParts.value ||
+      //     execLeg.LegBehaviour !== legBehaviourParts.value ||
+      //     execLeg.Remarks // If remarks are added/modified
+      //   ) {
+      //     modeFlag = 'Update';
+      //   }
+       
+      //   return {
+      //     ...execLeg,
+      //     LegID: legIdParts.value,
+      //     LegIDDescription: legIdParts.description,
+      //     Departure: departureParts.value,
+      //     DepartureDescription: departureParts.description,
+      //     Arrival: arrivalParts.value,
+      //     ArrivalDescription: arrivalParts.description,
+      //     LegBehaviour: legBehaviourParts.value,
+      //     LegBehaviourDescription: legBehaviourParts.description,
+      //     ModeFlag: modeFlag,
+      //     ReasonForUpdate: legReasonForUpdate.value
+      //   };
+      // });
+
+
       // Process ExecutionLegDetails to handle pipe-separated values
       const processedExecutionLegDetails = leg.ExecutionLegDetails.map(execLeg => {
-        // Process pipe-separated values for LegID, Departure, Arrival, LegBehaviour
-        const legIdParts = splitAtPipe(execLeg.LegID);
-        const departureParts = splitAtPipe(execLeg.Departure);
-        const arrivalParts = splitAtPipe(execLeg.Arrival);
-        const legBehaviourParts = splitAtPipe(execLeg.LegBehaviour);
-       
-        // Set ModeFlag based on the operation
-        // For newly added legs (no CustomerOrderDetails or empty array), set to Insert
-        // For existing legs that have been modified, set to Update
-        // Otherwise, keep as NoChange
-        let modeFlag = 'NoChange';
-       console.log("execLeg  == ",execLeg)
-       console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
-       console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
-        // Check if this is a newly added leg
-        if (!execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0) {
-          modeFlag = 'Insert';
-        }
-        // Check if this is an existing leg that has been modified
-        else if (
-          execLeg.LegID !== legIdParts.value||
-          execLeg.Departure !== departureParts.value ||
-          execLeg.Arrival !==  arrivalParts.value ||
-          execLeg.LegBehaviour !== legBehaviourParts.value ||
-          execLeg.Remarks // If remarks are added/modified
-        ) {
-          modeFlag = 'Update';
-        }
-       
-        return {
-          ...execLeg,
-          LegID: legIdParts.value,
-          LegIDDescription: legIdParts.description,
-          Departure: departureParts.value,
-          DepartureDescription: departureParts.description,
-          Arrival: arrivalParts.value,
-          ArrivalDescription: arrivalParts.description,
-          LegBehaviour: legBehaviourParts.value,
-          LegBehaviourDescription: legBehaviourParts.description,
-          ModeFlag: modeFlag,
-          ReasonForUpdate: legReasonForUpdate.value
-        };
-      });
+      const legIdParts = splitAtPipe(execLeg.LegID);
+      const departureParts = splitAtPipe(execLeg.Departure);
+      const arrivalParts = splitAtPipe(execLeg.Arrival);
+      const legBehaviourParts = splitAtPipe(execLeg.LegBehaviour);
+
+      let modeFlag = 'NoChange';
+
+      // detect changes
+      console.log("execLeg  == ",execLeg)
+      console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
+      console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
+
+      const isNewLeg = !execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0;
+      const hasModifiedFields =
+        execLeg.LegID !== legIdParts.value ||
+        execLeg.Departure !== departureParts.value ||
+        execLeg.Arrival !== arrivalParts.value ||
+        execLeg.LegBehaviour !== legBehaviourParts.value ||
+        execLeg.Remarks;
+
+      if (isNewLeg) modeFlag = 'Insert';
+      else if (hasModifiedFields) modeFlag = 'Update';
+
+      // 🟡 If Departure or Arrival changed, reset LegID to null
+      const isDepartureOrArrivalChanged =
+        execLeg.Departure !== departureParts.value || execLeg.Arrival !== arrivalParts.value;
+
+      const finalLegID = isDepartureOrArrivalChanged ? null : legIdParts.value;
+      const finalLegIDDescription = isDepartureOrArrivalChanged ? null : legIdParts.description;
+
+      return {
+        ...execLeg,
+        LegID: finalLegID,
+        LegIDDescription: finalLegIDDescription,
+        Departure: departureParts.value,
+        DepartureDescription: departureParts.description,
+        Arrival: arrivalParts.value,
+        ArrivalDescription: arrivalParts.description,
+        LegBehaviour: legBehaviourParts.value,
+        LegBehaviourDescription: legBehaviourParts.description,
+        ModeFlag: modeFlag,
+        ReasonForUpdate: legReasonForUpdate.value
+      };
+    });
+
      
       return {
         ...leg,
@@ -310,17 +362,22 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           <div className="space-y-2">
             <Label>Departure</Label>
             <DynamicLazySelect
-              value={execLeg.Departure}
+              value={execLeg.Departure && execLeg.DepartureDescription
+                ? `${execLeg.Departure} || ${execLeg.DepartureDescription}`
+                : (execLeg.Departure || execLeg.DepartureDescription || '')} 
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Departure', value)}
               fetchOptions={fetchDepartures}
               placeholder="Select Departure"
             />
           </div>
+          
  
           <div className="space-y-2">
             <Label>Arrival</Label>
             <DynamicLazySelect
-              value={execLeg.Arrival}
+              value={execLeg.Arrival && execLeg.ArrivalDescription
+                ? `${execLeg.Arrival} || ${execLeg.ArrivalDescription}`
+                : (execLeg.Arrival || execLeg.ArrivalDescription || '')}
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Arrival', value)}
               fetchOptions={fetchArrivals}
               placeholder="Select Arrival"
@@ -344,9 +401,12 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                 <SelectItem value="Dvry">Dvry (Delivery)</SelectItem>
               </SelectContent>
             </Select> */}
+            
            
             <DynamicLazySelect
-              value={execLeg.LegBehaviour}
+              value={execLeg.LegBehaviour && execLeg.LegBehaviourDescription
+                ? `${execLeg.LegBehaviour} || ${execLeg.LegBehaviourDescription}`
+                : (execLeg.LegBehaviour || execLeg.LegBehaviourDescription || '')}
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegBehaviour', value)}
               fetchOptions={fetchLegBehaviours}
               placeholder="Select Behaviour"
@@ -496,7 +556,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-sm">{order.CustomerOrderNo}</span>
                               <Badge variant="secondary" className="text-xs">
-                                {order.ExecutionLegBehaviourDescription}
+                                {selectedLeg.LegBehaviourDescription}
                               </Badge>
                             </div>
                             <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -507,11 +567,11 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div>
                               <span className="text-muted-foreground">From: </span>
-                              <span className="font-medium">{order.DeparturePointDescription}</span>
+                              <span className="font-medium">{selectedLeg.DeparturePointDescription}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">To: </span>
-                              <span className="font-medium">{order.ArrivalPointDescription}</span>
+                              <span className="font-medium">{selectedLeg.ArrivalPointDescription}</span>
                             </div>
                           </div>
  
@@ -541,14 +601,14 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold">Leg Details</h3>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onAddExecutionLeg(selectedLegIndex)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Leg
-                  </Button>
+                  </Button> */}
                 </div>
  
                 <div className="space-y-4">

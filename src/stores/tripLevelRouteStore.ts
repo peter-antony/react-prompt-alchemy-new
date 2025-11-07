@@ -256,7 +256,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
     const newLeg: LegDetail = {
       LegSequence: (selectedRoute.LegDetails?.length || 0) + 1,
       LegID: '',
-      LegUniqueId: crypto.randomUUID(),
+      LegUniqueId: null,
       Departure: '',
       DepartureDescription: '',
       Arrival: '',
