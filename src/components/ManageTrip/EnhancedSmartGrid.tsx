@@ -209,11 +209,11 @@ export const EnhancedSmartGrid = () => {
     { key: 'ActivityDescription', label: 'Event', type: 'Text', width: 80 },
     { key: 'CustomerOrder', label: 'Customer Order', type: 'Text', width: 80 },
     { key: 'PlannedDate', label: 'Planned Date', type: 'Date', width: 160, editable: false },
-    { key: 'PlannedTime', label: 'Planned Time', type: 'Text', width: 160, editable: false },
+    { key: 'PlannedTime', label: 'Planned Time', type: 'Time', width: 160, editable: false },
     { key: 'RevisedDate', label: 'Revised Date', type: 'Date', width: 160, editable: false },
-    { key: 'RevisedTime', label: 'Revised Time', type: 'Text', width: 160, editable: false },
-    { key: 'ActualDate', label: 'Actual Date', type: 'Date', width: 160, editable: true },
-    { key: 'ActualTime', label: 'Actual Time', type: 'Time', width: 160, editable: true },
+    { key: 'RevisedTime', label: 'Revised Time', type: 'Time', width: 160, editable: false },
+    { key: 'ActualDate', label: 'Actual Date', type: 'Date', width: 160, editable: false },
+    { key: 'ActualTime', label: 'Actual Time', type: 'Time', width: 160, editable: false },
     { key: 'DelayedIn', label: 'Delay', type: 'Text', width: 180, editable: false },
   ];
 

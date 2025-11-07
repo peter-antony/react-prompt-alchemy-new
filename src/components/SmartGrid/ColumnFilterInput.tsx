@@ -242,7 +242,7 @@ export function ColumnFilterInput({
 
   const handleDropdownTextChange = (dropdown: string, text: string, mode?: 'dropdown' | 'text', column?: any) => {
     // Preserve the other field when updating one so both can be sent (AND semantics)
-    console.log('column: ', column);
+    console.log('column: ', column, dropdown);
     if (mode === 'dropdown') {
       setDropdownValue(dropdown);
       setDropdownMode('dropdown');
@@ -589,7 +589,7 @@ export function ColumnFilterInput({
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
-                      value={option.name ? option.name : option.id}
+                      value={option.name ? option.id : option.name}
                       className="text-xs"
                     >
                       { (option.id && option.name) ? `${option.id} || ${option.name}` : (option.id || option.name) }

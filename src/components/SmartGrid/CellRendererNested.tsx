@@ -667,6 +667,11 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Time renderer
   const renderTime = () => {
+    const formatTime = (t?: any) => {
+      if (t == null) return '';
+      // ensure string and take first 5 chars: "HH:mm" from "HH:mm:ss" or "HH:mm"
+      return String(t).slice(0, 5);
+    };
     if (isEditing) {
       return (
         <Input
@@ -698,7 +703,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       );
     }
     if (!value) return <span className="text-gray-400">-</span>;
-    return <span className="truncate" title={String(value)}>{value}</span>;
+    return <span className="truncate" title={String(value)}>{formatTime(value)}</span>;
   };
 
   // Action button renderer
