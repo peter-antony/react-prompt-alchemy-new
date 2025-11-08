@@ -1,4 +1,4 @@
-import { ColumnConfig } from '@/types/bulkUpload';
+import { ColumnConfig } from '@/types/BulkUpload';
 
 // Excel header mappings to  {
     
