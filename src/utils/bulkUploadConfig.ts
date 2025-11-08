@@ -262,8 +262,8 @@ export const bulkUploadColumnsConfig: ColumnConfig[] = [
     }
   },
   {
-    fieldName: 'Replaced Wagon',
-    displayName: 'Replaced Wagon',
+    fieldName: 'Replaced Wagon ID',
+    displayName: 'Replaced Wagon ID',
     validationRules: {
       type: 'string',
       required: false,

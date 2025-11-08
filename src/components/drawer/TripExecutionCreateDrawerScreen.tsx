@@ -2811,7 +2811,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           </TabsContent>
 
           <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
-            <ConsignmentTrip legId={selectedLegId}/>
+            <ConsignmentTrip legId={selectedLegId} onClose={onClose}/>
           </TabsContent>
 
           <TabsContent value="transshipment" className="flex-1 flex flex-col m-0">
