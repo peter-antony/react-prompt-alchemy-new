@@ -903,6 +903,24 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       } else {
         console.warn("setTrip method not available");
       }
+
+      // Refresh legs in drawer store and rebind the dynamic panels just after save
+      try {
+        loadLegsFromAPI();
+        // Force re-render to ensure components pick up refreshed store state
+        setResetKey((prev) => prev + 1);
+
+        // Immediately bind updated values to the main activities panel
+        if (tripExecutionRef?.current?.setFormValues) {
+          tripExecutionRef.current.setFormValues(updatedActivity);
+        }
+        // Bind updated values to the additional activities panel if available
+        if (updatedAdditionalActivity && tripAdditionalRef?.current?.setFormValues) {
+          tripAdditionalRef.current.setFormValues(updatedAdditionalActivity);
+        }
+      } catch (err) {
+        console.warn("Error refreshing legs after save:", err);
+      }
       
       // Create the final data structure for API submission
       // const apiSubmissionData = {
