@@ -1,4 +1,4 @@
-import { ColumnConfig } from '@/types/BulkUpload';
+import { ColumnConfig } from '@/types/bulkUpload';
 
 // Excel header mappings to  {
     
@@ -35,8 +35,8 @@ export const excelColumnMappings = {
   'Container Type': 'ContainerType',
   'Container Qty UOM': 'ContainerQtyUOM',
   'Container Qty': 'ContainerQty',
-  'Container Tare Weight UOM': 'ContainerTareWeightUOM',
-  'Container Tare Weight': 'ContainerTareWeight',
+  'Container Tare Weight UOM': 'ContainerWeightUOM',
+  'Container Tare Weight': 'ContainerAvgTareWeight',
   'Container Seal No.': 'ContainerSealNo',
   'THU ID': 'Thu',
   'THU Serial No': 'ThuSerialNo',

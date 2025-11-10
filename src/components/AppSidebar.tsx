@@ -131,7 +131,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
             {item.externalURL ? (
               <a
                 href={item.path}
-                target="_blank"
+                target="_self"
                 rel="noopener noreferrer"
                 className="w-9 h-9 mb-3 rounded-lg flex items-center justify-center transition-colors text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               >

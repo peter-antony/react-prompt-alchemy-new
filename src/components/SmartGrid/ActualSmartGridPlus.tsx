@@ -17,7 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { SmartGridPlusProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
-import { ValidationResult, UploadSummary } from '@/types/BulkUpload';
+import { ValidationResult, UploadSummary } from '@/types/bulkUpload';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import { useToast } from '@/hooks/use-toast';
 import { useGridPreferences } from '@/hooks/useGridPreferences';
@@ -185,12 +185,10 @@ export function ActualSmartGridPlus({
   }, [preferences, showCheckboxes, plugins, columnWidths]);
 
   // Apply preferences to get ordered and visible columns - FILTER OUT SUB-ROW COLUMNS from main table
+  // Always use the strict order from currentColumns (actualEditableColumns) regardless of preferences
   const orderedColumns = useMemo(() => {
-    const columnMap = new Map(currentColumns.map(col => [col.key, col]));
-
-    const visibleColumns = preferences.columnOrder
-      .map(id => columnMap.get(id))
-      .filter((col): col is GridColumnConfig => col !== undefined)
+    // Use the original order from currentColumns instead of preferences.columnOrder to ensure strict ordering
+    const visibleColumns = currentColumns
       .filter(col => !preferences.hiddenColumns.includes(col.key))
       .filter(col => !col.subRow); // Filter out sub-row columns from main table
 
@@ -827,15 +825,10 @@ export function ActualSmartGridPlus({
 
   // Handle drag and drop for column reordering
   const handleColumnDragStart = useCallback((e: React.DragEvent, columnKey: string) => {
-    if (editingHeader || resizingColumn) {
-      e.preventDefault();
-      return;
-    }
-    e.stopPropagation();
-    setDraggedColumn(columnKey);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', columnKey);
-  }, [editingHeader, resizingColumn, setDraggedColumn]);
+    // Prevent column dragging to maintain strict order from actualEditableColumns
+    e.preventDefault();
+    return;
+  }, []);
 
   const handleColumnDragOver = useCallback((e: React.DragEvent, targetColumnKey: string) => {
     if (resizingColumn) {
@@ -869,28 +862,15 @@ export function ActualSmartGridPlus({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!draggedColumn || draggedColumn === targetColumnKey) {
-      setDraggedColumn(null);
-      setDragOverColumn(null);
-      return;
-    }
-
-    const newOrder = [...preferences.columnOrder];
-    const draggedIndex = newOrder.indexOf(draggedColumn);
-    const targetIndex = newOrder.indexOf(targetColumnKey);
-
-    newOrder.splice(draggedIndex, 1);
-    newOrder.splice(targetIndex, 0, draggedColumn);
-
-    updateColumnOrder(newOrder);
+    // Disable column reordering to maintain strict order from actualEditableColumns
     setDraggedColumn(null);
     setDragOverColumn(null);
 
     toast({
-      title: "Success",
-      description: "Column order updated"
+      title: "Info",
+      description: "Column order is fixed and cannot be changed"
     });
-  }, [draggedColumn, preferences.columnOrder, updateColumnOrder, toast, resizingColumn, setDraggedColumn, setDragOverColumn]);
+  }, [resizingColumn, setDraggedColumn, setDragOverColumn, toast]);
 
   const handleColumnDragEnd = useCallback(() => {
     if (resizingColumn) return;
@@ -1628,14 +1608,14 @@ export function ActualSmartGridPlus({
                           draggedColumn === column.key && "opacity-50",
                           dragOverColumn === column.key && "bg-blue-100 border-blue-300",
                           resizingColumn === column.key && "bg-blue-50",
-                          !resizingColumn && "cursor-move"
+                          !resizingColumn && "cursor-default"
                         )}
                         style={{
                           width: `${column.width}px`,
                           minWidth: `${column.width}px`,
                           maxWidth: `${column.width}px`
                         }}
-                        draggable={!editingHeader && !resizingColumn}
+                        draggable={false}
                         onDragStart={(e) => handleColumnDragStart(e, column.key)}
                         onDragOver={(e) => handleColumnDragOver(e, column.key)}
                         onDragLeave={handleColumnDragLeave}
@@ -1644,7 +1624,8 @@ export function ActualSmartGridPlus({
                       >
                         <div className="flex items-center justify-between gap-1 overflow-visible">
                           <div className="flex items-center gap-1 flex-1 overflow-visible">
-                            {!shouldHideIcons && (
+                            {/* Hide GripVertical icon since column reordering is disabled */}
+                            {false && !shouldHideIcons && (
                               <GripVertical className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                             )}
                             {editingHeader === column.key ? (

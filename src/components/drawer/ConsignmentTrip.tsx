@@ -3034,7 +3034,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           if (newData[rowIndex]) {
             newData[rowIndex] = {
               ...newData[rowIndex],
-              ContainerType: safeSplit(value, ' || ', 1), // Store ID part
+              ContainerType: safeSplit(value, ' || ', 0), // Store ID part
             };
             hasUserEditsRef.current = true;
           }
@@ -3115,7 +3115,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       },
     },
     {
-      key: 'ContainerTareWeightUOM',
+      key: 'ContainerWeightUOM',
       label: 'Container Tare Weight UOM',
       type: 'Select',
       sortable: true,
@@ -3129,7 +3129,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              ContainerTareWeightUOM: value,
+              ContainerWeightUOM: value,
             }));
             return;
           }
@@ -3139,7 +3139,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                ContainerTareWeightUOM: value,
+                ContainerWeightUOM: value,
               };
             }
             hasUserEditsRef.current = true;
@@ -3151,7 +3151,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       },
     },
     {
-      key: 'ContainerTareWeight',
+      key: 'ContainerAvgTareWeight',
       label: 'Container Tare Weight',
       type: 'Integer',
       sortable: true,
@@ -3164,7 +3164,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              ContainerTareWeight: value,
+              ContainerAvgTareWeight: value,
             }));
             return;
           }
@@ -3174,7 +3174,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                ContainerTareWeight: value,
+                ContainerAvgTareWeight: value,
               };
             }
             hasUserEditsRef.current = true;
@@ -4107,7 +4107,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       // Process ContainerType field
       if (processedRow.ContainerType && processedRow.ContainerType.includes(' || ')) {
         processedRow.ContainerType = safeSplit(processedRow.ContainerType, ' || ', 0);
-        processedRow.ContainerTypeDescription = safeSplit(newRow.ContainerType, ' || ', 1);
+        // processedRow.ContainerTypeD = safeSplit(newRow.ContainerType, ' || ', 0);
       }
 
       // Process Thu field
@@ -4455,8 +4455,8 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
         'ContainerType': 'Container Type',
         'ContainerQtyUOM': 'Container Qty UOM',
         'ContainerQty': 'Container Qty',
-        'ContainerTareWeightUOM': 'Container Tare Weight UOM',
-        'ContainerTareWeight': 'Container Tare Weight',
+        'ContainerWeightUOM': 'Container Tare Weight UOM',
+        'ContainerAvgTareWeight': 'Container Tare Weight',
         'ContainerSealNo': 'Container Seal No.',
         'Thu': 'THU ID',
         'ThuSerialNo': 'THU Serial No',
@@ -4719,8 +4719,8 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
               ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
               WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
               ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
-              ContainerTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight),
-              ContainerTareWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom),
+              ContainerAvgTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
+              ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
               LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
               LastProductTransportedDate1: safeString(actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1),
               LastProductTransported2: safeString(actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2),
@@ -4803,8 +4803,8 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
             ContainsHazardousGoods: actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods || "",
             WagonSealNo: actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal || "",
             ContainerSealNo: actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal || "",
-            ContainerTareWeight: actualRow['Container Tare Weight'] || actualRow.ContainerTareWeight || actualRow.containertareweight || null,
-            ContainerTareWeightUOM: actualRow['Container Tare Weight UOM'] || actualRow.ContainerTareWeightUOM || actualRow.containertareweightuom || "",
+            ContainerAvgTareWeight: actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight || null,
+            ContainerWeightUOM: actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom || "",
             LastProductTransported1: actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1 || "",
             LastProductTransportedDate1: actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1 || null,
             LastProductTransported2: actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2 || "",
