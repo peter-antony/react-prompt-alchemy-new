@@ -1864,7 +1864,7 @@ export function ActualSmartGridPlus({
                   <div className="text-sm text-gray-500">
                     Showing {Math.min((currentPage - 1) * pageSize + 1, processedData.length)} to {Math.min(currentPage * pageSize, processedData.length)} of {processedData.length} entries
                   </div>
-                  <Pagination>
+                  <Pagination className="justify-start">
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
