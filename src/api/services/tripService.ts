@@ -230,6 +230,34 @@ export const tripService = {
     return response.data;
   },
 
+  // amend trip service call
+  cancelTripService: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "TripLog CancelTrip",
+      },
+      RequestPayload: params,
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.CANCEL_TRIP}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   // Get single trip
   getTrip: async (id: string): Promise<ApiResponse<Trip>> => {
     const response = await apiClient.get(`${API_ENDPOINTS.TRIPS.LIST}/${id}`);

@@ -18,8 +18,9 @@ import { TripExecutionCreateDrawerScreen } from '@/components/drawer/TripExecuti
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { LinkedTransactionsDrawerScreen } from '@/components/drawer/LinkedTransactionsDrawerScreen';
 import { tripService } from '@/api/services/tripService';
-import { NotebookPen, Search, Clock } from "lucide-react";
+import { NotebookPen, Search, Clock, Ban } from "lucide-react";
 import { TripAmendModal } from '@/components/ManageTrip/TripAmendModal';
+import TripPlanActionModal from '@/components/ManageTrip/TripPlanActionModal';
 import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
 
 
@@ -51,12 +52,15 @@ const ManageTripExecution = () => {
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const [popupOpen, setPopupOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [popupTitle, setPopupTitle] = useState('Amend');
   const [popupButtonName, setPopupButtonName] = useState('Amend');
   const [popupBGColor, setPopupBGColor] = useState('');
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
-  const [fields, setFields] = useState([
+  
+  // Fields for Cancel modal (with date, reasonCode, remarks)
+  const [cancelFields, setCancelFields] = useState([
     {
       type: "date",
       label: "Requested Date and Time",
@@ -85,11 +89,40 @@ const ManageTripExecution = () => {
       mappedName: 'Remarks'
     },
   ]);
+
+  // Fields for Amend modal (only reasonCode and remarks, no date)
+  const [amendFields, setAmendFields] = useState([
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'ReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'Remarks'
+    },
+  ]);
   // console.log('filtersForThisGrid: ', filtersForThisGrid);
 
-  const handleFieldChange = (name, value) => {
-    console.log('Field changed:', name, value);
-    setFields(fields =>
+  const handleCancelFieldChange = (name, value) => {
+    console.log('Cancel field changed:', name, value);
+    setCancelFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const handleAmendFieldChange = (name, value) => {
+    console.log('Amend field changed:', name, value);
+    setAmendFields(fields =>
       fields.map(f => (f.name === name ? { ...f, value } : f))
     );
   };
@@ -222,6 +255,133 @@ const ManageTripExecution = () => {
     setPopupOpen(true);
   }, [tripData, toast, fetchTrip]);
 
+  const tripCancelHandler = useCallback(async () => {
+    setCancelModalOpen(true);
+  }, []);
+
+  const handleTripsCancelSubmit = async (formFields: any) => {
+    console.log('Cancel form fields received:', formFields);
+    
+    // Map form fields to API object
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Cancel API:', mappedObj);
+    
+    // Handle ReasonCode splitting if it contains '||'
+    let ReasonCodeValue = '';
+    let ReasonCodeLabel = '';
+
+    if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+      // If ReasonCode is a string with '||', split it into value and label
+      const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+      ReasonCodeValue = value.trim();
+      ReasonCodeLabel = labelParts.join('||').trim();
+    } else if (typeof mappedObj.ReasonCode === 'string') {
+      ReasonCodeValue = mappedObj.ReasonCode;
+      ReasonCodeLabel = mappedObj.ReasonCode;
+    }
+    
+    // Prepare trip data object for API
+    let tripDataObj: any = { ...tripData };
+    tripDataObj.Header.Cancellation.CancellationRequestedDateTime = mappedObj?.Canceldatetime;
+    tripDataObj.Header.Cancellation.CancellationReasonCode = ReasonCodeValue;
+    tripDataObj.Header.Cancellation.CancellationReasonCodeDescription = ReasonCodeLabel;
+    tripDataObj.Header.Cancellation.CancellationRemarks = mappedObj?.Remarks;
+    tripDataObj.Header.ModeFlag = "Update";
+    console.log('Trip Data Object for Cancel API:', tripDataObj);
+    
+    try {
+      setApiStatus('loading');
+      console.log('Calling cancelTrip API...');
+      
+      // Wait for the API response
+      const response: any = await tripService.cancelTripService(tripDataObj);
+      
+      console.log('Cancel Trip API Response:', response);
+      console.log('Response data:', response?.data);
+      console.log('IsSuccess:', response?.data?.IsSuccess);
+      console.log('Message:', response?.data?.Message);
+      console.log('ResponseData (raw):', response?.data?.ResponseData);
+      
+      setApiStatus('success');
+      setCancelModalOpen(false);
+      
+      // Handle success/failure based on server response
+      if (response?.data?.IsSuccess) {
+        // Parse the ResponseData JSON string to get detailed trip cancellation info
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+        
+        // Use the message from ResponseData if available, otherwise use the main message
+        const successMessage = responseData?.Message || response?.data?.Message || "Trip cancelled successfully.";
+        const reasonCode = responseData?.ReasonCode || "";
+        const templateId = responseData?.TemplateID || "";
+        
+        toast({
+          title: "✅ Trip Cancelled",
+          description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+          variant: "default",
+        });
+        
+        console.log('Trip Cancellation Details:', {
+          message: successMessage,
+          reasonCode: reasonCode,
+          templateId: templateId,
+          status: responseData?.Status
+        });
+        let res = response?.data?.ResponseData ? JSON.parse(response?.data?.ResponseData) : null;
+        // Optionally refresh trip data after successful cancellation
+        if (res?.TripID) {
+          await fetchTrip(res.TripID);
+          console.log("🔄 Trip data refreshed after cancellation.");
+        }
+      } else {
+        // Parse ResponseData for error details if available
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed Error ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse error ResponseData:', parseError);
+        }
+        
+        const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Trip cancellation failed.";
+        
+        toast({
+          title: "⚠️ Trip Cancellation Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Cancel Trip API Error:', error);
+      setApiStatus('error');
+      
+      // Handle different types of errors
+      let errorMessage = "An unexpected error occurred while cancelling the trip.";
+      
+      if (error?.response?.data?.Message) {
+        errorMessage = error.response.data.Message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({
+        title: "Error cancelling trip",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleTripsAmendSubmit = async (formFields: any) => {
     console.log('Form fields received:', formFields);
     
@@ -233,11 +393,25 @@ const ManageTripExecution = () => {
     });
     console.log('Mapped Object for API:', mappedObj);
     
+    // Handle ReasonCode splitting if it contains '||'
+    let ReasonCodeValue = '';
+    let ReasonCodeLabel = '';
+
+    if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+      // If ReasonCode is a string with '||', split it into value and label
+      const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+      ReasonCodeValue = value.trim();
+      ReasonCodeLabel = labelParts.join('||').trim();
+    } else if (typeof mappedObj.ReasonCode === 'string') {
+      ReasonCodeValue = mappedObj.ReasonCode;
+      ReasonCodeLabel = mappedObj.ReasonCode;
+    }
+    
     // Prepare trip data object for API
     let tripDataObj: any = { ...tripData };
-    tripDataObj.Header.Amendment.AmendmentRequestedDateTime = mappedObj?.Canceldatetime;
-    tripDataObj.Header.Amendment.AmendmentReasonCode = mappedObj?.ReasonCode;
-    tripDataObj.Header.Amendment.AmendmentReasonCodeDescription = mappedObj?.ReasonCode;
+    // Note: Amendment doesn't require date field, so we don't set AmendmentRequestedDateTime
+    tripDataObj.Header.Amendment.AmendmentReasonCode = ReasonCodeValue;
+    tripDataObj.Header.Amendment.AmendmentReasonCodeDescription = ReasonCodeLabel;
     tripDataObj.Header.Amendment.AmendmentRemarks = mappedObj?.Remarks;
     tripDataObj.Header.ModeFlag = "Update";
     console.log('Trip Data Object for API:', tripDataObj);
@@ -361,8 +535,7 @@ const ManageTripExecution = () => {
           disabled: false,
           type: 'Button' as const,
           onClick: () => {
-            // tripCancelhandler();
-            console.log('Cancel clicked', tripData);
+            tripCancelHandler();
           },
         },
         {
@@ -445,11 +618,23 @@ const ManageTripExecution = () => {
           // titleColor={popupTextColor}
           // titleBGColor={popupTitleBgColor}
           icon={<NotebookPen className="w-4 h-4" color="blue" strokeWidth={1.5} />}
-          fields={fields as any}
-          onFieldChange={handleFieldChange}
+          fields={amendFields as any}
+          onFieldChange={handleAmendFieldChange}
           onSubmit={handleTripsAmendSubmit}
           submitLabel={popupButtonName}
         // submitColor={popupBGColor}
+        />
+
+        <TripPlanActionModal
+          open={cancelModalOpen}
+          onClose={() => setCancelModalOpen(false)}
+          title="Cancel Trip Plan"
+          icon={<Ban className="w-4 h-4" />}
+          fields={cancelFields as any}
+          onFieldChange={handleCancelFieldChange}
+          onSubmit={handleTripsCancelSubmit}
+          submitLabel="Cancel Trip"
+          actionType="cancel"
         />
 
       </div>
