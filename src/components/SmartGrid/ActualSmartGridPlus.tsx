@@ -1115,7 +1115,7 @@ export function ActualSmartGridPlus({
   }, []);
 
   const handleDeleteRowAction = useCallback(async (rowIndex: number, row: any) => {
-    if (window.confirm('Are you sure you want to delete this row?')) {
+    // if (window.confirm('Are you sure you want to delete this row?')) {
       try {
         const updatedData = gridData.filter((_, index) => index !== rowIndex);
         setGridData(updatedData);
@@ -1135,7 +1135,7 @@ export function ActualSmartGridPlus({
           variant: "destructive",
         });
       }
-    }
+    // }
   }, [gridData, setGridData, onDeleteRow, toast]);
 
   const handleCellDoubleClick = useCallback((rowIndex: number, row: any) => {

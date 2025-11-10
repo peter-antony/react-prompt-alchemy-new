@@ -5262,12 +5262,12 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       // If user has made edits and we have existing data, preserve it completely
       // This prevents reinitializing data and losing Delete/Insert flags
       if (hasUserEditsRef.current && prevData.length > 0) {
-        console.log('Preserving existing edited data, not reinitializing from API');
+        // console.log('Preserving existing edited data, not reinitializing from API');
         return prevData;
       }
 
       // Only initialize from API when there are no user edits
-      console.log('Initializing actualEditableData from API data');
+      // console.log('Initializing actualEditableData from API data');
       // Initialize existing data from API with proper ModeFlag for identification
       return actualConsignments.map(row => {
         // Check if this row exists in previous data and has Delete/Insert ModeFlag
