@@ -33,6 +33,7 @@ interface TripInfo {
 interface LegDetail {
   LegSequence: number;
   LegID: string;
+  LegIDDescription: string;
   LegUniqueId: string;
   Departure: string;
   DepartureDescription: string;
@@ -245,6 +246,11 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         // panelData.LegUniqueId = null;
       }
 
+      // ====== Check for Remarks changes ======
+      if (originalLeg && originalLeg.Remarks !== panelData.Remarks) {
+        isModified = true;
+      }
+
       // ====== Determine ModeFlag correctly ======
       if (originalLeg?.ModeFlag === 'Insert') {
         panelData.ModeFlag = 'Insert'; // keep new legs as Insert
@@ -446,7 +452,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'LegID',
         label: 'Leg ID',
         fieldType: 'text',
-        value: leg.LegID?.toString() || '',
+        value: leg.LegID && leg.LegIDDescription
+          ? `${leg.LegID} || ${leg.LegIDDescription}`
+          : (leg.LegID || leg.LegIDDescription || ''),
         mandatory: true,
         visible: true,
         editable: false,
@@ -454,6 +462,29 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         width: 'six'
         // Remove onChange since we're using ref-based approach
       },
+      // LegID: {
+      //   id: 'LegID',
+      //   label: 'Leg ID',
+      //   fieldType: 'text',
+      //   value: (() => {
+      //     const id = leg.LegID || '';
+      //     const desc = leg.LegIDDescription || '';
+      //     const maxLength = 25; // adjust this to how many chars you want visible
+
+      //     const truncatedDesc = desc.length > maxLength
+      //       ? desc.substring(0, maxLength) + '...'
+      //       : desc;
+
+      //     if (id && desc) return `${id} || ${truncatedDesc}`;
+      //     return id || truncatedDesc || '';
+      //   })(),
+      //   mandatory: true,
+      //   visible: true,
+      //   editable: false,
+      //   order: 2,
+      //   width: 'six'
+      // },
+
       Departure: {
         id: 'Departure',
         label: 'Departure',

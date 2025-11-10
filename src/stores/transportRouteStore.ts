@@ -21,6 +21,7 @@ interface TripInfo {
 interface LegDetail {
   LegSequence: number;
   LegID: string;
+  LegIDDescription: string;
   LegUniqueId: string;
   Departure: string;
   DepartureDescription: string;
@@ -132,6 +133,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
           ? responseData.LegDetails.map((leg: any, index: number) => ({
               LegSequence: leg.LegSequence || index + 1,
               LegID: leg.LegID || '',
+              LegIDDescription: leg.LegIDDescription || '',
               LegUniqueId: leg.LegUniqueId || `${Date.now()}`,
               Departure: leg.Departure || '',
               DepartureDescription: leg.DepartureDescription || '',
@@ -219,6 +221,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
     const newLeg: LegDetail = {
       LegSequence: (selectedRoute.LegDetails?.length || 0) + 1,
       LegID: '',
+      LegIDDescription: '',
       LegUniqueId: null,
       Departure: '',
       DepartureDescription: '',
