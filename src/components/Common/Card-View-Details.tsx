@@ -238,7 +238,8 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                             </div>
                             <div className="flex items-center gap-2 text-gray-700 text-xs">
                                 <Banknote className="w-4 h-4 text-gray-600" />
-                                <span className="truncate">€ {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
+                                <span className="truncate">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
+                                {/* <span className="truncate">€ {formattedAmount(item?.BillingDetails?.NetAmount)}</span> */}
                                 {/* <span className="truncate">{item.price}</span> */}
                             </div>
                             <div className="flex items-center gap-2 text-gray-700 text-xs">
@@ -282,7 +283,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                         <div className="px-4 py-3">
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="font-semibold text-gray-700">{item?.BillingDetails?.Tariff}</div>
-                                                <div className="font-semibold text-gray-700">€ {formattedAmount(item?.BillingDetails?.UnitPrice)}</div>
+                                                <div className="font-semibold text-gray-700">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {formattedAmount(item?.BillingDetails?.UnitPrice)}</div>
                                             </div>
                                             <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
                                                 <div>Tariff ID</div>

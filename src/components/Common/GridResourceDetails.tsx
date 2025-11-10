@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { quickOrderService } from "@/api/services/quickOrderService";
 import ResourceGroupSearch from "./ResourceGroupSearch";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import jsonStore from "@/stores/jsonStore";
 interface CardStatus {
   label: string;
   color: string;
@@ -241,7 +242,7 @@ const GridResourceDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrde
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">
                   <Banknote className="w-4 h-4 text-gray-600" />
-                  <span className="truncate">€ {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
+                  <span className="truncate">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
                   {/* <span className="truncate">{item.price}</span> */}
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 text-xs">

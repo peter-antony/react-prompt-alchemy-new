@@ -581,7 +581,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   className="text-lg font-bold"
                   style={{ color: fieldColour || 'inherit' }}
                 >
-                € {field.value || ' 0.00'}
+                {jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {field.value || ' 0.00'}
                 </div>
               </div>
             );
