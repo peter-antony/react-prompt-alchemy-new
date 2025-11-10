@@ -39,6 +39,16 @@
       };
       document.head.appendChild(script);
     </script>
+
+    <script>
+      const base = "/Forwardis-dev";
+      if (!window.location.hash && window.location.pathname.startsWith(base)) {
+        const subPath = window.location.pathname.replace(base, "");
+        const search = window.location.search || "";
+        window.location.replace(`${base}/#${subPath}${search}`);
+      }
+    </script>
+
   </head>
 
   <body>
