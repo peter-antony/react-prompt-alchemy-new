@@ -29,13 +29,14 @@ const LocationDetailsTooltip: React.FC<LocationDetailsTooltipProps> = ({ row, ty
 
     if (propKey === "PlannedActual" && type === "LegLocationFormat") {
       const planned = row?.Consignment?.[0]?.Planned?.[0] || {};
+      const events = row?.Consignment?.[0] || {};
       return (
         <div className="space-y-2">
           {[
-            { label: "Wagon Quantity", value: `${planned.WagonQty || "-"} Nos` },
-            { label: "Container Quantity", value: `${planned.ContainerQty || "-"} Nos` },
-            { label: "Product Weight", value: `${planned.ProductWeight || "-"} Ton` },
-            { label: "THU Quantity", value: `${planned.ThuQty || "-"} Nos` },
+            { label: "Wagon Quantity", value: `${events.TotalWagons || "-"} Nos` },
+            { label: "Container Quantity", value: `${events.TotalContainer || "-"} Nos` },
+            { label: "Product Weight", value: `${events.TotalProductWeight || "-"} Ton` },
+            { label: "THU Quantity", value: `${events.TotalTHU || "-"} Nos` },
           ].map((item, i) => (
             <div key={i} className="flex justify-between items-center">
               <span className="text-gray-600">{item.label}</span>
