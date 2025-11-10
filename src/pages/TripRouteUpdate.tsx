@@ -1042,7 +1042,7 @@ export const TripRouteUpdate = () => {
         title="Leg Details"
         titleBadge={selectedRoute?.CustomerOrderID || ''}
         titleBadgeStyles="badge-blue rounded-2xl"
-        titleBadgeStatus={selectedRoute?.Status}
+        titleBadgeStatus={selectedRoute?.StatusDescription || ''} 
         titleBadgeStatusStyles="badge-green rounded-2xl"
         width="100%"
         showFooter={false}

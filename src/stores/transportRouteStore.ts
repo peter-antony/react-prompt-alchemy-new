@@ -58,6 +58,7 @@ interface TransportRoute {
   RouteID: string;
   RouteDescription: string;
   Status: string;
+  StatusDescription: string;
   LegDetails: LegDetail[];
   ReasonForUpdate: string;
 }
@@ -169,6 +170,7 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
           RouteID: responseData?.RouteID || route.RouteID,
           RouteDescription: responseData?.RouteDescription || route.RouteDescription,
           Status: responseData?.Status || route.Status,
+          StatusDescription: responseData?.StatusDescription || route.StatusDescription,
           LegDetails: legDetails,
           ReasonForUpdate: responseData?.ReasonForUpdate || route.ReasonForUpdate || ""
         };
