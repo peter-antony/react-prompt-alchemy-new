@@ -559,7 +559,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
         </div>
 
       </div>
-      <div className="absolute bottom-0 right-0 w-full bg-white border-t border-gray-200 flex justify-end px-6 py-3">
+      <div className=" position-fixed bottom-0 right-0 w-full bg-white border-t border-gray-200 flex justify-end px-6 py-3">
         <button
           onClick={handleAddOthers} // define this function as needed
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md px-6 py-2 shadow-sm"
