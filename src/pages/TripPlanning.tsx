@@ -146,6 +146,7 @@ const TripPlanning = () => {
   const [selectedArrCOData, setSelectedArrCOData] = useState<any[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
+  const [isCreatingTrip, setIsCreatingTrip] = useState(false);
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
@@ -1147,6 +1148,8 @@ const TripPlanning = () => {
 
       console.log("createSingleTripData", tripData);
       console.log("Updated customerOrderList with ResourceDetails:", selectedArrCOData);
+      
+      setIsCreatingTrip(true); // Show loader before API call
       try {
         const response: any = await tripPlanningService.createTripPlan(tripData);
         const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
@@ -1187,6 +1190,13 @@ const TripPlanning = () => {
         }
       } catch (error) {
         console.error("Error updating nested data:", error);
+        toast({
+          title: "⚠️ Error",
+          description: "An error occurred while creating the trip. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCreatingTrip(false); // Hide loader
       }
     }
   }
@@ -1248,7 +1258,7 @@ const TripPlanning = () => {
     let successCount = 0;
     let failureCount = 0;
     const errors: string[] = [];
-
+    setIsCreatingTrip(true);
     // Call confirm API for each TripID
     for (const tripID of tripIDsToProcess) {
       try {
@@ -1313,6 +1323,9 @@ const TripPlanning = () => {
           description: error,
           variant: "destructive",
         });
+      }
+      finally {
+        setIsCreatingTrip(false);
       }
     }
     
@@ -1388,7 +1401,7 @@ const TripPlanning = () => {
     let successCount = 0;
     let failureCount = 0;
     const errors: string[] = [];
-
+    setIsCreatingTrip(true);
     // Call release API for each TripID
     for (const tripID of tripIDsToProcess) {
       try {
@@ -1453,6 +1466,8 @@ const TripPlanning = () => {
           description: error,
           variant: "destructive",
         });
+      } finally {
+        setIsCreatingTrip(false);
       }
     }
 
@@ -1679,6 +1694,7 @@ const TripPlanning = () => {
     };
     console.log('Amend Payload:', Header);
     console.log("Using TripID for Amend:", tripIDToUse);
+    setIsCreatingTrip(true);
     try {
       const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
@@ -1715,6 +1731,8 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
+    } finally {
+      setIsCreatingTrip(false);
     }
   };
 
@@ -1763,6 +1781,7 @@ const TripPlanning = () => {
     };
     console.log('Cancel Payload:', Header);
     console.log("Using TripID for Cancel:", tripIDToUse);
+    setIsCreatingTrip(true);
     try {
       const response = await tripPlanningService.confirmTripPlanning({ Header, messageType });
       console.log("response ===", response);
@@ -1798,6 +1817,8 @@ const TripPlanning = () => {
       }
     } catch (error) {
       console.error("Error confirming trip:", error);
+    } finally {
+      setIsCreatingTrip(false);
     }
   };
 
@@ -2775,12 +2796,21 @@ const TripPlanning = () => {
           }}
         /> : ''
       }
-      {/* Loading Overlay */}
+      {/* Loading Overlay for Resources */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
           <div className="text-lg font-semibold text-blue-700">Loading {currentResourceType}...</div>
           <div className="text-sm text-gray-500 mt-1">Fetching {currentResourceType.toLowerCase()} data from server, please wait.</div>
+        </div>
+      )}
+
+      {/* Loading Overlay for Trip Creation */}
+      {isCreatingTrip && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading ...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
       )}
 
