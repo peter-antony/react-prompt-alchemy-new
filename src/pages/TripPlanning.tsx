@@ -1272,7 +1272,8 @@ const TripPlanning = () => {
           console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
           const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
           const tripStatus = parsedResponse?.TripStatus;
-          
+          setTripNo(tripID);
+          setTripStatus(tripStatus);
           // Update trip status for this specific TripID in the grid data
           if (tripStatus && tripID) {
             setTripCustomerOrdersData(prev =>
@@ -1411,7 +1412,8 @@ const TripPlanning = () => {
           console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
           const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
           const tripStatus = parsedResponse?.TripStatus;
-          
+          setTripNo(tripID);
+          setTripStatus(tripStatus);
           // Update trip status for this specific TripID in the grid data
           if (tripStatus && tripID) {
             setTripCustomerOrdersData(prev =>
@@ -1690,7 +1692,9 @@ const TripPlanning = () => {
         console.log("response?.data?.ResponseData ===", JSON.parse((response as any)?.data?.ResponseData));
         const parsedResponse = JSON.parse((response as any)?.data?.ResponseData);
         const tripStatus = parsedResponse?.TripStatus;
+        setTripNo(parsedResponse?.TripID);
         setTripStatus(tripStatus);
+        setAmendModalOpen(false);
         if (tripStatus && tripIDToUse) {
           setTripCustomerOrdersData(prev =>
             Array.isArray(prev)
@@ -1700,7 +1704,6 @@ const TripPlanning = () => {
               : prev
           );
         }
-        setAmendModalOpen(false);
         console.log("Trip data updated in store", tripStatus);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -1898,16 +1901,20 @@ const TripPlanning = () => {
             <div className="flex items-center justify-between mb-4">
               <div className='flex items-center gap-2'>
                 <h1 className="text-2xl font-semibold">Trip No.</h1>
+                {/* Show tripNo and tripStatus only when:
+                    1. tripID is from URL (urlTripID exists), OR
+                    2. Switch is ON (consolidatedTrip) AND multiple COs are selected (selectedArrCOData.length > 0)
+                */}
                 <div className="relative max-w-md">
                   <Input
                     placeholder="Trip No."
-                    value={tripNo}
+                    value={(urlTripID || (consolidatedTrip && selectedArrCOData.length > 0)) ? tripNo : ''}
                     onChange={(e) => setTripNo(e.target.value)}
                     className="pr-10"
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-                {tripStatus && (
+                {(urlTripID || (consolidatedTrip && selectedArrCOData.length > 0)) && tripStatus && (
                   <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">
                     {tripStatus}
                   </span>

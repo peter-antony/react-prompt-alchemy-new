@@ -55,7 +55,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
   const [expandedCOInfo, setExpandedCOInfo] = useState(false);
   const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pickupComplete, setPickupComplete] = useState(false);
+  const [pickupComplete, setPickupComplete] = useState(true);
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
   const [selectedCustomerData, setSelectedCustomerData] = useState<any>({});
@@ -263,6 +263,15 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
     {
       key: 'Product',
       label: 'Product',
+      type: 'Text',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250
+    },
+    {
+      key: 'ProductDescription',
+      label: 'Product Description',
       type: 'Text',
       sortable: true,
       editable: false,
