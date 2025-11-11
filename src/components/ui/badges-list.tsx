@@ -9,6 +9,7 @@ interface BadgesListProps {
   className?: string;
   badgeVariant?: 'default' | 'secondary' | 'destructive' | 'outline';
   idField?: string; // Field name to use for displaying the ID (e.g., 'EquipmentID', 'HandlerID', 'VehicleID', 'DriverID')
+  isRemoveButton?: boolean;
 }
 
 export const BadgesList: React.FC<BadgesListProps> = ({
@@ -17,6 +18,7 @@ export const BadgesList: React.FC<BadgesListProps> = ({
   className,
   badgeVariant = 'default',
   idField = 'EquipmentID', // Default to EquipmentID for backward compatibility
+  isRemoveButton = false,
 }) => {
   console.log('items:::::::::::: ', items);
   return (
@@ -27,14 +29,15 @@ export const BadgesList: React.FC<BadgesListProps> = ({
           variant={badgeVariant}
           className="flex items-center gap-1 pr-1 transition-all hover:opacity-80"
         >
-          <span>{item?.[idField] || item?.ResourceID}</span>
-          <button
-            onClick={() => onRemove(index)}
-            className="ml-1 rounded-full p-0.5 hover:bg-background/20 transition-colors"
-            aria-label={`Remove ${item?.[idField] || item?.ResourceID}`}
-          >
-            <X className="h-3 w-3" />
-          </button>
+          <span>{item?.[idField] || item?.ResourceID } </span>
+            { isRemoveButton && (<button
+              onClick={() => onRemove(index)}
+              className="ml-1 rounded-full p-0.5 hover:bg-background/20 transition-colors"
+              aria-label={`Remove ${item?.[idField] || item?.ResourceID}`}
+            >
+              <X className="h-3 w-3" />
+            </button>)
+          }
         </Badge>
       ))}
     </div>

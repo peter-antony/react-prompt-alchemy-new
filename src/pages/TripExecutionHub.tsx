@@ -1218,7 +1218,7 @@ export const TripExecutionHub = () => {
       options: [
         { id: 'One Way', name: 'One Way', default: "N", description: "", seqNo: 1 },
         { id: 'Round Trip', name: 'Round Trip', default: "N", description: "", seqNo: 2 },
-      ]
+      ] as any[],
     },
     {
       key: 'TripType', label: 'Trip Type', type: 'lazyselect',

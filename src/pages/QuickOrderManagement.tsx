@@ -482,7 +482,7 @@ const QuickOrderManagement = () => {
         // { id: '1', name: 'BOTH', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'SELL', default: "N", description: "", seqNo: 2 },
         { id: '3', name: 'BUY', default: "N", description: "", seqNo: 3 },
-      ]
+      ] as any[],
     },
     {
       key: 'Supplier', label: 'Supplier', type: 'lazyselect',
@@ -536,7 +536,7 @@ const QuickOrderManagement = () => {
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     },
     {
       key: 'SubService', label: 'Sub Service', type: 'lazyselect',

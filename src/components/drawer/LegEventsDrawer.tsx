@@ -118,6 +118,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
   const [selectedLegIndex, setSelectedLegIndex] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const isReadOnly = true; // or from props, e.g. props.readOnly
 
   // Store bindings (destructured in a single selector to avoid multiple subscriptions)
   const data = useTripLegandEventsStore((s) => s.data);
@@ -224,21 +225,51 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
       // Send to API
       const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
       console.log('response = ', response);
-      if (response?.data?.IsSuccess) {
-        toast({
-          title: "Success",
-          description: response.data.Message || "Leg and events saved successfully",
-        });
-        // Refresh data from API after successful save
-        if (tripId) {
-          await loadFromApi({ tripId });
+      
+      // Check if response has data
+      if (response?.data) {
+        const { IsSuccess, ResponseData, Message } = response.data;
+        
+        // Parse ResponseData if it exists (it's a JSON string)
+        let parsedResponseData: any = null;
+        if (ResponseData) {
+          try {
+            parsedResponseData = JSON.parse(ResponseData);
+          } catch (parseError) {
+            console.warn('Failed to parse ResponseData:', parseError);
+          }
+        }
+        
+        // Check for error in parsed ResponseData even if IsSuccess is true
+        if (parsedResponseData?.error) {
+          const { errorCode, errorMessage } = parsedResponseData.error;
+          toast({
+            title: errorCode || "Error",
+            description: errorMessage || Message || "Failed to save leg and events",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // If IsSuccess is true and no error in ResponseData, show success
+        if (IsSuccess) {
+          toast({
+            title: "Success",
+            description: Message || "Leg and events saved successfully",
+          });
+          // Refresh data from API after successful save
+          if (tripId) {
+            await loadFromApi({ tripId });
+          }
+          // Also call the optional onSave callback if provided
+          if (onSave) {
+            await onSave();
+          }
+        } else {
+          throw new Error(Message || "Failed to save leg and events");
         }
       } else {
-        throw new Error(response.data.Message || "Failed to save leg and events");
-      }
-      // Also call the optional onSave callback if provided
-      if (onSave) {
-        await onSave();
+        throw new Error("No response data received");
       }
     } catch (error: any) {
       toast({
@@ -295,12 +326,14 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">
-                Trip Start Date <span className="text-red-500">*</span>
+                Trip Start Date 
+                {/* <span className="text-red-500">*</span> */}
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    disabled={isReadOnly}
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !localTripStartDate && "text-muted-foreground"
@@ -327,12 +360,14 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">
-                Trip Start Time <span className="text-red-500">*</span>
+                Trip Start Time 
+                {/* <span className="text-red-500">*</span> */}
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    disabled={isReadOnly}
                     className="w-full justify-start text-left font-normal"
                   >
                     <Clock className="mr-2 h-4 w-4" />
@@ -356,12 +391,14 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">
-                Trip End Date <span className="text-red-500">*</span>
+                Trip End Date 
+                {/* <span className="text-red-500">*</span> */}
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    disabled={isReadOnly}
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !localTripEndDate && "text-muted-foreground"
@@ -388,12 +425,14 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">
-                Trip End Time <span className="text-red-500">*</span>
+                Trip End Time 
+                {/* <span className="text-red-500">*</span> */}
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    disabled={isReadOnly}
                     className="w-full justify-start text-left font-normal"
                   >
                     <Clock className="mr-2 h-4 w-4" />
