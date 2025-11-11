@@ -29,6 +29,7 @@ import TripOdometer from './TripOdometer';
 import TripVendorFeedback from './TripVendorFeedback';
 import { useTrainParametersAlertStore } from '@/stores/trainParametersAlertStore';
 import { Alert, AlertDescription } from '../ui/alert';
+import { tripService } from "@/api/services";
 
 
 const TripRouteIcon = () => {
@@ -48,7 +49,7 @@ export const ActionIconBar = () => {
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { hasAlert, colorClass } = useTrainParametersAlertStore();
-  const { clearAlert } = useTrainParametersAlertStore();
+  const { setAlert, clearAlert } = useTrainParametersAlertStore();
   const { routes,
       selectedOrder,
       selectedRoute,
@@ -78,7 +79,60 @@ export const ActionIconBar = () => {
 
     const tripId: any = tripData?.Header?.TripNo;
 
-    // Alert dot is controlled from the Train Parameters drawer via store
+    // Always show alert by default; only manual close clears the dot
+      useEffect(() => {
+        // setShowAlert(true);
+        setAlert(false, 'bg-amber-600');
+      }, []);
+      useEffect(() => {
+        if (!tripId) return;
+    
+        const fetchData = async () => {
+          try {
+            const response = await tripService.getPathConstraints(tripId);
+            const constraint = JSON.parse(response?.data?.ResponseData || '{}');
+            const constraints = constraint?.PathConstraints;
+            if (constraints) {
+              console.log("constraints",constraints);
+              if(parseFloat(constraints.BalanceLength)<0 || parseFloat(constraints.BalanceWeight)<0 || parseFloat(constraints.BalanceQuantity)<0){
+                setAlert(true, 'bg-amber-600');
+              }
+              else{
+                setAlert(false, 'bg-amber-600');
+              }
+              // // 🧩 Bind Length
+              // setLengthData({
+              //   planned: constraints.PlannedLength?.toString() || "",
+              //   actual: constraints.ActualLength?.toString() || "",
+              //   balance: constraints.BalanceLength?.toString() || "",
+              //   unit: constraints.LengthUOM || "",
+              // });
+    
+              // // 🧩 Bind Weight
+              // setWeightData({
+              //   planned: constraints.PlannedWeight?.toString() || "",
+              //   actual: constraints.ActualWeight?.toString() || "",
+              //   balance: constraints.BalanceWeight?.toString() || "",
+              //   unit: constraints.WeightUOM || "",
+              // });
+    
+              // // 🧩 Bind Quantity
+              // setQuantityData({
+              //   planned: constraints.PlannedQuantity?.toString() || "",
+              //   actual: constraints.ActualQuantity?.toString() || "",
+              //   balance: constraints.BalanceQuantity?.toString() || "",
+              //   unit: constraints.QuantityUOM || "",
+              // });
+            }
+          } catch (error) {
+            console.error("Error loading PathConstraints:", error);
+          }
+        };
+    
+        fetchData();
+      }, [tripId]);
+
+    // Alert dot is controlled manually from the drawer; default is active
 
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">

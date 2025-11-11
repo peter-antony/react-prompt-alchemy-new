@@ -101,32 +101,11 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
     return an > bn;
   };
 
-  // Alert should reflect negative balances only; no default alert on mount
-
-  
+  // Always show alert by default; only manual close clears the dot
   useEffect(() => {
-  const hasExceeded = 
-    isGreater(lengthData.actual, lengthData.planned) ||
-    isGreater(weightData.actual, weightData.planned) ||
-    isGreater(quantityData.actual, quantityData.planned);
-
-  if (hasExceeded) {
-    setShowAlert(true);
-    setAlert(true, "bg-amber-600");
-  } else {
     setShowAlert(false);
-    clearAlert();
-  }
-}, [
-  lengthData.actual,
-  lengthData.planned,
-  weightData.actual,
-  weightData.planned,
-  quantityData.actual,
-  quantityData.planned,
-]);
-
-
+    setAlert(false, 'bg-amber-600');
+  }, []);
 
   // 🔹 Fetch PathConstraints API on mount
   useEffect(() => {
@@ -138,6 +117,16 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
         const constraint = JSON.parse(response?.data?.ResponseData || '{}');
         const constraints = constraint?.PathConstraints;
         if (constraints) {
+
+          if(parseFloat(constraints.BalanceLength)<0 || parseFloat(constraints.BalanceWeight)<0 || parseFloat(constraints.BalanceQuantity)<0){
+            setShowAlert(true);
+            setAlert(true, 'bg-amber-600');
+          }
+          else{
+            setShowAlert(false);
+            setAlert(false, 'bg-amber-600');
+          }
+          
           // 🧩 Bind Length
           setLengthData({
             planned: constraints.PlannedLength?.toString() || "",
@@ -176,6 +165,14 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
       weight: weightData,
       quantity: quantityData,
     });
+    if(parseFloat(lengthData.balance)<0 || parseFloat(weightData.balance)<0 || parseFloat(quantityData.balance)<0){
+      setShowAlert(true);
+      setAlert(true, 'bg-amber-600');
+    }
+    else{
+      setShowAlert(false);
+      setAlert(false, 'bg-amber-600');
+    }
     try {
       const response = await tripService.savePathConstraints(tripId, {
         "PlannedLength": parseFloat(lengthData.planned),
