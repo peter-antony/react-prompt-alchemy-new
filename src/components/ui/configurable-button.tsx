@@ -106,8 +106,8 @@ export const ConfigurableButton: React.FC<ConfigurableButtonProps> = ({
           className="select-none flex items-center text-sm font-medium px-3 gap-2 w-full h-full"
         >
           <Plus className="h-4 w-4" />
-          {/* {label} */}
-          Create Order
+          {config.label}
+          {/* Create Order */}
         </div>
         {/* {hasDropdown && (
           <>
