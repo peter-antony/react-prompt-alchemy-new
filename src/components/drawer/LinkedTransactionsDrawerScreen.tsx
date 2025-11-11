@@ -106,33 +106,59 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
   const LinkedTransactions = tripData?.LinkedTransactions;
 
   const transactions = useMemo(() => {
-      if (!LinkedTransactions) return [];
+  if (!LinkedTransactions) return [];
 
-      const tripPlanItems =
-      LinkedTransactions.TripPlan?.map((t, index) => ({
-        id: `trip-${index}`,
-        badge: 'T',
-        badgeColor: 'bg-orange-100 text-orange-600',
-        type: t.PlanTripStatus || '',
-        transactionId: t.TripNo || '-',
-        companyName: t.TransportSupplier || '-',
-        containerNumber: '-',
-        customerOrderNumber: '-',
-        amount: 0,
-        productId: '-',
-        date: t.TripDate || '-',
-      })) || [];
+  const { QuickOrder, TripPlan } = LinkedTransactions;
 
-    return [ ...tripPlanItems];
-  }, [LinkedTransactions]);
+  // 🔵 QuickOrder card (handle first element if array exists)
+  const quickOrder = Array.isArray(QuickOrder) && QuickOrder.length > 0 ? QuickOrder[0] : null;
+  const quickOrderItem = {
+    id: 'quickorder',
+    badge: 'Q',
+    badgeColor: 'bg-blue-100 text-blue-600',
+    type: quickOrder ? quickOrder.QuickOrderStatus || '-' : 'Not Available',
+    transactionId: quickOrder?.QuickOrderNo || '-',
+    companyName: quickOrder?.ResourcesGroupID || '-',
+    containerNumber: '-',
+    customerOrderNumber: '-',
+    amount: quickOrder?.AmountWithCurrency?.trim() || '0.00 EUR',
+    productId: '-',
+    date: quickOrder?.FromDate
+      ? new Date(quickOrder.FromDate).toLocaleDateString('en-GB')
+      : '-',
+  };
 
-  const customerTotal = transactions
-    .filter(t => t.badge === 'C')
-    .reduce((sum, t) => sum + t.amount, 0);
+  // 🟠 TripPlan card (handle first element if array exists)
+  const tripPlan = Array.isArray(TripPlan) && TripPlan.length > 0 ? TripPlan[0] : null;
+  const tripPlanItem = {
+    id: 'tripplan',
+    badge: 'T',
+    badgeColor: 'bg-orange-100 text-orange-600',
+    type: tripPlan ? tripPlan.PlanTripStatus || '-' : 'Not Available',
+    transactionId: tripPlan?.TripNo || '-',
+    companyName: tripPlan?.TransportSupplier || '-',
+    containerNumber: '-',
+    customerOrderNumber: '-',
+    amount: 0,
+    productId: '-',
+    date: tripPlan?.TripDate
+      ? new Date(tripPlan.TripDate).toLocaleDateString('en-GB')
+      : '-',
+  };
+
+  return [quickOrderItem, tripPlanItem];
+}, [LinkedTransactions]);
+
+
+
+
+  // const customerTotal = transactions
+  //   .filter(t => t.badge === 'C')
+  //   .reduce((sum, t) => sum + t.amount, 0);
   
-  const supplierTotal = transactions
-    .filter(t => t.badge === 'S')
-    .reduce((sum, t) => sum + t.amount, 0);
+  // const supplierTotal = transactions
+  //   .filter(t => t.badge === 'S')
+  //   .reduce((sum, t) => sum + t.amount, 0);
 
   const filteredTransactions = transactions.filter(transaction =>
     transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,10 +174,10 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-foreground">Total Net Amount</span>
           <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-50">
-            Customer € {customerTotal.toFixed(2)}
+            {/* Customer € {customerTotal.toFixed(2)} */}
           </Badge>
           <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-50">
-            Supplier € {supplierTotal.toFixed(2)}
+            {/* Supplier € {supplierTotal.toFixed(2)} */}
           </Badge>
         </div>
 
@@ -215,7 +241,7 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
               {/* Amount */}
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Euro className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground">€ {transaction.amount.toFixed(2)}</span>
+                <span className="text-foreground">€ {transaction.amount}</span>
               </div>
 
               {/* Product ID */}
