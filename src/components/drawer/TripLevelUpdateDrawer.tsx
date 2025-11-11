@@ -362,13 +362,21 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
  
           <div className="space-y-2">
             <Label>Departure</Label>
-            <DynamicLazySelect
+            {/* <DynamicLazySelect
               value={execLeg.Departure && execLeg.DepartureDescription
                 ? `${execLeg.Departure} || ${execLeg.DepartureDescription}`
                 : (execLeg.Departure || execLeg.DepartureDescription || '')} 
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Departure', value)}
               fetchOptions={fetchDepartures}
               placeholder="Select Departure"
+              disabled
+            /> */}
+            <Input
+              className="h-10"
+              value={execLeg.Departure && execLeg.DepartureDescription
+                ? `${execLeg.Departure} || ${execLeg.DepartureDescription}`
+                : (execLeg.Departure || execLeg.DepartureDescription || '')} 
+                disabled
             />
           </div>
           
