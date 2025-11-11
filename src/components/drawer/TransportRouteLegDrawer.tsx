@@ -190,6 +190,19 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       let departureChanged = false;
       let arrivalChanged = false;
 
+      //  ====== Normalize and compare LegId ======
+      if (panelData.LegID && panelData.LegID.includes('||')) {
+        const [legId, legDesc] = panelData.LegID.split('||').map(x => x.trim());
+        panelData.LegID = legId;
+        panelData.LegIDDescription = legDesc;
+      }
+      if (
+        originalLeg &&
+        (originalLeg.LegID !== panelData.LegID || originalLeg.LegIDDescription !== panelData.LegIDDescription)
+      ) {
+        isModified = true;
+      }
+
       // ====== Normalize and compare Departure ======
       if (panelData.Departure && panelData.Departure.includes('||')) {
         const [depCode, depDesc] = panelData.Departure.split('||').map(x => x.trim());
@@ -307,55 +320,85 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   }));
 
   const handleSave = async () => {
-    // Get all form data from DynamicPanels
-    const formData = getFormData();
-    console.log('💾 Saving form data:', formData);
-    console.log('💾 selectedRoute form data:', selectedRoute);
+  // Get all form data from DynamicPanels
+  const formData = getFormData();
+  console.log('💾 Saving form data:', formData);
+  console.log('💾 selectedRoute form data:', selectedRoute);
 
-    // Extract only the value before "||" for ReasonForUpdate (if present)
-    const reasonValue = typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
+  // Validate mandatory fields
+  let missingFields: string[] = [];
+
+  formData.legDetails.forEach((leg: any, index: number) => {
+    const requiredFields = [
+      { key: "LegSequence", label: "Leg Sequence" },
+      // { key: "LegID", label: "Leg ID" },
+      { key: "Departure", label: "Departure" },
+      { key: "Arrival", label: "Arrival" },
+      { key: "TransportMode", label: "Transport Mode" },
+    ];
+
+    requiredFields.forEach(({ key, label }) => {
+      if (!leg[key] || leg[key].toString().trim() === "") {
+        missingFields.push(`Leg ${index + 1}: ${label}`);
+      }
+    });
+  });
+
+  if (missingFields.length > 0) {
+    toast({
+      title: "⚠️ Missing Mandatory Fields",
+      description: (
+        <div>
+          Please fill in the following mandatory fields:
+          {/* <ul className="list-disc ml-4 mt-2 text-red-500"> */}
+            {missingFields.map((field, i) => (
+              <li key={i}>{field}</li>
+            ))}
+          {/* </ul> */}
+        </div>
+      ),
+      variant: "destructive",
+    });
+    return; // ❌ Stop execution — don't proceed with save
+  }
+
+  // Proceed with save if all required fields are filled
+  const reasonValue =
+    typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
       ? reasonForUpdate.split("||")[0].trim()
       : reasonForUpdate;
 
-    const formatFinalRouteData =
-    {
-      ...selectedRoute,
-      // LegDetails: formData.legDetails,
-      LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
-      ReasonForUpdate: reasonValue
-    };
-    const response = await tripService.updateCOSelection(formatFinalRouteData);
-    console.log('💾 response:', response);
-
-    console.log('💾 formatFinalRouteData:', formatFinalRouteData);
-
-    // Here you can process the form data as needed
-    // For now, we'll just show a success message
-    // toast({
-    //   title: 'Success',
-    //   description: 'Route details saved successfully',
-    // });
-
-    // Access the response data safely
-    const responseData = response as any;
-
-    if (responseData && responseData.data) {
-      // Display the message from the API response
-      toast({
-        title: responseData.data.IsSuccess === false ? "⚠️ Save Failed" : "✅ Saved Successfully",
-        description: responseData.data.Message || "Trip details saved successfully",
-        variant: responseData.data.IsSuccess === false ? "destructive" : "default"
-      });
-    } else {
-      // Fallback toast if response structure is unexpected
-      toast({
-        title: "Success",
-        description: "Trip details saved successfully",
-      });
-    }
-
-
+  const formatFinalRouteData = {
+    ...selectedRoute,
+    LegDetails: formData.legDetails.map(({ NetAmount, ...rest }) => rest),
+    ReasonForUpdate: reasonValue,
   };
+
+  const response = await tripService.updateCOSelection(formatFinalRouteData);
+  console.log('💾 response:', response);
+  console.log('💾 formatFinalRouteData:', formatFinalRouteData);
+
+  const responseData = response as any;
+
+  if (responseData && responseData.data) {
+    toast({
+      title:
+        responseData.data.IsSuccess === false
+          ? "⚠️ Save Failed"
+          : "✅ Saved Successfully",
+      description:
+        responseData.data.Message || "Trip details saved successfully",
+      variant:
+        responseData.data.IsSuccess === false ? "destructive" : "default",
+    });
+  } else {
+    toast({
+      title: "Success",
+      description: "Trip details saved successfully",
+    });
+  }
+};
+
 
   const handleDelete = async (index: number) => {
     try {
@@ -456,7 +499,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         value: leg.LegID && leg.LegIDDescription
           ? `${leg.LegID} || ${leg.LegIDDescription}`
           : (leg.LegID || leg.LegIDDescription || ''),
-        mandatory: true,
+        mandatory: false,
         visible: true,
         editable: false,
         order: 2,
