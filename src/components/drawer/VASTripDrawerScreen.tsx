@@ -69,14 +69,24 @@ const initialFormData: FormData = {
   ModeFlag: ''
 };
 
-export const VASTripDrawerScreen = ({ tripUniqueNo }) => {
+export const VASTripDrawerScreen = ({ tripUniqueNo, tripInformationData }: { tripUniqueNo?: string, tripInformationData?: any }) => {
   const [vasItems, setVasItems] = useState<VASItem[]>([]);
   const [selectedVAS, setSelectedVAS] = useState<string | null>(null);
+  const [selectedVASForCopy, setSelectedVASForCopy] = useState<string[]>([]);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  // const { tripData } = manageTripStore();
-  const [tripData, setTripData] = useState<any>(null);
-  const tripId: any = tripUniqueNo;
+  // Use tripInformationData if provided, otherwise fallback to store
+  const { tripData: storeTripData } = manageTripStore();
+  const tripData = tripInformationData || storeTripData;
+  const tripId: any = tripData?.Header?.TripNo || tripUniqueNo;
   const { toast } = useToast();
+  
+  // Log when tripInformationData changes
+  useEffect(() => {
+    if (tripInformationData) {
+      console.log("tripInformationData updated:", tripInformationData);
+      console.log("tripData (current):", tripInformationData || storeTripData);
+    }
+  }, [tripInformationData, storeTripData]);
 
   // Filter VAS items based on selected CustomerOrderNo
   const filteredVasItems = formData.CustomerOrderNo
@@ -122,11 +132,6 @@ export const VASTripDrawerScreen = ({ tripUniqueNo }) => {
   const [customerValue, setCustomerValue] = useState<string | undefined>();
 
 
-  useEffect(() => {
-    if (tripData) {
-      console.log("Trip Data:", tripData);
-    }
-  }, [tripData]);
 
   // Refactored VAS fetch function
   const fetchVASForTrip = async () => {
@@ -142,7 +147,6 @@ export const VASTripDrawerScreen = ({ tripUniqueNo }) => {
         response?.data ||
         response?.VAS ||
         [];
-        setTripData(vasapi);
 
       console.log("VAS List (Drawer):", vasList);
 
@@ -208,8 +212,7 @@ export const VASTripDrawerScreen = ({ tripUniqueNo }) => {
   // VAS API Fetch on mount
   useEffect(() => {
     fetchVASForTrip();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripId]); // Only depend on tripId to avoid infinite loop
+  }, [tripId]);
 
 
 
@@ -258,13 +261,63 @@ const saveCurrentFormData = () => {
     }));
   };
 
-  const handleDeleteItem = (id: string) => {
-    setVasItems(vasItems.filter(item => item.id !== id));
-    if (selectedVAS === id) {
-      setSelectedVAS(null);
-      setFormData(initialFormData);
-    }
+  const handleDeleteItem = async (id: string) => {
+  const vasToDelete = vasItems.find((item) => item.id === id);
+  if (!vasToDelete) return;
+
+  // Mark this one as Delete
+  const updatedVasItems = vasItems.map((item) =>
+    item.id === id
+      ? {
+          ...item,
+          formData: {
+            ...item.formData,
+            ModeFlag: "Delete",
+          },
+        }
+      : item
+  );
+
+  // Header info same as save
+  const HeaderInfo = {
+    TripNo: tripData?.Header?.TripNo,
+    TripOU: tripData?.Header?.TripOU,
+    TripStatus: tripData?.Header?.TripStatus,
+    TripStatusDescription: tripData?.Header?.TripStatusDescription,
   };
+
+  const vasList = prepareVasPayload(updatedVasItems);
+
+  try {
+    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+    console.log("Delete VAS response", response);
+
+    const apiMessage = response?.data?.Message || "Deleted Successfully";
+    const isSuccess = response?.data?.IsSuccess !== false;
+
+    toast({
+      title: isSuccess ? "✅ VAS Deleted Successfully" : "❌ Delete Failed",
+      description: apiMessage,
+      variant: isSuccess ? "default" : "destructive",
+    });
+
+    // Refresh list after delete
+    if (isSuccess) {
+      await fetchVASForTrip();
+    }
+  } catch (error) {
+    console.error("Error deleting VAS:", error);
+    const errorMessage =
+      error?.data?.Message || error?.message || "Failed to delete VAS";
+
+    toast({
+      title: "❌ Delete Failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  }
+};
+
 
   const prepareVasPayload = (vasItems) => {
     const splitPiped = (value: any): { id: string; name: string } => {
@@ -425,13 +478,83 @@ const saveCurrentFormData = () => {
   }
 };
 
+  const handleCopyToSupplier = async () => {
+  if (selectedVASForCopy.length === 0) return;
+
+  // Step 1: Update only selected items for supplier copy
+  const updatedVasItems = vasItems.map((item) => {
+    if (selectedVASForCopy.includes(item.id)) {
+      return {
+        ...item,
+        formData: {
+          ...item.formData,
+          IsApplicableToSupplier: true,
+          ModeFlag:
+            item.formData.ModeFlag === "NoChanges" ||
+            !item.formData.ModeFlag
+              ? "Update"
+              : item.formData.ModeFlag,
+        },
+      };
+    }
+    return item; // keep unchanged for non-selected items
+  });
+
+  // Step 2: Prepare header info (same as handleSave)
+  const HeaderInfo = {
+    TripNo: tripData?.Header?.TripNo,
+    TripOU: tripData?.Header?.TripOU,
+    TripStatus: tripData?.Header?.TripStatus,
+    TripStatusDescription: tripData?.Header?.TripStatusDescription,
+  };
+
+  // Step 3: Prepare VAS list (same as handleSave)
+  const vasList = prepareVasPayload(updatedVasItems);
+
+  try {
+    // Step 4: Call same API as handleSave
+    const response = await tripService.saveVASTrip(HeaderInfo, vasList);
+    console.log("Copy to Supplier save response", response);
+
+    const apiMessage = response?.data?.Message || "Success";
+    const isSuccess = response?.data?.IsSuccess !== false;
+
+    toast({
+      title: isSuccess
+        ? "✅ Copied to Supplier Successfully"
+        : "❌ Copy Failed",
+      description: apiMessage,
+      variant: isSuccess ? "default" : "destructive",
+    });
+
+    if (isSuccess) {
+      // Step 5: Refresh data and reset checkboxes
+      await fetchVASForTrip();
+      setSelectedVASForCopy([]);
+    }
+  } catch (error) {
+    console.error("Error copying VAS to supplier:", error);
+    const errorMessage =
+      error?.data?.Message ||
+      error?.message ||
+      "Failed to copy VAS to supplier";
+
+    toast({
+      title: "❌ Copy Failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  }
+};
+
+
 
 
   const handleClear = () => {
     setFormData(initialFormData);
     setSelectedVAS(null);
   };
-  console.log("VASDrawerScreen CustomerOrderNo:", tripData?.CustomerOrders);
+  console.log("VASDrawerScreen CustomerOrderNo:", tripData);
 
   return (
     <div className="flex h-full">
@@ -468,7 +591,7 @@ const saveCurrentFormData = () => {
     </SelectTrigger>
     <SelectContent>
       {tripData?.CustomerOrders?.length > 0 ? (
-        tripData?.CustomerOrders.map((order: any, idx: number) => (
+        tripData.CustomerOrders.map((order: any, idx: number) => (
           <SelectItem key={idx} value={order.CustomerOrderNo}>
             {order.CustomerOrderNo}
           </SelectItem>
@@ -497,38 +620,67 @@ const saveCurrentFormData = () => {
 
         <div className="space-y-2 flex-1 overflow-y-auto">
           {filteredVasItems.map((item) => (
-            <Card
-              key={item.id}
-              className={`cursor-pointer transition-colors hover:bg-accent ${selectedVAS === item.id ? 'bg-accent border-primary' : ''
-                }`}
-              onClick={() => handleVASClick(item)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{item.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="text-xs">
-                        {item.quantity}
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteItem(item.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+  <Card
+    key={item.id}
+    className={`cursor-pointer transition-colors hover:bg-accent ${selectedVAS === item.id ? 'bg-accent border-primary' : ''}`}
+    onClick={() => handleVASClick(item)}
+  >
+    <CardContent className="p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-1">
+          {/* ✅ Checkbox for Copy Selection */}
+          <Checkbox
+            checked={selectedVASForCopy.includes(item.id)}
+            onCheckedChange={(checked) => {
+              setSelectedVASForCopy((prev) =>
+                checked
+                  ? [...prev, item.id]
+                  : prev.filter((id) => id !== item.id)
+              );
+            }}
+            onClick={(e) => e.stopPropagation()} // prevent card click
+          />
+
+          <div>
+            <div className="font-medium text-sm">{item.name}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-xs">
+                {item.quantity}
+              </Badge>
+            </div>
+          </div>
         </div>
+
+        {/* Delete button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteItem(item.id);
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+))}
+
+        </div>
+        {selectedVASForCopy.length > 0 && (
+  <div className="pt-3 border-t mt-3">
+    <Button
+      variant="default"
+      className="w-full"
+      onClick={() => handleCopyToSupplier()}
+    >
+      Copy to Supplier ({selectedVASForCopy.length})
+    </Button>
+  </div>
+)}
+
       </div>
 
       {/* Main Content Area */}
@@ -576,7 +728,9 @@ const saveCurrentFormData = () => {
               </Select> */}
               <DynamicLazySelect
                 fetchOptions={fetchVASID}
-                value={formData.VASID}
+                value={formData.VASID && formData.VASIDDescription
+                  ? `${formData.VASID} || ${formData.VASIDDescription}`
+                  : (formData.VASID || formData.VASIDDescription || '')}
                 onChange={(value) => setFormData({ ...formData, VASID: value as string })}
                 placeholder="Select VAS ID"
               />
@@ -594,7 +748,9 @@ const saveCurrentFormData = () => {
               </Select> */}
               <DynamicLazySelect
                 fetchOptions={fetchCustomers}
-                value={formData.CustomerID}
+                value={formData.CustomerID && formData.CustomerDescription
+                  ? `${formData.CustomerID} || ${formData.CustomerDescription}`
+                  : (formData.CustomerID || formData.CustomerDescription || '')}
                 onChange={(value) => setFormData({ ...formData, CustomerID: value as string })}
                 placeholder="Select Customer"
               />
@@ -603,20 +759,7 @@ const saveCurrentFormData = () => {
 
           {/* Supplier and Contract */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Supplier</Label>
-              {/* <Input
-                placeholder="Enter Supplier"
-                value={formData.supplier}
-                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-              /> */}
-              <DynamicLazySelect
-                fetchOptions={fetchSupplier}
-                value={formData.SupplierID}
-                onChange={(value) => setFormData({ ...formData, SupplierID: value as string })}
-                placeholder="Select Supplier Contract"
-              />
-            </div>
+            
             <div className="space-y-2">
               <Label>Supplier Contract <span className="text-destructive"></span></Label>
               {/* <Select value={formData.supplierContract} onValueChange={(value) => setFormData({ ...formData, supplierContract: value })}>
@@ -630,8 +773,26 @@ const saveCurrentFormData = () => {
               </Select> */}
               <DynamicLazySelect
                 fetchOptions={fetchSupplierContract}
-                value={formData.SupplierContract}
+                value={formData.SupplierContract && formData.SupplierContractDescription
+                  ? `${formData.SupplierContract} || ${formData.SupplierContractDescription}`
+                  : (formData.SupplierContract || formData.SupplierContractDescription || '')}
                 onChange={(value) => setFormData({ ...formData, SupplierContract: value as string })}
+                placeholder="Select Supplier Contract"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Supplier</Label>
+              {/* <Input
+                placeholder="Enter Supplier"
+                value={formData.supplier}
+                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+              /> */}
+              <DynamicLazySelect
+                fetchOptions={fetchSupplier}
+                value={formData.SupplierID && formData.SupplierDescription
+                  ? `${formData.SupplierID} || ${formData.SupplierDescription}`
+                  : (formData.SupplierID || formData.SupplierDescription || '')}
+                onChange={(value) => setFormData({ ...formData, SupplierID: value as string })}
                 placeholder="Select Supplier Contract"
               />
             </div>

@@ -160,6 +160,7 @@ const TripPlanning = () => {
   const [othersDrawerOpen, setOthersDrawerOpen] = useState(false);
   const [otherInfo, setOtherInfo] = useState(false);
   const [oldTripData, setOldTripData] = useState('');
+  const [tripInformation, setTripInformation] = useState<any>({});
 
   const { toast } = useToast();
 
@@ -185,6 +186,10 @@ const TripPlanning = () => {
     const tripNoFromAPI = data?.Header?.TripNo;
     setOldTripData(data)
     console.log("data ===", data);
+    setTripInformation(
+      data
+    )
+    console.log('tripInformation=====', tripInformation);
     let otherInfoData: any = {};
 
     if (data.Header?.SupplierRefNo != undefined && data.Header?.SupplierRefNo != null) {
@@ -794,7 +799,9 @@ const TripPlanning = () => {
       Equipments: [] as any[],
       Handlers: [] as any[],
       Vehicle: [] as any[],
-      Drivers: [] as any[]
+      Drivers: [] as any[],
+      Supplier: [] as any[],
+      Schedule: [] as any[]
     };
 
     // Collect all resources from selectedArrCOData (including merged ones)
@@ -828,6 +835,11 @@ const TripPlanning = () => {
         groupedResources.Vehicle.push({ VehicleID: resource.ResourceID });
       } else if (resource.ResourceType === 'Driver') {
         groupedResources.Drivers.push({ DriverID: resource.ResourceID });
+      } else if (resource.ResourceType === 'Agent') {
+        // Agent is the ResourceType for Supplier
+        groupedResources.Supplier.push({ VendorID: resource.ResourceID });
+      } else if (resource.ResourceType === 'Schedule') {
+        groupedResources.Schedule.push({ SupplierID: resource.ResourceID });
       }
     });
 
@@ -837,10 +849,12 @@ const TripPlanning = () => {
       Equipments: groupedResources.Equipments,
       Handlers: groupedResources.Handlers,
       Vehicle: groupedResources.Vehicle,
-      Drivers: groupedResources.Drivers
+      Drivers: groupedResources.Drivers,
+      Supplier: groupedResources.Supplier,
+      Schedule: groupedResources.Schedule
     }));
 
-    console.log("Grouped resources:", groupedResources);
+    console.log("Grouped resources:", groupedResources, tripResourceDetailsData);
 
     // Update the customer order array state
     setSelectedArrCOData(updatedCustomerOrderArray);
@@ -2871,7 +2885,7 @@ const TripPlanning = () => {
         showBackButton={drawerType === 'transport-route' || drawerType === 'leg-and-events'}
         showCloseButton={true}
       >
-        {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} />}
+        {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} tripInformationData={tripInformation}/>}
         {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
         {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || undefined} />}
       </SideDrawer>
