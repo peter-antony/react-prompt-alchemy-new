@@ -1056,6 +1056,10 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
         searchTerm: searchTerm || '',
         offset,
         limit,
+        searchCriteria: {
+          id: searchTerm,
+          name: searchTerm
+      },
         additionalFilter: [
           {
             FilterName: "Uncode",
