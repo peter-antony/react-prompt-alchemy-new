@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { tripService } from "@/api/services";
 import { useToast } from "@/hooks/use-toast";
+import { useTrainParametersAlertStore } from "@/stores/trainParametersAlertStore";
 
 interface TrainParametersDrawerScreenProps {
   onClose: () => void;
@@ -33,6 +34,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
 }) => {
   const [showAlert, setShowAlert] = useState(true);
   const { toast } = useToast();
+  const { setAlert, clearAlert } = useTrainParametersAlertStore();
 
   const [lengthData, setLengthData] = useState<ParameterData>({
     planned: "",
@@ -89,6 +91,20 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
     };
 
     fetchAllUnits();
+  }, []);
+
+  // Helper to compare numeric strings safely
+  const isGreater = (a: string, b: string) => {
+    const an = parseFloat(a);
+    const bn = parseFloat(b);
+    if (isNaN(an) || isNaN(bn)) return false;
+    return an > bn;
+  };
+
+  // Always show alert by default; only manual close clears the dot
+  useEffect(() => {
+    setShowAlert(true);
+    setAlert(true, 'bg-amber-600');
   }, []);
 
   // 🔹 Fetch PathConstraints API on mount
@@ -259,7 +275,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
               const balance = calculateBalance(planned, data.actual);
               setData({ ...data, planned, balance });
             }}
-            className="flex-1"
+            className="flex-1 h-10"
           />
         </div>
       </div>
@@ -294,7 +310,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
               const balance = calculateBalance(data.planned, actual);
               setData({ ...data, actual, balance });
             }}
-            className="flex-1"
+            className="flex-1 h-10"
           />
         </div>
       </div>
@@ -325,7 +341,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
             disabled
             onChange={(e) => setData({ ...data, balance: e.target.value })}
             className={cn(
-              "flex-1",
+              "flex-1 h-10",
               parseFloat(data.balance) < 0 && "text-red-600"
             )}
           />
@@ -348,7 +364,10 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowAlert(false)}
+                onClick={() => {
+                  setShowAlert(false);
+                  clearAlert();
+                }}
                 className="h-5 w-5 p-0 hover:bg-transparent"
               >
                 <X className="h-4 w-4 text-amber-600" />

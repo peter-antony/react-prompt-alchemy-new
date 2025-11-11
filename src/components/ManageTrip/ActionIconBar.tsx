@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   MapPin,
@@ -13,7 +13,9 @@ import {
   FileUp,
   Link,
   TramFront,
-  Paperclip
+  Paperclip,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import Attachments from './Attachments';
 import { MoreInfoPanel } from './MoreInfo';
@@ -25,6 +27,8 @@ import { manageTripStore } from '@/stores/mangeTripStore';
 import { TripTrackTrace } from '../drawer/tripTrackTrace';
 import TripOdometer from './TripOdometer';
 import TripVendorFeedback from './TripVendorFeedback';
+import { useTrainParametersAlertStore } from '@/stores/trainParametersAlertStore';
+import { Alert, AlertDescription } from '../ui/alert';
 
 
 const TripRouteIcon = () => {
@@ -43,6 +47,8 @@ export const ActionIconBar = () => {
   const [isVendorFeedbackOpen, setVendorFeedbackOpen] = useState(false);
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
+  const { hasAlert, colorClass } = useTrainParametersAlertStore();
+  const { setAlert, clearAlert } = useTrainParametersAlertStore();
   const { routes,
       selectedOrder,
       selectedRoute,
@@ -72,7 +78,13 @@ export const ActionIconBar = () => {
 
     const tripId: any = tripData?.Header?.TripNo;
 
-    
+    // Always show alert by default; only manual close clears the dot
+      useEffect(() => {
+        // setShowAlert(true);
+        setAlert(true, 'bg-amber-600');
+      }, []);
+
+    // Alert dot is controlled manually from the drawer; default is active
 
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">
@@ -104,10 +116,44 @@ export const ActionIconBar = () => {
         {/* <span className="text-xs">Print</span> */}
       </Button>
       
-      <Button title='Train Parameters' onClick={() => openDrawer('train-parameters')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button
+        title="Train Parameters"
+        onClick={() => openDrawer('train-parameters')}
+        variant="ghost"
+        size="sm"
+        className="relative flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]"
+      >
+        {/* Alert dot */}
+        {hasAlert && (
+          <span
+            className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full ${colorClass} ring-2 ring-white shadow-sm`}
+          />
+        )}
+
         <TramFront size={16} strokeWidth={1.2} />
-        {/* <span className="text-xs">Print</span> */}
       </Button>
+      {hasAlert && (
+        <Alert className=" px-4 py-2 bg-amber-50 border-amber-200" style={{ position: 'fixed', top: '65px', right: '25px', width: '50%' }}>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertDescription className="text-amber-800 flex-1">
+                Kindly note that the Actual &lt;weight/length/wagon quantity&gt; is higher than the planned.
+              </AlertDescription>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  // setShowAlert(false);
+                  clearAlert();
+                }}
+                className="h-5 w-5 p-0 hover:bg-transparent"
+              >
+                <X className="h-4 w-4 text-amber-600" />
+              </Button>
+            </div>
+          </Alert>
+      )}
+
       <Button title='Transport Route Update' onClick={() => openTripDrawer(tripId)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
         <TripRouteIcon  />
         {/* <span className="text-xs">Print</span> */}
