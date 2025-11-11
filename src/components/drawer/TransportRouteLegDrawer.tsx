@@ -162,6 +162,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const fetchTransportModes = fetchMasterData("Transport Mode Init");
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
   const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
+  const fetchQCCode1 = fetchMasterData("ManageRouteUpdateCO QC1 Init");
 
   // Helper function to get form data
   const getFormData = () => {
@@ -256,6 +257,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       if (originalLeg && originalLeg.ModeFlag !== 'Insert' && (departureChanged || arrivalChanged)) {
         console.log(`🟡 LegID set to null for leg index ${legIndex} due to location change`);
         panelData.LegID = null;
+        panelData.LegIDDescription = null;
         // panelData.LegUniqueId = null;
       }
 
@@ -404,16 +406,16 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     try {
       console.log(`🗑️ Deleting leg at index ${index}`);
 
-      // 1️⃣ Get the latest form data before deleting
+      // Get the latest form data before deleting
       const formDataBeforeDelete = getFormData();
       console.log('🗑️ Form data before delete:', formDataBeforeDelete);
 
-      // 2️⃣ Build final payload — all legs included
+      // Build final payload — all legs included
       const reasonValue = typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
         ? reasonForUpdate.split("||")[0].trim()
         : reasonForUpdate;
 
-      // 3️⃣ Prepare legs for payload: mark only the deleted leg with ModeFlag: "Delete"
+      // Prepare legs for payload: mark only the deleted leg with ModeFlag: "Delete"
       const updatedLegs = (selectedRoute?.LegDetails || []).map((leg, i) => ({
         ...leg,
         ModeFlag: i === index ? "Delete" : "Nochange",
@@ -492,13 +494,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         width: 'six',
         inputType: 'number'
       },
-      LegID: {
-        id: 'LegID',
-        label: 'Leg ID',
+      LegIDDescription: {
+        id: 'LegIDDescription',
+        label: 'Leg ID Description',
         fieldType: 'text',
-        value: leg.LegID && leg.LegIDDescription
-          ? `${leg.LegID} || ${leg.LegIDDescription}`
-          : (leg.LegID || leg.LegIDDescription || ''),
+        value: leg.LegIDDescription?.length > 30
+          ? leg.LegIDDescription.substring(0, 30) + '...'
+          : leg.LegIDDescription,
         mandatory: false,
         visible: true,
         editable: false,
@@ -506,6 +508,20 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         width: 'six'
         // Remove onChange since we're using ref-based approach
       },
+      // LegID: {
+      //   id: 'LegID',
+      //   label: 'Leg ID',
+      //   fieldType: 'text',
+      //   value: leg.LegID && leg.LegIDDescription
+      //     ? `${leg.LegID} || ${leg.LegIDDescription}`
+      //     : (leg.LegID || leg.LegIDDescription || ''),
+      //   mandatory: false,
+      //   visible: true,
+      //   editable: false,
+      //   order: 2,
+      //   width: 'six'
+      //   // Remove onChange since we're using ref-based approach
+      // },
       // LegID: {
       //   id: 'LegID',
       //   label: 'Leg ID',
@@ -598,6 +614,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 7,
         maxLength: 255,
+        fetchOptions: fetchQCCode1,
         // options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
         // Removed onChange events - using uncontrolled approach
       },
