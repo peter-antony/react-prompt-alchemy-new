@@ -446,7 +446,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: true,
         order: 1,
-        width: 'six'
+        width: 'six',
+        inputType: 'number'
       },
       LegID: {
         id: 'LegID',
