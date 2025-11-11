@@ -151,6 +151,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   // utils/fetchOptionsHelper.ts
   const makeLazyFetcher = (messageType: string) => {
     return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
@@ -235,9 +236,11 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
   // Iterate through all messageTypes
   const fetchAll = async () => {
     setLoading(false);
+    setApiStatus('loading');
     for (const type of messageTypes) {
       await fetchData(type);
     }
+    setApiStatus('success');
   };
   // Local array of order IDs for suggestions
   const orderIds = [
@@ -649,6 +652,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
 
     // setLoading(false);
     setError(null);
+    // setApiStatus('loading');
     try {
       const data: any = await quickOrderService.getCommonComboData({ messageType: "ContractID Selection", contractId: contractIdValue, type: OrderType });
       const parsedResponse = JSON.parse(data.data.ResponseData);
@@ -726,9 +730,11 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
       // setFormData(normalizeOrderFormDetails({ Customer: "C001", Vendor: "011909", Cluster: "CL01", WBS: "DE17BAS843" }))
 
       // setApiData(data);
+      // setApiStatus('error');
     }
     finally {
       // setLoading(true);
+      // if (apiStatus === 'loading') setApiStatus('success');
     }
   };
 
@@ -1630,6 +1636,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     const fullJson = jsonStore.getQuickOrder();
     console.log("fullJson ===", fullJson);
     try {
+      setApiStatus('loading');
       //  Update resource
       const res: any = await quickOrderService.updateQuickOrderResource(fullJson);
       console.log("updateQuickOrderResource result:", res);
@@ -1654,6 +1661,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
         console.log("OrderForm: data Copy changed", jsonStore.getAllResourceGroups());
         const resourceGroups = jsonStore.getAllResourceGroups();
         setResourceData(resourceGroups || []);
+        setApiStatus('success');
       })
       //  Update your store or state with the fetched data
       if (resourceStatus === "Success" || resourceStatus === "SUCCESS") {
@@ -1683,6 +1691,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
         // description: err.response.data.description,
         variant: "destructive", // or "error"
       });
+      setApiStatus('error');
     }
     finally {
     }
@@ -1905,6 +1914,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     console.log("Updated data:", jsonStore.getQuickOrder());
     const fullJson = jsonStore.getQuickOrder();
 
+    // setApiStatus('loading');
     const res: any = await quickOrderService.updateQuickOrderResource(fullJson);
     console.log("updateQuickOrderResource result:", res);
     const resourceStatus = JSON.parse(res?.data?.ResponseData)[0].Status;
@@ -1936,6 +1946,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
 
         const fullJson2 = jsonStore.getJsonData();
         console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+        // setApiStatus('success');
       })
       setCopyModalOpen(false);
     } else {
@@ -2128,7 +2139,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
           </Dialog>
 
           {/* Delete Confirmation Modal */}
-          <Dialog open={isDeleteModalOpen} onOpenChange={setDeleteModalOpen}>
+      <Dialog open={isDeleteModalOpen} onOpenChange={setDeleteModalOpen}>
             <DialogContent className="max-w-sm w-full p-0 rounded-xl text-xs">
               <DialogTitle className="sr-only">Cancel Resource Group Confirmation</DialogTitle>
               <div className="flex flex-col">
@@ -2181,7 +2192,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
                 </div>
               </div>
             </DialogContent>
-          </Dialog>
+        </Dialog>
 
           <Toast
             message="Order No:QO/00001/2025 has been saved successfully."
@@ -2197,6 +2208,15 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
           />
         </div>
       </div>
+
+      {/* Loading overlay matching QuickOrderManagement */}
+      {apiStatus === 'loading' && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
 
       <div className="lg:col-span-1 w-4/6">
         {(!isEditQuickOrder && !isResourceData && !isResourceClosed) ?
@@ -2239,6 +2259,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
                 <Button onClick={openUpdateResourceGroup} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 bg-gray-100 text-gray-600 p-0 border border-gray-300">
                   <Plus className="w-4 h-4" />
                 </Button>
+                
 
                 {/* Create Quick Order Button */}
                 <div className="relative inline-block">
@@ -2251,7 +2272,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
                       const basePath = basePathMatch ? basePathMatch[0] : "";
                       window.location.href = `${basePath}/create-quick-order`;
                     }}
-                    className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
+                    className="border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
 
                     type='button'
                     onMouseEnter={() => setShowTooltip(true)}
