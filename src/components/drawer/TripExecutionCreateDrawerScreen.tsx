@@ -1703,6 +1703,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [DelayedReason, setDelayedReason] = useState<any[]>([]);
   const [TripLogActivity, setTripLogActivity] = useState<any[]>([]);
   const [TripLogCustomEventCategory, setTripLogCustomEventCategory] = useState<any[]>([]);
+  const [TripLogPlaceIt, setTripLogPlaceIt] = useState<any[]>([]);
+  const [TripLogReportedBy, setTripLogReportedBy] = useState<any[]>([]);
   const [qcList1, setqcList1] = useState<any>();
   const [qcList2, setqcList2] = useState<any>();
   const [qcList3, setqcList3] = useState<any>();
@@ -1761,7 +1763,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     "Trip Log QC2 Combo Init",
     "Trip Log QC3 Combo Init",
     "Trip Log Placed Init",
-    "Activity Name Init"
+    "Activity Name Init",
+    "PlaceIt Init",
+    "Report By Init",
   ];
   useEffect(() => {
     fetchAll();
@@ -1792,6 +1796,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       }
       if (messageType == "Trip Log Custom Event Category") {
         setTripLogCustomEventCategory(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "PlaceIt Init") {
+        setTripLogPlaceIt(JSON.parse(data?.data?.ResponseData));
+      }
+      if (messageType == "Report By Init") {
+        setTripLogReportedBy(JSON.parse(data?.data?.ResponseData));
       }
       if (messageType == "Trip Log QC1 Combo Init") {
         setqcList1(JSON.parse(data?.data?.ResponseData) || []);
@@ -2190,7 +2200,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       id: "Sequence",
       label: "Sequence",
       fieldType: "text",
-      width: 'third',
+      width: 'four',
       value: '',
       mandatory: false,
       visible: true,
@@ -2206,7 +2216,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       visible: true,
       editable: true,
       order: 2,
-      width: 'third',
+      width: 'four',
       options: TripLogCustomEventCategory?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
@@ -2218,7 +2228,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       id: 'FromLocation',
       label: 'From Location',
       fieldType: 'lazyselect',
-      width: 'third',
+      width: 'four',
       value: '',
       mandatory: false,
       visible: true,
@@ -2258,7 +2268,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       id: 'ToLocation',
       label: 'To Location',
       fieldType: 'lazyselect',
-      width: 'third',
+      width: 'four',
       value: '',
       mandatory: false,
       visible: true,
@@ -2303,7 +2313,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       visible: true,
       editable: true,
       order: 5,
-      width: 'third',
+      width: 'four',
       options: TripLogActivity?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
       events: {
         onChange: (value, event) => {
@@ -2313,26 +2323,172 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     },
     RevisedDate: {
       id: "RevisedDate",
-      label: "Revised Date and Time",
+      label: "Revised Date",
       fieldType: "date",
-      width: 'third',
+      width: 'four',
       value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 6,
     },
-    ActualDate: {
-      id: "ActualDate",
-      label: "Actual Date And Time",
-      fieldType: "date",
-      width: 'third',
-      value: "",
+    RevisedTime: {
+      id: "RevisedTime",
+      label: "Revised Time",
+      fieldType: "time",
+      width: 'four',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 7,
-    }
+    },
+    ActualDate: {
+      id: "ActualDate",
+      label: "Actual Date",
+      fieldType: "date",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+    },
+    ActualTime: {
+      id: "ActualTime",
+      label: "Actual Time",
+      fieldType: "time",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+    },
+    PlaceIt: {
+      id: "PlaceIt",
+      label: "Place It",
+      fieldType: "select",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      options: TripLogPlaceIt?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
+    },
+    ReportedBy: {
+      id: "ReportedBy",
+      label: "Reported By",
+      fieldType: "select",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
+      options: TripLogReportedBy?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id }))
+    },
+    CustomerOrder: {
+      id: "CustomerOrder",
+      label: "Customer Order",
+      fieldType: "lazyselect",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 12,
+      hideSearch: false,
+      disableLazyLoading: false,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "CustomerOrder Number Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
+      },
+      events: {
+        onChange: (selected, event) => {
+          console.log('Customer changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Customer dropdown clicked:', { event, value });
+        }
+      }
+    },
+    PlannedDate: {
+      id: "PlannedDate",
+      label: "Planned Date",
+      fieldType: "date",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 13,
+    },
+    PlannedTime: {
+      id: "PlannedTime",
+      label: "Planned Time",
+      fieldType: "time",
+      width: 'four',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+    },
+    Remarks1: {
+        id: 'Remarks1',
+        label: 'Remarks 1',
+        fieldType: 'text',
+        width: 'four',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 15,
+        placeholder: '',
+        maxLength: 500,
+      },
+      Remarks2: {
+        id: 'Remarks2',
+        label: 'Remarks 2',
+        fieldType: 'text',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 16,
+        placeholder: '',
+        width: 'four',
+        maxLength: 500,
+      },
+      Remarks3: {
+        id: 'Remarks3',
+        label: 'Remarks 3',
+        fieldType: 'text',
+        value: '',
+        mandatory: false,
+        visible: true,
+        editable: true,
+        order: 17,
+        placeholder: '',
+        width: 'four',
+        maxLength: 500,
+      }
   }; // Dependencies for useMemo
 
   const handlerModalAdditionalEvents = () => {
@@ -2745,9 +2901,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              {/* <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <RefreshCw className="h-4 w-4" />
-                              </Button>
+                              </Button> */}
                             </div>
                           </div>
 
