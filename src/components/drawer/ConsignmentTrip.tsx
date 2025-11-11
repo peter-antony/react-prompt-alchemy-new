@@ -55,7 +55,8 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
   const [expandedCOInfo, setExpandedCOInfo] = useState(false);
   const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pickupComplete, setPickupComplete] = useState(true);
+  const [pickupComplete, setPickupComplete] = useState();
+  const [pickupCompleteDisabled, setPickupCompleteDisabled] = useState(false);
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
   const [selectedCustomerData, setSelectedCustomerData] = useState<any>({});
@@ -151,6 +152,13 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       }
       if (selectedCustomerData?.ReturnBRId) {
         setReturnBRId(selectedCustomerData?.ReturnBRId || "");
+      }
+      // Bind Pickup Complete switch from API and set disabled state
+      const apiPickup = selectedCustomerData?.PickupCompleteForThisCustomerOrder;
+      if (apiPickup !== undefined && apiPickup !== null) {
+        const isComplete = apiPickup === '1' || apiPickup === 1 || apiPickup === true;
+        setPickupComplete(isComplete);
+        setPickupCompleteDisabled(!isComplete);
       }
     }
   }, [selectedCustomerData]);
@@ -4862,24 +4870,25 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
 
       console.log(`Deleted rows: ${deletedRows.length}, Inserted rows: ${insertedRows.length}, Updated rows: ${updatedRows.length}`);
 
-      // If no data to save, return early
-      if (allDataToSave.length === 0) {
-        // Check if user has edited data but no valid data to save
-        if (hasUserEditsRef.current) {
-          toast({
-            title: "⚠️ Invalid Data",
-            description: "Please ensure all required fields are filled correctly.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "⚠️ No Changes",
-            description: "No changes to save.",
-            variant: "default",
-          });
-        }
-        return;
-      }
+      // // If no data to save, return early
+      // if (allDataToSave.length === 0) {
+      //   // Check if user has edited data but no valid data to save
+      //   if (hasUserEditsRef.current) {
+      //     toast({
+      //       title: "⚠️ Invalid Data",
+      //       description: "Please ensure all required fields are filled correctly.",
+      //       variant: "destructive",
+      //     });
+      //   } 
+      //   // else {
+      //   //   toast({
+      //   //     title: "⚠️ No Changes",
+      //   //     description: "No changes to save.",
+      //   //     variant: "default",
+      //   //   });
+      //   // }
+      //   return;
+      // }
 
       // Create a deep copy of the trip data to avoid mutation
       const updatedTripData = JSON.parse(JSON.stringify(currentTripData));
@@ -4912,6 +4921,9 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = [];
         }
 
+        // Bind pickup complete flag to consignment and mark as Update
+        updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].PickupCompleteForThisCustomerOrder = pickupComplete ? '1' : '0';
+        updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].ModeFlag = 'Update';
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = allDataToSave;
 
         // Save to API
@@ -5457,7 +5469,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
-              <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={(checked) => setPickupComplete(checked as boolean)} />
+              <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={(checked) => setPickupComplete(checked as boolean)}  />
               <Label htmlFor="maintenanceRequired" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
 
