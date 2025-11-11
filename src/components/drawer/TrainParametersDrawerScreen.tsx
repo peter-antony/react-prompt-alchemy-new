@@ -32,7 +32,7 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
   onClose,
   tripId,
 }) => {
-  const [showAlert, setShowAlert] = useState(true);
+  const [showAlert, setShowAlert] = useState(false);
   const { toast } = useToast();
   const { setAlert, clearAlert } = useTrainParametersAlertStore();
 
@@ -101,11 +101,32 @@ export const TrainParametersDrawerScreen: React.FC<TrainParametersDrawerScreenPr
     return an > bn;
   };
 
-  // Always show alert by default; only manual close clears the dot
+  // Alert should reflect negative balances only; no default alert on mount
+
+  
   useEffect(() => {
+  const hasExceeded = 
+    isGreater(lengthData.actual, lengthData.planned) ||
+    isGreater(weightData.actual, weightData.planned) ||
+    isGreater(quantityData.actual, quantityData.planned);
+
+  if (hasExceeded) {
     setShowAlert(true);
-    setAlert(true, 'bg-amber-600');
-  }, []);
+    setAlert(true, "bg-amber-600");
+  } else {
+    setShowAlert(false);
+    clearAlert();
+  }
+}, [
+  lengthData.actual,
+  lengthData.planned,
+  weightData.actual,
+  weightData.planned,
+  quantityData.actual,
+  quantityData.planned,
+]);
+
+
 
   // 🔹 Fetch PathConstraints API on mount
   useEffect(() => {

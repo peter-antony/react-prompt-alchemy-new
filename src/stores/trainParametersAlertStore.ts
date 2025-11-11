@@ -8,7 +8,7 @@ interface TrainParametersAlertStore {
 }
 
 export const useTrainParametersAlertStore = create<TrainParametersAlertStore>((set) => ({
-  hasAlert: true,
+  hasAlert: false,
   colorClass: 'bg-amber-600',
   setAlert: (hasAlert, colorClass) =>
     set((state) => ({ hasAlert, colorClass: colorClass ?? state.colorClass })),

@@ -48,7 +48,7 @@ export const ActionIconBar = () => {
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { hasAlert, colorClass } = useTrainParametersAlertStore();
-  const { setAlert, clearAlert } = useTrainParametersAlertStore();
+  const { clearAlert } = useTrainParametersAlertStore();
   const { routes,
       selectedOrder,
       selectedRoute,
@@ -78,13 +78,7 @@ export const ActionIconBar = () => {
 
     const tripId: any = tripData?.Header?.TripNo;
 
-    // Always show alert by default; only manual close clears the dot
-      useEffect(() => {
-        // setShowAlert(true);
-        setAlert(true, 'bg-amber-600');
-      }, []);
-
-    // Alert dot is controlled manually from the drawer; default is active
+    // Alert dot is controlled from the Train Parameters drawer via store
 
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">
