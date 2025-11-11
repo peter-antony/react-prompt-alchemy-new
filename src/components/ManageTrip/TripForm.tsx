@@ -178,7 +178,7 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
       // },
       CO2Emisions: {
         id: 'CO2Emisions',
-        label: 'CO2 Emissions',
+        label: 'CO₂ Emissions',
         fieldType: 'inputdropdown',
         width: 'full',
         value: '', // Uncontrolled - DynamicPanel manages its own state
