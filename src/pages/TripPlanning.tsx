@@ -130,11 +130,13 @@ const TripPlanning = () => {
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');
   const [referenceDocType, setReferenceDocType] = useState('');
   const [referenceDocNo, setReferenceDocNo] = useState('');
-  const [transportMode, setTransportMode] = useState('rail');
-  const [departureCode, setDepartureCode] = useState('234315');
-  const [departureLocation, setDepartureLocation] = useState('Berlin Central Station');
-  const [arrivalCode, setArrivalCode] = useState('52115');
-  const [arrivalLocation, setArrivalLocation] = useState('Frankfurt Station');
+  const [transportMode, setTransportMode] = useState('Rail');
+  const [departureCode, setDepartureCode] = useState('');
+  const [arrivalCode, setArrivalCode] = useState('');
+  const [departureLocation, setDepartureLocation] = useState('');
+  const [arrivalLocation, setArrivalLocation] = useState('');
+  const [departureLocationData, setDepartureLocationData] = useState<any>(null);
+  const [arrivalLocationData, setArrivalLocationData] = useState<any>(null);
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
   const [consolidatedTrip, setConsolidatedTrip] = useState(false);
   // Generic resource drawer state
@@ -241,6 +243,16 @@ const TripPlanning = () => {
     console.log("Resource details data updated:", tripResourceDetailsData);
     // API calls, calculations, etc.
   }, [tripResourceDetailsData]);
+  
+  // Debug useEffect to track location data state changes (this will show the updated value)
+  useEffect(() => {
+    console.log("🔍 departureLocationData state updated:", departureLocationData);
+  }, [departureLocationData]);
+
+  useEffect(() => {
+    console.log("🔍 arrivalLocationData state updated:", arrivalLocationData);
+  }, [arrivalLocationData]);
+
   // Debug useEffect to track selectedArrCOData changes
   useEffect(() => {
     console.log("🔍 selectedArrCOData changed:", selectedArrCOData);
@@ -908,13 +920,94 @@ const TripPlanning = () => {
     }
   };
 
+  // Function to fetch location details for display
+  const fetchLocationDetails = async (locationCode: string, type: 'departure' | 'arrival') => {
+    console.log(`[fetchLocationDetails] Fetching ${type} location for code:`, locationCode);
+    
+    if (!locationCode || locationCode.trim() === '') {
+      console.warn(`[fetchLocationDetails] Empty locationCode for ${type}`);
+      if (type === 'departure') {
+        setDepartureLocationData(null);
+      } else {
+        setArrivalLocationData(null);
+      }
+      return;
+    }
+    
+    try {
+      const response = await tripPlanningService.getWagonLocationData({
+        messageType: "LocationID On Select",
+        searchTerm: locationCode || '',
+        offset: 0,
+        limit: 1,
+      });
+
+      console.log(`[fetchLocationDetails] Raw response for ${type}:`, response);
+      
+      const rr: any = response;
+      const responseDataString = rr?.ResponseData || rr?.data?.ResponseData || "[]";
+      const parsedData = JSON.parse(responseDataString);
+      
+      console.log(`[fetchLocationDetails] Parsed data for ${type}:`, parsedData);
+      console.log(`[fetchLocationDetails] Is array:`, Array.isArray(parsedData));
+      console.log(`[fetchLocationDetails] Array length:`, Array.isArray(parsedData) ? parsedData.length : 'N/A');
+      
+      // Extract the first item from the array if it's an array
+      let locationData: any = null;
+      
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        locationData = parsedData[0];
+        console.log(`[fetchLocationDetails] Extracted first item for ${type}:`, locationData);
+      } else if (parsedData && typeof parsedData === 'object' && !Array.isArray(parsedData)) {
+        // If it's already an object (not an array), use it directly
+        locationData = parsedData;
+        console.log(`[fetchLocationDetails] Using object directly for ${type}:`, locationData);
+      } else {
+        console.warn(`[fetchLocationDetails] No valid location data found for ${type}`);
+        locationData = null;
+      }
+      
+      // Set the state with the extracted location data
+      if (locationData) {
+        console.log(`[fetchLocationDetails] Setting ${type} location data:`, locationData);
+        if (type === 'departure') {
+          setDepartureLocationData(locationData);
+        } else {
+          setArrivalLocationData(locationData);
+        }
+      } else {
+        console.warn(`[fetchLocationDetails] Clearing ${type} location data (no data found)`);
+        if (type === 'departure') {
+          setDepartureLocationData(null);
+        } else {
+          setArrivalLocationData(null);
+        }
+      }
+      console.log("departureLocationData ----", departureLocationData);
+      console.log("arrivalLocationData ----", arrivalLocationData);
+      // Note: Don't try to access state immediately after setState - it will show the old value
+      // React state updates are asynchronous. The state will be available on the next render.
+    } catch (error) {
+      console.error(`[fetchLocationDetails] Error fetching location details for ${type}:`, error);
+      // Clear state on error
+      if (type === 'departure') {
+        setDepartureLocationData(null);
+      } else {
+        setArrivalLocationData(null);
+      }
+    }
+  };
+
   // Specific fetch functions for different message types
   const fetchLocations = fetchMasterData("Location Init");
   const fetchCluster = fetchMasterData("Cluster Init");
-  const fetchRefDocType = fetchMasterData("Ref Doc Type(Tug) Init");
+  const fetchRefDocType = fetchMasterData("Ref Doc Type Init");
 
   const fetchSupplier = fetchMasterData("Supplier Init");
   const fetchSchedule = fetchMasterData("Schedule ID Init");
+  const fetchAddressOnSelect = fetchMasterData("Departure Init");
+  // const fetchWagonLocationData = fetchLocationDetails("LocationID On Select");
+  const fetchArrivalAddress = fetchMasterData("Arrival Init");
   const [supplier, setSupplier] = useState<string | undefined>();
   const [schedule, setSchedule] = useState<string | undefined>();
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
@@ -1923,6 +2016,162 @@ const TripPlanning = () => {
     }
   };
 
+  const createWagonContainerTripData = async () => {
+    console.log("createWagonContainerTripData", departureLocationData);
+    console.log("createWagonContainerTripData", arrivalLocationData);
+    if(!departureLocationData || !arrivalLocationData) {
+      toast({
+        title: "⚠️ Save Failed",
+        description: "Departure or arrival location is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const processedLocation = splitAtPipe(location);
+    const processedCluster = splitAtPipe(cluster);
+    const processedReferenceDocType = splitAtPipe(referenceDocType);
+    console.log("processedLocation ====", processedLocation);
+    
+    // Extract all ResourceDetails from selectedArrCOData and flatten into a single array
+    const allResourceDetails: any[] = [];
+    
+    if (selectedArrCOData && Array.isArray(selectedArrCOData) && selectedArrCOData.length > 0) {
+      selectedArrCOData.forEach((customerOrder: any) => {
+        if (customerOrder?.ResourceDetails && Array.isArray(customerOrder.ResourceDetails)) {
+          // Add all ResourceDetails from this customer order to the flat array
+          allResourceDetails.push(...customerOrder.ResourceDetails);
+        }
+      });
+    }
+    
+    console.log("Extracted ResourceDetails:", allResourceDetails);
+    console.log("Total ResourceDetails count:", allResourceDetails.length);
+    
+    const tripData = {
+      "Header": {
+        "TripRunNo": "",
+        "TripNo": "",
+        "TripStatus": "",
+        "TripType": "Tug Operations",
+        "PlanningProfileID": "General-GMBH",
+        "Location": processedLocation, // Now processedLocation is already just the code
+        "Cluster": processedCluster,
+        "PlanDate": format(planDate ?? new Date(), "yyyy-MM-dd"),
+        "LoadType": "Empty",
+        "PlanStartDate": "",
+        "PlanStartTime": "",
+        "PlanEndDate": "",
+        "PlanEndTime": "",
+        "RefDocType": processedReferenceDocType,
+        "RefDocNo": referenceDocNo,
+        "TugTransportMode": transportMode,
+      },
+      "AddressInfo": {
+        "Departure": {
+          "DepartureID": departureLocationData.LocationCode,
+          "DepartureDescription": departureLocationData.LocationDescription,
+          "AddressLine1": departureLocationData.AddressLine1,
+          "AddressLine2": departureLocationData.AddressLine2,
+          "PostalCode": departureLocationData.PostalCode,
+          "Suburb": "",
+          "City": departureLocationData.City,
+          "State": departureLocationData.State,
+          "Country": departureLocationData.Country
+        },
+        "Arrival": {
+          "ArrivalID": arrivalLocationData.LocationCode,
+          "ArrivalDescription": arrivalLocationData.LocationDescription,
+          "AddressLine1": arrivalLocationData.AddressLine1,
+          "AddressLine2": arrivalLocationData.AddressLine2,
+          "PostalCode": arrivalLocationData.PostalCode,
+          "Suburb": "",
+          "City": arrivalLocationData.City,
+          "State": arrivalLocationData.State,
+          "Country": arrivalLocationData.Country
+        },
+      },
+      "ResourceDetails": allResourceDetails
+    }
+
+    console.log("createWagonContainerTripData payload", tripData);
+
+    // setIsCreatingTrip(true); // Show loader before API call
+    try {
+      const response: any = await tripPlanningService.createWagonTripPlan(tripData);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("resourceStatus ====", resourceStatus);
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        if(parsedResponse.error){
+          toast({
+            title: "⚠️ Save Failed",
+            description: parsedResponse.error.errorMessage || "Failed to save changes.",
+            variant: "destructive",
+          });
+        }
+        if(parsedResponse.RequestPayload) {
+          toast({
+            title: "✅ Trip Created Successfully",
+            description: "Your changes have been saved.",
+            variant: "default",
+          });
+        }
+        // setCreateTripBtn(false);
+        // setTripNo(parsedResponse?.CustomerOrders?.[0]?.TripID);
+        // setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
+        // setShowConfirmReleaseBtn(true);
+        // setcustomerOrderList(null);
+        // Reload TripCOHub component
+        // setTripCOHubReloadKey(prev => prev + 1);
+        console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Save Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+
+      }
+    } catch (error) {
+      console.error("Error updating nested data:", error);
+      toast({
+        title: "⚠️ Error",
+        description: "An error occurred while creating the trip. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      // setIsCreatingTrip(false); // Hide loader
+    }
+  };
+
+  const handleChangeDepartureAddress = (value: string) => {
+    console.log("handleChangeDepartureAddress ===", value);
+    const departureCode = value.split('||')[0];
+    const departureLocationDescription = value.split('||')[1];
+    setDepartureCode(departureCode);
+    setDepartureLocation(value);
+    // Fetch location details for display
+    fetchLocationDetails(departureCode, 'departure');
+    // fetchWagonLocationData({ searchTerm: departureCode, offset: 0, limit: 10 });
+    console.log("handleChangeDepartureAddress ===", departureCode, departureLocationDescription);
+  };
+
+  const handleChangeArrivalAddress = (value: string) => {
+    console.log("handleChangeArrivalAddress ===", value);
+    const arrivalCode = value.split('||')[0];
+    const arrivalLocationDescription = value.split('||')[1];
+    setArrivalCode(arrivalCode);
+    setArrivalLocation(value);
+    // Fetch location details for display
+    fetchLocationDetails(arrivalCode, 'arrival');
+    // fetchWagonLocationData({ searchTerm: arrivalCode, offset: 0, limit: 10 });
+    console.log("handleChangeArrivalAddress ===", arrivalCode, arrivalLocationDescription);
+  };
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -2147,6 +2396,8 @@ const TripPlanning = () => {
                     value={referenceDocType}
                     onChange={(value) => setReferenceDocType(value as string)}
                     placeholder=""
+                    hideSearch={true}
+                    disableLazyLoading={true}
                   />
                 </div>
 
@@ -2167,12 +2418,12 @@ const TripPlanning = () => {
                   <label className="text-sm font-medium">Transport Mode</label>
                   <RadioGroup value={transportMode} onValueChange={setTransportMode} className="flex items-center gap-6 h-10">
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="rail" id="rail" />
-                      <Label htmlFor="rail" className="cursor-pointer">Rail</Label>
+                      <RadioGroupItem value="Rail" id="Rail" />
+                      <Label htmlFor="Rail" className="cursor-pointer">Rail</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="road" id="road" />
-                      <Label htmlFor="road" className="cursor-pointer">Road</Label>
+                      <RadioGroupItem value="Road" id="Road" />
+                      <Label htmlFor="Road" className="cursor-pointer">Road</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -2196,121 +2447,293 @@ const TripPlanning = () => {
 
           {/* Conditional Content Based on Trip Type */}
           {isWagonContainer ? (
-            <div className="flex gap-6">
-              {/* Address Details Section - Left */}
-              <div className="flex-1 bg-card border border-border rounded-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <h2 className="text-lg font-medium">Address Details</h2>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Departure */}
-                  <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg">
-                    <h3 className="font-medium text-sm">Departure</h3>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Departure *</label>
-                      <div className="relative">
-                        <Input
-                          value={`${departureCode} | ${departureLocation}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const parts = value.split('|');
-                            setDepartureCode(parts[0]?.trim() || '');
-                            setDepartureLocation(parts[1]?.trim() || '');
-                          }}
-                          className="pr-10"
-                        />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <>
+              <div className="bg-card border border-border rounded-lg p-4 mb-[60px]">
+                <div className="flex gap-6">
+                  {/* Address Details Section - Left */}
+                  <div className="flex-1 bg-card border border-border rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <h2 className="text-lg font-medium">Address Details</h2>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-2 bg-white p-3 rounded border border-border">
-                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium">Berlin Central Station - Europaplatz 1, 10557</p>
-                        <p className="text-muted-foreground">Berlin, Germany</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0">
+                      <Button variant="ghost" size="icon">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
 
-                  {/* Arrival */}
-                  <div className="space-y-4 bg-orange-50/50 p-4 rounded-lg">
-                    <h3 className="font-medium text-sm">Arrival</h3>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Arrival *</label>
-                      <div className="relative">
-                        <Input
-                          value={`${arrivalCode} | ${arrivalLocation}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const parts = value.split('|');
-                            setArrivalCode(parts[0]?.trim() || '');
-                            setArrivalLocation(parts[1]?.trim() || '');
-                          }}
-                          className="pr-10"
-                        />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 bg-white p-3 rounded border border-border">
-                      <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium">Hauptbahnhof, 60329 Frankfurt am Main,</p>
-                        <p className="text-muted-foreground">Germany</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Resources Cards - Right */}
-              <div className="w-80 space-y-3">
-                {[
-                  { title: 'Resources', subtitle: 'Selected Resources', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                  { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', iconColor: 'text-cyan-600' },
-                  { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', iconColor: 'text-lime-600' },
-                  { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
-                  { title: 'Handler', icon: UserCog, color: 'bg-orange-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-orange-600' },
-                  { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
-                  { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
-                ].map((resource) => {
-                  const Icon = resource.icon;
-                  return (
-                    <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
-                            <Icon className={cn("h-5 w-5", resource.iconColor)} />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-sm">{resource.title}</h3>
-                            {resource.subtitle && (
-                              <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                            )}
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Departure */}
+                      <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg">
+                        <h3 className="font-bold text-lg">Departure</h3>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Departure <span className="text-red-500 ml-1">*</span></label>
+                          <div className="relative">
+                            <DynamicLazySelect
+                              fetchOptions={fetchAddressOnSelect}
+                              value={departureLocation}
+                              onChange={(value) => handleChangeDepartureAddress(value as string)}
+                              // onChange={(value) => setDepartureLocation(value as string)}
+                              placeholder=""
+                            />
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon">
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-start gap-2 bg-white p-3 rounded border border-border">
+                          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="text-sm">
+                            {departureLocationData ? (
+                              <>
+                                <p className="font-medium">
+                                  {departureLocationData.AddressLine1 || ''}, 
+                                  {departureLocationData.AddressLine2 && ` - ${departureLocationData.AddressLine2}`}
+                                  {/* {departureLocationData.AddressLine2 || ''}  */}
+                                  {departureLocationData.PostalCode && ` - ${departureLocationData.PostalCode}`}, 
+                                  {/* {departureLocationData.PostalCode || ''},  */}
+                                  {departureLocationData.City || ''}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {departureLocationData.State  || ''}, 
+                                  {departureLocationData.Country || ''}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-medium"> - </p>
+                              </>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </Card>
-                  );
-                })}
+
+                      {/* Arrival */}
+                      <div className="space-y-4 bg-orange-50/50 p-4 rounded-lg">
+                        <h3 className="font-bold text-lg">Arrival</h3>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Arrival <span className="text-red-500 ml-1">*</span></label>
+                          <div className="relative">
+                            <DynamicLazySelect
+                              fetchOptions={fetchAddressOnSelect}
+                              value={arrivalLocation}
+                              onChange={(value) => handleChangeArrivalAddress(value as string)}
+                              // onChange={(value) => setArrivalLocation(value as string)}
+                              placeholder=""
+                            />
+                          </div>  
+                        </div>
+                        <div className="flex items-start gap-2 bg-white p-3 rounded border border-border">
+                          <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="text-sm">
+                            {arrivalLocationData ? (
+                              <>
+                                <p className="font-medium">
+                                  {arrivalLocationData.AddressLine1 || ''}, 
+                                  {arrivalLocationData.AddressLine2 && ` - ${arrivalLocationData.AddressLine2}`}
+                                  {/* {arrivalLocationData.AddressLine2 || ''}  */}
+                                  {arrivalLocationData.PostalCode && ` - ${arrivalLocationData.PostalCode}`}, 
+                                  {/* {arrivalLocationData.PostalCode || ''},  */}
+                                  {arrivalLocationData.City || ''}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {arrivalLocationData.State  || ''}, 
+                                  {arrivalLocationData.Country || ''}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-medium"> - </p>
+                              </>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resources Cards - Right */}
+                  <div className="w-1/4 space-y-3">
+                    <div className="bg-card overflow-hidden">
+                      <div className=''>
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Supplier</div>
+                          <div className='flex items-center gap-2'>
+                            <div className="text-sm font-medium w-full">
+                              <DynamicLazySelect
+                                fetchOptions={fetchSupplier}
+                                value={supplier}
+                                onChange={(value) => changeSupplier(value as string)}
+                                placeholder=""
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                handleOpenResourceDrawer('Supplier');
+                              }}
+                            >
+                              <Search className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className='mt-3 mb-3'>
+                          <div className="text-xs text-muted-foreground mb-1">Schedule</div>
+                          <div className='flex items-center gap-2'>
+                            <div className="text-sm font-medium w-full">
+                              <DynamicLazySelect
+                                fetchOptions={fetchSchedule}
+                                value={schedule}
+                                onChange={(value) => changeSchedule(value as string)}
+                                placeholder=""
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                handleOpenResourceDrawer('Schedule');
+                              }}
+                            >
+                              <Search className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      {[
+                        { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                        // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
+                        // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
+                        { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
+                        { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
+                        { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
+                        { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
+
+                      ].map((resource) => {
+                        const Icon = resource.icon;
+                        return (
+                          <Card key={resource.title} className="p-4 hover:shadow-md mb-3 transition-shadow cursor-pointer">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+                                  <Icon className={cn("h-5 w-5", resource.iconColor)} />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-sm">{resource.title}
+                                    <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
+                                  </h3>
+                                  {resource.title == 'Equipment' && (
+                                    <BadgesList
+                                      items={tripResourceDetailsData?.Equipments}
+                                      onRemove={handleRemoveEquipment}
+                                      badgeVariant="secondary"
+                                      idField="EquipmentID"
+                                    />
+                                  )}
+                                  {resource.title == 'Handler' && (
+                                    <BadgesList
+                                      items={tripResourceDetailsData?.Handlers}
+                                      onRemove={handleRemoveHandler}
+                                      badgeVariant="secondary"
+                                      idField="HandlerID"
+                                    />
+                                  )}
+                                  {resource.title == 'Vehicle' && (
+                                    <BadgesList
+                                      items={tripResourceDetailsData?.Vehicle}
+                                      onRemove={handleRemoveVehicle}
+                                      badgeVariant="secondary"
+                                      idField="VehicleID"
+                                    />
+                                  )}
+                                  {resource.title == 'Driver' && (
+                                    <BadgesList
+                                      items={tripResourceDetailsData?.Drivers}
+                                      onRemove={handleRemoveDriver}
+                                      badgeVariant="secondary"
+                                      idField="DriverID"
+                                    />
+                                  )}
+                                  {resource.subtitle && (
+                                    <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
+                                  )}
+                                </div>
+                              </div>
+                              {resource.title === 'Others' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    handleOthersClick()
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    if (resource.title === 'Equipment') {
+                                      handleOpenResourceDrawer('Equipment');
+                                    } else if (resource.title === 'Supplier') {
+                                      handleOpenResourceDrawer('Supplier');
+                                    } else if (resource.title === 'Schedule') {
+                                      handleOpenResourceDrawer('Schedule');
+                                    } else if (resource.title === 'Driver') {
+                                      handleOpenResourceDrawer('Driver');
+                                    } else if (resource.title === 'Handler') {
+                                      handleOpenResourceDrawer('Handler');
+                                    } else if (resource.title === 'Vehicle') {
+                                      handleOpenResourceDrawer('Vehicle');
+                                    }
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* Wagon container buttons */}
+                <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+                  <div className="flex items-center gap-4">
+                    
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <button onClick={openCancelPopup} disabled={!tripNo} className={buttonCancel}>
+                      Cancel
+                    </button>
+                    {!tripNo &&
+                      <button onClick={createWagonContainerTripData} className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                        Create Trip
+                      </button>
+                    }
+                    <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
+                      Confirm
+                    </button>
+                    <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
+                      Release
+                    </button>
+                    {tripNo &&
+                      (<button onClick={openAmendPopup} className={buttonClass}>
+                        Amend
+                      </button>)
+                    }
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             /* Customer Orders Section */
             <>

@@ -246,6 +246,61 @@ export const tripPlanningService = {
       return response.data;
     },
 
+    createWagonTripPlan: async (params?: any): Promise<ApiResponse<Trip>> => {
+      console.log("params ", params);
+      const userContext = getUserContext();
+      const requestPayload = JSON.stringify({
+        context: {
+          UserID: "ramcouser",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
+          MessageID: "12345",
+          MessageType: "Create Trip - Tug Operation Creation",
+        },
+        RequestPayload: params,
+      });
+      const requestBody = {
+        RequestData: requestPayload,
+      };
+      const response = await apiClient.post(
+        API_ENDPOINTS.QUICK_ORDERS.COMBO,
+        requestBody
+      );
+      return response.data;
+    },
+
+    getWagonLocationData: async (
+      params?: any
+    ): Promise<PaginatedResponse<Trip>> => {
+      console.log("params1 ---", params);
+      const userContext = getUserContext();
+      const stringifyData: any = JSON.stringify({
+        context: {
+          MessageID: "12345",
+          MessageType: params?.messageType || "",
+          UserID: "ramcouser",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
+        },
+        SearchCriteria: {
+          "LocationCode": params?.searchTerm || '',
+        },
+        Pagination: {
+          PageNumber: params?.offset,
+          PageSize: params?.limit,
+        },
+      });
+      const requestBody = {
+        RequestData: stringifyData,
+      };
+  
+      const response = await apiClient.post(
+        API_ENDPOINTS.QUICK_ORDERS.COMBO,
+        requestBody
+      );
+      return response.data;
+    },
+
     createMultipleCOTripPlan: async (params?: any): Promise<ApiResponse<Trip>> => {
       console.log("params ", params);
       const userContext = getUserContext();
