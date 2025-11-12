@@ -1,32 +1,77 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { manageTripStore } from "@/stores/mangeTripStore";
 import { DynamicLazySelect } from "../DynamicPanel/DynamicLazySelect";
-import { quickOrderService, tripService } from "@/api/services";
+
 import { useToast } from "@/hooks/use-toast";
+import { quickOrderService, tripService } from "@/api/services";
+import { tripPlanningService } from "@/api/services/tripPlanningService";
 
 const TripVendorFeedback = () => {
     const { tripData } = manageTripStore();
     const VendorFeedbackData = tripData?.Header?.VendorPerformaneFeedback || {};
 
+    console.log("VendorFeedbackData", VendorFeedbackData);
+
     const { toast } = useToast();
 
     // Extract vendor info
-    const vendorCode = VendorFeedbackData.VendorID || "-";
-    const vendorName = VendorFeedbackData.VendorDescription || "-";
+    const vendorCode = VendorFeedbackData.VendorID;
+    const vendorName = VendorFeedbackData.VendorDescription;
 
     // Initialize with backend values
-    const [rating, setRating] = useState(VendorFeedbackData.Rating || 3);
-    const [feedback, setFeedback] = useState(VendorFeedbackData.Feedback || "OK");
+    const [rating, setRating] = useState(VendorFeedbackData.Rating);
+    const [feedback, setFeedback] = useState(VendorFeedbackData.Feedback);
     const [reasonCode, setReasonCode] = useState(VendorFeedbackData.ReasonCode || "");
     const [remarks, setRemarks] = useState(VendorFeedbackData.Remarks || "");
-    const [reasonForUpdate, setReasonForUpdate] = useState<string | undefined>();
+    const defaultReasonForUpdate = VendorFeedbackData?.ReasonCode
+        ? [VendorFeedbackData.ReasonCode, VendorFeedbackData.ReasonCodeDescription].filter(Boolean).join(" || ")
+        : undefined;
+    const [reasonForUpdate, setReasonForUpdate] = useState<string | undefined>(defaultReasonForUpdate);
     const [saving, setSaving] = useState(false);
 
     const ratingLabels = ["Very Poor", "Poor", "OK", "Good", "Excellent"];
+
+    // 🔄 Load vendor feedback from API when drawer opens (component mounts)
+    const tripId = tripData?.Header?.TripNo || (tripData as any)?.Header?.TripID;
+    useEffect(() => {
+        if (!tripId) return;
+
+        const loadVendorFeedback = async () => {
+            try {
+                const response = await tripPlanningService.getTripDataByID(tripId);
+                const raw: any = response as any;
+                const payload = raw?.data ?? raw;
+                const parsed = payload?.ResponseData
+                    ? JSON.parse(payload.ResponseData)
+                    : payload;
+
+                const data = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (!data) return;
+
+                // Update global trip store with latest data
+                manageTripStore.getState().setTrip?.(data);
+
+                // Bind vendor feedback fields to local state
+                const vf = data?.Header?.VendorPerformaneFeedback || {};
+                setRating(vf?.Rating);
+                setFeedback(vf?.Feedback);
+                setReasonCode(vf?.ReasonCode || "");
+                setRemarks(vf?.Remarks || "");
+                const preSelectedReason = vf?.ReasonCode
+                    ? [vf.ReasonCode, vf.ReasonCodeDescription].filter(Boolean).join(" || ")
+                    : undefined;
+                setReasonForUpdate(preSelectedReason);
+            } catch (error) {
+                console.error("Error loading vendor feedback:", error);
+            }
+        };
+
+        loadVendorFeedback();
+    }, [tripId]);
 
     // ⭐ When user clicks a star
     const handleRatingClick = (value: number) => {
@@ -59,7 +104,7 @@ const TripVendorFeedback = () => {
                 .filter((item: any) => item.id && item.name)
                 .map((item: any) => ({
                     label: `${item.id} || ${item.name}`,
-                    value: item.id, // use id as value
+                    value: `${item.id} || ${item.name}`,
                 }));
         } catch (error) {
             console.error("Error fetching service type options:", error);
@@ -144,7 +189,7 @@ const TripVendorFeedback = () => {
                 <div className="flex flex-col">
                     <Label className="text-sm font-medium mb-1 text-gray-700">Vendor</Label>
                     <div className="text-gray-800 text-sm font-medium">
-                        {vendorCode} - {vendorName}
+                        {vendorCode || "-"} - {vendorName || "-"}
                     </div>
                 </div>
 
@@ -158,8 +203,8 @@ const TripVendorFeedback = () => {
                                 size={22}
                                 onClick={() => handleRatingClick(star)}
                                 className={`cursor-pointer ${star <= rating
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-gray-300"
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
                                     }`}
                             />
                         ))}
