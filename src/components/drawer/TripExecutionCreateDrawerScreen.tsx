@@ -214,6 +214,89 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   };
 
+  // Helper: parse combined date and time into a Date object
+  const parseDateTime = (
+    dateString?: string | null,
+    timeString?: string | null
+  ): Date | null => {
+    if (!dateString || !timeString) return null;
+    try {
+      let date: Date;
+      if (dateString.includes('-') && dateString.length === 10) {
+        // YYYY-MM-DD
+        date = new Date(dateString);
+      } else if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+          // DD/MM/YYYY
+          date = new Date(
+            parseInt(parts[2], 10),
+            parseInt(parts[1], 10) - 1,
+            parseInt(parts[0], 10)
+          );
+        } else {
+          date = new Date(dateString);
+        }
+      } else {
+        date = new Date(dateString);
+      }
+
+      if (isNaN(date.getTime())) return null;
+
+      let hours = 0,
+        minutes = 0,
+        seconds = 0;
+      if (timeString.includes(':')) {
+        const tParts = timeString.split(':');
+        if (tParts.length >= 2) {
+          hours = parseInt(tParts[0], 10);
+          minutes = parseInt(tParts[1], 10);
+          seconds = tParts.length >= 3 ? parseInt(tParts[2], 10) : 0;
+        } else {
+          const dt = new Date(`1970-01-01T${timeString}`);
+          if (!isNaN(dt.getTime())) {
+            hours = dt.getHours();
+            minutes = dt.getMinutes();
+            seconds = dt.getSeconds();
+          }
+        }
+      } else {
+        const dt = new Date(`1970-01-01T${timeString}`);
+        if (!isNaN(dt.getTime())) {
+          hours = dt.getHours();
+          minutes = dt.getMinutes();
+          seconds = dt.getSeconds();
+        }
+      }
+      date.setHours(hours, minutes, seconds, 0);
+      return date;
+    } catch {
+      return null;
+    }
+  };
+
+  // Helper: format millisecond diff into "DD Days HH Hours MM Mins"
+  const formatDelay = (diffMs: number): string => {
+    const totalMinutes = Math.round(Math.abs(diffMs) / 60000);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(days)} Days ${pad(hours)} Hours ${pad(minutes)} Mins`;
+  };
+
+  // Helper: calculate delayed time based on planned/revised vs actual
+  const getDelayedTime = (activity: any): string => {
+    const actual = parseDateTime(activity?.ActualDate, activity?.ActualTime);
+    const revised = parseDateTime(activity?.RevisedDate, activity?.RevisedTime);
+    const planned = parseDateTime(activity?.PlannedDate, activity?.PlannedTime);
+    if (!actual) return '';
+    const target = revised ?? planned;
+    if (!target) return '';
+    const diff = target.getTime() - actual.getTime();
+    return formatDelay(diff);
+  };
+
   // Helper function to transform QuickCode objects to separate fields
   const transformQuickCodeFields = (formData: any, currentActivity: any) => {
     const transformQuickCode = (quickCodeField: string, quickCodeValueField: string) => {
@@ -2767,9 +2850,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
                                 <Package className="h-4 w-4" />
                               </div>
-                              <div>
+                              <div className="flex items-center gap-2">
                                 <div className="font-medium text-sm">{(activity as any).ActivityDescription} - {formatDateToDDMMYYYY((activity as any).PlannedDate)} {formatTimeTo12Hour((activity as any).PlannedTime)}</div>
                                 {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
+                                <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
+                                  {`${getDelayedTime(activity)} Delayed`}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -2814,9 +2900,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
                                 <Package className="h-4 w-4" />
                               </div>
-                              <div>
+                              <div className="flex items-center gap-2">
                                 <div className="font-medium text-sm">{(activity as any).title} - {formatDateToDDMMYYYY((activity as any).RevisedDate)} {formatTimeTo12Hour((activity as any).RevisedTime)}</div>
                                 {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
+                                <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
+                                  {`${getDelayedTime(activity)} Delayed`}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
