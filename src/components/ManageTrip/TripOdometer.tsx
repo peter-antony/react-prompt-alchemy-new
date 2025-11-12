@@ -4,47 +4,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { manageTripStore } from "@/stores/mangeTripStore";
 import { tripService } from "@/api/services/tripService";
+import { tripPlanningService } from "@/api/services/tripPlanningService";
 import { useToast } from "@/hooks/use-toast";
 
 const TripOdometer = () => {
   const { tripData } = manageTripStore();
   const OdometerData = tripData?.Header || {};
 
-  // Handle null values
-  const odometerUOM = OdometerData.OdometerUOM ?? "-";
-  const initialStart = OdometerData.TripOdometerStart ?? "-";
-  const initialEnd = OdometerData.TripOdometerEnd ?? "-";
-  const initialTotal = OdometerData.TotalOdometer ?? "-";
+  console.log("TripOdometer Start", OdometerData.TripOdometerStart);
+  console.log("TripOdometer End", OdometerData.TripOdometerEnd);
+  console.log("TripOdometer Total", OdometerData.TotalOdometer);
 
+  // Handle null values (no formatting)
+  const initialUOM = OdometerData.OdometerUOM ?? "";
+  const initialStart = OdometerData.TripOdometerStart ?? "";
+  const initialEnd = OdometerData.TripOdometerEnd ?? "";
+  const initialTotal = OdometerData.TotalOdometer ?? "";
+
+  const [odometerUOM, setOdometerUOM] = useState(initialUOM);
   const [odometerStart, setOdometerStart] = useState(initialStart);
   const [odometerEnd, setOdometerEnd] = useState(initialEnd);
   const [totalTripRun, setTotalTripRun] = useState(initialTotal);
   // const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  // Helper: remove UOM or symbols from value for calculation
-  const parseValue = (value: string) => {
-    const num = parseFloat(value.replace(/[^\d.-]/g, ""));
-    return isNaN(num) ? null : num;
-  };
-
-  // Calculate total trip run when start/end change
+  // Load latest odometer data on drawer open/init (based on current trip)
+  const tripId = (tripData as any)?.Header?.TripNo || (tripData as any)?.Header?.TripID;
   useEffect(() => {
-    const start = parseValue(odometerStart);
-    const end = parseValue(odometerEnd);
+    if (!tripId) return;
 
-    if (start !== null && end !== null) {
-      const total = (end - start).toFixed(2);
-      setTotalTripRun(`${total} ${odometerUOM}`);
-    } else {
-      setTotalTripRun("-");
-    }
-  }, [odometerStart, odometerEnd, odometerUOM]);
+    const loadOdometer = async () => {
+      try {
+        const response = await tripPlanningService.getTripDataByID(tripId as string);
+        const raw: any = response as any;
+        const payload = raw?.data ?? raw;
+        const parsed = payload?.ResponseData ? JSON.parse(payload.ResponseData) : payload;
+        const data = Array.isArray(parsed) ? parsed[0] : parsed;
+        if (!data) return;
 
-  const formatNumericString = (value: string) => {
-    const parsed = parseValue(value);
-    return parsed === null ? null : parsed.toFixed(2);
-  };
+        // Update store for consistency
+        manageTripStore.getState().setTrip?.(data);
+
+        const header = data?.Header || {};
+        setOdometerUOM(header?.OdometerUOM ?? "");
+        setOdometerStart(header?.TripOdometerStart ?? "");
+        setOdometerEnd(header?.TripOdometerEnd ?? "");
+        setTotalTripRun(header?.TotalOdometer ?? "");
+      } catch (error) {
+        console.error("Error loading odometer info:", error);
+      }
+    };
+
+    loadOdometer();
+  }, [tripId]);
+
+  // No local formatting or calculation; bind raw values
 
   const handleSave = async () => {
     if (!tripData || !tripData.Header) {
@@ -52,15 +66,13 @@ const TripOdometer = () => {
       return;
     }
 
-    const formattedStart = formatNumericString(odometerStart);
-    const formattedEnd = formatNumericString(odometerEnd);
-
     const updatedTripData = {
       ...tripData,
       Header: {
         ...tripData.Header,
-        TripOdometerStart: formattedStart,
-        TripOdometerEnd: formattedEnd,
+        TripOdometerStart: odometerStart,
+        TripOdometerEnd: odometerEnd,
+        OdometerUOM: odometerUOM,
         // Do not set TotalOdometer; API will calculate it
         ModeFlag: "Update",
       },
@@ -92,6 +104,8 @@ const TripOdometer = () => {
 
       {/* Inputs */}
       <div className="flex flex-col space-y-6 pb-24">
+        {/* Odometer UOM is displayed within Total Trip Run */}
+
         {/* Odometer Start */}
         <div className="flex flex-col">
           <Label className="text-sm font-medium mb-2 text-gray-700">
@@ -99,7 +113,7 @@ const TripOdometer = () => {
           </Label>
           <Input
             placeholder="Enter Odometer Start"
-            value={odometerStart || "-"}
+            value={odometerStart || ""}
             onChange={(e) => setOdometerStart(e.target.value)}
           />
         </div>
@@ -111,7 +125,7 @@ const TripOdometer = () => {
           </Label>
           <Input
             placeholder="Enter Odometer End"
-            value={odometerEnd || "-"}
+            value={odometerEnd || ""}
             onChange={(e) => setOdometerEnd(e.target.value)}
           />
         </div>
@@ -122,8 +136,8 @@ const TripOdometer = () => {
             Total Trip Run
           </Label>
           <Input
-            placeholder="Enter Total Trip Run"
-            value={totalTripRun || "-"}
+            placeholder="Total Odometer"
+            value={`${totalTripRun || ""}${odometerUOM ? ` ${odometerUOM}` : ""}`}
             readOnly
           />
         </div>
