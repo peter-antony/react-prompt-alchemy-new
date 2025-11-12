@@ -108,47 +108,74 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
   const LinkedTransactions = tripData?.LinkedTransactions;
 
   const transactions = useMemo(() => {
-  if (!LinkedTransactions) return [];
+    if (!LinkedTransactions) return [];
 
-  const { QuickOrder, TripPlan } = LinkedTransactions;
+    const { Claims, QuickOrder, TripPlan } = LinkedTransactions;
 
-  // 🔵 QuickOrder card (handle first element if array exists)
-  const quickOrder:any = Array.isArray(QuickOrder) && QuickOrder.length > 0 ? QuickOrder[0] : null;
-  const quickOrderItem:any = {
-    id: 'quickorder',
-    badge: 'Q',
-    badgeColor: 'bg-blue-100 text-blue-600',
-    type: quickOrder ? quickOrder.QuickOrderStatus || '-' : 'Not Available',
-    transactionId: quickOrder?.QuickOrderNo || '-',
-    companyName: quickOrder?.ResourcesGroupID || '-',
-    containerNumber: quickOrder?.InternalOrderNo || '-',
-    customerOrderNumber: '-',
-    amount: quickOrder?.AmountWithCurrency?.trim() || '0.00 EUR',
-    productId: '-',
-    date: quickOrder?.FromDate
-      ? dateFormatter(new Date(quickOrder.FromDate))  + ' to ' + dateFormatter(new Date(quickOrder.ToDate))
-      : '-',
-  };
+    // 🟣 Map Claims
+    const claimsList =
+      Array.isArray(Claims) && Claims.length > 0
+        ? Claims.map((claim: any, index: number) => ({
+          id: `claim-${index}`,
+          badge: 'C',
+          badgeColor: 'bg-purple-100 text-purple-600',
+          type: claim.ClaimsStatus || '-',
+          transactionId: claim.ClaimsID || '-',
+          companyName: claim.CustomerIDVendorID || '-',
+          containerNumber: claim.TripNo || '-',
+          customerOrderNumber: claim.CustomerDescriptionVendorDescription || '-',
+          amount: '—', // No amount field in structure
+          productId: claim.ClaimsFor || '-',
+          date: claim.ClaimsDate
+            ? dateFormatter(new Date(claim.ClaimsDate))
+            : '-',
+        }))
+        : [];
 
-  // 🟠 TripPlan card (handle first element if array exists)
-  const tripPlan = Array.isArray(TripPlan) && TripPlan.length > 0 ? TripPlan[0] : null;
-  const tripPlanItem = {
-    id: 'tripplan',
-    badge: 'T',
-    badgeColor: 'bg-orange-100 text-orange-600',
-    type: tripPlan ? tripPlan.PlanTripStatus || '-' : 'Not Available',
-    transactionId: tripPlan?.TripNo || '-',
-    companyName: tripPlan?.TransportSupplier || '-',
-    containerNumber: '-',
-    customerOrderNumber: '-',
-    amount: 0,
-    productId: '-',
-    date: tripPlan?.TripDate
-      ? dateFormatter(new Date(tripPlan.TripDate)) : '-',
-  };
+    // 🔵 QuickOrder card
+    const quickOrder: any =
+      Array.isArray(QuickOrder) && QuickOrder.length > 0 ? QuickOrder[0] : null;
+    const quickOrderItem: any = {
+      id: 'quickorder',
+      badge: 'Q',
+      badgeColor: 'bg-blue-100 text-blue-600',
+      type: quickOrder ? quickOrder.QuickOrderStatus || '-' : '',
+      transactionId: quickOrder?.QuickOrderNo || '-',
+      companyName: quickOrder?.ResourcesGroupID || '-',
+      containerNumber: quickOrder?.InternalOrderNo || '-',
+      customerOrderNumber: '-',
+      amount: quickOrder?.AmountWithCurrency?.trim() || '0.00 EUR',
+      productId: '-',
+      date: quickOrder?.FromDate
+        ? dateFormatter(new Date(quickOrder.FromDate)) +
+        ' to ' +
+        dateFormatter(new Date(quickOrder.ToDate))
+        : '-',
+    };
 
-  return [quickOrderItem, tripPlanItem];
-}, [LinkedTransactions]);
+    // 🟠 TripPlan card
+    const tripPlan =
+      Array.isArray(TripPlan) && TripPlan.length > 0 ? TripPlan[0] : null;
+    const tripPlanItem = {
+      id: 'tripplan',
+      badge: 'T',
+      badgeColor: 'bg-orange-100 text-orange-600',
+      type: tripPlan ? tripPlan.PlanTripStatus || '-' : '',
+      transactionId: tripPlan?.TripNo || '-',
+      companyName: tripPlan?.TransportSupplier || '-',
+      containerNumber: '-',
+      customerOrderNumber: '-',
+      amount: 0,
+      productId: '-',
+      date: tripPlan?.TripDate
+        ? dateFormatter(new Date(tripPlan.TripDate))
+        : '-',
+    };
+
+    // ✅ Combine all into a single list
+    return [...claimsList, quickOrderItem, tripPlanItem];
+  }, [LinkedTransactions]);
+
 
 
 
