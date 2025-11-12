@@ -501,6 +501,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         value: leg.LegIDDescription?.length > 30
           ? leg.LegIDDescription.substring(0, 30) + '...'
           : leg.LegIDDescription,
+        tooltip: leg.LegIDDescription || '',
         mandatory: false,
         visible: true,
         editable: false,

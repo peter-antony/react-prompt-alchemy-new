@@ -49,6 +49,7 @@ export interface FieldConfig {
   dateFormat?: string; // For date field type - format string for date-fns
   allowedType?: 'number' | 'alphanumeric' | 'alpha'; // To restrict input types
   maxLength?: number; // To restrict maximum input length
+  tooltip?: string; // Tooltip text to show full value when truncated
   // For lazyselect field type
   fetchOptions?: (params: {
     searchTerm: string;

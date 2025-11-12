@@ -375,6 +375,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
               validationErrors={validationErrors}
               // Pass mandatory info
               mandatory={config.mandatory}
+              tooltip={config.tooltip}
             />
           </div>
         ))}
