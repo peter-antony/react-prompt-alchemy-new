@@ -4314,34 +4314,38 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           Wagon: normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
           WagonDescription: normalizedRow['Wagon Description'] || normalizedRow.wagondescription || normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
           WagonType: normalizedRow['Wagon Type'] || normalizedRow.wagontype || "",
-          WagonTypeDescription: normalizedRow['Wagon Type Description'] || normalizedRow.wagontypedescription || "",
+          WagonTypeDescription: normalizedRow['Wagon Type Description'] || normalizedRow.wagontypedescription || normalizedRow.wagontype || "",
           WagonPosition: normalizedRow['Wagon Position'] || normalizedRow.wagonposition || "",
           WagonQty: normalizedRow['Wagon Qty'] || normalizedRow.wagonqty || 1,
           WagonQtyUOM: normalizedRow['Wagon Qty UOM'] || normalizedRow.wagonqtyuom || "",
           WagonLength: normalizedRow['Wagon Length'] || normalizedRow.wagonlength || "",
           WagonLengthUOM: normalizedRow['Wagon Length UOM'] || normalizedRow.wagonlengthuom || "",
-          WagonTareWeight: normalizedRow['Tare Weight'] || normalizedRow.tareweight || "",
-          GrossWeight: normalizedRow['Gross Weight'] || normalizedRow.grossweight || 0,
-
+          WagonTareWeight: normalizedRow['Wagon Tare Weight'] || normalizedRow.wagontareweight || "",
+          WagonTareWeightUOM: normalizedRow['Wagon Tare Weight UOM'] || normalizedRow.wagontareweight || "",
+          GrossWeight: normalizedRow['Wagon Gross Weight'] || normalizedRow.grossweight || 0,
+          GrossWeightUOM: normalizedRow['Wagon Gross Weight UOM'] || normalizedRow.grossweightuom || "",
+          ContainerAvgTareWeight: normalizedRow['Container Tare Weight'] || normalizedRow.containeravgtareweight || "",
+          ContainerWeightUOM: normalizedRow['Container Tare Weight UOM'] || normalizedRow.containerweightuom || "",
           ContainerId: normalizedRow['Container ID'] || normalizedRow.containerid || "",
           ContainerDescription: normalizedRow['Container Description'] || normalizedRow.containerdescription || normalizedRow['Container ID'] || normalizedRow.containerid || "",
           ContainerType: normalizedRow['Container Type'] || normalizedRow.containertype || "",
           ContainerQty: normalizedRow['Container Qty'] || normalizedRow.containerqty || "",
           ContainerQtyUOM: normalizedRow['Container Qty UOM'] || normalizedRow.containerqtyuom || "",
           ContainerSealNo: normalizedRow['Container Seal No.'] || normalizedRow.containersealn || normalizedRow.containerseal || "",
-
+ 
           Product: normalizedRow['Product ID'] || normalizedRow.productid || "",
           ProductDescription: normalizedRow['Product Description'] || normalizedRow.productdescription || "",
-          ProductWeight: normalizedRow['Product Weight Qty'] || normalizedRow.productweightqty || "",
-          ProductWeightUOM: normalizedRow['Product Weight Qty UOM'] || normalizedRow.productweightqtyuom || "",
-
+          ProductWeight: normalizedRow['Product Weight'] || normalizedRow.productweightqty || "",
+          ProductWeightUOM: normalizedRow['Product Weight UOM'] || normalizedRow.productweightqtyuom || "",
+         
+ 
           Thu: normalizedRow['THU ID'] || normalizedRow.thuid || "",
           ThuDescription: normalizedRow['THU Description'] || normalizedRow.thudescription || normalizedRow['THU ID'] || normalizedRow.thuid || "",
           ThuSerialNo: normalizedRow['THU Serial No'] || normalizedRow.thuserialno || "",
           ThuQty: normalizedRow['THU Qty'] || normalizedRow.thuqty || "",
           ThuWeight: normalizedRow['THU Weight'] || normalizedRow.thuweight || "",
           ThuWeightUOM: normalizedRow['THU Weight UOM'] || normalizedRow.thuweightuom || "",
-
+ 
           ShuntingOption: normalizedRow['Shunting Option'] || normalizedRow.shuntingoption || "",
           ReplacedWagon: normalizedRow['Replaced Wagon ID'] || normalizedRow.replacedwagonid || "",
           ShuntingReasonCode: normalizedRow['Reason Code'] || normalizedRow.reasoncode || "",
@@ -4355,7 +4359,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           LastProductTransported1: normalizedRow['Last Product Transported 1'] || normalizedRow.lastproducttransported1 || "",
           LastProductTransported2: normalizedRow['Last Product Transported 2'] || normalizedRow.lastproducttransported2 || "",
           LastProductTransported3: normalizedRow['Last Product Transported 3'] || normalizedRow.lastproducttransported3 || "",
-
+ 
           QuickCode1: normalizedRow['Quick Code 1'] || normalizedRow.quickcode1 || "",
           QuickCode2: normalizedRow['Quick Code 2'] || normalizedRow.quickcode2 || "",
           QuickCode3: normalizedRow['Quick Code 3'] || normalizedRow.quickcode3 || "",
@@ -4371,11 +4375,11 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           DGClassDescription: normalizedRow['DG Class Description'] || normalizedRow.dgclassdescription || normalizedRow['DG Class'] || normalizedRow.dgclass || "",
           ContainsHazardousGoods: normalizedRow['Contains Hazardous Goods'] || normalizedRow.containshazardousgoods || "",
           WagonSealNo: normalizedRow['Wagon Seal No.'] || normalizedRow.wagonsealn || normalizedRow.wagonseal || "",
-
+ 
           Remarks1: normalizedRow['Remarks1'] || normalizedRow.remarks1 || "",
           Remarks2: normalizedRow['Remarks2'] || normalizedRow.remarks2 || "",
           Remarks3: normalizedRow['Remarks3'] || normalizedRow.remarks3 || "",
-
+ 
           // Add required system fields
           ModeFlag: 'Insert',
           // isNewRow: true,
