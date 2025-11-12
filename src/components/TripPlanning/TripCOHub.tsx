@@ -467,9 +467,9 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       order: 5
     },
     {
-      key: "LegFromDescription",
+      key: "DepartureLegFrom",
       label: "Leg From",
-      type: "TextPipedData",
+      type: "Text",
       sortable: true,
       editable: false,
       subRow: false,
@@ -485,9 +485,9 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     //   order: 7
     // },
     {
-      key: "LegToDescription",
+      key: "DepartureLegTo",
       label: "Leg To",
-      type: "TextPipedData",
+      type: "Text",
       sortable: true,
       editable: false,
       subRow: false,
@@ -546,7 +546,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       subRow: true,
     },
     {
-      key: "Service",
+      key: "ServiceType",
       label: "Service",
       type: "Text",
       sortable: true,
@@ -554,7 +554,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       subRow: true,
     },
     {
-      key: "ServiceDescription",
+      key: "ServiceTypeDescription",
       label: "Service Description",
       type: "Text",
       sortable: true,
@@ -562,7 +562,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       subRow: true,
     },
     {
-      key: "SubService",
+      key: "SubServiceType",
       label: "Sub service",
       type: "Text",
       sortable: true,
@@ -570,7 +570,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       subRow: true,
     },
     {
-      key: "SubServiceDescription",
+      key: "SubServiceTypeDescription",
       label: "Sub Service Description",
       type: "Text",
       sortable: true,
@@ -1493,7 +1493,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     },
     {
       key: 'IsShowForwardCustomerOrders',
@@ -1502,7 +1502,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     },
     {
       key: 'IsShowReturnCustomerOrders',
@@ -1511,7 +1511,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     }
   ];
 

@@ -1101,7 +1101,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     },
     {
       key: 'IsShowForwardCustomerOrders',
@@ -1110,7 +1110,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     },
     {
       key: 'IsShowReturnCustomerOrders',
@@ -1119,7 +1119,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       options: [
         { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ]
+      ] as any[],
     }
   ];
 
