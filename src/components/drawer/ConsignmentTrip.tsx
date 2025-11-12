@@ -1234,6 +1234,10 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
         searchTerm: searchTerm || '',
         offset,
         limit,
+        searchCriteria: {
+            id: searchTerm,
+            name: searchTerm
+          },
         additionalFilter: [
           {
             FilterName: "ProductId",
@@ -2204,6 +2208,16 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           searchTerm: searchTerm || '',
           offset,
           limit,
+          searchCriteria: {
+            id: searchTerm,
+            name: searchTerm
+          },
+          additionalFilter: [
+            // {
+            //   FilterName: "Uncode",
+            //   FilterValue: unCodeValue
+            // }
+          ]
         });
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
@@ -3482,6 +3496,17 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
           searchTerm: searchTerm || '',
           offset,
           limit,
+          searchCriteria: {
+            id: searchTerm,
+            name: searchTerm
+          },
+          additionalFilter: [
+            // {
+            //   FilterName: "Uncode",
+            //   FilterValue: unCodeValue
+            // }
+          ]
+
         });
         const rr: any = response.data
         return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
