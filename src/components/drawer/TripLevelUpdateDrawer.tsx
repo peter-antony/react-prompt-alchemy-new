@@ -515,9 +515,9 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                       <span className="font-semibold text-sm">
                         {String(index + 1).padStart(2, '0')} - {leg.LegID || `Leg ${index + 1}`}
                       </span>
-                      <Badge variant="outline" className="text-xs">
+                      {/* <Badge variant="outline" className="text-xs">
                         {leg.CustomerOrderDetails?.length || 0}
-                      </Badge>
+                      </Badge> */}
                     </div>
  
                     <div className="space-y-1 text-xs">
@@ -557,7 +557,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold">Customer Order Details</h3>
-                  <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge>
+                  {/* <Badge variant="outline">{selectedLeg.CustomerOrderDetails?.length || 0}</Badge> */}
                 </div>
  
                 <div className="grid grid-cols-3 gap-3">
