@@ -958,10 +958,10 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 bg-white px-6 py-4 flex items-center justify-between">
-        <p className="text-sm text-gray-600">
+      <div className="border-t border-gray-200 bg-white px-6 py-4 flex items-center justify-end">
+        {/* <p className="text-sm text-gray-600">
           Last Modified: Samuel Wilson 10:10:00 AM
-        </p>
+        </p> */}
         <Button
           onClick={handleSave}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
