@@ -145,13 +145,13 @@ export const quickOrderService = {
           FilterName: "TripID",
           FilterValue: params?.TripID,
         }
-       ]: params?.messageType === "Incident Causer Name Init" ? [
+      ]: params?.messageType === "Incident Causer Name Init" ? [
         {
           FilterName: "IncidentCausedBy",
-          FilterValue: "Customer"
+          FilterValue: (params?.IncidentCausedBy || '').split('||')[0]?.trim()
         },
         {
-          FilterName: "tripplanid_trip",
+          FilterName: "tripplanid",
           FilterValue: params?.IncidentTripId,
         }
        ]: params?.messageType === "Trip status Init" ? [

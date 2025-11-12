@@ -273,7 +273,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   const fetchWorkCategory = fetchMasterData("Work Category Init");
   const fetchWorkGroup = fetchMasterData("Work Group Init");
   const fetchIncidentCausedBy = fetchMasterData("Incident Caused By Init");
-  const fetchIncidentCauserName = fetchMasterData("Incident Causer Name Init", { IncidentTripId: tripId });
+  const fetchIncidentCauserName = fetchMasterData("Incident Causer Name Init",{ IncidentTripId: tripId, IncidentCausedBy: (formData.IncidentCausedBy || '').split('||')[0]?.trim(), });
 
   //MoreInfo Details
 
