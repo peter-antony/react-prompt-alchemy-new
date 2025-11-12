@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { manageTripStore } from '@/stores/mangeTripStore';
+import { dateFormatter } from '@/utils/formatter';
 
 interface LinkedTransaction {
   id: string;
@@ -18,6 +19,7 @@ interface LinkedTransaction {
   type: 'buy' | 'sell';
   badge: 'C' | 'S';
   badgeColor: string;
+  InternalOrderNo?:any;
 }
 
 interface LinkedTransactionsDrawerScreenProps {
@@ -111,20 +113,20 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
   const { QuickOrder, TripPlan } = LinkedTransactions;
 
   // 🔵 QuickOrder card (handle first element if array exists)
-  const quickOrder = Array.isArray(QuickOrder) && QuickOrder.length > 0 ? QuickOrder[0] : null;
-  const quickOrderItem = {
+  const quickOrder:any = Array.isArray(QuickOrder) && QuickOrder.length > 0 ? QuickOrder[0] : null;
+  const quickOrderItem:any = {
     id: 'quickorder',
     badge: 'Q',
     badgeColor: 'bg-blue-100 text-blue-600',
     type: quickOrder ? quickOrder.QuickOrderStatus || '-' : 'Not Available',
     transactionId: quickOrder?.QuickOrderNo || '-',
     companyName: quickOrder?.ResourcesGroupID || '-',
-    containerNumber: '-',
+    containerNumber: quickOrder?.InternalOrderNo || '-',
     customerOrderNumber: '-',
     amount: quickOrder?.AmountWithCurrency?.trim() || '0.00 EUR',
     productId: '-',
     date: quickOrder?.FromDate
-      ? new Date(quickOrder.FromDate).toLocaleDateString('en-GB')
+      ? dateFormatter(new Date(quickOrder.FromDate))  + ' to ' + dateFormatter(new Date(quickOrder.ToDate))
       : '-',
   };
 
@@ -142,8 +144,7 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
     amount: 0,
     productId: '-',
     date: tripPlan?.TripDate
-      ? new Date(tripPlan.TripDate).toLocaleDateString('en-GB')
-      : '-',
+      ? dateFormatter(new Date(tripPlan.TripDate)) : '-',
   };
 
   return [quickOrderItem, tripPlanItem];
@@ -221,7 +222,7 @@ export const LinkedTransactionsDrawerScreen: React.FC<LinkedTransactionsDrawerSc
                     <div className="text-xs text-muted-foreground">{transaction.containerNumber}</div>
                   </div>
                 </div>
-                <Badge variant={transaction.type === 'buy' ? 'default' : 'secondary'} className="text-xs">
+                <Badge variant={transaction.type === 'buy' ? 'default' : 'secondary'} className="text-xs rounded-2xl">
                   {transaction.type}
                 </Badge>
               </div>
