@@ -313,7 +313,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
     // );
     if (isEditing) {
       return (
-        <Popover defaultOpen>
+        <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -332,7 +332,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
                   onEdit(rowIndex, column.key, date.toLocaleDateString('en-CA'));
                 }
               }}
-              initialFocus
+              // initialFocus
               className="p-3 pointer-events-auto"
             />
           </PopoverContent>
@@ -528,15 +528,15 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Date renderer
   const renderDate = () => {
-    if (isEditing) {
+    if (isEditable) {
       return (
-        <Popover defaultOpen>
+        <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className="w-full justify-start text-left font-normal h-8 px-2"
             >
-              {tempValue ? dateFormatter(new Date(tempValue)) : <span>Pick a date</span>}
+              {tempValue ? dateFormatter(new Date(tempValue)) : <span>-</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -549,7 +549,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
                   onEdit(rowIndex, column.key, date.toLocaleDateString('en-CA'));
                 }
               }}
-              initialFocus
+              // initialFocus
               className="p-3 pointer-events-auto"
             />
           </PopoverContent>
@@ -567,7 +567,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
           )}
           title={value ? dateFormatter(new Date(value)) : ''}
         >
-          {value ? dateFormatter(new Date(value)) : <span className="text-gray-400">Click to edit</span>}
+          {value ? dateFormatter(new Date(value)) : <span className="text-gray-400">-</span>}
         </div>
       );
     }
@@ -586,7 +586,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
   const renderDateFormat = () => {
     if (isEditing) {
       return (
-        <Popover defaultOpen>
+        <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -611,7 +611,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
                   onEdit(rowIndex, column.key, date.toLocaleDateString('en-CA'));
                 }
               }}
-              initialFocus
+              // initialFocus
               className="p-3 pointer-events-auto"
             />
           </PopoverContent>
@@ -672,7 +672,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       // ensure string and take first 5 chars: "HH:mm" from "HH:mm:ss" or "HH:mm"
       return String(t).slice(0, 5);
     };
-    if (isEditing) {
+    if (isEditable) {
       return (
         <Input
           type="time"

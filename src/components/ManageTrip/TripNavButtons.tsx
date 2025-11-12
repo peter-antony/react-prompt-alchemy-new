@@ -1,4 +1,5 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link } from "react-router-dom";
 
 interface TripNavButtonsProps {
   previousTrips?: { PrevTripNo: string; PrevTripOU?: string }[];
@@ -31,13 +32,14 @@ export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavBu
                 {previousTrips?.map((trip, i) => (
                   <li
                     key={i}
-                    className="text-xs text-gray-800 font-medium border-b last:border-none border-gray-100 pb-1"
+                    className="text-xs text-gray-800 font-medium last:border-none border-gray-100 pb-2"
                   >
-                    
                     {trip?.PrevTripNo && (
-                      <span className="text-[13px] ml-1">
-                        {trip?.PrevTripNo}
-                      </span>
+                      <a className="text-[13px] ml-1 text-blue-600 hover:underline">
+                        <Link to={`/manage-trip?id=${trip?.PrevTripNo}`}>
+                          {trip?.PrevTripNo}
+                        </Link>
+                      </a>
                     )}
                   </li>
                 ))}
@@ -73,13 +75,15 @@ export const TripNavButtons = ({ previousTrips = [], nextTrips = [] }: TripNavBu
                 {nextTrips?.map((trip, i) => (
                   <li
                     key={i}
-                    className="text-xs text-gray-800 font-medium border-b last:border-none border-gray-100 pb-1"
+                    className="text-xs text-gray-800 font-medium last:border-none border-gray-100 pb-2"
                   >
                     {/* {trip.TripNo}{" "} */}
                     {trip?.NextTripNo && (
-                      <span className="text-[13px] ml-1">
-                        {trip?.NextTripNo}
-                      </span>
+                      <a className="text-[13px] ml-1 text-blue-600 hover:underline">
+                        <Link to={`/manage-trip?id=${trip?.NextTripNo}`}>
+                          {trip?.NextTripNo}
+                        </Link>
+                      </a>
                     )}
                   </li>
                 ))}

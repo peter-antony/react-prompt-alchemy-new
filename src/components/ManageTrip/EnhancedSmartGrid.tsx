@@ -212,8 +212,8 @@ export const EnhancedSmartGrid = () => {
     { key: 'PlannedTime', label: 'Planned Time', type: 'Time', width: 160, editable: false },
     { key: 'RevisedDate', label: 'Revised Date', type: 'Date', width: 160, editable: false },
     { key: 'RevisedTime', label: 'Revised Time', type: 'Time', width: 160, editable: false },
-    { key: 'ActualDate', label: 'Actual Date', type: 'Date', width: 160, editable: false },
-    { key: 'ActualTime', label: 'Actual Time', type: 'Time', width: 160, editable: false },
+    { key: 'ActualDate', label: 'Actual Date', type: 'Date', width: 160, editable: true },
+    { key: 'ActualTime', label: 'Actual Time', type: 'Time', width: 160, editable: true },
     { key: 'DelayedIn', label: 'Delay', type: 'Text', width: 180, editable: false },
   ];
 
