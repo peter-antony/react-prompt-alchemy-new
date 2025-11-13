@@ -26,6 +26,7 @@ interface TripState {
   updateLeg?: (legId: string, updates: Partial<LegDetail>) => void;
   removeLeg?: (legId: string) => void;
   updateActivity?: (legIndex: number, activityIndex: number, updates: Partial<LegActivity>) => void;
+  updateAdditionalActivity?: (legIndex: number, additionalActivityIndex: number, updates: any) => void;
   addIncident?: (incident: Incident) => void;
   updateIncident?: (incidentId: string, updates: Partial<Incident>) => void;
   removeIncident?: (incidentId: string) => void;
@@ -120,6 +121,55 @@ export const manageTripStore = create<TripState>((set, get) => ({
       };
 
       leg.Activities = activities;
+      legDetails[legIndex] = leg;
+
+      return {
+        tripData: {
+          ...state.tripData,
+          LegDetails: legDetails,
+        },
+      };
+    });
+  },
+
+  // Update AdditionalActivity based on LegDetails index and AdditionalActivity index
+  updateAdditionalActivity: (legIndex: number, additionalActivityIndex: number, updates: any) => {
+    set((state) => {
+      if (!state.tripData?.LegDetails) {
+        console.warn("No LegDetails found in tripData");
+        return state;
+      }
+
+      const legDetails = [...state.tripData.LegDetails];
+      
+      // Validate legIndex
+      if (legIndex < 0 || legIndex >= legDetails.length) {
+        console.warn(`Invalid legIndex: ${legIndex}. LegDetails length: ${legDetails.length}`);
+        return state;
+      }
+
+      const leg = { ...legDetails[legIndex] };
+      
+      // Ensure AdditionalActivities array exists
+      if (!leg.AdditionalActivities) {
+        leg.AdditionalActivities = [];
+      }
+
+      // Validate additionalActivityIndex
+      if (additionalActivityIndex < 0 || additionalActivityIndex >= leg.AdditionalActivities.length) {
+        console.warn(`Invalid additionalActivityIndex: ${additionalActivityIndex}. AdditionalActivities length: ${leg.AdditionalActivities.length}`);
+        return state;
+      }
+
+      // Update the specific additional activity
+      const additionalActivities = Array.isArray(leg.AdditionalActivities) ? [...leg.AdditionalActivities] : [];
+      additionalActivities[additionalActivityIndex] = {
+        ...additionalActivities[additionalActivityIndex],
+        ...updates,
+        ModeFlag: updates.ModeFlag || "Update" as ModeFlag, // Set ModeFlag to Update if not specified
+      };
+
+      leg.AdditionalActivities = additionalActivities;
       legDetails[legIndex] = leg;
 
       return {

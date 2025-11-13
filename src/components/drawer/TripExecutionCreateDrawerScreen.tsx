@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp, Plus, NotebookPen, CalendarIcon, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,15 +16,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useTripExecutionDrawerStore } from '@/stores/tripExecutionDrawerStore';
 import { toast } from 'sonner';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { quickOrderService } from '@/api/services/quickOrderService';
-import { manageTripStore } from '@/stores/mangeTripStore';
 import { ConsignmentTrip } from './ConsignmentTrip';
 import { tripService } from "@/api/services/tripService";
 import { useToast } from '@/hooks/use-toast';
+import { TripData, LegDetail } from '@/types/manageTripTypes';
 import CommonPopup from '@/components/Common/CommonPopup';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -113,16 +112,35 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [currentEventFormIndex, setCurrentEventFormIndex] = useState<number>(-1);
   const [showEventsForm, setShowEventsForm] = useState(false);
 
-  // Zustand store
-  const { legs, selectedLegId, selectLeg, getSelectedLeg, addLeg, removeLeg, loadLegsFromAPI } = useTripExecutionDrawerStore();
   const { toast } = useToast();
-  // State to track form data changes
-  const [formDataState, setFormDataState] = useState<any>({});
-  const [activitiesFormData, setActivitiesFormData] = useState<any[]>([]);
   
-  // State to track additional activities form data
-  const [additionalFormDataState, setAdditionalFormDataState] = useState<any>({});
-  const [additionalActivitiesFormData, setAdditionalActivitiesFormData] = useState<any[]>([]);
+  // Direct API data state - no store dependencies
+  const [tripData, setTripData] = useState<TripData | null>(null);
+  const [legs, setLegs] = useState<LegDetail[]>([]);
+  const [selectedLegId, setSelectedLegId] = useState<string | null>(null);
+  const [isLoadingTrip, setIsLoadingTrip] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true so forms can render
+  
+  // Refs for Activities forms - one ref per activity
+  const activitiesRefs = useRef<Map<string, React.RefObject<DynamicPanelRef>>>(new Map());
+  // Refs for AdditionalActivities forms - one ref per additional activity
+  const additionalActivitiesRefs = useRef<Map<string, React.RefObject<DynamicPanelRef>>>(new Map());
+  
+  // Helper to get or create ref for an activity
+  const getActivityRef = (activityId: string): React.RefObject<DynamicPanelRef> => {
+    if (!activitiesRefs.current.has(activityId)) {
+      activitiesRefs.current.set(activityId, React.createRef<DynamicPanelRef>());
+    }
+    return activitiesRefs.current.get(activityId)!;
+  };
+  
+  // Helper to get or create ref for an additional activity
+  const getAdditionalActivityRef = (activityId: string): React.RefObject<DynamicPanelRef> => {
+    if (!additionalActivitiesRefs.current.has(activityId)) {
+      additionalActivitiesRefs.current.set(activityId, React.createRef<DynamicPanelRef>());
+    }
+    return additionalActivitiesRefs.current.get(activityId)!;
+  };
 
   // Date formatting utility function
   const formatDateToDDMMYYYY = (dateString: string | null | undefined): string => {
@@ -214,89 +232,6 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
   };
 
-  // Helper: parse combined date and time into a Date object
-  const parseDateTime = (
-    dateString?: string | null,
-    timeString?: string | null
-  ): Date | null => {
-    if (!dateString || !timeString) return null;
-    try {
-      let date: Date;
-      if (dateString.includes('-') && dateString.length === 10) {
-        // YYYY-MM-DD
-        date = new Date(dateString);
-      } else if (dateString.includes('/')) {
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-          // DD/MM/YYYY
-          date = new Date(
-            parseInt(parts[2], 10),
-            parseInt(parts[1], 10) - 1,
-            parseInt(parts[0], 10)
-          );
-        } else {
-          date = new Date(dateString);
-        }
-      } else {
-        date = new Date(dateString);
-      }
-
-      if (isNaN(date.getTime())) return null;
-
-      let hours = 0,
-        minutes = 0,
-        seconds = 0;
-      if (timeString.includes(':')) {
-        const tParts = timeString.split(':');
-        if (tParts.length >= 2) {
-          hours = parseInt(tParts[0], 10);
-          minutes = parseInt(tParts[1], 10);
-          seconds = tParts.length >= 3 ? parseInt(tParts[2], 10) : 0;
-        } else {
-          const dt = new Date(`1970-01-01T${timeString}`);
-          if (!isNaN(dt.getTime())) {
-            hours = dt.getHours();
-            minutes = dt.getMinutes();
-            seconds = dt.getSeconds();
-          }
-        }
-      } else {
-        const dt = new Date(`1970-01-01T${timeString}`);
-        if (!isNaN(dt.getTime())) {
-          hours = dt.getHours();
-          minutes = dt.getMinutes();
-          seconds = dt.getSeconds();
-        }
-      }
-      date.setHours(hours, minutes, seconds, 0);
-      return date;
-    } catch {
-      return null;
-    }
-  };
-
-  // Helper: format millisecond diff into "DD Days HH Hours MM Mins"
-  const formatDelay = (diffMs: number): string => {
-    const totalMinutes = Math.round(Math.abs(diffMs) / 60000);
-    const days = Math.floor(totalMinutes / (60 * 24));
-    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-    const minutes = totalMinutes % 60;
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${pad(days)} Days ${pad(hours)} Hours ${pad(minutes)} Mins`;
-  };
-
-  // Helper: calculate delayed time based on planned/revised vs actual
-  const getDelayedTime = (activity: any): string => {
-    const actual = parseDateTime(activity?.ActualDate, activity?.ActualTime);
-    const revised = parseDateTime(activity?.RevisedDate, activity?.RevisedTime);
-    const planned = parseDateTime(activity?.PlannedDate, activity?.PlannedTime);
-    if (!actual) return '';
-    const target = revised ?? planned;
-    if (!target) return '';
-    const diff = target.getTime() - actual.getTime();
-    return formatDelay(diff);
-  };
-
   // Helper function to transform QuickCode objects to separate fields
   const transformQuickCodeFields = (formData: any, currentActivity: any) => {
     const transformQuickCode = (quickCodeField: string, quickCodeValueField: string) => {
@@ -347,1145 +282,401 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     return value.trim();
   };
   
-  // Load legs from API on component mount
-  useEffect(() => {
-    loadLegsFromAPI();
-  }, [loadLegsFromAPI]);
-
-  // Auto-bind first leg data when legs are loaded
-  useEffect(() => {
-    setLoading(false);
-    if (legs.length > 0 && selectedLegId && tripExecutionRef?.current?.setFormValues) {
-      console.log("load tripExecutionRef ====");
-      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
-      if (selectedLegData) {
-        console.log("Auto-binding first leg data on load:", selectedLegData);
-        
-        const rawActivitiesData = selectedLegData.activities || [];
-        const formattedActivities = formatActivitiesForForm(rawActivitiesData);
-        const consignmentsData = selectedLegData.consignments || [];
-
-        // Prepare additional activities data for form binding
-        const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
-        const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
-        
-        const formData = {
-          // Basic leg information
-          legSequence: selectedLegData.id,
-          from: selectedLegData.from,
-          to: selectedLegData.to,
-          distance: selectedLegData.distance,
-          duration: selectedLegData.duration,
-          
-          // Activities array - this is the key data we want to bind
-          activities: formattedActivities,
-          
-          // Individual activity fields for easier form access
-          ...(formattedActivities.length > 0 && {
-            firstActivity: formattedActivities[0],
-            lastActivity: formattedActivities[formattedActivities.length - 1],
-            activityCount: formattedActivities.length,
-            
-            // Bind first activity fields directly for easy access
-            ActivitySeqNo: formattedActivities[0].SeqNo,
-            ActivityName: formattedActivities[0].Activity,
-            ActivityDescription: formattedActivities[0].ActivityDescription,
-            CustomerName: formattedActivities[0].CustomerName,
-            CustomerID: formattedActivities[0].CustomerID,
-            PlannedDate: formattedActivities[0].PlannedDate,
-            PlannedTime: formattedActivities[0].PlannedTime,
-            CustomerOrder: formattedActivities[0].CustomerOrder,
-            EventProfile: formattedActivities[0].EventProfile,
-            RevisedDate: formattedActivities[0].RevisedDate,
-            RevisedTime: formattedActivities[0].RevisedTime,
-            ActualDate: formattedActivities[0].ActualDate,
-            ActualTime: formattedActivities[0].ActualTime,
-            DelayedIn: formattedActivities[0].DelayedIn,
-            // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
-            // Keep the full format (id||name) for dropdown to ensure proper matching and display
-            QuickCode1: formattedActivities[0].QuickCode1 ? {
-              dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
-                ? formattedActivities[0].QuickCode1 
-                : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
-              input: formattedActivities[0].QuickCodeValue1 || ''
-            } : { dropdown: '', input: '' },
-            QuickCode2: formattedActivities[0].QuickCode2 ? {
-              dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
-                ? formattedActivities[0].QuickCode2 
-                : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
-              input: formattedActivities[0].QuickCodeValue2 || ''
-            } : { dropdown: '', input: '' },
-            QuickCode3: formattedActivities[0].QuickCode3 ? {
-              dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
-                ? formattedActivities[0].QuickCode3 
-                : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
-              input: formattedActivities[0].QuickCodeValue3 || ''
-            } : { dropdown: '', input: '' },
-            Remarks1: formattedActivities[0].Remarks1,
-            Remarks2: formattedActivities[0].Remarks2,
-            Remarks3: formattedActivities[0].Remarks3,
-            ReasonForChanges: formattedActivities[0].ReasonForChanges,
-            DelayedReason: formattedActivities[0].DelayedReason,
-            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-            AmendmentNo: formattedActivities[0].AmendmentNo,
-          }),
-          
-          // Consignments data
-          consignments: consignmentsData,
-          
-          // Additional leg metadata
-          hasInfo: selectedLegData.hasInfo,
-          transshipments: selectedLegData.transshipments || []
-        };
-        console.log("formData ====", formData);
-        console.log("formData ====", tripExecutionRef.current.setFormValues);
-        tripExecutionRef.current.setFormValues(formData);
-        // Create additional activities form data
-        const additionalFormData = {
-          // Basic leg information
-          legSequence: selectedLegData.id,
-          from: selectedLegData.from,
-          to: selectedLegData.to,
-          distance: selectedLegData.distance,
-          duration: selectedLegData.duration,
-          
-          // Additional activities array - this is the key data we want to bind
-          additionalActivities: formattedAdditionalActivities,
-          
-          // Individual additional activity fields for easier form access
-          ...(formattedAdditionalActivities.length > 0 && {
-            firstAdditionalActivity: formattedAdditionalActivities[0],
-            lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
-            additionalActivityCount: formattedAdditionalActivities.length,
-            
-            // Bind first additional activity fields directly for easy access
-            Sequence: formattedAdditionalActivities[0].Sequence,
-            Category: formattedAdditionalActivities[0].Category,
-            ActivityName: formattedAdditionalActivities[0].Activity,
-            ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
-            ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
-            FromLocation: formattedAdditionalActivities[0].FromLocation,
-            ToLocation: formattedAdditionalActivities[0].ToLocation,
-            Activity: formattedAdditionalActivities[0].Activity,
-            RevisedDate: formattedAdditionalActivities[0].RevisedDate,
-            ActualDate: formattedAdditionalActivities[0].ActualDate
-          }),
-          
-          // Consignments data
-          consignments: consignmentsData,
-          
-          // Additional leg metadata
-          hasInfo: selectedLegData.hasInfo,
-          transshipments: selectedLegData.transshipments || []
-        };
-        console.log("Form data to additionalFormData:", additionalFormData);
-        if (tripAdditionalRef?.current?.setFormValues) {
-          tripAdditionalRef.current.setFormValues(additionalFormData);
-        }
-        console.log("First leg data auto-bound to form fields");
-        setLoading(true);
-      }
+  // Fetch trip data directly from API
+  const fetchTripData = useCallback(async () => {
+    if (!tripId) {
+      console.warn('No tripId provided to TripExecutionCreateDrawerScreen');
+      return;
     }
-  }, [legs, selectedLegId, tripExecutionRef]);
-
-  // Handle selected leg changes and bind data to form fields
-  useEffect(() => {
-    setLoading(false);
-    if (selectedLegId && legs.length > 0) {
-      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
-      if (selectedLegData) {
-        console.log("Selected leg changed, binding data:", selectedLegData);
-        
-        // Prepare activities data for form binding
-        const rawActivitiesData = selectedLegData.activities || [];
-        const formattedActivities = formatActivitiesForForm(rawActivitiesData);
-        const consignmentsData = selectedLegData.consignments || [];
-        
-        // Prepare additional activities data for form binding
-        const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
-        const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
-        
-        // Create form data object with activities array
-        const formData = {
-          // Basic leg information
-          legSequence: selectedLegData.id,
-          from: selectedLegData.from,
-          to: selectedLegData.to,
-          distance: selectedLegData.distance,
-          duration: selectedLegData.duration,
-          
-          // Activities array - this is the key data we want to bind
-          activities: formattedActivities,
-          
-          // Individual activity fields for easier form access
-          ...(formattedActivities.length > 0 && {
-            firstActivity: formattedActivities[0],
-            lastActivity: formattedActivities[formattedActivities.length - 1],
-            activityCount: formattedActivities.length,
-            
-            // Bind first activity fields directly for easy access
-            ActivitySeqNo: formattedActivities[0].SeqNo,
-            ActivityName: formattedActivities[0].Activity,
-            ActivityDescription: formattedActivities[0].ActivityDescription,
-            CustomerName: formattedActivities[0].CustomerName,
-            CustomerID: formattedActivities[0].CustomerID,
-            PlannedDate: formattedActivities[0].PlannedDate,
-            PlannedTime: formattedActivities[0].PlannedTime,
-            CustomerOrder: formattedActivities[0].CustomerOrder,
-            EventProfile: formattedActivities[0].EventProfile,
-            RevisedDate: formattedActivities[0].RevisedDate,
-            RevisedTime: formattedActivities[0].RevisedTime,
-            ActualDate: formattedActivities[0].ActualDate,
-            ActualTime: formattedActivities[0].ActualTime,
-            DelayedIn: formattedActivities[0].DelayedIn,
-            // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
-            // Keep the full format (id||name) for dropdown to ensure proper matching and display
-            QuickCode1: formattedActivities[0].QuickCode1 ? {
-              dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
-                ? formattedActivities[0].QuickCode1 
-                : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
-              input: formattedActivities[0].QuickCodeValue1 || ''
-            } : { dropdown: '', input: '' },
-            QuickCode2: formattedActivities[0].QuickCode2 ? {
-              dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
-                ? formattedActivities[0].QuickCode2 
-                : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
-              input: formattedActivities[0].QuickCodeValue2 || ''
-            } : { dropdown: '', input: '' },
-            QuickCode3: formattedActivities[0].QuickCode3 ? {
-              dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
-                ? formattedActivities[0].QuickCode3 
-                : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
-              input: formattedActivities[0].QuickCodeValue3 || ''
-            } : { dropdown: '', input: '' },
-            Remarks1: formattedActivities[0].Remarks1,
-            Remarks2: formattedActivities[0].Remarks2,
-            Remarks3: formattedActivities[0].Remarks3,
-            ReasonForChanges: formattedActivities[0].ReasonForChanges,
-            DelayedReason: formattedActivities[0].DelayedReason,
-            LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-            // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-            LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-            LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-            AmendmentNo: formattedActivities[0].AmendmentNo,
-          }),
-          
-          // Consignments data
-          consignments: consignmentsData,
-          
-          // Additional leg metadata
-          hasInfo: selectedLegData.hasInfo,
-          transshipments: selectedLegData.transshipments || []
-        };
-        console.log("formData -----", formData.activities[0]);
-        // Make sure to bind the entire formData, not just the first activity, 
-        // so the Activities panel gets all fields it expects.
-        // The DynamicPanel usually expects a full set of fields, not just a partial activity object.
-        if (tripExecutionRef?.current?.setFormValues) {
-          tripExecutionRef.current.setFormValues(formData);
-        }
-        console.log("tripExecutionRef?.current?.setFormValues ", tripExecutionRef?.current?.setFormValues);
-        // if (tripExecutionRef?.current?.setFormValues) {
-        tripExecutionRef?.current?.setFormValues(formData.activities[0]);
-        console.log("Data automatically bound to tripExecutionRef on leg change");
-        // }
-
-        const additionalFormData = {
-          // Basic leg information
-          legSequence: selectedLegData.id,
-          from: selectedLegData.from,
-          to: selectedLegData.to,
-          distance: selectedLegData.distance,
-          duration: selectedLegData.duration,
-          
-          // Additional activities array - this is the key data we want to bind
-          additionalActivities: formattedAdditionalActivities,
-          
-          // Individual additional activity fields for easier form access
-          ...(formattedAdditionalActivities.length > 0 && {
-            firstAdditionalActivity: formattedAdditionalActivities[0],
-            lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
-            additionalActivityCount: formattedAdditionalActivities.length,
-            
-            // Bind first additional activity fields directly for easy access
-            Sequence: formattedAdditionalActivities[0].Sequence,
-            Category: formattedAdditionalActivities[0].Category,
-            ActivityName: formattedAdditionalActivities[0].Activity,
-            ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
-            ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
-            FromLocation: formattedAdditionalActivities[0].FromLocation,
-            ToLocation: formattedAdditionalActivities[0].ToLocation,
-            Activity: formattedAdditionalActivities[0].Activity,
-            RevisedDate: formattedAdditionalActivities[0].RevisedDate,
-            ActualDate: formattedAdditionalActivities[0].ActualDate
-          }),
-          
-          // Consignments data
-          consignments: consignmentsData,
-          
-          // Additional leg metadata
-          hasInfo: selectedLegData.hasInfo,
-          transshipments: selectedLegData.transshipments || []
-        };
-        console.log("Form data to additionalFormData:", additionalFormData);
-        // Bind data to tripExecutionRef (Activities panel)
-        if (tripExecutionRef?.current?.setFormValues) {
-          tripExecutionRef.current.setFormValues(formData.activities[0]);
-          console.log("Data automatically bound to tripExecutionRef on leg change");
-        }
-        
-        // Bind data to tripAdditionalRef (Additional Activities panel)
-        if (tripAdditionalRef?.current?.setFormValues) {
-          tripAdditionalRef.current.setFormValues(additionalFormData);
-          // tripAdditionalRef.current.setFormValues({
-          //   ...formData,
-          //   // Additional specific data for additional activities panel
-          //   additionalActivities: formattedActivities.filter(activity => 
-          //     activity.category === 'Additional' || activity.subCategory === 'Additional'
-          //   )
-          // });
-          console.log("Data automatically bound to tripAdditionalRef on leg change");
-        }
-        setLoading(true);
-      }
-    }
-  }, [selectedLegId, legs, tripExecutionRef, tripAdditionalRef]);
-
-  // Helper function to update activities in the store
-  const updateActivitiesInStore = (legId: string, updatedActivities: any[]) => {
+    
+    setIsLoadingTrip(true);
+    // Don't set loading to false - keep forms renderable
     try {
-      // Update the activities in the store
-      const updatedLegs = legs.map(leg => 
-        leg.id === legId 
-          ? { ...leg, activities: updatedActivities }
-          : leg
-      );
+      console.log('Fetching trip data for tripId:', tripId);
+      // Use getTripById API - note: it expects { id: tripId }
+      const response: any = await tripService.getTripById({ id: tripId });
       
-      // You can add a method to update the store here
-      // For now, we'll just log the updated data
-      console.log("Updated legs with new activities:", updatedLegs);
+      console.log('API Response:', response);
+      console.log('Response structure:', {
+        hasData: !!response?.data,
+        hasResponseData: !!response?.data?.ResponseData,
+        responseKeys: response?.data ? Object.keys(response.data) : [],
+        fullResponse: response
+      });
       
-      return updatedLegs;
+      let parsedResponse: any = null;
+      
+      // Try different response structures
+      if (response?.data?.ResponseData) {
+        try {
+          parsedResponse = JSON.parse(response.data.ResponseData);
+        } catch (e) {
+          console.warn('Failed to parse ResponseData as JSON, trying as object:', e);
+          parsedResponse = response.data.ResponseData;
+        }
+      } else if (response?.ResponseData) {
+        try {
+          parsedResponse = JSON.parse(response.ResponseData);
+        } catch (e) {
+          parsedResponse = response.ResponseData;
+        }
+      } else if (response?.data) {
+        parsedResponse = response.data;
+      } else if (Array.isArray(response)) {
+        parsedResponse = response;
+      } else {
+        parsedResponse = response;
+      }
+      
+      console.log('Parsed Response:', parsedResponse);
+      
+      // Handle array response - get the first object
+      const trip = Array.isArray(parsedResponse) ? parsedResponse[0] : parsedResponse;
+      console.log('Trip data:', trip);
+      console.log('Trip LegDetails:', trip?.LegDetails);
+      
+      if (!trip) {
+        console.warn('No trip data found in response');
+        setLoading(false);
+        toast({
+          title: "Warning",
+          description: "No trip data found in response",
+          variant: "default",
+        });
+        return;
+      }
+      
+      // Ensure LegDetails is an array
+      const formattedTripData: TripData = {
+        Header: trip?.Header || {},
+        LegDetails: Array.isArray(trip?.LegDetails) ? trip.LegDetails : (trip?.LegDetails ? [trip.LegDetails] : []),
+        CustomerOrders: trip?.CustomerOrders || [],
+        ResourceDetails: trip?.ResourceDetails || [],
+      };
+      
+      console.log('Formatted Trip Data:', formattedTripData);
+      console.log('LegDetails count:', formattedTripData.LegDetails?.length);
+      console.log('First leg:', formattedTripData.LegDetails?.[0]);
+      console.log('First leg Activities:', formattedTripData.LegDetails?.[0]?.Activities);
+      console.log('First leg AdditionalActivities:', formattedTripData.LegDetails?.[0]?.AdditionalActivities);
+      
+      setTripData(formattedTripData);
+      setLegs(formattedTripData.LegDetails || []);
+      
+      // Auto-select first leg if available
+      if (formattedTripData.LegDetails && formattedTripData.LegDetails.length > 0) {
+        const firstLegSequence = formattedTripData.LegDetails[0].LegSequence;
+        console.log('Auto-selecting first leg:', firstLegSequence);
+        setSelectedLegId(firstLegSequence || null);
+      } else {
+        console.warn('No LegDetails found in trip data');
+        setLoading(false); // Only set to false if no data
+      }
+      
+      // Keep loading as true so forms can render
     } catch (error) {
-      console.error("Error updating activities in store:", error);
-      return null;
+      console.error('Error fetching trip data:', error);
+      toast({
+        title: "Error",
+        description: `Failed to load trip data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingTrip(false);
     }
-  };
+  }, [tripId, toast]);
+  
+  // Fetch trip data directly from API on component mount
+  useEffect(() => {
+    if (tripId) {
+      fetchTripData();
+    }
+  }, [tripId, fetchTripData]);
+  
+  // Get selected leg from legs array
+  const selectedLeg = legs.find(leg => leg.LegSequence === selectedLegId) || null;
 
-  const { getLegDetails, tripData, setTrip } = manageTripStore();
+  // Bind activity data to forms when selected leg changes
+  useEffect(() => {
+    if (!selectedLeg || !loading) {
+      console.log('Skipping form binding - selectedLeg:', selectedLeg, 'loading:', loading);
+      return;
+    }
     
+    console.log('Binding data for selected leg:', selectedLeg);
+    console.log('Activities:', selectedLeg.Activities);
+    console.log('AdditionalActivities:', selectedLeg.AdditionalActivities);
+    
+    // Small delay to ensure refs are ready after render
+    const timer = setTimeout(() => {
+      // Bind Activities data to their respective forms
+      if (selectedLeg.Activities && Array.isArray(selectedLeg.Activities)) {
+        selectedLeg.Activities.forEach((activity: any, index) => {
+          const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
+          const activityRef = getActivityRef(activityId);
+          const formattedActivity = formatActivitiesForForm([activity])[0];
+          
+          // Format data for DynamicPanel
+          const formData = {
+            ...formattedActivity,
+            // Format QuickCode fields for inputdropdown
+            QuickCode1: formattedActivity.QuickCode1 ? {
+              dropdown: typeof formattedActivity.QuickCode1 === 'string' 
+                ? formattedActivity.QuickCode1 
+                : (formattedActivity.QuickCode1?.dropdown || extractQuickCodeId(formattedActivity.QuickCode1)),
+              input: formattedActivity.QuickCodeValue1 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode2: formattedActivity.QuickCode2 ? {
+              dropdown: typeof formattedActivity.QuickCode2 === 'string' 
+                ? formattedActivity.QuickCode2 
+                : (formattedActivity.QuickCode2?.dropdown || extractQuickCodeId(formattedActivity.QuickCode2)),
+              input: formattedActivity.QuickCodeValue2 || ''
+            } : { dropdown: '', input: '' },
+            QuickCode3: formattedActivity.QuickCode3 ? {
+              dropdown: typeof formattedActivity.QuickCode3 === 'string' 
+                ? formattedActivity.QuickCode3 
+                : (formattedActivity.QuickCode3?.dropdown || extractQuickCodeId(formattedActivity.QuickCode3)),
+              input: formattedActivity.QuickCodeValue3 || ''
+            } : { dropdown: '', input: '' },
+            LastIdentifiedLocation: formattedActivity.LastIdentifiedLocation 
+              ? `${formattedActivity.LastIdentifiedLocation}||${formattedActivity.LastIdentifiedLocationDescription || ''}`
+              : '',
+          };
+          
+          if (activityRef?.current?.setFormValues) {
+            console.log(`Binding activity ${activityId} to form`);
+            activityRef.current.setFormValues(formData);
+          } else {
+            console.warn(`Activity ref ${activityId} not ready`);
+          }
+        });
+      }
+      
+      // Bind AdditionalActivities data to their respective forms
+      if (selectedLeg.AdditionalActivities && Array.isArray(selectedLeg.AdditionalActivities)) {
+        selectedLeg.AdditionalActivities.forEach((additionalActivity: any, index) => {
+          const activityId = `additional-activity-${selectedLeg.LegSequence}-${additionalActivity.Sequence || index}`;
+          const additionalActivityRef = getAdditionalActivityRef(activityId);
+          const formattedAdditionalActivity = formatAdditionalActivitiesForForm([additionalActivity])[0];
+          
+          if (additionalActivityRef?.current?.setFormValues) {
+            console.log(`Binding additional activity ${activityId} to form`);
+            additionalActivityRef.current.setFormValues(formattedAdditionalActivity);
+          } else {
+            console.warn(`Additional activity ref ${activityId} not ready`);
+          }
+        });
+      }
+      
+      setResetKey(prev => prev + 1);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [selectedLeg, loading]);
+
+
+    
+  // Save all activities and additional activities
   const onSaveActivities = async () => {
-    console.log("Saving activities");
+    if (!selectedLeg || !tripData) {
+      toast({
+        title: "Error",
+        description: "No leg or trip data available",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // try {
-      // Get the selected leg data
-      const selectedLegData = legs.find(leg => leg.id === selectedLegId);
-      if (!selectedLegData) {
-        console.warn("No selected leg found");
-        // toast.error('No leg selected');
-        return null;
-      }
-      
-      console.log("Selected leg data:", selectedLegData);
-      
-      // Get the full getLegDetails() data from manageTripStore
-      const fullLegDetails = getLegDetails();
-      console.log("Full getLegDetails() data:", fullLegDetails);
-      
-      // Find the leg in the full data by matching the selectedLegData.id
-      const legIndex = fullLegDetails.findIndex((leg: any) => leg.LegSequence === selectedLegData.id);
-      if (legIndex === -1) {
-        console.warn("Leg not found in getLegDetails() data");
-        // toast.error('Leg not found in trip data');
-        return null;
-      }
-      
-      console.log("Found leg at index:", legIndex, "in getLegDetails() data");
-      
-      // Get form data from tripExecutionRef
-      let formData = null;
-      
-      if (tripExecutionRef?.current?.getFormValues) {
-        try {
-          formData = tripExecutionRef.current.getFormValues();
-          console.log("Form data from tripExecutionRef:", formData);
-        } catch (error) {
-          console.warn("tripExecutionRef.getFormValues() failed:", error);
-        }
-      }
-      
-      // Fallback to state-based form data
-      if (!formData || Object.keys(formData).length === 0) {
-        formData = formDataState;
-        console.log("Using state-based form data:", formData);
-      }
-      
-      if (!formData) {
-        console.warn("No form data available");
-        // toast.error('No form data available');
-        return null;
-      }
-      
-      // Get the sequence number from form data
-      const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
-      console.log("Sequence number from form:", sequenceNumber);
-      
-      // Get the current leg's activities
-      const currentLeg = fullLegDetails[legIndex];
-      const currentActivities = currentLeg.Activities || [];
-      console.log("Current activities in leg:", currentActivities);
-      
-      // Find the activity by sequence number
-      const activityIndex = currentActivities.findIndex((activity: any) => 
-        activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
+    try {
+      // Find the leg index in tripData
+      const legIndex = tripData.LegDetails?.findIndex(
+        (leg: any) => leg.LegSequence === selectedLeg.LegSequence
       );
       
-      if (activityIndex === -1) {
-        console.warn(`Activity with sequence number ${sequenceNumber} not found`);
-        // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
-        return null;
+      if (legIndex === -1 || legIndex === undefined) {
+        toast({
+          title: "Error",
+          description: "Leg not found in trip data",
+          variant: "destructive",
+        });
+        return;
       }
-
-      console.log("formData ==========================", formData);
       
-      // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
-      let LastIdentifiedLocationValue = '';
-      let LastIdentifiedLocationLabel = '';
-
-      if (typeof formData.LastIdentifiedLocation === 'string' && formData.LastIdentifiedLocation.includes('||')) {
-        // If activityName is a string with '||', split it into value and label
-        const [value, ...labelParts] = formData.LastIdentifiedLocation.split('||');
-        LastIdentifiedLocationValue = value.trim();
-        LastIdentifiedLocationLabel = labelParts.join('||').trim();
-      } else if (typeof formData.LastIdentifiedLocation === 'string') {
-        LastIdentifiedLocationValue = formData.LastIdentifiedLocation;
-        LastIdentifiedLocationLabel = formData.LastIdentifiedLocation;
-      } else if (typeof formData.LastIdentifiedLocation === 'object' && formData.LastIdentifiedLocation !== null) {
-        // In case it's already an object (from dropdown)
-        const splitData = splitDropdowns(formData.LastIdentifiedLocation);
-        LastIdentifiedLocationValue = splitData.value || '';
-        LastIdentifiedLocationLabel = splitData.label || '';
-      }
-
-      // Fallback if label is empty, just use value
-      if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
+      const updatedLegDetails = [...(tripData.LegDetails || [])];
+      const currentLeg = updatedLegDetails[legIndex];
       
-      console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
-      
-      // Create updated activity with form data
-      const currentActivity = currentActivities[activityIndex] as any;
-      const updatedActivity = {
-        ...currentActivity,
-        // Update with form data
-        Activity: formData.ActivityName || currentActivity.Activity,
-        ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
-        CustomerID: formData.CustomerID || currentActivity.CustomerID,
-        CustomerName: formData.CustomerName || currentActivity.CustomerName,
-        ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
-        CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
-        PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
-        PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
-        RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
-        RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
-        ActualDate: formData.ActualDate || currentActivity['ActualDate'],
-        ActualTime: formData.ActualTime || currentActivity['ActualTime'],
-        DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
-        // Transform QuickCode objects to separate fields using helper function
-        ...transformQuickCodeFields(formData, currentActivity),
-        Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
-        Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
-        Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
-        EventProfile: formData.EventProfile || currentActivity['EventProfile'],
-        ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
-        DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
-        LastIdentifiedLocation: LastIdentifiedLocationValue || currentActivity['LastIdentifiedLocation'],
-        LastIdentifiedLocationDescription: LastIdentifiedLocationLabel || currentActivity['LastIdentifiedLocationDescription'],
-        // LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
-        // LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
-        LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
-        LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
-        AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
-        ModeFlag: 'Update'
-        // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
-      };
-      
-      console.log("Updated activity:", updatedActivity);
-      
-      // Update the activity in the full leg details
-      const updatedLegDetails = [...fullLegDetails];
-      updatedLegDetails[legIndex] = {
-        ...updatedLegDetails[legIndex],
-        Activities: [
-          ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
-          updatedActivity,
-          ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
-        ]
-      };
-      
-      console.log("Updated leg details:", updatedLegDetails[legIndex]);
-      console.log("Updated activities array:", updatedLegDetails[legIndex].Activities);
-      
-      // Handle Additional Activities if tripAdditionalRef is available
-      let updatedAdditionalActivity = null;
-      if (tripAdditionalRef?.current?.getFormValues) {
-        try {
-          // Get additional activities form data from tripAdditionalRef
-          let additionalFormData = null;
-          
-          if (tripAdditionalRef?.current?.getFormValues) {
-            try {
-              additionalFormData = tripAdditionalRef.current.getFormValues();
-              console.log("Additional activities form data from tripAdditionalRef:", additionalFormData);
-            } catch (error) {
-              console.warn("tripAdditionalRef.getFormValues() failed:", error);
+      // Collect all updated Activities from their respective forms
+      const updatedActivities = (selectedLeg.Activities || []).map((activity: any, index) => {
+        const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
+        const activityRef = getActivityRef(activityId);
+        
+        if (activityRef?.current?.getFormValues) {
+          try {
+            const formData = activityRef.current.getFormValues();
+            
+            // Parse LastIdentifiedLocation
+            let LastIdentifiedLocationValue = '';
+            let LastIdentifiedLocationLabel = '';
+            if (typeof formData.LastIdentifiedLocation === 'string' && formData.LastIdentifiedLocation.includes('||')) {
+              const [value, ...labelParts] = formData.LastIdentifiedLocation.split('||');
+              LastIdentifiedLocationValue = value.trim();
+              LastIdentifiedLocationLabel = labelParts.join('||').trim();
+            } else if (typeof formData.LastIdentifiedLocation === 'string') {
+              LastIdentifiedLocationValue = formData.LastIdentifiedLocation;
+              LastIdentifiedLocationLabel = formData.LastIdentifiedLocation;
+            } else if (typeof formData.LastIdentifiedLocation === 'object' && formData.LastIdentifiedLocation !== null) {
+              const splitData = splitDropdowns(formData.LastIdentifiedLocation);
+              LastIdentifiedLocationValue = splitData.value || '';
+              LastIdentifiedLocationLabel = splitData.label || '';
             }
-          }
-          
-          // Fallback to state-based form data
-          if (!additionalFormData || Object.keys(additionalFormData).length === 0) {
-            additionalFormData = additionalFormDataState;
-            console.log("Using state-based additional activities form data:", additionalFormData);
-          }
-          
-          if (additionalFormData && Object.keys(additionalFormData).length > 0) {
-            // Get the sequence number from additional activities form data
-            const additionalSequenceNumber = additionalFormData.firstAdditionalActivitySequence || additionalFormData.Sequence || 1;
-            console.log("Additional activities sequence number from form:", additionalSequenceNumber);
+            if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
             
-            // Get the current leg's additional activities
-            const currentAdditionalActivities = currentLeg.AdditionalActivities || [];
-            console.log("Current additional activities in leg:", currentAdditionalActivities);
-            
-            // Find the additional activity by sequence number
-            const additionalActivityIndex = currentAdditionalActivities.findIndex((activity: any) => 
-              activity.Sequence === additionalSequenceNumber || activity.Sequence === parseInt(additionalSequenceNumber)
-            );
-            
-            if (additionalActivityIndex !== -1) {
-              console.log("Found additional activity at index:", additionalActivityIndex, "with sequence number:", additionalSequenceNumber);
-              // Create updated additional activity with form data
-              const currentAdditionalActivity = currentAdditionalActivities[additionalActivityIndex] as any;
-              console.log("additionalFormData ===", additionalFormData);
-              console.log("currentAdditionalActivity ===", currentAdditionalActivity);
-              updatedAdditionalActivity = {
-                ...currentAdditionalActivity,
-                // Update with form data
-                Category: additionalFormData.Category || currentAdditionalActivity.Category,
-                Activity: additionalFormData.ActivityName || currentAdditionalActivity.Activity,
-                ActivityDescription: additionalFormData.firstAdditionalActivityDescription || currentAdditionalActivity.ActivityDescription,
-                PlaceIt: additionalFormData.ActivityPlaceIt || currentAdditionalActivity.PlaceIt,
-                ReportedBy: additionalFormData.ReportedBy || currentAdditionalActivity.ReportedBy,
-                CustomerOrder: additionalFormData.ActivityCustomerOrder || currentAdditionalActivity.CustomerOrder,
-                LocationID: additionalFormData.ActivityLocationID || currentAdditionalActivity.LocationID,
-                LocationDescription: additionalFormData.ActivityLocationDescription || currentAdditionalActivity.LocationDescription,
-                FromLocation: additionalFormData.FromLocation || currentAdditionalActivity.FromLocation,
-                FromLocationDescription: additionalFormData.FromLocationDescription || currentAdditionalActivity.FromLocationDescription,
-                ToLocation: additionalFormData.ToLocation || currentAdditionalActivity.ToLocation,
-                ToLocationDescription: additionalFormData.ToLocationDescription || currentAdditionalActivity.ToLocationDescription,
-                PlannedDate: additionalFormData.ActivityPlannedDate || currentAdditionalActivity.PlannedDate,
-                PlannedTime: additionalFormData.ActivityPlannedTime || currentAdditionalActivity.PlannedTime,
-                RevisedDate: additionalFormData.RevisedDate || currentAdditionalActivity.RevisedDate,
-                RevisedTime: additionalFormData.RevisedTime || currentAdditionalActivity.RevisedTime,
-                ActualDate: additionalFormData.ActualDate || currentAdditionalActivity.ActualDate,
-                ActualTime: additionalFormData.ActualTime || currentAdditionalActivity.ActualTime,
-                Remarks: additionalFormData.Remarks || currentAdditionalActivity.Remarks,
-                Remarks1: additionalFormData.Remarks1 || currentAdditionalActivity.Remarks1,
-                Remarks2: additionalFormData.Remarks2 || currentAdditionalActivity.Remarks2,
-                EventProfile: additionalFormData.ActivityEventProfile || currentAdditionalActivity.EventProfile,
-                ModeFlag: 'Update'
-              };
-              
-              console.log("Updated additional activity:", updatedAdditionalActivity);
-              
-              // Update the additional activity in the leg details
-              updatedLegDetails[legIndex] = {
-                ...updatedLegDetails[legIndex],
-                AdditionalActivities: [
-                  ...updatedLegDetails[legIndex].AdditionalActivities.slice(0, additionalActivityIndex),
-                  updatedAdditionalActivity,
-                  ...updatedLegDetails[legIndex].AdditionalActivities.slice(additionalActivityIndex + 1)
-                ]
-              };
-              
-              console.log("Updated additional activities array:", updatedLegDetails[legIndex].AdditionalActivities);
-            } else {
-              console.log("No additional activity found with sequence number:", additionalSequenceNumber);
-            }
-          } else {
-            console.log("No additional activities form data available");
+            // Return updated activity (cast to any to allow all fields)
+            return {
+              ...activity,
+              Activity: formData.ActivityName || formData.Activity || activity.Activity,
+              ActivityDescription: formData.ActivityDescription || activity.ActivityDescription,
+              CustomerID: formData.CustomerID || activity.CustomerID,
+              CustomerName: formData.CustomerName || activity.CustomerName,
+              ConsignmentInformation: formData.ConsignmentInformation || activity.ConsignmentInformation,
+              CustomerOrder: formData.CustomerOrder || activity.CustomerOrder,
+              PlannedDate: formData.PlannedDate || activity.PlannedDate,
+              PlannedTime: formData.PlannedTime || activity.PlannedTime,
+              RevisedDate: formData.RevisedDate || activity.RevisedDate,
+              RevisedTime: formData.RevisedTime || activity.RevisedTime,
+              ActualDate: formData.ActualDate || activity.ActualDate,
+              ActualTime: formData.ActualTime || activity.ActualTime,
+              DelayedIn: formData.DelayedIn || activity.DelayedIn,
+              ...transformQuickCodeFields(formData, activity),
+              Remarks1: formData.Remarks1 || activity.Remarks1,
+              Remarks2: formData.Remarks2 || activity.Remarks2,
+              Remarks3: formData.Remarks3 || activity.Remarks3,
+              EventProfile: formData.EventProfile || activity.EventProfile,
+              ReasonForChanges: formData.ReasonForChanges || activity.ReasonForChanges,
+              DelayedReason: formData.DelayedReason || activity.DelayedReason,
+              LastIdentifiedLocation: LastIdentifiedLocationValue || activity.LastIdentifiedLocation,
+              LastIdentifiedLocationDescription: LastIdentifiedLocationLabel || activity.LastIdentifiedLocationDescription,
+              LastIdentifiedDate: formData.LastIdentifiedDate || activity.LastIdentifiedDate,
+              LastIdentifiedTime: formData.LastIdentifiedTime || activity.LastIdentifiedTime,
+              AmendmentNo: formData.AmendmentNo || activity.AmendmentNo,
+              ModeFlag: 'Update' as any
+            } as any;
+          } catch (error) {
+            console.warn(`Error getting form data for activity ${activityId}:`, error);
+            return { ...activity, ModeFlag: 'NoChange' as any } as any;
           }
-        } catch (error) {
-          console.warn("Error processing additional activities:", error);
         }
-      }
+        return { ...activity, ModeFlag: 'NoChange' as any } as any;
+      });
       
-      // Get the current trip data from the store
-      const currentTripData = tripData;
-      console.log("Current trip data:", currentTripData);
+      // Collect all updated AdditionalActivities from their respective forms
+      const updatedAdditionalActivities = (selectedLeg.AdditionalActivities || []).map((additionalActivity: any, index) => {
+        const activityId = `additional-activity-${selectedLeg.LegSequence}-${additionalActivity.Sequence || index}`;
+        const additionalActivityRef = getAdditionalActivityRef(activityId);
+        
+        if (additionalActivityRef?.current?.getFormValues) {
+          try {
+            const formData = additionalActivityRef.current.getFormValues();
+            console.log("formData ------------", formData);
+            // Helper to split dropdown values
+            const splitDropdownValue = (value: any) => {
+              if (typeof value === 'string' && value.includes('||')) {
+                const [val, ...labelParts] = value.split('||');
+                return { value: val.trim(), label: labelParts.join('||').trim() };
+              } else if (typeof value === 'object' && value !== null) {
+                const splitData = splitDropdowns(value);
+                return { value: splitData.value || splitData.dropdown || value, label: splitData.label || value };
+              }
+              return { value: value || '', label: value || '' };
+            };
+            
+            const fromLocationData = splitDropdownValue(formData.FromLocation);
+            const toLocationData = splitDropdownValue(formData.ToLocation);
+            const activityData = splitDropdownValue(formData.Activity);
+            const categoryData = splitDropdownValue(formData.Category);
+            const placeItData = splitDropdownValue(formData.PlaceIt);
+            const reportedByData = splitDropdownValue(formData.ReportedBy);
+            const customerOrderData = splitDropdownValue(formData.CustomerOrder);
+            
+            console.log("activityData =================", activityData);
+            console.log("activityData =================", additionalActivity);
+            console.log("activityData =================", formData);
+
+            return {
+              ...additionalActivity,
+              Sequence: formData.Sequence || additionalActivity.Sequence,
+              Category: categoryData.value || additionalActivity.Category,
+              Activity: activityData.value || additionalActivity.Activity,
+              ActivityDescription: activityData.label || formData.ActivityDescription || additionalActivity.ActivityDescription,
+              PlaceIt: placeItData.value || additionalActivity.PlaceIt,
+              ReportedBy: reportedByData.value || additionalActivity.ReportedBy,
+              CustomerOrder: customerOrderData.value || additionalActivity.CustomerOrder,
+              FromLocation: fromLocationData.value || additionalActivity.FromLocation,
+              FromLocationDescription: fromLocationData.label || additionalActivity.FromLocationDescription,
+              ToLocation: toLocationData.value || additionalActivity.ToLocation,
+              ToLocationDescription: toLocationData.label || additionalActivity.ToLocationDescription,
+              PlannedDate: formData.PlannedDate || additionalActivity.PlannedDate,
+              PlannedTime: formData.PlannedTime || additionalActivity.PlannedTime,
+              RevisedDate: formData.RevisedDate || additionalActivity.RevisedDate,
+              RevisedTime: formData.RevisedTime || additionalActivity.RevisedTime,
+              ActualDate: formData.ActualDate || additionalActivity.ActualDate,
+              ActualTime: formData.ActualTime || additionalActivity.ActualTime,
+              // Remarks1: formData.Remarks1 || additionalActivity.Remarks1,
+              Remarks: formData.Remarks1 || additionalActivity.Remarks1,
+              Remarks1: formData.Remarks2 || additionalActivity.Remarks2,
+              Remarks2: formData.Remarks3 || additionalActivity.Remarks3,
+              ModeFlag: 'Update'
+            };
+          } catch (error) {
+            console.warn(`Error getting form data for additional activity ${activityId}:`, error);
+            return { ...additionalActivity, ModeFlag: 'NoChange' };
+          }
+        }
+        return { ...additionalActivity, ModeFlag: 'NoChange' };
+      });
       
-      if (!currentTripData) {
-        console.warn("No trip data available in store");
-        // toast.error('No trip data available');
-        return null;
-      }
+      // Update the leg with new activities
+      updatedLegDetails[legIndex] = {
+        ...currentLeg,
+        Activities: updatedActivities as any,
+        AdditionalActivities: updatedAdditionalActivities
+      };
       
-      // Update the trip data with the modified leg details
-      const updatedTripData = {
-        ...currentTripData,
+      // Update trip data
+      const updatedTripData: TripData = {
+        ...tripData,
         LegDetails: updatedLegDetails
       };
       
-      console.log("Updated trip data:", updatedTripData);
-
-      try{
-        const response = await tripService.saveTrip(updatedTripData);
-        console.log("Trip saved response:", response);
-        console.log("Trip saved response:", (response as any)?.data?.ResponseData);
-        const resourceStatus = (response as any)?.data?.IsSuccess;
-        console.log("resourceStatus ===", resourceStatus);
-        if(resourceStatus){
-          toast({
-            title: "✅ Trip Saved Successfully",
-            description: (response as any)?.data?.ResponseData.Message,
-            variant: "default", // or "success" if you have custom variant
-          });
-        }else{
-          console.log("error as any ===", (response as any)?.data?.Message);
-          toast({
-            title: "⚠️ Submission failed",
-            description: (response as any)?.data?.Message,
-            variant: "destructive", // or "success" if you have custom variant
-          });
-        }
-        // const resourceStatus = JSON.parse(response?.data?.ResponseData)[0].Status;
-        // const isSuccessStatus = JSON.parse(response?.data?.IsSuccess);
-        // if(resourceStatus === "Success" || resourceStatus === "SUCCESS"){
-        //   toast({
-        //     title: "✅ Form submitted successfully",
-        //     description: "Your changes have been saved.",
-        //     variant: "default", // or "success" if you have custom variant
-        //   });
-        // }else{
-        //   toast({
-        //     title: "⚠️ Submission failed",
-        //     description: isSuccessStatus ? JSON.parse(response?.data?.ResponseData)[0].Error_msg : JSON.parse(data?.data?.Message),
-        //     variant: "destructive", // or "success" if you have custom variant
-        //   });
-        // }
-      } catch (err) {
-
-      }
+      // Save to API
+      const response = await tripService.saveTrip(updatedTripData);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
       
-      // Push the updated trip data back to the store
-      if (setTrip) {
-        setTrip(updatedTripData);
-        console.log("Trip data updated in store");
+      if (resourceStatus) {
+        toast({
+          title: "✅ Trip Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+        
+        // Refresh trip data after successful save
+        await fetchTripData();
       } else {
-        console.warn("setTrip method not available");
+        toast({
+          title: "⚠️ Submission failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
       }
-
-      // Refresh legs in drawer store and rebind the dynamic panels just after save
-      try {
-        loadLegsFromAPI();
-        // Force re-render to ensure components pick up refreshed store state
-        setResetKey((prev) => prev + 1);
-
-        // Immediately bind updated values to the main activities panel
-        if (tripExecutionRef?.current?.setFormValues) {
-          tripExecutionRef.current.setFormValues(updatedActivity);
-        }
-        // Bind updated values to the additional activities panel if available
-        if (updatedAdditionalActivity && tripAdditionalRef?.current?.setFormValues) {
-          tripAdditionalRef.current.setFormValues(updatedAdditionalActivity);
-        }
-      } catch (err) {
-        console.warn("Error refreshing legs after save:", err);
-      }
-      
-      // Create the final data structure for API submission
-      // const apiSubmissionData = {
-      //   // Updated trip data
-      //   updatedTripData: updatedTripData,
-        
-      //   // Updated leg details
-      //   updatedLegDetails: updatedLegDetails,
-        
-      //   // Specific updated leg
-      //   updatedLeg: updatedLegDetails[legIndex],
-        
-      //   // Updated activity
-      //   updatedActivity: updatedActivity,
-        
-      //   // Form data for reference
-      //   formData: formData,
-        
-      //   // Original data for comparison
-      //   originalTripData: currentTripData,
-      //   originalLeg: currentLeg,
-      //   originalActivity: currentActivities[activityIndex]
-      // };
-      
-      // console.log("API submission data:", apiSubmissionData);
-      
-      // Show success message
-      // toast.success('Activity updated successfully and pushed to trip data');
-      
-      // return apiSubmissionData;
-
-    // } catch (error) {
-    //   console.error("Error saving activities:", error);
-    //   toast.error('Error saving activities');
-    //   return null;
-    // }
+    } catch (error) {
+      console.error("Error saving activities:", error);
+      toast({
+        title: "⚠️ Error",
+        description: "Failed to save activities",
+        variant: "destructive",
+      });
+    }
   };
-
-  // const onSaveActivities = async () => {
-  //   console.log("Saving activities");
-    
-  //   // try {
-  //     // Get the selected leg data
-  //     const selectedLegData = legs.find(leg => leg.id === selectedLegId);
-  //     if (!selectedLegData) {
-  //       console.warn("No selected leg found");
-  //       // toast.error('No leg selected');
-  //       return null;
-  //     }
-      
-  //     console.log("Selected leg data:", selectedLegData);
-      
-  //     // Get the full getLegDetails() data from manageTripStore
-  //     const fullLegDetails = getLegDetails();
-  //     console.log("Full getLegDetails() data:", fullLegDetails);
-      
-  //     // Find the leg in the full data by matching the selectedLegData.id
-  //     const legIndex = fullLegDetails.findIndex((leg: any) => leg.LegSequence === selectedLegData.id);
-  //     if (legIndex === -1) {
-  //       console.warn("Leg not found in getLegDetails() data");
-  //       // toast.error('Leg not found in trip data');
-  //       return null;
-  //     }
-      
-  //     console.log("Found leg at index:", legIndex, "in getLegDetails() data");
-      
-  //     // Collect data from all DynamicPanel forms
-  //     const allFormData: any[] = [];
-      
-  //     // Get data from the main tripExecutionRef
-  //     if (tripExecutionRef?.current?.getFormValues) {
-  //       try {
-  //         const mainFormData = tripExecutionRef.current.getFormValues();
-  //         if (mainFormData && Object.keys(mainFormData).length > 0) {
-  //           allFormData.push({
-  //             formId: 'main-form',
-  //             formType: 'main',
-  //             data: mainFormData
-  //           });
-  //           console.log("Main form data:", mainFormData);
-  //         }
-  //       } catch (error) {
-  //         console.warn("tripExecutionRef.getFormValues() failed:", error);
-  //       }
-  //     }
-      
-  //     let localFormArray = [];
-  //     // Get data from all individual form refs
-  //     formRefs.current.forEach((ref, formId) => {
-  //       if (ref?.current?.getFormValues) {
-  //         try {
-  //           const formData = ref.current.getFormValues();
-  //           if (formData && Object.keys(formData).length > 0) {
-  //             // Remove unwanted fields from formData before pushing to localFormArray
-  //             const { NetAmount, id, title, ...cleanedFormData } = formData;
-  //             const transformedFormData = transformQuickCodeFields(cleanedFormData, '');
-  //             console.log("transformedFormData ", transformedFormData);
-  //             console.log("formData ", cleanedFormData);
-
-  //             // Use splitDropdowns to correctly parse activityName value and label from the pipe-separated string
-  //             let LastIdentifiedLocationValue = '';
-  //             let LastIdentifiedLocationLabel = '';
-
-  //             if (typeof cleanedFormData.LastIdentifiedLocation === 'string' && cleanedFormData.LastIdentifiedLocation.includes('||')) {
-  //               // If activityName is a string with '||', split it into value and label
-  //               const [value, ...labelParts] = cleanedFormData.LastIdentifiedLocation.split('||');
-  //               LastIdentifiedLocationValue = value.trim();
-  //               LastIdentifiedLocationLabel = labelParts.join('||').trim();
-  //             } else if (typeof cleanedFormData.LastIdentifiedLocation === 'string') {
-  //               LastIdentifiedLocationValue = cleanedFormData.LastIdentifiedLocation;
-  //               LastIdentifiedLocationLabel = cleanedFormData.LastIdentifiedLocation;
-  //             } else if (typeof cleanedFormData.LastIdentifiedLocation === 'object' && cleanedFormData.LastIdentifiedLocation !== null) {
-  //               // In case it's already an object (from dropdown)
-  //               const splitData = splitDropdowns(cleanedFormData.LastIdentifiedLocation);
-  //               LastIdentifiedLocationValue = splitData.value || '';
-  //               LastIdentifiedLocationLabel = splitData.label || '';
-  //             }
-
-  //             // Fallback if label is empty, just use value
-  //             if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
-
-  //             const updatedFormData = {
-  //               ...cleanedFormData,
-  //               QuickCode1: transformedFormData.QuickCode1 || '',
-  //               QuickCode2: transformedFormData.QuickCode2 || '',
-  //               QuickCode3: transformedFormData.QuickCode3 || '',
-  //               QuickCodeValue1: transformedFormData.QuickCodeValue1 || '',
-  //               QuickCodeValue2: transformedFormData.QuickCodeValue2 || '',
-  //               QuickCodeValue3: transformedFormData.QuickCodeValue3 || '',
-  //               LastIdentifiedLocation: LastIdentifiedLocationValue,
-  //               LastIdentifiedLocationDescription: LastIdentifiedLocationLabel,
-  //               ModeFlag:
-  //                 cleanedFormData.ModeFlag === 'Insert'
-  //                   ? 'Insert'
-  //                   : (cleanedFormData.ModeFlag === 'NoChange' || !cleanedFormData.ModeFlag)
-  //                     ? 'Update'
-  //                     : cleanedFormData.ModeFlag
-  //             };
-  //             allFormData.push({
-  //               formId: formId,
-  //               formType: 'dynamic',
-  //               data: updatedFormData
-  //             });
-              
-  //             // Push cleaned data to localFormArray
-  //             localFormArray.push(updatedFormData);
-  //             console.log(`Form ${formId} data:`, updatedFormData);
-  //             console.log(`Form ${formId} cleaned data (removed NetAmount, id, title):`, cleanedFormData);
-  //           }
-  //         } catch (error) {
-  //           console.warn(`Form ${formId} getFormValues() failed:`, error);
-  //         }
-  //       }
-  //     });
-  //     console.log(`localFormArray:`, localFormArray);
-      
-  //     // Get data from eventsForms (popup created forms)
-  //     // eventsForms.forEach((eventForm, index) => {
-  //     //   if (eventForm.data && Object.keys(eventForm.data).length > 0) {
-  //     //     // Remove unwanted fields from eventForm.data before pushing to localFormArray
-  //     //     const { NetAmount, id, title, ...cleanedEventData } = eventForm.data;
-          
-  //     //     allFormData.push(eventForm.data);
-  //     //     // allFormData.push({
-  //     //     //   formId: eventForm.id,
-  //     //     //   formType: 'event',
-  //     //     //   data: eventForm.data,
-  //     //     //   title: eventForm.title,
-  //     //     //   createdAt: eventForm.createdAt
-  //     //     // });
-          
-  //     //     // Push cleaned data to localFormArray
-  //     //     localFormArray.push(cleanedEventData);
-  //     //     console.log(`Event form ${eventForm.id} data:`, eventForm.data);
-  //     //     console.log(`Event form ${eventForm.id} cleaned data (removed NetAmount, id, title):`, cleanedEventData);
-  //     //   }
-  //     // });
-      
-  //     // console.log("All collected form data:", allFormData);
-      
-  //     // if (allFormData.length === 0) {
-  //     //   console.warn("No form data available from any forms");
-  //     //   toast({
-  //     //     title: "Warning",
-  //     //     description: "No form data available to save",
-  //     //     variant: "destructive",
-  //     //   });
-  //     //   return null;
-  //     // }
-      
-  //     // Display summary of collected forms
-  //     // console.log(`✅ Successfully collected data from ${allFormData.length} forms:`);
-  //     // allFormData.forEach((form, index) => {
-  //     //   console.log(`  ${index + 1}. ${form.formType} form (${form.formId}):`, form.data);
-  //     //   if (form.title) {
-  //     //     console.log(`     Title: ${form.title}`);
-  //     //   }
-  //     //   if (form.createdAt) {
-  //     //     console.log(`     Created: ${form.createdAt}`);
-  //     //   }
-  //     // });
-      
-  //     // Show success message with form count
-  //     toast({
-  //       title: "Forms Collected",
-  //       description: `Successfully collected data from ${allFormData.length} forms`,
-  //       variant: "default",
-  //     });
-      
-  //     // Use the first form data as the primary data for backward compatibility
-  //     // let formData = allFormData[0]?.data || formDataState;
-  //     let formData = localFormArray;
-      
-  //     // Remove unwanted fields from main formData
-  //     // if (formData && typeof formData === 'object') {
-  //     //   const { NetAmount, id, title, ...cleanedFormData } = formData;
-  //     //   formData = cleanedFormData;
-  //     //   console.log("Main formData cleaned (removed NetAmount, id, title):", formData);
-  //     // }
-      
-  //     console.log("formData +++++++++++++", formData);
-  //     // Get the sequence number from form data
-  //     // const sequenceNumber = formData.ActivitySeqNo || formData.SeqNo || 1;
-  //     // console.log("Sequence number from form:", sequenceNumber);
-      
-  //     // Get the current leg's activities
-  //     const currentLeg = fullLegDetails[legIndex];
-  //     const currentActivities = currentLeg.Activities || [];
-  //     console.log("Current activities in leg:", currentActivities);
-      
-  //     // Find the activity by sequence number
-  //     // const activityIndex = currentActivities.findIndex((activity: any) => 
-  //     //   activity.SeqNo === sequenceNumber || activity.SeqNo === parseInt(sequenceNumber)
-  //     // );
-      
-  //     // if (activityIndex === -1) {
-  //     //   console.warn(`Activity with sequence number ${sequenceNumber} not found`);
-  //     //   // toast.error(`Activity with sequence number ${sequenceNumber} not found`);
-  //     //   return null;
-  //     // }
-      
-  //     // console.log("Found activity at index:", activityIndex, "with sequence number:", sequenceNumber);
-      
-  //     // Create updated activity with form data
-  //     // const currentActivity = currentActivities[activityIndex] as any;
-  //     // const updatedActivity = {
-  //     //   ...currentActivity,
-  //     //   // Update with form data
-  //     //   Activity: formData.ActivityName || currentActivity.Activity,
-  //     //   ActivityDescription: formData.ActivityDescription || currentActivity['ActivityDescription'],
-  //     //   CustomerID: formData.CustomerID || currentActivity.CustomerID,
-  //     //   CustomerName: formData.CustomerName || currentActivity.CustomerName,
-  //     //   ConsignmentInformation: formData.ConsignmentInformation || currentActivity['ConsignmentInformation'],
-  //     //   CustomerOrder: formData.CustomerOrder || currentActivity['CustomerOrder'],
-  //     //   PlannedDate: formData.PlannedDate || currentActivity['PlannedDate'],
-  //     //   PlannedTime: formData.PlannedTime || currentActivity['PlannedTime'],
-  //     //   RevisedDate: formData.RevisedDate || currentActivity['RevisedDate'],
-  //     //   RevisedTime: formData.RevisedTime || currentActivity['RevisedTime'],
-  //     //   ActualDate: formData.ActualDate || currentActivity['ActualDate'],
-  //     //   ActualTime: formData.ActualTime || currentActivity['ActualTime'],
-  //     //   DelayedIn: formData.DelayedIn || currentActivity['DelayedIn'],
-  //     //   // Transform QuickCode objects to separate fields using helper function
-  //     //   ...transformQuickCodeFields(formData, currentActivity),
-  //     //   Remarks1: formData.Remarks1 || currentActivity['Remarks1'],
-  //     //   Remarks2: formData.Remarks2 || currentActivity['Remarks2'],
-  //     //   Remarks3: formData.Remarks3 || currentActivity['Remarks3'],
-  //     //   EventProfile: formData.EventProfile || currentActivity['EventProfile'],
-  //     //   ReasonForChanges: formData.ReasonForChanges || currentActivity['ReasonForChanges'],
-  //     //   DelayedReason: formData.DelayedReason || currentActivity['DelayedReason'],
-  //     //   LastIdentifiedLocation: formData.LastIdentifiedLocation || currentActivity['LastIdentifiedLocation'],
-  //     //   LastIdentifiedLocationDescription: formData.LastIdentifiedLocationDescription || currentActivity['LastIdentifiedLocationDescription'],
-  //     //   LastIdentifiedDate: formData.LastIdentifiedDate || currentActivity['LastIdentifiedDate'],
-  //     //   LastIdentifiedTime: formData.LastIdentifiedTime || currentActivity['LastIdentifiedTime'],
-  //     //   AmendmentNo: formData.AmendmentNo || currentActivity['AmendmentNo'],
-  //     //   ModeFlag: 'Update'
-  //     //   // ModeFlag: formData.ModeFlag || currentActivity['ModeFlag'] || 'Update'
-  //     // };
-      
-  //     // console.log("Updated activity:", updatedActivity);
-      
-  //     // Update the activity in the full leg details
-  //     const updatedLegDetails = [...fullLegDetails];
-  //     updatedLegDetails[legIndex] = {
-  //       ...updatedLegDetails[legIndex],
-  //       Activities: [
-  //         // ...updatedLegDetails[legIndex].Activities.slice(0, activityIndex),
-  //         ...formData,
-  //         // ...updatedLegDetails[legIndex].Activities.slice(activityIndex + 1)
-  //       ]
-  //     };
-      
-  //     console.log("Updated leg details:", updatedLegDetails[legIndex]);
-  //     console.log("Updated activities array:", updatedLegDetails[legIndex].Activities);
-      
-  //     // Handle Additional Activities if tripAdditionalRef is available
-  //     let updatedAdditionalActivity = null;
-  //     if (tripAdditionalRef?.current?.getFormValues) {
-  //       try {
-  //         // Get additional activities form data from tripAdditionalRef
-  //         let additionalFormData = null;
-          
-  //         if (tripAdditionalRef?.current?.getFormValues) {
-  //           try {
-  //             additionalFormData = tripAdditionalRef.current.getFormValues();
-  //             console.log("Additional activities form data from tripAdditionalRef:", additionalFormData);
-  //           } catch (error) {
-  //             console.warn("tripAdditionalRef.getFormValues() failed:", error);
-  //           }
-  //         }
-          
-  //         // Fallback to state-based form data
-  //         if (!additionalFormData || Object.keys(additionalFormData).length === 0) {
-  //           additionalFormData = additionalFormDataState;
-  //           console.log("Using state-based additional activities form data:", additionalFormData);
-  //         }
-          
-  //         if (additionalFormData && Object.keys(additionalFormData).length > 0) {
-  //           // Get the sequence number from additional activities form data
-  //           const additionalSequenceNumber = additionalFormData.firstAdditionalActivitySequence || additionalFormData.Sequence || 1;
-  //           console.log("Additional activities sequence number from form:", additionalSequenceNumber);
-            
-  //           // Get the current leg's additional activities
-  //           const currentAdditionalActivities = currentLeg.AdditionalActivities || [];
-  //           console.log("Current additional activities in leg:", currentAdditionalActivities);
-            
-  //           // Find the additional activity by sequence number
-  //           const additionalActivityIndex = currentAdditionalActivities.findIndex((activity: any) => 
-  //             activity.Sequence === additionalSequenceNumber || activity.Sequence === parseInt(additionalSequenceNumber)
-  //           );
-            
-  //           if (additionalActivityIndex !== -1) {
-  //             console.log("Found additional activity at index:", additionalActivityIndex, "with sequence number:", additionalSequenceNumber);
-  //             // Create updated additional activity with form data
-  //             const currentAdditionalActivity = currentAdditionalActivities[additionalActivityIndex] as any;
-  //             console.log("additionalFormData ===", additionalFormData);
-  //             console.log("currentAdditionalActivity ===", currentAdditionalActivity);
-  //             updatedAdditionalActivity = {
-  //               ...currentAdditionalActivity,
-  //               // Update with form data
-  //               Category: additionalFormData.Category || currentAdditionalActivity.Category,
-  //               Activity: additionalFormData.ActivityName || currentAdditionalActivity.Activity,
-  //               ActivityDescription: additionalFormData.firstAdditionalActivityDescription || currentAdditionalActivity.ActivityDescription,
-  //               PlaceIt: additionalFormData.ActivityPlaceIt || currentAdditionalActivity.PlaceIt,
-  //               ReportedBy: additionalFormData.ReportedBy || currentAdditionalActivity.ReportedBy,
-  //               CustomerOrder: additionalFormData.ActivityCustomerOrder || currentAdditionalActivity.CustomerOrder,
-  //               LocationID: additionalFormData.ActivityLocationID || currentAdditionalActivity.LocationID,
-  //               LocationDescription: additionalFormData.ActivityLocationDescription || currentAdditionalActivity.LocationDescription,
-  //               FromLocation: additionalFormData.FromLocation || currentAdditionalActivity.FromLocation,
-  //               FromLocationDescription: additionalFormData.FromLocationDescription || currentAdditionalActivity.FromLocationDescription,
-  //               ToLocation: additionalFormData.ToLocation || currentAdditionalActivity.ToLocation,
-  //               ToLocationDescription: additionalFormData.ToLocationDescription || currentAdditionalActivity.ToLocationDescription,
-  //               PlannedDate: additionalFormData.ActivityPlannedDate || currentAdditionalActivity.PlannedDate,
-  //               PlannedTime: additionalFormData.ActivityPlannedTime || currentAdditionalActivity.PlannedTime,
-  //               RevisedDate: additionalFormData.RevisedDate || currentAdditionalActivity.RevisedDate,
-  //               RevisedTime: additionalFormData.RevisedTime || currentAdditionalActivity.RevisedTime,
-  //               ActualDate: additionalFormData.ActualDate || currentAdditionalActivity.ActualDate,
-  //               ActualTime: additionalFormData.ActualTime || currentAdditionalActivity.ActualTime,
-  //               Remarks: additionalFormData.Remarks || currentAdditionalActivity.Remarks,
-  //               Remarks1: additionalFormData.Remarks1 || currentAdditionalActivity.Remarks1,
-  //               Remarks2: additionalFormData.Remarks2 || currentAdditionalActivity.Remarks2,
-  //               EventProfile: additionalFormData.ActivityEventProfile || currentAdditionalActivity.EventProfile,
-  //               ModeFlag: 'Update'
-  //             };
-              
-  //             console.log("Updated additional activity:", updatedAdditionalActivity);
-              
-  //             // Update the additional activity in the leg details
-  //             updatedLegDetails[legIndex] = {
-  //               ...updatedLegDetails[legIndex],
-  //               AdditionalActivities: [
-  //                 ...updatedLegDetails[legIndex].AdditionalActivities.slice(0, additionalActivityIndex),
-  //                 updatedAdditionalActivity,
-  //                 ...updatedLegDetails[legIndex].AdditionalActivities.slice(additionalActivityIndex + 1)
-  //               ]
-  //             };
-              
-  //             console.log("Updated additional activities array:", updatedLegDetails[legIndex].AdditionalActivities);
-  //           } else {
-  //             console.log("No additional activity found with sequence number:", additionalSequenceNumber);
-  //           }
-  //         } else {
-  //           console.log("No additional activities form data available");
-  //         }
-  //       } catch (error) {
-  //         console.warn("Error processing additional activities:", error);
-  //       }
-  //     }
-      
-  //     // Get the current trip data from the store
-  //     const currentTripData = tripData;
-  //     console.log("Current trip data:", currentTripData);
-      
-  //     if (!currentTripData) {
-  //       console.warn("No trip data available in store");
-  //       // toast.error('No trip data available');
-  //       return null;
-  //     }
-      
-  //     // Update the trip data with the modified leg details
-  //     const updatedTripData = {
-  //       ...currentTripData,
-  //       LegDetails: updatedLegDetails
-  //     };
-      
-  //     console.log("Updated trip data:", updatedTripData);
-
-  //     try{
-  //       const response = await tripService.saveTrip(updatedTripData);
-  //       console.log("Trip saved response:", response);
-  //       console.log("Trip saved response:", (response as any)?.data?.ResponseData);
-  //       const resourceStatus = (response as any)?.data?.IsSuccess;
-  //       console.log("resourceStatus ===", resourceStatus);
-  //       if(resourceStatus){
-  //         toast({
-  //           title: "✅ Trip Saved Successfully",
-  //           description: (response as any)?.data?.ResponseData.Message,
-  //           variant: "default", // or "success" if you have custom variant
-  //         });
-  //       }else{
-  //         console.log("error as any ===", (response as any)?.data?.Message);
-  //         toast({
-  //           title: "⚠️ Submission failed",
-  //           description: (response as any)?.data?.Message,
-  //           variant: "destructive", // or "success" if you have custom variant
-  //         });
-  //       }
-  //     } catch (err) {
-  //       console.error("Error saving activities:", err);
-  //       toast({
-  //         title: "⚠️ Submission failed",
-  //         description: (err as any)?.data?.Message,
-  //         variant: "destructive", // or "success" if you have custom variant
-  //       });
-  //       // return null;
-  //     }
-      
-  //     // Push the updated trip data back to the store
-  //     if (setTrip) {
-  //       setTrip(updatedTripData);
-  //       console.log("Trip data updated in store");
-  //     } else {
-  //       console.warn("setTrip method not available");
-  //     }
-      
-  //     // Create the final data structure for API submission
-  //     // const apiSubmissionData = {
-  //     //   // Updated trip data
-  //     //   updatedTripData: updatedTripData,
-        
-  //     //   // Updated leg details
-  //     //   updatedLegDetails: updatedLegDetails,
-        
-  //     //   // Specific updated leg
-  //     //   updatedLeg: updatedLegDetails[legIndex],
-        
-  //     //   // Updated activity
-  //     //   updatedActivity: updatedActivity,
-        
-  //     //   // Form data for reference
-  //     //   formData: formData,
-        
-  //     //   // Original data for comparison
-  //     //   originalTripData: currentTripData,
-  //     //   originalLeg: currentLeg,
-  //     //   originalActivity: currentActivities[activityIndex]
-  //     // };
-      
-  //     // console.log("API submission data:", apiSubmissionData);
-      
-  //     // Show success message
-  //     // toast.success('Activity updated successfully and pushed to trip data');
-      
-  //     // return apiSubmissionData;
-
-  //   // } catch (error) {
-  //   //   console.error("Error saving activities:", error);
-  //   //   toast.error('Error saving activities');
-  //   //   return null;
-  //   // }
-  // };
-
-  const selectedLeg = getSelectedLeg();
 
   // Helper function to format activities data for form binding
   const formatActivitiesForForm = (activities: any[]) => {
@@ -1567,190 +758,29 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }));
   };
 
-  // Handle leg selection and bind data to dynamic panels
-  const handleLegSelection = (legId: string) => {
-    selectLeg(legId);
-    setLoading(false);
-    // Increment resetKey to force form re-render
+  // Handle leg selection
+  const handleLegSelection = (legSequence: string) => {
+    setSelectedLegId(legSequence);
     setResetKey(prev => prev + 1);
-    // Find the selected leg data
-    const selectedLegData = legs.find(leg => leg.id === legId);
-    if (selectedLegData) {
-      console.log("Selected leg data:", selectedLegData);
-      console.log("Selected leg activities:", selectedLegData.activities);
-      
-      // Prepare activities data for form binding
-      const rawActivitiesData = selectedLegData.activities || [];
-      const formattedActivities = formatActivitiesForForm(rawActivitiesData);
-      const consignmentsData = selectedLegData.consignments || [];
-      
-      // Prepare additional activities data for form binding
-      const rawAdditionalActivitiesData = selectedLegData.additionalActivities || [];
-      const formattedAdditionalActivities = formatAdditionalActivitiesForForm(rawAdditionalActivitiesData);
-      
-      // Create form data object with activities array
-      const formData = {
-        // Basic leg information
-        legSequence: selectedLegData.id,
-        from: selectedLegData.from,
-        to: selectedLegData.to,
-        distance: selectedLegData.distance,
-        duration: selectedLegData.duration,
-        
-        // Activities array - this is the key data we want to bind
-        activities: formattedActivities,
-        
-        // Individual activity fields for easier form access
-        ...(formattedActivities.length > 0 && {
-          firstActivity: formattedActivities[0],
-          lastActivity: formattedActivities[formattedActivities.length - 1],
-          activityCount: formattedActivities.length,
-          
-          // Bind first activity fields directly for easy access
-          ActivitySeqNo: formattedActivities[0].SeqNo,
-          ActivityName: formattedActivities[0].Activity,
-          ActivityDescription: formattedActivities[0].ActivityDescription,
-          CustomerName: formattedActivities[0].CustomerName,
-          CustomerID: formattedActivities[0].CustomerID,
-          PlannedDate: formattedActivities[0].PlannedDate,
-          PlannedTime: formattedActivities[0].PlannedTime,
-          CustomerOrder: formattedActivities[0].CustomerOrder,
-          EventProfile: formattedActivities[0].EventProfile,
-          RevisedDate: formattedActivities[0].RevisedDate,
-          RevisedTime: formattedActivities[0].RevisedTime,
-          ActualDate: formattedActivities[0].ActualDate,
-          ActualTime: formattedActivities[0].ActualTime,
-          DelayedIn: formattedActivities[0].DelayedIn,
-          // Format QuickCode fields for inputdropdown type: { dropdown: value, input: textValue }
-          // Keep the full format (id||name) for dropdown to ensure proper matching and display
-          QuickCode1: formattedActivities[0].QuickCode1 ? {
-            dropdown: typeof formattedActivities[0].QuickCode1 === 'string' 
-              ? formattedActivities[0].QuickCode1 
-              : (formattedActivities[0].QuickCode1?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode1)),
-            input: formattedActivities[0].QuickCodeValue1 || ''
-          } : { dropdown: '', input: '' },
-          QuickCode2: formattedActivities[0].QuickCode2 ? {
-            dropdown: typeof formattedActivities[0].QuickCode2 === 'string' 
-              ? formattedActivities[0].QuickCode2 
-              : (formattedActivities[0].QuickCode2?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode2)),
-            input: formattedActivities[0].QuickCodeValue2 || ''
-          } : { dropdown: '', input: '' },
-          QuickCode3: formattedActivities[0].QuickCode3 ? {
-            dropdown: typeof formattedActivities[0].QuickCode3 === 'string' 
-              ? formattedActivities[0].QuickCode3 
-              : (formattedActivities[0].QuickCode3?.dropdown || extractQuickCodeId(formattedActivities[0].QuickCode3)),
-            input: formattedActivities[0].QuickCodeValue3 || ''
-          } : { dropdown: '', input: '' },
-          Remarks1: formattedActivities[0].Remarks1,
-          Remarks2: formattedActivities[0].Remarks2,
-          Remarks3: formattedActivities[0].Remarks3,
-          ReasonForChanges: formattedActivities[0].ReasonForChanges,
-          DelayedReason: formattedActivities[0].DelayedReason,
-          LastIdentifiedLocation: formattedActivities[0].LastIdentifiedLocation + '||' + formattedActivities[0].LastIdentifiedLocationDescription,
-          // LastIdentifiedLocationDescription: formattedActivities[0].LastIdentifiedLocationDescription,
-          LastIdentifiedDate: formattedActivities[0].LastIdentifiedDate,
-          LastIdentifiedTime: formattedActivities[0].LastIdentifiedTime,
-          AmendmentNo: formattedActivities[0].AmendmentNo,
-        }),
-        
-        // Consignments data
-        consignments: consignmentsData,
-        
-        // Additional leg metadata
-        hasInfo: selectedLegData.hasInfo,
-        transshipments: selectedLegData.transshipments || []
-      };
-      
-      console.log("Form data to be bound:", formData);
-      
-      // Store form data in state for later retrieval
-      setFormDataState(formData);
-      setActivitiesFormData(formattedActivities);
-      
-      // Create additional activities form data
-      const additionalFormData = {
-        // Basic leg information
-        legSequence: selectedLegData.id,
-        from: selectedLegData.from,
-        to: selectedLegData.to,
-        distance: selectedLegData.distance,
-        duration: selectedLegData.duration,
-        
-        // Additional activities array - this is the key data we want to bind
-        additionalActivities: formattedAdditionalActivities,
-        
-        // Individual additional activity fields for easier form access
-        ...(formattedAdditionalActivities.length > 0 && {
-          firstAdditionalActivity: formattedAdditionalActivities[0],
-          lastAdditionalActivity: formattedAdditionalActivities[formattedAdditionalActivities.length - 1],
-          additionalActivityCount: formattedAdditionalActivities.length,
-          
-          // Bind first additional activity fields directly for easy access
-          Sequence: formattedAdditionalActivities[0].Sequence,
-          Category: formattedAdditionalActivities[0].Category,
-          ActivityName: formattedAdditionalActivities[0].Activity,
-          ActivityDescription: formattedAdditionalActivities[0].ActivityDescription,
-          ActivityPlaceIt: formattedAdditionalActivities[0].PlaceIt,
-          FromLocation: formattedAdditionalActivities[0].FromLocation,
-          ToLocation: formattedAdditionalActivities[0].ToLocation,
-          Activity: formattedAdditionalActivities[0].Activity,
-          RevisedDate: formattedAdditionalActivities[0].RevisedDate,
-          ActualDate: formattedAdditionalActivities[0].ActualDate
-        }),
-        
-        // Consignments data
-        consignments: consignmentsData,
-        
-        // Additional leg metadata
-        hasInfo: selectedLegData.hasInfo,
-        transshipments: selectedLegData.transshipments || []
-      };
-      console.log("Form data to additionalFormData:", additionalFormData);
-      
-      // Store additional form data in state for later retrieval
-      setAdditionalFormDataState(additionalFormData);
-      setAdditionalActivitiesFormData(formattedAdditionalActivities);
-      
-      // Bind data to tripExecutionRef (Activities panel)
-      if (tripExecutionRef?.current?.setFormValues) {
-        tripExecutionRef.current.setFormValues(formData.activities[0]);
-        console.log("Data bound to tripExecutionRef");
-      }
-      
-      // Bind data to tripAdditionalRef (Additional Activities panel)
-      if (tripAdditionalRef?.current?.setFormValues) {
-        tripAdditionalRef.current.setFormValues(additionalFormData);
-        console.log("Additional activities data bound to tripAdditionalRef");
-      }
-      setLoading(true);
-    }
   };
 
   const handleAddViaPoint = () => {
     if (!viaPointForm.viaLocation) {
-      // toast.error('Please enter via location');
+      toast({
+        title: "Error",
+        description: "Please enter via location",
+        variant: "destructive",
+      });
       return;
     }
-
-    const [from, to] = viaPointForm.legFromTo ? viaPointForm.legFromTo.split(' - ') : ['', ''];
-    
-    addLeg(
-      from || viaPointForm.viaLocation,
-      to || viaPointForm.viaLocation,
-      viaPointForm.viaLocation,
-      viaPointForm.plannedDate,
-      viaPointForm.plannedTime
-    );
-
-    // Reset form
-    setViaPointForm({
-      legFromTo: '',
-      viaLocation: '',
-      plannedDate: '',
-      plannedTime: '',
-    });
+    // Note: Via point addition would need to be handled through API
+    // For now, just close the dialog
     setShowAddViaPointsDialog(false);
-    // toast.success('Via point added successfully');
+    toast({
+      title: "Info",
+      description: "Via point addition requires API integration",
+      variant: "default",
+    });
   };
 
   const additionalActivities: AdditionalActivity[] = [
@@ -1775,10 +805,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   useEffect(() => {
     setDates({});
     setResetKey(k => k + 1);
-    console.log("Legs loaded from API:", legs);
   }, [legs]);
 
-  const [loading, setLoading] = useState(false);
   const [apiData, setApiData] = useState(null);
   const [error, setError] = useState<string | null>(null);
   const [LastIdentifiedLocation, setLastIdentifiedLocation] = useState<any[]>([]);
@@ -2647,6 +1675,89 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     
     console.log('New Events form created from popup:', newEventForm);
   };
+
+  // Helper: parse combined date and time into a Date object
+  const parseDateTime = (
+    dateString?: string | null,
+    timeString?: string | null
+  ): Date | null => {
+    if (!dateString || !timeString) return null;
+    try {
+      let date: Date;
+      if (dateString.includes('-') && dateString.length === 10) {
+        // YYYY-MM-DD
+        date = new Date(dateString);
+      } else if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+          // DD/MM/YYYY
+          date = new Date(
+            parseInt(parts[2], 10),
+            parseInt(parts[1], 10) - 1,
+            parseInt(parts[0], 10)
+          );
+        } else {
+          date = new Date(dateString);
+        }
+      } else {
+        date = new Date(dateString);
+      }
+ 
+      if (isNaN(date.getTime())) return null;
+ 
+      let hours = 0,
+        minutes = 0,
+        seconds = 0;
+      if (timeString.includes(':')) {
+        const tParts = timeString.split(':');
+        if (tParts.length >= 2) {
+          hours = parseInt(tParts[0], 10);
+          minutes = parseInt(tParts[1], 10);
+          seconds = tParts.length >= 3 ? parseInt(tParts[2], 10) : 0;
+        } else {
+          const dt = new Date(`1970-01-01T${timeString}`);
+          if (!isNaN(dt.getTime())) {
+            hours = dt.getHours();
+            minutes = dt.getMinutes();
+            seconds = dt.getSeconds();
+          }
+        }
+      } else {
+        const dt = new Date(`1970-01-01T${timeString}`);
+        if (!isNaN(dt.getTime())) {
+          hours = dt.getHours();
+          minutes = dt.getMinutes();
+          seconds = dt.getSeconds();
+        }
+      }
+      date.setHours(hours, minutes, seconds, 0);
+      return date;
+    } catch {
+      return null;
+    }
+  };
+ 
+  // Helper: format millisecond diff into "DD Days HH Hours MM Mins"
+  const formatDelay = (diffMs: number): string => {
+    const totalMinutes = Math.round(Math.abs(diffMs) / 60000);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(days)} Days ${pad(hours)} Hours ${pad(minutes)} Mins`;
+  };
+ 
+  // Helper: calculate delayed time based on planned/revised vs actual
+  const getDelayedTime = (activity: any): string => {
+    const actual = parseDateTime(activity?.ActualDate, activity?.ActualTime);
+    const revised = parseDateTime(activity?.RevisedDate, activity?.RevisedTime);
+    const planned = parseDateTime(activity?.PlannedDate, activity?.PlannedTime);
+    if (!actual) return '';
+    const target = revised ?? planned;
+    if (!target) return '';
+    const diff = target.getTime() - actual.getTime();
+    return formatDelay(diff);
+  };
   
   return (
     <>
@@ -2697,95 +1808,90 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         {/* Legs List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-2 space-y-2">
-            {legs.map((leg) => (
-              <div
-                key={leg.id}
-                onClick={() => handleLegSelection(leg.id)}
-                className={cn(
-                  "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2 relative min-h-[50px]",
-                  selectedLegId === leg.id && "border-primary bg-accent"
-                )}
-              >
-                {/* Leg Header */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-1">
-                      <span className="flex-shrink-0">{leg.id} </span>
-                      <div className="flex-1 min-w-0 flex items-center gap-1">
-                        <div className="flex-1 min-w-0 truncate">
-                          {/* <span className="font-medium text-sm truncate">{leg.from}</span> - <span className="font-medium text-sm truncate">{leg.to}</span> */}
+            {isLoadingTrip ? (
+              <div className="p-4 text-center text-muted-foreground">
+                Loading legs...
+              </div>
+            ) : legs.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                No legs found
+              </div>
+            ) : (
+              legs.map((leg) => (
+                <div
+                  key={leg.LegSequence}
+                  onClick={() => handleLegSelection(leg.LegSequence)}
+                  className={cn(
+                    "p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors cursor-pointer space-y-2 relative min-h-[50px]",
+                    selectedLegId === leg.LegSequence && "border-primary bg-accent"
+                  )}
+                >
+                  {/* Leg Header */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-1">
+                        <span className="flex-shrink-0">{leg.LegSequence} </span>
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
+                          <div className="flex-1 min-w-0 truncate">
+                            {/* <span className="font-medium text-sm truncate">{leg.DeparturePointDescription}</span> - <span className="font-medium text-sm truncate">{leg.ArrivalPointDescription}</span> */}
+                          </div>
                         </div>
                       </div>
-                      {/* <div className="text-xs text-muted-foreground">Origin</div> */}
                     </div>
-                  </div>
-                  <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
-                    {leg.LegBehaviourDescription}
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 mt-1"
-                          aria-label="View location details"
-                          // onClick={(e) => e.stopPropagation()}
+                    <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
+                      {leg.LegBehaviourDescription}
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 mt-1"
+                            aria-label="View location details"
+                          >
+                            <Info className="h-3 w-3 text-gray-600" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          className="max-w-xs p-3 text-sm bg-white border border-gray-200 shadow-lg z-50"
+                          sideOffset={5}
                         >
-                          <Info className="h-3 w-3 text-gray-600" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        className="max-w-xs p-3 text-sm bg-white border border-gray-200 shadow-lg z-50"
-                        sideOffset={5}
-                      >
-                        <div className="space-y-1 mb-2">
-                          <div><span className="font-medium"></span> {leg.from} - <span className="font-medium"></span> {leg.to}</div>
-                        </div>
-                        {leg.id && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground bottom-3">
-                            <span className="font-medium">{formatDateToDDMMYYYY(leg.PlanStartDate)} {formatTimeTo12Hour(leg.PlanStartTime)} - {formatDateToDDMMYYYY(leg.PlanEndDate)} {formatTimeTo12Hour(leg.PlanEndTime)}</span>
-                            
+                          <div className="space-y-1 mb-2">
+                            <div><span className="font-medium"></span> {leg.DeparturePointDescription} - <span className="font-medium"></span> {leg.ArrivalPointDescription}</div>
                           </div>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-
-                {/* Destination */}
-                {/* <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{leg.to}</div>
-                    <div className="text-xs text-muted-foreground">Destination</div>
+                          {(leg as any).PlanStartDate && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground bottom-3">
+                              <span className="font-medium">{formatDateToDDMMYYYY((leg as any).PlanStartDate)} {formatTimeTo12Hour((leg as any).PlanStartTime)} - {formatDateToDDMMYYYY((leg as any).PlanEndDate)} {formatTimeTo12Hour((leg as any).PlanEndTime)}</span>
+                            </div>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
-                </div> */}
-
-                {/* Distance & Duration */}
-                {/* <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{leg.distance}</span>
-                  <span>•</span>
-                  <span>{leg.duration}</span>
-                </div> */}
-
-                {/* API Data - Leg Sequence and Behavior */}
-                
-              </div>
-            ))}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {!selectedLeg ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Select a leg to view details</p>
-            </div>
-          </div>
-        ) : (
+       {/* Main Content */}
+       <div className="flex-1 flex flex-col">
+         {isLoadingTrip ? (
+           <div className="flex-1 flex items-center justify-center text-muted-foreground">
+             <div className="text-center">
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+               <p className="text-sm">Loading trip data...</p>
+             </div>
+           </div>
+         ) : !selectedLeg ? (
+           <div className="flex-1 flex items-center justify-center text-muted-foreground">
+             <div className="text-center">
+               <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+               <p className="text-sm">Select a leg to view details</p>
+             </div>
+           </div>
+         ) : (
           <>
         {/* Tabs */}
         <Tabs defaultValue="consignment" className="flex-1 flex flex-col">
@@ -2819,12 +1925,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
                   onClick={() => setExpandedActivities(!expandedActivities)}
                 >
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    Events
-                    <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                      {selectedLeg.activities.length}
-                    </Badge>
-                  </h3>
+                   <h3 className="text-sm font-semibold flex items-center gap-2">
+                     Events
+                     <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
+                       {selectedLeg.Activities?.length || 0}
+                     </Badge>
+                   </h3>
                   {expandedActivities ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -2842,54 +1948,76 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       transition={{ duration: 0.2 }}
                       className="space-y-3 overflow-hidden"
                     >
-                    
-                      {selectedLeg.activities.map((activity) => (
-                        <div key={activity.id} className="rounded-lg bg-card">
-                          <div className="flex items-center justify-between p-4 bg-muted/30">
-                            <div className="flex items-center gap-3"> 
-                              <div className="p-2 rounded bg-blue-500/10 text-blue-600">
-                                <Package className="h-4 w-4" />
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="font-medium text-sm">{(activity as any).ActivityDescription} - {formatDateToDDMMYYYY((activity as any).PlannedDate)} {formatTimeTo12Hour((activity as any).PlannedTime)}</div>
-                                {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
-                                <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
-                                  {`${getDelayedTime(activity)} Delayed`}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                variant={activity.status === 'completed' ? 'default' : activity.status === 'in-progress' ? 'secondary' : 'outline'} 
-                                className="text-xs"
-                              >
-                                {activity.status}
-                              </Badge>
-                            </div>
-                          </div>
+                     
+                       {selectedLeg.Activities?.map((activity: any, index) => {
+                         const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
+                         const activityRef = getActivityRef(activityId);
+                         const formattedActivity = formatActivitiesForForm([activity])[0];
+                         
+                         // Format data for DynamicPanel
+                         const formData = {
+                           ...formattedActivity,
+                           // Format QuickCode fields for inputdropdown
+                           QuickCode1: formattedActivity.QuickCode1 ? {
+                             dropdown: typeof formattedActivity.QuickCode1 === 'string' 
+                               ? formattedActivity.QuickCode1 
+                               : (formattedActivity.QuickCode1?.dropdown || extractQuickCodeId(formattedActivity.QuickCode1)),
+                             input: formattedActivity.QuickCodeValue1 || ''
+                           } : { dropdown: '', input: '' },
+                           QuickCode2: formattedActivity.QuickCode2 ? {
+                             dropdown: typeof formattedActivity.QuickCode2 === 'string' 
+                               ? formattedActivity.QuickCode2 
+                               : (formattedActivity.QuickCode2?.dropdown || extractQuickCodeId(formattedActivity.QuickCode2)),
+                             input: formattedActivity.QuickCodeValue2 || ''
+                           } : { dropdown: '', input: '' },
+                           QuickCode3: formattedActivity.QuickCode3 ? {
+                             dropdown: typeof formattedActivity.QuickCode3 === 'string' 
+                               ? formattedActivity.QuickCode3 
+                               : (formattedActivity.QuickCode3?.dropdown || extractQuickCodeId(formattedActivity.QuickCode3)),
+                             input: formattedActivity.QuickCodeValue3 || ''
+                           } : { dropdown: '', input: '' },
+                           LastIdentifiedLocation: formattedActivity.LastIdentifiedLocation 
+                             ? `${formattedActivity.LastIdentifiedLocation}||${formattedActivity.LastIdentifiedLocationDescription || ''}`
+                             : '',
+                         };
+                         
+                         return (
+                           <div key={activityId} className="rounded-lg bg-card">
+                             <div className="flex items-center justify-between p-4 bg-muted/30">
+                               <div className="flex items-center gap-3"> 
+                                 <div className="p-2 rounded bg-blue-500/10 text-blue-600">
+                                   <Package className="h-4 w-4" />
+                                 </div>
+                                 <div className='flex items-center gap-2'>
+                                   <div className="font-medium text-sm">
+                                     {activity.ActivityDescription || activity.Activity} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}
+                                   </div>
+                                   <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
+                                      {`${getDelayedTime(activity)} Delayed`}
+                                    </div>
+                                 </div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                 <Badge variant="outline" className="text-xs">
+                                   Seq: {activity.SeqNo || index + 1}
+                                 </Badge>
+                               </div>
+                             </div>
 
-                          {loading ?
-                            <DynamicPanel
-                              ref={tripExecutionRef}
-                              key="trip-execution-panel"
-                              panelId="operational-details"
-                              panelTitle="Trip Activities"
-                              panelConfig={tripExecutionPanelConfig}
-                              formName="operationalDetailsForm"
-                              initialData={activity}
-                            /> : ''
-                            // <DynamicPanel
-                            //   ref={getFormRef(`main-${activity.id}`)}
-                            //   key={`trip-execution-panel-main-${activity.id}`}
-                            //   panelId={`operational-details-main-${activity.id}`}
-                            //   panelTitle="Events"
-                            //   panelConfig={tripExecutionPanelConfig}
-                            //   formName={`operationalDetailsForm-main-${activity.id}`}
-                            //   initialData={activity}
-                            // /> : ''
-                          }
-                        </div>
-                      ))}
+                             {loading ? (
+                               <DynamicPanel
+                                 ref={activityRef}
+                                 key={`trip-execution-panel-${activityId}`}
+                                 panelId={`operational-details-${activityId}`}
+                                 panelTitle="Trip Activities"
+                                 panelConfig={tripExecutionPanelConfig}
+                                 formName={`operationalDetailsForm-${activityId}`}
+                                 initialData={formData}
+                               />
+                             ) : null}
+                           </div>
+                         );
+                       })}
 
                       {/* New Activity Forms */}
                       {eventsForms.map((activity) => (
@@ -2900,12 +2028,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               <div className="p-2 rounded bg-blue-500/10 text-blue-600">
                                 <Package className="h-4 w-4" />
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className='flex items-center gap-2'>
                                 <div className="font-medium text-sm">{(activity as any).title} - {formatDateToDDMMYYYY((activity as any).RevisedDate)} {formatTimeTo12Hour((activity as any).RevisedTime)}</div>
-                                {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
-                                <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
+                                <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
                                   {`${getDelayedTime(activity)} Delayed`}
                                 </div>
+                                {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -2952,12 +2080,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded hover:bg-muted/50"
                   onClick={() => setExpandedAdditional(!expandedAdditional)}
                 >
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    Additional Events
-                    <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
-                      {additionalActivities.length}
-                    </Badge>
-                  </h3>
+                   <h3 className="text-sm font-semibold flex items-center gap-2">
+                     Additional Events
+                     <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
+                       {selectedLeg.AdditionalActivities?.length || 0}
+                     </Badge>
+                   </h3>
                   {expandedAdditional ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -2973,42 +2101,49 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       exit={{ height: 0, opacity: 0 }}
                       className="space-y-3 overflow-hidden"
                     >
-                      {additionalActivities.map((activity) => (
-                        <div key={activity.id} className="rounded-lg bg-card p-4 space-y-4">
-                          {/* Header */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded bg-blue-500/10 text-blue-600">
-                                {activity.icon}
-                              </div>
-                              <div>
-                                <div className="font-medium text-sm">{(activity as any).ActivityDescription} - {formatDateToDDMMYYYY((activity as any).PlannedDate)} {formatTimeTo12Hour((activity as any).PlannedTime)}</div>
-                                {/* <div className="text-xs text-muted-foreground">{activity.timestamp}</div> */}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              {/* <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <RefreshCw className="h-4 w-4" />
-                              </Button> */}
-                            </div>
-                          </div>
+                       {selectedLeg.AdditionalActivities?.map((activity: any, index) => {
+                         const activityId = `additional-activity-${selectedLeg.LegSequence}-${activity.Sequence || index}`;
+                         const additionalActivityRef = getAdditionalActivityRef(activityId);
+                         const formattedAdditionalActivity = formatAdditionalActivitiesForForm([activity])[0];
+                         
+                         return (
+                           <div key={activityId} className="rounded-lg bg-card p-4 space-y-4">
+                             {/* Header */}
+                             <div className="flex items-center justify-between">
+                               <div className="flex items-center gap-3">
+                                 <div className="p-2 rounded bg-blue-500/10 text-blue-600">
+                                   <Info className="h-4 w-4" />
+                                 </div>
+                                 <div>
+                                   <div className="font-medium text-sm">
+                                     {activity.ActivityDescription || activity.Activity} - {formatDateToDDMMYYYY(activity.RevisedDate)} {formatTimeTo12Hour(activity.RevisedTime)}
+                                   </div>
+                                 </div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                 <Badge variant="outline" className="text-xs">
+                                   Seq: {activity.Sequence || index + 1}
+                                 </Badge>
+                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                   <Trash2 className="h-4 w-4" />
+                                 </Button>
+                               </div>
+                             </div>
 
-                          {loading ?
-                            <DynamicPanel
-                              ref={getFormRef(`additional-${activity.id}`)}
-                              key={`trip-execution-panel-additional-${activity.id}`}
-                              panelId={`operational-details-additional-${activity.id}`}
-                              panelTitle="Additional Events"
-                              panelConfig={tripExecutionAdditionalPanelConfig}
-                              formName={`operationalDetailsForm-additional-${activity.id}`}
-                              initialData={activity}
-                            /> : ''
-                          }
-                        </div>
-                      ))}
+                             {loading ? (
+                               <DynamicPanel
+                                 ref={additionalActivityRef}
+                                 key={`trip-execution-panel-additional-${activityId}`}
+                                 panelId={`operational-details-additional-${activityId}`}
+                                 panelTitle="Additional Events"
+                                 panelConfig={tripExecutionAdditionalPanelConfig}
+                                 formName={`operationalDetailsForm-additional-${activityId}`}
+                                 initialData={formattedAdditionalActivity}
+                               />
+                             ) : null}
+                           </div>
+                         );
+                       })}
 
                       {/* New Activity Forms */}
                       {additionalEventsForms.map((activity) => (
@@ -3074,7 +2209,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           </TabsContent>
 
           <TabsContent value="consignment" className="flex-1 flex flex-col m-0">
-            <ConsignmentTrip legId={selectedLegId} onClose={onClose}/>
+            <ConsignmentTrip legId={selectedLegId} selectedLeg={selectedLeg} tripData={tripData} onClose={onClose}/>
           </TabsContent>
 
           <TabsContent value="transshipment" className="flex-1 flex flex-col m-0">
@@ -3082,12 +2217,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">Transloading Details</h3>
-                  <Badge variant="secondary" className="h-6 px-2">
-                    {selectedLeg.transshipments.length}
-                  </Badge>
-                </div>
+                 <div className="flex items-center gap-2">
+                   <h3 className="text-lg font-semibold">Transloading Details</h3>
+                   <Badge variant="secondary" className="h-6 px-2">
+                     0
+                   </Badge>
+                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" className="h-8">
                     <Plus className="h-4 w-4 mr-1" />
@@ -3204,9 +2339,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                         <TableHead className="w-[120px]">Draft Bill</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {selectedLeg.transshipments.map((transshipment) => (
-                        <TableRow key={transshipment.id}>
+                     <TableBody>
+                       {/* Transshipments would come from API if available */}
+                       {[].map((transshipment: any) => (
+                         <TableRow key={transshipment.id}>
                           <TableCell>
                             <div>
                               <div className="font-medium text-blue-600">WAG00000001</div>
@@ -3285,13 +2421,13 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 <SelectTrigger>
                   <SelectValue placeholder="Select leg or leave empty" />
                 </SelectTrigger>
-                <SelectContent>
-                  {legs.map((leg) => (
-                    <SelectItem key={leg.id} value={`${leg.from} - ${leg.to}`}>
-                      {leg.from} - {leg.to}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                 <SelectContent>
+                   {legs.map((leg) => (
+                     <SelectItem key={leg.LegSequence} value={`${leg.DeparturePointDescription} - ${leg.ArrivalPointDescription}`}>
+                       {leg.DeparturePointDescription} - {leg.ArrivalPointDescription}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
               </Select>
             </div>
 

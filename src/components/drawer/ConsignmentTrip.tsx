@@ -40,7 +40,7 @@ const safeSplit = (value: string | undefined, delimiter: string, index: number, 
   return parts[index] || fallback;
 };
 
-export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, tripData?: any, onClose?: () => void }) => {
+export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { legId: string, selectedLeg?: any, tripData?: any, onClose?: () => void }) => {
   const gridPlanId = 'ConsignmentTripPlanGrid';
   const gridActualId = 'ConsignmentTripActualGrid';
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -55,7 +55,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
   const [expandedCOInfo, setExpandedCOInfo] = useState(false);
   const [expandedActuals, setExpandedActuals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pickupComplete, setPickupComplete] = useState();
+  const [pickupComplete, setPickupComplete] = useState<boolean>(false);
   const [pickupCompleteDisabled, setPickupCompleteDisabled] = useState(false);
   const [customerList, setCustomerList] = useState<any[]>([]);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState('0');
@@ -4030,7 +4030,10 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
   }, [actualEditableData]);
 
   const { getConsignments } = useTripExecutionDrawerStore();
-  const consignments = getConsignments(legId) || [];
+  // Use selectedLeg.Consignment if provided, otherwise fallback to store
+  const consignments = selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment) 
+    ? selectedLeg.Consignment 
+    : (getConsignments(legId) || []);
 
   const handleEditRow = async (editedRow: any, rowIndex: number) => {
     try {
@@ -5003,7 +5006,10 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
 
                       // Update related state
                       setTimeout(() => {
-                        const cons = getConsignments(legId) || [];
+                        // Use selectedLeg.Consignment if provided, otherwise fallback to store
+                        const cons = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+                          ? selectedLeg.Consignment
+                          : (getConsignments(legId) || []);
                         if (cons.length > 0) {
                           const selectedIndex = parseInt(selectedCustomerIndex || '0', 10);
                           const selected = cons[selectedIndex];
@@ -5241,16 +5247,35 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
     fetchThuQtyUOMOptions();
   }, []);
 
-  // Step 2: Load fresh data whenever legId changes
+  // Track previous legId and selectedLeg to detect changes
+  const prevLegIdRef = useRef<string | null>(null);
+  const prevSelectedLegRef = useRef<any>(null);
+  
+  // Step 2: Load fresh data whenever legId or selectedLeg changes
   useEffect(() => {
     if (!legId) return;
 
-    // detect leg change
-    if (legId !== currentLeg) {
-      setCurrentLeg(legId);
-      hasUserEditsRef.current = false; // Reset user edits flag when leg changes
+    // Check if legId changed OR selectedLeg changed (by comparing LegSequence)
+    const legChanged = legId !== currentLeg || legId !== prevLegIdRef.current;
+    const selectedLegChanged = selectedLeg?.LegSequence !== prevSelectedLegRef.current?.LegSequence;
+    
+    if (legChanged || selectedLegChanged) {
+      if (legChanged) {
+        setCurrentLeg(legId);
+        hasUserEditsRef.current = false; // Reset user edits flag when leg changes
+      }
+      
+      // Update refs to track changes
+      prevLegIdRef.current = legId;
+      prevSelectedLegRef.current = selectedLeg;
 
-      const cons = getConsignments(legId) || [];
+      // Use selectedLeg.Consignment if provided, otherwise fallback to store
+      const cons = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+        ? selectedLeg.Consignment
+        : (getConsignments(legId) || []);
+      
+      console.log('ConsignmentTrip: Loading data for legId:', legId, 'selectedLeg.LegSequence:', selectedLeg?.LegSequence, 'consignments:', cons.length);
+      
       if (cons.length > 0) {
         const list = buildCustomerOrderList(cons);
         setCustomerList(list);
@@ -5261,6 +5286,7 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
         setPlannedData(selected?.Planned ?? []);
         setActualData(selected?.Actual ?? []);
         setActualEditableData(selected?.Actual ?? []);
+        console.log('ConsignmentTrip: Loaded planned:', selected?.Planned?.length, 'actual:', selected?.Actual?.length);
       } else {
         // reset everything if no consignment for new leg
         setCustomerList([]);
@@ -5269,25 +5295,34 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
         setPlannedData([]);
         setActualData([]);
         setActualEditableData([]);
-        // No consignment data available for this leg
+        console.log('ConsignmentTrip: No consignment data available for this leg');
       }
     }
-  }, [legId]); // only on leg change
+  }, [legId, selectedLeg, currentLeg]); // on leg change or selectedLeg change
 
-  // Step 3: Keep selection stable if same leg data updates
+  // Step 3: Keep selection stable if same leg data updates (when selectedLeg changes but legId is same)
   useEffect(() => {
-    // Early return if no current leg or no consignments
-    if (!currentLeg || consignments.length === 0) {
+    // Early return if no current leg
+    if (!currentLeg || !legId) {
+      return;
+    }
+
+    // Use selectedLeg.Consignment if provided, otherwise fallback to store
+    const currentConsignments = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+      ? selectedLeg.Consignment
+      : (getConsignments(legId) || []);
+
+    if (currentConsignments.length === 0) {
       return;
     }
 
     // Build customer list
-    const list = buildCustomerOrderList(consignments);
+    const list = buildCustomerOrderList(currentConsignments);
     setCustomerList(list);
 
     // Get selected consignment
     const selectedIndex = parseInt(selectedCustomerIndex || '0', 10);
-    const selected = consignments[selectedIndex];
+    const selected = currentConsignments[selectedIndex];
 
     if (!selected) {
       return;
@@ -5345,12 +5380,17 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
       });
     });
 
-  }, [currentLeg, consignments, selectedCustomerIndex]);
+  }, [currentLeg, legId, selectedLeg, selectedCustomerIndex]);
 
   // Separate useEffect to handle customer selection changes
   useEffect(() => {
-    if (!currentLeg || consignments.length === 0) return;
-  }, [selectedCustomerIndex]);
+    if (!currentLeg || !legId) return;
+    // Use selectedLeg.Consignment if provided, otherwise fallback to store
+    const currentConsignments = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+      ? selectedLeg.Consignment
+      : (getConsignments(legId) || []);
+    if (currentConsignments.length === 0) return;
+  }, [selectedCustomerIndex, currentLeg, legId, selectedLeg]);
 
   // Step 4: Handle dropdown change
   const handleCustomerChange = (idx: string) => {
@@ -5502,8 +5542,8 @@ export const ConsignmentTrip = ({ legId, tripData, onClose }: { legId: string, t
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
-              <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={(checked) => setPickupComplete(checked as boolean)}  />
-              <Label htmlFor="maintenanceRequired" className="cursor-pointer">Pickup Complete for this CO</Label>
+              <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={setPickupComplete}  />
+              <Label htmlFor="pickupComplete" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
 
             <Button
