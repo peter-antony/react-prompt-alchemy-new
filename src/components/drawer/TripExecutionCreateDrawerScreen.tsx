@@ -2150,9 +2150,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                    <div className="font-medium text-sm">
                                      {activity.ActivityDescription || activity.Activity} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}
                                    </div>
+                                   {activity?.ActualTime && (     
                                    <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
                                       {`${getDelayedTime(activity)} Delayed`}
                                     </div>
+                                   )}
                                  </div>
                                </div>
                                <div className="flex items-center gap-2">
@@ -2188,9 +2190,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                               </div>
                               <div className='flex items-center gap-2'>
                                 <div className="font-medium text-sm">{(activity as any).title} - {formatDateToDDMMYYYY((activity as any).RevisedDate)} {formatTimeTo12Hour((activity as any).RevisedTime)}</div>
+                                {activity?.ActualTime && (     
                                 <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
                                   {`${getDelayedTime(activity)} Delayed`}
                                 </div>
+                                )}
                                 {/* <div className="text-xs text-muted-foreground">{activity.PlannedDate}</div> */}
                               </div>
                             </div>
