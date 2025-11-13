@@ -2345,6 +2345,9 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
               TariffType: matchedTariff.TariffType + ' || ' + matchedTariff.TariffTypeDescription
             });
           }
+          const tariffCurrency = matchedTariff.ValueCurrency?.trim() || 'EUR';
+          jsonStore.setQuickOrderFields({ Currency: tariffCurrency });
+          console.log('✅ Currency updated based on tariff:', tariffCurrency);
           if (matchedTariff && basicDetailsRef && basicDetailsRef.current && typeof basicDetailsRef.current.setFormValues === "function") {
             basicDetailsRef.current.setFormValues({
               Resource: matchedTariff.Resource + ' || ' + matchedTariff.ResourceDescription,
