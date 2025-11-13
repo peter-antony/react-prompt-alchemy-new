@@ -346,6 +346,12 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     });
   });
 
+  // Validate Reason For Update is provided
+  const reasonStr = (formData.reasonForUpdate ?? "").toString().trim();
+  if (!reasonStr) {
+    missingFields.push("Reason For Update");
+  }
+
   if (missingFields.length > 0) {
     toast({
       title: "⚠️ Missing Mandatory Fields",
@@ -744,7 +750,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       <div className="border-b border-gray-200 bg-white px-6 py-4">
 
         {/* Customer & Service Info Grid */}
-        <div className="grid grid-cols-5 gap-6 text-sm">
+        <div className="grid grid-cols-6 gap-6 text-sm">
           <div>
             <p className="text-gray-500 mb-1 font-medium">Customer Order</p>
             <p className="font-semibold text-gray-900">{selectedRoute?.CustomerOrderID} - {selectedRoute?.CustomerName}</p>
@@ -760,6 +766,10 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
           <div>
             <p className="text-gray-500 mb-1 font-medium">Sub-Service</p>
             <p className="font-semibold text-gray-900">{selectedRoute?.SubServiceDescription}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 mb-1 font-medium">Route ID</p>
+            <p className="font-semibold text-gray-900">{selectedRoute?.RouteID} || {selectedRoute?.RouteDescription}</p>
           </div>
           <div className='flex justify-end'>
             <Button
@@ -821,7 +831,10 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                         {/* Trip Details */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">
-                            {trip.TripID} : {trip.DepartureDescription}, {trip.DepartureActualDate || "-"} → {trip.ArrivalDescription}, {trip.ArrivalActualDate || "-"}
+                            {trip.TripID} : {trip.DepartureDescription},{" "}
+                            {trip.DepartureActualDate ? trip.DepartureActualDate.slice(0, -3) : "-"} →{" "}
+                            {trip.ArrivalDescription},{" "}
+                            {trip.ArrivalActualDate ? trip.ArrivalActualDate.slice(0, -3) : "-"}
                           </span>
                           {trip.LoadType && (
                             <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 text-xs px-2 py-1">
@@ -935,7 +948,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
 
         {/* Reason for Update */}
         <div className="mt-6 max-w-md">
-          <Label htmlFor="reasonForUpdate">Reason For Update</Label>
+          <Label htmlFor="reasonForUpdate">Reason For Update<span className="text-red-500 text-[13px] ml-1">*</span></Label>
           {/* <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
             <SelectTrigger id="reasonForUpdate" className="mt-2">
               <SelectValue placeholder="Select Reason" />
