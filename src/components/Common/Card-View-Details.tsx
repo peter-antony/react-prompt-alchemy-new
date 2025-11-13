@@ -130,7 +130,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         console.log("Delete item: ", item);
         console.log("Delete item: ", jsonStore.getQuickOrder());
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
-        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // jsonStore.setQuickOrder(fetchedQuickOrderData);
         // Pass the item data to the parent component via the callback
         if (typeof onDeleteResourceGroup === "function") {
             onDeleteResourceGroup(item);
@@ -139,7 +139,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
 
     const handleCopy = (item: CardDetailsItem) => {
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
-        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // jsonStore.setQuickOrder(fetchedQuickOrderData);
         // Pass the item data to the parent component via the callback
         if (typeof onCopyResourceGroup === "function") {
             onCopyResourceGroup(item);
@@ -148,7 +148,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
 
     const handleAttachments = (item: CardDetailsItem) => {
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
-        jsonStore.setQuickOrder(fetchedQuickOrderData);
+        // jsonStore.setQuickOrder(fetchedQuickOrderData);
         // Pass the item data to the parent component via the callback
         const resourceId = item.ResourceUniqueID;
         console.log("resourceId", resourceId);
