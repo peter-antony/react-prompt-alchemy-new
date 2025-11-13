@@ -29,7 +29,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
 }
 
-export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({
+export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
   panelId,
   panelOrder = 1,
   startingTabIndex = 1,
@@ -67,6 +67,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [currentBadgeValue, setCurrentBadgeValue] = useState(badgeValue);
+
+  // Keep internal panelConfig in sync with incoming prop so option updates reflect
+  useEffect(() => {
+    setPanelConfig(initialPanelConfig);
+  }, [initialPanelConfig]);
 
   // Create default values from panel config
   const createDefaultValues = useMemo(() => {

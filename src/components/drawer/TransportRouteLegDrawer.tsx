@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, useMemo } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useMemo, useEffect } from 'react';
 import { DynamicPanel } from '@/components/DynamicPanel/DynamicPanel';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -107,6 +107,10 @@ const extractIdFromPipeSeparatedValue = (value: string | null | undefined): stri
 export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, TransportRouteLegDrawerProps>((props, ref) => {
   const [reasonForUpdate, setReasonForUpdate] = useState('');
   const [hoveredTooltipIndex, setHoveredTooltipIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true); // Start as true so forms can render
+  const [errors, setErrors] = useState<string | null>(null);
+  const [apiData, setApiData] = useState(null);
+  const [QCCode1, setQCCode1] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Refs for each DynamicPanel
@@ -163,6 +167,37 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
   const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
   const fetchQCCode1 = fetchMasterData("ManageRouteUpdateCO QC1 Init");
+
+  const messageTypes = [
+    "ManageRouteUpdateCO QC1 Init",
+  ]
+
+  useEffect(() => {
+      fetchAll();
+    }, []);
+    const fetchAll = async () => {
+      for (const type of messageTypes) {
+        await fetchData(type);
+      }
+    };
+    const fetchData = async (messageType) => {
+      setErrors(null);
+      setLoading(false);
+      try {
+        const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType });
+        setApiData(data);
+        console.log("API Data:", data);
+        
+        if (messageType == "ManageRouteUpdateCO QC1 Init") {
+          setQCCode1(JSON.parse(data?.data?.ResponseData));
+        }
+            } catch (err) {
+      setErrors(`Error fetching API data for ${messageType}`);
+      // setApiData(data);
+    } finally {
+      setLoading(true);
+    }
+  };
 
   // Helper function to get form data
   const getFormData = () => {
@@ -264,6 +299,42 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       // ====== Check for Remarks changes ======
       if (originalLeg && originalLeg.Remarks !== panelData.Remarks) {
         isModified = true;
+      }
+
+      // ====== Normalize and compare QCCode1 (inputdropdown) ======
+      // DynamicPanel returns inputdropdown values as an object: { dropdown, input }
+      // We need to split this into QCCode1 and QCCode1Value for payload
+      if (panelData.QCCode1) {
+        if (typeof panelData.QCCode1 === 'object' && panelData.QCCode1 !== null) {
+          const qcDropdown = (panelData.QCCode1.dropdown ?? '').toString().trim();
+          const qcInput = (panelData.QCCode1.input ?? '').toString().trim();
+
+          // Compare with original values to determine modification
+          if (originalLeg && (originalLeg.QCCode1 !== qcDropdown || (originalLeg.QCCode1Value ?? '') !== qcInput)) {
+            isModified = true;
+          }
+
+          // Overwrite fields into expected payload format
+          panelData.QCCode1 = qcDropdown || null;
+          panelData.QCCode1Value = qcInput || null;
+        } else if (typeof panelData.QCCode1 === 'string') {
+          // If a string slipped through, try to split format "code-input" or treat entire as code
+          const val = panelData.QCCode1.trim();
+          const hyphenIdx = val.indexOf('-');
+          const code = hyphenIdx > 0 ? val.slice(0, hyphenIdx).trim() : val;
+          const input = hyphenIdx > 0 ? val.slice(hyphenIdx + 1).trim() : '';
+
+          if (originalLeg && (originalLeg.QCCode1 !== code || (originalLeg.QCCode1Value ?? '') !== input)) {
+            isModified = true;
+          }
+
+          panelData.QCCode1 = code || null;
+          panelData.QCCode1Value = input || null;
+        }
+      } else {
+        // Ensure fields exist explicitly when not set
+        panelData.QCCode1 = panelData.QCCode1 ?? null;
+        panelData.QCCode1Value = panelData.QCCode1Value ?? null;
       }
 
       // ====== Determine ModeFlag correctly ======
@@ -564,6 +635,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 3,
         width: 'six',
+        hideSearch: false,
+        disableLazyLoading: false,
         fetchOptions: fetchDepartures
         // Remove onChange since we're using ref-based approach
       },
@@ -579,6 +652,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 4,
         width: 'six',
+        hideSearch: false,
+        disableLazyLoading: false,
         fetchOptions: fetchArrivals
         // Remove onChange since we're using ref-based approach
       },
@@ -594,6 +669,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 5,
         width: 'six',
+        hideSearch: false,
+        disableLazyLoading: false,
         fetchOptions: fetchLegBehaviours
         // Remove onChange since we're using ref-based approach
       },
@@ -607,6 +684,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 6,
         width: 'six',
+        hideSearch: false,
+        disableLazyLoading: false,
         fetchOptions: fetchTransportModes
         // Remove onChange since we're using ref-based approach
       },
@@ -621,8 +700,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         editable: true,
         order: 7,
         maxLength: 255,
-        fetchOptions: fetchQCCode1,
-        // options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+        // fetchOptions: fetchQCCode1,
+        options: QCCode1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
         // Removed onChange events - using uncontrolled approach
       },
       Remarks: {
@@ -634,7 +713,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         visible: true,
         editable: true,
         order: 8,
-        width: 'six'
+        width: 'six',
+        placeholder: '',
+        maxLength: 500,
       },
     };
   };
