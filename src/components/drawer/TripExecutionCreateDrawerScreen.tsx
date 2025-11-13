@@ -569,7 +569,104 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         return { ...activity, ModeFlag: 'NoChange' as any } as any;
       });
       
-      // Collect all updated AdditionalActivities from their respective forms
+      // Collect data from NEW events forms (forms added via popup)
+      const newActivities = eventsForms.map((newForm: any) => {
+        const formRef = getFormRef(newForm.id);
+        
+        if (formRef?.current?.getFormValues) {
+          try {
+            const formData = formRef.current.getFormValues();
+            console.log("New event form data:", formData);
+            
+            // Parse LastIdentifiedLocation
+            let LastIdentifiedLocationValue = '';
+            let LastIdentifiedLocationLabel = '';
+            if (typeof formData.LastIdentifiedLocation === 'string' && formData.LastIdentifiedLocation.includes('||')) {
+              const [value, ...labelParts] = formData.LastIdentifiedLocation.split('||');
+              LastIdentifiedLocationValue = value.trim();
+              LastIdentifiedLocationLabel = labelParts.join('||').trim();
+            } else if (typeof formData.LastIdentifiedLocation === 'string') {
+              LastIdentifiedLocationValue = formData.LastIdentifiedLocation;
+              LastIdentifiedLocationLabel = formData.LastIdentifiedLocation;
+            } else if (typeof formData.LastIdentifiedLocation === 'object' && formData.LastIdentifiedLocation !== null) {
+              const splitData = splitDropdowns(formData.LastIdentifiedLocation);
+              LastIdentifiedLocationValue = splitData.value || '';
+              LastIdentifiedLocationLabel = splitData.label || '';
+            }
+            if (!LastIdentifiedLocationLabel) LastIdentifiedLocationLabel = LastIdentifiedLocationValue;
+            
+            // Create new activity object with ModeFlag: 'Insert'
+            return {
+              Activity: formData.ActivityName || formData.Activity || newForm.Activity || null,
+              ActivityDescription: formData.ActivityDescription || newForm.ActivityDescription || newForm.title || '',
+              CustomerID: formData.CustomerID || newForm.CustomerID || null,
+              CustomerName: formData.CustomerName || newForm.CustomerName || '',
+              ConsignmentInformation: formData.ConsignmentInformation || newForm.ConsignmentInformation || '',
+              CustomerOrder: formData.CustomerOrder || newForm.CustomerOrder || null,
+              PlannedDate: formData.PlannedDate || newForm.PlannedDate || newForm.PlanDate || null,
+              PlannedTime: formData.PlannedTime || newForm.PlannedTime || newForm.PlanTime || null,
+              RevisedDate: formData.RevisedDate || newForm.RevisedDate || null,
+              RevisedTime: formData.RevisedTime || newForm.RevisedTime || null,
+              ActualDate: formData.ActualDate || newForm.ActualDate || null,
+              ActualTime: formData.ActualTime || newForm.ActualTime || null,
+              DelayedIn: formData.DelayedIn || newForm.DelayedIn || null,
+              ...transformQuickCodeFields(formData, newForm),
+              Remarks1: formData.Remarks1 || newForm.Remarks1 || null,
+              Remarks2: formData.Remarks2 || newForm.Remarks2 || null,
+              Remarks3: formData.Remarks3 || newForm.Remarks3 || null,
+              EventProfile: formData.EventProfile || newForm.EventProfile || null,
+              ReasonForChanges: formData.ReasonForChanges || newForm.ReasonForChanges || null,
+              DelayedReason: formData.DelayedReason || newForm.DelayedReason || null,
+              LastIdentifiedLocation: LastIdentifiedLocationValue || newForm.LastIdentifiedLocation || null,
+              LastIdentifiedLocationDescription: LastIdentifiedLocationLabel || newForm.LastIdentifiedLocationDescription || '',
+              LastIdentifiedDate: formData.LastIdentifiedDate || newForm.LastIdentifiedDate || null,
+              LastIdentifiedTime: formData.LastIdentifiedTime || newForm.LastIdentifiedTime || null,
+              AmendmentNo: formData.AmendmentNo || newForm.AmendmentNo || null,
+              ModeFlag: 'Insert' as any // Mark as new insert
+            } as any;
+          } catch (error) {
+            console.warn(`Error getting form data for new event ${newForm.id}:`, error);
+            // Return basic data even if form data retrieval fails
+            return {
+              Activity: newForm.Activity || null,
+              ActivityDescription: newForm.title || newForm.ActivityDescription || '',
+              PlannedDate: newForm.PlanDate || null,
+              PlannedTime: newForm.PlanTime || null,
+              ModeFlag: 'Insert' as any
+            } as any;
+          }
+        } else {
+          console.warn(`Form ref not found for new event ${newForm.id}`);
+          // Return basic data if ref is not available
+          return {
+            Activity: newForm.Activity || null,
+            ActivityDescription: newForm.title || newForm.ActivityDescription || '',
+            PlannedDate: newForm.PlanDate || null,
+            PlannedTime: newForm.PlanTime || null,
+            ModeFlag: 'Insert' as any
+          } as any;
+        }
+      });
+      
+      // Combine existing updated activities with new activities
+      const allActivities = [...updatedActivities, ...newActivities];
+      
+      console.log("All Activities (existing + new):", allActivities);
+      console.log("New activities count:", newActivities.length);
+      
+      // Helper to split dropdown values
+      const splitDropdownValue = (value: any) => {
+        if (typeof value === 'string' && value.includes('||')) {
+          const [val, ...labelParts] = value.split('||');
+          return { value: val.trim(), label: labelParts.join('||').trim() };
+        } else if (typeof value === 'object' && value !== null) {
+          const splitData = splitDropdowns(value);
+          return { value: splitData.value || splitData.dropdown || value, label: splitData.label || value };
+        }
+        return { value: value || '', label: value || '' };
+      };
+      
+      // Collect all updated AdditionalActivities from their respective forms (existing activities)
       const updatedAdditionalActivities = (selectedLeg.AdditionalActivities || []).map((additionalActivity: any, index) => {
         const activityId = `additional-activity-${selectedLeg.LegSequence}-${additionalActivity.Sequence || index}`;
         const additionalActivityRef = getAdditionalActivityRef(activityId);
@@ -578,38 +675,27 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           try {
             const formData = additionalActivityRef.current.getFormValues();
             console.log("formData ------------", formData);
-            // Helper to split dropdown values
-            const splitDropdownValue = (value: any) => {
-              if (typeof value === 'string' && value.includes('||')) {
-                const [val, ...labelParts] = value.split('||');
-                return { value: val.trim(), label: labelParts.join('||').trim() };
-              } else if (typeof value === 'object' && value !== null) {
-                const splitData = splitDropdowns(value);
-                return { value: splitData.value || splitData.dropdown || value, label: splitData.label || value };
-              }
-              return { value: value || '', label: value || '' };
-            };
             
             const fromLocationData = splitDropdownValue(formData.FromLocation);
             const toLocationData = splitDropdownValue(formData.ToLocation);
-            const activityData = splitDropdownValue(formData.Activity);
-            const categoryData = splitDropdownValue(formData.Category);
-            const placeItData = splitDropdownValue(formData.PlaceIt);
-            const reportedByData = splitDropdownValue(formData.ReportedBy);
+            // const activityData = splitDropdownValue(formData.Activity);
+            // const categoryData = splitDropdownValue(formData.Category);
+            // const placeItData = splitDropdownValue(formData.PlaceIt);
+            // const reportedByData = splitDropdownValue(formData.ReportedBy);
             const customerOrderData = splitDropdownValue(formData.CustomerOrder);
             
-            console.log("activityData =================", activityData);
+            console.log("fromLocationData =================", fromLocationData);
             console.log("activityData =================", additionalActivity);
             console.log("activityData =================", formData);
 
             return {
               ...additionalActivity,
               Sequence: formData.Sequence || additionalActivity.Sequence,
-              Category: categoryData.value || additionalActivity.Category,
-              Activity: activityData.value || additionalActivity.Activity,
-              ActivityDescription: activityData.label || formData.ActivityDescription || additionalActivity.ActivityDescription,
-              PlaceIt: placeItData.value || additionalActivity.PlaceIt,
-              ReportedBy: reportedByData.value || additionalActivity.ReportedBy,
+              Category: formData.Category || additionalActivity.Category,
+              Activity: formData.Activity || additionalActivity.Activity,
+              ActivityDescription: formData.ActivityDescription || additionalActivity.ActivityDescription,
+              PlaceIt: formData.PlaceIt || additionalActivity.PlaceIt,
+              ReportedBy: formData.ReportedBy || additionalActivity.ReportedBy,
               CustomerOrder: customerOrderData.value || additionalActivity.CustomerOrder,
               FromLocation: fromLocationData.value || additionalActivity.FromLocation,
               FromLocationDescription: fromLocationData.label || additionalActivity.FromLocationDescription,
@@ -635,11 +721,77 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         return { ...additionalActivity, ModeFlag: 'NoChange' };
       });
       
-      // Update the leg with new activities
+      // Collect data from NEW additional events forms (forms added via popup)
+      const newAdditionalActivities = additionalEventsForms.map((newForm: any) => {
+        const formRef = getFormRef(`additional-${newForm.id}`);
+        
+        if (formRef?.current?.getFormValues) {
+          try {
+            const formData = formRef.current.getFormValues();
+            console.log("New additional event form data:", formData);
+            
+            const fromLocationData = splitDropdownValue(formData.FromLocation);
+            const toLocationData = splitDropdownValue(formData.ToLocation);
+            const customerOrderData = splitDropdownValue(formData.CustomerOrder);
+            // Create new additional activity object with ModeFlag: 'Insert'
+            return {
+              Sequence: formData.Sequence || newForm.Sequence || null,
+              Category: formData.Category || newForm.Category || null,
+              Activity: formData.Activity || newForm.Activity || null,
+              ActivityDescription: formData.ActivityDescription || newForm.ActivityDescription || newForm.title || '',
+              PlaceIt: formData.PlaceIt || newForm.PlaceIt || null,
+              ReportedBy: formData.ReportedBy || newForm.ReportedBy || null,
+              CustomerOrder: customerOrderData.value || newForm.CustomerOrder || null,
+              FromLocation: fromLocationData.value || newForm.FromLocation || null,
+              FromLocationDescription: fromLocationData.label || newForm.FromLocationDescription || '',
+              ToLocation: toLocationData.value || newForm.ToLocation || null,
+              ToLocationDescription: toLocationData.label || newForm.ToLocationDescription || '',
+              PlannedDate: formData.PlannedDate || newForm.PlannedDate || newForm.PlanDate || null,
+              PlannedTime: formData.PlannedTime || newForm.PlannedTime || newForm.PlanTime || null,
+              RevisedDate: formData.RevisedDate || newForm.RevisedDate || null,
+              RevisedTime: formData.RevisedTime || newForm.RevisedTime || null,
+              ActualDate: formData.ActualDate || newForm.ActualDate || null,
+              ActualTime: formData.ActualTime || newForm.ActualTime || null,
+              Remarks: formData.Remarks1 || newForm.Remarks || null,
+              Remarks1: formData.Remarks2 || newForm.Remarks1 || null,
+              Remarks2: formData.Remarks3 || newForm.Remarks2 || null,
+              ModeFlag: 'Insert' // Mark as new insert
+            };
+          } catch (error) {
+            console.warn(`Error getting form data for new additional event ${newForm.id}:`, error);
+            // Return basic data even if form data retrieval fails
+            return {
+              Activity: newForm.Activity || null,
+              ActivityDescription: newForm.title || newForm.ActivityDescription || '',
+              PlannedDate: newForm.PlanDate || null,
+              PlannedTime: newForm.PlanTime || null,
+              ModeFlag: 'Insert'
+            };
+          }
+        } else {
+          console.warn(`Form ref not found for new additional event ${newForm.id}`);
+          // Return basic data if ref is not available
+          return {
+            Activity: newForm.Activity || null,
+            ActivityDescription: newForm.title || newForm.ActivityDescription || '',
+            PlannedDate: newForm.PlanDate || null,
+            PlannedTime: newForm.PlanTime || null,
+            ModeFlag: 'Insert'
+          };
+        }
+      });
+      
+      // Combine existing updated activities with new activities
+      const allAdditionalActivities = [...updatedAdditionalActivities, ...newAdditionalActivities];
+      
+      console.log("All AdditionalActivities (existing + new):", allAdditionalActivities);
+      console.log("New activities count:", newAdditionalActivities.length);
+      
+      // Update the leg with new activities (including new events and new additional events)
       updatedLegDetails[legIndex] = {
         ...currentLeg,
-        Activities: updatedActivities as any,
-        AdditionalActivities: updatedAdditionalActivities
+        Activities: allActivities as any,
+        AdditionalActivities: allAdditionalActivities
       };
       
       // Update trip data
@@ -648,6 +800,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         LegDetails: updatedLegDetails
       };
       
+      console.log("updatedTripData =================", updatedTripData);
       // Save to API
       const response = await tripService.saveTrip(updatedTripData);
       const resourceStatus = (response as any)?.data?.IsSuccess;
@@ -658,6 +811,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        
+        // Clear the new events forms and additional events forms after successful save
+        setEventsForms([]);
+        setAdditionalEventsForms([]);
         
         // Refresh trip data after successful save
         await fetchTripData();
@@ -726,6 +883,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const formatAdditionalActivitiesForForm = (additionalActivities: any[]) => {
     if (!additionalActivities || additionalActivities.length === 0) return [];
     
+    console.log("get data ===", additionalActivities);
     return additionalActivities.map((activity, index) => ({
       // Map API response fields to form fields
       Sequence: activity.Sequence || (index + 1),
@@ -747,9 +905,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       RevisedTime: activity.RevisedTime || '',
       ActualDate: activity.ActualDate || '',
       ActualTime: activity.ActualTime || '',
-      Remarks: activity.Remarks || '',
-      Remarks1: activity.Remarks1 || '',
-      Remarks2: activity.Remarks2 || '',
+      Remarks1: activity.Remarks || '',
+      Remarks2: activity.Remarks1 || '',
+      Remarks3: activity.Remarks2 || '',
       EventProfile: activity.EventProfile || '',
       ModeFlag: activity.ModeFlag || 'NoChange',
       
