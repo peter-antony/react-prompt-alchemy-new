@@ -541,10 +541,11 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   //     }
   //   }
   // }, [isOpen]);
-  //checking with all equipment ids coming from Trip-Planning page
+  // Auto-select resources based on selectedResourcesRq when drawer opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && selectedResourcesRq && Array.isArray(selectedResourcesRq) && selectedResourcesRq.length > 0) {
       console.log("INSIDE useEffect, isOpen-true", selectedResourcesRq);
+      console.log("Current resourceType:", resourceType);
   
       // Step 1: Clear previous selections
       setSelectedRows(new Set());
@@ -553,46 +554,89 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       setRowTripId([]);
       console.log("Selection cleared on drawer open");
   
-      // Step 2: Prepare ID field and the list of EquipmentIDs to match
-      const idField = getIdField(); // e.g. "EquipmentID", "DriverID", etc.
+      // Step 2: Prepare ID field for the current resource type
+      const idField = getIdField(); // e.g. "EquipmentID", "DriverID", "HandlerID", "VehicleID", "VendorID", "SupplierID"
       console.log("idField:", idField);
   
-      // Extract all EquipmentIDs from selectedResourcesRq
-      if(selectedResourcesRq!=0){
-        const equipmentIds = selectedResourcesRq
-          ?.filter((r) => r?.ResourceType === "Equipment" && r?.EquipmentID)
-          ?.map((r) => r.EquipmentID);
-    
-        console.log("equipmentIds to match:", equipmentIds);
-    
-        if (equipmentIds?.length > 0) {
-          const newSelectedRows = new Set<number>();
-          const newSelectedRowIds = new Set<string>();
-          const newSelectedRowObjects: any[] = [];
-    
-          currentResourceData?.forEach((row: any, index: number) => {
-            const rowId = row[idField];
-            if (equipmentIds.includes(rowId)) {
-              newSelectedRows.add(index);
-              newSelectedRowIds.add(rowId);
-              newSelectedRowObjects.push(row);
-            }
-          });
-    
-          if (newSelectedRowIds.size > 0) {
-            setSelectedRows(newSelectedRows);
-            setSelectedRowIds(newSelectedRowIds);
-            setSelectedRowObjects(newSelectedRowObjects);
-            setRowTripId(Array.from(newSelectedRowIds));
-    
-            console.log("Auto-selected equipment rows:", newSelectedRowObjects);
-          } else {
-            console.log("No matching equipment rows found.");
-          }
-        }
+      // Step 3: Extract IDs from selectedResourcesRq based on resource type
+      // The selectedResourcesRq array contains objects like:
+      // Equipment: [{ EquipmentID: "..." }]
+      // Handler: [{ HandlerID: "..." }]
+      // Vehicle: [{ VehicleID: "..." }]
+      // Driver: [{ DriverID: "..." }]
+      // Supplier: [{ VendorID: "..." }] or similar
+      // Schedule: [{ SupplierID: "..." }] or similar
+      
+      let resourceIds: string[] = [];
+      
+      // Extract IDs based on the ID field name
+      if (idField === 'EquipmentID') {
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.EquipmentID)
+          .map((r) => r.EquipmentID);
+      } else if (idField === 'HandlerID') {
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.HandlerID)
+          .map((r) => r.HandlerID);
+      } else if (idField === 'VehicleID') {
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.VehicleID)
+          .map((r) => r.VehicleID);
+      } else if (idField === 'DriverCode') {
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.DriverID || r?.DriverCode)
+          .map((r) => r.DriverID || r.DriverCode);
+      } else if (idField === 'VendorID') {
+        // For Supplier
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.VendorID)
+          .map((r) => r.VendorID);
+      } else if (idField === 'SupplierID') {
+        // For Schedule
+        resourceIds = selectedResourcesRq
+          .filter((r) => r?.SupplierID)
+          .map((r) => r.SupplierID);
       }
+    
+      console.log(`${resourceType} IDs to match:`, resourceIds);
+    
+      // Step 4: Match and select rows in the grid
+      if (resourceIds?.length > 0 && currentResourceData?.length > 0) {
+        const newSelectedRows = new Set<number>();
+        const newSelectedRowIds = new Set<string>();
+        const newSelectedRowObjects: any[] = [];
+    
+        currentResourceData?.forEach((row: any, index: number) => {
+          const rowId = row[idField];
+          if (rowId && resourceIds.includes(String(rowId))) {
+            newSelectedRows.add(index);
+            newSelectedRowIds.add(String(rowId));
+            newSelectedRowObjects.push(row);
+          }
+        });
+    
+        if (newSelectedRowIds.size > 0) {
+          setSelectedRows(newSelectedRows);
+          setSelectedRowIds(newSelectedRowIds);
+          setSelectedRowObjects(newSelectedRowObjects);
+          setRowTripId(Array.from(newSelectedRowIds));
+    
+          console.log(`Auto-selected ${resourceType} rows:`, newSelectedRowObjects);
+        } else {
+          console.log(`No matching ${resourceType} rows found in grid.`);
+        }
+      } else {
+        console.log(`No ${resourceType} IDs to match or no grid data available.`);
+      }
+    } else if (isOpen) {
+      // Clear selections if drawer opens but no selected resources
+      setSelectedRows(new Set());
+      setSelectedRowIds(new Set());
+      setSelectedRowObjects([]);
+      setRowTripId([]);
+      console.log("Drawer opened with no selected resources - cleared selections");
     }
-  }, [isOpen, selectedResourcesRq, currentResourceData]);
+  }, [isOpen, selectedResourcesRq, currentResourceData, resourceType]);
   
 
   // Load resource data only if no prop data is provided
@@ -751,6 +795,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         setSelectedRowObjects([row]);
         setRowTripId([rowId]);
         console.log('Selected only this row (cleared previous selections):', rowId);
+        console.log('Selected row objects after click (computed):', [row]);
+        console.log('Selected row IDs after click (computed):', [rowId]);
       }
     } else {
       // Multi-selection mode for other resource types (Equipment, Driver, Handler, Vehicle)
@@ -774,6 +820,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         setSelectedRowObjects(newSelectedRowObjects);
         setRowTripId(Array.from(newSelectedRowIds));
         console.log('Removed row from multi-selection:', rowId);
+        console.log('Selected row objects after click (computed):', newSelectedRowObjects);
+        console.log('Selected row IDs after click (computed):', Array.from(newSelectedRowIds));
       }
       else {
         // Add row: add to all tracking sets/arrays (ensure uniqueness)
@@ -793,17 +841,19 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         setSelectedRowObjects(newSelectedRowObjects);
         setRowTripId(Array.from(newSelectedRowIds));
         console.log('Added row to multi-selection:', rowId);
+        console.log('Selected row objects after click (computed):', newSelectedRowObjects);
+        console.log('Selected row IDs after click (computed):', Array.from(newSelectedRowIds));
       }
     }
-
-    console.log('Selected row objects after click:', isSingleSelectionMode ? [row] : selectedRowObjects);
-    console.log('Selected row IDs after click:', isSingleSelectionMode ? [rowId] : Array.from(selectedRowIds));
   };
 
   // Handle add resource
   const handleAddResource = () => {
     const idField = getIdField();
     const selectedItems = currentResourceData.filter(item => selectedRowIds.has(item[idField]));
+    console.log('[Add to CO] idField:', idField);
+    console.log('[Add to CO] selectedRowIds:', Array.from(selectedRowIds));
+    console.log('[Add to CO] selectedItems count:', selectedItems.length);
     
     // Map ResourceType based on idField
     const getResourceTypeFromIdField = (idField: string) => {
@@ -867,6 +917,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     console.log('handle resource click', idField, serviceType, subServiceType);
     console.log('rowTripId"s===========', rowTripId);
     console.log('formattedDataArray===========', formattedDataArray);
+    console.log('[Add to CO] Dispatching formatted selection payload count:', formattedDataArray.length);
     
     // Pass both original selected items and formatted data array to parent
     onAddResource(formattedDataArray);

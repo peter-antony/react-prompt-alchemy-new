@@ -666,6 +666,18 @@ const TripPlanning = () => {
     }]);
   };
   //400--
+  const transformedResourceKeysEquipment = new Set<string>();
+  const transformedResourceKeysHandler = new Set<string>();
+
+  const FormatedGroupResources = {
+    Equipments: [] as any[],
+    Handlers: [] as any[],
+    Vehicle: [] as any[],
+    Drivers: [] as any[],
+    Supplier: [] as any[],
+    Schedule: [] as any[]
+  };
+
   const handleAddResource = (resources: any[]) => {
     setSelectedResources(resources);
     console.log('Selected resources:', resources);
@@ -751,25 +763,41 @@ const TripPlanning = () => {
       } else {
         // Normal merge for other resource types (Equipment, Driver, Handler, Vehicle)
         // Check for duplicates before adding - don't add if ResourceID and ResourceType already exist
+
+        // Replace resources of the current type for the active leg (Equipment, Driver, Handler, Vehicle)
+        // Determine the resource type being added from state or payload
+        const resourceTypeBeingAdded = currentResourceType || (transformedResourceDetails[0]?.ResourceType ?? '');
+
+        // Remove existing resources of the same type for the same leg (if leg present)
+        const filteredExistingResources = existingResourceDetails.filter((existing: any) => {
+          const sameType = existing.ResourceType === resourceTypeBeingAdded;
+          const sameLeg = typeof existing.LegBehaviour !== 'undefined' ? (existing.LegBehaviour === currentLegBehaviour) : true;
+          // Keep if not the same type for this leg; otherwise remove to replace
+          return !(sameType && sameLeg);
+        });
+
+        // Add LegBehaviour to the new resources for consistency
         const resourcesWithLegBehaviour = transformedResourceDetails
           .map(resource => ({
             ...resource,
             LegBehaviour: currentLegBehaviour
           }))
           .filter(newResource => {
-            // Check if a resource with the same ResourceID and ResourceType already exists
-            const isDuplicate = existingResourceDetails.some((existing: any) =>
-              existing.ResourceID === newResource.ResourceID &&
-              existing.ResourceType === newResource.ResourceType
-            );
+            // Check against the filtered existing resources (same-type for this leg removed)
+            const isDuplicate = filteredExistingResources.some((existing: any) => {
+              const sameIdAndType = existing.ResourceID === newResource.ResourceID && existing.ResourceType === newResource.ResourceType;
+              const sameLeg = typeof existing.LegBehaviour !== 'undefined' ? (existing.LegBehaviour === currentLegBehaviour) : true;
+              return sameIdAndType && sameLeg;
+            });
             if (isDuplicate) {
-              console.log(`Skipping duplicate resource: ${newResource.ResourceType} - ${newResource.ResourceID}`);
+              console.log(`Skipping duplicate after filter: ${newResource.ResourceType} - ${newResource.ResourceID}`);
             }
             return !isDuplicate; // Only include non-duplicates
           });
 
-        mergedResourceDetails = [...existingResourceDetails, ...resourcesWithLegBehaviour];
-        console.log("Other resource types - normal merge (duplicates filtered), mergedResourceDetails ===", mergedResourceDetails);
+        // Replace same-type resources for the current leg with the latest selection
+        mergedResourceDetails = [...filteredExistingResources, ...resourcesWithLegBehaviour];
+        console.log("Other resource types - normal merge (duplicates filtered, same-type for leg replaced), mergedResourceDetails ===", mergedResourceDetails);
       }
       // Update the existing customer order with merged resources
       updatedCustomerOrderArray[existingIndex] = {
@@ -816,6 +844,30 @@ const TripPlanning = () => {
       Schedule: [] as any[]
     };
 
+    //--
+    // const transformedResourceKeysEquipment = new Set<string>();
+    // const transformedResourceKeysHandler = new Set<string>();
+    let transformedResorceType = "";
+    transformedResourceDetails.forEach(tr => {
+      transformedResorceType = tr.ResourceType;
+      
+      if(transformedResorceType == 'Handler') {
+        // transformedResourceKeysHandler.add(`${tr.ResourceType}_${tr.ResourceID}`);
+        // FormatedGroupResources.Handlers.push(transformedResourceDetails);
+      } else if(transformedResorceType == 'Equipment') {
+        // transformedResourceKeysEquipment.add(`${tr.ResourceType}_${tr.ResourceID}`);
+        // FormatedGroupResources.Equipments.push(transformedResourceDetails);
+      } else if(transformedResorceType == 'Vehicle') {
+        
+      } else if(transformedResorceType == 'Driver') {
+        
+      }
+    });
+    console.log("transformedResourceKeys",transformedResorceType);
+    console.log("tripResourceDetailsData",tripResourceDetailsData);
+    console.log("FormatedGroupResources",FormatedGroupResources);
+    //--
+
     // Collect all resources from selectedArrCOData (including merged ones)
     // Use a Set to track unique ResourceID + ResourceType combinations
     const uniqueResourceKeys = new Set<string>();
@@ -825,6 +877,19 @@ const TripPlanning = () => {
       (co.ResourceDetails || []).forEach((resource: any) => {
         // Create a unique key combining ResourceID and ResourceType
         const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
+        console.log("uniqueKey",uniqueKey);
+        // if(transformedResorceType == resource.ResourceType){
+        //    // Only add if this combination doesn't already exist
+        //   if (!uniqueResourceKeys.has(uniqueKey) && transformedResourceKeys.has(uniqueKey)) {
+        //     uniqueResourceKeys.add(uniqueKey);
+        //     allResources.push({
+        //       ResourceID: resource.ResourceID,
+        //       ResourceType: resource.ResourceType
+        //     });
+        //   }
+        // }
+        // else
+        {
 
         // Only add if this combination doesn't already exist
         if (!uniqueResourceKeys.has(uniqueKey)) {
@@ -834,15 +899,35 @@ const TripPlanning = () => {
             ResourceType: resource.ResourceType
           });
         }
+        }
+        //--
+        // allResources.forEach((ar:any,index) => {
+        //   const uniqueKey = `${ar.ResourceType}_${resource.ResourceID}`;
+        //   if(!transformedResourceKeys.has(uniqueKey)){
+        //     uniqueResourceKeys.delete(uniqueKey);
+        //     allResources.splice(index,1);
+        //   }
+        // });
+        
+        //--
       });
     });
+
+    console.log("transformedResourceKeys<<>>",transformedResourceKeysHandler);
+    console.log("transformedResourceKeys<<>>",transformedResourceKeysEquipment);
 
     // Group by ResourceType (now guaranteed to be unique)
     allResources.forEach((resource: any) => {
       if (resource.ResourceType === 'Equipment') {
+        // const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
+        //   if(transformedResourceKeysEquipment.has(uniqueKey)){
         groupedResources.Equipments.push({ EquipmentID: resource.ResourceID });
+        // }
       } else if (resource.ResourceType === 'Handler') {
+        // const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
+          // if(transformedResourceKeysHandler.has(uniqueKey)){
         groupedResources.Handlers.push({ HandlerID: resource.ResourceID });
+          // }
       } else if (resource.ResourceType === 'Vehicle') {
         groupedResources.Vehicle.push({ VehicleID: resource.ResourceID });
       } else if (resource.ResourceType === 'Driver') {
@@ -854,8 +939,40 @@ const TripPlanning = () => {
         groupedResources.Schedule.push({ SupplierID: resource.ResourceID });
       }
     });
+    console.log('All resources ----------- ', allResources);
 
     // Update tripResourceDetailsData with grouped resources
+    // Ensure the current resource type reflects ONLY the latest transformed selection
+    const resourceTypeBeingAdded = currentResourceType || (transformedResourceDetails[0]?.ResourceType ?? '');
+    if (resourceTypeBeingAdded) {
+      if (resourceTypeBeingAdded === 'Equipment') {
+        groupedResources.Equipments = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Equipment')
+          .map(r => ({ EquipmentID: r.ResourceID }));
+      } else if (resourceTypeBeingAdded === 'Handler') {
+        groupedResources.Handlers = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Handler')
+          .map(r => ({ HandlerID: r.ResourceID }));
+      } else if (resourceTypeBeingAdded === 'Vehicle') {
+        groupedResources.Vehicle = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Vehicle')
+          .map(r => ({ VehicleID: r.ResourceID }));
+      } else if (resourceTypeBeingAdded === 'Driver') {
+        groupedResources.Drivers = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Driver')
+          .map(r => ({ DriverID: r.ResourceID }));
+      } else if (resourceTypeBeingAdded === 'Agent') {
+        groupedResources.Supplier = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Agent')
+          .map(r => ({ VendorID: r.ResourceID }));
+      } else if (resourceTypeBeingAdded === 'Schedule') {
+        groupedResources.Schedule = transformedResourceDetails
+          .filter(r => r.ResourceType === 'Schedule')
+          .map(r => ({ SupplierID: r.ResourceID }));
+      }
+      console.log(`Overrode groupedResources for type ${resourceTypeBeingAdded} using transformedResourceDetails`, groupedResources);
+    }
+
     setTripResourceDetailsData((prev: any) => ({
       ...prev,
       Equipments: groupedResources.Equipments,
@@ -2848,7 +2965,7 @@ const TripPlanning = () => {
                           { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
+                          { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (tripResourceDetailsData?.Equipments?.length != 0) ? tripResourceDetailsData?.Equipments?.length : '', iconColor: 'text-red-600' },
                           { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
                           { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
                           { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
@@ -3261,7 +3378,26 @@ const TripPlanning = () => {
         isOpen={isResourceDrawerOpen}
         onClose={handleCloseResourceDrawer}
         onAddResource={handleAddResource}
-        selectedResourcesRq={EquipmentData}
+        // selectedResourcesRq={EquipmentData}
+        selectedResourcesRq={(() => {
+          // Return the appropriate selected resources based on current resource type
+          switch (currentResourceType) {
+            case 'Equipment':
+              return tripResourceDetailsData?.Equipments || [];
+            case 'Handler':
+              return tripResourceDetailsData?.Handlers || [];
+            case 'Vehicle':
+              return tripResourceDetailsData?.Vehicle || [];
+            case 'Driver':
+              return tripResourceDetailsData?.Drivers || [];
+            case 'Supplier':
+              return tripResourceDetailsData?.Supplier || [];
+            case 'Schedule':
+              return tripResourceDetailsData?.Schedule || [];
+            default:
+              return [];
+          }
+        })()}
         resourceType={currentResourceType}
         resourceData={resourceData}
         isLoading={isLoadingResource}
