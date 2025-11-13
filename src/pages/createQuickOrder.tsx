@@ -670,6 +670,16 @@ const CreateQuickOrder = () => {
             // Update the fetchedQuickOrderData state to trigger re-render
             setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
             setRefreshTrigger(prev => prev + 1);
+
+            // After amend/cancel, recompute footer button: show Confirm if not Confirmed
+            try {
+              const newStatus = (updatedParsedData?.ResponseResult?.[0]?.Status) ?? jsonStore.getQuickOrder()?.Status;
+              console.log("Post-amend QuickOrder Status:", newStatus);
+              setShowAmendButton(newStatus === 'Confirmed');
+            } catch (e) {
+              console.warn('Unable to determine updated status after amend, defaulting to Confirm button.');
+              setShowAmendButton(false);
+            }
             
       } else {
         toast({
