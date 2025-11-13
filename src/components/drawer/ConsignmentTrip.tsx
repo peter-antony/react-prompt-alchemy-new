@@ -5546,13 +5546,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               <Label htmlFor="pickupComplete" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
 
-            <Button
+            {/* <Button
               variant="outline"
               className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3 absolute right-0"
             >
               <Plus className="h-4 w-4" />
               Add Via Point
-            </Button>
+            </Button> */}
 
           </div>
           <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
