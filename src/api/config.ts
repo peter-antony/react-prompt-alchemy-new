@@ -127,7 +127,8 @@ export const API_ENDPOINTS = {
     ROUTE_UPDATE: "manageexecution/planhubsearch",
     CO_SELECTION: "manageexecution/planhubselection",
     UPDATE_SELECTION: "manageexecution/planhubupdate",
-    TRIP_LEG_LEVEL_UPDATE: "manageexecution/plantriplevelupdate"
+    TRIP_LEG_LEVEL_UPDATE: "manageexecution/plantriplevelupdate",
+    FILE_UPDATEDOWN: '/files/updatedown'
   },
   // Quick Order management
   QUICK_ORDERS: {

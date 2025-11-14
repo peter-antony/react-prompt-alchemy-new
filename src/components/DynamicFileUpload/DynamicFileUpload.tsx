@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FileUploadProps, StagedFile, UploadedFile, FileFilterState, FileUploadConfig } from '@/types/fileUpload';
 import jsonStore from '@/stores/jsonStore';
-
+import { API_ENDPOINTS, API_CONFIG } from '@/api/config';
 
 const defaultConfig: FileUploadConfig = {
   categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
@@ -89,7 +89,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
         category: file.FileCategory || '',
         remarks: file.remarks || '',
         AttachUniqueName: file.AttachUniqueName || "",
-        downloadUrl: `http://192.168.2.92/v1/files/updatedown`
+        downloadUrl: `${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`
       }));
       console.log("get loaded files ", newUploadedGetFiles);
       setUploadedFiles(prev => [...prev, ...newUploadedGetFiles]);

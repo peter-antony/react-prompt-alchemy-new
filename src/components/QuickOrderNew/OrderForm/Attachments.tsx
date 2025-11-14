@@ -5,7 +5,7 @@ import { StagedFile } from '@/types/fileUpload';
 import jsonStore from '@/stores/jsonStore';
 import { quickOrderService } from "@/api/services/quickOrderService";
 import { useSearchParams } from "react-router-dom";
-
+import { API_ENDPOINTS, API_CONFIG } from "@/api/config";
 
 const fileIcons = {
   pdf: <FileText className="text-red-500 w-6 h-6" />,
@@ -365,7 +365,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
 
       console.log("➡️ FormData sent:", formData);
 
-      const resp = await fetch("http://192.168.2.92/v1/files/updatedown", {
+      const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
         method: "POST",
         headers: {
           Accept: "application/json",
