@@ -27,6 +27,26 @@ export function processGridData(
           value = value.value;
         }
         
+        // Handle arrays (for CustomerCountBadge, WorkOrderBadge, etc.)
+        if (Array.isArray(value)) {
+          return value.some(item => {
+            if (typeof item === 'object' && item !== null) {
+              // Search in all properties of the object
+              return Object.values(item).some(prop => 
+                String(prop || '').toLowerCase().includes(globalFilter.toLowerCase())
+              );
+            }
+            return String(item || '').toLowerCase().includes(globalFilter.toLowerCase());
+          });
+        }
+        
+        // Handle objects (search in all properties)
+        if (value && typeof value === 'object' && value !== null) {
+          return Object.values(value).some(prop => 
+            String(prop || '').toLowerCase().includes(globalFilter.toLowerCase())
+          );
+        }
+        
         return String(value || '').toLowerCase().includes(globalFilter.toLowerCase());
       })
     );
@@ -57,6 +77,35 @@ export function processGridData(
         const operator = filter.operator || 'contains';
 
         if (value == null) return false;
+
+        // Handle arrays (for CustomerCountBadge, WorkOrderBadge, etc.)
+        if (Array.isArray(value)) {
+          return value.some(item => {
+            if (typeof item === 'object' && item !== null) {
+              // Search in all properties of the object
+              return Object.values(item).some(prop => {
+                const stringValue = String(prop || '').toLowerCase();
+                const stringFilter = String(filterValue).toLowerCase();
+                
+                switch (operator) {
+                  case 'equals':
+                    return stringValue === stringFilter;
+                  case 'contains':
+                    return stringValue.includes(stringFilter);
+                  case 'startsWith':
+                    return stringValue.startsWith(stringFilter);
+                  case 'endsWith':
+                    return stringValue.endsWith(stringFilter);
+                  default:
+                    return true;
+                }
+              });
+            }
+            const stringValue = String(item || '').toLowerCase();
+            const stringFilter = String(filterValue).toLowerCase();
+            return stringValue.includes(stringFilter);
+          });
+        }
 
         const stringValue = String(value).toLowerCase();
         const stringFilter = String(filterValue).toLowerCase();
