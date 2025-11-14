@@ -957,6 +957,40 @@ function markAttachmentAsDeleted(attachItemId: string) {
   return false; // no match found or invalid structure
 }
 
+function markAttachmentAsDeletedByCategoryAndName(fileCategory: string, attachName: string) {
+  if (!fileCategory || !attachName) return false;
+
+  if (
+    jsonData &&
+    jsonData.ResponseResult &&
+    jsonData.ResponseResult.QuickOrder &&
+    Array.isArray(jsonData.ResponseResult.QuickOrder.Attachments) &&
+    jsonData.ResponseResult.QuickOrder.Attachments.length > 0
+  ) {
+    const attachments = jsonData.ResponseResult.QuickOrder.Attachments[0]; 
+    if (!Array.isArray(attachments.AttachItems)) return false;
+
+    // Normalize search values to avoid mismatch due to spacing / casing
+    const categoryToMatch = String(fileCategory).trim().toLowerCase();
+    const nameToMatch = String(attachName).trim().toLowerCase();
+
+    // Find the matching attachment item
+    const matchedItem = attachments.AttachItems.find((item: any) => {
+      const itemCategory = String(item.FileCategory || "").trim().toLowerCase();
+      const itemName = String(item.AttachName || "").trim().toLowerCase();
+
+      return itemCategory === categoryToMatch && itemName === nameToMatch;
+    });
+
+    if (matchedItem) {
+      matchedItem.ModeFlag = "Delete";   // Mark as deleted
+      console.log("Deleted by Category & Name:", matchedItem);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function setResourceGroupFields(fields: { ServiceType?: any, OperationalLocation?: any }) {
   if (resourceJsonData) {
@@ -1240,6 +1274,7 @@ const jsonStore = {
   pushQuickOrderAttachment,
   deleteQuickOrderAttachmentById,
   markAttachmentAsDeleted,
+  markAttachmentAsDeletedByCategoryAndName,
   setResourceGroupFields,
   setResourceType,
   setTariffFields,
