@@ -3154,17 +3154,17 @@ const TripPlanning = () => {
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
-                            { urlTripID && (<div className='flex justify-end relative'>
+                            {/* { urlTripID && (<div className='flex justify-end relative'>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className='w-8 h-8 border rounded-lg absolute right-0 top-0'
+                                  className='h-8 border rounded-lg absolute right-0 top-0 px-2'
                                   onClick={() => { setIsAddCOToTripOpen(true)}}
                                   title="Add Customer Order">
-                                  <Plus className="h-4 w-4" />
+                                  Add CO <Plus className="h-4 w-4" />
                                 </Button>
                               </div>)
-                              }
+                              } */}
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub
                                 key={tripCOHubReloadKey}

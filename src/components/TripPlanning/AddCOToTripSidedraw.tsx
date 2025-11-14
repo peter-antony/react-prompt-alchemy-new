@@ -1119,29 +1119,62 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
 
   const handleCOToTrip = async () => {
     console.log("handleCOToTrip - Original selectedRowObjects ===", selectedRowObjects);
+    console.log("handleCOToTrip - selectedTripData.CustomerOrders ===", selectedTripData?.CustomerOrders);
 
-    // Transform the selected rows to include only required fields
-    // const transformedCOData = selectedRowObjects.map(flattenStatusFields);
-    console.log("handleCOToTrip - Transformed CO Data ===", selectedRowObjects);
+    // Create a map for quick lookup of selected rows
+    const selectedMap = new Map<string, any>();
+    selectedRowObjects.forEach(row => {
+      const key = `${row.CustomerOrderID}-${row.LegBehaviour}`;
+      selectedMap.set(key, row);
+    });
 
-    // Pass transformed data to parent callback
-    // onAddCO();// Send to API
+    // Create a map for existing trip customer orders
+    const existingMap = new Map<string, any>();
+    (selectedTripData?.CustomerOrders || []).forEach((order: any) => {
+      const key = `${order.CustomerOrderID}-${order.LegBehaviour}`;
+      existingMap.set(key, order);
+    });
+
+    const customerOrdersToSave: any[] = [];
+
+    // Process existing orders from selectedTripData
+    existingMap.forEach((order, key) => {
+      if (selectedMap.has(key)) {
+        // Order exists in both - NoChange
+        customerOrdersToSave.push({
+          CustomerOrderNo: order.CustomerOrderID,
+          LegBehaviour: order.LegBehaviour,
+          ModeFlag: 'NoChange'
+        });
+      } else {
+        // Order exists only in existing data - Delete
+        customerOrdersToSave.push({
+          CustomerOrderNo: order.CustomerOrderID,
+          LegBehaviour: order.LegBehaviour,
+          ModeFlag: 'Delete'
+        });
+      }
+    });
+
+    // Process selected rows - find new ones (Insert)
+    selectedMap.forEach((row, key) => {
+      if (!existingMap.has(key)) {
+        // Order exists only in selected rows - Insert
+        customerOrdersToSave.push({
+          CustomerOrderNo: row.CustomerOrderID,
+          LegBehaviour: row.LegBehaviour,
+          ModeFlag: 'Insert'
+        });
+      }
+    });
+
+    console.log("handleCOToTrip - Processed CustomerOrders ===", customerOrdersToSave);
+
     let dataToSave = {
       Header: {
         TripNo: selectedTripData?.Header?.TripNo,
       },
-      CustomerOrders: [
-        ...(selectedTripData?.CustomerOrders?.map(order => ({
-          CustomerOrderNo: order.CustomerOrderNo,
-          LegBehaviour: order.LegBehaviour,
-          ModeFlag: order.ModeFlag || "Nochange", // default if missing
-        })) || []),
-        ...(selectedRowObjects?.map(order => ({
-          CustomerOrderNo: order.CustomerOrderID,
-          LegBehaviour: order.LegBehaviour,
-          ModeFlag: 'Insert', // New CO to be added to the trip
-        })) || []),
-      ]
+      CustomerOrders: customerOrdersToSave
     };
     const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
     console.log('response = ', response);
