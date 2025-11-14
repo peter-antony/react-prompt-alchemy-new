@@ -88,9 +88,8 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
         fileType: file.AttachmentType,
         category: file.FileCategory || '',
         remarks: file.remarks || '',
-        // uploadDate: new Date().toISOString(),
-        // fileSize: file.file.size,
-        downloadUrl: `#download-${file.AttachItemID}`
+        AttachUniqueName: file.AttachUniqueName || "",
+        downloadUrl: `http://192.168.2.92/v1/files/updatedown`
       }));
       console.log("get loaded files ", newUploadedGetFiles);
       setUploadedFiles(prev => [...prev, ...newUploadedGetFiles]);
@@ -280,25 +279,64 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
       setIsUploading(false);
     }
   }, [selectedCategory, remarks, stagedFiles, onUpload, reset, toast]);
-  const handleDownloadFile = useCallback(async (fileId: any) => {
-    try {
-      if (onDownload) {
-        setOpenMenuId(null);
-        await onDownload(fileId);
+  function downloadBlob(blob: Blob, filename: string) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+const handleDownloadFile = useCallback(async (file: any) => {
+  try {
+    console.log("📥 Starting download for file:", file);
+
+    if (onDownload) {
+      const result :any = await onDownload(file);
+      if (result && result.blob) {
+        const url = URL.createObjectURL(result.blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log("✅ Download completed:", result.filename);
+      } else {
+        console.warn("⚠️ No blob returned from onDownload.");
       }
-      // setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
-      // toast({
-      //   title: "File Deleted",
-      //   description: "File deleted successfully",
-      // });
-    } catch (error) {
-      toast({
-        title: "Download Failed",
-        description: "Failed to download file",
-        variant: "destructive"
-      });
     }
-  }, [onDownload, toast]);
+  } catch (error) {
+    console.error("❌ Download failed:", error);
+    toast({
+      title: "Download Failed",
+      description: "Failed to download file",
+      variant: "destructive",
+    });
+  }
+}, [onDownload, toast]);
+
+  // const handleDownloadFile = useCallback(async (fileId: any) => {
+  //   try {
+  //     if (onDownload) {
+  //       setOpenMenuId(null);
+  //       await onDownload(fileId);
+  //     }
+  //     // setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  //     // toast({
+  //     //   title: "File Deleted",
+  //     //   description: "File deleted successfully",
+  //     // });
+  //   } catch (error) {
+  //     toast({
+  //       title: "Download Failed",
+  //       description: "Failed to download file",
+  //       variant: "destructive"
+  //     });
+  //   }
+  // }, [onDownload, toast]);
   const handleDeleteFile = useCallback(async (fileId: any) => {
     console.log("HANDLE DELTE..",fileId)
     try {
@@ -533,7 +571,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {filteredFiles?.map(file => {
+              {filteredFiles?.map((file, index) => {
                 const extension = file?.fileName?.split('.').pop()?.toLowerCase();
                 let iconColor = '';
                 let iconBg = '';
@@ -564,7 +602,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
                   docx: <BookA className="text-blue-500 w-6 h-6" />,
                 };
                 return (
-                  <div key={file.id} className="p-4 border rounded-lg hover:shadow-sm transition-shadow bg-white">
+                  <div key={index} className="p-4 border rounded-lg hover:shadow-sm transition-shadow bg-white">
                     <div className="flex items-start justify-between">
                       <div className='flex gap-2'>
                         <div className={`p-2 h-10 w-10 rounded ${iconBg}`}>
@@ -593,10 +631,14 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
                         </button>
                         {openMenuId === file.id && (
                           <div ref={menuRef} className="relative right-0 top-8 z-20 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2">
-                            <button  onClick={() => handleDownloadFile(file)} className="flex items-center w-full px-4 py-2 hover:bg-gray-50 text-xs gap-2">
+                            <button  onClick={() => {
+                              handleDownloadFile(file)
+                              }} className="flex items-center w-full px-4 py-2 hover:bg-gray-50 text-xs gap-2">
                               <span><DownloadCloud className="w-4 h-4 " /></span> Download
                             </button>
-                            <button onClick={() => handleDeleteFile(file)} className="flex items-center w-full px-4 py-2 text-xs hover:bg-gray-50 gap-2">
+                            <button onClick={() => {
+                              
+                              handleDeleteFile(file)}} className="flex items-center w-full px-4 py-2 text-xs hover:bg-gray-50 gap-2">
                               <span><Trash2 className="w-4 h-4" /></span> Delete
                             </button>
                           </div>

@@ -4,6 +4,8 @@ import { DynamicFileUpload } from '@/components/DynamicFileUpload';
 import { StagedFile } from '@/types/fileUpload';
 import jsonStore from '@/stores/jsonStore';
 import { quickOrderService } from "@/api/services/quickOrderService";
+import { useSearchParams } from "react-router-dom";
+
 
 const fileIcons = {
   pdf: <FileText className="text-red-500 w-6 h-6" />,
@@ -38,7 +40,11 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
   });
   const [attachmentData, setAttachmentData] = useState(null);
   const [loading, setLoading] = useState(false);
+    const [searchParams] = useSearchParams();
   const [reloadKey, setReloadKey] = useState(0);
+   const [uniqueName, setUniqueName] = useState(
+      "2362e1a23a5a49f99c077072b7f0f8b9.png"
+    );
   useEffect(() => {
     console.log("AttachmentData updated:", attachmentData);
     const attachmentList = jsonStore.getQuickOrder();
@@ -66,74 +72,22 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
     setLoading(true);
   }, [isResourceGroupAttchment, isResourceID]);
 
-  // const handleUpload = async (files: StagedFile[]) => {
-  //   // Simulate API call
-  //   console.log('Uploading files:', files);
-  //   const AttachItems = files.map((file) => {
-  //     // Get file type from file.file.name (extension after last dot)
-  //     const fileName = file.file?.name || '';
-  //     const fileType = fileName.split('.').pop()?.toLowerCase() || '';
-  //       const obj= {
-  //       AttachItemID: -1,
-  //       AttachmentType: fileType,
-  //       FileCategory: file.category,
-  //       AttachName: fileName,
-  //       AttachUniqueName: fileName,
-  //       AttachRelPath: "value",
-  //       ModeFlag: "Insert"
-  //     };
-  //     jsonStore.pushQuickOrderAttachment(obj)
-  //     return obj
-  //   });
-  //   console.log('AttachItems:', AttachItems);
-  //   // if(isResourceGroupAttchment){
-  //   //   jsonStore.pushResourceGroupAttachments(AttachItems[0]);
-  //   // }else{
-  //   //   jsonStore.pushAttachments(AttachItems[0]);
-  //   // }
-  //   console.log('get saved List:', jsonStore.getAttachments());
-  //   jsonStore.setQuickOrder({
-  //     ...jsonStore.getJsonData().quickOrder,
-  //     // ...formValues.QuickOrder,
-  //     "ModeFlag": "Update",
-  //     "Status": "Fresh",
-  //     "QuickOrderNo": jsonStore.getQuickUniqueID()
-  //   });
-  //   const fullJson = jsonStore.getJsonData().ResponseResult.QuickOrder;
-  //   console.log("FULL Plan JSON :: ", fullJson);
-  //   try {
-  //     // const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson, { headers });
-  //     const data: any = await quickOrderService.updateAttachmentQuickOrderResource(fullJson);
-  //     console.log(" try", data);
-  //     //  Get OrderNumber from response
-  //     const resourceGroupID = JSON.parse(data?.data?.ResponseData)[0].QuickUniqueID;
-  //     console.log("OrderNumber:", resourceGroupID);
-  //     //  Fetch the full quick order details
-  //     quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
-  //       let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
-  //       console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-  //       console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
-  //       // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
-  //       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-
-  //       // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-  //       const fullJson2 = jsonStore.getJsonData();
-  //       console.log("ATTACHMENTS SAVE SAVE --- FULL JSON 66:: ", fullJson2);
-  //     })
-
-  //   } catch (err) {
-  //     console.log(" catch", err);
-  //     // setError(`Error fetching API data for Update ResourceGroup`);
-  //   }
-
-  //   return new Promise<void>((resolve) => {
-  //     setTimeout(() => {
-  //       console.log('Upload completed');
-  //       resolve();
-  //     }, 2000);
-  //   });
-  // };
-
+   const getAttachments = async () => {
+       const response = jsonStore.getQuickOrder();
+      const res = response.data;
+      console.log("GET ALL ATTACHMENTS : ", response.data);
+      setLoading(true);
+      const parsedData = JSON.parse(res?.ResponseData) || [];
+      console.log("GET ALL ATTACHMENTS 3 : ", JSON.parse(res?.ResponseData));
+      console.log(
+        "GET ALL ATTACHMENTS parsedDataparsedDataparsedData : ",
+        parsedData
+      );
+  
+      setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
+      setReloadKey((prev) => prev + 1);
+      // set({ tripList: response.data, loading: false });
+    };
   const handleUpload = async (files: StagedFile[]) => {
     // Simulate API call
     console.log('Uploading files:', files);
@@ -225,7 +179,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
           quickOrderService.getQuickOrder(resourceGroupID).then((fetchRes: any) => {
           let parsedData: any = JSON.parse(fetchRes?.data?.ResponseData);
           console.log("screenFetchQuickOrder result:", JSON.parse(fetchRes?.data?.ResponseData));
-          console.log("Parsed result:", (parsedData?.ResponseResult)[0]);
+          console.log("AFTER UPLOAD::Parsed result:", (parsedData?.ResponseResult)[0]);
           // jsonStore.pushResourceGroup((parsedData?.ResponseResult)[0]);
           jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
 
@@ -248,7 +202,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
 
   const handleDelete = async (file: any) => {
     // Simulate API call
-    console.log('Deleting %%%%file:', file);
+    console.log('Deleting %% file:', file);
+    console.log('Deleting %% file ID:', file.id);
      if(isResourceGroupAttchment && isResourceID){
 
      }else{
@@ -301,88 +256,101 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
     });
   };
 
-  // const handleDownload = async (file: any) => {
-  //   try {
-  //     const response = await fetch(file.downloadUrl);
-  //     const blob = await response.blob();
-  //     const url = window.URL.createObjectURL(blob);
-  
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.download = file.fileName || "downloaded_file";
-  //     document.body.appendChild(link);
-  //     link.click();
-  
-  //     // Cleanup
-  //     document.body.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     console.error("Error downloading file:", error);
+
+  // const handleDelete = async (fileId: any) => {
+  //   // Simulate API call
+  //   console.log("Deleting TripLog file:", fileId);
+   
+  //   const fileData = {
+  //     AttachmentType: fileId.fileName,
+  //     AttachName: fileId.fileName,
+  //     FileCategory: fileId.category,
+  //     AttachItemID: fileId.id,
+  //     AttachUniqueName: fileId.AttachUniqueName,
+  //     AttachRelPath: fileId.downloadUrl,
+  //     Remarks: fileId.remarks,
+  //     ModeFlag: "Delete",
+  //   };
+  //   console.log("fileData for delete : ", fileData);
+  //   const response: any = await tripService.saveAttachments(
+  //     fileData,
+  //     tripUniqueID
+  //   );
+  //   const responseData = response as any;
+  //   if (responseData && responseData.data) {
+  //     console.log("TRIPLOG FILE DELETE RESPONSE : ", response);
+  //     getAttachments();
+  //     // setReloadKey(prev => prev + 1);
+  //     return new Promise<void>((resolve) => {
+  //       setTimeout(() => {
+  //         console.log("Delete completed");
+  //         resolve();
+  //       }, 1000);
+  //     });
   //   }
   // };
-// Paste this into your app and call handleDownload(file)
-async function handleDownload(file) {
+  async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
+  console.log("📦 Download request started...");
+  console.log("➡️ File object received:", file);
+
   try {
-    // adjust headers/credentials if your API requires auth/cookies
-    const resp = await fetch(file.downloadUrl, {
-      credentials: 'include',
-      // headers: { Authorization: `Bearer ${token}` },
+    const formData = new FormData();
+
+    // ✅ Correct fields
+    formData.append("Filecategory", file.category);
+    formData.append("Filename", file.AttachUniqueName);
+
+    console.log("➡️ FormData sent:", formData);
+
+    const resp = await fetch("http://192.168.2.92/v1/files/updatedown", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Is_JSON_Format: "true",
+      },
+      body: formData,
     });
 
-    console.log('HTTP status:', resp.status, resp.statusText);
-    const contentType = resp.headers.get('content-type') || '';
-    const contentDisp = resp.headers.get('content-disposition') || '';
-    console.log('Content-Type:', contentType);
-    console.log('Content-Disposition:', contentDisp);
+    console.log("🌐 HTTP status:", resp.status, resp.statusText);
 
-    // peek at start of body to see if it's HTML or JSON (clone so we can still read blob)
-    const peek = await resp.clone().text();
-    console.log('Response body preview (first 300 chars):', peek.slice(0, 300));
+    if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
 
-    if (!resp.ok) {
-      throw new Error(`Server returned ${resp.status}`);
-    }
+    const contentType = resp.headers.get("content-type") || "";
+    console.log("📑 Content-Type:", contentType);
 
-    // If server returned JSON containing base64 file data
-    if (contentType.includes('application/json')) {
+    let blob: Blob;
+    let filename = file.AttachUniqueName || file.fileName || "downloaded_file";
+
+    if (contentType.includes("application/json")) {
       const json = await resp.json();
-      // try common fields where base64 might be found
-      const b64 = json.base64 || json.data || json.file || json.fileBase64 || null;
-      const mime = json.contentType || json.mime || 'application/octet-stream';
-      if (!b64) throw new Error('JSON response but no base64 field found');
+      console.log("🧾 JSON response:", json);
 
-      // decode base64 -> blob
+      if (!json.FileData) {
+        throw new Error("⚠️ FileData is null — backend did not return actual file data");
+      }
+
+      const b64 = json.FileData;
+      const mime = json.ContentType || "application/octet-stream";
+
       const byteChars = atob(b64);
       const byteNumbers = new Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+      for (let i = 0; i < byteChars.length; i++)
+        byteNumbers[i] = byteChars.charCodeAt(i);
+
       const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: mime });
-      const filename = file.fileName || (json.fileName || 'downloaded_file');
-      downloadBlob(blob, filename);
-      return;
-    }
+      blob = new Blob([byteArray], { type: mime });
 
-    // Otherwise assume binary blob
-    const blob = await resp.blob();
-    console.log('Blob type:', blob.type, 'size:', blob.size);
-
-    // Determine filename:
-    let filename = file.fileName || 'downloaded_file';
-    // try extract from content-disposition: e.g. attachment; filename="abc.pdf"
-    const fnameFromHeader = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/i.exec(contentDisp);
-    if (fnameFromHeader) {
-      filename = decodeURIComponent((fnameFromHeader[1] || fnameFromHeader[2] || fnameFromHeader[3] || '').trim());
+      filename = json.FileName || filename;
     } else {
-      // add extension based on blob.type if missing
-      if (!filename.includes('.') && blob.type) {
-        const ext = mimeToExt(blob.type);
-        if (ext) filename = `${filename}.${ext}`;
-      }
+      blob = await resp.blob();
     }
 
-    downloadBlob(blob, filename);
+    console.log("✅ File ready:", { filename, blobType: blob.type, size: blob.size });
+
+    return { blob, filename };
   } catch (err) {
-    console.error('download error:', err);
+    console.error("❌ Download failed:", err);
+    throw err;
   }
 }
 
