@@ -1,5 +1,5 @@
  
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -121,6 +121,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [selectedLegIndex, setSelectedLegIndex] = useState<number>(0);
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
+  const [qc1Options, setQc1Options] = useState<{ label: string; value: string }[]>([]);
  
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
@@ -160,8 +161,44 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const fetchLegBehaviours = fetchMasterData("LegBehaviour Init");
   const fetchReasonForUpdate = fetchMasterData("Reason For Update Init");
   const fetchLegID = fetchMasterData("Leg ID Init");
+
+  useEffect(() => {
+    const loadQC1 = async () => {
+      try {
+        const response = await quickOrderService.getMasterCommonData({ messageType: "ManageRouteUpdateCO QC1 Init" });
+        const rr: any = response.data;
+        const parsed = JSON.parse(rr.ResponseData) || [];
+        const options = parsed
+          .filter((item: any) => item.id && item.name)
+          .map((item: any) => ({ label: item.name, value: item.id }));
+        setQc1Options(options);
+      } catch (e) {
+        setQc1Options([]);
+      }
+    };
+    loadQC1();
+  }, []);
  
   const handleSave = async () => {
+    // Validate Reason For Update is provided (mandatory)
+    const reasonStr = (reasonForUpdate ?? "").toString().trim();
+    if (!reasonStr) {
+      const missingFields: string[] = ["Reason For Update"];
+      toast({
+        title: "⚠️ Missing Mandatory Fields",
+        description: (
+          <div>
+            Please fill in the following mandatory fields:
+              {missingFields.map((field, i) => (
+                <li key={i}>{field}</li>
+              ))}
+          </div>
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+
     const legReasonForUpdate = splitAtPipe(reasonForUpdate);
 
     // Process leg details to handle pipe-separated values and set ModeFlag
@@ -436,10 +473,13 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           <div className="space-y-2">
             <Label>QC Code 1</Label>
             <InputDropdown
-              // value={execLeg.QuickCodeValue1}
-              // onChange={setWagonDetailsLength}
-              // options={weightLength}
-              placeholder=""
+              value={{ dropdown: execLeg.QuickCode1 || '', input: execLeg.QuickCodeValue1 || '' }}
+              onChange={(val) => {
+                onUpdateExecutionLeg(legIndex, execLegIndex, 'QuickCode1', val.dropdown);
+                onUpdateExecutionLeg(legIndex, execLegIndex, 'QuickCodeValue1', val.input);
+              }}
+              options={qc1Options}
+              placeholder="Enter Value"
             />
           </div>
  
@@ -670,7 +710,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       {/* Footer */}
       <div className="sticky bottom-0 z-20 px-6 py-4 border-t bg-card space-y-4">
         <div className="max-w-md">
-          <label className="text-sm font-medium mb-2 block">Reason For Update</label>
+          <label className="text-sm font-medium mb-2 block">Reason For Update<span className="text-red-500 text-[13px] ml-1">*</span></label>
           {/* <Select value={reasonForUpdate} onValueChange={setReasonForUpdate}>
             <SelectTrigger>
               <SelectValue placeholder="Select Reason" />
@@ -689,7 +729,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
             placeholder="Select Type"
           />
         </div>
- 
+
         <div className="flex justify-end">
           <Button onClick={handleSave}>Save</Button>
         </div>
