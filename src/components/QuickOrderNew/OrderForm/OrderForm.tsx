@@ -1728,7 +1728,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     // Reset identifiers and flags for a fresh insert
     cloned.ResourceUniqueID = -1;
     cloned.ModeFlag = "Insert";
-
+    cloned.ResourceStatus = "Fresh"
     // Set BillingDetails fields to null
     cloned.BillingDetails = {
       ...cloned.BillingDetails,
@@ -1846,8 +1846,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     console.log("copyQuickOrderDetails - Original data:", quickOrderData);
 
     // Deep clone the data to avoid mutations
+    console.log("SELECTED RG =",resourceGroupData)
     const clonedData = JSON.parse(JSON.stringify(quickOrderData));
-
+    console.log(" clonedData.ResourceGroup = ", clonedData.ResourceGroup)
     // Update QuickOrder level fields
     clonedData.QuickUniqueID = -1;
     clonedData.ModeFlag = "Insert";
@@ -1862,8 +1863,9 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
     clonedData.Status = "Fresh";
 
     // Update ResourceGroup fields
-    if (Array.isArray(clonedData.ResourceGroup)) {
-      clonedData.ResourceGroup = clonedData.ResourceGroup.map((resource: any) => {
+    // if (Array.isArray(clonedData.ResourceGroup)) { // while copying, unselected resourceGroup also getting copied
+    if (Array.isArray(resourceGroupData)) {
+      clonedData.ResourceGroup = resourceGroupData.map((resource: any) => {
         // Update ResourceGroup level fields
         resource.ResourceUniqueID = -1;
         resource.ModeFlag = "Insert";
@@ -2125,6 +2127,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
                           className="ml-1 cursor-pointer hover:text-red-600"
                           onClick={() => {
                             const updatedData = resourceGroupData.filter((_, i) => i !== index);
+                            console.log("clicked Cross..",updatedData)
                             setResourceGroupData(updatedData);
                           }}
                         >
