@@ -47,6 +47,7 @@ export interface GridColumnConfig {
   editable?: boolean;
   mandatory?: boolean;
   hidden?: boolean;
+  disabled?: boolean;      // Field-level disabled state for editing
   order?: number;
   options?: string[];
   subRow?: boolean; // Property for sub-row display
@@ -326,4 +327,7 @@ export interface SmartGridPlusProps extends SmartGridProps {
   // UI configuration
   addRowButtonLabel?: string;
   addRowButtonPosition?: "top-left" | "top-right" | "top";
+  
+  // Regional formatting
+  region?: 'german' | 'indian';
 }

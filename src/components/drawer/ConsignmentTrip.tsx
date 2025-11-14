@@ -40,9 +40,146 @@ const safeSplit = (value: string | undefined, delimiter: string, index: number, 
   return parts[index] || fallback;
 };
 
-export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { legId: string, selectedLeg?: any, tripData?: any, onClose?: () => void }) => {
+// Helper functions for German decimal format conversion
+const convertGermanToStandardDecimal = (value: string | number | undefined | null): string => {
+  if (!value && value !== 0) return '';
+  const stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  // If it's already in standard format (contains dot), return as is
+  if (stringValue.includes('.') && !stringValue.includes(',')) {
+    return stringValue;
+  }
+
+  // Convert German format (66,7) to standard format (66.7)
+  // Handle cases like "1.234,56" (thousands separator with decimal comma)
+  if (stringValue.includes(',')) {
+    // If there are both dots and commas, assume dot is thousands separator and comma is decimal
+    if (stringValue.includes('.') && stringValue.lastIndexOf(',') > stringValue.lastIndexOf('.')) {
+      return stringValue.replace(/\./g, '').replace(',', '.');
+    }
+    // Simple case: just comma as decimal separator
+    return stringValue.replace(',', '.');
+  }
+
+  return stringValue;
+};
+
+const convertStandardToGermanDecimal = (value: string | number | undefined | null): string => {
+  if (!value && value !== 0) return '';
+  const stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  // Convert standard format (66.7) to German format (66,7)
+  // Only convert the last dot to comma (decimal separator)
+  const parts = stringValue.split('.');
+  if (parts.length === 2) {
+    return `${parts[0]},${parts[1]}`;
+  }
+
+  return stringValue;
+};
+
+// Enhanced helper to normalize any decimal input to standard format for API
+const normalizeDecimalForAPI = (value: string | number | undefined | null): string => {
+  if (!value && value !== 0) return '';
+  let stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  // Handle German format input (66,7 or 1.234,56)
+  if (stringValue.includes(',')) {
+    // If both dots and commas exist, assume dots are thousands separators
+    if (stringValue.includes('.') && stringValue.lastIndexOf(',') > stringValue.lastIndexOf('.')) {
+      stringValue = stringValue.replace(/\./g, '').replace(',', '.');
+    } else {
+      // Just replace comma with dot
+      stringValue = stringValue.replace(',', '.');
+    }
+  }
+
+  return stringValue;
+};
+
+// Simple decimal display formatter - just replace . with , for German format, preserve original values
+const simpleDecimalDisplayFormatter = (value: string | number | undefined | null, region: 'german' | 'indian' = 'german'): string => {
+  if (!value && value !== 0) return '';
+  const stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  if (region === 'german') {
+    // Simply replace dots with commas for German format without any other processing
+    return stringValue.replace(/\./g, ',');
+  } else {
+    // Indian format uses standard dot notation
+    return stringValue;
+  }
+};
+
+// Enhanced helper to format any decimal value based on region
+const formatDecimalForDisplay = (value: string | number | undefined | null, region: 'german' | 'indian' = 'german'): string => {
+  if (!value && value !== 0) return '';
+  let stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  // First normalize to standard format
+  stringValue = normalizeDecimalForAPI(stringValue);
+
+  // Then convert based on region
+  if (region === 'german') {
+    return convertStandardToGermanDecimal(stringValue);
+  } else {
+    // Indian format uses standard dot notation
+    return stringValue;
+  }
+};
+
+// Simple decimal input normalizer - just replace , with . for API format, preserve original values
+const simpleDecimalInputNormalizer = (value: string | number | undefined | null, expectedRegion: 'german' | 'indian' = 'german'): string => {
+  if (!value && value !== 0) return '';
+  let stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  if (expectedRegion === 'german') {
+    // Simply replace commas with dots for API format without any other processing
+    return stringValue.replace(/,/g, '.');
+  } else {
+    // Indian format already uses dots
+    return stringValue;
+  }
+};
+
+// Enhanced helper to normalize decimal input based on expected region format
+const normalizeDecimalInput = (value: string | number | undefined | null, expectedRegion: 'german' | 'indian' = 'german'): string => {
+  if (!value && value !== 0) return '';
+  let stringValue = String(value).trim();
+  if (!stringValue) return '';
+
+  if (expectedRegion === 'german') {
+    // For German region, user can input with comma, normalize to standard format for API
+    return normalizeDecimalForAPI(stringValue);
+  } else {
+    // For Indian region, user inputs with dot, which is already standard format
+    return stringValue;
+  }
+};
+
+const isNumericDecimalField = (fieldName: string): boolean => {
+  const numericDecimalFields = [
+    'ProductWeight', 'WagonAvgLoadWeight', 'WagonAvgTareWeight',
+    'WagonTareWeight', 'GrossWeight', 'ContainerAvgTareWeight',
+    'ContainerAvgLoadWeight', 'ThuWeight', 'WagonLength'
+  ];
+  return numericDecimalFields.includes(fieldName);
+};
+
+export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { legId: string, selectedLeg: any, tripData?: any, onClose?: () => void }) => {
   const gridPlanId = 'ConsignmentTripPlanGrid';
   const gridActualId = 'ConsignmentTripActualGrid';
+
+  // Regional configuration for decimal formatting
+  // TODO: This can be moved to a global config or user preferences
+  const [region, setRegion] = useState<'german' | 'indian'>('german'); // Default to German format
+
   const { activeFilters, setActiveFilters } = useFilterStore();
   // const filtersForThisGrid = activeFilters[gridId] || {};
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -86,6 +223,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   const [forceUnCodeRefresh, setForceUnCodeRefresh] = useState<boolean>(false);
   const [forceProductRefresh, setForceProductRefresh] = useState<boolean>(false);
   const [gridRefreshKey, setGridRefreshKey] = useState<number>(0);
+  const [cachedDGClassOptions, setCachedDGClassOptions] = useState<any[]>([]);
+  const [lastUnCodeForDGClass, setLastUnCodeForDGClass] = useState<string>('');
+  const [forceDGClassRefresh, setForceDGClassRefresh] = useState<boolean>(false);
 
   // Track when fields are being programmatically set vs user-initiated changes
   const [isProductBeingSet, setIsProductBeingSet] = useState<boolean>(false);
@@ -96,11 +236,17 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   // Track field selection priority for new rows - which field was selected first has priority
   const [newRowFieldPriority, setNewRowFieldPriority] = useState<'product' | 'uncode' | null>(null);
 
+  // Track preserved product values when user switches to uncode after selecting product
+  const [preservedProductValues, setPreservedProductValues] = useState<{
+    rowIndex: number;
+    product: string;
+    productDescription: string;
+  } | null>(null);
+
   // Function to force grid refresh with new data
   // Helper function to safely update a row while preserving important flags
   const safeUpdateRow = useCallback((currentRow: any, updates: any) => {
     if (!currentRow) {
-      console.warn('safeUpdateRow: currentRow is null or undefined');
       return updates;
     }
 
@@ -108,10 +254,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     let preservedModeFlag;
     if (currentRow.ModeFlag === 'Delete') {
       preservedModeFlag = 'Delete';
-      console.log('safeUpdateRow: Preserving Delete ModeFlag');
     } else if (currentRow.ModeFlag === 'Insert') {
       preservedModeFlag = 'Insert';
-      console.log('safeUpdateRow: Preserving Insert ModeFlag');
     } else {
       // For other ModeFlags, allow updates or use existing
       preservedModeFlag = updates.ModeFlag || currentRow.ModeFlag || 'Update';
@@ -131,7 +275,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   }, []);
 
   const forceGridRefresh = useCallback((newData: any[], description: string) => {
-    console.log(`Forcing grid refresh: ${description}`);
 
     // Clear data first to force unmount/remount of rows
     setActualEditableData([]);
@@ -140,7 +283,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     setTimeout(() => {
       setActualEditableData([...newData]);
       setGridRefreshKey(prev => prev + 1);
-      console.log(`Grid refreshed: ${description}, total rows:`, newData.length);
+
     }, 50);
   }, []);
 
@@ -165,24 +308,21 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
   useEffect(() => {
     if (productChangeTracker && userInitiatedProductChange && !isUnCodeBeingSet) {
-      console.log('Product change triggered by user selection, loading UN Code options');
       productOnSelectUncodeLoad();
       setProductChangeTracker(null);
       setUserInitiatedProductChange(false);
     } else if (productChangeTracker && !userInitiatedProductChange) {
-      console.log('Product change not user-initiated (programmatic), skipping UN Code reload');
       setProductChangeTracker(null);
     }
   }, [productChangeTracker, userInitiatedProductChange, isUnCodeBeingSet]);
 
   useEffect(() => {
     if (unCodeChangeTracker && userInitiatedUnCodeChange && !isProductBeingSet) {
-      console.log('UN Code change triggered by user selection, loading Product options');
       unCodeOnSelectProductLoad();
+      unCodeOnSelectDGClassLoad();
       setUnCodeChangeTracker(null);
       setUserInitiatedUnCodeChange(false);
     } else if (unCodeChangeTracker && !userInitiatedUnCodeChange) {
-      console.log('UN Code change not user-initiated (programmatic), skipping Product reload');
       setUnCodeChangeTracker(null);
     }
   }, [unCodeChangeTracker, userInitiatedUnCodeChange, isProductBeingSet]);
@@ -198,11 +338,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     const shouldClearCache = (prev !== null && prev >= 0) && (current !== null && current >= 0) && prev !== current;
 
     if (shouldClearCache) {
-      console.log('Clearing cache due to existing row change from', prev, 'to', current);
       setCachedUnCodeOptions([]);
       setLastProductIdForUnCode('');
       setCachedProductOptions([]);
       setLastUnCodeForProduct('');
+      setCachedDGClassOptions([]);
+      setLastUnCodeForDGClass('');
+
+      // Clear preserved product values when switching rows
+      setPreservedProductValues(null);
     } else {
       console.log('Preserving cache - row change from', prev, 'to', current, '(involves new row or same row)');
     }
@@ -1006,19 +1150,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       // 3. If we have cached data, use the lastUnCodeForProduct as a fallback
       else if (cachedProductOptions.length > 0 && lastUnCodeForProduct) {
         unCodeValue = lastUnCodeForProduct;
-        console.log('createProductFetchOptions: Using cached unCode as fallback:', unCodeValue);
       }
 
-      console.log('createProductFetchOptions: Determined unCode:', unCodeValue, 'from sources - tracker:', !!unCodeChangeTracker, 'editingRowIndex:', currentEditingRowIndex, 'cachedFallback:', !!(cachedProductOptions.length > 0 && lastUnCodeForProduct));
 
       // Check if there's an active unCodeChangeTracker (indicates UN Code was just selected)
       // If so, don't make API call as unCodeOnSelectProductLoad will handle it
       if (unCodeChangeTracker && unCodeChangeTracker.unCode === unCodeValue) {
-        console.log('createProductFetchOptions: UN Code selection in progress, waiting for unCodeOnSelectProductLoad to complete');
 
         // Return cached data if available, otherwise empty (will be populated soon by unCodeOnSelectProductLoad)
         if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
-          console.log('Using cached data while UN Code selection is active');
           if (searchTerm) {
             const filtered = cachedProductOptions.filter(option =>
               option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1028,16 +1168,12 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           }
           return cachedProductOptions.slice(offset, offset + limit);
         } else {
-          console.log('No cached data yet, returning empty while waiting for unCodeOnSelectProductLoad');
           return [];
         }
       }
 
-      // Check if we have cached results for the same unCodeValue
-      console.log('createProductFetchOptions: Checking cache for unCode:', unCodeValue, 'Cached unCode:', lastUnCodeForProduct, 'Cache size:', cachedProductOptions.length);
 
       if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
-        console.log('Using cached Product options, avoiding duplicate API call');
         // Apply search term filtering if provided
         if (searchTerm) {
           const filtered = cachedProductOptions.filter(option =>
@@ -1049,8 +1185,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         return cachedProductOptions.slice(offset, offset + limit);
       }
 
-      // Only make API call if we don't have cached data and no active UN Code selection
-      console.log('Making Product API call as no cached data available and no active UN Code selection');
       const response = await quickOrderService.getDynamicSearchData({
         messageType: "Product ID Init",
         searchTerm: searchTerm || '',
@@ -1059,7 +1193,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         searchCriteria: {
           id: searchTerm,
           name: searchTerm
-      },
+        },
         additionalFilter: [
           {
             FilterName: "Uncode",
@@ -1118,7 +1252,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     // Trigger refresh flag to force UN Code dropdown refresh
     setForceUnCodeRefresh(true);
 
-    console.log('productOnSelectUncodeLoad: Cached UN Code options for productId:', productIDValue, 'Options count:', unCodeOptions.length, 'cleared productChangeTracker, and set refresh flag'); return unCodeOptions;
   };
   const unCodeOnSelectProductLoad = async () => {
     let unCodeValue = '';
@@ -1159,10 +1292,88 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     // Trigger refresh flag to force Product dropdown refresh
     setForceProductRefresh(true);
 
-    console.log('unCodeOnSelectProductLoad: Cached Product options for unCode:', unCodeValue, 'Options count:', productOptions.length, 'cleared unCodeChangeTracker, and set refresh flag');
 
     return productOptions;
   };
+
+  const unCodeOnSelectDGClassLoad = async () => {
+    let unCodeValue = '';
+    // Use unCodeChangeTracker.unCode if available, otherwise get from existing row data
+    if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
+      unCodeValue = unCodeChangeTracker.unCode;
+    } else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+      const fullUnCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
+      // Extract just the UN Code part if it's in "UN XXX || Description" format
+      unCodeValue = safeSplit(fullUnCodeValue, ' || ', 0) || fullUnCodeValue;
+    } else if (currentEditingRowIndex === -1) {
+      // For new rows, try to get UN Code from unCodeChangeTracker or lastUnCodeForDGClass
+      if (lastUnCodeForDGClass) {
+        unCodeValue = lastUnCodeForDGClass;
+      }
+    }
+
+    // Only load DG Class options if we have a valid UN Code
+    // This handles manual removal where uncode filter value will be empty
+    if (!unCodeValue || unCodeValue.trim() === '' || unCodeValue === null || unCodeValue === undefined) {
+      setCachedDGClassOptions([]);
+      setLastUnCodeForDGClass('');
+      setForceDGClassRefresh(true);
+      return [];
+    }
+
+    // Clear cache if we're loading for a different UN Code
+    if (lastUnCodeForDGClass && lastUnCodeForDGClass !== unCodeValue) {
+      setCachedDGClassOptions([]);
+    }
+
+    // Double-check that we have a valid UN Code before making API call
+    // This prevents API calls with empty filter values after manual removal
+    if (!unCodeValue || unCodeValue.trim() === '' || unCodeValue === null || unCodeValue === undefined) {
+      setCachedDGClassOptions([]);
+      setLastUnCodeForDGClass('');
+      return [];
+    }
+
+
+    // Now unCodeValue will have the correct value for both new rows (-1) and existing rows
+    const response = await quickOrderService.getDynamicSearchData({
+      messageType: "DG Class Init",
+      searchTerm: '',
+      offset: 1,
+      limit: 1000,
+      searchCriteria: {
+        id: '',
+        name: ''
+      },
+      additionalFilter: [
+        {
+          FilterName: "Uncode",
+          FilterValue: unCodeValue
+        }
+      ]
+    });
+
+    const rr: any = response.data
+    const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+      ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+        ? {
+          label: `${item.id} || ${item.name}`,
+          value: `${item.id} || ${item.name}`,
+        }
+        : {})
+    }));
+
+    // Cache the results and the UN Code they were fetched for
+    setCachedDGClassOptions(dgClassOptions);
+    setLastUnCodeForDGClass(unCodeValue);
+
+    // Trigger refresh flag to force DG Class dropdown refresh
+    setForceDGClassRefresh(true);
+
+
+    return dgClassOptions;
+  };
+
   const createUnCodeFetchOptions = useMemo(() => {
     // Reset the refresh flag when function is recreated
     if (forceUnCodeRefresh) {
@@ -1184,19 +1395,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       // 3. If we have cached data, use the lastProductIdForUnCode as a fallback
       else if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode) {
         productIDValue = lastProductIdForUnCode;
-        console.log('createUnCodeFetchOptions: Using cached productId as fallback:', productIDValue);
       }
 
-      console.log('createUnCodeFetchOptions: Determined productId:', productIDValue, 'from sources - tracker:', !!productChangeTracker, 'editingRowIndex:', currentEditingRowIndex, 'cachedFallback:', !!(cachedUnCodeOptions.length > 0 && lastProductIdForUnCode));
 
       // Check if there's an active productChangeTracker (indicates product was just selected)
       // If so, don't make API call as productOnSelectUncodeLoad will handle it
       if (productChangeTracker && productChangeTracker.productId === productIDValue) {
-        console.log('createUnCodeFetchOptions: Product selection in progress, waiting for productOnSelectUncodeLoad to complete');
 
         // Return cached data if available, otherwise empty (will be populated soon by productOnSelectUncodeLoad)
         if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
-          console.log('Using cached data while product selection is active');
           if (searchTerm) {
             const filtered = cachedUnCodeOptions.filter(option =>
               option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1206,16 +1413,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           }
           return cachedUnCodeOptions.slice(offset, offset + limit);
         } else {
-          console.log('No cached data yet, returning empty while waiting for productOnSelectUncodeLoad');
           return [];
         }
       }
 
       // Check if we have cached results for the same productIDValue
-      console.log('createUnCodeFetchOptions: Checking cache for productId:', productIDValue, 'Cached productId:', lastProductIdForUnCode, 'Cache size:', cachedUnCodeOptions.length);
 
       if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
-        console.log('Using cached UN Code options, avoiding duplicate API call');
         // Apply search term filtering if provided
         if (searchTerm) {
           const filtered = cachedUnCodeOptions.filter(option =>
@@ -1228,16 +1432,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       }
 
       // Only make API call if we don't have cached data and no active product selection
-      console.log('Making UN Code API call as no cached data available and no active product selection');
       const response = await quickOrderService.getDynamicSearchData({
         messageType: "UN Code Init",
         searchTerm: searchTerm || '',
         offset,
         limit,
         searchCriteria: {
-            id: searchTerm,
-            name: searchTerm
-          },
+          id: searchTerm,
+          name: searchTerm
+        },
         additionalFilter: [
           {
             FilterName: "ProductId",
@@ -1257,6 +1460,133 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       }));
     };
   }, [cachedUnCodeOptions, lastProductIdForUnCode, productChangeTracker, currentEditingRowIndex, actualEditableData, forceUnCodeRefresh]);
+
+  const createDGClassFetchOptions = useMemo(() => {
+    // Reset the refresh flag when function is recreated
+    if (forceDGClassRefresh) {
+      setForceDGClassRefresh(false);
+    }
+
+    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+      let unCodeValue = '';
+
+
+      // Try multiple sources to get the UN Code in order of preference:
+      // 1. From unCodeChangeTracker (if active UN Code selection is happening)
+      if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
+        unCodeValue = unCodeChangeTracker.unCode;
+      }
+      // 2. For new rows (index -1), try to get from lastUnCodeForDGClass
+      else if (currentEditingRowIndex === -1) {
+        if (lastUnCodeForDGClass) {
+          unCodeValue = lastUnCodeForDGClass;
+        }
+      }
+      // 3. From current editing row data for existing rows
+      else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+        const fullUnCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
+        // Extract just the UN Code part if it's in "UN XXX || Description" format
+        unCodeValue = safeSplit(fullUnCodeValue, ' || ', 0) || fullUnCodeValue;
+      }
+      // 4. If still no value, try lastUnCodeForDGClass as ultimate fallback
+      else if (lastUnCodeForDGClass) {
+        unCodeValue = lastUnCodeForDGClass;
+      }
+      // 5. Last resort: check if any row has UN Code data (for cases where currentEditingRowIndex is not set correctly)
+      else if (actualEditableData && actualEditableData.length > 0) {
+        for (let i = 0; i < actualEditableData.length; i++) {
+          const rowUnCode = actualEditableData[i].UNCode;
+          if (rowUnCode && rowUnCode.trim() !== '') {
+            const fullUnCodeValue = rowUnCode;
+            unCodeValue = safeSplit(fullUnCodeValue, ' || ', 0) || fullUnCodeValue;
+            break;
+          }
+        }
+      }
+
+      // if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+      //   console.log('createDGClassFetchOptions: DEBUG - Current row data:', actualEditableData[currentEditingRowIndex]);
+      // }
+
+
+      // Check if there's an active unCodeChangeTracker (indicates UN Code was just selected)
+      // If so, don't make API call as we'll use cached data or wait for it to load
+      if (unCodeChangeTracker && unCodeChangeTracker.unCode === unCodeValue) {
+
+        // Return cached data if available, otherwise empty (DG Class will be populated by UN Code onChange)
+        if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === unCodeValue) {
+          if (searchTerm) {
+            const filtered = cachedDGClassOptions.filter(option =>
+              option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            return filtered.slice(offset, offset + limit);
+          }
+          return cachedDGClassOptions.slice(offset, offset + limit);
+        } else {
+          return [];
+        }
+      }
+
+      // Check if we have cached results for the same unCodeValue
+
+      if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === unCodeValue && !forceDGClassRefresh) {
+        // Apply search term filtering if provided
+        if (searchTerm) {
+          const filtered = cachedDGClassOptions.filter(option =>
+            option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          return filtered.slice(offset, offset + limit);
+        }
+        return cachedDGClassOptions.slice(offset, offset + limit);
+      }
+
+      // Only make API call if we don't have cached data, no active UN Code selection, or forced refresh
+
+      // If no UN Code value is available, return empty array - DG Class depends on UN Code
+      if (!unCodeValue || unCodeValue.trim() === '') {
+        return [];
+      }
+
+
+      const response = await quickOrderService.getDynamicSearchData({
+        messageType: "DG Class Init",
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        searchCriteria: {
+          id: searchTerm,
+          name: searchTerm
+        },
+        additionalFilter: [
+          {
+            FilterName: "Uncode",
+            FilterValue: unCodeValue
+          }
+        ]
+      });
+
+      const rr: any = response.data
+      const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+
+      // Update cache with new results
+      if (unCodeValue) {
+        setCachedDGClassOptions(dgClassOptions);
+        setLastUnCodeForDGClass(unCodeValue);
+      }
+
+      return dgClassOptions;
+    };
+  }, [cachedDGClassOptions, lastUnCodeForDGClass, unCodeChangeTracker, currentEditingRowIndex, actualEditableData, forceDGClassRefresh]);
+
   const actualEditableColumns: GridColumnConfig[] = [
     {
       key: 'actions',
@@ -1284,12 +1614,20 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         });
         const rr: any = response.data;
         const wagonTypeList = JSON.parse(rr.ResponseData) || [];
-        return wagonTypeList
-          .filter((item: any) => item.id && item.name)
-          .map((item: any) => ({
-            label: String(item.name),
-            value: String(item.name),
-          }));
+        // return wagonTypeList
+        //   .filter((item: any) => item.id && item.name)
+        //   .map((item: any) => ({
+        //     label: String(item.name),
+        //     value: String(item.name),
+        //   }));
+        return (wagonTypeList).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
       },
       onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
@@ -1299,7 +1637,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              WagonTypeDescription: value,
+              wagonType: safeSplit(value, ' || ', 0),
+              WagonTypeDescription: safeSplit(value, ' || ', 1),
             }));
             return;
           }
@@ -1310,7 +1649,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               const updatedRow = {
                 ...newData[rowIndex],
-                WagonTypeDescription: value,
+                wagonType: safeSplit(value, ' || ', 0),
+                WagonTypeDescription: safeSplit(value, ' || ', 1),
               };
 
               newData[rowIndex] = updatedRow;
@@ -1347,12 +1687,20 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         });
         const rr: any = response.data;
         const wagonList = JSON.parse(rr.ResponseData) || [];
-        return wagonList
-          .filter((item: any) => item.id)
-          .map((item: any) => ({
-            label: item.name,
-            value: item.id,
-          }));
+        // return wagonList
+        //   .filter((item: any) => item.id)
+        //   .map((item: any) => ({
+        //     label: item.name,
+        //     value: item.id,
+        //   }));
+        return (wagonList).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+            : {})
+        }));
       },
       onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
@@ -1386,9 +1734,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const rr: any = response.data;
             const payload = JSON.parse(rr.ResponseData);
 
-            if (payload && payload.ResponsePayload) {
+            if (payload && payload.ResponsePayload && Array.isArray(payload.ResponsePayload) && payload.ResponsePayload.length > 0) {
               // API returned data - update the new row values
-              const wagonData = payload.ResponsePayload;
+              const wagonData = payload.ResponsePayload[0]; // Get first element from array
               setNewRowValues((prev: any) => ({
                 ...prev,
                 ...(wagonData.WagonID && { Wagon: wagonData.WagonID }),
@@ -1406,8 +1754,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               // API returned empty response or this is a new entry
               setNewRowValues((prev: any) => ({
                 ...prev,
-                Wagon: value,
-                WagonDescription: value,
+                Wagon: safeSplit(value, ' || ', 0),
+                WagonDescription: safeSplit(value, ' || ', 1),
                 WagonType: 'UT',
                 WagonTypeDescription: 'Unknown Type',
                 WagonQty: '',
@@ -1455,9 +1803,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prevData];
 
             if (newData[rowIndex]) {
-              if (payload && payload.ResponsePayload) {
+              if (payload && payload.ResponsePayload && Array.isArray(payload.ResponsePayload) && payload.ResponsePayload.length > 0) {
                 // API returned data - update only the specific fields from API response
-                const wagonData = payload.ResponsePayload;
+                const wagonData = payload.ResponsePayload[0]; // Get first element from array
 
                 // Update only the fields that come from the API response
                 newData[rowIndex] = {
@@ -1476,8 +1824,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 // For new entries, set WagonDescription to the same value as Wagon and WagonType to "Unknown"
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  Wagon: value,
-                  WagonDescription: value,
+                  Wagon: safeSplit(value, ' || ', 0),
+                  WagonDescription: safeSplit(value, ' || ', 1),
                   WagonTypeDescription: 'Unknown Type',
                   WagonType: 'UT',
                   WagonQty: '',
@@ -1525,7 +1873,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               // Skip updating if row is marked for deletion
               if (newData[rowIndex].ModeFlag === 'Delete') {
-                console.warn('Attempting to update deleted row, skipping update');
                 return newData;
               }
               // Use safe update to preserve critical ModeFlags like Delete/Insert
@@ -1562,10 +1909,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           setActualEditableData(prevData => {
             const newData = [...prevData];
             if (newData[rowIndex]) {
-              newData[rowIndex] = {
-                ...newData[rowIndex],
-                WagonQty: value,
-              };
+              const currentRow = newData[rowIndex];
+              const updates = { WagonQty: value };
+
+              newData[rowIndex] = safeUpdateRow(currentRow, updates);
             }
             hasUserEditsRef.current = true;
             return newData;
@@ -1576,7 +1923,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'NHMDescription',
+      key: 'NHM',
       label: 'NHM',
       type: 'LazySelect',
       sortable: true,
@@ -1607,7 +1954,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           setNewRowValues((prev: any) => ({
             ...prev,
             NHM: safeSplit(value, ' || ', 0),
-            NHMDescription: safeSplit(value, ' || ', 1, value)
+            NHMDescription: safeSplit(value, ' || ', 1)
           }));
           return;
         }
@@ -1615,16 +1962,28 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex !== undefined) {
           setActualEditableData(prev => {
             const newData = [...prev];
-            newData[actualRowIndex] = {
-              ...newData[actualRowIndex],
+            const currentRow = newData[actualRowIndex];
+            const updates = {
               NHM: safeSplit(value, ' || ', 0),
-              NHMDescription: safeSplit(value, ' || ', 1, value)
+              NHMDescription: safeSplit(value, ' || ', 1)
             };
+
+            newData[actualRowIndex] = safeUpdateRow(currentRow, updates);
             hasUserEditsRef.current = true;
             return newData;
           });
         }
       },
+    },
+    {
+      key: 'NHMDescription',
+      label: 'NHM Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
     },
     {
       key: 'Product',
@@ -1648,8 +2007,23 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
           // If user manually cleared the field, don't trigger UN Code loading
           if (isManualClear) {
-            console.log('Product field manually cleared by user, not triggering UN Code reload');
             setUserInitiatedProductChange(false);
+
+            // Clear preserved product values when manually cleared
+            setPreservedProductValues(null);
+
+            // Clear UN Code and DG Class caches since Product ID is cleared
+            setCachedUnCodeOptions([]);
+            setLastProductIdForUnCode('');
+            setForceUnCodeRefresh(true);
+            setCachedDGClassOptions([]);
+            setLastUnCodeForDGClass('');
+            setForceDGClassRefresh(true);
+
+            // Clear Product options cache and force refresh to recall Product ID Init
+            setCachedProductOptions([]);
+            setLastUnCodeForProduct('');
+            setForceProductRefresh(true);
 
             // Clear the Product field and related UN Code data
             if (actualRowIndex === -1 && setNewRowValues) {
@@ -1667,7 +2041,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
               // Reset field priority when manually cleared in new row
               setNewRowFieldPriority(null);
-              console.log('Reset field priority due to manual Product clear in new row');
             } else {
               setActualEditableData(prevData => {
                 const newData = [...prevData];
@@ -1697,7 +2070,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           if (actualRowIndex === -1 && setNewRowValues) {
             // Check if UN Code was selected first and has priority
             if (newRowFieldPriority === 'uncode') {
-              console.log('Product ID selected from loaded data after UN Code selection - not triggering UN Code API');
               // Just update the Product ID fields without calling UN Code API
               setNewRowValues((prev: any) => ({
                 ...prev,
@@ -1721,8 +2093,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const rr: any = response.data;
             const payload = JSON.parse(rr.ResponseData);
 
-            if (payload && payload.ResponsePayload) {
-              const productfetchData = payload.ResponsePayload;
+            if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+              const productfetchData = payload.ResponsePayload[0]; // Get first element from array
 
               // Mark UN Code as being programmatically set
               setIsUnCodeBeingSet(true);
@@ -1731,13 +2103,18 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 ...prev,
                 Product: safeSplit(value, ' || ', 0),
                 ProductDescription: safeSplit(value, ' || ', 1),
-                UNCode: productfetchData[0].UNCode || '',
-                UNCodeDescription: productfetchData[0].UNDescription || '',
-                DGClass: productfetchData[0].DGClass && productfetchData[0].DGClassDescription
-                  ? `${productfetchData[0].DGClass}`
-                  : (productfetchData[0].DGClass || ''),
-                DGClassDescription: productfetchData[0].DGClassDescription || '',
+                UNCode: productfetchData.UNCode || '',
+                UNCodeDescription: productfetchData.UNDescription || '',
+                DGClass: productfetchData.DGClass || '',
+                DGClassDescription: productfetchData.DGClassDescription || '',
               }));
+
+              // Preserve product values for new row (index -1)
+              setPreservedProductValues({
+                rowIndex: -1,
+                product: safeSplit(value, ' || ', 0),
+                productDescription: safeSplit(value, ' || ', 1),
+              });
 
               // Reset the UN Code being set flag after a short delay
               setTimeout(() => setIsUnCodeBeingSet(false), 100);
@@ -1745,7 +2122,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               // Set priority to Product since it was selected first
               if (newRowFieldPriority === null) {
                 setNewRowFieldPriority('product');
-                console.log('Setting Product ID priority for new row');
               }
 
               // Set currentEditingRowIndex to -1 for new rows
@@ -1768,13 +2144,19 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 DGClassDescription: '',
               }));
 
+              // Preserve product values for new row (index -1) even when API returns empty
+              setPreservedProductValues({
+                rowIndex: -1,
+                product: safeSplit(value, ' || ', 0),
+                productDescription: safeSplit(value, ' || ', 1),
+              });
+
               // Reset the UN Code being set flag after a short delay
               setTimeout(() => setIsUnCodeBeingSet(false), 100);
 
               // Set priority to Product since it was selected first
               if (newRowFieldPriority === null) {
                 setNewRowFieldPriority('product');
-                console.log('Setting Product ID priority for new row (empty response)');
               }
 
               // Also set tracker when API returns empty response
@@ -1805,8 +2187,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prevData];
 
             if (newData[rowIndex]) {
-              if (payload && payload.ResponsePayload) {
-                const productfetchData = payload.ResponsePayload;
+              if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+                const productfetchData = payload.ResponsePayload[0]; // Get first element from array
 
                 // Mark UN Code as being programmatically set
                 setIsUnCodeBeingSet(true);
@@ -1815,12 +2197,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   ...newData[rowIndex],
                   Product: safeSplit(value, ' || ', 0),
                   ProductDescription: safeSplit(value, ' || ', 1),
-                  UNCode: productfetchData[0].UNCode || '',
-                  UNCodeDescription: productfetchData[0].UNDescription || '',
-                  DGClass: productfetchData[0].DGClass && productfetchData[0].DGClassDescription
-                    ? `${productfetchData[0].DGClass}`
-                    : (productfetchData[0].DGClass || ''),
-                  DGClassDescription: productfetchData[0].DGClassDescription || '',
+                  UNCode: productfetchData.UNCode || '',
+                  UNCodeDescription: productfetchData.UNDescription || '',
+                  DGClass: productfetchData.DGClass || '',
+                  DGClassDescription: productfetchData.DGClassDescription || '',
                   // NHM: productfetchData.NHMCode || '',
                   // NHMDescription: productfetchData.NHMDescription || '', // Stand Alone
                   //...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
@@ -1828,6 +2208,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                 // Reset the UN Code being set flag after a short delay
                 setTimeout(() => setIsUnCodeBeingSet(false), 100);
+
+                // Preserve product values for existing rows
+                setPreservedProductValues({
+                  rowIndex: rowIndex,
+                  product: safeSplit(value, ' || ', 0),
+                  productDescription: safeSplit(value, ' || ', 1),
+                });
               } else {
                 // API returned empty response - clear related fields
                 // Mark UN Code as being programmatically set (cleared)
@@ -1848,6 +2235,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                 // Reset the UN Code being set flag after a short delay
                 setTimeout(() => setIsUnCodeBeingSet(false), 100);
+
+                // Preserve product values for existing rows even when API returns empty
+                setPreservedProductValues({
+                  rowIndex: rowIndex,
+                  product: safeSplit(value, ' || ', 0),
+                  productDescription: safeSplit(value, ' || ', 1),
+                });
               }
 
             } else {
@@ -1860,7 +2254,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
           setProductChangeTracker({
             rowIndex: rowIndex,
-            productId: safeSplit(value, ' || ', 0)
+            productId: safeSplit(value, ' || ', 0),
           });
 
           // Reset Product being set flag
@@ -1870,6 +2264,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           console.error('Failed to fetch wagon details:', error);
         }
       },
+    },
+    {
+      key: 'ProductDescription',
+      label: 'Product Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
     },
     {
       key: 'ProductWeightUOM',
@@ -1918,10 +2322,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              ProductWeight: value,
+              ProductWeight: normalizedValue,
             }));
             return;
           }
@@ -1931,7 +2341,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                ProductWeight: value,
+                ProductWeight: normalizedValue,
               };
             }
             hasUserEditsRef.current = true;
@@ -1964,8 +2374,45 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
           // If user manually cleared the field, don't trigger Product loading
           if (isManualClear) {
-            console.log('UN Code field manually cleared by user, not triggering Product reload');
             setUserInitiatedUnCodeChange(false);
+
+            // Clear DG Class cache since UN Code is cleared
+            setCachedDGClassOptions([]);
+            setLastUnCodeForDGClass('');
+            setForceDGClassRefresh(true);
+
+            // Trigger DG Class Init API without UNCode filter to load all DG classes
+            const triggerDGClassInit = async () => {
+              try {
+                const response = await quickOrderService.getDynamicSearchData({
+                  messageType: "DG Class Init",
+                  searchTerm: '',
+                  offset: 1,
+                  limit: 1000,
+                  searchCriteria: {
+                    id: '',
+                    name: ''
+                  },
+                  // No additionalFilter since UNCode is cleared - load all DG classes
+                });
+
+                const rr: any = response.data;
+                const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+                  ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+                    ? {
+                      label: `${item.id} || ${item.name}`,
+                      value: `${item.id} || ${item.name}`,
+                    }
+                    : {})
+                }));
+
+                // Update cached DG Class options with all available options
+                setCachedDGClassOptions(dgClassOptions);
+                setForceDGClassRefresh(true);
+              } catch (error) {
+                console.error('Failed to trigger DG Class Init API after UN Code clear:', error);
+              }
+            };
 
             // Clear the UN Code field and related Product data
             if (actualRowIndex === -1 && setNewRowValues) {
@@ -1986,7 +2433,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
               // Reset field priority when manually cleared in new row
               setNewRowFieldPriority(null);
-              console.log('Reset field priority due to manual UN Code clear in new row');
             } else {
               setActualEditableData(prevData => {
                 const newData = [...prevData];
@@ -2011,6 +2457,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               });
             }
 
+            // Trigger DG Class Init API after clearing fields
+            triggerDGClassInit();
+
             setIsUnCodeBeingSet(false);
             return;
           }
@@ -2019,13 +2468,23 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           if (actualRowIndex === -1 && setNewRowValues) {
             // Check if Product ID was selected first and has priority
             if (newRowFieldPriority === 'product') {
-              console.log('UN Code selected from loaded data after Product ID selection - not triggering Product API');
               // Just update the UN Code fields without calling Product API
               setNewRowValues((prev: any) => ({
                 ...prev,
                 UNCode: safeSplit(value, ' || ', 0),
                 UNCodeDescription: safeSplit(value, ' || ', 1),
               }));
+
+              // Set currentEditingRowIndex and trigger DG Class loading even when Product has priority
+              setCurrentEditingRowIndex(-1);
+              setUnCodeChangeTracker({
+                rowIndex: -1,
+                unCode: safeSplit(value, ' || ', 0)
+              });
+
+              setTimeout(() => {
+                unCodeOnSelectDGClassLoad();
+              }, 100);
 
               // Reset UN Code being set flag
               setIsUnCodeBeingSet(false);
@@ -2042,21 +2501,25 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const rr: any = response.data;
             const payload = JSON.parse(rr.ResponseData);
 
-            if (payload && payload.ResponsePayload) {
-              const unCodefetchData = payload.ResponsePayload;
+            if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+              const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
 
               // Mark Product as being programmatically set
               setIsProductBeingSet(true);
+
+              // Check if we have preserved product values for this row to restore
+              const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
+              const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
+              const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
+
 
               setNewRowValues((prev: any) => ({
                 ...prev,
                 UNCode: safeSplit(value, ' || ', 0),
                 UNCodeDescription: safeSplit(value, ' || ', 1),
-                Product: unCodefetchData.ProductID || '',
-                ProductDescription: unCodefetchData.ProductDescription || '',
-                DGClass: unCodefetchData.DGClass && unCodefetchData.DGClassDescription
-                  ? `${unCodefetchData.DGClass}`
-                  : (unCodefetchData.DGClass || ''),
+                Product: productToSet,
+                ProductDescription: productDescToSet,
+                DGClass: unCodefetchData.DGClass || '',
                 DGClassDescription: unCodefetchData.DGClassDescription || '',
               }));
 
@@ -2066,7 +2529,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               // Set priority to UN Code since it was selected first
               if (newRowFieldPriority === null) {
                 setNewRowFieldPriority('uncode');
-                console.log('Setting UN Code priority for new row');
               }
 
               // Set currentEditingRowIndex to -1 for new rows
@@ -2075,15 +2537,26 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 rowIndex: -1,
                 unCode: safeSplit(value, ' || ', 0)
               });
+
+              // Explicitly trigger DG Class loading for new rows
+              setTimeout(() => {
+                unCodeOnSelectDGClassLoad();
+              }, 100);
             } else {
               // API returned empty response - clear related fields for new row
               // Mark Product as being programmatically set (cleared)
               setIsProductBeingSet(true);
 
+              // Check if we have preserved product values for this row to restore
+              const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
+              const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
+              const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
+
+
               setNewRowValues((prev: any) => ({
                 ...prev,
-                Product: '',
-                ProductDescription: '',
+                Product: productToSet,
+                ProductDescription: productDescToSet,
                 UNCode: safeSplit(value, ' || ', 0),
                 UNCodeDescription: safeSplit(value, ' || ', 1),
                 NHM: '',
@@ -2099,7 +2572,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               // Set priority to UN Code since it was selected first
               if (newRowFieldPriority === null) {
                 setNewRowFieldPriority('uncode');
-                console.log('Setting UN Code priority for new row (empty response)');
               }
 
               // Also set tracker when API returns empty response
@@ -2108,6 +2580,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 rowIndex: -1,
                 unCode: safeSplit(value, ' || ', 0)
               });
+
+              // Even when API returns empty, trigger DG Class loading for new rows
+              setTimeout(() => {
+                unCodeOnSelectDGClassLoad();
+              }, 100);
             }
 
             // Reset UN Code being set flag
@@ -2128,21 +2605,25 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prevData];
 
             if (newData[rowIndex]) {
-              if (payload && payload.ResponsePayload) {
-                const unCodefetchData = payload.ResponsePayload;
+              if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+                const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
 
                 // Mark Product as being programmatically set
                 setIsProductBeingSet(true);
+
+                // Check if we have preserved product values for this row to restore
+                const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
+                const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
+                const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
+
 
                 newData[rowIndex] = {
                   ...newData[rowIndex],
                   UNCode: safeSplit(value, ' || ', 0),
                   UNCodeDescription: safeSplit(value, ' || ', 1),
-                  Product: unCodefetchData.ProductID || '',
-                  ProductDescription: unCodefetchData.ProductDescription || '',
-                  DGClass: unCodefetchData.DGClass && unCodefetchData.DGClassDescription
-                    ? `${unCodefetchData.DGClass}`
-                    : (unCodefetchData.DGClass || ''),
+                  Product: productToSet,
+                  ProductDescription: productDescToSet,
+                  DGClass: unCodefetchData.DGClass || '',
                   DGClassDescription: unCodefetchData.DGClassDescription || '',
                   // NHM: unCodefetchData.NHMCode || '',
                   // NHMDescription: unCodefetchData.NHMDescription || '',
@@ -2156,10 +2637,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 // Mark Product as being programmatically set (cleared)
                 setIsProductBeingSet(true);
 
+                // Check if we have preserved product values for this row to restore
+                const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
+                const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
+                const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
+
                 newData[rowIndex] = {
                   ...newData[rowIndex],
-                  Product: '',
-                  ProductDescription: '',
+                  Product: productToSet,
+                  ProductDescription: productDescToSet,
                   UNCode: safeSplit(value, ' || ', 0),
                   UNCodeDescription: safeSplit(value, ' || ', 1),
                   NHM: '',
@@ -2195,6 +2681,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
+      key: 'UNCodeDescription',
+      label: 'UnCode Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
+    },
+    {
       key: 'DGClass',
       label: 'DG Class',
       type: 'LazySelect',
@@ -2202,33 +2698,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       editable: true,
       subRow: false,
       width: 250,
-      fetchOptions: async ({ searchTerm, offset, limit }) => {
-        const response = await quickOrderService.getMasterCommonData({
-          messageType: "DG Class Init",
-          searchTerm: searchTerm || '',
-          offset,
-          limit,
-          searchCriteria: {
-            id: searchTerm,
-            name: searchTerm
-          },
-          additionalFilter: [
-            // {
-            //   FilterName: "Uncode",
-            //   FilterValue: unCodeValue
-            // }
-          ]
-        });
-        const rr: any = response.data
-        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-            ? {
-              label: `${item.id} || ${item.name}`,
-              value: `${item.id} || ${item.name}`,
-            }
-            : {})
-        }));
-      },
+      fetchOptions: createDGClassFetchOptions,
       onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
@@ -2269,6 +2739,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           console.error('Failed to fetch wagon details:', error);
         }
       },
+    },
+    {
+      key: 'DGClassDescription',
+      label: 'DGClass Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
     },
     {
       key: 'ContainsHazardousGoods',
@@ -2353,10 +2833,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              WagonTareWeight: value,
+              WagonTareWeight: normalizedValue,
             }));
             return;
           }
@@ -2367,7 +2851,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                WagonTareWeight: value,
+                WagonTareWeight: normalizedValue,
               };
             } else {
               console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
@@ -2428,10 +2912,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              GrossWeight: value,
+              GrossWeight: normalizedValue,
             }));
             return;
           }
@@ -2441,7 +2929,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                GrossWeight: value,
+                GrossWeight: normalizedValue,
               };
             }
             hasUserEditsRef.current = true;
@@ -2499,10 +2987,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              WagonLength: value,
+              WagonLength: normalizedValue,
             }));
             return;
           }
@@ -2512,7 +3004,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                WagonLength: value,
+                WagonLength: normalizedValue,
               };
             }
             hasUserEditsRef.current = true;
@@ -2553,7 +3045,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex === -1 && setNewRowValues) {
           setNewRowValues((prev: any) => ({
             ...prev,
-            ShuntingOption: safeSplit(value, ' || ', 1, value)
+            ShuntingOption: safeSplit(value, ' || ', 0),
+            ShuntingOptionDescription: safeSplit(value, ' || ', 1)
           }));
           return;
         }
@@ -2563,7 +3056,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntingOption: safeSplit(value, ' || ', 1, value)
+              ShuntingOption: safeSplit(value, ' || ', 0),
+              ShuntingOptionDescription: safeSplit(value, ' || ', 1)
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -2572,8 +3066,18 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
+      key: 'ShuntingOptionDescription',
+      label: 'Shunting Option Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
+    },
+    {
       key: 'ReplacedWagon',
-      label: 'Replaced Wagon ID',
+      label: 'Replaced Wagon',
       type: 'LazySelect',
       sortable: true,
       editable: true,
@@ -2602,7 +3106,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex === -1 && setNewRowValues) {
           setNewRowValues((prev: any) => ({
             ...prev,
-            ReplacedWagon: safeSplit(value, ' || ', 1, value)
+            ReplacedWagon: safeSplit(value, ' || ', 0)
           }));
           return;
         }
@@ -2612,7 +3116,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ReplacedWagon: safeSplit(value, ' || ', 1, value)
+              ReplacedWagon: safeSplit(value, ' || ', 0)
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -2650,7 +3154,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex === -1 && setNewRowValues) {
           setNewRowValues((prev: any) => ({
             ...prev,
-            ShuntingReasonCode: safeSplit(value, ' || ', 1, value)
+            ShuntingReasonCode: safeSplit(value, ' || ', 0),
+            ShuntingReasonCodeDescription: safeSplit(value, ' || ', 1)
           }));
           return;
         }
@@ -2660,7 +3165,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntingReasonCode: safeSplit(value, ' || ', 1, value)
+              ShuntingReasonCode: safeSplit(value, ' || ', 0),
+              ShuntingReasonCodeDescription: safeSplit(value, ' || ', 1)
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -2668,8 +3174,19 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         }
       },
     },
+
     {
-      key: 'ShuntInLocationDescription',
+      key: 'ShuntingReasonCodeDescription',
+      label: 'Shunting Reason Code Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
+    },
+    {
+      key: 'ShuntInLocation',
       label: 'Shunt In Location',
       type: 'LazySelect',
       sortable: true,
@@ -2698,7 +3215,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex === -1 && setNewRowValues) {
           setNewRowValues((prev: any) => ({
             ...prev,
-            ShuntInLocationDescription: safeSplit(value, ' || ', 1, value)
+            ShuntInLocation: safeSplit(value, ' || ', 0),
+            ShuntInLocationDescription: safeSplit(value, ' || ', 1)
           }));
           return;
         }
@@ -2708,7 +3226,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntInLocationDescription: safeSplit(value, ' || ', 1, value)
+              ShuntInLocation: safeSplit(value, ' || ', 0),
+              ShuntInLocationDescription: safeSplit(value, ' || ', 1)
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -2717,7 +3236,17 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'ShuntOutLocationDescription',
+      key: 'ShuntInLocationDescription',
+      label: 'Shunt In Location Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
+    },
+    {
+      key: 'ShuntOutLocation',
       label: 'Shunt Out Location',
       type: 'LazySelect',
       sortable: true,
@@ -2746,7 +3275,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         if (actualRowIndex === -1 && setNewRowValues) {
           setNewRowValues((prev: any) => ({
             ...prev,
-            ShuntOutLocationDescription: safeSplit(value, ' || ', 1, value)
+            ShuntOutLocation: safeSplit(value, ' || ', 0),
+            ShuntOutLocationDescription: safeSplit(value, ' || ', 1)
           }));
           return;
         }
@@ -2756,13 +3286,24 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ShuntOutLocationDescription: safeSplit(value, ' || ', 1, value)
+              ShuntOutLocation: safeSplit(value, ' || ', 0),
+              ShuntOutLocationDescription: safeSplit(value, ' || ', 1)
             };
             hasUserEditsRef.current = true;
             return newData;
           });
         }
       },
+    },
+    {
+      key: 'ShuntOutLocationDescription',
+      label: 'Shunt Out Location Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
     },
     {
       key: 'ShuntInDate',
@@ -3020,7 +3561,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             newData[rowIndex] = {
               ...newData[rowIndex],
               ContainerId: safeSplit(value, ' || ', 0), // Store ID part
-              ContainerDescription: safeSplit(value, ' || ', 1, value), // Store description part
+              ContainerDescription: safeSplit(value, ' || ', 1), // Store description part
             };
             hasUserEditsRef.current = true;
           }
@@ -3029,7 +3570,17 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'ContainerType',
+      key: 'ContainerDescription',
+      label: 'Container Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
+    },
+    {
+      key: 'ContainerTypeDescription',
       label: 'Container Type',
       type: 'LazySelect',
       sortable: true,
@@ -3060,6 +3611,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           setNewRowValues((prev: any) => ({
             ...prev,
             ContainerType: safeSplit(value, ' || ', 0),
+            ContainerTypeDescription: safeSplit(value, ' || ', 1),
           }));
           return;
         }
@@ -3070,6 +3622,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             newData[rowIndex] = {
               ...newData[rowIndex],
               ContainerType: safeSplit(value, ' || ', 0), // Store ID part
+              ContainerTypeDescription: safeSplit(value, ' || ', 1), // Store description part
             };
             hasUserEditsRef.current = true;
           }
@@ -3196,10 +3749,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              ContainerAvgTareWeight: value,
+              ContainerAvgTareWeight: normalizedValue,
             }));
             return;
           }
@@ -3209,7 +3766,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                ContainerAvgTareWeight: value,
+                ContainerAvgTareWeight: normalizedValue,
               };
             }
             hasUserEditsRef.current = true;
@@ -3288,6 +3845,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           setNewRowValues((prev: any) => ({
             ...prev,
             Thu: safeSplit(value, ' || ', 0),
+            ThuDescription: safeSplit(value, ' || ', 1),
           }));
           return;
         }
@@ -3297,13 +3855,24 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           if (newData[rowIndex]) {
             newData[rowIndex] = {
               ...newData[rowIndex],
-              Thu: safeSplit(value, ' || ', 0), // Store ID part
+              Thu: safeSplit(value, ' || ', 0),
+              ThuDescription: safeSplit(value, ' || ', 1),
             };
             hasUserEditsRef.current = true;
           }
           return newData;
         });
       },
+    },
+    {
+      key: 'ThuDescription',
+      label: 'Thu Description',
+      type: 'String',
+      sortable: true,
+      editable: false,
+      subRow: false,
+      width: 250,
+      disabled: true,
     },
     {
       key: 'ThuSerialNo',
@@ -3458,10 +4027,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: (value: string | number, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+
+          // Normalize the input value based on regional configuration
+          const normalizedValue = normalizeDecimalInput(value, region);
+
           if (actualRowIndex === -1 && setNewRowValues) {
             setNewRowValues((prev: any) => ({
               ...prev,
-              ThuWeight: value,
+              ThuWeight: normalizedValue,
             }));
             return;
           }
@@ -3471,7 +4044,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             if (newData[rowIndex]) {
               newData[rowIndex] = {
                 ...newData[rowIndex],
-                ThuWeight: value,
+                ThuWeight: normalizedValue,
               };
             }
             hasUserEditsRef.current = true;
@@ -3483,7 +4056,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'ClassOfStores',
+      key: 'ClassOfStoresDescription',
       label: 'Class Of Stores',
       type: 'LazySelect',
       sortable: true,
@@ -3534,7 +4107,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              ClassOfStores: safeSplit(value, ' || ', 0) // Store ID part
+              ClassOfStores: safeSplit(value, ' || ', 0), // Store ID part
+              ClassOfStoresDescription: safeSplit(value, ' || ', 1)
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -3648,7 +4222,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'QuickCode1',
+      key: 'QuickCode1Description',
       label: 'Quick Code 1',
       type: 'LazySelect',
       sortable: true,
@@ -3688,7 +4262,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode1: safeSplit(value, ' || ', 0) // Store ID part
+              QuickCode1: safeSplit(value, ' || ', 0),
+              QuickCode1Description: safeSplit(value, ' || ', 1) // Store ID part
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -3697,7 +4272,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'QuickCode2',
+      key: 'QuickCode2Description',
       label: 'Quick Code 2',
       type: 'LazySelect',
       sortable: true,
@@ -3737,7 +4312,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode2: safeSplit(value, ' || ', 0) // Store ID part
+              QuickCode2: safeSplit(value, ' || ', 0),
+              QuickCode2Description: safeSplit(value, ' || ', 1) // Store ID part
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -3746,7 +4322,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       },
     },
     {
-      key: 'QuickCode3',
+      key: 'QuickCode3Description',
       label: 'Quick Code 3',
       type: 'LazySelect',
       sortable: true,
@@ -3786,7 +4362,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             const newData = [...prev];
             newData[actualRowIndex] = {
               ...newData[actualRowIndex],
-              QuickCode3: safeSplit(value, ' || ', 0) // Store ID part
+              QuickCode3: safeSplit(value, ' || ', 0),
+              QuickCode3Description: safeSplit(value, ' || ', 1) // Store ID part
             };
             hasUserEditsRef.current = true;
             return newData;
@@ -4026,10 +4603,48 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
   // Filter out deleted rows for display purposes while keeping them in actualEditableData for API calls
   const visibleActualEditableData = useMemo(() => {
-    return actualEditableData.filter(row => row?.ModeFlag !== 'Delete');
-  }, [actualEditableData]);
+    return actualEditableData.filter(row => row?.ModeFlag !== 'Delete').map(row => {
+      // Create a copy of the row for display formatting
+      const displayRow = { ...row };
+
+      // Format all numeric decimal fields based on regional configuration
+      if (isNumericDecimalField('ProductWeight') && displayRow.ProductWeight) {
+        displayRow.ProductWeight = simpleDecimalDisplayFormatter(displayRow.ProductWeight, region);
+      }
+      if (isNumericDecimalField('WagonAvgLoadWeight') && displayRow.WagonAvgLoadWeight) {
+        displayRow.WagonAvgLoadWeight = simpleDecimalDisplayFormatter(displayRow.WagonAvgLoadWeight, region);
+      }
+      if (isNumericDecimalField('WagonAvgTareWeight') && displayRow.WagonAvgTareWeight) {
+        displayRow.WagonAvgTareWeight = simpleDecimalDisplayFormatter(displayRow.WagonAvgTareWeight, region);
+      }
+      if (isNumericDecimalField('WagonTareWeight') && displayRow.WagonTareWeight) {
+        displayRow.WagonTareWeight = simpleDecimalDisplayFormatter(displayRow.WagonTareWeight, region);
+      }
+      if (isNumericDecimalField('GrossWeight') && displayRow.GrossWeight) {
+        displayRow.GrossWeight = simpleDecimalDisplayFormatter(displayRow.GrossWeight, region);
+      }
+      if (isNumericDecimalField('ContainerAvgTareWeight') && displayRow.ContainerAvgTareWeight) {
+        displayRow.ContainerAvgTareWeight = simpleDecimalDisplayFormatter(displayRow.ContainerAvgTareWeight, region);
+      }
+      if (isNumericDecimalField('ContainerAvgLoadWeight') && displayRow.ContainerAvgLoadWeight) {
+        displayRow.ContainerAvgLoadWeight = simpleDecimalDisplayFormatter(displayRow.ContainerAvgLoadWeight, region);
+      }
+      if (isNumericDecimalField('ThuWeight') && displayRow.ThuWeight) {
+        displayRow.ThuWeight = simpleDecimalDisplayFormatter(displayRow.ThuWeight, region);
+      }
+      if (isNumericDecimalField('WagonLength') && displayRow.WagonLength) {
+        displayRow.WagonLength = formatDecimalForDisplay(displayRow.WagonLength, region);
+      }
+      if (isNumericDecimalField('WagonLength') && displayRow.WagonLength) {
+        displayRow.WagonLength = formatDecimalForDisplay(displayRow.WagonLength, region);
+      }
+
+      return displayRow;
+    });
+  }, [actualEditableData, region]);
 
   const { getConsignments } = useTripExecutionDrawerStore();
+  // const consignments = getConsignments(legId) || [];
   // Use selectedLeg.Consignment if provided, otherwise fallback to store
   const consignments = selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment) 
     ? selectedLeg.Consignment 
@@ -4037,7 +4652,39 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
   const handleEditRow = async (editedRow: any, rowIndex: number) => {
     try {
-      // Update the actualEditableData state with the edited row
+      // Normalize weight fields based on regional configuration before storing
+      const normalizedEditedRow = { ...editedRow };
+
+      // Convert weight fields from regional format to API format (standard)
+      if (normalizedEditedRow.ProductWeight) {
+        normalizedEditedRow.ProductWeight = simpleDecimalInputNormalizer(normalizedEditedRow.ProductWeight, region);
+      }
+      if (normalizedEditedRow.WagonAvgLoadWeight) {
+        normalizedEditedRow.WagonAvgLoadWeight = simpleDecimalInputNormalizer(normalizedEditedRow.WagonAvgLoadWeight, region);
+      }
+      if (normalizedEditedRow.WagonAvgTareWeight) {
+        normalizedEditedRow.WagonAvgTareWeight = simpleDecimalInputNormalizer(normalizedEditedRow.WagonAvgTareWeight, region);
+      }
+      if (normalizedEditedRow.WagonTareWeight) {
+        normalizedEditedRow.WagonTareWeight = simpleDecimalInputNormalizer(normalizedEditedRow.WagonTareWeight, region);
+      }
+      if (normalizedEditedRow.GrossWeight) {
+        normalizedEditedRow.GrossWeight = simpleDecimalInputNormalizer(normalizedEditedRow.GrossWeight, region);
+      }
+      if (normalizedEditedRow.ContainerAvgTareWeight) {
+        normalizedEditedRow.ContainerAvgTareWeight = simpleDecimalInputNormalizer(normalizedEditedRow.ContainerAvgTareWeight, region);
+      }
+      if (normalizedEditedRow.ContainerAvgLoadWeight) {
+        normalizedEditedRow.ContainerAvgLoadWeight = simpleDecimalInputNormalizer(normalizedEditedRow.ContainerAvgLoadWeight, region);
+      }
+      if (normalizedEditedRow.ThuWeight) {
+        normalizedEditedRow.ThuWeight = simpleDecimalInputNormalizer(normalizedEditedRow.ThuWeight, region);
+      }
+      if (normalizedEditedRow.WagonLength) {
+        normalizedEditedRow.WagonLength = normalizeDecimalInput(normalizedEditedRow.WagonLength, region);
+      }
+
+      // Update the actualEditableData state with the normalized edited row
       setActualEditableData(prevData => {
         const newData = [...prevData];
 
@@ -4061,7 +4708,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         });
 
         if (actualRowIndex !== -1) {
-          newData[actualRowIndex] = { ...newData[actualRowIndex], ...editedRow };
+          newData[actualRowIndex] = { ...newData[actualRowIndex], ...normalizedEditedRow };
         }
 
         return newData;
@@ -4124,7 +4771,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
       // Process ShuntingOption field
       if (processedRow.ShuntingOption && processedRow.ShuntingOption.includes(' || ')) {
-        processedRow.ShuntingOption = safeSplit(processedRow.ShuntingOption, ' || ', 1, processedRow.ShuntingOption);
+        processedRow.ShuntingOption = safeSplit(processedRow.ShuntingOption, ' || ', 0, processedRow.ShuntingOption);
+        processedRow.ShuntingOptionDescription = safeSplit(newRow.ShuntingOption, ' || ', 1, newRow.ShuntingOption);
       }
 
       // Process ReplacedWagon field
@@ -4201,7 +4849,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
       // Reset field priority for next new row
       setNewRowFieldPriority(null);
-      console.log('Reset field priority after adding new row');
 
       // Simulate API call (you can add real API call here if needed)
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -4239,7 +4886,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         });
 
         if (actualRowIndex === -1) {
-          console.warn('Row not found in actualEditableData:', row);
           return prevData;
         }
 
@@ -4249,11 +4895,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         // Only newly added rows have ModeFlag: 'Insert'. All others (undefined, 'Update', 'NoChange', etc.) are existing data
         if (rowToDelete.ModeFlag === 'Insert') {
           // This is newly added data - remove it completely from cache
-          console.log('Deleting newly added row - removing from cache completely');
           newData.splice(actualRowIndex, 1);
         } else {
           // This is existing data from API - mark as Delete but keep in array for API call
-          console.log('Deleting existing row - marking as Delete for API');
           newData[actualRowIndex] = {
             ...rowToDelete,
             ModeFlag: 'Delete'
@@ -4273,7 +4917,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       });
 
     } catch (error) {
-      console.error('Error in handleDeleteRow:', error);
+
       toast({
         title: "⚠️ Delete failed",
         description: "An error occurred while deleting the row.",
@@ -4315,9 +4959,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         const gridMappedRow = {
           // Map Excel columns to grid field names
           Wagon: normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
-          WagonDescription: normalizedRow['Wagon Description'] || normalizedRow.wagondescription || normalizedRow['Wagon ID'] || normalizedRow.wagonid || "",
-          WagonType: normalizedRow['Wagon Type'] || normalizedRow.wagontype || "",
-          WagonTypeDescription: normalizedRow['Wagon Type Description'] || normalizedRow.wagontypedescription || normalizedRow.wagontype || "",
+          WagonTypeDescription: normalizedRow['Wagon Type'] || normalizedRow.wagontypedescription || "",
           WagonPosition: normalizedRow['Wagon Position'] || normalizedRow.wagonposition || "",
           WagonQty: normalizedRow['Wagon Qty'] || normalizedRow.wagonqty || 1,
           WagonQtyUOM: normalizedRow['Wagon Qty UOM'] || normalizedRow.wagonqtyuom || "",
@@ -4325,64 +4967,54 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           WagonLengthUOM: normalizedRow['Wagon Length UOM'] || normalizedRow.wagonlengthuom || "",
           WagonTareWeight: normalizedRow['Wagon Tare Weight'] || normalizedRow.wagontareweight || "",
           WagonTareWeightUOM: normalizedRow['Wagon Tare Weight UOM'] || normalizedRow.wagontareweight || "",
-          GrossWeight: normalizedRow['Wagon Gross Weight'] || normalizedRow.grossweight || 0,
+          GrossWeight: normalizedRow['Wagon Gross Weight'] || normalizedRow.grossweight || "",
           GrossWeightUOM: normalizedRow['Wagon Gross Weight UOM'] || normalizedRow.grossweightuom || "",
           ContainerAvgTareWeight: normalizedRow['Container Tare Weight'] || normalizedRow.containeravgtareweight || "",
           ContainerWeightUOM: normalizedRow['Container Tare Weight UOM'] || normalizedRow.containerweightuom || "",
           ContainerId: normalizedRow['Container ID'] || normalizedRow.containerid || "",
-          ContainerDescription: normalizedRow['Container Description'] || normalizedRow.containerdescription || normalizedRow['Container ID'] || normalizedRow.containerid || "",
-          ContainerType: normalizedRow['Container Type'] || normalizedRow.containertype || "",
+          ContainerTypeDescription: normalizedRow['Container Type'] || normalizedRow.containertypedescription || "",
           ContainerQty: normalizedRow['Container Qty'] || normalizedRow.containerqty || "",
           ContainerQtyUOM: normalizedRow['Container Qty UOM'] || normalizedRow.containerqtyuom || "",
           ContainerSealNo: normalizedRow['Container Seal No.'] || normalizedRow.containersealn || normalizedRow.containerseal || "",
- 
+
           Product: normalizedRow['Product ID'] || normalizedRow.productid || "",
-          ProductDescription: normalizedRow['Product Description'] || normalizedRow.productdescription || "",
           ProductWeight: normalizedRow['Product Weight'] || normalizedRow.productweightqty || "",
           ProductWeightUOM: normalizedRow['Product Weight UOM'] || normalizedRow.productweightqtyuom || "",
-         
- 
+
+
           Thu: normalizedRow['THU ID'] || normalizedRow.thuid || "",
-          ThuDescription: normalizedRow['THU Description'] || normalizedRow.thudescription || normalizedRow['THU ID'] || normalizedRow.thuid || "",
           ThuSerialNo: normalizedRow['THU Serial No'] || normalizedRow.thuserialno || "",
           ThuQty: normalizedRow['THU Qty'] || normalizedRow.thuqty || "",
+          ThuQtyUOM: normalizedRow['THU Qty UOM'] || normalizedRow.thuqtyuom || "",
           ThuWeight: normalizedRow['THU Weight'] || normalizedRow.thuweight || "",
           ThuWeightUOM: normalizedRow['THU Weight UOM'] || normalizedRow.thuweightuom || "",
- 
           ShuntingOption: normalizedRow['Shunting Option'] || normalizedRow.shuntingoption || "",
-          ReplacedWagon: normalizedRow['Replaced Wagon ID'] || normalizedRow.replacedwagonid || "",
-          ShuntingReasonCode: normalizedRow['Reason Code'] || normalizedRow.reasoncode || "",
-          Remarks: normalizedRow['Remarks'] || normalizedRow.remarks || "",
+          ReplacedWagon: normalizedRow['Replaced Wagon'] || normalizedRow.replacedwagonid || "",
+          ShuntingReasonCode: normalizedRow['Shunting Reason Code'] || normalizedRow.reasoncode || "",
           ShuntInLocation: normalizedRow['Shunt In Location'] || normalizedRow.shuntinlocation || "",
           ShuntOutLocation: normalizedRow['Shunt Out Location'] || normalizedRow.shuntoutlocation || "",
-          ShuntInDate: normalizedRow['Shunt In Date & Time'] ? normalizedRow['Shunt In Date & Time'].split(' ')[0] : (normalizedRow.shuntindatetime ? normalizedRow.shuntindatetime.split(' ')[0] : ""),
-          ShuntInTime: normalizedRow['Shunt In Date & Time'] ? normalizedRow['Shunt In Date & Time'].split(' ')[1] : (normalizedRow.shuntindatetime ? normalizedRow.shuntindatetime.split(' ')[1] : ""),
-          ShuntOutDate: normalizedRow['Shunt Out Date & Time'] ? normalizedRow['Shunt Out Date & Time'].split(' ')[0] : (normalizedRow.shuntoutdatetime ? normalizedRow.shuntoutdatetime.split(' ')[0] : ""),
-          ShuntOutTime: normalizedRow['Shunt Out Date & Time'] ? normalizedRow['Shunt Out Date & Time'].split(' ')[1] : (normalizedRow.shuntoutdatetime ? normalizedRow.shuntoutdatetime.split(' ')[1] : ""),
+          ShuntInDate: normalizedRow['Shunt In Date'] ? normalizedRow['Shunt In Date'] : (normalizedRow.shuntindate ? normalizedRow.shuntindate : ""),
+          ShuntInTime: normalizedRow['Shunt In Time'] ? normalizedRow['Shunt In Time'] : (normalizedRow.shuntintime ? normalizedRow.shuntintime : ""),
+          ShuntOutDate: normalizedRow['Shunt Out Date'] ? normalizedRow['Shunt Out Date'] : (normalizedRow.shuntoutdate ? normalizedRow.shuntoutdate : ""),
+          ShuntOutTime: normalizedRow['Shunt Out Time'] ? normalizedRow['Shunt Out Time'] : (normalizedRow.shuntouttime ? normalizedRow.shuntouttime : ""),
           LastProductTransported1: normalizedRow['Last Product Transported 1'] || normalizedRow.lastproducttransported1 || "",
           LastProductTransported2: normalizedRow['Last Product Transported 2'] || normalizedRow.lastproducttransported2 || "",
           LastProductTransported3: normalizedRow['Last Product Transported 3'] || normalizedRow.lastproducttransported3 || "",
- 
-          QuickCode1: normalizedRow['Quick Code 1'] || normalizedRow.quickcode1 || "",
-          QuickCode2: normalizedRow['Quick Code 2'] || normalizedRow.quickcode2 || "",
-          QuickCode3: normalizedRow['Quick Code 3'] || normalizedRow.quickcode3 || "",
+          QuickCode1Description: normalizedRow['Quick Code 1'] || normalizedRow.quickcode1description || "",
+          QuickCode2Description: normalizedRow['Quick Code 2'] || normalizedRow.quickcode2description || "",
+          QuickCode3Description: normalizedRow['Quick Code 3'] || normalizedRow.quickcode3description || "",
           QuickCodeValue1: normalizedRow['Quick Code Value 1'] || normalizedRow.quickcodevalue1 || "",
           QuickCodeValue2: normalizedRow['Quick Code Value 2'] || normalizedRow.quickcodevalue2 || "",
           QuickCodeValue3: normalizedRow['Quick Code Value 3'] || normalizedRow.quickcodevalue3 || "",
-          ClassOfStores: normalizedRow['Class Of Stores'] || normalizedRow.classofstores || "",
+          ClassOfStoresDescription: normalizedRow['Class Of Stores'] || normalizedRow.classofstoresdescription || "",
           NHM: normalizedRow['NHM'] || normalizedRow.nhm || "",
-          NHMDescription: normalizedRow['NHM Description'] || normalizedRow.nhmdescription || normalizedRow['NHM'] || normalizedRow.nhm || "",
           UNCode: normalizedRow['UN Code'] || normalizedRow.uncode || "",
-          UNCodeDescription: normalizedRow['UN Code Description'] || normalizedRow.uncodedescription || normalizedRow['UN Code'] || normalizedRow.uncode || "",
           DGClass: normalizedRow['DG Class'] || normalizedRow.dgclass || "",
-          DGClassDescription: normalizedRow['DG Class Description'] || normalizedRow.dgclassdescription || normalizedRow['DG Class'] || normalizedRow.dgclass || "",
           ContainsHazardousGoods: normalizedRow['Contains Hazardous Goods'] || normalizedRow.containshazardousgoods || "",
           WagonSealNo: normalizedRow['Wagon Seal No.'] || normalizedRow.wagonsealn || normalizedRow.wagonseal || "",
- 
           Remarks1: normalizedRow['Remarks1'] || normalizedRow.remarks1 || "",
           Remarks2: normalizedRow['Remarks2'] || normalizedRow.remarks2 || "",
           Remarks3: normalizedRow['Remarks3'] || normalizedRow.remarks3 || "",
- 
           // Add required system fields
           ModeFlag: 'Insert',
           // isNewRow: true,
@@ -4424,6 +5056,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         'Wagon Qty',
         'NHM',
         'Product ID',
+        'Product Description',
         'Product Weight UOM',
         'Product Weight',
         'UN Code',
@@ -4494,10 +5127,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         'WagonLengthUOM': 'Wagon Length UOM',
         'WagonLength': 'Wagon Length',
         'ShuntingOption': 'Shunting Option',
-        'ReplacedWagon': 'Replaced Wagon ID',
-        'ShuntingReasonCode': 'Reason Code',
-        'ShuntInLocationDescription': 'Shunt In Location',
-        'ShuntOutLocationDescription': 'Shunt Out Location',
+        'ReplacedWagon': 'Replaced Wagon',
+        'ShuntingReasonCode': 'Shunting Reason Code',
+        'ShuntInLocation': 'Shunt In Location',
+        'ShuntOutLocation': 'Shunt Out Location',
         'ShuntInDate': 'Shunt In Date',
         'ShuntInTime': 'Shunt In Time',
         'ShuntOutTime': 'Shunt Out Time',
@@ -4505,7 +5138,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         'WagonPosition': 'Wagon Position',
         'WagonSealNo': 'Wagon Seal No.',
         'ContainerId': 'Container ID',
-        'ContainerType': 'Container Type',
+        'ContainerTypeDescription': 'Container Type',
         'ContainerQtyUOM': 'Container Qty UOM',
         'ContainerQty': 'Container Qty',
         'ContainerWeightUOM': 'Container Tare Weight UOM',
@@ -4517,13 +5150,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         'ThuQty': 'THU Qty',
         'ThuWeightUOM': 'THU Weight UOM',
         'ThuWeight': 'THU Weight',
-        'ClassOfStores': 'Class Of Stores',
+        'ClassOfStoresDescription': 'Class Of Stores',
         'LastProductTransported1': 'Last Product Transported 1',
         'LastProductTransported2': 'Last Product Transported 2',
         'LastProductTransported3': 'Last Product Transported 3',
-        'QuickCode1': 'Quick Code 1',
-        'QuickCode2': 'Quick Code 2',
-        'QuickCode3': 'Quick Code 3',
+        'QuickCode1Description': 'Quick Code 1',
+        'QuickCode2Description': 'Quick Code 2',
+        'QuickCode3Description': 'Quick Code 3',
         'QuickCodeValue1': 'Quick Code Value 1',
         'QuickCodeValue2': 'Quick Code Value 2',
         'QuickCodeValue3': 'Quick Code Value 3',
@@ -4675,11 +5308,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       let currentGridData = [];
 
       if (hasUserEditsRef.current) {
-        // Debug: Log all ModeFlags before processing
-        console.log('=== SAVE DEBUG: Processing actualEditableData ===');
-        actualEditableData.forEach((row, idx) => {
-          console.log(`Row ${idx}: ModeFlag = ${row?.ModeFlag}, WagonPosition = ${row?.WagonPosition || row?.['Wagon Position']}`);
-        });
+
 
         // If user has made edits, include all current actual data
         currentGridData = actualEditableData.map((actualRow, index) => {
@@ -4689,12 +5318,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               throw new Error(`Invalid row data at index ${index}`);
             }
             let modeFlag = "Update";
+            let lineUniqueID = null;
 
             // Preserve the original ModeFlag for Insert and Delete operations
             if (actualRow.ModeFlag === 'Insert') {
               modeFlag = "Insert";
+              lineUniqueID = null;
             } else if (actualRow.ModeFlag === 'Delete') {
               modeFlag = "Delete";
+              lineUniqueID = actualRow.LineUniqueID || null;
             }
 
             // Helper function to safely get numeric values
@@ -4731,38 +5363,40 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               PlanToActualCopy: "",
               WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
               WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
-              WagonTypeDescription: safeString(actualRow['Wagon Type'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription),
+              WagonTypeDescription: safeString(actualRow['Wagon Type Description'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription),
               Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
               WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
               WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
               WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
-              ContainerType: safeString(actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype),
+              ContainerTypeDescription: safeString(actualRow['Container Type Description'] || actualRow.ContainerTypeDescription || actualRow.containertypedescription),
               ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
               ContainerDescription: safeString(actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription),
               ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
               ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
               Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
-              ProductDescription: safeString(actualRow['Product Description'] || actualRow.ProductDescription || actualRow.ProductDescription || actualRow.productdescription),
-              ProductWeight: safeNumeric(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
+              ProductDescription: safeString(actualRow['Product Description'] || actualRow.ProductDescription || actualRow.productdescription),
+              ProductWeight: safeString(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
               ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
               Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
               ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
               ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
               ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
-              ThuWeight: safeNumeric(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
+              ThuQtyUom: safeString(actualRow['THU Qty UOM'] || actualRow.ThuQtyUOM || actualRow.thuqtyuom),
+              ThuWeight: safeString(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
               ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
               ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
-              ReplacedWagon: safeString(actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
+              ReplacedWagon: safeString(actualRow['Replaced Wagon'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
               ShuntingReasonCode: safeString(actualRow['Shunting Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
               ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
-              ShuntInLocationDescription: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
+              ShuntInLocationDescription: safeString(actualRow['Shunt In Location Description'] || actualRow.ShuntInLocationDescription || actualRow.shuntinlocationdescription),
               ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
-              ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
-              ShuntInDate: safeDateTimeSplit(actualRow['Shunt In Date & Time'] || actualRow.shuntindatetime, 0),
-              ShuntInTime: safeDateTimeSplit(actualRow['Shunt In Date & Time'] || actualRow.shuntindatetime, 1),
-              ShuntOutDate: safeDateTimeSplit(actualRow['Shunt Out Date & Time'] || actualRow.shuntoutdatetime, 0),
-              ShuntOutTime: safeDateTimeSplit(actualRow['Shunt Out Date & Time'] || actualRow.shuntoutdatetime, 1),
+              ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location Description'] || actualRow.ShuntOutLocationDescription || actualRow.shuntoutlocationdescription),
+              ShuntInDate: actualRow['Shunt In Date'] || actualRow.shuntindate,
+              ShuntInTime: actualRow['Shunt In Time'] || actualRow.shuntintime,
+              ShuntOutDate: actualRow['Shunt Out Date'] || actualRow.shuntoutdate,
+              ShuntOutTime: actualRow['Shunt Out Time'] || actualRow.shuntouttime,
               ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
+              ClassOfStoresDescription: safeString(actualRow['Class Of Stores Description'] || actualRow.ClassOfStoresDescription || actualRow.classofstoresdescription),
               NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
               NHMDescription: safeString(actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription),
               UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
@@ -4772,7 +5406,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
               WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
               ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
-              ContainerAvgTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
+              ContainerAvgTareWeight: safeString(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
               ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
               LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
               LastProductTransportedDate1: safeString(actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1),
@@ -4780,21 +5414,22 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               LastProductTransportedDate2: safeString(actualRow['Last Product Transported Date2'] || actualRow.LastProductTransportedDate2 || actualRow.lastproducttransporteddate2),
               LastProductTransported3: safeString(actualRow['Last Product Transported3'] || actualRow.LastProductTransported3 || actualRow.lastproducttransported3),
               LastProductTransportedDate3: safeString(actualRow['Last Product Transported Date3'] || actualRow.LastProductTransportedDate3 || actualRow.lastproducttransporteddate3),
-              WagonTareWeight: safeNumeric(actualRow['Wagon Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight),
+              WagonTareWeight: safeString(actualRow['Wagon Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight),
               WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
               WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
               WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
-              GrossWeight: safeNumeric(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
+              GrossWeight: safeString(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
               GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
-              QuickCode1: safeString(actualRow['Quick Code1'] || actualRow.QuickCode1 || actualRow.quickcode1),
-              QuickCode2: safeString(actualRow['Quick Code2'] || actualRow.QuickCode2 || actualRow.quickcode2),
-              QuickCode3: safeString(actualRow['Quick Code3'] || actualRow.QuickCode3 || actualRow.quickcode3),
+              QuickCode1Description: safeString(actualRow['Quick Code1'] || actualRow.QuickCode1Description || actualRow.quickcode1description),
+              QuickCode2Description: safeString(actualRow['Quick Code2'] || actualRow.QuickCode2Description || actualRow.quickcode2description),
+              QuickCode3Description: safeString(actualRow['Quick Code3'] || actualRow.QuickCode3Description || actualRow.quickcode3description),
               QuickCodeValue1: safeString(actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
               QuickCodeValue2: safeString(actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
               QuickCodeValue3: safeString(actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
               Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
               Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
               Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
+              LineUniqueID: lineUniqueID,
               ModeFlag: modeFlag // Set appropriate mode flag
             };
 
@@ -4815,38 +5450,40 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             PlanToActualCopy: "",
             WagonPosition: actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition || "",
             WagonType: actualRow['Wagon Type'] || actualRow.WagonTypeDescription || actualRow.wagontype || "",
-            WagonTypeDescription: actualRow['Wagon Type'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription || "",
+            WagonTypeDescription: actualRow['Wagon Type Description'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription || "",
             Wagon: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid || "",
             WagonDescription: actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid || "",
             WagonQty: actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty || null,
             WagonQtyUOM: actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom || "",
-            ContainerType: actualRow['Container Type'] || actualRow.ContainerType || actualRow.containertype || "",
+            ContainerTypeDescription: actualRow['Container Type Description'] || actualRow.ContainerTypeDescription || actualRow.containertypedescription || "",
             ContainerId: actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid || "",
             ContainerDescription: actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription || "",
             ContainerQty: actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty || null,
             ContainerQtyUOM: actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom || "",
-            Product: actualRow['Product ID'] || actualRow.CommodityId || actualRow.Product || actualRow.commodityid || "",
+            Product: actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.productid || "",
+            ProductDescription: actualRow['Product ID'] || actualRow.ProductDescription || actualRow.ProductDescription || actualRow.productdescription || "",
             ProductWeight: actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.commodityactualqty || null,
             ProductWeightUOM: actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.commodityqtyuom || "",
             Thu: actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid || "",
             ThuDescription: actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription || "",
             ThuSerialNo: actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno || "",
             ThuQty: actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty || null,
+            ThuQtyUom: actualRow['THU Qty UOM'] || actualRow.ThuQtyUOM || actualRow.thuqtyuom || "",
             ThuWeight: actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight || null,
             ThuWeightUOM: actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom || "",
             ShuntingOption: actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption || "",
-            ReplacedWagon: actualRow['Replaced Wagon ID'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
+            ReplacedWagon: actualRow['Replaced Wagon'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid || "",
             ShuntingReasonCode: actualRow['Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode || "",
-            Remarks: actualRow['Remarks'] || actualRow.Remarks || actualRow.remarks || "",
             ShuntInLocation: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
-            ShuntInLocationDescription: actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation || "",
+            ShuntInLocationDescription: actualRow['Shunt In Location Description'] || actualRow.ShuntInLocationDescription || actualRow.shuntinlocationdescription || "",
             ShuntOutLocation: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
-            ShuntOutLocationDescription: actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation || "",
-            ShuntInDate: actualRow['Shunt In Date'] ? actualRow['Shunt In Date'].split(' ')[0] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[0] : ""),
-            ShuntInTime: actualRow['Shunt In Time'] ? actualRow['Shunt In Time'].split(' ')[1] : (actualRow.shuntindatetime ? actualRow.shuntindatetime.split(' ')[1] : ""),
-            ShuntOutDate: actualRow['Shunt Out Date'] ? actualRow['Shunt Out Date'].split(' ')[0] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[0] : ""),
-            ShuntOutTime: actualRow['Shunt Out Time'] ? actualRow['Shunt Out Time'].split(' ')[1] : (actualRow.shuntoutdatetime ? actualRow.shuntoutdatetime.split(' ')[1] : ""),
+            ShuntOutLocationDescription: actualRow['Shunt Out Location Description'] || actualRow.ShuntOutLocationDescription || actualRow.shuntoutlocationdescription || "",
+            ShuntInDate: actualRow['Shunt In Date'] ? actualRow['Shunt In Date'] : (actualRow.shuntindate ? actualRow.shuntindate : ""),
+            ShuntInTime: actualRow['Shunt In Time'] ? actualRow['Shunt In Time'] : (actualRow.shuntintime ? actualRow.shuntintime : ""),
+            ShuntOutDate: actualRow['Shunt Out Date'] ? actualRow['Shunt Out Date'] : (actualRow.shuntoutdate ? actualRow.shuntoutdate : ""),
+            ShuntOutTime: actualRow['Shunt Out Time'] ? actualRow['Shunt Out Time'] : (actualRow.shuntouttime ? actualRow.shuntouttime : ""),
             ClassOfStores: actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores || "",
+            ClassOfStoresDescription: actualRow['Class Of Stores Description'] || actualRow.ClassOfStoresDescription || actualRow.classofstoresdescription || "",
             NHM: actualRow['NHM'] || actualRow.NHM || actualRow.nhm || "",
             NHMDescription: actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription || "",
             UNCode: actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode || "",
@@ -4870,16 +5507,17 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             WagonLengthUOM: actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom || "",
             GrossWeight: actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight || null,
             GrossWeightUOM: actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom || null,
-            QuickCode1: actualRow['Quick Code1'] || actualRow.QuickCode1 || actualRow.quickcode1 || "",
-            QuickCode2: actualRow['Quick Code2'] || actualRow.QuickCode2 || actualRow.quickcode2 || "",
-            QuickCode3: actualRow['Quick Code3'] || actualRow.QuickCode3 || actualRow.quickcode3 || "",
+            QuickCode1Description: actualRow['Quick Code1'] || actualRow.QuickCode1Description || actualRow.quickcode1description || "",
+            QuickCode2Description: actualRow['Quick Code2'] || actualRow.QuickCode2Description || actualRow.quickcode2description || "",
+            QuickCode3Description: actualRow['Quick Code3'] || actualRow.QuickCode3Description || actualRow.quickcode3description || "",
             QuickCodeValue1: actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1 || "",
             QuickCodeValue2: actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2 || "",
             QuickCodeValue3: actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3 || "",
             Remarks1: actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1 || "",
             Remarks2: actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2 || "",
             Remarks3: actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3 || "",
-            ModeFlag: "Insert" // All newly imported data gets Insert mode
+            ModeFlag: "Insert",// All newly imported data gets Insert mode,
+            LineUniqueID: null
           };
         });
       }
@@ -4893,18 +5531,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       // Combine only the data that needs to be sent to API
       const allDataToSave = [...currentGridData, ...deletedDataToInclude];
 
-      // Debug: Log what's being sent to API
-      console.log('=== SAVE DEBUG: Final API Data ===');
-      console.log(`Total rows to save: ${allDataToSave.length}`);
-      allDataToSave.forEach((row, idx) => {
-        console.log(`API Row ${idx}: ModeFlag = ${row.ModeFlag}, WagonPosition = ${row.WagonPosition}`);
-      });
-
       const deletedRows = allDataToSave.filter(row => row.ModeFlag === 'Delete');
       const insertedRows = allDataToSave.filter(row => row.ModeFlag === 'Insert');
       const updatedRows = allDataToSave.filter(row => row.ModeFlag === 'Update');
 
-      console.log(`Deleted rows: ${deletedRows.length}, Inserted rows: ${insertedRows.length}, Updated rows: ${updatedRows.length}`);
 
       // // If no data to save, return early
       // if (allDataToSave.length === 0) {
@@ -5006,6 +5636,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                       // Update related state
                       setTimeout(() => {
+                        // const cons = getConsignments(legId) || [];
                         // Use selectedLeg.Consignment if provided, otherwise fallback to store
                         const cons = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
                           ? selectedLeg.Consignment
@@ -5018,7 +5649,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             setActualData([...freshData]);
                           }
                         }
-                        
+
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5039,7 +5670,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                         // Use the dedicated refresh function
                         forceGridRefresh(allDataToSave, 'saved data fallback');
-                        
+
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5247,7 +5878,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     fetchThuQtyUOMOptions();
   }, []);
 
-  // Track previous legId and selectedLeg to detect changes
+  // Step 2: Load fresh data whenever legId changes
+   // Track previous legId and selectedLeg to detect changes
   const prevLegIdRef = useRef<string | null>(null);
   const prevSelectedLegRef = useRef<any>(null);
   
@@ -5255,59 +5887,70 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   useEffect(() => {
     if (!legId) return;
 
-    // Check if legId changed OR selectedLeg changed (by comparing LegSequence)
-    const legChanged = legId !== currentLeg || legId !== prevLegIdRef.current;
-    const selectedLegChanged = selectedLeg?.LegSequence !== prevSelectedLegRef.current?.LegSequence;
-    
-    if (legChanged || selectedLegChanged) {
-      if (legChanged) {
-        setCurrentLeg(legId);
-        hasUserEditsRef.current = false; // Reset user edits flag when leg changes
-      }
-      
-      // Update refs to track changes
-      prevLegIdRef.current = legId;
-      prevSelectedLegRef.current = selectedLeg;
+    // detect leg change
+    if (legId !== currentLeg) {
+      setCurrentLeg(legId);
+      hasUserEditsRef.current = false; // Reset user edits flag when leg changes
 
-      // Use selectedLeg.Consignment if provided, otherwise fallback to store
-      const cons = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
-        ? selectedLeg.Consignment
-        : (getConsignments(legId) || []);
+      // const cons = getConsignments(legId) || [];
+      // Check if legId changed OR selectedLeg changed (by comparing LegSequence)
+      const legChanged = legId !== currentLeg || legId !== prevLegIdRef.current;
+      const selectedLegChanged = selectedLeg?.LegSequence !== prevSelectedLegRef.current?.LegSequence;
       
-      console.log('ConsignmentTrip: Loading data for legId:', legId, 'selectedLeg.LegSequence:', selectedLeg?.LegSequence, 'consignments:', cons.length);
-      
-      if (cons.length > 0) {
-        const list = buildCustomerOrderList(cons);
-        setCustomerList(list);
+      if (legChanged || selectedLegChanged) {
+        if (legChanged) {
+          setCurrentLeg(legId);
+          hasUserEditsRef.current = false; // Reset user edits flag when leg changes
+        }
+        
+        // Update refs to track changes
+        prevLegIdRef.current = legId;
+        prevSelectedLegRef.current = selectedLeg;
 
-        setSelectedCustomerIndex('0');
-        const selected = cons[0];
-        setSelectedCustomerData(selected); // Use raw consignment data
-        setPlannedData(selected?.Planned ?? []);
-        setActualData(selected?.Actual ?? []);
-        setActualEditableData(selected?.Actual ?? []);
-        console.log('ConsignmentTrip: Loaded planned:', selected?.Planned?.length, 'actual:', selected?.Actual?.length);
-      } else {
-        // reset everything if no consignment for new leg
-        setCustomerList([]);
-        setSelectedCustomerIndex('');
-        setSelectedCustomerData({});
-        setPlannedData([]);
-        setActualData([]);
-        setActualEditableData([]);
-        console.log('ConsignmentTrip: No consignment data available for this leg');
+        // Use selectedLeg.Consignment if provided, otherwise fallback to store
+        const cons = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+          ? selectedLeg.Consignment
+          : (getConsignments(legId) || []);
+        
+        console.log('ConsignmentTrip: Loading data for legId:', legId, 'selectedLeg.LegSequence:', selectedLeg?.LegSequence, 'consignments:', cons.length);
+        if (cons.length > 0) {
+          const list = buildCustomerOrderList(cons);
+          setCustomerList(list);
+
+          setSelectedCustomerIndex('0');
+          const selected = cons[0];
+          setSelectedCustomerData(selected); // Use raw consignment data
+          setPlannedData(selected?.Planned ?? []);
+          setActualData(selected?.Actual ?? []);
+          setActualEditableData(selected?.Actual ?? []);
+          console.log('ConsignmentTrip: Loaded planned:', selected?.Planned?.length, 'actual:', selected?.Actual?.length);
+        } else {
+          // reset everything if no consignment for new leg
+          setCustomerList([]);
+          setSelectedCustomerIndex('');
+          setSelectedCustomerData({});
+          setPlannedData([]);
+          setActualData([]);
+          setActualEditableData([]);
+          console.log('ConsignmentTrip: No consignment data available for this leg');
+          // No consignment data available for this leg
+        }
       }
     }
   }, [legId, selectedLeg, currentLeg]); // on leg change or selectedLeg change
 
-  // Step 3: Keep selection stable if same leg data updates (when selectedLeg changes but legId is same)
+  // Step 3: Keep selection stable if same leg data updates
   useEffect(() => {
+    // Early return if no current leg or no consignments
+    // if (!currentLeg || consignments.length === 0) {
+    //   return;
+    // }
     // Early return if no current leg
     if (!currentLeg || !legId) {
       return;
     }
 
-    // Use selectedLeg.Consignment if provided, otherwise fallback to store
+     // Use selectedLeg.Consignment if provided, otherwise fallback to store
     const currentConsignments = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
       ? selectedLeg.Consignment
       : (getConsignments(legId) || []);
@@ -5316,8 +5959,17 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       return;
     }
 
+    // Use selectedLeg.Consignment if provided, otherwise fallback to store
+    // const currentConsignments = (selectedLeg?.Consignment && Array.isArray(selectedLeg.Consignment))
+    //   ? selectedLeg.Consignment
+    //   : (getConsignments(legId) || []);
+
+    // if (currentConsignments.length === 0) {
+    //   return;
+    // }
     // Build customer list
     const list = buildCustomerOrderList(currentConsignments);
+    // const list = buildCustomerOrderList(consignments);
     setCustomerList(list);
 
     // Get selected consignment
@@ -5541,7 +6193,24 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Regional Format Selector */}
             <div className="flex items-center gap-2">
+              <Label htmlFor="region-select" className="text-sm font-medium whitespace-nowrap">Decimal Format:</Label>
+              <Select value={region} onValueChange={(value: 'german' | 'indian') => setRegion(value)}>
+                <SelectTrigger className="w-[120px] h-9" id="region-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="german">DE (66,7)</SelectItem>
+                  <SelectItem value="indian">IN (66.7)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={(checked) => setPickupComplete(checked as boolean)} />
+              <Label htmlFor="maintenanceRequired" className="cursor-pointer">Pickup Complete for this CO</Label> */}
               <Switch id="pickupComplete" checked={pickupComplete} onCheckedChange={setPickupComplete}  />
               <Label htmlFor="pickupComplete" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
@@ -5868,12 +6537,36 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             key={`actual-grid-${legId}-${selectedCustomerIndex}-${gridRefreshKey}`}
                             columns={actualEditableColumns}
                             data={[...visibleActualEditableData]}
+                            region={region}
                             gridTitle="Actuals"
                             inlineRowAddition={true}
                             inlineRowEditing={true}
                             onAddRow={handleAddRow}
                             onEditRow={handleEditRow}
                             onDeleteRow={handleDeleteRow}
+                            onInlineEdit={(rowIndex: number, updatedRow: any) => {
+                              // Handle automatic ModeFlag update for inline edits
+                              setActualEditableData(prevData => {
+                                const newData = [...prevData];
+
+                                // Find the actual row index in the full data
+                                const visibleRow = visibleActualEditableData[rowIndex];
+                                const actualRowIndex = newData.findIndex(dataRow => {
+                                  if (dataRow === visibleRow) return true;
+                                  // Additional fallback matching logic if needed
+                                  return false;
+                                });
+
+                                if (actualRowIndex !== -1 && newData[actualRowIndex]) {
+                                  const currentRow = newData[actualRowIndex];
+
+                                  newData[actualRowIndex] = safeUpdateRow(currentRow, updatedRow);
+                                  hasUserEditsRef.current = true;
+                                }
+
+                                return newData;
+                              });
+                            }}
                             onImport={handleImportData}
                             onExport={handleExportData}
                             onImportData={(importedData) => {
@@ -5891,7 +6584,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
                             showGroupingDropdown={true}
                             paginationMode="pagination"
-                            selectedRows={selectedRows}
                             rowClassName={(row: any, index: number) => {
                               return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
                             }}
@@ -5914,13 +6606,15 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   </div>
                 </motion.div>
               )}
-              <div className='flex justify-end fixed bottom-0 right-[40px] bg-white w-full'>
-                <Button
-                  className="h-8 my-2 bg-blue-600 rounded hover:bg-blue-700"
-                  onClick={handleSavePlanActuals}
-                >
-                  Save Consignment
-                </Button>
+              <div className='flex flex-col items-end fixed bottom-0 right-[40px] bg-white w-full border-t pt-2'>
+                <div className='flex gap-2'>
+                  <Button
+                    className="h-8 bg-blue-600 rounded hover:bg-blue-700"
+                    onClick={handleSavePlanActuals}
+                  >
+                    Save Consignment
+                  </Button>
+                </div>
               </div>
 
               {/* Debug button for testing - can be removed in production */}

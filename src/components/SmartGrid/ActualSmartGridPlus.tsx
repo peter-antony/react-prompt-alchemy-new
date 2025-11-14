@@ -72,7 +72,8 @@ export function ActualSmartGridPlus({
   defaultRowValues = {},
   validationRules = {},
   addRowButtonLabel = "Add Row",
-  addRowButtonPosition = "top-left"
+  addRowButtonPosition = "top-left",
+  region = 'german' // Add region prop with default value
 }: SmartGridPlusProps) {
   const {
     gridData,
@@ -1116,25 +1117,25 @@ export function ActualSmartGridPlus({
 
   const handleDeleteRowAction = useCallback(async (rowIndex: number, row: any) => {
     // if (window.confirm('Are you sure you want to delete this row?')) {
-      try {
-        const updatedData = gridData.filter((_, index) => index !== rowIndex);
-        setGridData(updatedData);
+    try {
+      const updatedData = gridData.filter((_, index) => index !== rowIndex);
+      setGridData(updatedData);
 
-        if (onDeleteRow) {
-          await onDeleteRow(row, rowIndex);
-        }
-
-        toast({
-          title: "Row Deleted",
-          description: "Row has been deleted successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete row.",
-          variant: "destructive",
-        });
+      if (onDeleteRow) {
+        await onDeleteRow(row, rowIndex);
       }
+
+      toast({
+        title: "Row Deleted",
+        description: "Row has been deleted successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete row.",
+        variant: "destructive",
+      });
+    }
     // }
   }, [gridData, setGridData, onDeleteRow, toast]);
 
@@ -1261,6 +1262,7 @@ export function ActualSmartGridPlus({
         <EnhancedCellEditor1
           value={editingValue}
           column={column}
+          region={region}
           onChange={(value) => {
             // Call column-specific onChange first if provided
             if (column.onChange) {
@@ -1359,6 +1361,7 @@ export function ActualSmartGridPlus({
                 <EnhancedCellEditor1
                   value={newRowValues[column.key]}
                   column={column}
+                  region={region}
                   onChange={(value) => {
                     const updatedRowValues = {
                       ...newRowValues,
