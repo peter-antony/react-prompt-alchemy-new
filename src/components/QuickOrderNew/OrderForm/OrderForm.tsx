@@ -1414,6 +1414,15 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
   }
 
   const openUpdateResourceGroup = async () => {
+    const currentStatus = jsonStore.getQuickOrder()?.Status;
+    if (currentStatus === 'Confirmed') {
+      toast({
+        title: "Cannot add resource group",
+        description: "Cannot add more resource group after confirmation.",
+        variant: "destructive",
+      });
+      return;
+    }
     openResourceGroupGetID();
     setTimeout(() => {
       setResourceGroupOpen(true);
