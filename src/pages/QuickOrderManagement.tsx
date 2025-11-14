@@ -495,7 +495,7 @@ const QuickOrderManagement = () => {
     {
       key: 'Cluster', label: 'Cluster', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Cluster Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     {
@@ -503,7 +503,7 @@ const QuickOrderManagement = () => {
       label: 'Customer',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("Customer Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     { key: 'CustomerSupplierRefNo', label: 'Customer/Supplier Ref No', type: 'text' },
@@ -569,7 +569,7 @@ const QuickOrderManagement = () => {
     {
       key: 'CreatedBy', label: 'Quick Order Created By', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Createdby Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     {
@@ -591,7 +591,7 @@ const QuickOrderManagement = () => {
     {
       key: 'ResourceType', label: 'Resource Type', type: 'lazyselect',
       fetchOptions: makeLazyFetcher("ResourceType Init"),
-      hideSearch: true,
+      hideSearch: false,
       disableLazyLoading: true
     },
     {
@@ -678,7 +678,7 @@ const QuickOrderManagement = () => {
           } else if (key == 'IsBillingFailed') {
             searchData.push({
               FilterName: key,
-              FilterValue: value.value === 'Yes' ? '1' : '0'
+              FilterValue: value.value === 'Yes' ? 'Yes' : 'No'
             })
           } else if (key == 'PrimaryRefDoc') {
             const { dropdown, text } = value?.value || {};
