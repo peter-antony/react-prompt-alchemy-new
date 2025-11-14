@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import CommonPopup from '@/components/Common/CommonPopup';
 import { NotebookPen } from 'lucide-react';
 import { json } from 'stream/consumers';
-
+import { format } from "date-fns";
 const CreateQuickOrder = () => {
   const navigate = useNavigate();
   const { setFooter, resetFooter } = useFooterStore();
@@ -34,14 +34,17 @@ const CreateQuickOrder = () => {
   const [customerOrderNoList, setCustomerOrderNoList] = useState<any[]>([]);
   const [fetchedQuickOrderData, setFetchedQuickOrderData] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
+  // const [footerLabelData ,setFooterLabelData] = useState({"CreatedBy":'','CreatedDate':'','LastModifiedBy':'','LastmodifiedDate':''});
   const messageTypes = [
     // "Quick Order Billing Type Init",
     "Quick Order Amend Reason Code Init",
   ];
 
   const newQuickOrderRef = React.useRef<NewQuickOrderHandle>(null);
-
+  var footerLabelData  = {"CreatedBy":'','CreatedDate':'','LastModifiedBy':'','LastmodifiedDate':''};
+  function formatDate(dateString: string) {
+    return format(new Date(dateString), "dd-MM-yyyy HH:mm");
+  }
   useEffect(() => {
     fetchAll();
     //  Fetch the full quick order details
@@ -60,7 +63,102 @@ const CreateQuickOrder = () => {
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
         jsonStore.setQuickOrder(fetchedQuickOrderData);
         const fullJson2 = jsonStore.getJsonData();
+        let footerObj :any = {};
+        footerObj.CreatedBy = (parsedData?.ResponseResult)[0].CreatedBy || '';
+        footerObj.CreatedDate = (parsedData?.ResponseResult)[0].CreatedDate || '';
+        footerObj.LastModifiedBy = (parsedData?.ResponseResult)[0].LastModifiedBy || '';
+        footerObj.LastmodifiedDate = (parsedData?.ResponseResult)[0].LastmodifiedDate || '';
+        // setFooterLabelData(footerObj);
+        footerLabelData = footerObj;
+        console.log("footerLabelData = ",footerLabelData)
         // const storedConfirmStatus = localStorage.getItem('confirmOrder');
+        setFooter({
+          visible: true,
+          pageName: 'Create_Quick_Order',
+          // leftButtons: [
+          //   {
+          //     label: "CIM/CUV Report",
+          //     onClick: () => console.log("CIM/CUV Report"),
+          //     type: "Icon",
+          //     iconName: 'BookText'
+          //   },
+          // ],
+          leftButtons: [
+            {
+              label: "Created By",
+              // onClick: () => console.log("CIM/CUV Report"),
+              type: "Label",
+              iconName: footerLabelData.CreatedBy
+            },
+            {
+              label: "Created Date",
+              // onClick: () => console.log("CIM/CUV Report"),
+              type: "Label",
+              iconName: formatDate(footerLabelData.CreatedDate)
+            },
+            {
+              label: "Last Modified By",
+              // onClick: () => console.log("CIM/CUV Report"),
+              type: "Label",
+              iconName: footerLabelData.LastModifiedBy
+            },
+            {
+              label: "Last Modified Date",
+              // onClick: () => console.log("CIM/CUV Report"),
+              type: "Label",
+              iconName: formatDate(footerLabelData.LastmodifiedDate)
+            },
+          ],
+          rightButtons: [
+            {
+              label: "Cancel",
+              disabled: isSaveButtonDisabled,
+              type: 'Button' as const,
+              onClick: () => {
+                // console.log("Cancel clicked");
+                quickOrderCancelhandler();
+                setRefreshTrigger(prev => prev + 1);
+    
+                // quickOrderCancelhandler();
+              },
+            },
+            {
+              label: "Save",
+              type: "Button" as const,
+              disabled: isSaveButtonDisabled,
+              onClick: () => {
+                console.log("Save Draft clicked");
+                quickOrderSaveDraftHandler();
+                setRefreshTrigger(prev => prev + 1);
+    
+              },
+            },
+            ...(!showAmendButton ? [
+              {
+                label: "Confirm",
+                type: "Button" as const,
+                disabled: isConfirmButtonDisabled, //isConfirmButtonDisabled,
+                onClick: () => {
+                  console.log("Confirm clicked XXXX");
+                  quickOrderConfirmHandler();
+                  // Force refresh to ensure Resource Group Details remain visible
+                  setRefreshTrigger(prev => prev + 1);
+                },
+              }
+            ] : [
+              {
+                label: "Amend",
+                type: "Button" as const,
+                disabled: false,
+                onClick: () => {
+                  console.log("Amend clicked");
+                  quickOrderAmendHandler();
+                },
+              }
+            ]),
+          ],
+        });
+        return () => resetFooter();
         const storedConfirmStatus = jsonStore.getQuickOrder().Status;
         console.log("storedConfirmStatus ===", storedConfirmStatus);
         if (storedConfirmStatus === 'Confirmed') {
@@ -85,67 +183,93 @@ const CreateQuickOrder = () => {
 
     })
 
-    setFooter({
-      visible: true,
-      pageName: 'Create_Quick_Order',
-      // leftButtons: [
-      //   {
-      //     label: "CIM/CUV Report",
-      //     onClick: () => console.log("CIM/CUV Report"),
-      //     type: "Icon",
-      //     iconName: 'BookText'
-      //   },
-      // ],
-      rightButtons: [
-        {
-          label: "Cancel",
-          disabled: isSaveButtonDisabled,
-          type: 'Button' as const,
-          onClick: () => {
-            // console.log("Cancel clicked");
-            quickOrderCancelhandler();
-            setRefreshTrigger(prev => prev + 1);
+    // setFooter({
+    //   visible: true,
+    //   pageName: 'Create_Quick_Order',
+    //   // leftButtons: [
+    //   //   {
+    //   //     label: "CIM/CUV Report",
+    //   //     onClick: () => console.log("CIM/CUV Report"),
+    //   //     type: "Icon",
+    //   //     iconName: 'BookText'
+    //   //   },
+    //   // ],
+    //   leftButtons: [
+    //     {
+    //       label: "Created By",
+    //       // onClick: () => console.log("CIM/CUV Report"),
+    //       type: "Label",
+    //       iconName: footerLabelData.CreatedBy
+    //     },
+    //     {
+    //       label: "Created Date",
+    //       // onClick: () => console.log("CIM/CUV Report"),
+    //       type: "Label",
+    //       iconName: footerLabelData.CreatedDate
+    //     },
+    //     {
+    //       label: "Last Modified By",
+    //       // onClick: () => console.log("CIM/CUV Report"),
+    //       type: "Label",
+    //       iconName: footerLabelData.LastModifiedBy
+    //     },
+    //     {
+    //       label: "Last Modified Date",
+    //       // onClick: () => console.log("CIM/CUV Report"),
+    //       type: "Label",
+    //       iconName: footerLabelData.LastmodifiedDate
+    //     },
+    //   ],
+    //   rightButtons: [
+    //     {
+    //       label: "Cancel",
+    //       disabled: isSaveButtonDisabled,
+    //       type: 'Button' as const,
+    //       onClick: () => {
+    //         // console.log("Cancel clicked");
+    //         quickOrderCancelhandler();
+    //         setRefreshTrigger(prev => prev + 1);
 
-            // quickOrderCancelhandler();
-          },
-        },
-        {
-          label: "Save",
-          type: "Button" as const,
-          disabled: isSaveButtonDisabled,
-          onClick: () => {
-            console.log("Save Draft clicked");
-            quickOrderSaveDraftHandler();
-            setRefreshTrigger(prev => prev + 1);
+    //         // quickOrderCancelhandler();
+    //       },
+    //     },
+    //     {
+    //       label: "Save",
+    //       type: "Button" as const,
+    //       disabled: isSaveButtonDisabled,
+    //       onClick: () => {
+    //         console.log("Save Draft clicked");
+    //         quickOrderSaveDraftHandler();
+    //         setRefreshTrigger(prev => prev + 1);
 
-          },
-        },
-        ...(!showAmendButton ? [
-          {
-            label: "Confirm",
-            type: "Button" as const,
-            disabled: isConfirmButtonDisabled, //isConfirmButtonDisabled,
-            onClick: () => {
-              console.log("Confirm clicked XXXX");
-              quickOrderConfirmHandler();
-              // Force refresh to ensure Resource Group Details remain visible
-              setRefreshTrigger(prev => prev + 1);
-            },
-          }
-        ] : [
-          {
-            label: "Amend",
-            type: "Button" as const,
-            disabled: false,
-            onClick: () => {
-              console.log("Amend clicked");
-              quickOrderAmendHandler();
-            },
-          }
-        ]),
-      ],
-    });
-    return () => resetFooter();
+    //       },
+    //     },
+    //     ...(!showAmendButton ? [
+    //       {
+    //         label: "Confirm",
+    //         type: "Button" as const,
+    //         disabled: isConfirmButtonDisabled, //isConfirmButtonDisabled,
+    //         onClick: () => {
+    //           console.log("Confirm clicked XXXX");
+    //           quickOrderConfirmHandler();
+    //           // Force refresh to ensure Resource Group Details remain visible
+    //           setRefreshTrigger(prev => prev + 1);
+    //         },
+    //       }
+    //     ] : [
+    //       {
+    //         label: "Amend",
+    //         type: "Button" as const,
+    //         disabled: false,
+    //         onClick: () => {
+    //           console.log("Amend clicked");
+    //           quickOrderAmendHandler();
+    //         },
+    //       }
+    //     ]),
+    //   ],
+    // });
+    // return () => resetFooter();
   }, [showAmendButton, isConfirmButtonDisabled, isSaveButtonDisabled]);
   const fetchQuickOrder = () => {
     const id = jsonStore.getQuickUniqueID();
