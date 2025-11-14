@@ -547,6 +547,7 @@ const CreateQuickOrder = () => {
   };
 
   const quickOrderCancelhandler = async () => {
+    console.log("inside quickOrderCancelhandler")
     console.log('amendmend data rows:', reasonCodeTypeList);
     setFields([
       {
@@ -581,7 +582,7 @@ const CreateQuickOrder = () => {
     setPopupBGColor('bg-red-600');
     setPopupTextColor('text-red-500');
     setPopupTitleBgColor('bg-red-50');
-    setRefreshTrigger(prev => prev + 1);
+    // setRefreshTrigger(prev => prev + 1);
     // Fetch updated QuickOrder details and update the form
     // try {
     //   const OrderNumber = jsonStore.getQuickUniqueID()
