@@ -1,27 +1,410 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { SmartGridWithGrouping } from "@/components/SmartGrid";
-import { tripService } from "@/api/services";
-import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
-import { Plus, Search, CloudUpload, NotebookPen, X, Ban } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect, useMemo } from 'react';
+import { SideDrawer } from '@/components/SideDrawer';
+import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
+import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, X } from 'lucide-react';
+import { GridColumnConfig, GridColumnType, FilterConfig, ServerFilter } from '@/types/smartgrid';
+import { quickOrderService } from '@/api/services/quickOrderService';
+import { useFilterStore } from "@/stores/filterStore";
 import { useSmartGridState } from '@/hooks/useSmartGridState';
-import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
-import { ConfigurableButtonConfig } from '@/components/ui/configurable-button';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { AppLayout } from '@/components/AppLayout';
-import { useNavigate } from 'react-router-dom';
-import { useFooterStore } from '@/stores/footerStore';
-import { filterService, quickOrderService } from '@/api/services';
+import { useToast } from '@/hooks/use-toast';
 import { format, subDays, subMonths, addMonths } from 'date-fns';
 import { tripCOSearchCriteria, SearchCriteria } from "@/constants/tripCOSearchCriteria";
-import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
-import { useFilterStore } from "@/stores/filterStore";
-import { Button } from "@/components/ui/button";
-import { tripPlanningService } from "@/api/services/tripPlanningService";
+import { tripService } from "@/api/services/tripService";
+import { useNavigate } from 'react-router-dom';
+import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
+import { filterService } from '@/api/services';
 
-export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData }) => {
+interface AddCOToTripSidedrawProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddCO: () => void;
+  // onAddResource: (formattedData?: { ResourceID: string; ResourceType: string }[]) => void;
+  // resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule';
+  resourceData?: any[];
+  selectedTripData?: any;
+  isLoading?: boolean;
+}
+
+// Resource type configurations
+const resourceConfigs = {
+  Equipment: {
+    messageType: 'GetEquipment-CreateTripPlan',
+    title: 'Select Equipment',
+    buttonText: 'Add Equipment to CO',
+    gridTitle: 'Equipment',
+    idField: 'EquipmentID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'EquipmentType',
+        label: 'Equipment Type',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'EquipmentID',
+        label: 'Equipment ID',
+        type: 'Text' as GridColumnType,
+        width: 200,
+        editable: false
+      },
+      {
+        key: 'OwnerID',
+        label: 'Owner ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'EquipmentCategory',
+        label: 'Wagon/Container',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'Ownership',
+        label: 'Ownership',
+        type: 'Badge' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'Keeper',
+        label: 'Keeper',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      }
+    ]
+  },
+  Supplier: {
+    messageType: 'GetAgents-CreateTripPlan',
+    title: 'Select Supplier',
+    buttonText: 'Add Supplier to CO',
+    gridTitle: 'Supplier',
+    idField: 'VendorID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'VendorID',
+        label: 'Vendor ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'VendorName',
+        label: 'Vendor Name',
+        type: 'Text' as GridColumnType,
+        width: 200,
+        editable: false
+      },
+      {
+        key: 'ServiceType',
+        label: 'Service Type',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'SubServiceType',
+        label: 'Sub Service Type',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ContractID',
+        label: 'Contract ID',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'RatingOnTime',
+        label: 'Rating',
+        type: 'Text' as GridColumnType,
+        width: 100,
+        editable: false
+      }
+    ]
+  },
+  Driver: {
+    messageType: 'GetDrivers-CreateTripPlan',
+    title: 'Select Driver',
+    buttonText: 'Add Driver to CO',
+    gridTitle: 'Driver',
+    idField: 'DriverCode', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'DriverCode',
+        label: 'Driver ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'DriverName',
+        label: 'Driver Name',
+        type: 'Text' as GridColumnType,
+        width: 200,
+        editable: false
+      },
+      {
+        key: 'DriverStatus',
+        label: 'Status',
+        type: 'Badge' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+    ]
+  },
+  Handler: {
+    messageType: 'GetHandlers-CreateTripPlan',
+    title: 'Select Handler',
+    buttonText: 'Add Handler to CO',
+    gridTitle: 'Handler',
+    idField: 'HandlerID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'HandlerID',
+        label: 'Handler ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'HandlerName',
+        label: 'Handler Name',
+        type: 'Text' as GridColumnType,
+        width: 200,
+        editable: false
+      },
+      {
+        key: 'HandlerGrade',
+        label: 'Handler Grade',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'Supplier',
+        label: 'Supplier',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ContractID',
+        label: 'ContractID',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'TarifID',
+        label: 'TarifID',
+        type: 'Text' as GridColumnType,
+        width: 100,
+        editable: false
+      }
+    ]
+  },
+  Vehicle: {
+    messageType: 'GetVehicle-CreateTripPlan',
+    title: 'Select Vehicle',
+    buttonText: 'Add Vehicle to CO',
+    gridTitle: 'Vehicle',
+    idField: 'VehicleID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'VehicleID',
+        label: 'Vehicle ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'VehicleType',
+        label: 'Vehicle Type',
+        type: 'Text' as GridColumnType,
+        width: 200,
+        editable: false
+      },
+      {
+        key: 'ContractID',
+        label: 'Contract ID',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'OwnerID',
+        label: 'Owner ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'VehicleStatus',
+        label: 'Vehicle Status',
+        type: 'Badge' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+    ]
+  },
+  Schedule: {
+    messageType: 'GetSchedules-CreateTripPlan',
+    title: 'Select Schedule',
+    buttonText: 'Add Schedule to CO',
+    gridTitle: 'Schedule',
+    idField: 'SupplierID', // Primary ID field for this resource type
+    columns: [
+      {
+        key: 'SupplierID',
+        label: 'Supplier ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ScheduleNo',
+        label: 'Schedule No',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'SupplierName',
+        label: 'Supplier Name',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ExecutiveCarrierID',
+        label: 'Executive Carrier ID',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ExecutiveCarrierName',
+        label: 'Executive Carrier Name',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      // {
+      //   key: '',
+      //   label: 'Via',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
+      // {
+      //   key: '',
+      //   label: 'Reccuring Schedule (RS)',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
+      {
+        key: 'FromLocation',
+        label: 'From Location',
+        type: 'Text' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'ToLocation',
+        label: 'To Location',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'TotalTransitTime',
+        label: 'Total Transit Time',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'TransitTimeUnit',
+        label: 'Transit Time Unit',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'PathNo',
+        label: 'Path No',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'Resources',
+        label: 'Resources',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'Distance',
+        label: 'Distance',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'DistanceUOM',
+        label: 'Distance UOM',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxLength',
+        label: 'Max Length',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxGrossWeight',
+        label: 'Max Gross Weight',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+      {
+        key: 'MaxNoOfWagon',
+        label: 'Max No of Wagon',
+        type: 'Date' as GridColumnType,
+        width: 120,
+        editable: false
+      },
+    ]
+  }
+};
+
+export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
+  isOpen,
+  onClose,
+  onAddCO,
+  selectedTripData,
+  resourceData: propResourceData,
+  isLoading = false
+}) => {
   const pageSize = 15;
-  const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
+  const gridId = "CO-Trip"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -32,13 +415,19 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
 
   const gridState = useSmartGridState();
   const { toast } = useToast();
-  const { config, setFooter, resetFooter } = useFooterStore();
+  // const { config, setFooter, resetFooter } = useFooterStore();
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
 
   console.log('filtersForThisGrid: ', filtersForThisGrid);
-  console.log('TripCOHub received props - tripID:', tripID, 'manageFlag:', manageFlag, 'customerOrdersData:', customerOrdersData);
-
+  console.log('selectedTripData ----------', selectedTripData);
+  // Helper function to notify parent component about selected rows
+  const notifyParentOfSelection = (selectedObjects: any[]) => {
+    if (onAddCO) {
+      // onAddCO(selectedObjects);
+    }
+  };
+  // console.log('TripCOHub received props - tripID:', tripID, 'manageFlag:', manageFlag, 'customerOrdersData:', customerOrdersData);
   const initialColumns: GridColumnConfig[] = [
     {
       key: "CustomerOrderID",
@@ -75,7 +464,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 4
+      order: 3
     },
     {
       key: "TripStatus",
@@ -84,7 +473,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 5
+      order: 4
     },
     {
       key: "LegFromDescription",
@@ -93,7 +482,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 6
+      order: 4
     },
     // {
     //   key: "LegFromDescription",
@@ -102,7 +491,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     //   sortable: true,
     //   editable: false,
     //   subRow: false,
-    //   order: 7
+    //   order: 5
     // },
     {
       key: "LegToDescription",
@@ -120,7 +509,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     //   sortable: true,
     //   editable: false,
     //   subRow: false,
-    //   order: 9
+    //   order: 7
     // },
     {
       key: "TransportMode",
@@ -129,7 +518,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 10
+      order: 8
     },
     {
       key: "DepartureDate",
@@ -138,7 +527,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 11
+      order: 9
     },
     {
       key: "ArrivalDate",
@@ -147,7 +536,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       sortable: true,
       editable: false,
       subRow: false,
-      order: 12
+      order: 10
     },
     {
       key: "ShuntedOutEquipmentNo",
@@ -418,361 +807,6 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     // }
   ];
 
-  // Copy of initialColumns for when tripID is available
-  const tripColumns: GridColumnConfig[] = [
-    {
-      key: "CustomerOrderID",
-      label: "Customer Order ID",
-      type: "Link",
-      sortable: true,
-      editable: false,
-      mandatory: true,
-      subRow: false,
-      order: 1
-    },
-    {
-      key: "CustomerOrderStatus",
-      label: "CO Status",
-      type: "Badge",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 2
-    },
-    {
-      key: "LegBehaviour",
-      label: "Leg Behaviour",
-      type: "Badge",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 3
-    },
-    {
-      key: "TripID",
-      label: "Trip ID",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 4
-    },
-    {
-      key: "TripStatus",
-      label: "Trip Status",
-      type: "Badge",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 5
-    },
-    {
-      key: "DepartureLegFrom",
-      label: "Leg From",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 6
-    },
-    // {
-    //   key: "LegFromDescription",
-    //   label: "Leg From Description",
-    //   type: "Text",
-    //   sortable: true,
-    //   editable: false,
-    //   subRow: false,
-    //   order: 7
-    // },
-    {
-      key: "DepartureLegTo",
-      label: "Leg To",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 8
-    },
-    // {
-    //   key: "LegToDescription",
-    //   label: "Leg To Description",
-    //   type: "Text",
-    //   sortable: true,
-    //   editable: false,
-    //   subRow: false,
-    //   order: 9
-    // },
-    {
-      key: "TransportMode",
-      label: "Transport Mode",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 10
-    },
-    {
-      key: "DepartureDate",
-      label: "Departure Date",
-      type: "DateTimeRange",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 11
-    },
-    {
-      key: "ArrivalDate",
-      label: "Arrival Date",
-      type: "DateTimeRange",
-      sortable: true,
-      editable: false,
-      subRow: false,
-      order: 12
-    },
-    {
-      key: "ShuntedOutEquipmentNo",
-      label: "Shunted out equipment No",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ShuntedOutDate",
-      label: "Shunted out date",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ServiceType",
-      label: "Service",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ServiceTypeDescription",
-      label: "Service Description",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "SubServiceType",
-      label: "Sub service",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "SubServiceTypeDescription",
-      label: "Sub Service Description",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "CustomerID",
-      label: "Customer ID",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "CustomerName",
-      label: "Customer Name",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ReturnOrForward",
-      label: "Return or forward",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ContractID",
-      label: "Contract ID",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ContractDescription",
-      label: "Contract Description",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ScheduleInfo",
-      label: "Schedule Info",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "OnewayOrRoundtrip",
-      label: "One way / Roundtrip",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "LoadType",
-      label: "Load Type",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "CreationDate",
-      label: "Creation Date",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "CustomerOrderDate",
-      label: "Customer Order Date",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "RequiredWagonQuantity",
-      label: "Wagon quantity Required",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "PlannedWagonQuantity",
-      label: "Planned wagon quantity",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "PendingWagonQuantity",
-      label: "Pending wagon quantity",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "NHM",
-      label: "NHM",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ProductWeight",
-      label: "Product weight",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ProductWeightUOM",
-      label: "Product Weight UOM",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "RIDForEmptyWagon",
-      label: "RID for Empty Wagon",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "SupplierID",
-      label: "Supplier ID",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "SupplierName",
-      label: "Supplier Name",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "SpecialInstruction",
-      label: "Special instructions",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "Equipment",
-      label: "Equipment",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "PassNo",
-      label: "Pass No.",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ExecutiveCarrier",
-      label: "Executive carrier",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "ScheduleNo",
-      label: "Schedule No.",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-  ];
-
-  const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
-
   const fetchTripsAgain = async () => {
     gridState.setColumns(initialColumns);
     gridState.setLoading(true);
@@ -785,7 +819,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
         searchCriteria = buildSearchCriteria(filtersForThisGrid);
       }
       else {
-        // ✅ Fallback defaults with default CustomerOrderCreationDate
+        // ✅ Fallback defaults
         const defaultFilters = {
           ...tripCOSearchCriteria,
           CustomerOrderCreationDate: {
@@ -794,7 +828,6 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           }
         };
         searchCriteria = buildSearchCriteria(defaultFilters);
-        console.log('Using default filters with CustomerOrderCreationDate:', defaultFilters);
       }
       console.log('searchCriteria: ', searchCriteria);
       // const ResultSearchCriteria = buildSearchCriteria(defaultsTo);
@@ -841,9 +874,13 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          TripStatus: {
+            value: row.TripStatus,
+            variant: getStatusColorLocal(row.TripStatus),
+          }
         }
       });
-      console.log("processedData", processedData);
+
       gridState.setGridData(processedData);
       setApiStatus("success");
     } catch (error) {
@@ -855,94 +892,11 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     }
   };
 
-  // Log when tripID or manageFlag props change
-  useEffect(() => {
-    console.log('TripCOHub props updated - tripID:', tripID, 'manageFlag:', manageFlag);
-  }, [tripID, manageFlag]);
-
-  // Handle CustomerOrders data from parent component
-  useEffect(() => {
-    console.log("customerOrdersData", customerOrdersData);
-    if (customerOrdersData && customerOrdersData.length > 0) {
-      console.log('📋 Received CustomerOrders data from parent:', customerOrdersData);
-      
-      // Process the CustomerOrders data similar to API response
-      const processedData = customerOrdersData.map((row: any) => {
-        const getStatusColorLocal = (status: string) => {
-          const statusColors: Record<string, string> = {
-            'Released': 'badge-fresh-green rounded-2xl',
-            'Executed': 'badge-purple rounded-2xl',
-            'Fresh': 'badge-blue rounded-2xl',
-            'Cancelled': 'badge-red rounded-2xl',
-            'Deleted': 'badge-red rounded-2xl',
-            'Save': 'badge-green rounded-2xl',
-            'Under Amendment': 'badge-orange rounded-2xl',
-            'Confirmed': 'badge-green rounded-2xl',
-            'Initiated': 'badge-blue rounded-2xl',
-            'Under Execution': 'badge-purple rounded-2xl',
-            'Draft Bill Raised': 'badge-orange rounded-2xl',
-            'Not Eligible': 'badge-red rounded-2xl',
-            'Revenue leakage': 'badge-red rounded-2xl',
-            'Invoice Created': 'badge-blue rounded-2xl',
-            'Invoice Approved': 'badge-fresh-green rounded-2xl'
-          };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
-        };
-        
-        return {
-          ...row,
-          CustomerOrderStatus: {
-            value: row.CustomerOrderStatus,
-            variant: getStatusColorLocal(row.CustomerOrderStatus),
-          },
-          TripBillingStatus: {
-            value: row.TripBillingStatus,
-            variant: getStatusColorLocal(row.TripBillingStatus),
-          },      
-        CustomerOrderID: row.CustomerOrderNo || row.CustomerOrderID
-        }
-      });
-
-      // Use tripColumns if tripID is available, otherwise use initialColumns
-      const columnsToUse = tripID ? tripColumns : initialColumns;
-      
-      // Set the processed data to grid
-      gridState.setColumns(columnsToUse);
-      gridState.setGridData(processedData);
-      setApiStatus("success");
-      console.log('✅ CustomerOrders data bound to grid:', processedData);
-    }
-  }, [customerOrdersData, tripID]);
-
   // Initialize columns and data
   useEffect(() => {
-    // Don't fetch if tripID is provided (parent will handle data fetch)
-    if (tripID) {
-      console.log('📋 TripID provided, waiting for parent to fetch data...');
-      return;
-    }
-    
-    // Only fetch from API if no CustomerOrders data is provided from parent
-    if (!customerOrdersData || customerOrdersData.length === 0) {
-      console.log('🔄 No CustomerOrders data from parent, fetching from API...');
-      fetchTripsAgain();
-    } else {
-      console.log('📋 Using CustomerOrders data from parent, skipping API fetch');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripID]); // Only run when tripID changes
+    fetchTripsAgain();
+  }, []);
 
-  // Log highlightedRows changes
-  useEffect(() => {
-    console.log('highlightedRows updated (composite keys):', highlightedRows);
-  }, [highlightedRows]);
-
-  // Initialize columns and processed data in the grid state
-  // useEffect(() => {
-  //   console.log('Initializing columns and data in GridDemo');
-  //   gridState.setColumns(initialColumns);
-  //   gridState.setGridData(processedData);
-  // }, [processedData]);
   const processedData = useMemo(() => {
     return gridState.gridData.map(row => ({
       ...row,
@@ -957,23 +911,29 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     }));
   }, []);
 
+  // Helper function to create unique row identifier
+  const getUniqueRowId = (row: any) => {
+    return `${row.CustomerOrderID}-${row.LegBehaviour}`;
+  };
+
   // Update selected row indices based on current page data to maintain selection state
   useEffect(() => {
     const currentData = gridState.gridData.length > 0 ? gridState.gridData : processedData;
     const newSelectedIndices = new Set<number>();
 
-    // Find indices of currently selected row IDs in the current page data
+    // Find indices of currently selected rows in the current page data
+    // Use composite key (CustomerOrderID + LegBehaviour) for unique identification
     currentData.forEach((row: any, index: number) => {
-      if (selectedRowIds.has(row.TripPlanID)) {
+      const uniqueId = getUniqueRowId(row);
+      if (selectedRowIds.has(uniqueId)) {
         newSelectedIndices.add(index);
       }
     });
 
     // Only update if there's a difference to avoid infinite loops
-    // Also prevent updates that might trigger unwanted side effects
     if (newSelectedIndices.size !== selectedRows.size ||
       !Array.from(newSelectedIndices).every(index => selectedRows.has(index))) {
-      console.log('Updating selected row indices without affecting pagination');
+      console.log('Updating selected row indices for current page:', Array.from(newSelectedIndices));
       setSelectedRows(newSelectedIndices);
     }
   }, [gridState.gridData, processedData, selectedRowIds]);
@@ -981,32 +941,13 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
-  const handleLinkClick = (value: any, columnKey: any, rowIndex: any) => {
+  const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
     if (columnKey === 'TripPlanID') {
-      navigate(`/manage-trip?id=${value.TripPlanID}`);
+      // navigate(`/manage-trip?id=${value.TripPlanID}`);
     }
     if (columnKey == "CustomerOrderID") {
-      console.log('rowIndex', rowIndex);
-      
-      // Create composite key string from CustomerOrderID and LegBehaviour
-      const compositeKey = `${value.CustomerOrderID}-${value.LegBehaviour}`;
-      console.log('compositeKey:', compositeKey);
-      
-      // Check if this row is currently highlighted
-      const isCurrentlyHighlighted = highlightedRows.includes(compositeKey);
-      
-      if (isCurrentlyHighlighted) {
-        // If it's already highlighted, remove it (toggle off)
-        setHighlightedRows(prev => prev.filter(key => key !== compositeKey));
-        onCustomerOrderClick(value, false); // Pass false to indicate deselection
-        console.log('Row unselected:', compositeKey);
-      } else {
-        // If it's not highlighted, add it (toggle on)
-        setHighlightedRows(prev => [...prev, compositeKey]);
-        onCustomerOrderClick(value, true); // Pass true to indicate selection
-        console.log('Row selected:', compositeKey);
-      }
+      // onCustomerOrderClick(value);
     }
   };
 
@@ -1029,25 +970,25 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
     console.log('Selected rows changed via checkbox:', selectedRowIndices);
     setSelectedRows(selectedRowIndices);
-    // Update selected row objects and IDs using unique row identification
+    // Update selected row objects using composite key (CustomerOrderID + LegBehaviour)
 
     const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
     const selectedObjects = Array.from(selectedRowIndices)
       .map(index => currentData[index])
       .filter(Boolean);
 
-    // Create a new Set of unique row IDs
-    const newSelectedRowIds = new Set(selectedObjects.map(row => row.TripPlanID));
+    // Create a new Set of unique row IDs using composite key
+    const newSelectedRowIds = new Set(selectedObjects.map(row => getUniqueRowId(row)));
 
-    // Update selected row objects to ensure uniqueness by ID
-    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
-      self.findIndex(r => r.id === row.TripPlanID) === index
-    );
-
+    // Update selected row objects - no need to filter for uniqueness since we're using composite key
     setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(uniqueSelectedObjects);
-    console.log('Selected row objects:', uniqueSelectedObjects);
-    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
+    setSelectedRowObjects(selectedObjects);
+
+    // Notify parent component about the selection change
+    notifyParentOfSelection(selectedObjects);
+
+    console.log('Selected row objects:', selectedObjects);
+    console.log('Selected row IDs (composite keys):', Array.from(newSelectedRowIds));
   };
 
   const [rowTripId, setRowTripId] = useState<any>([]);
@@ -1055,34 +996,31 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
 
-    // Toggle row selection
+    // Toggle row selection using composite key (CustomerOrderID + LegBehaviour)
     const newSelectedRows = new Set(selectedRows);
-    // if (newSelectedRows.has(index)) {
     const newSelectedRowIds = new Set(selectedRowIds);
     const newSelectedRowObjects = [...selectedRowObjects];
 
-    // Check if this row is already selected by ID (not index)
-    const isRowSelected = newSelectedRowIds.has(row.TripPlanID);
+    // Check if this row is already selected by composite key
+    const uniqueId = getUniqueRowId(row);
+    const isRowSelected = newSelectedRowIds.has(uniqueId);
 
     if (isRowSelected) {
       // Remove row: remove from all tracking sets/arrays
       newSelectedRows.delete(index);
-      newSelectedRowIds.delete(row.TripPlanID);
-      const objectIndex = newSelectedRowObjects.findIndex(obj => obj.TripPlanID === row.TripPlanID);
+      newSelectedRowIds.delete(uniqueId);
+      const objectIndex = newSelectedRowObjects.findIndex(obj => getUniqueRowId(obj) === uniqueId);
       if (objectIndex > -1) {
         newSelectedRowObjects.splice(objectIndex, 1);
       }
-      console.log('Removed row:', row.TripPlanID);
+      console.log('Removed row with composite key:', uniqueId);
     }
     else {
-      // Add row: add to all tracking sets/arrays (ensure uniqueness)
+      // Add row: add to all tracking sets/arrays
       newSelectedRows.add(index);
-      newSelectedRowIds.add(row.TripPlanID);
-      // Only add if not already in objects array (double-check uniqueness)
-      if (!newSelectedRowObjects.some(obj => obj.TripPlanID === row.TripPlanID)) {
-        newSelectedRowObjects.push(row);
-      }
-      console.log('Added row:', row.TripPlanID);
+      newSelectedRowIds.add(uniqueId);
+      newSelectedRowObjects.push(row);
+      console.log('Added row with composite key:', uniqueId);
     }
 
     // Update all state
@@ -1090,20 +1028,23 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     setSelectedRowIds(newSelectedRowIds);
     setSelectedRowObjects(newSelectedRowObjects);
 
-    // Update selected row objects
-    // const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
-    // const selectedObjects = Array.from(newSelectedRows).map(idx => currentData[idx]).filter(Boolean);
-    // setSelectedRowObjects(selectedObjects);
-    // console.log('Selected row objects after click:', selectedObjects);
+    // Notify parent component about the selection change
+    notifyParentOfSelection(newSelectedRowObjects);
+
     console.log('Selected row objects after click:', newSelectedRowObjects);
     setRowTripId(Array.from(newSelectedRowIds));
     console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
-    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+    console.log('Selected row IDs (composite keys) after click:', Array.from(newSelectedRowIds));
   };
 
   useEffect(() => {
     console.log("rowTripId updated:", rowTripId);
   }, [rowTripId]);
+
+  // Notify parent component when selectedRowObjects changes
+  useEffect(() => {
+    notifyParentOfSelection(selectedRowObjects);
+  }, [selectedRowObjects]);
 
   const renderSubRow = (row: any, rowIndex: number) => {
     return (
@@ -1120,24 +1061,6 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       />
     );
   };
-
-  // const buildSearchCriteria: any = (latestFilters: any) => {
-  //   const criteria: SearchCriteria = { ...tripCOSearchCriteria };
-  //   if (Object.keys(latestFilters).length > 0) {
-  //     Object.entries(latestFilters).forEach(([key, value]): any => {
-  //       const filter: any = value; // 👈 cast to any
-  //       if (key === "PlannedExecutionDate") {
-  //         // criteria.PlannedExecutionDateFrom = filter?.value?.from.replace(/-/g, "/");
-  //         // criteria.PlannedExecutionDateTo = filter?.value?.to.replace(/-/g, "/");
-  //       } else {
-  //         // all other keys map directly
-  //         criteria[key] = filter.value;
-  //       }
-  //     });
-  //     return criteria;
-  //   }
-  //   return criteria;
-  // }
 
   const buildSearchCriteria = (latestFilters: Record<string, any> = {}): SearchCriteria => {
     const criteria: SearchCriteria = { ...tripCOSearchCriteria };
@@ -1283,7 +1206,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             'Invoice Created': 'badge-blue rounded-2xl',
             'Invoice Approved': 'badge-fresh-green rounded-2xl'
           };
-          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
 
         return {
@@ -1520,42 +1443,170 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     console.log('Clear all filters');
   }
 
-  // Function to clear all highlighted rows
-  const clearAllSelections = () => {
-    setHighlightedRows([]);
-    // Also clear the parent component's selected data
-    onCustomerOrderClick(null, false);
-    console.log('All selections cleared');
+  /**
+   * Transform selected CO row objects to include only the required fields
+   * These fields are needed for the trip planning workflow
+   */
+  function flattenStatusFields(obj) {
+    const newObj = { ...obj };
+    for (const key in newObj) {
+      const val = newObj[key];
+      if (val && typeof val === "object" && "value" in val) {
+        newObj[key] = val.value;
+        newObj['DepartureLegFrom'] = newObj['LegFromDescription'];
+        newObj['DepartureLegTo'] = newObj['LegToDescription'];
+      }
+    }
+    return newObj;
   }
 
+  const handleCOToTrip = async () => {
+    console.log("handleCOToTrip - Original selectedRowObjects ===", selectedRowObjects);
+
+    // Transform the selected rows to include only required fields
+    // const transformedCOData = selectedRowObjects.map(flattenStatusFields);
+    console.log("handleCOToTrip - Transformed CO Data ===", selectedRowObjects);
+
+    // Pass transformed data to parent callback
+    // onAddCO();// Send to API
+    let dataToSave = {
+      Header: {
+        TripNo: selectedTripData?.Header?.TripNo,
+      },
+      CustomerOrders: [
+        ...(selectedTripData?.CustomerOrders?.map(order => ({
+          CustomerOrderNo: order.CustomerOrderNo,
+          LegBehaviour: order.LegBehaviour,
+          ModeFlag: order.ModeFlag || "Nochange", // default if missing
+        })) || []),
+        ...(selectedRowObjects?.map(order => ({
+          CustomerOrderNo: order.CustomerOrderID,
+          LegBehaviour: order.LegBehaviour,
+          ModeFlag: 'Insert', // New CO to be added to the trip
+        })) || []),
+      ]
+    };
+    const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
+    console.log('response = ', response);
+
+    // Check if response has data
+    if (response?.data) {
+      const { IsSuccess, ResponseData, Message } = response.data;
+
+      // Parse ResponseData if it exists (it's a JSON string)
+      let parsedResponseData: any = null;
+      if (ResponseData) {
+        try {
+          parsedResponseData = JSON.parse(ResponseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+      }
+
+      // Check for error in parsed ResponseData even if IsSuccess is true
+      if (parsedResponseData?.error) {
+        const { errorCode, errorMessage } = parsedResponseData.error;
+        toast({
+          title: errorCode || "Error",
+          description: errorMessage || Message || "Failed to save CO",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If IsSuccess is true and no error in ResponseData, show success
+      if (IsSuccess) {
+        toast({
+          title: "Success",
+          description: Message || "",
+        });
+        onAddCO();// Send to API
+        // Refresh data from API after successful save
+        // if (tripId) {
+        //   await loadFromApi({ tripId });
+        // }
+        // Also call the optional onSave callback if provided
+        // if (onSave) {
+        //   await onSave();
+        // }
+      } else {
+        throw new Error(Message || "Failed to save leg and events");
+      }
+    } else {
+      throw new Error("No response data received");
+    }
+
+
+  };
+
   return (
-    <>
+    <SideDrawer
+      isOpen={isOpen}
+      onClose={onClose}
+      title='Select Customer Order'
+      width="85%"
+      slideDirection="right"
+      showFooter={true}
+      footerButtons={[
+        {
+          label: 'Add CO to Trip',
+          variant: 'default',
+          action: handleCOToTrip,
+          disabled: selectedRowIds.size === 0
+        }
+      ]}
+    >
       {/* <AppLayout> */}
-      <div className="">
+      <div className="p-6">
         <div className="container-fluid mx-auto space-y-6">
-          {/* Clear Selections Button */}
-          {/* {highlightedRows.length > 0 && (
-            <div className="flex justify-end mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearAllSelections}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                Clear All Selections ({highlightedRows.length})
-              </Button>
-            </div>
-          )} */}
-          
           {/* Grid Container */}
-          <div className={`rounded-lg ${config.visible ? 'pb-4' : ''}`}>
+          <div>
+            {selectedRowObjects.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
+                <div className="text-sm text-blue-700">
+                  <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
+                  <span className="ml-2 text-xs">
+                    ({selectedRowObjects.map(row => row.CustomerOrderID).join(', ')})
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedRows(new Set());
+                    setSelectedRowIds(new Set());
+                    setSelectedRowObjects([]);
+                    setRowTripId([]);
+                    // If you also want to clear filters from Zustand:
+                    // clearAllFilters("trip-hub");
+                  }}
+                  title="Clear row selection"
+                  className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+
+            )}
+            <style>{`
+                          
+            ${Array.from(selectedRowIds).map((rowId) => {
+              return `
+                tr[data-row-id="${rowId}"] {
+                  background-color: #eff6ff !important;
+                  border-left: 4px solid #3b82f6 !important;
+                }
+                tr[data-row-id="${rowId}"]:hover {
+                  background-color: #dbeafe !important;
+                }
+              `;
+            }).join('\n')}
+                        `}</style>
             {/* Selected rows indicator */}
             <SmartGridWithGrouping
               key={`grid-${gridState.forceUpdate}`}
               columns={gridState.columns}
               data={gridState.gridData}
-              highlightedRowIndices={highlightedRows}
               groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
               showGroupingDropdown={true}
               editableColumns={['plannedStartEndDateTime']}
@@ -1573,12 +1624,13 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
               // }
               rowClassName={(row: any, index: number) => {
-                return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                const uniqueId = getUniqueRowId(row);
+                return selectedRowIds.has(uniqueId) ? 'selected' : '';
               }}
               nestedRowRenderer={renderSubRow}
               // configurableButtons={gridConfigurableButtons}
               showDefaultConfigurableButton={false}
-              gridTitle="Trip Customer Orders"
+              gridTitle="Customer Order"
               recordCount={gridState.gridData.length}
               showCreateButton={true}
               searchPlaceholder="Search"
@@ -1608,6 +1660,6 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
       )}
-    </>
+    </SideDrawer>
   );
 };

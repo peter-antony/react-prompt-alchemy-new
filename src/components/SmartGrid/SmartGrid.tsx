@@ -1199,7 +1199,7 @@ export function SmartGrid({
                 paginatedData.flatMap((row, rowIndex) => {
                   const rows = [
                     <TableRow key={rowIndex}
-                      data-row-id={ (gridTitle == 'Trip Plans' ?  row.TripPlanID : gridTitle == 'Planning Equipments' ? (row.EquipmentID || row.VehicleID || row.HandlerID || row.DriverCode || row.VendorID || row.SupplierID) : (gridTitle == 'Trip Customer Orders Multi' ? `${row.CustomerOrderID}-${row.LegBehaviour}` : rowIndex)) || rowIndex}
+                      data-row-id={ (gridTitle == 'Trip Plans' ?  row.TripPlanID : gridTitle == 'Planning Equipments' ? (row.EquipmentID || row.VehicleID || row.HandlerID || row.DriverCode || row.VendorID || row.SupplierID) : ((gridTitle == 'Trip Customer Orders Multi' || gridTitle == 'Customer Order') ? `${row.CustomerOrderID}-${row.LegBehaviour}` : rowIndex)) || rowIndex}
                       className={cn(
                         "hover:bg-gray-100 transition-all duration-100 border-gray-100 cursor-pointer",
                         highlightedRowIndices.includes(`${row.CustomerOrderID}-${row.LegBehaviour}`) && "border-b-[0px] bg-blue-100 border-l-4 border-blue-500 hover:bg-blue-100/80",

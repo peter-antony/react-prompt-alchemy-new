@@ -45,6 +45,7 @@ import { VASTripDrawerScreen } from '@/components/drawer/VASTripDrawerScreen';
 import { BadgesList } from '@/components/ui/badges-list';
 import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
+import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedraw';
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -163,6 +164,7 @@ const TripPlanning = () => {
   const [otherInfo, setOtherInfo] = useState(false);
   const [oldTripData, setOldTripData] = useState('');
   const [tripInformation, setTripInformation] = useState<any>({});
+  const [ isAddCOToTripOpen, setIsAddCOToTripOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -269,6 +271,85 @@ const TripPlanning = () => {
   // Ref to track the last fetched tripID to prevent duplicate API calls
   const lastFetchedTripIDRef = useRef<string | null>(null);
   const isFetchingRef = useRef<boolean>(false);
+  
+  // Extract fetchTripData as a reusable function
+  const fetchTripData = async (tripId?: string) => {
+    const idToFetch = tripId || urlTripID;
+    
+    if (!idToFetch || idToFetch.trim() === '') {
+      console.log('⚠️ No trip ID provided to fetch');
+      return;
+    }
+    
+    // Mark as fetching to prevent concurrent calls
+    isFetchingRef.current = true;
+    lastFetchedTripIDRef.current = idToFetch;
+    
+    console.log('🔄 Fetching trip data for TripID:', idToFetch);
+    
+    try {
+      const response: any = await tripService.getTripById({ id: idToFetch });
+      
+      // Parse the ResponseData
+      const parsedResponse = response?.data?.ResponseData 
+        ? JSON.parse(response.data.ResponseData)
+        : response?.data || {};
+      
+      console.log('📋 Parsed trip response:', parsedResponse);
+      
+      // Extract CustomerOrders from the trip response
+      const customerOrders = parsedResponse.CustomerOrders || [];
+
+      const resourceDetails = parsedResponse.ResourceDetails || [];
+      
+      if (customerOrders && customerOrders.length > 0) {
+        console.log('✅ CustomerOrders found:', customerOrders.length);
+        // Store CustomerOrders data for TripCOHub
+        setTripCustomerOrdersData(customerOrders);
+        
+        // Also update trip status if available
+        if (parsedResponse.Header?.TripStatus) {
+          setTripStatus(parsedResponse.Header.TripStatus);
+        }
+      } else {
+        console.log('⚠️ No CustomerOrders found in trip response');
+        setTripCustomerOrdersData([]);
+      }
+
+      if (resourceDetails) {
+        console.log('✅ ResourceDetails found:', resourceDetails);
+        console.log('✅ resourceDetails.Equipments found:', resourceDetails.Equipments);
+        console.log('✅ resourceDetails.Supplier found:', resourceDetails.Supplier?.[0]?.VendorID);
+        // Store ResourceDetails data for TripCOHub
+        setTripResourceDetailsData(() => resourceDetails);
+        setEquipmentData(resourceDetails.Equipments)
+        setEquipmentCount(resourceDetails.Equipments?.length)
+        if (resourceDetails.Supplier?.[0]) {
+          setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
+        }
+        // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
+        // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
+        console.log("tripResourceDetailsData ====", tripResourceDetailsData);
+      } else {
+        console.log('⚠️ No ResourceDetails found in trip response');
+        setTripResourceDetailsData({});
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch trip data:', error);
+      setTripCustomerOrdersData([]);
+      toast({
+        title: "Error",
+        description: "Failed to fetch trip data. Please try again.",
+        variant: "destructive",
+      });
+      // Reset the ref on error so it can retry if needed
+      lastFetchedTripIDRef.current = null;
+    } finally {
+      // Reset fetching flag
+      isFetchingRef.current = false;
+    }
+  };
+  
   // Fetch trip data when urlTripID is available (only once per tripID)
   useEffect(() => {
     // Only fetch if urlTripID exists, is not empty, hasn't been fetched before, and not currently fetching
@@ -282,77 +363,7 @@ const TripPlanning = () => {
       return;
     }
 
-    const fetchTripData = async () => {
-      // Mark as fetching to prevent concurrent calls
-      isFetchingRef.current = true;
-      lastFetchedTripIDRef.current = urlTripID;
-      
-      console.log('🔄 Fetching trip data for TripID:', urlTripID);
-      
-      try {
-        const response: any = await tripService.getTripById({ id: urlTripID });
-        
-        // Parse the ResponseData
-        const parsedResponse = response?.data?.ResponseData 
-          ? JSON.parse(response.data.ResponseData)
-          : response?.data || {};
-        
-        console.log('📋 Parsed trip response:', parsedResponse);
-        
-        // Extract CustomerOrders from the trip response
-        const customerOrders = parsedResponse.CustomerOrders || [];
-
-        const resourceDetails = parsedResponse.ResourceDetails || [];
-        
-        if (customerOrders && customerOrders.length > 0) {
-          console.log('✅ CustomerOrders found:', customerOrders.length);
-          // Store CustomerOrders data for TripCOHub
-          setTripCustomerOrdersData(customerOrders);
-          
-          // Also update trip status if available
-          if (parsedResponse.Header?.TripStatus) {
-            setTripStatus(parsedResponse.Header.TripStatus);
-          }
-        } else {
-          console.log('⚠️ No CustomerOrders found in trip response');
-          setTripCustomerOrdersData([]);
-        }
-
-        if (resourceDetails) {
-          console.log('✅ ResourceDetails found:', resourceDetails);
-          console.log('✅ resourceDetails.Equipments found:', resourceDetails.Equipments);
-          console.log('✅ resourceDetails.Supplier found:', resourceDetails.Supplier?.[0]?.VendorID);
-          // Store ResourceDetails data for TripCOHub
-          setTripResourceDetailsData(() => resourceDetails);
-          setEquipmentData(resourceDetails.Equipments)
-          setEquipmentCount(resourceDetails.Equipments?.length)
-          if (resourceDetails.Supplier?.[0]) {
-            setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
-          }
-          // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
-          // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
-          console.log("tripResourceDetailsData ====", tripResourceDetailsData);
-        } else {
-          console.log('⚠️ No ResourceDetails found in trip response');
-          setTripResourceDetailsData({});
-        }
-      } catch (error) {
-        console.error('❌ Failed to fetch trip data:', error);
-        setTripCustomerOrdersData([]);
-        toast({
-          title: "Error",
-          description: "Failed to fetch trip data. Please try again.",
-          variant: "destructive",
-        });
-        // Reset the ref on error so it can retry if needed
-        lastFetchedTripIDRef.current = null;
-      } finally {
-        // Reset fetching flag
-        isFetchingRef.current = false;
-      }
-    };
-
-    fetchTripData();
+    fetchTripData(urlTripID);
   }, [urlTripID]); // Removed 'toast' from dependencies as it's stable
 
   // Customer Orders Grid Configuration
@@ -2331,6 +2342,25 @@ const TripPlanning = () => {
     }
   };
 
+  const handleAddCO = () => {
+    console.log("handleAddCO - Reloading trip data");
+    
+    // Close the drawer
+    setIsAddCOToTripOpen(false);
+    
+    // Reload trip data using fetchTripData method
+    if (urlTripID) {
+      fetchTripData(urlTripID);
+    }
+    
+    // Show success toast
+    toast({
+      title: "✅ Customer Orders Added",
+      description: "Trip data reloaded successfully.",
+      variant: "default",
+    });
+  };
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -3124,6 +3154,16 @@ const TripPlanning = () => {
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
+                            { urlTripID && (<div className='flex justify-end'>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className='w-8 h-8 border rounded-xl'
+                                  onClick={() => { setIsAddCOToTripOpen(true)}}>
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>)
+                              }
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub
                                 key={tripCOHubReloadKey}
@@ -3307,7 +3347,7 @@ const TripPlanning = () => {
 
                       {/* Toggle */}
                       <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-                        <div className="flex items-center gap-4">
+                        { !urlTripID && (<div className="flex items-center gap-4">
                           <Switch
                             id="consolidated-trip-inline"
                             checked={consolidatedTrip}
@@ -3317,8 +3357,9 @@ const TripPlanning = () => {
                           <Label htmlFor="consolidated-trip-inline" className="cursor-pointer text-sm font-medium">
                             Create single trip with consolidated orders
                           </Label>
-                        </div>
-                        <div className='flex items-center gap-4'>
+                        </div>)
+                        }
+                        <div className='flex items-center gap-4 ml-auto'>
                           {/* Debug Info */}
                           {/* <div className="text-xs text-gray-600">
                             Customer Orders: {selectedArrCOData?.length || 0}
@@ -3419,6 +3460,13 @@ const TripPlanning = () => {
           }}
         /> : ''
       }
+      {/* Add customer order to trip */}
+      <AddCOToTripSidedraw
+        isOpen={isAddCOToTripOpen}
+        onClose={() => setIsAddCOToTripOpen(false)}
+        onAddCO={handleAddCO}
+        selectedTripData={tripInformation}
+      />
       {/* Loading Overlay for Resources */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
