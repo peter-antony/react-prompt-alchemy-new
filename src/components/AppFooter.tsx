@@ -4,18 +4,28 @@ import { Button } from "./ui/button";
 import { useFooterStore, FooterButtonConfig } from "../stores/footerStore";
 import CommonPopup from "@/components/Common/CommonPopup";
 
-const renderButton = (config: FooterButtonConfig, index: number, showPopover: boolean, setShowPopover: (show: boolean) => void) => {
+const renderButton = (
+  config: FooterButtonConfig,
+  index: number,
+  showPopover: boolean,
+  setShowPopover: (show: boolean) => void,
+  pageName: string
+) => {
   const buttonStyles = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary:
       "bg-background text-blue-600 border border-blue-600 hover:bg-blue-50",
     cancel: "bg-white text-red-300 hover:text-red-600 hover:bg-red-100",
+    cancelQuickOrder: "bg-red-100 text-red-600  hover:bg-red-200 hover:text-red-700",
   };
 
   const getButtonClass = () => {
     if (config.label.toLowerCase() === "cancel") {
+      if (pageName === "Quick_Order") {
+        return buttonStyles.cancelQuickOrder;
+      }
       return buttonStyles.cancel;
-    }else if(config.label.toLowerCase() === "save"){
+    } else if (config.label.toLowerCase() === "save") {
       return buttonStyles.secondary;
     }
     return config.type === "Button"
@@ -184,8 +194,8 @@ export const AppFooter: React.FC = () => {
     <footer className="h-12 bg-white border-t border-gray-200 flex items-center justify-between px-6 fixed bottom-0 left-[60px] right-0 z-20">
       {/* {config.pageName == "Quick_Order" && (
         <> */}
-             <div className="flex items-center space-x-4">
-         {config.leftButtons.map((config, index) => renderButton(config, index, showCimCuvPopover, setShowCimCuvPopover))}
+      <div className="flex items-center space-x-4">
+        {config.leftButtons.map((btnConfig, index) => renderButton(btnConfig, index, showCimCuvPopover, setShowCimCuvPopover, config.pageName))}
          {/* {config.leftButtons.length > 0 &&
                <Button variant="ghost" size="icon" className='h-9 w-9 border'>
                   <MoreHorizontal size={16} />
@@ -194,7 +204,7 @@ export const AppFooter: React.FC = () => {
              } */}
        </div>
        <div className="flex items-center space-x-4">
-         {config.rightButtons.map((config, index) => renderButton(config, index, showCimCuvPopover, setShowCimCuvPopover))}
+         {config.rightButtons.map((btnConfig, index) => renderButton(btnConfig, index, showCimCuvPopover, setShowCimCuvPopover, config.pageName))}
        </div>
       {/* </>
       )} */}
