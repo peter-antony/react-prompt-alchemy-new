@@ -81,6 +81,7 @@ export function SmartGrid({
   onToggleServersideFilter,
   hideAdvancedFilter = false,
   hideCheckboxToggle = false,
+  hideRightToolbar = false,
   hideToolbar = false,
   serverFilters = [],
   showFilterTypeDropdown = false,
@@ -883,6 +884,7 @@ export function SmartGrid({
         showServersideFilter={showServersideFilter}
         onToggleServersideFilter={onToggleServersideFilter}
         hideCheckboxToggle={hideCheckboxToggle}
+        hideRightToolbar={hideRightToolbar}
         gridId={gridId}
          // Selection props
         selectedRowsCount={currentSelectedRows.size}

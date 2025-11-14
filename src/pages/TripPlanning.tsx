@@ -3154,12 +3154,13 @@ const TripPlanning = () => {
                         {addResourcesFlag ? (
                           <>
                             <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
-                            { urlTripID && (<div className='flex justify-end'>
+                            { urlTripID && (<div className='flex justify-end relative'>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className='w-8 h-8 border rounded-xl'
-                                  onClick={() => { setIsAddCOToTripOpen(true)}}>
+                                  className='w-8 h-8 border rounded-lg absolute right-0 top-0'
+                                  onClick={() => { setIsAddCOToTripOpen(true)}}
+                                  title="Add Customer Order">
                                   <Plus className="h-4 w-4" />
                                 </Button>
                               </div>)

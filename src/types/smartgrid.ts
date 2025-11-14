@@ -246,6 +246,7 @@ export interface SmartGridProps {
   hideAdvancedFilter?: boolean;
   // Control whether to show the checkbox toggle button in toolbar
   hideCheckboxToggle?: boolean;
+  hideRightToolbar?: boolean;
   // Control whether to show the toolbar
   hideToolbar?: boolean;
   customPageSize?: number | any;

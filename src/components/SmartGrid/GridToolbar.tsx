@@ -75,6 +75,7 @@ interface GridToolbarProps {
   onToggleServersideFilter?: () => void;
   gridId?: string;
   hideCheckboxToggle?: boolean;
+  hideRightToolbar?: boolean;
   // Selection props
   selectedRowsCount?: number;
   onClearSelection?: () => void;
@@ -119,6 +120,7 @@ export function GridToolbar({
   onToggleServersideFilter,
   gridId,
   hideCheckboxToggle = false,
+  hideRightToolbar = false,
   selectedRowsCount = 0,
   onClearSelection
 }: GridToolbarProps) {
@@ -216,7 +218,7 @@ export function GridToolbar({
       </div>
 
       {/* Right side - Controls */}
-      <div className="flex items-center space-x-3">
+      { !hideRightToolbar && <div className="flex items-center space-x-3">
         {/* Search box - only show if clientSideSearch is enabled */}
         <div className="relative">
           <Input
@@ -524,6 +526,7 @@ export function GridToolbar({
           />
         ))}
       </div>
+      }
     </div>
   );
 }

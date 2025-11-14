@@ -1587,6 +1587,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               hideAdvancedFilter={true}
               customPageSize={pageSize}
               hideCheckboxToggle={true}
+              hideRightToolbar={tripID ? true : false}
               serverFilters={dynamicServerFilters}
               showFilterTypeDropdown={false}
               showServersideFilter={showServersideFilter}
