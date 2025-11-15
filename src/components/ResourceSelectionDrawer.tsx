@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Search, X } from 'lucide-react';
 import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { toast } from '@/hooks/use-toast';
+import { tripPlanningService } from '@/api/services/tripPlanningService';
 
 interface ResourceSelectionDrawerProps {
   isOpen: boolean;
@@ -17,6 +19,9 @@ interface ResourceSelectionDrawerProps {
   resourceData?: any[];
   selectedResourcesRq?: any;
   isLoading?: boolean;
+  saveButtonEnableFlag?: boolean;
+  tripInformation?: any;
+  onUpdateTripInformation?: (updatedTripInformation: any) => void;
 }
 
 // Resource type configurations
@@ -392,7 +397,10 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   resourceType,
   selectedResourcesRq,
   resourceData: propResourceData,
-  isLoading = false
+  isLoading = false,
+  saveButtonEnableFlag = false,
+  tripInformation,
+  onUpdateTripInformation
 }) => {
   const [serviceType, setServiceType] = useState<string>();
   const [subServiceType, setSubServiceType] = useState<string>();
@@ -924,6 +932,294 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     onClose();
   };
 
+  // Handle save resource (when saveButtonEnableFlag is true)
+  const handleSaveResource = async () => {
+    const idField = getIdField();
+    console.log('[Save Resource] idField:', idField);
+    console.log('[Save Resource] selectedRowIds:', Array.from(selectedRowIds));
+    
+    // Map ResourceType based on idField
+    const getResourceTypeFromIdField = (idField: string) => {
+      switch (idField) {
+        case 'EquipmentID':
+          return 'Equipment';
+        case 'VendorID':
+          return 'Agent';
+        case 'DriverCode':
+          return 'Driver';
+        case 'HandlerID':
+          return 'Handler';
+        case 'VehicleID':
+          return 'Vehicle';
+        case 'SupplierID':
+          return 'Schedule';
+        default:
+          return resourceType;
+      }
+    };
+    
+    // Parse serviceType to extract Service and ServiceDescription
+    const parseServiceType = (serviceTypeValue: string | undefined) => {
+      if (!serviceTypeValue) {
+        return { Service: "", ServiceDescription: "" };
+      }
+      const parts = serviceTypeValue.split(' || ');
+      return {
+        Service: (parts[0] || "").trim(),
+        ServiceDescription: (parts[1] || "").trim()
+      };
+    };
+    
+    // Parse subServiceType to extract SubService and SubServiceDescription
+    const parseSubServiceType = (subServiceTypeValue: string | undefined) => {
+      if (!subServiceTypeValue) {
+        return { SubService: "", SubServiceDescription: "" };
+      }
+      const parts = subServiceTypeValue.split(' || ');
+      return {
+        SubService: (parts[0] || "").trim(),
+        SubServiceDescription: (parts[1] || "").trim()
+      };
+    };
+    
+    const { Service, ServiceDescription } = parseServiceType(serviceType);
+    const { SubService, SubServiceDescription } = parseSubServiceType(subServiceType);
+    
+    // Format the data based on resource type - loop through all selected IDs
+    const formattedDataArray: any = rowTripId.map(resourceId => ({
+      ResourceID: resourceId,
+      ResourceType: getResourceTypeFromIdField(idField),
+      Service: Service,
+      ServiceDescription: ServiceDescription,
+      SubService: SubService,
+      SubServiceDescription: SubServiceDescription,
+      EffectiveFromDate: "",
+      EffectiveToDate: "",
+      ModeFlag: "Insert"
+    }));
+    
+    console.log('[Save Resource] formattedDataArray:', formattedDataArray);
+    console.log('[Save Resource] Dispatching formatted selection payload count:', formattedDataArray.length);
+    console.log("tripInformation ====", tripInformation);
+    // Update tripInformation.ResourceDetails based on formattedDataArray
+    // Compare existing ResourceDetails with new formattedDataArray and set ModeFlag accordingly
+    // ONLY update the resource type being edited in this drawer, leave other resource types unchanged
+    if (tripInformation) {
+      const existingResourceDetails = tripInformation.ResourceDetails || {};
+      
+      // Map ResourceType to the key used in ResourceDetails object
+      const getResourceDetailsKey = (resourceType: string): string => {
+        switch (resourceType) {
+          case 'Equipment':
+            return 'Equipments';
+          case 'Handler':
+            return 'Handlers';
+          case 'Vehicle':
+            return 'Vehicle';
+          case 'Driver':
+            return 'Drivers';
+          case 'Agent':
+          case 'Supplier':
+            return 'Supplier';
+          case 'Schedule':
+            return 'Schedule';
+          default:
+            return resourceType;
+        }
+      };
+
+      // Get the resource details key for the current resource type being edited
+      const currentResourceDetailsKey = getResourceDetailsKey(resourceType);
+      console.log('Updating ResourceDetails for resource type:', resourceType, '-> key:', currentResourceDetailsKey);
+
+      // Get existing items for the current resource type only
+      const existingItems = Array.isArray(existingResourceDetails[currentResourceDetailsKey]) 
+        ? existingResourceDetails[currentResourceDetailsKey] 
+        : [];
+      
+      // New items from formattedDataArray (should all be of the current resource type)
+      const newItems = formattedDataArray || [];
+
+      // Create a map of existing items by ResourceID for quick lookup
+      const existingMap = new Map<string, any>();
+      existingItems.forEach((item: any) => {
+        // Handle different ID field names based on resource type
+        let resourceId = '';
+        if (currentResourceDetailsKey === 'Equipments') {
+          resourceId = item.EquipmentID || item.ResourceID || item.id || '';
+        } else if (currentResourceDetailsKey === 'Handlers') {
+          resourceId = item.HandlerID || item.ResourceID || item.id || '';
+        } else if (currentResourceDetailsKey === 'Vehicle') {
+          resourceId = item.VehicleID || item.ResourceID || item.id || '';
+        } else if (currentResourceDetailsKey === 'Drivers') {
+          resourceId = item.DriverID || item.DriverCode || item.ResourceID || item.id || '';
+        } else if (currentResourceDetailsKey === 'Supplier') {
+          resourceId = item.VendorID || item.ResourceID || item.id || '';
+        } else if (currentResourceDetailsKey === 'Schedule') {
+          resourceId = item.SupplierID || item.ResourceID || item.id || '';
+        } else {
+          resourceId = item.ResourceID || item.id || '';
+        }
+        
+        if (resourceId) {
+          existingMap.set(String(resourceId), item);
+        }
+      });
+
+      // Create a set of new ResourceIDs
+      const newResourceIds = new Set<string>();
+      newItems.forEach((item: any) => {
+        const resourceId = item.ResourceID || item.id || '';
+        if (resourceId) {
+          newResourceIds.add(String(resourceId));
+        }
+      });
+
+      // Process only the current resource type
+      const updatedItems: any[] = [];
+
+      // Process existing items for the current resource type
+      existingItems.forEach((existingItem: any) => {
+        // Get ResourceID based on resource type
+        let resourceId = '';
+        if (currentResourceDetailsKey === 'Equipments') {
+          resourceId = String(existingItem.EquipmentID || existingItem.ResourceID || existingItem.id || '');
+        } else if (currentResourceDetailsKey === 'Handlers') {
+          resourceId = String(existingItem.HandlerID || existingItem.ResourceID || existingItem.id || '');
+        } else if (currentResourceDetailsKey === 'Vehicle') {
+          resourceId = String(existingItem.VehicleID || existingItem.ResourceID || existingItem.id || '');
+        } else if (currentResourceDetailsKey === 'Drivers') {
+          resourceId = String(existingItem.DriverID || existingItem.DriverCode || existingItem.ResourceID || existingItem.id || '');
+        } else if (currentResourceDetailsKey === 'Supplier') {
+          resourceId = String(existingItem.VendorID || existingItem.ResourceID || existingItem.id || '');
+        } else if (currentResourceDetailsKey === 'Schedule') {
+          resourceId = String(existingItem.SupplierID || existingItem.ResourceID || existingItem.id || '');
+        } else {
+          resourceId = String(existingItem.ResourceID || existingItem.id || '');
+        }
+        
+        if (newResourceIds.has(resourceId)) {
+          // Item exists in both - set ModeFlag to "NoChange"
+          const newItem = newItems.find((item: any) => 
+            String(item.ResourceID || item.id || '') === resourceId
+          );
+          updatedItems.push({
+            ...existingItem,
+            ...(newItem || {}),
+            ModeFlag: "NoChange"
+          });
+        } else {
+          // Item exists only in existing array - set ModeFlag to "Deleted"
+          updatedItems.push({
+            ...existingItem,
+            ModeFlag: "Delete"
+          });
+        }
+      });
+
+      // Process new items that don't exist in existing array
+      newItems.forEach((newItem: any) => {
+        const resourceId = String(newItem.ResourceID || newItem.id || '');
+        
+        if (!existingMap.has(resourceId)) {
+          // Item exists only in new array - add with ModeFlag "Update"
+          updatedItems.push({
+            ...newItem,
+            ModeFlag: "Insert"
+          });
+        }
+      });
+
+      // Update ONLY the current resource type array, preserve all other resource types unchanged
+      const updatedResourceDetails: Record<string, any[]> = { ...existingResourceDetails };
+      updatedResourceDetails[currentResourceDetailsKey] = updatedItems;
+
+      console.log('=== UPDATED tripInformation.ResourceDetails (from ResourceSelectionDrawer) ===');
+      console.log('Resource Type being updated:', resourceType);
+      console.log('Resource Details Key:', currentResourceDetailsKey);
+      console.log('Existing items count:', existingItems.length);
+      console.log('New items count:', newItems.length);
+      console.log('Updated items count:', updatedItems.length);
+      console.log('Updated ResourceDetails:', updatedResourceDetails);
+
+      // Update tripInformation in parent via callback
+      const updatedTripInformation = {
+        ...tripInformation, 
+        ResourceDetails: updatedResourceDetails
+      };
+
+      const tripData = {
+        "Header": tripInformation?.Header,
+        "ResourceDetails": updatedResourceDetails
+      }
+
+      onUpdateTripInformation(updatedTripInformation);
+      // Also call onAddResource to maintain existing functionality
+      onAddResource(formattedDataArray);
+      console.log("updatedTripInformation =====", updatedTripInformation);
+      console.log("tripData =====", tripData);
+      try {
+        const response: any = await tripPlanningService.resourceUpdateTripLevel(tripData);
+        const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+        // const data = parsedResponse;
+        const resourceStatus = (response as any)?.data?.IsSuccess;
+        console.log("parsedResponse ====", parsedResponse);
+        if (resourceStatus) {
+          console.log("Trip data updated in store");
+
+          // Extract CustomerOrders from response
+          const customerOrders = parsedResponse.CustomerOrders || [];
+          console.log("📋 CustomerOrders from API response:", customerOrders);
+
+          toast({
+            title: "✅ Trip Created Successfully",
+            description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+            variant: "default",
+          });
+          onClose();
+          console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
+        } else {
+          console.log("error as any ===", (response as any)?.data?.Message);
+          toast({
+            title: "⚠️ Save Failed",
+            description: (response as any)?.data?.Message || "Failed to save changes.",
+            variant: "destructive",
+          });
+
+        }
+      } catch (error) {
+        console.error("Error updating nested data:", error);
+        toast({
+          title: "⚠️ Error",
+          description: "An error occurred while creating the trip. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        
+      }
+    }
+    
+  };
+
+  // Conditionally build footer buttons based on saveButtonEnableFlag
+  const footerButtons = saveButtonEnableFlag
+    ? [
+        {
+          label: 'Save',
+          variant: 'default' as const,
+          action: handleSaveResource,
+          disabled: selectedRowIds.size === 0
+        }
+      ]
+    : [
+        {
+          label: config.buttonText,
+          variant: 'default' as const,
+          action: handleAddResource,
+          disabled: selectedRowIds.size === 0
+        }
+      ];
+
   return (
     <SideDrawer
       isOpen={isOpen}
@@ -932,14 +1228,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       width="75%"
       slideDirection="right"
       showFooter={true}
-      footerButtons={[
-        {
-          label: config.buttonText,
-          variant: 'default',
-          action: handleAddResource,
-          disabled: selectedRowIds.size === 0
-        }
-      ]}
+      footerButtons={footerButtons}
     >
       <div className="space-y-6">
         {/* Filter Section */}
@@ -978,6 +1267,11 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                  {currentResourceData.length}
                </Badge>
+               {saveButtonEnableFlag && (
+                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                   Add Resources Enabled
+                 </Badge>
+               )}
             </div>
             
             {/* Search */}

@@ -20,7 +20,7 @@ export const BadgesList: React.FC<BadgesListProps> = ({
   idField = 'EquipmentID', // Default to EquipmentID for backward compatibility
   isRemoveButton = false,
 }) => {
-  console.log('items:::::::::::: ', items);
+  // console.log('items:::::::::::: ', items);
   return (
     <div className={cn('flex flex-wrap gap-2 mt-2', className)}>
       {items?.map((item: any, index: any) => (
