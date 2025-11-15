@@ -128,7 +128,8 @@ export const API_ENDPOINTS = {
     CO_SELECTION: "manageexecution/planhubselection",
     UPDATE_SELECTION: "manageexecution/planhubupdate",
     TRIP_LEG_LEVEL_UPDATE: "manageexecution/plantriplevelupdate",
-    FILE_UPDATEDOWN: '/files/updatedown'
+    FILE_UPDATEDOWN: '/files/updatedown',
+    SAVE_MANGE_TRIP: '/tripplanmanage/tripcreate'
   },
   // Quick Order management
   QUICK_ORDERS: {

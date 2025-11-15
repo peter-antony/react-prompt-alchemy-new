@@ -18,7 +18,7 @@ import {
   HelpCircle, InfoIcon, EllipsisVertical,
   CreditCard, Zap, FileUp, Route, TramFront,
   ChevronLeft,
-  ChevronDown
+  ChevronDown, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -297,7 +297,9 @@ const TripPlanning = () => {
         : response?.data || {};
       
       console.log('📋 Parsed trip response:', parsedResponse);
-      
+      setTripInformation(
+        parsedResponse
+      )
       // Extract CustomerOrders from the trip response
       const customerOrders = parsedResponse.CustomerOrders || [];
 
@@ -2535,6 +2537,7 @@ const TripPlanning = () => {
     setIsAddCOToTripOpen(false);
     
     // Reload trip data using fetchTripData method
+    
     if (urlTripID) {
       fetchTripData(urlTripID);
     }
@@ -2545,7 +2548,91 @@ const TripPlanning = () => {
       description: "Trip data reloaded successfully.",
       variant: "default",
     });
+    // window.location.reload();
   };
+
+  const removeCOFromTrip = async () => {
+    console.log('trip information', tripInformation);
+    console.log('removeCOFromTrip', customerOrderList);
+    if(!customerOrderList) return null;
+    const { CustomerOrderID, LegBehaviour } = customerOrderList;
+
+    // Build the customer orders array with proper ModeFlag
+    const customerOrders = (tripInformation?.CustomerOrders || []).map((order: any) => {
+      // Check if this order matches the one to be removed
+      const isMatchingOrder = order.CustomerOrderID === CustomerOrderID && order.LegBehaviour === LegBehaviour;
+      
+      return {
+        CustomerOrderNo: order.CustomerOrderID,
+        LegBehaviour: order.LegBehaviour,
+        ModeFlag: isMatchingOrder ? 'Delete' : (order.ModeFlag || 'NoChange')
+      };
+    });
+
+    const dataToSave = {
+      Header: {
+        TripNo: tripInformation?.Header?.TripNo,
+      },
+      CustomerOrders: customerOrders
+    };
+
+    console.log('removeCOFromTrip - dataToSave:', dataToSave);
+
+    try {
+      const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
+      console.log('removeCOFromTrip - response:', response);
+
+      if (response?.data) {
+        const { IsSuccess, ResponseData, Message } = response.data;
+
+        let parsedResponseData: any = null;
+        if (ResponseData) {
+          try {
+            parsedResponseData = JSON.parse(ResponseData);
+          } catch (parseError) {
+            console.warn('Failed to parse ResponseData:', parseError);
+          }
+        }
+
+        if (parsedResponseData?.error) {
+          const { errorCode, errorMessage } = parsedResponseData.error;
+          toast({
+            title: errorCode || "Error",
+            description: errorMessage || Message || "Failed to remove CO",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (IsSuccess) {
+          toast({
+            title: "Success",
+            description: "Customer Order removed successfully",
+          });
+          setcustomerOrderList(null);
+          // Reload trip data
+          if (urlTripID) {
+            fetchTripData(urlTripID);
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: Message || "Failed to remove customer order",
+            variant: "destructive",
+          });
+        }
+      } else {
+        throw new Error("No response data received");
+      }
+    } catch (error) {
+      console.error('removeCOFromTrip - error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove customer order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }
 
   return (
     <AppLayout>
@@ -3339,18 +3426,26 @@ const TripPlanning = () => {
                       <div className={`${addResourcesFlag ? 'flex' : ''} gap-6`}>
                         {addResourcesFlag ? (
                           <>
-                            <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6'>
-                            {/* { urlTripID && (<div className='flex justify-end relative'>
+                            <div className='w-3/4 flex-1 bg-card border border-border rounded-lg p-6 relative'>
+                            { urlTripID && (<div className='absolute right-0 px-6 flex gap-2'>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className='h-8 border rounded-lg absolute right-0 top-0 px-2'
+                                  className='h-8 rounded-lg px-2 w-fit bg-red-100 hover:bg-red-200'
+                                  onClick={() => { removeCOFromTrip()}}
+                                  title="Remove CO">
+                                  Remove CO <Trash2 className="h-4 w-4" size={16} color="#ea3939" strokeWidth={1.25}/> 
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className='h-8 rounded-lg px-2 w-fit bg-green-100 hover:bg-green-200'
                                   onClick={() => { setIsAddCOToTripOpen(true)}}
                                   title="Add Customer Order">
-                                  Add CO <Plus className="h-4 w-4" />
+                                  Add CO <Plus className="h-4 w-4" size={16} color="#156534" strokeWidth={1.25}/>
                                 </Button>
                               </div>)
-                              } */}
+                              }
                               {/* Trip Planning Customer Order Hub */}
                               <TripCOHub
                                 key={tripCOHubReloadKey}

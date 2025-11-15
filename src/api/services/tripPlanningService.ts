@@ -288,7 +288,7 @@ export const tripPlanningService = {
         RequestData: requestPayload,
       };
       const response = await apiClient.post(
-        API_ENDPOINTS.QUICK_ORDERS.COMBO,
+        API_ENDPOINTS.TRIPS.SAVE_MANGE_TRIP,
         requestBody
       );
       return response.data;

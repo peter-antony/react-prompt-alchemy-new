@@ -527,27 +527,27 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
   };
 
   // Pre-select rows from selectedTripData.CustomerOrders before API call
-  useEffect(() => {
-    if (selectedTripData?.CustomerOrders && Array.isArray(selectedTripData.CustomerOrders)) {
-      // Pre-populate selection based on selectedTripData
-      const preSelectedIds = new Set<string>();
-      const preSelectedObjects: any[] = [];
+  // useEffect(() => {
+  //   if (selectedTripData?.CustomerOrders && Array.isArray(selectedTripData.CustomerOrders)) {
+  //     // Pre-populate selection based on selectedTripData
+  //     const preSelectedIds = new Set<string>();
+  //     const preSelectedObjects: any[] = [];
       
-      selectedTripData.CustomerOrders.forEach((order: any) => {
-        const uniqueId = `${order.CustomerOrderID}-${order.LegBehaviour}`;
-        preSelectedIds.add(uniqueId);
-        preSelectedObjects.push({
-          CustomerOrderID: order.CustomerOrderID,
-          LegBehaviour: order.LegBehaviour,
-          ...order
-        });
-      });
+  //     selectedTripData.CustomerOrders.forEach((order: any) => {
+  //       const uniqueId = `${order.CustomerOrderID}-${order.LegBehaviour}`;
+  //       preSelectedIds.add(uniqueId);
+  //       preSelectedObjects.push({
+  //         CustomerOrderID: order.CustomerOrderID,
+  //         LegBehaviour: order.LegBehaviour,
+  //         ...order
+  //       });
+  //     });
       
-      setSelectedRowIds(preSelectedIds);
-      setSelectedRowObjects(preSelectedObjects);
-      console.log('Pre-selected rows from selectedTripData:', Array.from(preSelectedIds));
-    }
-  }, [selectedTripData]);
+  //     setSelectedRowIds(preSelectedIds);
+  //     setSelectedRowObjects(preSelectedObjects);
+  //     console.log('Pre-selected rows from selectedTripData:', Array.from(preSelectedIds));
+  //   }
+  // }, [selectedTripData]);
 
   // Initialize columns and data
   useEffect(() => {
@@ -574,26 +574,26 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
   };
 
   // Update selected row indices based on current page data to maintain selection state
-  useEffect(() => {
-    const currentData = gridState.gridData.length > 0 ? gridState.gridData : processedData;
-    const newSelectedIndices = new Set<number>();
+  // useEffect(() => {
+  //   const currentData = gridState.gridData.length > 0 ? gridState.gridData : processedData;
+  //   const newSelectedIndices = new Set<number>();
 
-    // Find indices of currently selected rows in the current page data
-    // Use composite key (CustomerOrderID + LegBehaviour) for unique identification
-    currentData.forEach((row: any, index: number) => {
-      const uniqueId = getUniqueRowId(row);
-      if (selectedRowIds.has(uniqueId)) {
-        newSelectedIndices.add(index);
-      }
-    });
+  //   // Find indices of currently selected rows in the current page data
+  //   // Use composite key (CustomerOrderID + LegBehaviour) for unique identification
+  //   currentData.forEach((row: any, index: number) => {
+  //     const uniqueId = getUniqueRowId(row);
+  //     if (selectedRowIds.has(uniqueId)) {
+  //       newSelectedIndices.add(index);
+  //     }
+  //   });
 
-    // Only update if there's a difference to avoid infinite loops
-    if (newSelectedIndices.size !== selectedRows.size ||
-      !Array.from(newSelectedIndices).every(index => selectedRows.has(index))) {
-      console.log('Updating selected row indices for current page:', Array.from(newSelectedIndices));
-      setSelectedRows(newSelectedIndices);
-    }
-  }, [gridState.gridData, processedData, selectedRowIds]);
+  //   // Only update if there's a difference to avoid infinite loops
+  //   if (newSelectedIndices.size !== selectedRows.size ||
+  //     !Array.from(newSelectedIndices).every(index => selectedRows.has(index))) {
+  //     console.log('Updating selected row indices for current page:', Array.from(newSelectedIndices));
+  //     setSelectedRows(newSelectedIndices);
+  //   }
+  // }, [gridState.gridData, processedData, selectedRowIds]);
 
   // Navigate to the create new quick order page
   const navigate = useNavigate();
@@ -1121,60 +1121,27 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
     console.log("handleCOToTrip - Original selectedRowObjects ===", selectedRowObjects);
     console.log("handleCOToTrip - selectedTripData.CustomerOrders ===", selectedTripData?.CustomerOrders);
 
-    // Create a map for quick lookup of selected rows
-    const selectedMap = new Map<string, any>();
-    selectedRowObjects.forEach(row => {
-      const key = `${row.CustomerOrderID}-${row.LegBehaviour}`;
-      selectedMap.set(key, row);
-    });
-
-    // Create a map for existing trip customer orders
-    const existingMap = new Map<string, any>();
-    (selectedTripData?.CustomerOrders || []).forEach((order: any) => {
-      const key = `${order.CustomerOrderID}-${order.LegBehaviour}`;
-      existingMap.set(key, order);
-    });
-
-    const customerOrdersToSave: any[] = [];
-
-    // Process existing orders from selectedTripData
-    existingMap.forEach((order, key) => {
-      if (selectedMap.has(key)) {
-        // Order exists in both - NoChange
-        customerOrdersToSave.push({
-          CustomerOrderNo: order.CustomerOrderID,
-          LegBehaviour: order.LegBehaviour,
-          ModeFlag: 'NoChange'
-        });
-      } else {
-        // Order exists only in existing data - Delete
-        customerOrdersToSave.push({
-          CustomerOrderNo: order.CustomerOrderID,
-          LegBehaviour: order.LegBehaviour,
-          ModeFlag: 'Delete'
-        });
-      }
-    });
-
-    // Process selected rows - find new ones (Insert)
-    selectedMap.forEach((row, key) => {
-      if (!existingMap.has(key)) {
-        // Order exists only in selected rows - Insert
-        customerOrdersToSave.push({
-          CustomerOrderNo: row.CustomerOrderID,
-          LegBehaviour: row.LegBehaviour,
-          ModeFlag: 'Insert'
-        });
-      }
-    });
-
-    console.log("handleCOToTrip - Processed CustomerOrders ===", customerOrdersToSave);
 
     let dataToSave = {
       Header: {
         TripNo: selectedTripData?.Header?.TripNo,
       },
-      CustomerOrders: customerOrdersToSave
+      CustomerOrders: [
+        ...selectedTripData.CustomerOrders.map((order:any) => {
+          return {
+            CustomerOrderNo: order.CustomerOrderID,
+            LegBehaviour: order.LegBehaviour,
+            ModeFlag: order.ModeFlag || 'NoChange'
+          }
+        }),
+        ...selectedRowObjects.map((row:any) => {
+          return {
+            CustomerOrderNo: row.CustomerOrderID,
+            LegBehaviour: row.LegBehaviour,
+            ModeFlag: 'Insert'
+          }
+        })
+      ]
     };
     const response: any = await tripService.saveLegAndEventsTripLevel(dataToSave);
     console.log('response = ', response);
@@ -1210,6 +1177,10 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
           title: "Success",
           description: Message || "",
         });
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
         onAddCO();// Send to API
         // Refresh data from API after successful save
         // if (tripId) {
