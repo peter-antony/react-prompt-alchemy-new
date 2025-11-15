@@ -1267,11 +1267,11 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                  {currentResourceData.length}
                </Badge>
-               {saveButtonEnableFlag && (
+               {/* {saveButtonEnableFlag && (
                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
                    Add Resources Enabled
                  </Badge>
-               )}
+               )} */}
             </div>
             
             {/* Search */}
