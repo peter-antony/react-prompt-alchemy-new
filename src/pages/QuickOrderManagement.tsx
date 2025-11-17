@@ -1268,6 +1268,7 @@ const QuickOrderManagement = () => {
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
                 gridId="quick-order-management"
                 userId="current-user"
+                customPageSize="25"
                 api={filterService}
               />
               {/* {!filtersLoading ? ( */}
