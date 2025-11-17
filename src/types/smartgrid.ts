@@ -34,7 +34,8 @@ export type GridColumnType =
   | 'LazySelect'           // Lazy-loaded select with search
   | 'CurrencyWithSymbol'   // Currency with symbol
   | 'ActionButton'         // Action button column
-  | 'LegLocationFormat';   // Location format for legs
+  | 'LegLocationFormat'   // Location format for legs
+  | 'StatusBadgeIcons'
 
 export interface GridColumnConfig {
   key: string;

@@ -90,7 +90,7 @@ const activitiesColumns: GridColumnConfig[] = [
   {
     key: 'status',
     label: 'Status',
-    type: 'Badge',
+    type: 'StatusBadgeIcons',
     width: 50,
     sortable: true,
     filterable: true,

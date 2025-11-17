@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Info, Package } from 'lucide-react';
+import { CheckCircle, CircleCheck, Info, MinusCircle, Package } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
@@ -64,6 +64,45 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       onEditCancel();
       setTempValue(value);
     }
+  };
+
+  const renderStatusBadgeIcons = () => {
+    const activities = row?.Activities || [];
+  
+    const fullFilledCount = activities.filter(
+      a => a?.ActualDate && a?.ActualTime
+    ).length;
+  
+    const partialCount = activities.filter(
+      a =>
+        (a?.ActualDate && !a?.ActualTime) ||
+        (!a?.ActualDate && a?.ActualTime)
+    ).length;
+  
+    let bgColor = "";
+    let Icon = CircleCheck;
+  
+    if (fullFilledCount === activities.length && activities.length > 0) {
+      // ✔ FULL (GREEN)
+      bgColor = "bg-green-600"; // green background
+    } else if (partialCount > 0) {
+      // ✔ PARTIAL (ORANGE)
+      bgColor = "bg-orange-500"; // orange background
+    } else {
+      bgColor = "bg-orange-500"; // orange background // ❌ no icon for empty case
+    }
+  
+    return (
+      <span className="inline-flex items-center">
+        <span className={`h-5 w-5 rounded-full flex items-center justify-center ${bgColor}`}>
+          <Icon
+            // size={12}
+            strokeWidth={2.5}
+            className="text-white w-5 h-5"
+          />
+        </span>
+      </span>
+    );
   };
 
   // Badge renderer with status mapping
@@ -814,6 +853,8 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
         return renderBadge();
       case 'BadgeCombinationCount':
         return renderBadgeCombinationCount();
+      case 'StatusBadgeIcons':
+        return renderStatusBadgeIcons();
       case 'DateTimeRange':
         return renderDateTimeRange();
       case 'TextWithTooltip':
