@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, EllipsisVertical, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,10 @@ import { exportToCSV, exportToExcel } from '@/utils/gridExport';
 import * as XLSX from 'xlsx';
 import { Switch } from '@/components/ui/switch';
 import { set } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useDrawerStore } from '@/stores/drawerStore';
+import { SideDrawer } from '../SideDrawer';
+import PODDrawer from './PODDrawer';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -226,6 +230,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   const [cachedDGClassOptions, setCachedDGClassOptions] = useState<any[]>([]);
   const [lastUnCodeForDGClass, setLastUnCodeForDGClass] = useState<string>('');
   const [forceDGClassRefresh, setForceDGClassRefresh] = useState<boolean>(false);
+  const [listPopoverOpen, setListPopoverOpen] = useState(false);
+  const [isPODDrawerOpen, setIsPODDrawerOpen] = useState(false);
+  const { isOpen, drawerType, closeDrawer, openDrawer } = useDrawerStore();
 
   // Track when fields are being programmatically set vs user-initiated changes
   const [isProductBeingSet, setIsProductBeingSet] = useState<boolean>(false);
@@ -6155,6 +6162,30 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Consignment Details</h3>
             <div className="flex items-center gap-2">
+            <Popover open={listPopoverOpen} onOpenChange={setListPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="More options"
+                    onClick={() => console.log('listPopoverOpen ==', listPopoverOpen)}
+                    className="listOfOptions inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
+                    <EllipsisVertical className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="p-2 w-full">
+                  <div className="flex flex-col gap-1">
+                    <button onClick={() => {
+                      console.log('POD');
+                      setIsPODDrawerOpen(true);
+                      setListPopoverOpen(false);
+                    }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      <Settings className="h-4 w-4" />
+                      <span>POD</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               {/* <Button size="sm" className="h-8" onClick={() => setShowPlanActualDrawer(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add Actuals
@@ -6725,6 +6756,25 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           allowMultipleFiles={false}
         />
       </TabsContent>
+      <SideDrawer
+        isOpen={isPODDrawerOpen}
+        onClose={() => setIsPODDrawerOpen(false)}
+        onBack={undefined}
+        title={'Proof Of Delivery'}
+        titleBadge={undefined}
+        slideDirection='right'
+        width={'75%'}
+        smoothness='smooth'
+        showBackButton={undefined}
+        showCloseButton={true}
+      >
+        <PODDrawer
+          tripNo={tripData?.Header?.TripNo || ''}
+          legNumber={legId}
+          customerOrderNo={selectedCustomerData?.CustomerOrderNo || ''}
+          dispatchDocNo={selectedCustomerData?.DispatchDocNo || ''}
+        />
+      </SideDrawer>
     </>
   );
 };

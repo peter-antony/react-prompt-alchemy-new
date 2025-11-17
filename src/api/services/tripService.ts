@@ -694,6 +694,92 @@ export const tripService = {
     return response.data;
   },
 
+  getPODLegAttachments: async (params: {
+    TripNo: string;
+    LegNumber: string | number;
+    CustomerOrderNo: string;
+    DispatchDocNo?: string;
+  }): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Get Attachment",
+      },
+      SearchCriteria: {
+        ReferenceType: "Trip Log POD Leg wise",
+        ReferenceDocNo: params?.TripNo,
+        ExtraRef1: "",
+        ExtraRef2: "",
+        ExtraRef3: "",
+        ExtraRef4: "",
+        RefDocType1: "Legno",
+        RefDocNo1: `${params?.LegNumber}`,
+        RefDocType2: "DispatchDoc",
+        RefDocNo2: params?.DispatchDocNo ?? "",
+        RefDocType3: "CustomerOrderNo",
+        RefDocNo3: params?.CustomerOrderNo,
+        AdditionalFilter: [],
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_ATTACHMENT,
+      requestBody
+    );
+    return response.data;
+  },
+
+  savePODLegAttachments: async (params: {
+    TripNo: string;
+    LegNumber: string | number;
+    CustomerOrderNo: string;
+    DispatchDocNo?: string;
+    WagonID?: string;
+    AttachItems: any[];
+  }): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Save Attachment",
+      },
+      RequestPayload: {
+        Attachments: {
+          ReferenceType: "Trip Log POD Leg wise",
+          ReferenceDocNo: params?.TripNo,
+          TotalAttachment: params?.AttachItems?.length || 0,
+          // Provide leg and document references to bind at server side
+          RefDocType1: "Legno",
+          RefDocNo1: `${params?.LegNumber}`,
+          RefDocType2: "DispatchDoc",
+          RefDocNo2: params?.DispatchDocNo ?? "",
+          RefDocType3: "CustomerOrderNo",
+          RefDocNo3: params?.CustomerOrderNo,
+          RefDocType4: params?.WagonID ? "WagonID" : "",
+          RefDocNo4: params?.WagonID ?? "",
+          AttachItems: params?.AttachItems || [],
+        },
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_ATTACHMENT}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   saveLegAndEventsTripLevel: async (
     params?: any
   ): Promise<PaginatedResponse<Trip>> => {
@@ -741,6 +827,98 @@ export const tripService = {
     };
     const response = await apiClient.post(
       API_ENDPOINTS.TRIPS.GET_INCIDENT,
+      requestBody
+    );
+    return response.data;
+  },
+
+  getPODFromTrip: async (params: {
+    TripNo: string;
+    LegNumber: string | number;
+    CustomerOrderNo: string;
+    DispatchDocNo?: string;
+  }): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "TripLogGetPOD",
+      },
+      SearchCriteria: {
+        TripNo: params?.TripNo,
+        LegNumber: `${params?.LegNumber}`,
+        CustomerOrderNo: params?.CustomerOrderNo,
+        DispatchDocNo: params?.DispatchDocNo ?? "",
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_INCIDENT,
+      requestBody
+    );
+    return response.data;
+  },
+
+  savePOD: async (params: {
+    TripNo: string;
+    LegNumber: string | number;
+    CustomerOrderNo: string;
+    DispatchDocNo?: string;
+    WagonDetails: Array<{
+      WagonType: string;
+      WagonTypeDescription: string;
+      WagonID: string;
+      WagonQty: number;
+      PODStatus: string;
+      PODStatusDescription: string;
+      ReasonCode: string;
+      ReasonCodeDescription: string;
+      Remarks: string;
+      LineUniqueID: null;
+      ModeFlag: string;
+    }>;
+    BulkUpdate?: {
+      PODStatus: string;
+      PODStatusDescription: string;
+      ReasonCode: string;
+      ReasonCodeDescription: string;
+      Remarks: string;
+    };
+  }): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "TripLogSavePOD",
+      },
+      RequestPayload: {
+        TripNo: params?.TripNo,
+        LegNumber: `${params?.LegNumber}`,
+        CustomerOrderNo: params?.CustomerOrderNo,
+        DispatchDocNo: params?.DispatchDocNo ?? "",
+        WagonDetails: params?.WagonDetails || [],
+        BulkUpdate: params?.BulkUpdate || {
+          PODStatus: "",
+          PODStatusDescription: "",
+          ReasonCode: "",
+          ReasonCodeDescription: "",
+          Remarks: "",
+        },
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_INCIDENT}`,
       requestBody
     );
     return response.data;
