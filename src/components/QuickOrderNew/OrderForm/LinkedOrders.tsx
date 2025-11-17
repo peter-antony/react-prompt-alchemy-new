@@ -149,15 +149,35 @@ export default function LinkedOrders() {
         }
       }
       let totalCustomerAmount = 0;
-
+      console.log("JSON #$@# :", jsonStore.getQuickOrder().ResourceGroup);
+      if (jsonStore.getQuickOrder().OrderType == 'SELL') {
+        console.log("RG count = ", (jsonStore.getQuickOrder().ResourceGroup).length)
+        let RG = (jsonStore.getQuickOrder().ResourceGroup);
+        if (RG.length > 0)
+          for (const item of RG) {
+            console.log("item.NetAmount = ",item.BillingDetails?.NetAmount)
+            totalCustomerAmount += Number(item.BillingDetails?.NetAmount);
+          }
+      }
       for (const item of linkedOrdersArr) {
         if (item.LinkedOrderType === "SELL") {
           totalCustomerAmount += Number(item.LinkedTotalNetAmount || 0);
+
         }
+
       }
       setTotalCustomerNetAmount(totalCustomerAmount);
       let totalSupplierAmount = 0;
+      if (jsonStore.getQuickOrder().OrderType == 'BUY') {
+        console.log("RG count = ", (jsonStore.getQuickOrder().ResourceGroup).length)
+       
+        let RG = (jsonStore.getQuickOrder().ResourceGroup);
+        if (RG.length > 0)
+          for (const item of RG) {
+            totalSupplierAmount += Number(item.BillingDetails?.NetAmount);
+          }
 
+      }
       for (const item of linkedOrdersArr) {
         if (item.LinkedOrderType === "BUY") {
           totalSupplierAmount += Number(item.LinkedTotalNetAmount || 0);

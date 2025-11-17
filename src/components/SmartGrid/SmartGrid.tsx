@@ -145,7 +145,7 @@ export function SmartGrid({
     handleSubRowEditCancel
   } = useSmartGridState();
 
-  const [pageSize] = useState(customPageSize || 10);
+  const [pageSize] = useState(customPageSize || 25);
   const [showFilterRow, setShowFilterRow] = useState(false);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [filterSystemFilters, setFilterSystemFilters] = useState<Record<string, any>>({});
