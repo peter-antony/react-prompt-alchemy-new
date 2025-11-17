@@ -384,7 +384,7 @@ async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
     // console.log("📑 Content-Type:", contentType);
     console.log("RESP 2222:", resp1);
     let blob: Blob;
-    let filename = file.AttachUniqueName || file.fileName || "downloaded_file";
+    let filename =  file.fileName || "downloaded_file";
 
     // if (contentType.includes("application/json")) {
     //   const json = await resp.json();
@@ -405,7 +405,7 @@ async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
       const byteArray = new Uint8Array(byteNumbers);
       blob = new Blob([byteArray], { type: mime });
 
-      filename = resp1.data.FileName || filename;
+      filename =  filename;
     // } else {
     //   blob = await resp.blob();
     // }

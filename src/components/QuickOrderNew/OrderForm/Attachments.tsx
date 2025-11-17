@@ -396,7 +396,8 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
       // console.log("📑 Content-Type:", resp1.headers.get("content-type"));
 
       // let blob: Blob;
-      let filename = file.AttachUniqueName || file.fileName || "downloaded_file";
+      // let filename = file.AttachUniqueName || file.fileName || "downloaded_file";
+      let filename = file.fileName || "downloaded_file";
 
       // if (contentType.includes("application/json")) {
       //   const json = await resp.json();
@@ -417,7 +418,7 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
         const byteArray = new Uint8Array(byteNumbers);
        let  blob = new Blob([byteArray], { type: mime });
 
-        filename = resp1.data.FileName || filename;
+        filename =  filename;
       // } else {
       //   blob = await resp.blob();
       // }
