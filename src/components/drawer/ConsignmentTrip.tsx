@@ -5308,8 +5308,6 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       let currentGridData = [];
 
       if (hasUserEditsRef.current) {
-
-
         // If user has made edits, include all current actual data
         currentGridData = actualEditableData.map((actualRow, index) => {
           try {
@@ -5577,7 +5575,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           updatedTripData.LegDetails[legIndex].Consignment = [];
         }
 
-        const consignmentIndex = 0;
+        // Use selectedCustomerIndex to determine which consignment to update
+        const consignmentIndex = parseInt(selectedCustomerIndex || '0', 10);
+        
+        // Ensure the consignment array has enough elements
+        while (updatedTripData.LegDetails[legIndex].Consignment.length <= consignmentIndex) {
+          updatedTripData.LegDetails[legIndex].Consignment.push({});
+        }
 
         if (!updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex]) {
           updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex] = {};
@@ -5591,7 +5595,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].PickupCompleteForThisCustomerOrder = pickupComplete ? '1' : '0';
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].ModeFlag = 'Update';
         updatedTripData.LegDetails[legIndex].Consignment[consignmentIndex].Actual = allDataToSave;
+        
+        console.log('Saving actuals data to consignment index:', consignmentIndex, 'selectedCustomerIndex:', selectedCustomerIndex);
 
+        console.log("updatedTripData ======", updatedTripData);
         // Save to API
         try {
           const response = await tripService.saveTrip(updatedTripData);
