@@ -126,23 +126,23 @@ const Attachments = ({
         const fileType = fileName.split(".").pop()?.toLowerCase() || "";
         const formData = new FormData();
         formData.append("Files", file.file);
-        formData.append("AttachmentType", fileType);
-        formData.append("AttachName", fileName);
-        formData.append("FileCategory", file.category);
-        formData.append("Attachuniquename", file.Attachuniquename);
+        formData.append("Attachmenttype", fileType);
+        formData.append("Attachname", fileName);
+        formData.append("Filecategory", file.category);
+        // formData.append("Attachuniquename", file.Attachuniquename);
         console.log(formData);
         const data: any =
           await quickOrderService.updateAttachmentQuickOrderResource(formData);
-
+        console.log("FIRST UPDATE RESPONSE :",data)
         // Send to API with FormData containing binary file
         const uploadedFiles = {
           AttachItemID: -1,
           ModeFlag: "Insert",
-          AttachmentType: data.Attachmenttype,
-          FileCategory: data.Filecategory,
-          AttachName: data.Attachname,
-          AttachUniqueName: data.Attachuniquename,
-          AttachRelPath: data.Attachrelpath,
+          AttachmentType: data.data.AttachmentType,
+          FileCategory: data.data.FileCategory,
+          AttachName: data.data.AttachName,
+          AttachUniqueName: data.data.AttachUniqueName,
+          AttachRelPath: data.data.AttachRelPath,
           Remarks: file.remarks,
         };
 
@@ -359,39 +359,43 @@ async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
     // ✅ Correct fields
     formData.append("Filecategory", file.category);
     formData.append("Filename", file.AttachUniqueName);
-
+    const bodyData = {
+      filecategory: file.category,
+      filename: file.AttachUniqueName,
+    };
+    const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData)
     console.log("➡️ FormData sent:", formData);
-    const token = JSON.parse(localStorage.getItem('token') || '{}');
-    const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token.access_token}`,
-        Accept: "application/json",
-        Is_JSON_Format: "true",
-      },
-      body: formData,
-    });
+    // const token = JSON.parse(localStorage.getItem('token') || '{}');
+    // const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
+    //   method: "POST",
+    //   headers: {
+    //     Authorization: `Bearer ${token.access_token}`,
+    //     Accept: "application/json",
+    //     Is_JSON_Format: "true",
+    //   },
+    //   body: formData,
+    // });
 
-    console.log("🌐 HTTP status:", resp.status, resp.statusText);
+    // console.log("🌐 HTTP status:", resp.status, resp.statusText);
 
-    if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+    // if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
 
-    const contentType = resp.headers.get("content-type") || "";
-    console.log("📑 Content-Type:", contentType);
-
+    // const contentType = resp.headers.get("content-type") || "";
+    // console.log("📑 Content-Type:", contentType);
+    console.log("RESP 2222:", resp1);
     let blob: Blob;
     let filename = file.AttachUniqueName || file.fileName || "downloaded_file";
 
-    if (contentType.includes("application/json")) {
-      const json = await resp.json();
-      console.log("🧾 JSON response:", json);
+    // if (contentType.includes("application/json")) {
+    //   const json = await resp.json();
+    //   console.log("🧾 JSON response:", json);
 
-      if (!json.FileData) {
-        throw new Error("⚠️ FileData is null — backend did not return actual file data");
-      }
+    //   if (!json.FileData) {
+    //     throw new Error("⚠️ FileData is null — backend did not return actual file data");
+    //   }
 
-      const b64 = json.FileData;
-      const mime = json.ContentType || "application/octet-stream";
+      const b64 = resp1.data.FileData;
+      const mime = resp1.ContentType || "application/octet-stream";
 
       const byteChars = atob(b64);
       const byteNumbers = new Array(byteChars.length);
@@ -401,10 +405,10 @@ async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
       const byteArray = new Uint8Array(byteNumbers);
       blob = new Blob([byteArray], { type: mime });
 
-      filename = json.FileName || filename;
-    } else {
-      blob = await resp.blob();
-    }
+      filename = resp1.data.FileName || filename;
+    // } else {
+    //   blob = await resp.blob();
+    // }
 
     console.log("✅ File ready:", { filename, blobType: blob.type, size: blob.size });
 
