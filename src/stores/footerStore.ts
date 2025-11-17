@@ -1,21 +1,17 @@
 import { create } from "zustand";
-export type FooterLabelConfig = {
-  label: string;
-  text: string;
-};
+
 export type FooterButtonConfig = {
   label: string;
-  onClick?: () => void;
+  onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
-  type?: "Button" | "Icon" | 'Link' | 'Label';
+  type?: "Button" | "Icon" | 'Link';
   iconName?: string;
 };
 
 type FooterConfig = {
   visible: boolean;
   pageName: string;
-  leftLabel?: FooterLabelConfig; 
   leftButtons: FooterButtonConfig[];
   rightButtons: FooterButtonConfig[];
 };
