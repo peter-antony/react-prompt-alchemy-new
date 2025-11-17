@@ -71,7 +71,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "TripID",
       label: "Trip ID",
-      type: "Text",
+      type: "Link",
       sortable: true,
       editable: false,
       subRow: false,
@@ -451,7 +451,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "TripID",
       label: "Trip ID",
-      type: "Text",
+      type: "Link",
       sortable: true,
       editable: false,
       subRow: false,
@@ -985,6 +985,24 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     console.log("Link clicked:", value, columnKey);
     if (columnKey === 'TripPlanID') {
       navigate(`/manage-trip?id=${value.TripPlanID}`);
+    }
+    if(columnKey === 'TripID') {
+      // window.open(`/manage-trip?id=${encodeURIComponent(value?.TripID)}`, "_blank");
+      const origin = window.location.origin;     // base domain
+      const pathname = window.location.pathname; // includes basename if any
+      const usesHash = window.location.href.includes('#');
+
+      let url = "";
+
+      if (usesHash) {
+        // HASH ROUTER (UAT/PROD)
+        url = `${origin}${pathname}#/manage-trip?id=${value?.TripID}`;
+      } else {
+        // BROWSER ROUTER (local/dev)
+        url = `${origin}${pathname}manage-trip?id=${value?.TripID}`;
+      }
+
+      window.open(url, "_blank");
     }
     if (columnKey == "CustomerOrderID") {
       console.log('rowIndex', rowIndex);
