@@ -698,23 +698,34 @@ const TripPlanning = () => {
     console.log('Selected customerOrderList:', customerOrderList);
 
     // Transform the new resources into the required ResourceDetails format
-    const transformedResourceDetails = resources.map(resource => ({
-      "ResourceID": resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || resource.DriverCode || resource.HandlerID || resource.VehicleID || resource.SupplierID,
-      "ResourceType": resource.resourceType || resource.ResourceType ||
-        (resource.EquipmentID ? 'Equipment' :
-          resource.VendorID ? 'Agent' :
-            resource.DriverCode ? 'Driver' :
-              resource.HandlerID ? 'Handler' :
-                resource.VehicleID ? 'Vehicle' :
-                  resource.SupplierID ? 'Schedule' : 'Unknown'),
-      "Service": resource.Service || "",
-      "ServiceDescription": resource.ServiceDescription || "",
-      "SubService": resource.SubService || "",
-      "SubServiceDescription": resource.SubServiceDescription || "",
-      "EffectiveFromDate": "",
-      "EffectiveToDate": "",
-      "ModeFlag": "Insert"
-    }));
+    const transformedResourceDetails = resources.map(resource => {
+      // For Driver, handle both DriverID and DriverCode
+      const driverId = resource.DriverID || resource.DriverCode;
+      const resourceId = resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || driverId || resource.HandlerID || resource.VehicleID || resource.SupplierID;
+      
+      return {
+        "ResourceID": resourceId,
+        "ResourceType": resource.resourceType || resource.ResourceType ||
+          (resource.EquipmentID ? 'Equipment' :
+            resource.VendorID ? 'Agent' :
+              (resource.DriverID || resource.DriverCode) ? 'Driver' :
+                resource.HandlerID ? 'Handler' :
+                  resource.VehicleID ? 'Vehicle' :
+                    resource.SupplierID ? 'Schedule' : 'Unknown'),
+        "Service": resource.Service || "",
+        "ServiceDescription": resource.ServiceDescription || "",
+        "SubService": resource.SubService || "",
+        "SubServiceDescription": resource.SubServiceDescription || "",
+        "EffectiveFromDate": "",
+        "EffectiveToDate": "",
+        "ModeFlag": "Insert",
+        // Include both DriverID and DriverCode for Driver resources
+        ...(driverId && (resource.DriverID || resource.DriverCode) ? {
+          DriverID: resource.DriverID || driverId,
+          DriverCode: resource.DriverCode || driverId
+        } : {})
+      };
+    });
 
     // Create updated customer order list object with ResourceDetails
     const updatedCustomerList = {
@@ -919,7 +930,17 @@ const TripPlanning = () => {
         } else if (resourceType === 'Vehicle') {
           resourceTypeMaps.Vehicle.set(resourceID, { VehicleID: resourceID });
         } else if (resourceType === 'Driver') {
-          resourceTypeMaps.Driver.set(resourceID, { DriverID: resourceID });
+          // For Driver, include both DriverID and DriverCode if available
+          const driverData: any = { DriverID: resourceID };
+          // Check if the resource has DriverCode, if not use DriverID as DriverCode
+          if (resource.DriverCode) {
+            driverData.DriverCode = resource.DriverCode;
+          } else if (resource.DriverID) {
+            driverData.DriverCode = resource.DriverID;
+          } else {
+            driverData.DriverCode = resourceID;
+          }
+          resourceTypeMaps.Driver.set(resourceID, driverData);
         } else if (resourceType === 'Agent') {
           resourceTypeMaps.Agent.set(resourceID, { VendorID: resourceID });
         } else if (resourceType === 'Schedule') {
@@ -944,7 +965,17 @@ const TripPlanning = () => {
       } else if (resourceType === 'Vehicle') {
         resourceTypeMaps.Vehicle.set(resourceID, { VehicleID: resourceID });
       } else if (resourceType === 'Driver') {
-        resourceTypeMaps.Driver.set(resourceID, { DriverID: resourceID });
+        // For Driver, include both DriverID and DriverCode if available
+        const driverData: any = { DriverID: resourceID };
+        // Check if the resource has DriverCode, if not use DriverID as DriverCode
+        if (resource.DriverCode) {
+          driverData.DriverCode = resource.DriverCode;
+        } else if (resource.DriverID) {
+          driverData.DriverCode = resource.DriverID;
+        } else {
+          driverData.DriverCode = resourceID;
+        }
+        resourceTypeMaps.Driver.set(resourceID, driverData);
       } else if (resourceType === 'Agent') {
         resourceTypeMaps.Agent.set(resourceID, { VendorID: resourceID });
       } else if (resourceType === 'Schedule') {
@@ -1155,7 +1186,7 @@ const TripPlanning = () => {
             // Item exists only in existing array - set ModeFlag to "Deleted"
             updatedItems.push({
               ...existingItem,
-              ModeFlag: "Deleted"
+              ModeFlag: "Delete"
             });
           }
         });
@@ -2321,12 +2352,14 @@ const TripPlanning = () => {
       setTripResourceDetailsData({ ...tripResourceDetailsData, Drivers: updatedDrivers });
 
       // Also remove from selectedArrCOData
-      const resourceID = driverToRemove.DriverID;
+      // Handle both DriverID and DriverCode
+      const resourceID = driverToRemove.DriverID || driverToRemove.DriverCode;
       setSelectedArrCOData(prev => prev.map(co => ({
         ...co,
-        ResourceDetails: (co.ResourceDetails || []).filter((r: any) =>
-          !(r.ResourceType === 'Driver' && r.ResourceID === resourceID)
-        )
+        ResourceDetails: (co.ResourceDetails || []).filter((r: any) => {
+          const rId = r.ResourceID || r.DriverID || r.DriverCode;
+          return !(r.ResourceType === 'Driver' && rId === resourceID);
+        })
       })));
       console.log("handleRemoveDriver ===", index, resourceID);
     }
@@ -2696,6 +2729,9 @@ const TripPlanning = () => {
                   onClick={handleManageTripsClick}
                 >
                   Manage Trips
+                </Button>
+                <Button variant="ghost" size="icon" className='border rounded-lg' onClick={handleOthersClick}>
+                  <Pencil className="h-4 w-4" />
                 </Button>
                 {/* <Button variant="ghost" size="icon" className='border rounded-lg'>
                   <ExternalLink className="h-4 w-4" />
@@ -3077,7 +3113,7 @@ const TripPlanning = () => {
                         </div>
                       </div>
                       {[
-                        { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                        // { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                         // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                         // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                         { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
@@ -3127,12 +3163,13 @@ const TripPlanning = () => {
                                       items={tripResourceDetailsData?.Drivers}
                                       onRemove={handleRemoveDriver}
                                       badgeVariant="secondary"
-                                      idField="DriverID"
+                                      idField="DriverCode"
+                                      fallbackIdField="DriverID"
                                     />
                                   )}
-                                  {resource.subtitle && (
+                                  {/* {resource.subtitle && (
                                     <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                  )}
+                                  )} */}
                                 </div>
                               </div>
                               {resource.title === 'Others' ? (
@@ -3265,7 +3302,7 @@ const TripPlanning = () => {
                           </div>
                         </div>
                         {[
-                          { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                          // { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                           // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                           // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                           { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (tripResourceDetailsData?.Equipments?.length != 0) ? tripResourceDetailsData?.Equipments?.length : '', iconColor: 'text-red-600' },
@@ -3315,12 +3352,13 @@ const TripPlanning = () => {
                                         items={tripResourceDetailsData?.Drivers}
                                         onRemove={handleRemoveDriver}
                                         badgeVariant="secondary"
-                                        idField="DriverID"
+                                        idField="DriverCode"
+                                        fallbackIdField="DriverID"
                                       />
                                     )}
-                                    {resource.subtitle && (
+                                    {/* {resource.subtitle && (
                                       <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                    )}
+                                    )} */}
                                   </div>
                                 </div>
                                 {resource.title === 'Others' ? (
@@ -3509,7 +3547,7 @@ const TripPlanning = () => {
                                 </div>
                               </div>
                               {[
-                                { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                                // { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
                                 // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
                                 // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
                                 { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (tripResourceDetailsData?.Equipments?.length != 0) ? tripResourceDetailsData?.Equipments?.length : '', iconColor: 'text-red-600' },
@@ -3559,12 +3597,13 @@ const TripPlanning = () => {
                                               items={tripResourceDetailsData?.Drivers}
                                               onRemove={handleRemoveDriver}
                                               badgeVariant="secondary"
-                                              idField="DriverID"
+                                              idField="DriverCode"
+                                              fallbackIdField="DriverID"
                                             />
                                           )}
-                                          {resource.subtitle && (
+                                          {/* {resource.subtitle && (
                                             <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                          )}
+                                          )} */}
                                         </div>
                                       </div>
                                       {resource.title === 'Others' ? (

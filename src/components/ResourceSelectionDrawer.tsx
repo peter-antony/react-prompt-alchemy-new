@@ -912,15 +912,38 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     const { Service, ServiceDescription } = parseServiceType(serviceType);
     const { SubService, SubServiceDescription } = parseSubServiceType(subServiceType);
     
-    // Format the data based on resource type - loop through all selected IDs
-    const formattedDataArray: any = rowTripId.map(resourceId => ({
-      ResourceID: resourceId,
-      ResourceType: getResourceTypeFromIdField(idField),
-      Service: Service,
-      ServiceDescription: ServiceDescription,
-      SubService: SubService,
-      SubServiceDescription: SubServiceDescription,
-    }));
+    // Format the data based on resource type - loop through all selected row objects
+    // For Equipment: use EquipmentID and EquipmentType instead of ResourceID and ResourceType
+    const formattedDataArray: any = selectedRowObjects.map((rowObj) => {
+      const resourceId = rowObj[idField];
+      const resourceTypeValue = getResourceTypeFromIdField(idField);
+      
+      // Base object with common fields
+      const baseObj: any = {
+        Service: Service,
+        ServiceDescription: ServiceDescription,
+        SubService: SubService,
+        SubServiceDescription: SubServiceDescription
+      };
+      
+      // For Equipment, use EquipmentID and EquipmentType
+      if (resourceTypeValue === 'Equipment') {
+        return {
+          ...baseObj,
+          EquipmentID: resourceId,
+          EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
+      
+      // For other resource types, use ResourceID and ResourceType
+      return {
+        ...baseObj,
+        ResourceID: resourceId,
+        ResourceType: resourceTypeValue
+      };
+    });
     
     console.log('handle resource click', idField, serviceType, subServiceType);
     console.log('rowTripId"s===========', rowTripId);
@@ -986,17 +1009,79 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     const { SubService, SubServiceDescription } = parseSubServiceType(subServiceType);
     
     // Format the data based on resource type - loop through all selected IDs
-    const formattedDataArray: any = rowTripId.map(resourceId => ({
-      ResourceID: resourceId,
-      ResourceType: getResourceTypeFromIdField(idField),
-      Service: Service,
-      ServiceDescription: ServiceDescription,
-      SubService: SubService,
-      SubServiceDescription: SubServiceDescription,
-      EffectiveFromDate: "",
-      EffectiveToDate: "",
-      ModeFlag: "Insert"
-    }));
+    // const formattedDataArray: any = rowTripId.map(resourceId => ({
+    //   ResourceID: resourceId,
+    //   ResourceType: getResourceTypeFromIdField(idField),
+    //   Service: Service,
+    //   ServiceDescription: ServiceDescription,
+    //   SubService: SubService,
+    //   SubServiceDescription: SubServiceDescription,
+    // }));
+
+    // Format the data based on resource type - loop through all selected row objects
+    // For Equipment: use EquipmentID and EquipmentType instead of ResourceID and ResourceType
+    const formattedDataArray: any = selectedRowObjects.map((rowObj) => {
+      const resourceId = rowObj[idField];
+      const resourceTypeValue = getResourceTypeFromIdField(idField);
+      
+      // Base object with common fields
+      const baseObj: any = {
+        Service: Service,
+        ServiceDescription: ServiceDescription,
+        SubService: SubService,
+        SubServiceDescription: SubServiceDescription,
+        EffectiveFromDate: "",
+        EffectiveToDate: "",
+        ModeFlag: "Insert"
+      };
+      
+      console.log("resourceTypeValue -----", resourceTypeValue);
+      // For Equipment, use EquipmentID and EquipmentType
+      if (resourceTypeValue === 'Equipment') {
+        return {
+          ...baseObj,
+          EquipmentID: resourceId,
+          EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
+      if (resourceTypeValue === 'Handler') {
+        return {
+          ...baseObj,
+          HandlerID: resourceId,
+          // EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
+      if (resourceTypeValue === 'Vehicle') {
+        return {
+          ...baseObj,
+          VehicleID: resourceId,
+          // EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
+      if (resourceTypeValue === 'Driver') {
+        return {
+          ...baseObj,
+          // DriverCode: resourceId,
+          DriverID: resourceId,
+          // EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
+      
+      // For other resource types, use ResourceID and ResourceType
+      return {
+        ...baseObj,
+        ResourceID: resourceId,
+        ResourceType: resourceTypeValue
+      };
+    });
     
     console.log('[Save Resource] formattedDataArray:', formattedDataArray);
     console.log('[Save Resource] Dispatching formatted selection payload count:', formattedDataArray.length);
@@ -1153,9 +1238,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         "ResourceDetails": updatedResourceDetails
       }
 
-      onUpdateTripInformation(updatedTripInformation);
       // Also call onAddResource to maintain existing functionality
-      onAddResource(formattedDataArray);
       console.log("updatedTripInformation =====", updatedTripInformation);
       console.log("tripData =====", tripData);
       try {
@@ -1164,6 +1247,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         // const data = parsedResponse;
         const resourceStatus = (response as any)?.data?.IsSuccess;
         console.log("parsedResponse ====", parsedResponse);
+        onUpdateTripInformation(updatedTripInformation);
+        onAddResource(formattedDataArray);
         if (resourceStatus) {
           console.log("Trip data updated in store");
 
