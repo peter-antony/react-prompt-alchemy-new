@@ -5344,6 +5344,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               return String(value);
             };
 
+            // Bug fix, Helper function to safely get string values or null if empty
+            const safeStringOrNull = (value: any) => {
+              if (value === null || value === undefined || value === '') {
+                return null;
+              }
+              return String(value);
+            };
+
             // Helper function to safely split date-time fields
             const safeDateTimeSplit = (value: any, part: number) => {
               try {
@@ -5416,7 +5424,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
               WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
               WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
-              GrossWeight: safeString(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
+              GrossWeight: safeStringOrNull(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
               GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
               QuickCode1Description: safeString(actualRow['Quick Code1'] || actualRow.QuickCode1Description || actualRow.quickcode1description),
               QuickCode2Description: safeString(actualRow['Quick Code2'] || actualRow.QuickCode2Description || actualRow.quickcode2description),
