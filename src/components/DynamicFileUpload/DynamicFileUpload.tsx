@@ -87,6 +87,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
         fileName: file.AttachName,
         fileType: file.AttachmentType,
         category: file.FileCategory || '',
+        AttachRelPath:file.AttachRelPath || '',
         remarks: file.remarks || '',
         AttachUniqueName: file.AttachUniqueName || "",
         downloadUrl: `${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`

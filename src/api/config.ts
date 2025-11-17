@@ -145,6 +145,7 @@ export const API_ENDPOINTS = {
     QUICKORDER_GET:"/quickorder/getdata",
     LINKEDORDERS_GET:"/quickorder/showlinked",
     UPLOADFILES: "/files/update",
+    DOWNLOADFILE: "/files/updatedown"
     // UPLOADFILES: "/fileupload/update",
   },
   // Invoice management

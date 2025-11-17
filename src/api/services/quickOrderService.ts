@@ -25,16 +25,16 @@ export interface QuickOrderCreateInput {
   TotalNet: number;
 }
 
-export interface QuickOrderUpdateInput extends Partial<QuickOrderCreateInput> {}
+export interface QuickOrderUpdateInput extends Partial<QuickOrderCreateInput> { }
 
 export const quickOrderService = {
 
   getUserContext: () => {
     try {
       const selectedContext = localStorage.getItem('selectedUserContext');
-      
+
       if (selectedContext) {
-        const parsedContext = JSON.parse(selectedContext);      
+        const parsedContext = JSON.parse(selectedContext);
         return {
           ouId: parsedContext.ouId || 4,
           roleName: parsedContext.roleName || "RAMCOROLE",
@@ -45,14 +45,14 @@ export const quickOrderService = {
     } catch (error) {
       console.error('Error retrieving user context from localStorage:', error);
     }
-    
+
     // Default values if nothing is stored
     const defaultContext = {
-      ouId: 4, 
+      ouId: 4,
       roleName: "RAMCOROLE",
       ouDescription: "Default OU"
     };
-    
+
     return defaultContext;
   },
 
@@ -140,12 +140,12 @@ export const quickOrderService = {
           FilterName: "Resource",
           FilterValue: params?.ResourceId,
         }
-       ]:params?.messageType === "Trip Log Incident ID Init" ? [
+      ] : params?.messageType === "Trip Log Incident ID Init" ? [
         {
           FilterName: "TripID",
           FilterValue: params?.TripID,
         }
-      ]: params?.messageType === "Incident Causer Name Init" ? [
+      ] : params?.messageType === "Incident Causer Name Init" ? [
         {
           FilterName: "IncidentCausedBy",
           FilterValue: (params?.IncidentCausedBy || '').split('||')[0]?.trim()
@@ -154,12 +154,12 @@ export const quickOrderService = {
           FilterName: "tripplanid",
           FilterValue: params?.IncidentTripId,
         }
-       ]: params?.messageType === "Trip status Init" ? [
+      ] : params?.messageType === "Trip status Init" ? [
         {
           FilterName: "ScreenName",
           FilterValue: params?.ScreenName,
         },
-       ]: 
+      ] :
         [],
       Pagination: {
         PageNumber: params?.offset,
@@ -196,18 +196,18 @@ export const quickOrderService = {
       },
       AdditionalFilter: params?.messageType === "Equipment ID Init" ? [
         {
-          FilterName:"EquipmentType",
+          FilterName: "EquipmentType",
           FilterValue: params?.EquipmentType,
-        }, 
-        {
-          FilterName:"ScreenName",
-          FilterValue:"Triplog"
         },
         {
-          FilterName:"TripId",
+          FilterName: "ScreenName",
+          FilterValue: "Triplog"
+        },
+        {
+          FilterName: "TripId",
           FilterValue: params?.IncidentTripId,
-        }  
-      ]: [],
+        }
+      ] : [],
       Pagination: {
         PageNumber: params?.offset,
         PageSize: params?.limit,
@@ -526,24 +526,58 @@ export const quickOrderService = {
       // headers = {
       //   'Content-Type': 'multipart/form-data',
       // };
-      headers= {
+      headers = {
         "accept": "text/plain",
         "Is_JSON_Format": "true",
         "Content-Type": "multipart/form-data",
       };
     } else {
-      
+
       // For regular data, wrap in RequestData
       // requestBody = {
       //   RequestData: data,
       // };
-      requestBody = { data}
+      requestBody = { data }
 
     }
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.UPLOADFILES,
       requestBody,
+      { headers }
+    );
+    // return response.data, headers;
+    return response.data;
+  },
+  // Update quick order
+  downloadAttachmentQuickOrder: async (
+    downloaddata: any
+    // data: JSON | QuickOrderUpdateInput
+  ): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    // Here we are getting the file uploaded details and want to send the data to API headers
+    console.log("Download Doc---", downloaddata);
+    // console.log("Upload Doc---", headers);
+
+    let requestBody: any;
+    let headers: any = {};
+
+    // Check if data is FormData (file upload) or regular object
+    // if (data instanceof FormData) {
+      let body :any= JSON.stringify(downloaddata);
+      headers = {
+        "accept": "text/plain",
+        "Is_JSON_Format": "true",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "context-lang-id": "1",
+        "context-ou-id": userContext.ouId,
+        "context-role-name": userContext.roleName,
+      };
+    
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.DOWNLOADFILE,
+      body,
       { headers }
     );
     // return response.data, headers;
@@ -686,7 +720,7 @@ export const quickOrderService = {
           FilterName: "Resource",
           FilterValue: params?.ResourceId,
         }
-       ]: params?.additionalFilter || [],
+      ] : params?.additionalFilter || [],
       Pagination: {
         PageNumber: params?.offset,
         PageSize: params?.limit,
@@ -695,7 +729,7 @@ export const quickOrderService = {
     const requestBody = {
       RequestData: stringifyData,
     };
- 
+
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.COMBO,
       requestBody
