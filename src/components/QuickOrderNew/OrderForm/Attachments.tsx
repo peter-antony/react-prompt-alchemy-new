@@ -364,10 +364,11 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
       formData.append("Filename", file.AttachUniqueName);
 
       console.log("➡️ FormData sent:", formData);
-
+      const token = JSON.parse(localStorage.getItem('token') || '{}');
       const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${token.access_token}`,
           Accept: "application/json",
           Is_JSON_Format: "true",
         },
