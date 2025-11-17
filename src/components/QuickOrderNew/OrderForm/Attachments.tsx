@@ -407,27 +407,27 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
       //     throw new Error("⚠️ FileData is null — backend did not return actual file data");
       //   }
 
-        const b64 = resp1.data.FileData;
-        const mime = resp1.ContentType || "application/octet-stream";
+      const b64 = resp1.data.FileData;
+      // const mime = resp1.ContentType || "application/octet-stream";
+      const mime = getMimeType(resp1.data.FileName)
+      const byteChars = atob(b64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++)
+        byteNumbers[i] = byteChars.charCodeAt(i);
 
-        const byteChars = atob(b64);
-        const byteNumbers = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++)
-          byteNumbers[i] = byteChars.charCodeAt(i);
+      const byteArray = new Uint8Array(byteNumbers);
+      let blob = new Blob([byteArray], { type: mime });
 
-        const byteArray = new Uint8Array(byteNumbers);
-       let  blob = new Blob([byteArray], { type: mime });
-
-        filename =  filename;
+      filename = filename;
       // } else {
       //   blob = await resp.blob();
       // }
 
       // console.log("✅ File ready:", { filename, blobType: blob.type, size: blob.size });
-     
-     
+
+
       // const blob = base64ToBlob(resp1?.FileData, "application/json");
-      
+
       // Convert base64 → PDF blob
       // const blob = base64ToBlob(resp1?.FileData, "application/pdf");
 
@@ -437,6 +437,23 @@ const Attachments = ({ isEditQuickOrder, isResourceGroupAttchment, isResourceID 
     } catch (err) {
       console.error("❌ Download failed:", err);
       throw err;
+    }
+  }
+  function getMimeType(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+
+    switch (ext) {
+      case "pdf": return "application/pdf";
+      case "xls": return "application/vnd.ms-excel";
+      case "xlsx": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      case "csv": return "text/csv";
+      case "jpg":
+      case "jpeg": return "image/jpeg";
+      case "png": return "image/png";
+      case "txt": return "text/plain";
+      case "doc": return "application/msword";
+      case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      default: return "application/octet-stream"; // fallback
     }
   }
   function base64ToBlob(base64: string, contentType = "application/pdf") {

@@ -104,7 +104,7 @@ const Attachments = ({
 
   const getAttachments = async () => {
     const response = await tripService.getAttachments(tripUniqueID);
-    const res : any= response.data;
+    const res: any = response.data;
     console.log("GET ALL ATTACHMENTS : ", response.data);
     setLoading(true);
     const parsedData = JSON.parse(res?.ResponseData) || [];
@@ -133,7 +133,7 @@ const Attachments = ({
         console.log(formData);
         const data: any =
           await quickOrderService.updateAttachmentQuickOrderResource(formData);
-        console.log("FIRST UPDATE RESPONSE :",data)
+        console.log("FIRST UPDATE RESPONSE :", data)
         // Send to API with FormData containing binary file
         const uploadedFiles = {
           AttachItemID: -1,
@@ -146,7 +146,7 @@ const Attachments = ({
           Remarks: file.remarks,
         };
 
-        
+
 
         // Add other metadata
         formData.append("AttachmentType", uploadedFiles.AttachName);
@@ -252,151 +252,56 @@ const Attachments = ({
     }
   };
 
-  // const handleDownload = async (file: any) => {
-  //     try {
-  //       const response = await fetch(file.downloadUrl);
-  //       const blob = await response.blob();
-  //       const url = window.URL.createObjectURL(blob);
-
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.download = file.fileName || "downloaded_file";
-  //       document.body.appendChild(link);
-  //       link.click();
-
-  //       // Cleanup
-  //       document.body.removeChild(link);
-  //       window.URL.revokeObjectURL(url);
-  //     } catch (error) {
-  //       console.error("Error downloading file:", error);
-  //     }
-  //   };
-  // async function handleDownload(file) {
-  //     try {
-  //         // adjust headers/credentials if your API requires auth/cookies
-  //         const resp = await fetch(file.downloadUrl, {
-  //             credentials: 'include',
-  //             // headers: { Authorization: `Bearer ${token}` },
-  //         });
-
-  //         console.log('HTTP status:', resp.status, resp.statusText);
-  //         const contentType = resp.headers.get('content-type') || '';
-  //         const contentDisp = resp.headers.get('content-disposition') || '';
-  //         console.log('Content-Type:', contentType);
-  //         console.log('Content-Disposition:', contentDisp);
-
-  //         // peek at start of body to see if it's HTML or JSON (clone so we can still read blob)
-  //         const peek = await resp.clone().text();
-  //         console.log('Response body preview (first 300 chars):', peek.slice(0, 300));
-
-  //         if (!resp.ok) {
-  //             throw new Error(`Server returned ${resp.status}`);
-  //         }
-
-  //         // If server returned JSON containing base64 file data
-  //         if (contentType.includes('application/json')) {
-  //             const json = await resp.json();
-  //             // try common fields where base64 might be found
-  //             const b64 = json.base64 || json.data || json.file || json.fileBase64 || null;
-  //             const mime = json.contentType || json.mime || 'application/octet-stream';
-  //             if (!b64) throw new Error('JSON response but no base64 field found');
-
-  //             // decode base64 -> blob
-  //             const byteChars = atob(b64);
-  //             const byteNumbers = new Array(byteChars.length);
-  //             for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-  //             const byteArray = new Uint8Array(byteNumbers);
-  //             const blob = new Blob([byteArray], { type: mime });
-  //             const filename = file.fileName || (json.fileName || 'downloaded_file');
-  //             downloadBlob(blob, filename);
-  //             return;
-  //         }
-
-  //         // Otherwise assume binary blob
-  //         const blob = await resp.blob();
-  //         console.log('Blob type:', blob.type, 'size:', blob.size);
-
-  //         // Determine filename:
-  //         let filename = file.fileName || 'downloaded_file';
-  //         // try extract from content-disposition: e.g. attachment; filename="abc.pdf"
-  //         const fnameFromHeader = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/i.exec(contentDisp);
-  //         if (fnameFromHeader) {
-  //             filename = decodeURIComponent((fnameFromHeader[1] || fnameFromHeader[2] || fnameFromHeader[3] || '').trim());
-  //         } else {
-  //             // add extension based on blob.type if missing
-  //             if (!filename.includes('.') && blob.type) {
-  //                 const ext = mimeToExt(blob.type);
-  //                 if (ext) filename = `${filename}.${ext}`;
-  //             }
-  //         }
-
-  //         downloadBlob(blob, filename);
-  //     } catch (err) {
-  //         console.error('download error:', err);
-  //     }
-  // }
-
-  // function downloadBlob(blob, filename = 'downloaded_file') {
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = filename;
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     a.remove();
-  //     window.URL.revokeObjectURL(url);
-  //     console.log('Downloaded as:', filename);
-  // }
-
+ 
   // Inside Attachment.tsx (can be inside the component as const function)
-async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
-  console.log("📦 Download request started...");
-  console.log("➡️ File object received:", file);
+  async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
+    console.log("📦 Download request started...");
+    console.log("➡️ File object received:", file);
 
-  try {
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    // ✅ Correct fields
-    formData.append("Filecategory", file.category);
-    formData.append("Filename", file.AttachUniqueName);
-    const bodyData = {
-      filecategory: file.category,
-      filename: file.AttachUniqueName,
-    };
-    const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData)
-    console.log("➡️ FormData sent:", formData);
-    // const token = JSON.parse(localStorage.getItem('token') || '{}');
-    // const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
-    //   method: "POST",
-    //   headers: {
-    //     Authorization: `Bearer ${token.access_token}`,
-    //     Accept: "application/json",
-    //     Is_JSON_Format: "true",
-    //   },
-    //   body: formData,
-    // });
+      // ✅ Correct fields
+      formData.append("Filecategory", file.category);
+      formData.append("Filename", file.AttachUniqueName);
+      const bodyData = {
+        filecategory: file.category,
+        filename: file.AttachUniqueName,
+      };
+      const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData)
+      console.log("➡️ FormData sent:", formData);
+      // const token = JSON.parse(localStorage.getItem('token') || '{}');
+      // const resp = await fetch(`${API_CONFIG.BASE_URL+API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`, {
+      //   method: "POST",
+      //   headers: {
+      //     Authorization: `Bearer ${token.access_token}`,
+      //     Accept: "application/json",
+      //     Is_JSON_Format: "true",
+      //   },
+      //   body: formData,
+      // });
 
-    // console.log("🌐 HTTP status:", resp.status, resp.statusText);
+      // console.log("🌐 HTTP status:", resp.status, resp.statusText);
 
-    // if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+      // if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
 
-    // const contentType = resp.headers.get("content-type") || "";
-    // console.log("📑 Content-Type:", contentType);
-    console.log("RESP 2222:", resp1);
-    let blob: Blob;
-    let filename =  file.fileName || "downloaded_file";
+      // const contentType = resp.headers.get("content-type") || "";
+      // console.log("📑 Content-Type:", contentType);
+      console.log("RESP 2222:", resp1);
+      let blob: Blob;
+      let filename = file.fileName || "downloaded_file";
 
-    // if (contentType.includes("application/json")) {
-    //   const json = await resp.json();
-    //   console.log("🧾 JSON response:", json);
+      // if (contentType.includes("application/json")) {
+      //   const json = await resp.json();
+      //   console.log("🧾 JSON response:", json);
 
-    //   if (!json.FileData) {
-    //     throw new Error("⚠️ FileData is null — backend did not return actual file data");
-    //   }
+      //   if (!json.FileData) {
+      //     throw new Error("⚠️ FileData is null — backend did not return actual file data");
+      //   }
 
       const b64 = resp1.data.FileData;
-      const mime = resp1.ContentType || "application/octet-stream";
-
+      // const mime = resp1.ContentType || "application/octet-stream";
+      const mime =  getMimeType(resp1.data.FileName);
       const byteChars = atob(b64);
       const byteNumbers = new Array(byteChars.length);
       for (let i = 0; i < byteChars.length; i++)
@@ -405,41 +310,38 @@ async function handleDownload(file): Promise<{ blob: Blob; filename: string }> {
       const byteArray = new Uint8Array(byteNumbers);
       blob = new Blob([byteArray], { type: mime });
 
-      filename =  filename;
-    // } else {
-    //   blob = await resp.blob();
-    // }
+      filename = filename;
+      // } else {
+      //   blob = await resp.blob();
+      // }
 
-    console.log("✅ File ready:", { filename, blobType: blob.type, size: blob.size });
+      console.log("✅ File ready:", { filename, blobType: blob.type, size: blob.size });
 
-    return { blob, filename };
-  } catch (err) {
-    console.error("❌ Download failed:", err);
-    throw err;
+      return { blob, filename };
+    } catch (err) {
+      console.error("❌ Download failed:", err);
+      throw err;
+    }
   }
-}
+  function getMimeType(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase();
 
-
-  function mimeToExt(mime) {
-    mime = (mime || "").toLowerCase();
-    if (mime.includes("pdf")) return "pdf";
-    if (mime.includes("png")) return "png";
-    if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
-    if (mime.includes("zip")) return "zip";
-    if (
-      mime.includes("excel") ||
-      mime.includes("spreadsheet") ||
-      mime.includes("xlsx")
-    )
-      return "xlsx";
-    if (
-      mime.includes("word") ||
-      mime.includes("msword") ||
-      mime.includes("doc")
-    )
-      return "docx";
-    return "";
+    switch (ext) {
+      case "pdf": return "application/pdf";
+      case "xls": return "application/vnd.ms-excel";
+      case "xlsx": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      case "csv": return "text/csv";
+      case "jpg":
+      case "jpeg": return "image/jpeg";
+      case "png": return "image/png";
+      case "txt": return "text/plain";
+      case "doc": return "application/msword";
+      case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      default: return "application/octet-stream"; // fallback
+    }
   }
+
+
 
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full h-full pr-6 bg-[#f8fafd]">
