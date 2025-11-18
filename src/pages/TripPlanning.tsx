@@ -49,7 +49,7 @@ import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedr
 
 const TripPlanning = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
@@ -183,6 +183,43 @@ const TripPlanning = () => {
       console.log("🔗 URL Manage flag extracted:", manageFlag);
     }
   }, [urlTripID, manageFlag]);
+  // Ref to store the timeout for debouncing trip ID changes
+  const tripIdChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handler for trip ID change when urlTripID exists
+  const handleTripIdChange = async (newTripId: string) => {
+    if (!newTripId || newTripId.trim() === '') {
+      return;
+    }
+
+    // Clear existing timeout
+    if (tripIdChangeTimeoutRef.current) {
+      clearTimeout(tripIdChangeTimeoutRef.current);
+    }
+
+    // Debounce the API call - wait 800ms after user stops typing
+    tripIdChangeTimeoutRef.current = setTimeout(async () => {
+      try {
+        // Update URL with new trip ID
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('tripId', newTripId);
+        setSearchParams(newSearchParams);
+        
+        // Call getTrip API with the new trip ID
+        await getTripDataByID(newTripId);
+        
+        console.log('✅ Trip ID changed and data fetched:', newTripId);
+      } catch (error) {
+        console.error('❌ Failed to fetch trip data for new ID:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch trip data. Please check the trip ID and try again.",
+          variant: "destructive",
+        });
+      }
+    }, 800);
+  };
+
   const getTripDataByID = async (tripID: string) => {
     console.log("Inside getTripDataByID")
     const response: any = await tripPlanningService.getTripDataByID(tripID);
@@ -194,6 +231,12 @@ const TripPlanning = () => {
     setTripInformation(
       data
     )
+    // Update tripNo state with the trip ID from API response or the passed tripID
+    if (tripNoFromAPI) {
+      setTripNo(tripNoFromAPI);
+    } else {
+      setTripNo(tripID);
+    }
     console.log('tripInformation=====', tripInformation);
     let otherInfoData: any = {};
 
@@ -2696,7 +2739,14 @@ const TripPlanning = () => {
                         ? tripNo
                         : ''
                     }
-                    onChange={(e) => setTripNo(e.target.value)}
+                    onChange={(e) => {
+                      const newTripId = e.target.value;
+                      setTripNo(newTripId);
+                      // Only handle onChange when urlTripID exists (coming from ManageTrip)
+                      if (urlTripID && newTripId && newTripId.trim() !== '') {
+                        handleTripIdChange(newTripId);
+                      }
+                    }}
                     className="pr-10"
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -2741,7 +2791,7 @@ const TripPlanning = () => {
                 </Button> */}
                 <Popover open={listPopoverOpen} onOpenChange={setListPopoverOpen}>
                   <PopoverTrigger asChild>
-                    {urlTripID &&
+                    {(urlTripID || tripNo) &&
                       (<Button
                         variant="ghost"
                         size="icon"
@@ -2754,22 +2804,6 @@ const TripPlanning = () => {
                   </PopoverTrigger>
                   <PopoverContent side="bottom" align="end" className="p-2 w-full">
                     <div className="flex flex-col gap-1">
-                      <button onClick={() => {
-                        console.log('VAS');
-                        openDrawer('vas-trip');
-                        setListPopoverOpen(false);
-                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
-                        <Settings className="h-4 w-4" />
-                        <span>VAS</span>
-                      </button>
-                      <button onClick={() => {
-                        console.log('Supplier Billing');
-                        openDrawer('train-parameters');
-                        setListPopoverOpen(false);
-                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
-                        <TramFront className="h-4 w-4" />
-                        <span>Train Parameters</span>
-                      </button>
                       <button onClick={() => {
                         console.log('Leg and Events');
                         openDrawer('leg-and-events');
@@ -2786,6 +2820,22 @@ const TripPlanning = () => {
                       }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <Route className="h-4 w-4" />
                         <span>Transport Route Update</span>
+                      </button>
+                      <button onClick={() => {
+                        console.log('Supplier Billing');
+                        openDrawer('train-parameters');
+                        setListPopoverOpen(false);
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <TramFront className="h-4 w-4" />
+                        <span>Train Parameters</span>
+                      </button>
+                      <button onClick={() => {
+                        console.log('VAS');
+                        openDrawer('vas-trip');
+                        setListPopoverOpen(false);
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <Settings className="h-4 w-4" />
+                        <span>VAS</span>
                       </button>
                     </div>
                   </PopoverContent>
