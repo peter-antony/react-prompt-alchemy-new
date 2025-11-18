@@ -146,20 +146,35 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
       order: 9
     },
     {
+      key: "DepartureTime",
+      label: "Departure Time",
+      type: "Date",
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
       key: "ArrivalDate",
       label: "Arrival Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 10
+    },
+    {
+      key: "ArrivalTime",
+      label: "Arrival Time",
+      type: "Date",
+      sortable: true,
+      editable: false,
+      subRow: false,
     },
     {
       key: "ShuntedOutEquipmentNo",

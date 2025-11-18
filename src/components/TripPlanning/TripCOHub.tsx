@@ -134,20 +134,35 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
       order: 11
     },
     {
-      key: "ArrivalDate",
-      label: "Arrival Date",
-      type: "DateTimeRange",
+      key: "DepartureTime",
+      label: "Departure Time",
+      type: "Text",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 12
+    },
+    {
+      key: "ArrivalDate",
+      label: "Arrival Date",
+      type: "Date",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "ArrivalTime",
+      label: "Arrival Time",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
     },
     {
       key: "ShuntedOutEquipmentNo",

@@ -157,20 +157,35 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
     {
       key: "DepartureDate",
       label: "Departure Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
       order: 9
     },
     {
-      key: "ArrivalDate",
-      label: "Arrival Date",
-      type: "DateTimeRange",
+      key: "DepartureTime",
+      label: "Departure Time",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 10
+    },
+    {
+      key: "ArrivalDate",
+      label: "Arrival Date",
+      type: "Date",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "ArrivalTime",
+      label: "Arrival Time",
+      type: "Date",
+      sortable: true,
+      editable: false,
+      subRow: false,
     },
     {
       key: "ShuntedOutEquipmentNo",
