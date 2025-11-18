@@ -25,23 +25,23 @@ import { useToast } from '@/hooks/use-toast';
 import { manageTripStore } from "@/stores/mangeTripStore";
 // import { console } from "inspector";
  
-/* ---------------- ICON HANDLER ---------------- */
+// File icon 
 const getFileIcon = (mime: string) => {
-  if (!mime) return <FileText className="text-gray-500 w-6 h-6" />;
- 
-  if (mime.includes("pdf"))
-    return <FileText className="text-red-500 w-6 h-6" />;
- 
-  if (
-    mime.includes("spreadsheet") ||
-    mime.includes("excel") ||
-    mime.includes("sheet")
-  )
+  const m = (mime || "").toLowerCase();
+  if (!m) return <FileText className="text-gray-500 w-6 h-6" />;
+  if (m.includes("pdf") || m === "pdf") return <FileText className="text-red-500 w-6 h-6" />;
+  if (m.includes("spreadsheet") || m.includes("excel") || m.includes("sheet") || m === "xls" || m === "xlsx")
     return <BookPlus className="text-green-500 w-6 h-6" />;
- 
-  if (mime.includes("image"))
+  if (
+    m.includes("image") ||
+    m === "jpg" ||
+    m === "jpeg" ||
+    m === "png" ||
+    m === "gif" ||
+    m === "bmp" ||
+    m === "webp"
+  )
     return <FileImage className="text-orange-400 w-6 h-6" />;
- 
   return <FileText className="text-gray-500 w-6 h-6" />;
 };
  
@@ -59,7 +59,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
  
   const fileInputRef = useRef<HTMLInputElement>(null);
  
-  /* ---------------- WAGON LIST WITH SEPARATE ATTACHMENTS ---------------- */
+  
   // useEffect(() => {
   //   fetchPODStatusOptions({
   //     searchTerm: "",
@@ -70,6 +70,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
  
   const [selectedWagonIndex, setSelectedWagonIndex] = useState(0);
   const [attachItems, setAttachItems] = useState([]);
+  const [stagedAttachItems, setStagedAttachItems] = useState<any[]>([]);
  
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -98,23 +99,55 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
     if (newFiles.length === 0) return;
 
-    setWagonList((prev) => {
-      const updated = [...prev];
-      const current = updated[selectedWagonIndex];
-      if (!current) return prev;
-      current.attachments = [...(current.attachments || []), ...newFiles];
-      return updated;
-    });
+    setStagedAttachItems((prev) => [...prev, ...newFiles]);
   };
  
-  const deleteFile = (index: number) => {
-    setWagonList((prev) => {
-      const updated = [...prev];
-      const current = updated[selectedWagonIndex];
-      if (!current || !Array.isArray(current.attachments)) return prev;
-      current.attachments = current.attachments.filter((_, i) => i !== index);
-      return updated;
-    });
+  const deleteStagedFile = (index: number) => {
+    setStagedAttachItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const deleteSavedFile = async (index: number) => {
+    try {
+      const file: any = (attachItems || [])[index];
+      if (!file) return;
+
+      const item = {
+        AttachItemID: file?.rawItem?.AttachItemID ?? null,
+        AttachmentType: file?.AttachmentType || file?.rawItem?.AttachmentType || "",
+        FileCategory: file?.rawItem?.FileCategory || "POD",
+        AttachName: file?.AttachName || file?.rawItem?.AttachName || "",
+        AttachUniqueName: file?.AttachUniqueName || file?.rawItem?.Attachuniquename || file?.rawItem?.AttachUniqueName,
+        AttachRelPath: file?.AttachRelPath || file?.rawItem?.Attachrelpath || file?.rawItem?.AttachRelPath,
+        Remarks: null,
+        ModeFlag: "Delete",
+        RefDocType1: "Legno",
+        RefDocNo1: Number(legNumber),
+        RefDocType2: "DispatchDoc",
+        RefDocNo2: resolvedDispatchDocNo || dispatchDocNo || "",
+        RefDocType3: "CustomerOrderNo",
+        RefDocNo3: customerOrderNo,
+      };
+
+      const saveRes = await tripService.savePODLegAttachments({
+        TripNo: tripNo,
+        LegNumber: legNumber,
+        CustomerOrderNo: customerOrderNo,
+        DispatchDocNo: resolvedDispatchDocNo || dispatchDocNo || "",
+        WagonID: "",
+        AttachItems: [item],
+      });
+
+      const success = (saveRes as any)?.IsSuccess || (saveRes as any)?.data?.IsSuccess;
+      if (!success) {
+        toast({ title: "Delete Failed", description: (saveRes as any)?.Message || "Could not delete attachment.", variant: "destructive" });
+        return;
+      }
+
+      await refreshAttachmentsFromServer();
+      toast({ title: "Attachment Deleted", description: "File deleted successfully.", variant: "default" });
+    } catch (error) {
+      toast({ title: "Delete Failed", description: "An error occurred while deleting attachment.", variant: "destructive" });
+    }
   };
 
   const buildWagonPayloadForSave = (applyAll: boolean = false) => {
@@ -199,13 +232,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
   const handleSaveAttachments = async () => {
     try {
-      const current = wagonList[selectedWagonIndex];
-      if (!current) {
-        toast({ title: "No Wagon Selected", description: "Select a wagon to save attachments.", variant: "destructive" });
-        return;
-      }
-
-      const staged = (current.attachments || []).filter((f: any) => !!f.rawFile);
+      const staged = (stagedAttachItems || []).filter((f: any) => !!f.rawFile);
       if (staged.length === 0) {
         toast({ title: "No New Files", description: "No newly uploaded files to save.", variant: "default" });
         return;
@@ -260,7 +287,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         LegNumber: legNumber,
         CustomerOrderNo: customerOrderNo,
         DispatchDocNo: resolvedDispatchDocNo || dispatchDocNo || "",
-        WagonID: current.WagonID,
+        WagonID: "",
         AttachItems: attachItems,
       });
 
@@ -270,40 +297,88 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         return;
       }
 
-      // Refresh attachment list from server and bind to UI
-      try {
-        const attRes = await tripService.getPODLegAttachments({
-          TripNo: tripNo,
-          LegNumber: legNumber,
-          CustomerOrderNo: customerOrderNo,
-          DispatchDocNo: resolvedDispatchDocNo || dispatchDocNo || "",
-        });
-        const attParsed = attRes?.data?.ResponseData ? JSON.parse(attRes.data.ResponseData) : attRes?.data || {};
-        console.log("attParsed", attParsed);
-        const attachItemsServer: any[] = Array.isArray(attParsed?.AttachItems) ? attParsed.AttachItems : [];
-        const filesForThisWagon = attachItemsServer.filter((it) => (it?.RefDocNo4 ?? current.WagonID) === current.WagonID);
-        const mapped = filesForThisWagon.map((it) => ({
-          fileName: it?.AttachName || "",
-          type: it?.AttachmentType || "",
-          size: "",
-          date: "",
-          downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
-          rawItem: it,
-        }));
-        setWagonList((prev) => {
-          const up = [...prev];
-          if (up[selectedWagonIndex]) {
-            up[selectedWagonIndex] = { ...up[selectedWagonIndex], attachments: mapped };
-          }
-          return up;
-        });
-      } catch (e) {
-        // If refresh fails, leave staged files as-is
-      }
+      await refreshAttachmentsFromServer();
+      setStagedAttachItems([]);
 
       toast({ title: "Attachments Saved", description: `${attachItems.length} file(s) saved successfully.`, variant: "default" });
     } catch (error) {
       toast({ title: "Save Failed", description: "An error occurred while saving attachments.", variant: "destructive" });
+    }
+  };
+
+  const refreshAttachmentsFromServer = async () => {
+    const attRes = await tripService.getPODLegAttachments({
+      TripNo: tripNo,
+      LegNumber: legNumber,
+      CustomerOrderNo: customerOrderNo,
+      DispatchDocNo: resolvedDispatchDocNo || dispatchDocNo || "",
+    });
+    const attParsed = attRes?.data?.ResponseData ? JSON.parse(attRes.data.ResponseData) : attRes?.data || {};
+    const attachItemsServer: any[] = Array.isArray(attParsed?.AttachItems) ? attParsed.AttachItems : [];
+    const mapped = attachItemsServer.map((it) => ({
+      AttachName: it?.AttachName || "",
+      AttachmentType: (it?.AttachmentType || "").toString().toLowerCase(),
+      AttachUniqueName: it?.AttachUniqueName || it?.Attachuniquename,
+      AttachRelPath: it?.AttachRelPath || it?.Attachrelpath,
+      downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
+      rawItem: it,
+    }));
+    setAttachItems(mapped);
+  };
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getMimeType = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case "pdf": return "application/pdf";
+      case "xls": return "application/vnd.ms-excel";
+      case "xlsx": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      case "csv": return "text/csv";
+      case "jpg":
+      case "jpeg": return "image/jpeg";
+      case "png": return "image/png";
+      case "txt": return "text/plain";
+      case "doc": return "application/msword";
+      case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      default: return "application/octet-stream";
+    }
+  };
+
+  const handleDownload = async (file: any): Promise<{ blob: Blob; filename: string }> => {
+    const bodyData = {
+      filecategory: file.category,
+      filename: file.AttachUniqueName,
+    };
+    const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData);
+    const b64 = resp1.data.FileData;
+    const mime = getMimeType(resp1.data.FileName);
+    const byteChars = atob(b64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mime });
+    const filename = file.fileName || resp1.data.FileName || "downloaded_file";
+    return { blob, filename };
+  };
+
+  const onDownloadSaved = async (file: any) => {
+    try {
+      const { blob, filename } = await handleDownload({
+        category: "POD",
+        AttachUniqueName: file.AttachUniqueName,
+        fileName: file.AttachName,
+      });
+      downloadBlob(blob, filename);
+    } catch (e) {
+      toast({ title: "Download Failed", description: "Could not download attachment.", variant: "destructive" });
     }
   };
  
@@ -456,30 +531,16 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
           DispatchDocNo: refDispatchDocNo,
         });
         const attParsed = attRes?.data?.ResponseData ? JSON.parse(attRes.data.ResponseData) : attRes?.data || {};
-        console.log("attachments", attParsed);
-        const attachItems: any[] = Array.isArray(attParsed?.AttachItems) ? attParsed.AttachItems : [];
-        console.log("attachItems", attachItems);
-        setAttachItems(attachItems);
-        const byWagon: Record<string, any[]> = {};
-        attachItems.forEach((item) => {
-          const key = item?.RefDocNo4 || "";
-          if (!byWagon[key]) byWagon[key] = [];
-          byWagon[key].push(item);
-        });
-        setWagonList((prev) =>
-          prev.map((w) => {
-            const items = byWagon[w.WagonID] || [];
-            const files = items.map((it) => ({
-              fileName: it?.AttachName || "",
-              type: it?.AttachmentType || "",
-              size: "",
-              date: "",
-              downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
-              rawItem: it,
-            }));
-            return { ...w, attachments: files };
-          })
-        );
+        const attachItemsServer: any[] = Array.isArray(attParsed?.AttachItems) ? attParsed.AttachItems : [];
+        const mapped = attachItemsServer.map((it) => ({
+          AttachName: it?.AttachName || "",
+          AttachmentType: (it?.AttachmentType || "").toString().toLowerCase(),
+          AttachUniqueName: it?.AttachUniqueName || it?.Attachuniquename,
+          AttachRelPath: it?.AttachRelPath || it?.Attachrelpath,
+          downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
+          rawItem: it,
+        }));
+        setAttachItems(mapped);
       } catch (e) {
         // silently ignore attachment load errors
       }
@@ -543,7 +604,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
                   <div className="text-xs text-muted-foreground">{w.WagonID}</div>
                 </div>
  
-                <Badge variant="secondary">{w.PODStatusDescription || w.PODStatus}</Badge>
+                <Badge variant="secondary"></Badge>
               </button>
             ))}
           </div>
@@ -640,7 +701,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
  
         <div className="mt-4">
           <label className="text-sm font-medium mb-3 block">Attachment</label>
- 
+
           <div
             className="border-2 border-dashed border-blue-200 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-blue-50 cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
@@ -648,16 +709,16 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
             <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center mb-2">
               <UploadCloud className="w-7 h-7 p-1 text-gray-500 bg-gray-200 rounded-full" />
             </div>
- 
+
             <span className="text-blue-600 font-medium text-sm">
               Click to Upload
             </span>
             <span className="text-gray-500 text-sm"> or drag & drop</span>
- 
+
             <p className="text-xs text-gray-400 mt-2">
               Supports all file types (Max 2 MB)
             </p>
- 
+
             <input
               ref={fileInputRef}
               type="file"
@@ -667,39 +728,70 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
               className="hidden"
             />
           </div>
- 
+
+          {((stagedAttachItems || []).length > 0) && (
+            <div className="mt-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {(stagedAttachItems || []).map((file: any, index: number) => (
+                  file?.rawFile ? (
+                    <div key={`staged-${index}`} className="p-4 border rounded-lg bg-white">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                        <div className="flex gap-3 items-start md:items-center">
+                          <div className="p-2 bg-gray-100 rounded h-10 w-10 flex items-center justify-center">
+                            {getFileIcon(file.type || file.rawFile?.type || "")}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm truncate">
+                              {file.fileName || file.rawFile?.name}
+                            </h4>
+                            <p className="text-xs text-gray-500">Not saved yet</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          {/* <a
+                            href={file.blobUrl}
+                            download={file.fileName}
+                            className="text-blue-600"
+                          >
+                            <DownloadCloud className="w-4 h-4" />
+                          </a> */}
+                          <button onClick={() => deleteStagedFile(index)} className="text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-4">
             <div className="text-lg font-semibold mb-2">
-              Attached Files 
+              Attached Files
               {/* ({wagonList[selectedWagonIndex]?.WagonTypeDescription || '-'}) */}
             </div>
- 
-            <div className="grid gap-4 sm:grid-cols-1">
-              {(attachItems || []).map((file, index) => (
-                <div  className="p-4 border rounded-lg bg-white">
-                  <div className="flex flex-col md:flex-row md:justify-between gap-3">
-                    <div className="flex gap-3 items-start">
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {(attachItems || []).map((file: any, index: number) => (
+                <div key={`saved-${index}`} className="p-4 border rounded-lg bg-white">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                    <div className="flex gap-3 items-start md:items-center">
                       <div className="p-2 bg-gray-100 rounded h-10 w-10 flex items-center justify-center">
-                        {getFileIcon(file.type)}
+                        {getFileIcon(file.AttachmentType)}
                       </div>
- 
                       <div className="flex-1">
                         <h4 className="font-medium text-sm truncate">
                           {file.AttachName}
                         </h4>
-                        {/* <div className="text-xs text-gray-500">
-                          {file.size} • {file.date}
-                        </div> */}
                       </div>
                     </div>
- 
-                    {/* ACTION BUTTONS */}
-                    <div className="flex gap-3 self-end md:self-auto">
-                      <a href={file.downloadUrl || file.blobUrl} download={file.fileName}>
+                    <div className="flex gap-3">
+                      <button onClick={() => onDownloadSaved(file)} className="text-blue-600">
                         <DownloadCloud className="w-4 h-4" />
-                      </a>
- 
-                      <button onClick={() => deleteFile(index)}>
+                      </button>
+                      <button onClick={() => deleteSavedFile(index)} className="text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -707,9 +799,10 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
                 </div>
               ))}
             </div>
+
           </div>
         </div>
- 
+
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" onClick={() => handleApplyAllPODSave()}>Apply to All</Button>
           <Button onClick={() => handleSavePODAndAttachments()}>Save</Button>
