@@ -220,7 +220,7 @@ export const ActionIconBar = () => {
           <MoreInfoPanel data={''} />
         </div>
       </SideDrawer>
-      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent="QO/00001/2025" onScrollPanel={true} isBadgeRequired={true}>
+      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
             <div className="">
               <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} /></div>
             </div>
