@@ -1233,7 +1233,7 @@ const TripPlanning = () => {
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
     { label: 'Transport Planning and Execution', href: '/trip-hub', active: false }, // Updated breadcrumb
-    { label: 'Trip Planning', active: true } // Updated breadcrumb
+    { label: 'Transport Planning', active: true } // Updated breadcrumb
   ];
 
   // Generic fetch function for master common data using quickOrderService.getMasterCommonData
