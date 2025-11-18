@@ -90,6 +90,7 @@ const QuickOrderManagement = () => {
   const [secondaryDocOptions, setSecondaryDocOptions] = useState<any[]>([]);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [quickResourceId, setQuickResourceId] = useState<string>('');
+  const pageSize = 25;
   const GitPullActionButton = () => {
     return (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1268,7 +1269,7 @@ const QuickOrderManagement = () => {
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
                 gridId="quick-order-management"
                 userId="current-user"
-                customPageSize="25"
+                customPageSize={pageSize}
                 api={filterService}
               />
               {/* {!filtersLoading ? ( */}
