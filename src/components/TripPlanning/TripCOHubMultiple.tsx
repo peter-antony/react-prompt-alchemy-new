@@ -1185,7 +1185,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
                   border-left: 4px solid orange !important;
                 }
                 tr[data-row-id="${rowId}"]:hover {
-                  background-color: #ffa50026 !important;
+                  background-color: #ffa50026 !important; 
                 }
               `;
             }).join('\n')}
