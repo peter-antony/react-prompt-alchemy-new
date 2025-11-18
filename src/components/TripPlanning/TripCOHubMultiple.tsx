@@ -1181,11 +1181,11 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
             ${Array.from(selectedRowIds).map((rowId) => {
               return `
                 tr[data-row-id="${rowId}"] {
-                  background-color: #eff6ff !important;
-                  border-left: 4px solid #3b82f6 !important;
+                  background-color: #ffa50026 !important;
+                  border-left: 4px solid orange !important;
                 }
                 tr[data-row-id="${rowId}"]:hover {
-                  background-color: #dbeafe !important;
+                  background-color: #ffa50026 !important;
                 }
               `;
             }).join('\n')}
