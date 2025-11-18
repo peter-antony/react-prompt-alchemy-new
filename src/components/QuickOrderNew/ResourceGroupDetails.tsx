@@ -999,6 +999,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                 // jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
                 const fullJson2 = jsonStore.getJsonData();
                 console.log("RESOURCE SAVE --- FULL JSON 33:: ", fullJson2);
+                // Dispatch custom event to refresh footer data
+                window.dispatchEvent(new CustomEvent('refreshFooterData'));
                 onSaveSuccess();
               })
               // onSaveSuccess();

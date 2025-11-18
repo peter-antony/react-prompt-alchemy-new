@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import CommonPopup from '@/components/Common/CommonPopup';
 import { NotebookPen } from 'lucide-react';
 import { json } from 'stream/consumers';
+import { format } from "date-fns";
 
 const CreateQuickOrder = () => {
   const navigate = useNavigate();
@@ -35,12 +36,30 @@ const CreateQuickOrder = () => {
   const [fetchedQuickOrderData, setFetchedQuickOrderData] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const [footerLabelData, setFooterLabelData] = useState({"CreatedBy":'','CreatedDate':'','LastModifiedBy':'','LastmodifiedDate':''});
   const messageTypes = [
     // "Quick Order Billing Type Init",
     "Quick Order Amend Reason Code Init",
   ];
 
   const newQuickOrderRef = React.useRef<NewQuickOrderHandle>(null);
+  
+  // Helper function to update footerLabelData from QuickOrder data
+  const updateFooterLabelData = (quickOrderData: any) => {
+    if (quickOrderData) {
+      let footerObj: any = {};
+      footerObj.CreatedBy = quickOrderData.CreatedBy || '';
+      footerObj.CreatedDate = quickOrderData.CreatedDate || '';
+      footerObj.LastModifiedBy = quickOrderData.LastModifiedBy || '';
+      footerObj.LastmodifiedDate = quickOrderData.LastmodifiedDate || '';
+      setFooterLabelData(footerObj);
+      console.log("Footer label data updated:", footerObj);
+    }
+  };
+
+  // function formatDate(dateString: string) {
+  //   return format(new Date(dateString), "dd-MM-yyyy HH:mm");
+  // }
 
   useEffect(() => {
     fetchAll();
@@ -60,7 +79,12 @@ const CreateQuickOrder = () => {
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
         jsonStore.setQuickOrder(fetchedQuickOrderData);
         const fullJson2 = jsonStore.getJsonData();
+
+        // Update footer label data from fetched QuickOrder
+        updateFooterLabelData((parsedData?.ResponseResult)[0]);
+
         // const storedConfirmStatus = localStorage.getItem('confirmOrder');
+        
         const storedConfirmStatus = jsonStore.getQuickOrder().Status;
         console.log("storedConfirmStatus ===", storedConfirmStatus);
         if (storedConfirmStatus === 'Confirmed') {
@@ -85,17 +109,37 @@ const CreateQuickOrder = () => {
 
     })
 
+    
+    // Update footer when footerLabelData or button states change
     setFooter({
       visible: true,
       pageName: 'Create_Quick_Order',
-      // leftButtons: [
-      //   {
-      //     label: "CIM/CUV Report",
-      //     onClick: () => console.log("CIM/CUV Report"),
-      //     type: "Icon",
-      //     iconName: 'BookText'
-      //   },
-      // ],
+      leftButtons: [
+        {
+          label: "Created By",
+          // onClick: () => console.log("CIM/CUV Report"),
+          type: "Label",
+          iconName: footerLabelData.CreatedBy
+        },
+        {
+          label: "Created Date",
+          // onClick: () => console.log("CIM/CUV Report"),
+          type: "Label",
+          iconName: format(footerLabelData.CreatedDate, "dd-MMM-yyyy")
+        },
+        {
+          label: "Last Modified By",
+          // onClick: () => console.log("CIM/CUV Report"),
+          type: "Label",
+          iconName: footerLabelData.LastModifiedBy
+        },
+        {
+          label: "Last Modified Date",
+          // onClick: () => console.log("CIM/CUV Report"),
+          type: "Label",
+          iconName: format(footerLabelData.LastmodifiedDate, "dd-MMM-yyyy")
+        },
+      ],
       rightButtons: [
         {
           label: "Cancel",
@@ -158,6 +202,10 @@ const CreateQuickOrder = () => {
         setFetchedQuickOrderData((parsedData?.ResponseResult)[0]);
         console.log("fetchedQuickOrderData ===", fetchedQuickOrderData);
         // jsonStore.setQuickOrder(fetchedQuickOrderData);
+        
+        // Update footer label data from fetched QuickOrder
+        updateFooterLabelData((parsedData?.ResponseResult)[0]);
+        
         const fullJson2 = jsonStore.getJsonData();
         // const storedConfirmStatus = localStorage.getItem('confirmOrder');
         const storedConfirmStatus = jsonStore.getQuickOrder().Status;
@@ -182,6 +230,41 @@ const CreateQuickOrder = () => {
 
     })
   }
+  
+  // Function to refresh footer data after resourceGroupDetails save
+  const refreshFooterData = React.useCallback(async () => {
+    try {
+      const orderId = jsonStore.getQuickUniqueID();
+      if (orderId) {
+        const updatedQuickOrderRes = await quickOrderService.getQuickOrder(orderId);
+        let updatedParsedData = JSON.parse((updatedQuickOrderRes as any)?.data?.ResponseData);
+        
+        if (updatedParsedData?.ResponseResult?.[0]) {
+          // Update footer label data with fresh data
+          updateFooterLabelData(updatedParsedData.ResponseResult[0]);
+          console.log("Footer data refreshed after resourceGroupDetails save");
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing footer data:", error);
+    }
+  }, []);
+
+  // Listen for custom event to refresh footer when resourceGroupDetails are saved
+  useEffect(() => {
+    const handleRefreshFooter = () => {
+      console.log("Custom event received: refreshing footer data");
+      refreshFooterData();
+    };
+
+    // Listen for custom event
+    window.addEventListener('refreshFooterData', handleRefreshFooter);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('refreshFooterData', handleRefreshFooter);
+    };
+  }, [refreshFooterData]);
   const confirmHandleAlternate = async () => {
     const fullJson = jsonStore.getQuickOrder();
     const messageType = "Quick Order Confirm";
@@ -385,6 +468,9 @@ const CreateQuickOrder = () => {
 
           // Update the fetchedQuickOrderData state to trigger re-render
           setFetchedQuickOrderData((updatedParsedData?.ResponseResult)[0]);
+
+          // Update footer label data with fresh data
+          updateFooterLabelData((updatedParsedData?.ResponseResult)[0]);
 
           // Trigger a refresh of the OrderForm component
           setRefreshTrigger(prev => prev + 1);
@@ -710,7 +796,19 @@ const CreateQuickOrder = () => {
 
           <div className="">
             {loading ?
-              <NewCreateQuickOrder ref={newQuickOrderRef} isEditQuickOrder={isEditQuickOrder} onOrderCreated={() => setIsSaveButtonDisabled(false)} onConfirm={quickOrderConfirmHandler} onSaveDraft={quickOrderSaveDraftHandler} onCancel={quickOrderCancelhandler} key={refreshTrigger} />
+              <NewCreateQuickOrder 
+                ref={newQuickOrderRef} 
+                isEditQuickOrder={isEditQuickOrder} 
+                onOrderCreated={() => {
+                  setIsSaveButtonDisabled(false);
+                  // Refresh footer data when order is created/updated
+                  refreshFooterData();
+                }} 
+                onConfirm={quickOrderConfirmHandler} 
+                onSaveDraft={quickOrderSaveDraftHandler} 
+                onCancel={quickOrderCancelhandler} 
+                key={refreshTrigger} 
+              />
               : ''
             }
           </div>

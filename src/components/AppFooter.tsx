@@ -76,6 +76,16 @@ const renderButton = (
           {config.loading ? "Loading..." : getIconButton()}
         </Button>
       );
+
+      case 'Label':
+        if (config.label === "Created By" || "Created Date" || "Last Modified By" || "Last Modified Date") {
+          return (
+            <div className="flex flex-col text-left">
+              <span className="text-xs text-gray-500">{config.label}</span>
+              <span className="text-sm font-medium">{config.iconName}</span>
+            </div>
+          )
+        }
     case "Link":
       return (
         <a
