@@ -119,25 +119,25 @@ const CreateQuickOrder = () => {
           label: "Created By",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: footerLabelData.CreatedBy
+          iconName: footerLabelData?.CreatedBy
         },
         {
           label: "Created Date",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: format(footerLabelData.CreatedDate, "dd-MMM-yyyy")
+          iconName: footerLabelData?.CreatedDate ? format(footerLabelData?.CreatedDate, "dd-MMM-yyyy") : ''
         },
         {
           label: "Last Modified By",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: footerLabelData.LastModifiedBy
+          iconName: footerLabelData?.LastModifiedBy
         },
         {
           label: "Last Modified Date",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: format(footerLabelData.LastmodifiedDate, "dd-MMM-yyyy")
+          iconName: footerLabelData?.LastmodifiedDate ? format(footerLabelData?.LastmodifiedDate, "dd-MMM-yyyy") : ''
         },
       ],
       rightButtons: [
