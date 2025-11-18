@@ -248,6 +248,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       formValues.productDetails = {
         ...formValues.productDetails,
+        
+        "ContainHazardousGoods": formValues.productDetails?.ContainHazardousGoods?.value || "",
         "NHM": formValues.productDetails?.NHM?.value || "",
         "NHMDescription": formValues.productDetails?.NHM?.label || "",
         "ProductID": formValues.productDetails?.ProductID?.value || "",
@@ -458,6 +460,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       };
       formValues.productDetails = {
         ...formValues.productDetails,
+        "ContainHazardousGoods": formValues.productDetails?.ContainHazardousGoods?.value || "",
         "NHM": formValues.productDetails?.NHM?.value || "",
         "NHMDescription": formValues.productDetails?.NHM?.label || "",
         "ProductID": formValues.productDetails?.ProductID?.value || "",
@@ -771,6 +774,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         };
         formValues.productDetails = {
           ...formValues.productDetails,
+          "ContainHazardousGoods": formValues.productDetails?.ContainHazardousGoods?.value || "",
           "NHM": formValues.productDetails?.NHM?.value || "",
           "NHMDescription": formValues.productDetails?.NHM?.label || "",
           "ProductID": formValues.productDetails?.ProductID?.value || "",
@@ -1034,6 +1038,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     };
     formValues.productDetails = {
       ...formValues.productDetails,
+      "ContainHazardousGoods": formValues.productDetails?.ContainHazardousGoods?.value || "",
       "NHM": formValues.productDetails?.NHM?.value || "",
       "NHMDescription": formValues.productDetails?.NHM?.label || "",
       "ProductID": formValues.productDetails?.ProductID?.value || "",
@@ -1627,6 +1632,45 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   };
   // Product Details Panel Configuration
   const productDetailsConfig: PanelConfig = {
+    ContainHazardousGoods:{
+      id: "ContainHazardousGoods",
+      label: "Hazardous Goods",
+      fieldType: "lazyselect",
+      width: 'third',
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      hideSearch: false,
+      disableLazyLoading: false,
+      fetchOptions: async ({ searchTerm, offset, limit }) => {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType: "Hazardous Goods Init",
+          searchTerm: searchTerm || '',
+          offset,
+          limit,
+        });
+        // response.data is already an array, so just return it directly
+        const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+            : {})
+        }));
+      },
+           events: {
+        onChange: (selected, event) => {
+          console.log('Hazardous Goods changed:', selected);
+        },
+        onClick: (event, value) => {
+          console.log('Hazardous Goods dropdown clicked:', { event, value });
+        }
+      }
+    },
     NHM: {
       id: "NHM",
       label: "NHM",
@@ -1636,7 +1680,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 1,
+      order: 2,
       hideSearch: false,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1675,7 +1719,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 2,
+      order: 3,
       hideSearch: false,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1698,7 +1742,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       },
       events: {
         onChange: (selected, event) => {
-          console.log('Customer changed:', selected);
+          console.log('Product changed:', selected);
+          setComboDropdown(selected)
         },
         onClick: (event, value) => {
           console.log('Customer dropdown clicked:', { event, value });
@@ -1713,7 +1758,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 3,
+      order: 4,
       value: "",
       inputType: 'number',
       // options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
@@ -1734,7 +1779,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 4,
+      order: 5,
       value: "",
       inputType: 'number',
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
@@ -1748,7 +1793,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 5,
+      order: 6,
       hideSearch: false,
       disableLazyLoading: false,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1779,7 +1824,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
       mandatory: false,
       visible: true,
       editable: true,
-      order: 5,
+      order: 6,
       hideSearch: false,
       disableLazyLoading: true,
       fetchOptions: async ({ searchTerm, offset, limit }) => {
@@ -1801,6 +1846,107 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
         }));
       },
     },
+  };
+  const setComboDropdown = async (productId: any) => {
+    console.log("PRODUCT ID VALUE", productId);
+    // If contractId.value contains '||', truncate everything after '||'
+    let productIdValue = productId.value;
+    if (typeof productIdValue === 'string' && productIdValue.includes('||')) {
+      productIdValue = productIdValue.split('||')[0].trim();
+    }
+    console.log("AFTER SPLIT -VALUE", productIdValue);
+
+    // setLoading(false);
+    setError(null);
+    // setApiStatus('loading');
+    try {
+      const data: any = await quickOrderService.getProductComboData({ messageType: "ProductID On Select", productId: productIdValue });
+      const parsedResponse = JSON.parse(data.data.ResponseData);
+      console.log("PRODUCT COMBO DROPDOWN DATA", parsedResponse);
+      const productDetails=parsedResponse.ResponsePayload[0];
+      productDetailsRef.current.setFormValues({
+        // ...item.ProductDetails,
+        ContainHazardousGoods: formatFieldWithName(productDetails.Hazardous, productDetails.HazardousDescription),
+        NHM: formatFieldWithName(productDetails.NHMCode, productDetails.NHMDescription),
+        ProductID: formatFieldWithName(productDetails.ProductID, productDetails.ProductDescription),
+        UNCode: formatFieldWithName(productDetails.UNCode, productDetails.UNDescription),
+        DGClass: formatFieldWithName(productDetails.DGClass, productDetails.DGClassDescription),
+        // ProductQuantity: ProductQuantityInputDropdown,
+      });
+      setProductDetailsData(prev => ({ ...prev }));
+
+      // // Set ContractTariff array in jsonStore for global access
+      // if (parsedResponse && parsedResponse.ContractTariff) {
+      //   jsonStore.setContractTariffList(parsedResponse.ContractTariff);
+      // }
+      // console.log("ORDERTYPE :", jsonStore.getContractTariffList());
+      // // setContracts(JSON.parse(data?.data?.ResponseData));
+      // const parsedData: any = JSON.parse(data?.data?.ResponseData);
+      // const contract: any = parsedData;
+      // console.log("CONTRACT DATA:: ", contract);
+      // if (contract) {
+      //   orderDetailsRef.current.setFormValues({
+      //     Contract: (contract.ContractID ? contract.ContractID : '') + ' || ' + (contract.ContractDesc ? contract.ContractDesc : ''),
+      //     ContractDescription: contract.ContractDesc,
+      //     Vendor: (contract.VendorID ? contract.VendorID : '') + ' || ' + (contract.VendorName ? contract.VendorName : ''),
+      //     Customer: (contract.CustomerID ? contract.CustomerID : '') + ' || ' + (contract.CustomerName ? contract.CustomerName : ''),
+      //     VendorName: contract.VendorName,
+      //     Cluster:
+      //       (contract.ClusterLocation ? contract.ClusterLocation : '') +
+      //       (contract.ClusterLocationDesc ? ' || ' + contract.ClusterLocationDesc : ''),
+      //     ClusterLocationDesc: contract.ClusterLocationDesc,
+      //     WBS: contract.WBS,
+      //     Currency: contract.Currency,
+      //   });
+
+      //   setOrderType(OrderType)
+      //   // const formatted = formatDateToYYYYMMDD("2023-08-31T00:00:00"); // "2023-08-31"
+      //   // setQuickOrderDate(formatDateToYYYYMMDD(contract.ValidFrom) )
+      //   console.log("contract.Currency = ",contract.Currency)
+      //   jsonStore.setQuickOrderFields({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS, Currency: contract.Currency });
+      //   jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
+      //   const additionalInfo = contract.ContractTariff;
+      //   jsonStore.setResourceType({ Resource: additionalInfo[0].Resource, ResourceDescription: additionalInfo[0].ResourceDescription, ResourceType: additionalInfo[0].ResourceType, ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription })
+      //   jsonStore.setTariffFields({
+      //     tariff: additionalInfo[0].TariffID,
+      //     tariffDescription: additionalInfo[0].TariffDescription,
+      //     // tariff: (additionalInfo[0].TariffID ? additionalInfo[0].TariffID : '') + (additionalInfo[0].TariffDescription ? ' || ' + additionalInfo[0].TariffDescription : ''),
+      //     // tariff: additionalInfo[0].TariffID && additionalInfo[0].TariffDescription
+      //     //     ? `${additionalInfo[0].TariffID} || ${additionalInfo[0].TariffDescription}`
+      //     //     : (additionalInfo[0].TariffID || additionalInfo[0].TariffDescription || ""),
+      //     contractPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : 0,
+      //     unitPrice: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : '',
+      //     // netAmount: additionalInfo[0].TariffRate ? additionalInfo[0].TariffRate : "",
+      //     tariffType: additionalInfo[0].TariffType ? additionalInfo[0].TariffType : "",
+      //     tariffTypeDescription: additionalInfo[0].TariffTypeDescription ? additionalInfo[0].TariffTypeDescription : "",
+      //     // billToID: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+      //     // draftBillNo: additionalInfo[0].BillToID ? additionalInfo[0].BillToID : "",
+      //   });
+      //   // jsonStore.setTariffDateFields({
+      //   //   fromDate: additionalInfo[0].ContractTariffValidFrom
+      //   //     ? additionalInfo[0].ContractTariffValidFrom.split("T")[0]
+      //   //     : "",
+      //   //   toDate: additionalInfo[0].ContractTariffValidTo
+      //   //     ? additionalInfo[0].ContractTariffValidTo.split("T")[0]
+      //   //     : "",
+      //   //   // fromDate: formatDate(additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : ""),
+      //   //   // toDate: formatDate(additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : ""),
+      //   //   // fromDate: additionalInfo[0].ContractTariffValidFrom ? additionalInfo[0].ContractTariffValidFrom : "",
+      //   //   // toDate: additionalInfo[0].ContractTariffValidTo ? additionalInfo[0].ContractTariffValidTo : "",
+      //   // });
+      //   // Set ValidFrom and ValidTo in jsonStore using a new set method
+
+
+      //   console.log("AFTER DATA BINDING - RESOURCEGROUP  : ", jsonStore.getResourceJsonData())
+      //   console.log("AFTER DATA BINDING - QUICKORDER  : ", jsonStore.getQuickOrder())
+      //   setFormData(normalizeOrderFormDetails({ OrderType: OrderType, Contract: contract.ContractID, ContractDescription: contract.ContractDesc, Customer: contract.CustomerID, CustomerName: contract.CustomerName, Vendor: contract.VendorID, VendorName: contract.VendorName, Cluster: contract.ClusterLocation, ClusterLocationDesc: contract.ClusterLocationDesc, WBS: contract.WBS }));
+      // }
+    } catch (err) {
+      setError(`Error fetching API data for${err}`);
+      console.log("ERROR IN COMBO DROPDOWN:: ", err);
+    }
+    finally {
+    }
   };
   // THU Details Panel Configuration
   const thuDetailsConfig: PanelConfig = {
@@ -2259,6 +2405,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   }
   function normalizeProductDetails(data) {
     return {
+      ContainHazardousGoods: formatFieldWithName(data.Hazardous, data.HazardousDescription),
       NHM: formatFieldWithName(data.NHM, data.NHMDescription),
       ProductID: formatFieldWithName(data.ProductID, data.ProductIDDescription),
       ProductQuantity: data.ProductQuantity || { dropdown: '', input: '' },
@@ -2651,6 +2798,7 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
           };
           productDetailsRef.current.setFormValues({
             ...item.ProductDetails,
+            ContainHazardousGoods: formatFieldWithName(item.ProductDetails.ContainHazardousGoods, item.ProductDetails.ContainHazardousGoods),
             NHM: formatFieldWithName(item.ProductDetails.NHM, item.ProductDetails.NHMDescription),
             ProductID: formatFieldWithName(item.ProductDetails.ProductID, item.ProductDetails.ProductIDDescription),
             UNCode: formatFieldWithName(item.ProductDetails.UNCode, item.ProductDetails.UNCodeDescription),

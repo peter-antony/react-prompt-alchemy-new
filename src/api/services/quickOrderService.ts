@@ -258,6 +258,44 @@ export const quickOrderService = {
     );
     return response.data;
   },
+    // Get master common data
+  getProductComboData: async (
+      params?: any
+    ): Promise<PaginatedResponse<QuickOrder>> => {
+      const userContext = getUserContext();
+      const stringifyData = JSON.stringify({
+        context: {
+          MessageID: "12345",
+          MessageType: params?.messageType || "",
+          UserID: "ramcouser",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
+        },
+        SearchCriteria: {
+        "ProductID": params?.productId,
+        "ProductDescription": "",
+        "UNCode": "",
+        "UNDescription": "",
+        "DGClass": "",
+        "DGClassDescription": "",
+        "NHMCode": "",
+        "NHMDescription": "",
+        "ClassOfStores": "",
+        "ClassOfStoresDescription": "",
+        "Hazardous": "",
+        "HazardousDescription": ""
+    }
+      });
+      const requestBody = {
+        RequestData: stringifyData,
+      };
+  
+      const response = await apiClient.post(
+        API_ENDPOINTS.QUICK_ORDERS.COMBO,
+        requestBody
+      );
+      return response.data;
+  },
   // Get quick order by ID
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
     const userContext = getUserContext();
