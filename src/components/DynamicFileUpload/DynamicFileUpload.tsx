@@ -440,7 +440,7 @@ const handleDownloadFile = useCallback(async (file: any) => {
               <input
                 ref={fileInputRef}
                 type="file"
-                multiple
+                multiple={false}
                 accept={finalConfig.allowedTypes?.map(type => `.${type}`).join(',')}
                 onChange={handleFileInputChange}
                 className="hidden"
