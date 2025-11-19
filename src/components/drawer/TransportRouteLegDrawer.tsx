@@ -126,7 +126,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     updateLegData,
     saveRouteDetails,
     fetchDepartures,
-    fetchArrivals
+    fetchArrivals,
+    openRouteDrawer
   } = useTransportRouteStore();
 
   console.log('selectedRoute from store: --------------- ', selectedRoute);
@@ -475,6 +476,35 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       title: "Success",
       description: "Trip details saved successfully",
     });
+  }
+
+  // Call get trip details again after save
+  if (responseData?.data?.IsSuccess !== false) {
+    const con = selectedRoute?.CustomerOrderID || '';
+    if (con) {
+      await openRouteDrawer({ CustomerOrderNo: con } as any);
+      const refreshed = useTransportRouteStore.getState().selectedRoute;
+      if (refreshed?.LegDetails) {
+        refreshed.LegDetails.forEach((leg: any, idx: number) => {
+          const ref = dynamicPanelRefs.current[`leg-${idx}`];
+          if (ref && typeof ref.setFormValues === 'function') {
+            const legForForm = {
+              ...leg,
+              Departure: (leg.Departure && leg.DepartureDescription)
+                ? `${leg.Departure} || ${leg.DepartureDescription}`
+                : (leg.Departure || leg.DepartureDescription || ''),
+              Arrival: (leg.Arrival && leg.ArrivalDescription)
+                ? `${leg.Arrival} || ${leg.ArrivalDescription}`
+                : (leg.Arrival || leg.ArrivalDescription || ''),
+              LegBehaviour: (leg.LegBehaviour && leg.LegBehaviourDescription)
+                ? `${leg.LegBehaviour} || ${leg.LegBehaviourDescription}`
+                : (leg.LegBehaviour || leg.LegBehaviourDescription || ''),
+            };
+            ref.setFormValues(legForForm);
+          }
+        });
+      }
+    }
   }
 };
 
