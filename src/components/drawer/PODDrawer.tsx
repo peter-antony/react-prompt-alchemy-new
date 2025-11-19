@@ -352,10 +352,21 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     }
   };
 
+  const resolveAttachUniqueName = (f: any): string => {
+    return (
+      f?.AttachUniqueName ||
+      f?.Attachuniquename ||
+      f?.rawItem?.AttachUniqueName ||
+      f?.rawItem?.Attachuniquename ||
+      ""
+    );
+  };
+
   const handleDownload = async (file: any): Promise<{ blob: Blob; filename: string }> => {
+    const uniqueName = resolveAttachUniqueName(file);
     const bodyData = {
       filecategory: file.category,
-      filename: file.AttachUniqueName,
+      filename: uniqueName,
     };
     const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData);
     const b64 = resp1.data.FileData;
@@ -372,8 +383,8 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
   const onDownloadSaved = async (file: any) => {
     try {
       const { blob, filename } = await handleDownload({
-        category: "POD",
-        AttachUniqueName: file.AttachUniqueName,
+        category: file?.rawItem?.FileCategory || "POD",
+        AttachUniqueName: resolveAttachUniqueName(file),
         fileName: file.AttachName,
       });
       downloadBlob(blob, filename);
