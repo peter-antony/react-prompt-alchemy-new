@@ -13,6 +13,7 @@ import ConfirmSwitch from '../../assets/images/ConfirmSwitch.png';
 import { combineInputDropdownValue, InputDropdownValue, splitInputDropdownValue } from '@/utils/inputDropdown';
 import jsonStore from '@/stores/jsonStore';
 import { EditableBadge } from '@/components/ui/editable-badge';
+import { Input } from '../ui/input';
 
 export interface DynamicPanelRef {
   getFormValues: () => any;
@@ -26,6 +27,7 @@ export interface DynamicPanelRef {
 
 interface DynamicPanelPropsExtended extends DynamicPanelProps {
   badgeValue?: string;
+  quickOrderNoCallback?: (value: string) => void;
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
 }
 
@@ -53,6 +55,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   panelSubTitle = '',
   validationErrors = {},
   badgeValue = '',
+  quickOrderNoCallback,
   // onBadgeChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
@@ -67,11 +70,20 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [currentBadgeValue, setCurrentBadgeValue] = useState(badgeValue);
+  const [quickOrderNoValue, setQuickOrderNoValue] = useState(jsonStore.getQuickOrderNo() || '');
 
   // Keep internal panelConfig in sync with incoming prop so option updates reflect
   useEffect(() => {
     setPanelConfig(initialPanelConfig);
   }, [initialPanelConfig]);
+
+  // Sync quickOrderNoValue with jsonStore when it changes
+  useEffect(() => {
+    const storeValue = jsonStore.getQuickOrderNo();
+    if (storeValue !== undefined) {
+      setQuickOrderNoValue(storeValue);
+    }
+  }, [jsonStore.getQuickOrderNo()]);
 
   // Create default values from panel config
   const createDefaultValues = useMemo(() => {
@@ -533,11 +545,28 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 />
               )} */}
               {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
-                <span
-                  className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
-                >
-                  {jsonStore.getQuickOrderNo()}
-                </span>
+                // <span
+                //   className="text-xs bg-blue-100 text-blue-600 border border-blue-300 font-semibold px-3 py-1 rounded-full cursor-pointer"
+                // >
+                //   {/* {jsonStore.getQuickOrderNo()} */}
+                <Input 
+                  type="text" 
+                  value={quickOrderNoValue} 
+                  className="text-xs text-blue-600 border px-3 py-1 rounded-lg cursor-pointer" 
+                  style={{width: '160px'}}
+                  // onChange={(e) => {
+                  //   quickOrderNoCallback?.(e.target.value);
+                  //   setQuickOrderNoValue(e.target.value);
+                  // }}
+                  onChange={(e) => setQuickOrderNoValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      quickOrderNoCallback?.(quickOrderNoValue.trim());
+                      e.currentTarget.blur();
+                    }
+                  }}
+                />
+                // </span>
               )}
               {panelSubTitle == "Order Details" && (() => {
                 // console.log("jsonStore.getQuickOrder()?.Status", jsonStore.getQuickOrder()?.Status);

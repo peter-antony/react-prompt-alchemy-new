@@ -13,6 +13,7 @@ import jsonStore from '@/stores/jsonStore';
 interface NewCreateQuickOrderProps {
   isEditQuickOrder?: boolean;
   onOrderCreated?: () => void;
+  quickOrderNoCallback?: (value: string) => void;
   onConfirm?: () => void;
   onSaveDraft?: () => void;
   onCancel?: () => void;
@@ -20,7 +21,7 @@ interface NewCreateQuickOrderProps {
 
 export type NewQuickOrderHandle = { getOrderValues: () => any };
 
-const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated, onConfirm,onSaveDraft,onCancel }, ref) => {
+const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated, onConfirm,onSaveDraft,onCancel, quickOrderNoCallback }, ref) => {
   useEffect(() => {
     if (!isEditQuickOrder) {
       // Set ResourceGroup as empty array in jsonStore
@@ -76,6 +77,7 @@ const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderP
             isEditQuickOrder={isEditQuickOrder}
             onOrderCreated={onOrderCreated}
             onScroll={true}
+            quickOrderNoCallback={quickOrderNoCallback}
           />
         {/* </div> */}
         

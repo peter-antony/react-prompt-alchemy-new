@@ -39,9 +39,12 @@ interface OrderFormProps {
   isEditQuickOrder?: boolean;
   onScroll?: boolean;
   onOrderCreated?: () => void;
+  quickOrderNoCallback?: (value: string) => void;
 }
 
-const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSaveDraft, onCancel, isEditQuickOrder, onScroll, onOrderCreated }: OrderFormProps, ref) => {
+const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  
+  onConfirm,onSaveDraft, onCancel, isEditQuickOrder, 
+  onScroll, onOrderCreated, quickOrderNoCallback }: OrderFormProps, ref) => {
   const navigate = useNavigate();
   const [OrderType, setOrderType] = useState('BUY');
   const [OrderDate, setOrderDate] = useState<Date>();
@@ -1982,6 +1985,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
 
   const [showTooltip, setShowTooltip] = useState(false);
 
+
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -2015,6 +2019,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  onConfirm,onSa
                 userId="current-user"
                 panelSubTitle="Order Details"
                 className="my-custom-orderform-panel"
+                quickOrderNoCallback={quickOrderNoCallback}
                 // onBadgeChange={onBadgeChange}
                 validationErrors={validationResults['Order Details']?.errors || {}}
               /> : ''

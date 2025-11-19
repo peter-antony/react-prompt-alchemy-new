@@ -774,4 +774,32 @@ export const quickOrderService = {
     );
     return response.data;
   },
+
+  // Get quick order with Number change
+  getQuickOrderWithNoChange: async (QuickOrderNo: string): Promise<ApiResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: "Quick Order Get",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+      },
+      AdditionalFilter: [
+        {
+          FilterName: "QuickOrderNo",
+          FilterValue: QuickOrderNo,
+        },
+      ],
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.QUICKORDER_GET,
+      requestBody
+    );
+    return response.data;
+  },
 };

@@ -786,6 +786,34 @@ const CreateQuickOrder = () => {
     }
   }
 
+  const quickOrderNoCallback = async (value: any) => {
+    console.log("changeQuickOrderNo", value);
+    const response: any = await quickOrderService.getQuickOrderWithNoChange(value);
+    console.log("response", response);
+    const isSuccessStatus = JSON.parse(response?.data?.IsSuccess);
+    if (isSuccessStatus) {
+      const responseData = JSON.parse(response?.data?.ResponseData);
+      console.log("responseData", responseData.ResponseResult?.[0]?.QuickUniqueID);
+      let uniqueID = responseData.ResponseResult[0]?.QuickUniqueID;
+      if(uniqueID) {
+        // jsonStore.setQuickUniqueID(uniqueID);
+        // Clear the store before navigating to ensure fresh data load
+        initializeJsonStore();
+        // Reset states to prepare for new data
+        setLoading(false);
+        setFetchedQuickOrderData(null);
+        // Navigate to the new order - this will trigger the useEffect to fetch fresh data
+        navigate(`/create-quick-order?id=${encodeURIComponent(uniqueID)}`);
+        window.location.reload();
+      }
+    } else {
+      toast({
+        title: "⚠️ Submission failed",
+        description: JSON.parse(response?.data?.Message),
+      });
+    }
+  }
+
   return (
     <AppLayout>
       <div className="main-content-h bg-gray-100">
@@ -808,6 +836,7 @@ const CreateQuickOrder = () => {
                 onSaveDraft={quickOrderSaveDraftHandler} 
                 onCancel={quickOrderCancelhandler} 
                 key={refreshTrigger} 
+                quickOrderNoCallback={quickOrderNoCallback}
               />
               : ''
             }
