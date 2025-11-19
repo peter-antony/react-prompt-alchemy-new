@@ -73,6 +73,7 @@ export function SmartGridNested({
   groupableColumns,
   showGroupingDropdown,
   clientSideSearch = false,
+  externalSearchQuery,
   showSubHeaders = true,
   showMainRowFilters = false,
   showExtraFilters = true,
@@ -157,6 +158,13 @@ export function SmartGridNested({
 
   // Use the current state columns (which include sub-row updates) instead of props
   const currentColumns = stateColumns.length > 0 ? stateColumns : columns;
+
+  // Sync external search query to internal globalFilter when client-side search is enabled
+  useEffect(() => {
+    if (clientSideSearch && typeof externalSearchQuery === 'string') {
+      setGlobalFilter(externalSearchQuery);
+    }
+  }, [externalSearchQuery, clientSideSearch, setGlobalFilter]);
 
   // Convert GridColumnConfig to Column format for useGridPreferences
   const preferencesColumns = useMemo(() => currentColumns.map(col => ({

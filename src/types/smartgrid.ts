@@ -227,6 +227,8 @@ export interface SmartGridProps {
   showGroupingDropdown?: boolean;
   // Search mode props
   clientSideSearch?: boolean;
+  // External search term to drive client-side filtering when toolbar is hidden
+  externalSearchQuery?: string;
   // Advanced Filter sub-header props
   showSubHeaders?: boolean;
   // Advanced Filter visibility props

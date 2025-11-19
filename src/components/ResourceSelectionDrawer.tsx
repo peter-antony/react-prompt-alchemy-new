@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
 import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
@@ -10,7 +10,6 @@ import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { toast } from '@/hooks/use-toast';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
-import { processGridData } from '@/utils/gridDataProcessing';
 
 interface ResourceSelectionDrawerProps {
   isOpen: boolean;
@@ -419,16 +418,6 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
   // Use prop data if provided, otherwise use local data
   const currentResourceData = propResourceData || resourceData;
-
-  const filteredResourceData = useMemo(() => processGridData(
-    currentResourceData,
-    searchTerm,
-    [],
-    undefined,
-    config.columns,
-    undefined,
-    true
-  ), [currentResourceData, searchTerm, config.columns]);
 
   // Get the ID field for the current resource type
   const getIdField = () => config.idField;
@@ -1374,7 +1363,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             <div className="relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search..."
+                placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64 pr-10"
@@ -1433,7 +1422,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             ) : (
               <SmartGridWithGrouping
                 columns={config.columns}
-                data={filteredResourceData}
+                data={currentResourceData}
                 groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
                 showGroupingDropdown={true}
                 editableColumns={['plannedStartEndDateTime']}
@@ -1453,11 +1442,12 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                   return selectedRowIds.has(row[idField]) ? 'selected' : '';
                 }}
                 showDefaultConfigurableButton={false}
-                gridTitle={config.gridTitle}
+                gridTitle="Planning Equipments"
                 recordCount={currentResourceData.length}
                 showCreateButton={true}
                 searchPlaceholder="Search"
                 clientSideSearch={true}
+                externalSearchQuery={searchTerm}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
                 hideCheckboxToggle={true}
