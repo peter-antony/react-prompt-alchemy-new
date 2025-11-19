@@ -149,6 +149,12 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
     return isNaN(d.getTime()) ? undefined : d;
   };
 
+  // Helper to convert time string to HH:MM format
+  const toHHMM = (timeStr = "") => {
+    if (!timeStr) return "";
+    return timeStr.substring(0, 5); // returns HH:MM
+  };
+
   // Derive legs and activities from store if available
   const storeLegs = useMemo<Leg[]>(() => {
     const legDetails = data?.LegDetails || [];
@@ -164,6 +170,8 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
         type: leg.LegBehaviourDescription || leg.LegBehaviour || '',
         customer: firstActivity?.CustomerName || firstActivity?.CustomerID || 'Unknown',
         orderNo: firstActivity?.CustomerOrder || 'Unknown',
+        legStartDateTime: leg.PlanStartDate ? format(leg.PlanStartDate, "dd-MMM-yyyy") + ' ' + (leg.PlanStartTime ? toHHMM(leg.PlanStartTime) : '') : '',
+        legEndDateTime: leg.PlanEndDate ? format(leg.PlanEndDate, "dd-MMM-yyyy") + ' ' + (leg.PlanEndTime ? toHHMM(leg.PlanEndTime) : '') : '',
       };
     });
   }, [data?.LegDetails]);
@@ -305,11 +313,6 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
       default:
         return <Clock className="h-4 w-4 text-blue-600" />;
     }
-  };
-
-  const toHHMM = (timeStr = "") => {
-    if (!timeStr) return "";
-    return timeStr.substring(0, 5); // returns HH:MM
   };
 
   return (
@@ -517,6 +520,14 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                             <div className="flex items-center gap-1 text-muted-foreground">
                               <FileText className="h-3 w-3" />
                               <span>{leg.orderNo}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <CalendarIcon className="h-3 w-3" />
+                              <span>{leg.legStartDateTime}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <CalendarIcon className="h-3 w-3" />
+                              <span>{leg.legEndDateTime}</span>
                             </div>
                           </div>
                         </div>

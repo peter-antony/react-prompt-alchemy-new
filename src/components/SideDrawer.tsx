@@ -213,7 +213,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                   {title}
                 </h2>
                 {titleBadge && (
-                  <span className={`px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded border border-primary/20 ${titleBadgeStyles}`}>
+                  <span className={`px-2 py-0.5 text-xs font-medium text-primary badge-blue rounded-2xl ${titleBadgeStyles}`}>
                     {titleBadge}
                   </span>
                 )}

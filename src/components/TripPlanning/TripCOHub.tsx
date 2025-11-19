@@ -143,7 +143,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "DepartureTime",
       label: "Departure Time",
-      type: "Text",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
@@ -159,7 +159,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     {
       key: "ArrivalTime",
       label: "Arrival Time",
-      type: "Text",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
