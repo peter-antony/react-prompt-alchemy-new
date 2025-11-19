@@ -1348,10 +1348,10 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           {/* Resource Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3>
-               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              {/* <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3> */}
+               {/* <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                  {currentResourceData.length}
-               </Badge>
+               </Badge> */}
                {/* {saveButtonEnableFlag && (
                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
                    Add Resources Enabled
@@ -1360,7 +1360,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             </div>
             
             {/* Search */}
-            <div className="relative">
+            {/* <div className="relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search"
@@ -1368,7 +1368,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64 pr-10"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Resource Grid */}
@@ -1430,7 +1430,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                 selectedRows={selectedRows}
                 onSelectionChange={handleRowSelection}
                 onRowClick={handleRowClick}
-                hideToolbar={true}
+                // hideToolbar={true}
                 onClearAll={() => {
                   setSelectedRows(new Set());
                   setSelectedRowIds(new Set());

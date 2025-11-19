@@ -185,7 +185,7 @@ export const SummaryCardsGrid = () => {
  
     // On close transition, bump refresh trigger for specific drawers
     if (prevIsOpenRef.current && !isOpen) {
-      if (lastDrawerTypeRef.current === 'vas' || lastDrawerTypeRef.current === 'incidents') {
+      if (lastDrawerTypeRef.current === 'vas' || lastDrawerTypeRef.current === 'incidents' || lastDrawerTypeRef.current === 'resources') {
         setRefreshTrigger((prev) => prev + 1);
       }
       // Reset last drawer type after close
@@ -241,25 +241,6 @@ export const SummaryCardsGrid = () => {
         iconColor: '#1036C0',
         bgColor: '#F0F3FE',
       },
-      // {
-      //   title: 'Resources',
-      //   icon: UserRoundCheck,
-      //   values: [
-      //     {
-      //       label: 'No. of Resource',
-      //       value:
-      //         (resources?.Equipments?.length || 0) +
-      //         (resources?.Vehicle?.length || 0) +
-      //         (resources?.Drivers?.length || 0),
-      //     },
-      //     // {
-      //     //   label: 'Total Cost',
-      //     //   value: `USD ${resources?.Supplier?.[0]?.Cost || 0}`,
-      //     // },
-      //   ],
-      //   iconColor: '#C01048',
-      //   bgColor: '#FFF1F3',
-      // },
       {
         title: 'VAS',
         icon: Settings,
@@ -282,6 +263,25 @@ export const SummaryCardsGrid = () => {
         ],
         iconColor: '#cd5c5c',
         bgColor: '#ff980012',
+      },
+      {
+        title: 'Resources',
+        icon: UserRoundCheck,
+        values: [
+          {
+            label: 'No. of Resource',
+            value:
+              (resources?.Equipments?.length || 0) +
+              (resources?.Vehicle?.length || 0) +
+              (resources?.Drivers?.length || 0),
+          },
+          // {
+          //   label: 'Total Cost',
+          //   value: `USD ${resources?.Supplier?.[0]?.Cost || 0}`,
+          // },
+        ],
+        iconColor: '#C01048',
+        bgColor: '#FFF1F3',
       },
       // {
       //   title: 'Supplier Billing',
