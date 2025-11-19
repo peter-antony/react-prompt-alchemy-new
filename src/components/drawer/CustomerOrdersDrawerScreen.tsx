@@ -31,7 +31,9 @@ interface CustomerOrder {
   ExecutionPlanID: string;
   LegBehaviour: string;
   DeparturePoint: string;
+  DeparturePointDescription: string;
   ArrivalPoint: string;
+  ArrivalPointDescription: string;
   PickupDateTime: string;
   DeliveryDateTime: string;
   PlannedFromDateTime: string;
@@ -94,7 +96,16 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
   },
   {
     key: 'DepartureArrival',
-    label: 'Departure and Arrival',
+    label: 'Departure',
+    type: 'Text',
+    width: 180,
+    sortable: false,
+    filterable: false,
+    editable: false,
+  },
+  {
+    key: 'DepartureArrivalDescription',
+    label: 'Arrival',
     type: 'Text',
     width: 180,
     sortable: false,
@@ -216,6 +227,8 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
         LegBehaviour: co.LegBehaviour,
         DeparturePoint: co.DeparturePoint,
         ArrivalPoint: co.ArrivalPoint,
+        ArrivalPointDescription: co.ArrivalPointDescription,
+        DeparturePointDescription: co.DeparturePointDescription,
         PickupDateTime: co.PickupDateTime,
         DeliveryDateTime: co.DeliveryDateTime,
         PlannedFromDateTime: co.PlannedFromDateTime,
@@ -242,7 +255,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
 
     // if both values are null use -, instead of " - to - " 
     .map((order) => {
-      const formatPair = (a, b, separator = " - ") => {
+      const formatPair = (a, b, separator = " || ") => {
         if (!a && !b) return "-";
         return `${a || "-"}${separator}${b || "-"}`;
       };
@@ -254,7 +267,8 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
 
       return {
         ...order,
-        DepartureArrival: formatPair(order.DeparturePoint, order.ArrivalPoint),
+        DepartureArrival: formatPair(order.DeparturePoint, order.DeparturePointDescription),
+        DepartureArrivalDescription: formatPair(order.ArrivalPoint, order.ArrivalPointDescription),
         PickupDelivery: formatRange(order.PickupDateTime, order.DeliveryDateTime),
         PlanFromToDate: formatRange(order.PlannedFromDateTime, order.PlannedToDateTime),
       };

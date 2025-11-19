@@ -1402,6 +1402,13 @@ const TripPlanning = () => {
   const [addResourcesFlag, setAddResourcesFlag] = useState<boolean>(false);
   const [saveButtonEnableFlag, setSaveButtonEnableFlag] = useState<boolean>(false);
   const [customerOrderList, setcustomerOrderList] = useState<any>();
+  const [selectedTripIDs, setSelectedTripIDs] = useState<Array<{ TripID: string }>>([])
+
+  // Debug useEffect to track selectedTripIDs changes
+  useEffect(() => {
+    console.log("🔍 selectedTripIDs changed:", selectedTripIDs);
+    console.log("🔍 selectedTripIDs count:", selectedTripIDs.length);
+  }, [selectedTripIDs]);
 
   const handleCustomerOrderSelect = (customerOrderList: any, isSelected: boolean = true) => {
     console.log("✅ Received from child:", customerOrderList, "isSelected:", isSelected);
@@ -1414,6 +1421,24 @@ const TripPlanning = () => {
     if (!isSelected) {
       // Handle deselection - remove from selectedArrCOData using both id and legBehaviour
       console.log("customerOrderList ====", customerOrderList);
+      
+      // Remove TripID from selectedTripIDs if it exists
+      if (customerOrderList && customerOrderList.TripID) {
+        const tripIDToRemove = customerOrderList.TripID;
+        setSelectedTripIDs(prev => {
+          const existingIndex = prev.findIndex(item => item.TripID === tripIDToRemove);
+          if (existingIndex !== -1) {
+            const updated = prev.filter(item => item.TripID !== tripIDToRemove);
+            console.log("🗑️ Removed TripID from selectedTripIDs:", tripIDToRemove);
+            console.log("📊 Remaining selected TripIDs:", updated);
+            return updated;
+          } else {
+            console.log("⚠️ TripID not found in selectedTripIDs:", tripIDToRemove);
+            return prev;
+          }
+        });
+      }
+      
       if (customerOrderList && customerOrderList.CustomerOrderID && customerOrderList.LegBehaviour) {
         const { CustomerOrderID, LegBehaviour } = customerOrderList;
         setSelectedArrCOData(prev => {
@@ -1425,7 +1450,9 @@ const TripPlanning = () => {
       } else {
         // Clear all selections (when customerOrderList is null or missing keys)
         setSelectedArrCOData([]);
+        setSelectedTripIDs([]);
         console.log("🗑️ Cleared all customer orders from selectedArrCOData");
+        console.log("🗑️ Cleared all TripIDs from selectedTripIDs");
       }
 
       // Clear the customer order list and hide resources flag
@@ -1438,6 +1465,23 @@ const TripPlanning = () => {
     }
 
     // Handle selection - add to selectedArrCOData
+    // Add TripID to selectedTripIDs if it exists
+    if (customerOrderList && customerOrderList.TripID) {
+      const tripIDToAdd = customerOrderList.TripID;
+      setSelectedTripIDs(prev => {
+        const existingIndex = prev.findIndex(item => item.TripID === tripIDToAdd);
+        if (existingIndex === -1) {
+          const updated = [...prev, { TripID: tripIDToAdd }];
+          console.log("✅ Added TripID to selectedTripIDs:", { TripID: tripIDToAdd });
+          console.log("📊 Total selected TripIDs:", updated);
+          return updated;
+        } else {
+          console.log("ℹ️ TripID already exists in selectedTripIDs:", tripIDToAdd);
+          return prev;
+        }
+      });
+    }
+    
     // Remove Status and TripBillingStatus, and add ModeFlag to the customerOrderList object
     const { Status, TripBillingStatus, ...rest } = customerOrderList;
     const updatedCustomerOrderList = {
@@ -1707,18 +1751,25 @@ const TripPlanning = () => {
     // console.log("confirmTripPlanning ===", selectedRowObjects);
     console.log("confirmTripPlanning ===", customerOrderList + tripNo);
     console.log("confirmTripPlanning ===", tripCustomerOrdersData);
+    console.log("confirmTripPlanning - selectedTripIDs ===", selectedTripIDs);
     
     const messageType = "Manage Trip Plan - Confirm Trip";
     
     // Check if a single customer order is selected
     let tripIDsToProcess: string[] = [];
     
-    if (customerOrderList && customerOrderList.TripID) {
-      // Single selection: use only the selected TripID
+    // Check if selectedTripIDs has items, use those first
+    if (selectedTripIDs.length > 0) {
+      // Map selectedTripIDs array of objects to array of strings
+      tripIDsToProcess = selectedTripIDs.map(item => item.TripID);
+      console.log("✅ Using TripIDs from selectedTripIDs:", tripIDsToProcess);
+    } else if (customerOrderList && customerOrderList.TripID) {
+      // Fallback: Single selection from customerOrderList
       tripIDsToProcess = [customerOrderList.TripID];
       console.log("✅ Single customer order selected, using TripID:", customerOrderList.TripID);
     } else {
       // No selection: extract all unique TripIDs from tripCustomerOrdersData
+      console.log('selectedTripIDs === ', selectedTripIDs);
       const allTripIDs = tripCustomerOrdersData
         .map((order: any) => order?.TripID)
         .filter((tripID: any) => tripID != null && tripID !== ''); // Filter out null/undefined/empty values
@@ -1850,14 +1901,20 @@ const TripPlanning = () => {
 
   const releseTripPlanning = async () => {
     console.log("releaseTripPlanning ===", tripCustomerOrdersData);
+    console.log("releaseTripPlanning - selectedTripIDs ===", selectedTripIDs);
     
     const messageType = "Manage Trip Plan - Release Trip";
     
     // Check if a single customer order is selected
     let tripIDsToProcess: string[] = [];
     
-    if (customerOrderList && customerOrderList.TripID) {
-      // Single selection: use only the selected TripID
+    // Check if selectedTripIDs has items, use those first
+    if (selectedTripIDs.length > 0) {
+      // Map selectedTripIDs array of objects to array of strings
+      tripIDsToProcess = selectedTripIDs.map(item => item.TripID);
+      console.log("✅ Using TripIDs from selectedTripIDs:", tripIDsToProcess);
+    } else if (customerOrderList && customerOrderList.TripID) {
+      // Fallback: Single selection from customerOrderList
       tripIDsToProcess = [customerOrderList.TripID];
       console.log("✅ Single customer order selected, using TripID:", customerOrderList.TripID);
     } else {
