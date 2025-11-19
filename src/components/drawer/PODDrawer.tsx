@@ -71,6 +71,13 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
   const [selectedWagonIndex, setSelectedWagonIndex] = useState(0);
   const [attachItems, setAttachItems] = useState([]);
   const [stagedAttachItems, setStagedAttachItems] = useState<any[]>([]);
+  const [initialWagonSnapshot, setInitialWagonSnapshot] = useState({
+    PODStatus: "",
+    PODStatusDescription: "",
+    ReasonCode: "",
+    ReasonCodeDescription: "",
+    Remarks: "",
+  });
  
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -207,6 +214,16 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
   const handleSavePODAndAttachments = async () => {
     try {
+      const staged = (stagedAttachItems || []).filter((f: any) => !!f.rawFile);
+      const w = wagonList[selectedWagonIndex];
+      const podFieldsChanged = !!w && (
+        (w.PODStatus || "") !== (initialWagonSnapshot.PODStatus || "") ||
+        (w.PODStatusDescription || "") !== (initialWagonSnapshot.PODStatusDescription || "") ||
+        (w.ReasonCode || "") !== (initialWagonSnapshot.ReasonCode || "") ||
+        (w.ReasonCodeDescription || "") !== (initialWagonSnapshot.ReasonCodeDescription || "") ||
+        (w.Remarks || "") !== (initialWagonSnapshot.Remarks || "")
+      );
+
       const { bulkUpdate, wagonDetails } = buildWagonPayloadForSave(false);
       const saveRes = await tripService.savePOD({
         TripNo: tripNo,
@@ -223,7 +240,29 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         return;
       }
 
-      await handleSaveAttachments();
+      let attachmentsSaved = false;
+      if (staged.length > 0) {
+        await handleSaveAttachments();
+        attachmentsSaved = true;
+      }
+
+      if (podFieldsChanged && attachmentsSaved) {
+        toast({ title: "Updated", description: "POD and attachments updated successfully.", variant: "default" });
+      } else if (podFieldsChanged && !attachmentsSaved) {
+        toast({ title: "POD Updated", description: "POD updated successfully.", variant: "default" });
+      } else if (!podFieldsChanged && attachmentsSaved) {
+        toast({ title: "Attachments Uploaded", description: "Attachments uploaded successfully.", variant: "default" });
+      } else {
+        toast({ title: "No Changes", description: "No changes to save.", variant: "default" });
+      }
+
+      setInitialWagonSnapshot({
+        PODStatus: w?.PODStatus || "",
+        PODStatusDescription: w?.PODStatusDescription || "",
+        ReasonCode: w?.ReasonCode || "",
+        ReasonCodeDescription: w?.ReasonCodeDescription || "",
+        Remarks: w?.Remarks || "",
+      });
 
     } catch (error) {
       toast({ title: "POD Save Failed", description: "An error occurred while saving POD.", variant: "destructive" });
@@ -233,10 +272,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
   const handleSaveAttachments = async () => {
     try {
       const staged = (stagedAttachItems || []).filter((f: any) => !!f.rawFile);
-      if (staged.length === 0) {
-        toast({ title: "No New Files", description: "No newly uploaded files to save.", variant: "default" });
-        return;
-      }
+      if (staged.length === 0) return;
 
       const attachItems: any[] = [];
       for (const f of staged) {
@@ -299,8 +335,6 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
       await refreshAttachmentsFromServer();
       setStagedAttachItems([]);
-
-      toast({ title: "Attachments Saved", description: `${attachItems.length} file(s) saved successfully.`, variant: "default" });
     } catch (error) {
       toast({ title: "Save Failed", description: "An error occurred while saving attachments.", variant: "destructive" });
     }
@@ -564,6 +598,13 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
           ReasonCodeDescription: mapped[0].ReasonCodeDescription,
           Remarks: mapped[0].Remarks,
         });
+        setInitialWagonSnapshot({
+          PODStatus: mapped[0].PODStatus,
+          PODStatusDescription: mapped[0].PODStatusDescription,
+          ReasonCode: mapped[0].ReasonCode,
+          ReasonCodeDescription: mapped[0].ReasonCodeDescription,
+          Remarks: mapped[0].Remarks,
+        });
       }
     };
     loadPOD();
@@ -574,6 +615,13 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     const w = wagonList[selectedWagonIndex];
     if (w) {
       setFormData({
+        PODStatus: w.PODStatus,
+        PODStatusDescription: w.PODStatusDescription,
+        ReasonCode: w.ReasonCode,
+        ReasonCodeDescription: w.ReasonCodeDescription,
+        Remarks: w.Remarks,
+      });
+      setInitialWagonSnapshot({
         PODStatus: w.PODStatus,
         PODStatusDescription: w.PODStatusDescription,
         ReasonCode: w.ReasonCode,
