@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
 import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
@@ -10,6 +10,7 @@ import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { toast } from '@/hooks/use-toast';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
+import { processGridData } from '@/utils/gridDataProcessing';
 
 interface ResourceSelectionDrawerProps {
   isOpen: boolean;
@@ -418,6 +419,16 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
   // Use prop data if provided, otherwise use local data
   const currentResourceData = propResourceData || resourceData;
+
+  const filteredResourceData = useMemo(() => processGridData(
+    currentResourceData,
+    searchTerm,
+    [],
+    undefined,
+    config.columns,
+    undefined,
+    true
+  ), [currentResourceData, searchTerm, config.columns]);
 
   // Get the ID field for the current resource type
   const getIdField = () => config.idField;
@@ -1348,10 +1359,10 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           {/* Resource Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {/* <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3> */}
-               {/* <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3>
+               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                  {currentResourceData.length}
-               </Badge> */}
+               </Badge>
                {/* {saveButtonEnableFlag && (
                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
                    Add Resources Enabled
@@ -1360,15 +1371,15 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             </div>
             
             {/* Search */}
-            {/* <div className="relative">
+            <div className="relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search"
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64 pr-10"
               />
-            </div> */}
+            </div>
           </div>
 
           {/* Resource Grid */}
@@ -1422,7 +1433,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             ) : (
               <SmartGridWithGrouping
                 columns={config.columns}
-                data={currentResourceData}
+                data={filteredResourceData}
                 groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
                 showGroupingDropdown={true}
                 editableColumns={['plannedStartEndDateTime']}
@@ -1430,7 +1441,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                 selectedRows={selectedRows}
                 onSelectionChange={handleRowSelection}
                 onRowClick={handleRowClick}
-                // hideToolbar={true}
+                hideToolbar={true}
                 onClearAll={() => {
                   setSelectedRows(new Set());
                   setSelectedRowIds(new Set());
@@ -1442,7 +1453,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                   return selectedRowIds.has(row[idField]) ? 'selected' : '';
                 }}
                 showDefaultConfigurableButton={false}
-                gridTitle="Planning Equipments"
+                gridTitle={config.gridTitle}
                 recordCount={currentResourceData.length}
                 showCreateButton={true}
                 searchPlaceholder="Search"
