@@ -138,6 +138,9 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
   const [localLegStartTime, setLocalLegStartTime] = useState(legStartTime);
   const [localLegEndDate, setLocalLegEndDate] = useState(legEndDate);
   const [localLegEndTime, setLocalLegEndTime] = useState(legEndTime);
+  const [isLegStartDateOpen, setIsLegStartDateOpen] = useState(false);
+  const [isLegEndDateOpen, setIsLegEndDateOpen] = useState(false);
+  const [activityDatePopoverStates, setActivityDatePopoverStates] = useState<Record<string, boolean>>({});
 
   // Helpers
   const parseDate = (value?: string | null): Date | undefined => {
@@ -304,6 +307,11 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
     }
   };
 
+  const toHHMM = (timeStr = "") => {
+    if (!timeStr) return "";
+    return timeStr.substring(0, 5); // returns HH:MM
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -371,7 +379,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                     className="w-full justify-start text-left font-normal"
                   >
                     <Clock className="mr-2 h-4 w-4" />
-                          {localTripStartTime}
+                          {toHHMM(localTripStartTime)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2" align="start">
@@ -436,7 +444,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                     className="w-full justify-start text-left font-normal"
                   >
                     <Clock className="mr-2 h-4 w-4" />
-                    {localTripEndTime}
+                    {toHHMM(localTripEndTime)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2" align="start">
@@ -524,7 +532,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                 <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Leg Start Date</Label>
-                    <Popover>
+                    <Popover open={isLegStartDateOpen} onOpenChange={setIsLegStartDateOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -545,6 +553,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                             if (!date) return;
                             setLocalLegStartDate(date);
                             try { updateLegField(selectedLegIndex, 'PlanStartDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                            setIsLegStartDateOpen(false);
                           }}
                           initialFocus
                         />
@@ -561,13 +570,13 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                           className="w-full justify-start text-left font-normal"
                         >
                           <Clock className="mr-2 h-4 w-4" />
-                          {localLegStartTime}
+                          {toHHMM(localLegStartTime)}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-2" align="start">
                         <Input
                           type="time"
-                          value={localLegStartTime}
+                          value={toHHMM(localLegStartTime)}
                           onChange={(e) => {
                             const v = e.target.value;
                             setLocalLegStartTime(v);
@@ -581,7 +590,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Leg End Date</Label>
-                    <Popover>
+                    <Popover open={isLegEndDateOpen} onOpenChange={setIsLegEndDateOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -602,6 +611,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                             if (!date) return;
                             setLocalLegEndDate(date);
                             try { updateLegField(selectedLegIndex, 'PlanEndDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                            setIsLegEndDateOpen(false);
                           }}
                           initialFocus
                         />
@@ -618,13 +628,13 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                           className="w-full justify-start text-left font-normal"
                         >
                           <Clock className="mr-2 h-4 w-4" />
-                          {localLegEndTime}
+                          {toHHMM(localLegEndTime)}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-2" align="start">
                         <Input
                           type="time"
-                          value={localLegEndTime}
+                          value={toHHMM(localLegEndTime)}
                           onChange={(e) => {
                             const v = e.target.value;
                             setLocalLegEndTime(v);
@@ -675,7 +685,10 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label className="text-xs text-muted-foreground">Planned Date</Label>
-                                  <Popover>
+                                  <Popover 
+                                    open={activityDatePopoverStates[`${selectedLegIndex}-${idx}`] || false}
+                                    onOpenChange={(open) => setActivityDatePopoverStates(prev => ({...prev, [`${selectedLegIndex}-${idx}`]: open}))}
+                                  >
                                     <PopoverTrigger asChild>
                                       <Button
                                         variant="outline"
@@ -693,6 +706,7 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                                         onSelect={(date) => {
                                           if (!date) return;
                                           try { updateActivityField(selectedLegIndex, idx, 'PlannedDate' as any, format(date, 'yyyy-MM-dd')); } catch {}
+                                          setActivityDatePopoverStates(prev => ({...prev, [`${selectedLegIndex}-${idx}`]: false}));
                                         }}
                                         initialFocus
                                       />
@@ -710,13 +724,13 @@ export const LegEventsDrawer: React.FC<LegEventsDrawerProps> = ({
                                         className="w-full justify-start text-left font-normal"
                                       >
                                         <Clock className="mr-2 h-3 w-3" />
-                                        {activity.plannedTime}
+                                        {toHHMM(activity.plannedTime)}
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-2" align="start">
                                       <Input
                                         type="time"
-                                        value={activity.plannedTime}
+                                        value={toHHMM(activity.plannedTime)}
                                         onChange={(e) => {
                                           const v = e.target.value;
                                           try { updateActivityField(selectedLegIndex, idx, 'PlannedTime' as any, v); } catch {}
