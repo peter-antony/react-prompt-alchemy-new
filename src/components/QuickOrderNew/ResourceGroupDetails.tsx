@@ -798,6 +798,11 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "SecondaryDocNo": formValues.moreInfoDetailsRef?.SecondaryDocType?.input || null,
             "PrimaryDocDate": formValues.moreInfoDetailsRef?.PrimaryDocDate || null,
             "SecondaryDocDate": formValues.moreInfoDetailsRef?.SecondaryDocDate || null,
+            "SendersRefNo": formValues.moreInfoDetailsRef?.SendersRefNo || null,
+            "CustomerRefNo": formValues.moreInfoDetailsRef?.CustomerRefNo || null,
+            "VendorRefNo": formValues.moreInfoDetailsRef?.VendorRefNo || null,
+            "PONo": formValues.moreInfoDetailsRef?.PONo || null,
+
             // Add more fields as needed
           };
 
@@ -1054,6 +1059,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "SecondaryDocNo": formValues.moreInfoDetailsRef?.SecondaryDocType?.input || null,
             "PrimaryDocDate": formValues.moreInfoDetailsRef?.PrimaryDocDate || null,
             "SecondaryDocDate": formValues.moreInfoDetailsRef?.SecondaryDocDate || null,
+            "SendersRefNo": formValues.moreInfoDetailsRef?.SendersRefNo || null,
+            "CustomerRefNo": formValues.moreInfoDetailsRef?.CustomerRefNo || null,
+            "VendorRefNo": formValues.moreInfoDetailsRef?.VendorRefNo || null,
+            "PONo": formValues.moreInfoDetailsRef?.PONo || null,
             // Add more fields as needed
           };
           console.log("formValues :: ", formValues.basicDetails);
@@ -1226,6 +1235,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "SecondaryDocNo": formValues.moreInfoDetailsRef?.SecondaryDocType?.input || null,
             "PrimaryDocDate": formValues.moreInfoDetailsRef?.PrimaryDocDate || null,
             "SecondaryDocDate": formValues.moreInfoDetailsRef?.SecondaryDocDate || null,
+            "SendersRefNo": formValues.moreInfoDetailsRef?.SendersRefNo || null,
+            "CustomerRefNo": formValues.moreInfoDetailsRef?.CustomerRefNo || null,
+            "VendorRefNo": formValues.moreInfoDetailsRef?.VendorRefNo || null,
+            "PONo": formValues.moreInfoDetailsRef?.PONo || null,
             // Add more fields as needed
           };
           console.log("formValues :: ", formValues.basicDetails);
@@ -1555,7 +1568,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
   }
 
   function normalizeMoreInfoDetails(data) {
-    console.log("data ====", data);
+    console.log("data normalizeMoreInfoDetails ====", data);
     if (data)
       return {
       PrimaryDocType: data.PrimaryDocType,
@@ -1564,6 +1577,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       SecondaryDocType: data.SecondaryDocType,
       SecondaryDocNo: data.SecondaryDocNo,
       SecondaryDocDate: data.SecondaryDocDate,
+      SendersRefNo: data.SendersRefNo,
+      CustomerRefNo: data.CustomerRefNo,
+      VendorRefNo: data.VendorRefNo,
+      PONo: data.PONo,
       // PrimaryDocTypeValue:data.PrimaryDocTypeValue,
       // SecondaryDocType:data.SecondaryDocType,
       // SecondaryDocTypeValue:data.SecondaryDocTypeValue,
@@ -1725,6 +1742,10 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
           },
           PrimaryDocDate: data.PrimaryDocDate || "",
           SecondaryDocDate: data.SecondaryDocDate || "",
+          SendersRefNo: data.SendersRefNo || "",
+          CustomerRefNo: data.CustomerRefNo || "",
+          VendorRefNo: data.VendorRefNo || "",
+          PONo: data.PONo || "",
           // Add more fields as needed, following the same pattern
         };
       };
@@ -2454,7 +2475,54 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       editable: true,
       order: 4,
     },
-
+    SendersRefNo: {
+      id: 'SendersRefNo',
+      label: 'Senders Ref No',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'half',
+      maxLength: 255
+    },
+    CustomerRefNo: {
+      id: 'CustomerRefNo',
+      label: 'Customer Ref No',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'half',
+      maxLength: 255
+    },
+    VendorRefNo: {
+      id: 'VendorRefNo',
+      label: 'Vendor Ref No',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'half',
+      maxLength: 255
+    },
+    PONo: {
+      id: 'PONo',
+      label: 'PO No',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'half',
+      maxLength: 255
+    }
   };
 
   const steps = [

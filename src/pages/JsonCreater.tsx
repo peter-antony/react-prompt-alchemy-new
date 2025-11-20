@@ -99,7 +99,11 @@ const Resource_Group_BASIC_JSON = {
     "SecondaryDocType": null,
     "SecondaryDocNo": null,
     "SecondaryDocDate": null,
-    "AddtionalMoreRefDocs": []
+    "AddtionalMoreRefDocs": [],
+    "SendersRefNo": null,
+    "CustomerRefNo": null,
+    "VendorRefNo": null,
+    "PONo": null
   },
   "Attachments": {
     "TotalAttachment": "0",
@@ -288,7 +292,11 @@ const Resource_Group_JSON = {
     "SecondaryDocType": null,
     "SecondaryDocNo": null,
     "SecondaryDocDate": null,
-    "AddtionalMoreRefDocs": []
+    "AddtionalMoreRefDocs": [],
+    "SendersRefNo": null,
+    "CustomerRefNo": null,
+    "VendorRefNo": null,
+    "PONo": null
   },
   "Attachments": {
     "TotalAttachment": "0",
