@@ -7,6 +7,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Trash2, ArrowLeft, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { ResourceSearchDrawer } from './ResourceSearchDrawer';
+import { tripPlanningService } from '@/api/services/tripPlanningService';
+import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
+import { quickOrderService } from '@/api/services/quickOrderService';
+import { InputDropdown, InputDropdownValue } from '@/components/ui/input-dropdown';
+
 
 interface FormData {
   carrier: string;
@@ -24,6 +30,10 @@ interface FormData {
   infrastructureManager: string;
   reason: string;
   remarks: string;
+  resourceCategory: string;
+  resource: string;
+  QCUserDefined: string;
+  QCUserDefinedValue: string;
 }
 
 interface Resource {
@@ -49,6 +59,10 @@ const initialFormData: FormData = {
   infrastructureManager: '',
   reason: '',
   remarks: '',
+  resourceCategory: '',
+  resource: '',
+  QCUserDefined: '',
+  QCUserDefinedValue: '',
 };
 
 const initialResources: Resource[] = [
@@ -57,6 +71,8 @@ const initialResources: Resource[] = [
     type: 'Schedule', 
     name: 'SCH32030023',
     formData: {
+      resourceCategory: 'Schedule',
+      resource: 'SCH32030023',
       carrier: 'ABC Executive Agent',
       supplier: 'ABC Supplier',
       supplierRef: 'REF001',
@@ -72,6 +88,8 @@ const initialResources: Resource[] = [
       infrastructureManager: 'IM001',
       reason: 'reason1',
       remarks: 'Schedule resource details',
+      QCUserDefined: 'QC1',
+      QCUserDefinedValue: 'QC1 value',
     }
   },
   { 
@@ -79,6 +97,8 @@ const initialResources: Resource[] = [
     type: 'Agent', 
     name: 'DB Cargo',
     formData: {
+      resourceCategory: 'Agent',
+      resource: 'SCH002',
       carrier: 'DB Cargo Agent',
       supplier: 'DB Supplier',
       supplierRef: 'REF002',
@@ -94,6 +114,8 @@ const initialResources: Resource[] = [
       infrastructureManager: 'IM002',
       reason: 'reason2',
       remarks: 'Agent resource details',
+      QCUserDefined: 'QC2',
+      QCUserDefinedValue: 'QC2 value',
     }
   },
   { 
@@ -101,6 +123,8 @@ const initialResources: Resource[] = [
     type: 'Handler', 
     name: '14388 (RAM)',
     formData: {
+      resourceCategory: 'Handler',
+      resource: 'HAND001',
       carrier: 'RAM Executive Agent',
       supplier: 'RAM Supplier',
       supplierRef: 'REF003',
@@ -116,6 +140,8 @@ const initialResources: Resource[] = [
       infrastructureManager: 'IM003',
       reason: 'reason1',
       remarks: 'Handler resource details',
+      QCUserDefined: 'QC3',
+      QCUserDefinedValue: 'QC3 value',
     }
   },
 ];
@@ -124,6 +150,19 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const [resources, setResources] = useState<Resource[]>(initialResources);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isResourceSearchDrawerOpen, setIsResourceSearchDrawerOpen] = useState(false);
+  const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule'>('Supplier');
+  const [selectedResources, setSelectedResources] = useState<any[]>([]);
+  const [resourceData, setResourceData] = useState<any[]>([]);
+  const [isLoadingResource, setIsLoadingResource] = useState(false);
+  const [tripInformation, setTripInformation] = useState<any>({});
+  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
+  const bindQC = (): InputDropdownValue => ({
+    dropdown: formData?.QCUserDefined ?? "",
+    input: formData?.QCUserDefinedValue ?? "", // use `input`, not `value`
+  });
+  const [QCUserDefined, setQCUserDefined] = useState<InputDropdownValue>(bindQC());
+  const [QC, setQC] = useState<any>([]);
 
   // Auto-select first resource on mount
   useEffect(() => {
@@ -134,9 +173,49 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
     }
   }, []);
 
+  // Fetch QC data for InputDropdown
+  useEffect(() => {
+    const fetchQCData = async () => {
+      try {
+        const response: any = await quickOrderService.getMasterCommonData({
+          messageType: "QCUserDefined Init",
+          searchTerm: '',
+          offset: 0,
+          limit: 1000,
+        });
+
+        const rr: any = response.data;
+        const responseData = JSON.parse(rr.ResponseData || "[]");
+        
+        // Format data for InputDropdown (needs label and value)
+        const formattedData = responseData
+          .filter((qc: any) => qc.id && qc.name)
+          .map((qc: any) => ({
+            label: qc.name,
+            value: qc.id,
+          }));
+        
+        setQC(formattedData || []);
+        console.log("QC data fetched:", formattedData);
+      } catch (error) {
+        console.error("Error fetching QC data:", error);
+        setQC([]);
+      }
+    };
+
+    fetchQCData();
+  }, []);
+
   const handleResourceClick = (resource: Resource) => {
     setSelectedResource(resource);
     setFormData(resource.formData);
+    // Update QCUserDefined state when resource is selected
+    setQCUserDefined({
+      dropdown: resource.formData?.QCUserDefined ?? "",
+      input: resource.formData?.QCUserDefinedValue ?? "",
+    });
+    console.log("resource ====", resource);
+    console.log("resource.formData ====", resource.formData);
   };
 
   const handleAddNew = () => {
@@ -144,13 +223,76 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
     setFormData(initialFormData);
   };
 
+  // Helper function to split dropdown values (format: "id || name")
+  const splitDropdownValue = (value: string | undefined) => {
+    if (!value) return { value: '', label: '' };
+    if (typeof value === 'string' && value.includes('||')) {
+      const parts = value.split('||');
+      return {
+        value: parts[0]?.trim() || '',
+        label: parts[1]?.trim() || ''
+      };
+    }
+    return { value: value, label: value };
+  };
+
   const handleSave = () => {
+    console.log("formData ==== before save (changed data from forms):", formData);
+    console.log("selectedResource ====", selectedResource);
+    console.log("resources array ====", resources);
+    
+    // Determine ModeFlag based on selectedResource
+    const modeFlag = selectedResource ? "Update" : "Insert";
+    // Split dropdown values
+    const carrierData = splitDropdownValue(formData.carrier);
+    const carrierStatusData = splitDropdownValue(formData.carrierStatus);
+    const legDetailsData = splitDropdownValue(formData.legDetails);
+    const serviceData = splitDropdownValue(formData.service);
+    const subServiceData = splitDropdownValue(formData.subService);
+    
+    const formPayload = {
+      ...formData,
+      carrier: carrierData.value || '',
+      carrierStatus: carrierStatusData.value || '',
+      legDetails: legDetailsData.value || '',
+      service: serviceData.value || '',
+      subService: subServiceData.value || '',
+      ModeFlag: modeFlag
+    }
+    // Create payload by updating selectedResource with new formData and ModeFlag
+    let payload: any;
+    
     if (selectedResource) {
-      // Update existing resource
+      // For update: Take selectedResource structure and update formData with current formData changes
+      // Also add ModeFlag to the payload
+      payload = {
+        ...selectedResource,  // Keep id, type, name, and all existing properties
+        formData: formPayload,  // Update formData with changed data from forms
+        // ModeFlag: modeFlag   // Add ModeFlag
+      };
+    } else {
+      // For insert: Create new resource structure with current formData
+      payload = {
+        id: `RES${Date.now()}`,
+        type: formData.resourceCategory as 'Schedule' | 'Agent' | 'Handler' || 'Schedule',
+        name: formData.resource || formData.scheduleNo || `Resource ${resources.length + 1}`,
+        formData: formPayload,  // Use current formData
+        // ModeFlag: modeFlag   // Add ModeFlag
+      };
+    }
+    
+    console.log("SelectedResource (original):", selectedResource);
+    console.log("FormData (changed data from forms):", formData);
+    console.log("Final payload (selectedResource + updated formData + ModeFlag):", payload);
+    console.log("formPayload:", formPayload);
+    
+    // Update local state
+    if (selectedResource) {
+      // Update existing resource in resources array with new formData
       setResources(prev => 
         prev.map(r => 
           r.id === selectedResource.id 
-            ? { ...r, formData } 
+            ? { ...r, formData: formPayload } 
             : r
         )
       );
@@ -158,13 +300,19 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
       // Create new resource
       const newResource: Resource = {
         id: `RES${Date.now()}`,
-        type: 'Schedule',
-        name: formData.scheduleNo || `Resource ${resources.length + 1}`,
-        formData,
+        type: formData.resourceCategory as 'Schedule' | 'Agent' | 'Handler' || 'Schedule',
+        name: formData.resource || formData.scheduleNo || `Resource ${resources.length + 1}`,
+        formData: formPayload,
       };
       setResources(prev => [...prev, newResource]);
       setSelectedResource(newResource);
+      console.log("newResource ====", newResource);
     }
+    
+    // TODO: Call API with payload
+    // Example: await tripPlanningService.saveResource(payload);
+    
+    console.log("Payload ready to send to API:", payload);
   };
 
   const handleClear = () => {
@@ -172,12 +320,163 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
     setSelectedResource(null);
   };
 
+  // Handle resource drawer open/close
+  const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
+    console.log(`Opening ${resourceType.toLowerCase()} drawer`);
+    setCurrentResourceType(resourceType);
+    setIsLoadingResource(true); // Show loader
+    setIsResourceSearchDrawerOpen(true);
+
+    const finalSearchCriteria = {
+      "PlanningProfileID": "General-GMBH",
+      "Location": "10-00004",
+      "PlanDate": "",
+      "ResourceProfileID": "",
+      "Service": "",
+      "ServiceDescription": "",
+      "SubServiceType": "",
+      "SubServiceDescription": ""
+    }
+
+    try {
+      let response: any;
+
+      // Call appropriate API based on resource type
+      switch (resourceType) {
+        case 'Equipment':
+          response = await tripPlanningService.getEquipmentList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Supplier':
+          response = await tripPlanningService.getAgentsList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Driver':
+          response = await tripPlanningService.getDriversList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Handler':
+          response = await tripPlanningService.getHandlersList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Vehicle':
+          response = await tripPlanningService.getVehicleList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        case 'Schedule':
+          response = await tripPlanningService.getSchedulesList({
+            searchCriteria: finalSearchCriteria
+          });
+          break;
+        default:
+          throw new Error(`Unknown resource type: ${resourceType}`);
+      }
+
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      console.log('Response:', JSON.parse(response?.data?.ResponseData));
+      const resourceDetails = parsedResponse.ResourceDetails;
+      console.log("resourceDetails data ====", resourceDetails);
+
+      // Set data based on resource type
+      switch (resourceType) {
+        case 'Supplier':
+          setResourceData(resourceDetails.Supplier || []);
+          break;
+        case 'Driver':
+          setResourceData(resourceDetails.Drivers || []);
+          break;
+        case 'Handler':
+          setResourceData(resourceDetails.Handlers || []);
+          break;
+        case 'Vehicle':
+          setResourceData(resourceDetails.Vehicles || []);
+          break;
+        case 'Schedule':
+          setResourceData(resourceDetails.Schedule || []);
+          break;
+      }
+
+      console.log("data ==== after set", resourceDetails);
+    }
+    catch (error) {
+      console.error('Server-side search failed:', error);
+    }
+    finally {
+      setIsLoadingResource(false); // Hide loader
+    }
+  };
+
+  const handleCloseResourceDrawer = () => {
+    setIsResourceSearchDrawerOpen(false);
+  };
+
+  const handleAddResource = (resources: any[]) => {
+    setSelectedResources(resources);
+    console.log('Selected resources:', resources);
+    
+    // Update the Resource field in formData with the first selected resource
+    if (resources && resources.length > 0) {
+      const firstResource = resources[0];
+      const resourceId = firstResource?.ResourceID || '';
+      
+      // Update formData with the selected resource ID
+      setFormData(prev => ({
+        ...prev,
+        resource: resourceId
+      }));
+      
+      console.log('Updated formData.resource with:', resourceId);
+    }
+  };
+
+  // Generic fetch function for master common data using quickOrderService.getMasterCommonData
+  const makeLazyFetcher = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+      
+      const rr: any = response.data
+        return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+          ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+            ? {
+                label: `${item.id} || ${item.name}`,
+                value: `${item.id} || ${item.name}`,
+              }
+            : {})
+        }));
+      
+      // Fallback to empty array if API call fails
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  const fetchCarrierOptions = makeLazyFetcher("Executive Carrier Init");
+  const fetchCarrierStatus = makeLazyFetcher("Carrier Status Init");
+  const fetchLegDetails = makeLazyFetcher("Leg ID Init");
+  const fetchServiceOptions = makeLazyFetcher("Service type Init");
+  const fetchSubServiceOptions = makeLazyFetcher("Sub Service type Init");
+  const fetchQC = makeLazyFetcher("QCUserDefined Init");
+  
   return (
     <div className="flex flex-col h-full">
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Resource List */}
-        <div className="w-64 border-r border-border bg-muted/30 p-4 flex flex-col">
+        <div className="w-72 border-r border-border bg-muted/30 p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-sm">All Resources</h3>
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleAddNew}>
@@ -209,20 +508,60 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             {/* Carrier and Supplier Row */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                  <Label>Resource Category</Label>
+                  <Select value={formData.resourceCategory} onValueChange={(value) => {
+                    // Clear the resource field when category changes
+                    setFormData({ ...formData, resourceCategory: value, resource: '' });
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Schedule">Schedule</SelectItem>
+                      <SelectItem value="Supplier">Supplier</SelectItem>
+                      <SelectItem value="Handler">Handler</SelectItem>
+                      <SelectItem value="Driver">Driver</SelectItem>
+                      <SelectItem value="Vehicle">Vehicle</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Resource</Label>
+                  <div className="relative">
+                    <Input className="h-10"
+                      value={formData.resource}
+                      onChange={(e) => setFormData({ ...formData, resource: e.target.value })}
+                    />
+                    <Search 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" 
+                      onClick={() => {
+                        const resourceCategory = formData.resourceCategory;
+                        if (resourceCategory) {
+                          // Pass the selected resourceCategory value to handleOpenResourceDrawer
+                          handleOpenResourceDrawer(resourceCategory as 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule');
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label>Carrier (Executive Agent)</Label>
-                <Select value={formData.carrier} onValueChange={(value) => setFormData({ ...formData, carrier: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ABC Executive Agent">ABC Executive Agent</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchCarrierOptions}
+                  value={formData.carrier}
+                  onChange={(value) => setFormData({ ...formData, carrier: value as string })}
+                  placeholder="Select Carrier (Executive Agent)"
+                  className="w-full"
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Supplier</Label>
                 <div className="relative">
-                  <Input
+                  <Input className="h-10"
                     value={formData.supplier}
                     onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
                   />
@@ -235,7 +574,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Supplier Ref. No.</Label>
-                <Input
+                <Input className="h-10"
                   placeholder="Enter Supplier Ref. No."
                   value={formData.supplierRef}
                   onChange={(e) => setFormData({ ...formData, supplierRef: e.target.value })}
@@ -243,35 +582,42 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               </div>
               <div className="space-y-2">
                 <Label>Carrier Status</Label>
-                <Select value={formData.carrierStatus} onValueChange={(value) => setFormData({ ...formData, carrierStatus: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Inprogress">Inprogress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchCarrierStatus}
+                  value={formData.carrierStatus}
+                  onChange={(value) => setFormData({ ...formData, carrierStatus: value as string })}
+                  placeholder="Select Carrier Status"
+                  className="w-full"
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                />
               </div>
             </div>
 
             {/* Schedule No and Train No */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Schedule No.</Label>
                 <div className="relative">
-                  <Input
+                  <Input className="h-10"
                     placeholder="Select Schedule No."
                     value={formData.scheduleNo}
                     onChange={(e) => setFormData({ ...formData, scheduleNo: e.target.value })}
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
+              </div> */}
+              <div className="space-y-2">
+                <Label>Infrastructure Manager Name</Label>
+                <Input className="h-10"
+                  placeholder="Enter Infrastructure Manager Name"
+                  value={formData.infrastructureManager}
+                  onChange={(e) => setFormData({ ...formData, infrastructureManager: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Train No (License Plate No.)</Label>
-                <Input
+                <Input className="h-10"
                   placeholder="Enter Train No."
                   value={formData.trainNo}
                   onChange={(e) => setFormData({ ...formData, trainNo: e.target.value })}
@@ -283,7 +629,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Path No.</Label>
-                <Input
+                <Input className="h-10"
                   placeholder="Enter Path No."
                   value={formData.pathNo}
                   onChange={(e) => setFormData({ ...formData, pathNo: e.target.value })}
@@ -291,14 +637,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               </div>
               <div className="space-y-2">
                 <Label>Leg Details</Label>
-                <Select value={formData.legDetails} onValueChange={(value) => setFormData({ ...formData, legDetails: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="01 - Voila to Curtici">01 - Voila to Curtici</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchLegDetails}
+                  value={formData.legDetails}
+                  onChange={(value) => setFormData({ ...formData, legDetails: value as string })}
+                  placeholder="Select Leg Details"
+                  className="w-full"
+                  hideSearch={false}
+                  disableLazyLoading={false}
+                />
               </div>
             </div>
 
@@ -307,7 +654,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               <div className="space-y-2">
                 <Label>Departure Point</Label>
                 <div className="relative">
-                  <Input
+                  <Input className="h-10"
                     value={formData.departurePoint}
                     onChange={(e) => setFormData({ ...formData, departurePoint: e.target.value })}
                   />
@@ -317,7 +664,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               <div className="space-y-2">
                 <Label>Arrival Point</Label>
                 <div className="relative">
-                  <Input
+                  <Input className="h-10"
                     value={formData.arrivalPoint}
                     onChange={(e) => setFormData({ ...formData, arrivalPoint: e.target.value })}
                   />
@@ -330,53 +677,58 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Service</Label>
-                <Select value={formData.service} onValueChange={(value) => setFormData({ ...formData, service: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="service1">Service 1</SelectItem>
-                    <SelectItem value="service2">Service 2</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchServiceOptions}
+                  value={formData.service}
+                  onChange={(value) => setFormData({ ...formData, service: value as string })}
+                  placeholder="Select Service"
+                  className="w-full"
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Sub Service</Label>
-                <Select value={formData.subService} onValueChange={(value) => setFormData({ ...formData, subService: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Sub Service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sub1">Sub Service 1</SelectItem>
-                    <SelectItem value="sub2">Sub Service 2</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DynamicLazySelect
+                  fetchOptions={fetchSubServiceOptions}
+                  value={formData.subService}
+                  onChange={(value) => setFormData({ ...formData, subService: value as string })}
+                  placeholder="Select Sub Service"
+                  className="w-full"
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                />
               </div>
             </div>
 
             {/* Infrastructure Manager and Reason */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Infrastructure Manager Name</Label>
-                <Input
-                  placeholder="Enter Infrastructure Manager Name"
-                  value={formData.infrastructureManager}
-                  onChange={(e) => setFormData({ ...formData, infrastructureManager: e.target.value })}
+                <Label>Quick Code</Label>
+                <InputDropdown
+                  value={QCUserDefined}
+                  onChange={(value) => {
+                    setQCUserDefined(value);
+                    // Update formData with QC values
+                    setFormData({
+                      ...formData,
+                      QCUserDefined: value.dropdown || '',
+                      QCUserDefinedValue: value.input || '',
+                    });
+                  }}
+                  options={QC}
+                  placeholder="Enter Value"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Reason</Label>
+                <Label>Reason <span className="text-destructive">*</span></Label>
                 <div className="relative">
-                  <Select value={formData.reason} onValueChange={(value) => setFormData({ ...formData, reason: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Reason" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="reason1">Reason 1</SelectItem>
-                      <SelectItem value="reason2">Reason 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Search className="absolute right-9 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input className="h-10"
+                    placeholder="Enter Reason"
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  />
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -404,6 +756,39 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
           Save Resource
         </Button>
       </div>
+
+      {/* Resource Selection Drawer */}
+      <ResourceSearchDrawer
+        isOpen={isResourceSearchDrawerOpen}
+        onClose={handleCloseResourceDrawer}
+        onAddResource={handleAddResource}
+		    tripInformation={tripInformation}
+        onUpdateTripInformation={(updatedTripInformation) => {
+          setTripInformation(updatedTripInformation);
+          console.log('TripInformation updated from ResourceSelectionDrawer:', updatedTripInformation);
+        }}
+        // selectedResourcesRq={EquipmentData}
+        selectedResourcesRq={(() => {
+          // Return the appropriate selected resources based on current resource type
+          switch (currentResourceType) {
+            case 'Handler':
+              return tripResourceDetailsData?.Handlers || [];
+            case 'Vehicle':
+              return tripResourceDetailsData?.Vehicle || [];
+            case 'Driver':
+              return tripResourceDetailsData?.Drivers || [];
+            case 'Supplier':
+              return tripResourceDetailsData?.Supplier || [];
+            case 'Schedule':
+              return tripResourceDetailsData?.Schedule || [];
+            default:
+              return [];
+          }
+        })()}
+        resourceType={currentResourceType}
+        resourceData={resourceData}
+        isLoading={isLoadingResource}
+      />
     </div>
   );
 };

@@ -198,7 +198,7 @@ export const SummaryCardsGrid = () => {
  
    const handleCardClick = (cardTitle: string) => {
     if (cardTitle === 'Resources') {
-      openDrawer('resources');
+      // openDrawer('resources');
     } else if (cardTitle === 'VAS') {
       openDrawer('vas');
     } else if (cardTitle === 'Incidents') {
