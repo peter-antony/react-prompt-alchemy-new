@@ -66,6 +66,8 @@ export function ActualSmartGridPlus({
   onAddRow,
   onEditRow,
   onDeleteRow,
+  onToolbarDeleteClick,
+  onToolbarAddClick, 
   onImport,
   onImportData,
   onExport,
@@ -73,8 +75,9 @@ export function ActualSmartGridPlus({
   validationRules = {},
   addRowButtonLabel = "Add Row",
   addRowButtonPosition = "top-left",
-  region = 'german' // Add region prop with default value
-}: SmartGridPlusProps) {
+  region = 'german', // Add region prop with default value
+  hideActionsColumn = false // NEW: hide actions column
+}: SmartGridPlusProps & { hideActionsColumn?: boolean }) {
   const {
     gridData,
     setGridData,
@@ -1000,6 +1003,8 @@ export function ActualSmartGridPlus({
       setIsAddingRow(false);
       setNewRowValues(defaultRowValues);
       setValidationErrors({});
+      setEditingRow(null); // Ensure no row is in edit mode
+      setEditingCell(null); // Ensure no cell is in edit mode
 
       toast({
         title: "Row Added",
@@ -1012,7 +1017,7 @@ export function ActualSmartGridPlus({
         variant: "destructive",
       });
     }
-  }, [newRowValues, validateRow, gridData, setGridData, onAddRow, defaultRowValues, toast]);
+  }, [newRowValues, validateRow, gridData, setGridData, onAddRow, defaultRowValues, toast, setEditingRow, setEditingCell]);
 
   const handleCancelNewRow = useCallback(() => {
     setIsAddingRow(false);
@@ -1206,55 +1211,13 @@ export function ActualSmartGridPlus({
       );
     }
 
-    // Handle SmartGridPlus specific actions column
-    if (column.key === 'actions') {
-      return (
-        <div className="flex items-center gap-1">
-          {isRowEditing ? (
-            <>
-              <Button
-                size="sm"
-                onClick={() => handleSaveEditRow(rowIndex)}
-                className="h-8 w-8 p-0"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancelEditRow}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </>
-          ) : (
-            <>
-              {inlineRowEditing && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleStartEditRow(rowIndex, row)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDeleteRowAction(rowIndex, row)}
-                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      );
+    // Remove actions column if hideActionsColumn is true
+    if (column.key === 'actions' && hideActionsColumn) {
+      return null;
     }
 
     // Handle inline row editing for SmartGridPlus
+    // Auto-save: update state immediately on cell edit, no tick
     if (isRowEditing && inlineRowEditing && column.key !== 'actions') {
       const editingValue = editingValues[column.key];
 
@@ -1270,6 +1233,11 @@ export function ActualSmartGridPlus({
             }
             // Then update local editingValues
             handleEditingCellChange(rowIndex, column.key, value);
+            // Auto-save: call onInlineEdit immediately if provided
+            if (onInlineEdit) {
+              const updatedRow = { ...row, [column.key]: value };
+              onInlineEdit(rowIndex, updatedRow);
+            }
           }}
           error={validationErrors[column.key]}
           shouldFocus={focusedColumnKey === column.key}
@@ -1308,6 +1276,7 @@ export function ActualSmartGridPlus({
           minWidth: `${totalGridWidth}px`,
           width: `${totalGridWidth}px`
         }}
+        onDoubleClick={handleSaveNewRow}
       >
         {/* Checkbox column */}
         {showCheckboxes && (
@@ -1321,7 +1290,7 @@ export function ActualSmartGridPlus({
             {/* Empty space for checkbox column */}
           </div>
         )}
-        {orderedColumns.map((column) => (
+        {orderedColumns.filter(col => !(hideActionsColumn && col.key === 'actions')).map((column) => (
           <div
             key={column.key}
             className="px-2 py-3 border-r border-gray-100 last:border-r-0 text-[13px] flex-shrink-0 relative"
@@ -1332,60 +1301,37 @@ export function ActualSmartGridPlus({
               position: 'relative'
             }}
           >
-            {column.key === 'actions' ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  onClick={handleSaveNewRow}
-                  className="h-8 w-8 p-0"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCancelNewRow}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div
-                className="w-full h-full"
-                style={{
-                  maxWidth: '100%',
-                  overflow: 'hidden'
+            <div
+              className="w-full h-full"
+              style={{
+                maxWidth: '100%',
+                overflow: 'hidden'
+              }}
+            >
+              <EnhancedCellEditor1
+                value={newRowValues[column.key]}
+                column={column}
+                region={region}
+                onChange={(value) => {
+                  const updatedRowValues = {
+                    ...newRowValues,
+                    [column.key]: value
+                  };
+                  setNewRowValues(updatedRowValues);
+                  if (validationErrors[column.key]) {
+                    setValidationErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors[column.key];
+                      return newErrors;
+                    });
+                  }
+                  if (column.onChange) {
+                    column.onChange(value, updatedRowValues, -1, setNewRowValues);
+                  }
                 }}
-              >
-                <EnhancedCellEditor1
-                  value={newRowValues[column.key]}
-                  column={column}
-                  region={region}
-                  onChange={(value) => {
-                    const updatedRowValues = {
-                      ...newRowValues,
-                      [column.key]: value
-                    };
-                    setNewRowValues(updatedRowValues);
-                    // Clear validation error for this field
-                    if (validationErrors[column.key]) {
-                      setValidationErrors(prev => {
-                        const newErrors = { ...prev };
-                        delete newErrors[column.key];
-                        return newErrors;
-                      });
-                    }
-                    // Call column-specific onChange if provided
-                    // Pass -1 as rowIndex and a callback to update new row values
-                    if (column.onChange) {
-                      column.onChange(value, updatedRowValues, -1, setNewRowValues);
-                    }
-                  }}
-                  error={validationErrors[column.key]}
-                />
-              </div>
-            )}
+                error={validationErrors[column.key]}
+              />
+            </div>
           </div>
         ))}
         {/* Plugin row actions column */}
@@ -1465,7 +1411,7 @@ export function ActualSmartGridPlus({
   return (
     <div className="space-y-4 w-full">
       {/* Add Row Button */}
-      {inlineRowAddition && addRowButtonPosition === "top-left" && (
+      {/* {inlineRowAddition && addRowButtonPosition === "top-left" && (
         <div className="flex justify-start">
           <Button
             onClick={handleAddRowClick}
@@ -1476,7 +1422,7 @@ export function ActualSmartGridPlus({
             {addRowButtonLabel}
           </Button>
         </div>
-      )}
+      )} */}
 
       {/* Toolbar */}
       <GridToolbar1
@@ -1505,6 +1451,8 @@ export function ActualSmartGridPlus({
         recordCount={recordCount}
         showAdvancedFilter={showFilterRow}
         onToggleAdvancedFilter={() => setShowFilterRow(!showFilterRow)}
+        onToolbarDeleteClick={onToolbarDeleteClick}
+        onToolbarAddClick={handleAddRowClick}
       />
 
       {/* Unified Grid Container with Single Horizontal Scroll - Fixed width like planned grid */}
@@ -1770,7 +1718,18 @@ export function ActualSmartGridPlus({
                           minWidth: `${totalGridWidth}px`,
                           width: `${totalGridWidth}px`
                         }}
-                        onDoubleClick={() => handleCellDoubleClick(actualIndex, row)}
+                        onClick={() => {
+                          // If not already editing this row, make it editable
+                          if (editingRow !== actualIndex) {
+                            handleStartEditRow(actualIndex, row);
+                          }
+                        }}
+                        onDoubleClick={() => {
+                          // If already editing this row, double click will exit edit mode
+                          if (editingRow === actualIndex) {
+                            setEditingRow(null);
+                          }
+                        }}
                       >
                         {/* Checkbox column */}
                         {showCheckboxes && (

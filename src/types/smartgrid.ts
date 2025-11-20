@@ -314,6 +314,8 @@ export interface SmartGridPlusProps extends SmartGridProps {
   onAddRow?: (row: any) => Promise<void> | void;
   onEditRow?: (row: any, rowIndex: number) => Promise<void> | void;
   onDeleteRow?: (row: any, rowIndex: number) => Promise<void> | void;
+  onToolbarDeleteClick?: () => void;
+  onToolbarAddClick?: () => void;
   
   // Import functionality
   onImport?: () => void;

@@ -80,6 +80,8 @@ interface GridToolbarProps {
   // Selection props
   selectedRowsCount?: number;
   onClearSelection?: () => void;
+  onToolbarDeleteClick?: () => void;
+  onToolbarAddClick?: () => void;
 }
 
 export const GridToolbar1 = React.memo(function GridToolbar1({
@@ -123,7 +125,9 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
   gridId,
   hideCheckboxToggle = false,
   selectedRowsCount = 0,
-  onClearSelection
+  onClearSelection,
+  onToolbarDeleteClick,
+  onToolbarAddClick
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -209,7 +213,7 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
 
   return (
     <div className={`flex items-center justify-between w-full
-      ${(gridTitle == 'Plan List' || gridTitle == 'Actual List') ? 'mb-0 p-4' : 'mb-4'}`}>
+      ${(gridTitle == 'Plan List' || gridTitle == 'Actual List') ? 'mb-0 p-4 ' : 'mb-4 pr-4 pl-4 pt-2'}`}>
       {/* Left side - Grid Title and Count */}
       <div className="flex items-center">
         {gridTitle && (
@@ -459,7 +463,7 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
         )} */}
 
         {/* Column Visibility Manager */}
-        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
+        {/* {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
           <ColumnVisibilityManager
             columns={columns}
             preferences={preferences}
@@ -468,9 +472,9 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
             onResetToDefaults={onResetToDefaults}
             onSubRowToggle={onSubRowToggle}
           />
-        )}
+        )} */}
 
-        {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List' && gridTitle !== 'Leg Details') && (
+        {/* {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List' && gridTitle !== 'Leg Details') && (
           <Button
             variant="ghost"
             size="sm"
@@ -481,7 +485,7 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
           >
             <RotateCcw className="h-4 w-4 text-gray-600" />
           </Button>
-        )}
+        )} */}
 
         {/* <Button 
           variant="ghost"
@@ -564,6 +568,35 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
         )}
 
         {/* Configurable Buttons */}
+        {/* Delete Button (Trash2 icon) */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToolbarDeleteClick}
+          disabled={loading}
+          title="Delete Selected"
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
+        >
+          {/* Trash2 icon (SVG) */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2.66667 4.66667H13.3333M6 7.33333V11.3333M10 7.33333V11.3333M2.66667 4.66667L3.33333 13.3333C3.38562 13.9306 3.93062 14.3333 4.53333 14.3333H11.4667C12.0694 14.3333 12.6144 13.9306 12.6667 13.3333L13.3333 4.66667M6.66667 2.66667H9.33333C9.70152 2.66667 10 2.96515 10 3.33333V4.66667H6V3.33333C6 2.96515 6.29848 2.66667 6.66667 2.66667Z" stroke="#ef3c36" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Button>
+        {/* Add Button (Plus icon) */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToolbarAddClick}
+          disabled={loading}
+          title="Add New Item"
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
+        >
+          {/* Plus icon (SVG) */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 4V12M4 8H12" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Button>
+
         {buttonsToShow.map((buttonConfig, index) => (
           <ConfigurableButton
             key={index}
