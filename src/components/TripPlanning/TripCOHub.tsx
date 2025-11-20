@@ -18,6 +18,7 @@ import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
+import { dateFormatter } from "@/utils/formatter";
 
 export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData }) => {
   const pageSize = 15;
@@ -856,6 +857,8 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
         }
       });
       console.log("processedData", processedData);
@@ -1329,6 +1332,8 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
           // QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });

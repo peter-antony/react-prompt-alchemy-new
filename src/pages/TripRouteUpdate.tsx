@@ -20,6 +20,7 @@ import { tripPlanningService } from "@/api/services/tripPlanningService";
 import { TransportRouteLegDrawer, TransportRouteLegDrawerRef } from '@/components/drawer/TransportRouteLegDrawer';
 import { useTransportRouteStore } from '@/stores/transportRouteStore';
 import { SideDrawer } from "@/components/SideDrawer";
+import { dateFormatter } from "@/utils/formatter";
 
 export const TripRouteUpdate = () => {
   const [searchParams] = useSearchParams();
@@ -163,7 +164,7 @@ export const TripRouteUpdate = () => {
     {
       key: "CODepartureDate",
       label: "Departure Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
@@ -172,7 +173,7 @@ export const TripRouteUpdate = () => {
     {
       key: "COArrivalDate",
       label: "Arrival Date",
-      type: "DateTimeRange",
+      type: "Date",
       sortable: true,
       editable: false,
       subRow: false,
@@ -275,6 +276,8 @@ export const TripRouteUpdate = () => {
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          CODepartureDate: dateFormatter(row.CODepartureDate),
+          COArrivalDate: dateFormatter(row.COArrivalDate),
         }
       });
 
@@ -756,6 +759,8 @@ export const TripRouteUpdate = () => {
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          CODepartureDate: dateFormatter(row.CODepartureDate),
+          COArrivalDate: dateFormatter(row.COArrivalDate),
           // QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });

@@ -18,6 +18,7 @@ import TripBulkCancelModal from "@/components/ManageTrip/TripBulkCancelModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
+import { dateFormatter } from "@/utils/formatter";
 
 interface TripCOHubMultipleProps {
   onCustomerOrderClick: (selectedRows: any[]) => void;
@@ -512,6 +513,8 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
         }
       });
 
@@ -918,6 +921,8 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
           // QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });

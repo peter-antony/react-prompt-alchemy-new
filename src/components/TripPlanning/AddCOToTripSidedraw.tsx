@@ -17,6 +17,7 @@ import { tripService } from "@/api/services/tripService";
 import { useNavigate } from 'react-router-dom';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { filterService } from '@/api/services';
+import { dateFormatter } from '@/utils/formatter';
 
 interface AddCOToTripSidedrawProps {
   isOpen: boolean;
@@ -526,7 +527,9 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
           TripStatus: {
             value: row.TripStatus,
             variant: getStatusColorLocal(row.TripStatus),
-          }
+          },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
         }
       });
 
@@ -891,6 +894,8 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          DepartureDate: dateFormatter(row.DepartureDate),
+          ArrivalDate: dateFormatter(row.ArrivalDate),
           // QuickOrderDate: dateFormatter(row.QuickOrderDate)
         };
       });
