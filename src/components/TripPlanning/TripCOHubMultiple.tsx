@@ -26,7 +26,7 @@ interface TripCOHubMultipleProps {
 }
 
 export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMultipleProps) => {
-  const pageSize = 15;
+  const pageSize = 50;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};

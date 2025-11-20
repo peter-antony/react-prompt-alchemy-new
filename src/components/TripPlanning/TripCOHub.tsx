@@ -21,7 +21,7 @@ import { tripPlanningService } from "@/api/services/tripPlanningService";
 import { dateFormatter } from "@/utils/formatter";
 
 export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData }) => {
-  const pageSize = 15;
+  const pageSize = 50;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
   const filtersForThisGrid = activeFilters[gridId] || {};
