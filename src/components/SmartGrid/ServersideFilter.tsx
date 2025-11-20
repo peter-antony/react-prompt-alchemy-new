@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFilterStore } from '@/stores/filterStore';
 import { cn } from '@/lib/utils';
 import { LazySelect } from './LazySelect';
+import { Switch } from '@/components/ui/switch';
 
 interface ServersideFilterProps {
   serverFilters: ServerFilter[];
@@ -311,6 +312,26 @@ export function ServersideFilter({
         filter !== undefined && visibleFields.includes(filter.key)
       );
     return orderedVisibleFilters.map((filter) => {
+       // Handle switch type
+       if (filter.type === 'switch') {
+        return (
+          <div key={filter.key} className="space-y-1">
+            <span className="text-xs font-medium text-gray-600">{filter.label}</span>
+            <div className="relative">
+              <Switch
+                checked={!!pendingFilters[filter.key]?.value}
+                onCheckedChange={(checked) => {
+                  handleFilterChange(filter.key, {
+                    value: checked,
+                    operator: 'equals',
+                    type: 'switch'
+                  });
+                }}
+              />
+            </div>
+          </div>
+        );
+      }
       // Handle lazyselect type specially
       if (filter.type === 'lazyselect' && filter.fetchOptions) {
         return (

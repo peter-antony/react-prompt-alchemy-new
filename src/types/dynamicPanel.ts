@@ -1,7 +1,7 @@
 
 export type PanelFieldConfig = 
   | {
-      fieldType: 'text' | 'search' | 'currency' | 'date' | 'time' | 'textarea';
+      fieldType: 'text' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'switch';
       key: string;
       label: string;
       placeholder?: string;
@@ -32,7 +32,7 @@ export type PanelFieldConfig =
 export interface FieldConfig {
   id: string;
   label: string;
-  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect';
+  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch';
   value: any;
   mandatory: boolean;
   visible: boolean;

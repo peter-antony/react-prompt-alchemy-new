@@ -14,6 +14,7 @@ import { Search, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import jsonStore from '@/stores/jsonStore';
+import { Switch } from '@/components/ui/switch';
 
 interface FieldRendererProps {
   config: FieldConfig;
@@ -678,6 +679,29 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               </div>
             );
           }}
+        />
+      );
+    
+    case 'switch':
+      return (
+        <Controller
+          name={fieldId}
+          control={control}
+          render={({ field }) => (
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={!!field.value}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  if (events?.onChange) {
+                    events.onChange(checked, { target: { value: checked } } as any);
+                  }
+                }}
+                tabIndex={tabIndex}
+              />
+              <span className="text-sm font-medium text-foreground">{config.label}</span>
+            </div>
+          )}
         />
       );
 

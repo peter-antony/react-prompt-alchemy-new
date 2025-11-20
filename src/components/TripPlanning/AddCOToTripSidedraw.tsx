@@ -765,9 +765,9 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
       if (key === 'IsShowForwardCustomerOrders' ||
         key === 'IsShowReturnCustomerOrders' ||
         key === 'IsShuntedOutWagons') {
-        if (filterValue === 'Yes') {
+        if (filterValue === true) {
           (criteria as any)[key] = '1';
-        } else if (filterValue === 'No') {
+        } else if (filterValue === false) {
           (criteria as any)[key] = '0';
         } else {
           (criteria as any)[key] = filterValue;
@@ -1096,23 +1096,33 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
         { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
       ] as any[],
     },
+    // {
+    //   key: 'IsShowForwardCustomerOrders',
+    //   label: 'Show Forward',
+    //   type: 'select',
+    //   options: [
+    //     { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+    //     { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+    //   ] as any[],
+    // },
+    // {
+    //   key: 'IsShowReturnCustomerOrders',
+    //   label: 'Show Return',
+    //   type: 'select',
+    //   options: [
+    //     { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+    //     { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+    //   ] as any[],
+    // }
     {
       key: 'IsShowForwardCustomerOrders',
       label: 'Show Forward',
-      type: 'select',
-      options: [
-        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
-        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ] as any[],
+      type: 'switch'
     },
     {
       key: 'IsShowReturnCustomerOrders',
       label: 'Show Return',
-      type: 'select',
-      options: [
-        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
-        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
-      ] as any[],
+      type: 'switch'
     }
   ];
 
