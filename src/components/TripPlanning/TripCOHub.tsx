@@ -1023,26 +1023,28 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       window.open(url, "_blank");
     }
     if (columnKey == "CustomerOrderID") {
-      console.log('rowIndex', rowIndex);
+      // Do not change selection on hyperlink click to keep behavior consistent
+
+      // console.log('rowIndex', rowIndex);
       
-      // Create composite key string from CustomerOrderID and LegBehaviour
-      const compositeKey = `${value.CustomerOrderID}-${value.LegBehaviour}`;
-      console.log('compositeKey:', compositeKey);
+      // // Create composite key string from CustomerOrderID and LegBehaviour
+      // const compositeKey = `${value.CustomerOrderID}-${value.LegBehaviour}`;
+      // console.log('compositeKey:', compositeKey);
       
-      // Check if this row is currently highlighted
-      const isCurrentlyHighlighted = highlightedRows.includes(compositeKey);
+      // // Check if this row is currently highlighted
+      // const isCurrentlyHighlighted = highlightedRows.includes(compositeKey);
       
-      if (isCurrentlyHighlighted) {
-        // If it's already highlighted, remove it (toggle off)
-        setHighlightedRows(prev => prev.filter(key => key !== compositeKey));
-        onCustomerOrderClick(value, false); // Pass false to indicate deselection
-        console.log('Row unselected:', compositeKey);
-      } else {
-        // If it's not highlighted, add it (toggle on)
-        setHighlightedRows(prev => [...prev, compositeKey]);
-        onCustomerOrderClick(value, true); // Pass true to indicate selection
-        console.log('Row selected:', compositeKey);
-      }
+      // if (isCurrentlyHighlighted) {
+      //   // If it's already highlighted, remove it (toggle off)
+      //   setHighlightedRows(prev => prev.filter(key => key !== compositeKey));
+      //   onCustomerOrderClick(value, false); // Pass false to indicate deselection
+      //   console.log('Row unselected:', compositeKey);
+      // } else {
+      //   // If it's not highlighted, add it (toggle on)
+      //   setHighlightedRows(prev => [...prev, compositeKey]);
+      //   onCustomerOrderClick(value, true); // Pass true to indicate selection
+      //   console.log('Row selected:', compositeKey);
+      // }
     }
   };
 
@@ -1091,50 +1093,61 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
 
-    // Toggle row selection
-    const newSelectedRows = new Set(selectedRows);
-    // if (newSelectedRows.has(index)) {
-    const newSelectedRowIds = new Set(selectedRowIds);
-    const newSelectedRowObjects = [...selectedRowObjects];
+    // // Toggle row selection
+    // const newSelectedRows = new Set(selectedRows);
+    // // if (newSelectedRows.has(index)) {
+    // const newSelectedRowIds = new Set(selectedRowIds);
+    // const newSelectedRowObjects = [...selectedRowObjects];
 
-    // Check if this row is already selected by ID (not index)
-    const isRowSelected = newSelectedRowIds.has(row.TripPlanID);
+    // // Check if this row is already selected by ID (not index)
+    // const isRowSelected = newSelectedRowIds.has(row.TripPlanID);
 
-    if (isRowSelected) {
-      // Remove row: remove from all tracking sets/arrays
-      newSelectedRows.delete(index);
-      newSelectedRowIds.delete(row.TripPlanID);
-      const objectIndex = newSelectedRowObjects.findIndex(obj => obj.TripPlanID === row.TripPlanID);
-      if (objectIndex > -1) {
-        newSelectedRowObjects.splice(objectIndex, 1);
-      }
-      console.log('Removed row:', row.TripPlanID);
+    // if (isRowSelected) {
+    //   // Remove row: remove from all tracking sets/arrays
+    //   newSelectedRows.delete(index);
+    //   newSelectedRowIds.delete(row.TripPlanID);
+    //   const objectIndex = newSelectedRowObjects.findIndex(obj => obj.TripPlanID === row.TripPlanID);
+    //   if (objectIndex > -1) {
+    //     newSelectedRowObjects.splice(objectIndex, 1);
+    //   }
+    //   console.log('Removed row:', row.TripPlanID);
+    // }
+    // else {
+    //   // Add row: add to all tracking sets/arrays (ensure uniqueness)
+    //   newSelectedRows.add(index);
+    //   newSelectedRowIds.add(row.TripPlanID);
+    //   // Only add if not already in objects array (double-check uniqueness)
+    //   if (!newSelectedRowObjects.some(obj => obj.TripPlanID === row.TripPlanID)) {
+    //     newSelectedRowObjects.push(row);
+    //   }
+    //   console.log('Added row:', row.TripPlanID);
+    // }
+
+    // // Update all state
+    // setSelectedRows(newSelectedRows);
+    // setSelectedRowIds(newSelectedRowIds);
+    // setSelectedRowObjects(newSelectedRowObjects);
+
+    // // Update selected row objects
+    // // const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
+    // // const selectedObjects = Array.from(newSelectedRows).map(idx => currentData[idx]).filter(Boolean);
+    // // setSelectedRowObjects(selectedObjects);
+    // // console.log('Selected row objects after click:', selectedObjects);
+    // console.log('Selected row objects after click:', newSelectedRowObjects);
+    // setRowTripId(Array.from(newSelectedRowIds));
+    // console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
+    // console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+
+    const compositeKey = `${row.CustomerOrderID}-${row.LegBehaviour}`;
+    const isHighlighted = highlightedRows.includes(compositeKey);
+
+    if (isHighlighted) {
+      setHighlightedRows(prev => prev.filter(key => key !== compositeKey));
+      onCustomerOrderClick(row, false);
+    } else {
+      setHighlightedRows(prev => [...prev, compositeKey]);
+      onCustomerOrderClick(row, true);
     }
-    else {
-      // Add row: add to all tracking sets/arrays (ensure uniqueness)
-      newSelectedRows.add(index);
-      newSelectedRowIds.add(row.TripPlanID);
-      // Only add if not already in objects array (double-check uniqueness)
-      if (!newSelectedRowObjects.some(obj => obj.TripPlanID === row.TripPlanID)) {
-        newSelectedRowObjects.push(row);
-      }
-      console.log('Added row:', row.TripPlanID);
-    }
-
-    // Update all state
-    setSelectedRows(newSelectedRows);
-    setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(newSelectedRowObjects);
-
-    // Update selected row objects
-    // const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
-    // const selectedObjects = Array.from(newSelectedRows).map(idx => currentData[idx]).filter(Boolean);
-    // setSelectedRowObjects(selectedObjects);
-    // console.log('Selected row objects after click:', selectedObjects);
-    console.log('Selected row objects after click:', newSelectedRowObjects);
-    setRowTripId(Array.from(newSelectedRowIds));
-    console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
-    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
   };
 
   useEffect(() => {
@@ -1608,6 +1621,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               showGroupingDropdown={true}
               editableColumns={['plannedStartEndDateTime']}
               paginationMode="pagination"
+              customPageSize={pageSize}
               onLinkClick={handleLinkClick}
               onUpdate={handleUpdate}
               onSubRowToggle={gridState.handleSubRowToggle}
@@ -1621,7 +1635,9 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
               // }
               rowClassName={(row: any, index: number) => {
-                return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                // return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                const uniqueId = `${row.CustomerOrderID}-${row.LegBehaviour}`;
+                return highlightedRows.includes(uniqueId) ? 'selected' : '';
               }}
               nestedRowRenderer={renderSubRow}
               // configurableButtons={gridConfigurableButtons}
@@ -1633,7 +1649,6 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               clientSideSearch={true}
               showSubHeaders={false}
               hideAdvancedFilter={true}
-              customPageSize={pageSize}
               hideCheckboxToggle={true}
               hideRightToolbar={tripID ? true : false}
               serverFilters={dynamicServerFilters}
