@@ -6580,7 +6580,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   </div>
 
                   {/* Actual List */}
-                  <div className="space-y-4">
+                  <div className="space-y-4" style={{ marginBottom: '3rem' }}>
                     {/* Table - Fixed width container with horizontal scroll for many columns */}
                     <div className="border rounded-lg overflow-x-auto overflow-y-hidden pt-2 w-full consignment-grid-container" style={{ minWidth: '800px' }}>
                       {actualEditableData && (
@@ -6668,7 +6668,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   </div>
                 </motion.div>
               )}
-              <div className='flex flex-col items-end fixed bottom-0 right-[40px] bg-white w-full border-t pt-2'>
+              <div className='flex flex-col items-end fixed bottom-0 right-[40px] bg-white w-full border-t p-2'>
                 <div className='flex gap-2'>
                   <Button
                     className="h-8 bg-blue-600 rounded hover:bg-blue-700"

@@ -38,15 +38,15 @@ export const TripExecutionHub = () => {
   const { config, setFooter, resetFooter } = useFooterStore();
 
   // Handle createTripPlan parameter
-  useEffect(() => {
-    if (createTripPlan === 'true') {
-      toast({
-        title: "Create Trip Plan Mode",
-        description: "You are now in trip plan creation mode. Use the available options to create a new trip plan.",
-        variant: "default",
-      });
-    }
-  }, [createTripPlan, toast]);
+  // useEffect(() => {
+  //   if (createTripPlan === 'true') {
+  //     toast({
+  //       title: "Create Trip Plan Mode",
+  //       description: "You are now in trip plan creation mode. Use the available options to create a new trip plan.",
+  //       variant: "default",
+  //     });
+  //   }
+  // }, [createTripPlan, toast]);
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
   const [popupOpen, setPopupOpen] = useState(false);
