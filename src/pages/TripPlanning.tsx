@@ -206,9 +206,25 @@ const TripPlanning = () => {
         setSearchParams(newSearchParams);
         
         // Call getTrip API with the new trip ID
-        await getTripDataByID(newTripId);
+        const response = await getTripDataByID(newTripId);
+        console.log("response ===000000000 ", response);
         
-        console.log('✅ Trip ID changed and data fetched:', newTripId);
+        // Check if data is empty
+        if (Object.keys(response?.tripFromAPI).length === 0) {
+          toast({
+            title: "⚠️ No Data Found",
+            description: `No trip data found for Trip ID: ${newTripId}`,
+            variant: "destructive",
+          });
+          console.log('⚠️ No trip data found for:', newTripId);
+        } else if (Object.keys(response?.tripFromAPI).length > 0) {
+          toast({
+            title: "✅ Trip Data Loaded",
+            description: `Successfully loaded data for Trip ID: ${newTripId}`,
+            variant: "default",
+          });
+          console.log('✅ Trip ID changed and data fetched:', newTripId);
+        }
       } catch (error) {
         console.error('❌ Failed to fetch trip data for new ID:', error);
         toast({
@@ -2799,8 +2815,27 @@ const TripPlanning = () => {
                     onChange={(e) => {
                       const newTripId = e.target.value;
                       setTripNo(newTripId);
-                      // Only handle onChange when urlTripID exists (coming from ManageTrip)
-                      if (urlTripID && newTripId && newTripId.trim() !== '') {
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const newTripId = e.currentTarget.value;
+                        if (newTripId && newTripId.trim() !== '') {
+                          console.log("🔍 Enter pressed - Fetching trip data for:", newTripId);
+                          handleTripIdChange(newTripId);
+                        } else {
+                          toast({
+                            title: "⚠️ Invalid Trip ID",
+                            description: "Please enter a valid Trip ID",
+                            variant: "destructive",
+                          });
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const newTripId = e.target.value;
+                      // Auto-trigger on blur if URL param exists and value changed
+                      if (urlTripID && newTripId && newTripId.trim() !== '' && newTripId !== urlTripID) {
+                        console.log("🔍 Input blur - Fetching trip data for:", newTripId);
                         handleTripIdChange(newTripId);
                       }
                     }}
