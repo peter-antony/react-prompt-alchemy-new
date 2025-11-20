@@ -392,6 +392,23 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       fetchTripData();
     }
   }, [tripId, fetchTripData]);
+
+  // Listen for trip data refresh events from child components (e.g., ConsignmentTrip)
+  useEffect(() => {
+    const handleTripDataRefreshed = async (event: CustomEvent) => {
+      console.log('Trip data refreshed event received:', event.detail);
+      // Refresh trip data when child component dispatches refresh event
+      if (tripId) {
+        await fetchTripData();
+      }
+    };
+
+    window.addEventListener('tripDataRefreshed', handleTripDataRefreshed as EventListener);
+
+    return () => {
+      window.removeEventListener('tripDataRefreshed', handleTripDataRefreshed as EventListener);
+    };
+  }, [tripId, fetchTripData]);
   
   // Get selected leg from legs array
   const selectedLeg = legs.find(leg => leg.LegSequence === selectedLegId) || null;
@@ -1997,7 +2014,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       </div>
                     </div>
                     <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
-                      {leg.LegBehaviourDescription}
+                      {leg.LegBehaviourDescription || leg.LegBehaviour || ''}
                     </div>
                     <TooltipProvider>
                       <Tooltip>

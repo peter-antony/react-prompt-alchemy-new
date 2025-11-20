@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, EllipsisVertical, Settings } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, EllipsisVertical, Settings, NotebookPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useDrawerStore } from '@/stores/drawerStore';
 import { SideDrawer } from '../SideDrawer';
 import PODDrawer from './PODDrawer';
+import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -5333,33 +5334,33 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           })
           .map((actualRow, index) => {
             try {
-              if (!actualRow || typeof actualRow !== 'object') {
-                throw new Error(`Invalid row data at index ${index}`);
-              }
+            if (!actualRow || typeof actualRow !== 'object') {
+              throw new Error(`Invalid row data at index ${index}`);
+            }
               let modeFlag = 'Update';
               let lineUniqueID = null;
 
-              if (actualRow.ModeFlag === 'Insert') {
+            if (actualRow.ModeFlag === 'Insert') {
                 modeFlag = 'Insert';
                 lineUniqueID = null;
-              } else if (actualRow.ModeFlag === 'Delete') {
+            } else if (actualRow.ModeFlag === 'Delete') {
                 modeFlag = 'Delete';
                 lineUniqueID = actualRow.LineUniqueID || null;
-              }
+            }
 
-              const safeNumeric = (value: any) => {
-                if (value === null || value === undefined || value === '') {
-                  return null;
-                }
-                const num = Number(value);
-                return isNaN(num) ? null : num;
-              };
-              const safeString = (value: any) => {
-                if (value === null || value === undefined) {
+            const safeNumeric = (value: any) => {
+              if (value === null || value === undefined || value === '') {
+                return null;
+              }
+              const num = Number(value);
+              return isNaN(num) ? null : num;
+            };
+            const safeString = (value: any) => {
+              if (value === null || value === undefined) {
                   return '';
-                }
-                return String(value);
-              };
+              }
+              return String(value);
+            };
               // Bug fix, Helper function to safely get string values or null if empty
 			  const safeStringOrNull = (value: any) => {
                 if (value === null || value === undefined || value === '') {
@@ -5367,95 +5368,95 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 }
                 return String(value);
               };
-              const safeDateTimeSplit = (value: any, part: number) => {
-                try {
+            const safeDateTimeSplit = (value: any, part: number) => {
+              try {
                   if (!value || typeof value !== 'string') return '';
-                  const parts = value.split(' ');
+                const parts = value.split(' ');
                   return parts[part] || '';
-                } catch (e) {
+              } catch (e) {
                   return '';
-                }
-              };
+              }
+            };
 
-              const mappedRow = {
+            const mappedRow = {
                 Seqno: (index + 1).toString(),
                 PlanToActualCopy: '',
-                WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
-                WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
+              WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
+              WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
                 WagonTypeDescription: safeString(actualRow['Wagon Type Description'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription),
-                Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
-                WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
-                WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
-                WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
+              Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
+              WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
+              WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
+              WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
                 ContainerTypeDescription: safeString(actualRow['Container Type Description'] || actualRow.ContainerTypeDescription || actualRow.containertypedescription),
-                ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
-                ContainerDescription: safeString(actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription),
-                ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
-                ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
-                Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
+              ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
+              ContainerDescription: safeString(actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription),
+              ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
+              ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
+              Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
                 ProductDescription: safeString(actualRow['Product Description'] || actualRow.ProductDescription || actualRow.productdescription),
                 ProductWeight: safeString(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
-                ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
-                Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
-                ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
-                ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
-                ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
+              ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
+              Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
+              ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
+              ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
+              ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
                 ThuQtyUom: safeString(actualRow['THU Qty UOM'] || actualRow.ThuQtyUOM || actualRow.thuqtyuom),
                 ThuWeight: safeString(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
-                ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
-                ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
+              ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
+              ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
                 ReplacedWagon: safeString(actualRow['Replaced Wagon'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
-                ShuntingReasonCode: safeString(actualRow['Shunting Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
-                ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
+              ShuntingReasonCode: safeString(actualRow['Shunting Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
+              ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
                 ShuntInLocationDescription: safeString(actualRow['Shunt In Location Description'] || actualRow.ShuntInLocationDescription || actualRow.shuntinlocationdescription),
-                ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
+              ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
                 ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location Description'] || actualRow.ShuntOutLocationDescription || actualRow.shuntoutlocationdescription),
                 ShuntInDate: actualRow['Shunt In Date'] || actualRow.shuntindate,
                 ShuntInTime: actualRow['Shunt In Time'] || actualRow.shuntintime,
                 ShuntOutDate: actualRow['Shunt Out Date'] || actualRow.shuntoutdate,
                 ShuntOutTime: actualRow['Shunt Out Time'] || actualRow.shuntouttime,
-                ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
+              ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
                 ClassOfStoresDescription: safeString(actualRow['Class Of Stores Description'] || actualRow.ClassOfStoresDescription || actualRow.classofstoresdescription),
-                NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
-                NHMDescription: safeString(actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription),
-                UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
-                UNCodeDescription: safeString(actualRow['UN Code Description'] || actualRow.UNCodeDescription || actualRow.uncodedescription),
-                DGClass: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
-                DGClassDescription: safeString(actualRow['DG Class Description'] || actualRow.DGClassDescription || actualRow.dgclassdescription),
-                ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
-                WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
-                ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
+              NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
+              NHMDescription: safeString(actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription),
+              UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
+              UNCodeDescription: safeString(actualRow['UN Code Description'] || actualRow.UNCodeDescription || actualRow.uncodedescription),
+              DGClass: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
+              DGClassDescription: safeString(actualRow['DG Class Description'] || actualRow.DGClassDescription || actualRow.dgclassdescription),
+              ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
+              WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
+              ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
                 ContainerAvgTareWeight: safeString(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
-                ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
-                LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
+              ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
+              LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
                 LastProductTransportedDate1: safeStringOrNull(actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1),
-                LastProductTransported2: safeString(actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2),
+              LastProductTransported2: safeString(actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2),
                 LastProductTransportedDate2: safeStringOrNull(actualRow['Last Product Transported Date2'] || actualRow.LastProductTransportedDate2 || actualRow.lastproducttransporteddate2),
-                LastProductTransported3: safeString(actualRow['Last Product Transported3'] || actualRow.LastProductTransported3 || actualRow.lastproducttransported3),
+              LastProductTransported3: safeString(actualRow['Last Product Transported3'] || actualRow.LastProductTransported3 || actualRow.lastproducttransported3),
                 LastProductTransportedDate3: safeStringOrNull(actualRow['Last Product Transported Date3'] || actualRow.LastProductTransportedDate3 || actualRow.lastproducttransporteddate3),
                 WagonTareWeight: safeStringOrNull(actualRow['Wagon Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight),
-                WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
-                WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
-                WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
+              WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
+              WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
+              WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
                 GrossWeight: safeStringOrNull(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
-                GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
+              GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
                 QuickCode1Description: safeString(actualRow['Quick Code1'] || actualRow.QuickCode1Description || actualRow.quickcode1description),
                 QuickCode2Description: safeString(actualRow['Quick Code2'] || actualRow.QuickCode2Description || actualRow.quickcode2description),
                 QuickCode3Description: safeString(actualRow['Quick Code3'] || actualRow.QuickCode3Description || actualRow.quickcode3description),
-                QuickCodeValue1: safeString(actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
-                QuickCodeValue2: safeString(actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
-                QuickCodeValue3: safeString(actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
-                Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
-                Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
-                Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
+              QuickCodeValue1: safeString(actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
+              QuickCodeValue2: safeString(actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
+              QuickCodeValue3: safeString(actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
+              Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
+              Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
+              Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
                 LineUniqueID: lineUniqueID,
-                ModeFlag: modeFlag // Set appropriate mode flag
-              };
-              return mappedRow;
-            } catch (rowError) {
-              throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
-            }
-          });
+              ModeFlag: modeFlag // Set appropriate mode flag
+            };
+            return mappedRow;
+          } catch (rowError) {
+            throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
+          }
+        });
 
       } else {
         // If no user edits, only include new/imported data (original logic)
@@ -5677,7 +5678,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             setActualData([...freshData]);
                           }
                         }
-
+                        
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5698,7 +5699,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                         // Use the dedicated refresh function
                         forceGridRefresh(allDataToSave, 'saved data fallback');
-
+                        
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5941,29 +5942,29 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           : (getConsignments(legId) || []);
 
         console.log('ConsignmentTrip: Loading data for legId:', legId, 'selectedLeg.LegSequence:', selectedLeg?.LegSequence, 'consignments:', cons.length);
-        if (cons.length > 0) {
-          const list = buildCustomerOrderList(cons);
-          setCustomerList(list);
+      if (cons.length > 0) {
+        const list = buildCustomerOrderList(cons);
+        setCustomerList(list);
 
-          setSelectedCustomerIndex('0');
-          const selected = cons[0];
-          setSelectedCustomerData(selected); // Use raw consignment data
-          setPlannedData(selected?.Planned ?? []);
-          setActualData(selected?.Actual ?? []);
-          setActualEditableData(selected?.Actual ?? []);
+        setSelectedCustomerIndex('0');
+        const selected = cons[0];
+        setSelectedCustomerData(selected); // Use raw consignment data
+        setPlannedData(selected?.Planned ?? []);
+        setActualData(selected?.Actual ?? []);
+        setActualEditableData(selected?.Actual ?? []);
           console.log('ConsignmentTrip: Loaded planned:', selected?.Planned?.length, 'actual:', selected?.Actual?.length);
-        } else {
-          // reset everything if no consignment for new leg
-          setCustomerList([]);
-          setSelectedCustomerIndex('');
-          setSelectedCustomerData({});
-          setPlannedData([]);
-          setActualData([]);
-          setActualEditableData([]);
+      } else {
+        // reset everything if no consignment for new leg
+        setCustomerList([]);
+        setSelectedCustomerIndex('');
+        setSelectedCustomerData({});
+        setPlannedData([]);
+        setActualData([]);
+        setActualEditableData([]);
           console.log('ConsignmentTrip: No consignment data available for this leg');
-          // No consignment data available for this leg
-        }
+        // No consignment data available for this leg
       }
+    }
     }
   }, [legId, selectedLeg, currentLeg]); // on leg change or selectedLeg change
 
@@ -6076,6 +6077,264 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   const handleCustomerChange = (idx: string) => {
     setSelectedCustomerIndex(idx);
     hasUserEditsRef.current = false;
+  };
+
+  const [addViaPointsModalOpen, setAddViaPointsModalOpen] = useState(false);
+  const [currentActionType, setCurrentActionType] = useState<'amend'>('amend');
+  const [fields, setFields] = useState([]);
+
+  // Create lazy fetcher for Reason Code using existing fetchMasterData pattern
+  // But format it correctly for DynamicLazySelect (needs label and value with || separator)
+  const fetchReasonCodeOptions = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: "Reason for changes Init",
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+      const rr: any = response.data;
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+          : {})
+      }));
+    } catch (error) {
+      console.error("Error fetching Reason Code options:", error);
+      return [];
+    }
+  };
+
+  // Create lazy fetcher for Via Location using Location Init
+  const fetchViaLocationOptions = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: "Location Init",
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+      const rr: any = response.data;
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+              label: `${item.id} || ${item.name}`,
+              value: `${item.id} || ${item.name}`,
+            }
+          : {})
+      }));
+    } catch (error) {
+      console.error("Error fetching Via Location options:", error);
+      return [];
+    }
+  };
+
+  const openAddViaPointsPopup = () => {
+    // Extract data from selectedLeg to bind to form fields
+    const legFromLocation = selectedLeg?.FromLocation || selectedLeg?.LegFrom || '';
+    const legFromDescription = selectedLeg?.FromLocationDescription || selectedLeg?.LegFromDescription || '';
+    const legToLocation = selectedLeg?.ToLocation || selectedLeg?.LegTo || '';
+    const legToDescription = selectedLeg?.ToLocationDescription || selectedLeg?.LegToDescription || '';
+    
+    // Format "Leg From and To" field: "FromLocation - ToLocation" or "FromDescription - ToDescription"
+    const legFromToValue = (legFromDescription && legToDescription)
+      ? `${legFromDescription} - ${legToDescription}`
+      : (legFromLocation && legToLocation)
+      ? `${legFromLocation} - ${legToLocation}`
+      : (selectedLeg?.DeparturePointDescription && selectedLeg?.ArrivalPointDescription)
+      ? `${selectedLeg.DeparturePointDescription} to ${selectedLeg.ArrivalPointDescription}`
+      : selectedLeg?.LegDescription || '';
+    // Get planned date and time from selectedLeg
+    const plannedDate = selectedLeg?.PlannedDate || selectedLeg?.PlanDate || '';
+    const plannedTime = selectedLeg?.PlannedTime || selectedLeg?.PlanTime || '';
+    // Format as "yyyy-MM-dd HH:mm:00" for DateTimePicker
+    const plannedDateTimeValue = plannedDate && plannedTime
+      ? `${plannedDate} ${plannedTime}:00`
+      : plannedDate
+      ? `${plannedDate} 00:00:00`
+      : '';
+    
+    // Get via location if exists (might be empty for new via point)
+    const viaLocationValue = selectedLeg?.ViaLocation || '';
+    
+    console.log("Selected Leg Data:", selectedLeg);
+    console.log("Leg From To Value:", legFromToValue);
+    console.log("Planned DateTime Value:", plannedDateTimeValue);
+    
+    setFields([
+      {
+        type: "text",
+        label: "Leg From and To",
+        name: "legFromTo",
+        placeholder: "Enter Leg From and To",
+        value: legFromToValue,
+        mappedName: 'LegFromTo'
+      },
+      {
+        type: "lazyselect",
+        label: "Via Location",
+        name: "viaLocation",
+        placeholder: "Enter Via Location",
+        value: viaLocationValue,
+        required: false,
+        mappedName: 'ViaLocation',
+        fetchOptions: fetchViaLocationOptions
+      },
+      {
+        type: "date",
+        label: "Planned Date and Time",
+        name: "plannedDate",
+        placeholder: "Select Planned Date and Time",
+        value: plannedDateTimeValue,
+        required: false,
+        mappedName: 'PlannedDateTime'
+      },
+    ]);
+    setCurrentActionType('amend');
+    console.log("fields ====", fields);
+    setAddViaPointsModalOpen(true);
+  }
+
+  const handleFieldChange = (name, value) => {
+    console.log('Field changed:', name, value);
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const handleAddViaPointsSubmit = async (formFields: any) => {
+    console.log("Add Via Points Submit:", formFields);
+    console.log("selectedLeg ====", selectedLeg);
+    console.log("selectedCustomerData ====", selectedCustomerData);
+    
+    const viaLocation = formFields[1]?.value;
+    const plannedDate = formFields[2]?.value;
+    const [code, description] = viaLocation?.split("||").map(item => item.trim()) || [];
+    const [datePart, timePart] = plannedDate?.split(" ") || [];
+
+    const fullTripData = manageTripStore.getState().tripData;
+    console.log("fullTripData ====", fullTripData);
+    const updatedTripData = {
+      ...fullTripData,
+      LegDetails: [...fullTripData.LegDetails, {
+        // ...selectedLeg,
+        LegSequence: (Number(selectedLeg?.LegSequence) || 0) + 1,
+        LegBehaviour: "Via Point",
+        LegBehaviourDescription: "Via Point",
+        DeparturePoint: selectedLeg?.ArrivalPoint,
+        DeparturePointDescription: selectedLeg?.ArrivalPointDescription,
+        ArrivalPoint: code,
+        ArrivalPointDescription: description,
+        PlanStartDate: datePart,
+        PlanStartTime: timePart,
+        PlanEndDate: "",
+        PlanEndTime: "",
+        ModeFlag: 'Insert',
+      }],
+    };
+    console.log("updatedTripData ====", updatedTripData);
+    try {
+      const response = await tripService.addViaPoint(updatedTripData);
+
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("resourceStatus ===", resourceStatus);
+      console.log("response ===", (response as any)?.data);
+      if (resourceStatus) {
+        // Don't close the modal - keep it open
+        // setAddViaPointsModalOpen(false);
+        
+        toast({
+          title: "✅ Via Point Added Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Via point has been added successfully.",
+          variant: "default",
+        });
+        
+        // Refresh trip data by calling getTrip API
+        const tripId = fullTripData?.Header?.TripNo || tripData?.Header?.TripNo || tripData?.TripId || tripData?.TripID;
+        // const tripId = fullTripData?.Header?.TripNo || fullTripData?.TripId || fullTripData?.TripID || tripData?.Header?.TripNo || tripData?.TripId || tripData?.TripID;
+        
+        if (tripId) {
+          try {
+            console.log("Refreshing trip data with tripId:", tripId);
+            const refreshResponse = await tripService.getTripById({ id: tripId });
+
+            if ((refreshResponse as any)?.data?.IsSuccess) {
+              const refreshedTripData = JSON.parse((refreshResponse as any).data.ResponseData);
+              
+              console.log("Refreshed trip data:", refreshedTripData);
+
+              // Update the trip store with fresh data
+              manageTripStore.getState().setTrip(refreshedTripData);
+
+              // Find the updated leg data
+              const legDetails = refreshedTripData.LegDetails;
+              if (legDetails && Array.isArray(legDetails)) {
+                // Find the leg that matches the current legId or the newly added via point
+                const updatedLegData = legDetails.find(leg => 
+                  leg.LegSequence === legId || 
+                  leg.LegSequence === selectedLeg?.LegSequence ||
+                  (leg.LegBehaviour === "Via Point" && leg.ArrivalPoint === code)
+                );
+
+                if (updatedLegData) {
+                  console.log("Updated leg data found:", updatedLegData);
+                  
+                  // Update consignment data if available
+                  if (updatedLegData.Consignment && Array.isArray(updatedLegData.Consignment)) {
+                    const cons = updatedLegData.Consignment;
+                    if (cons.length > 0) {
+                      setSelectedCustomerData(cons[0]);
+                      setPlannedData(cons[0]?.Planned ?? []);
+                      setActualData(cons[0]?.Actual ?? []);
+                      setActualEditableData(cons[0]?.Actual ?? []);
+                      console.log("Consignment data refreshed");
+                    }
+                  }
+                }
+
+                // Dispatch a custom event to notify parent component about data refresh
+                window.dispatchEvent(new CustomEvent('tripDataRefreshed', { 
+                  detail: { tripData: refreshedTripData, legDetails } 
+                }));
+              }
+
+              toast({
+                title: "✅ Data Refreshed",
+                description: "Trip data has been refreshed successfully.",
+                variant: "default",
+              });
+            } else {
+              console.error("Failed to refresh trip data");
+            }
+          } catch (refreshError) {
+            console.error("Error refreshing trip data:", refreshError);
+            toast({
+              title: "⚠️ Refresh Warning",
+              description: "Via point was added but data refresh failed. Please refresh manually.",
+              variant: "default",
+            });
+          }
+        } else {
+          console.warn("TripId not found, cannot refresh data");
+        }
+        
+      } else {
+        toast({
+          title: "⚠️ Add Via Point Failed",
+          description: (response as any)?.data?.Message || "Failed to add via point.",
+          variant: "destructive",
+        });
+      }
+    } catch (apiError) {
+      toast({
+        title: "⚠️ Add Via Point Failed",
+        description: "Failed to add via point. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -6267,13 +6526,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               <Label htmlFor="pickupComplete" className="cursor-pointer">Pickup Complete for this CO</Label>
             </div>
 
-            {/* <Button
+            <Button
               variant="outline"
               className="border border-blue-500 text-blue-500 hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3 absolute right-0"
+              onClick={openAddViaPointsPopup}
             >
               <Plus className="h-4 w-4" />
               Add Via Point
-            </Button> */}
+            </Button>
 
           </div>
           <Collapsible open={expandedCOInfo} onOpenChange={setExpandedCOInfo} className='space-y-2 rounded-lg'>
@@ -6670,12 +6930,12 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               )}
               <div className='flex flex-col items-end fixed bottom-0 right-[40px] bg-white w-full border-t p-2'>
                 <div className='flex gap-2'>
-                  <Button
+                <Button
                     className="h-8 bg-blue-600 rounded hover:bg-blue-700"
-                    onClick={handleSavePlanActuals}
-                  >
-                    Save Consignment
-                  </Button>
+                  onClick={handleSavePlanActuals}
+                >
+                  Save Consignment
+                </Button>
                 </div>
               </div>
 
@@ -6791,6 +7051,18 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           dispatchDocNo={selectedCustomerData?.DispatchDocNo || ''}
         />
       </SideDrawer>
+
+      <TripPlanActionModal
+        open={addViaPointsModalOpen}
+        onClose={() => setAddViaPointsModalOpen(false)}
+        title="Add Via Points"
+        icon={<NotebookPen className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleAddViaPointsSubmit}
+        submitLabel="Save"
+        actionType="amend"
+      />
     </>
   );
 };
