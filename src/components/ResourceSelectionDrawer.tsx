@@ -29,7 +29,7 @@ const resourceConfigs = {
   Equipment: {
     messageType: 'GetEquipment-CreateTripPlan',
     title: 'Select Equipment',
-    buttonText: 'Add Equipment to CO',
+    buttonText: 'Add Equipment to Trip',
     gridTitle: 'Equipment',
     idField: 'EquipmentID', // Primary ID field for this resource type
     columns: [
@@ -80,7 +80,7 @@ const resourceConfigs = {
   Supplier: {
     messageType: 'GetAgents-CreateTripPlan',
     title: 'Select Supplier',
-    buttonText: 'Add Supplier to CO',
+    buttonText: 'Add Supplier to Trip',
     gridTitle: 'Supplier',
     idField: 'VendorID', // Primary ID field for this resource type
     columns: [
@@ -131,7 +131,7 @@ const resourceConfigs = {
   Driver: {
     messageType: 'GetDrivers-CreateTripPlan',
     title: 'Select Driver',
-    buttonText: 'Add Driver to CO',
+    buttonText: 'Add Driver to Trip',
     gridTitle: 'Driver',
     idField: 'DriverCode', // Primary ID field for this resource type
     columns: [
@@ -161,7 +161,7 @@ const resourceConfigs = {
   Handler: {
     messageType: 'GetHandlers-CreateTripPlan',
     title: 'Select Handler',
-    buttonText: 'Add Handler to CO',
+    buttonText: 'Add Handler to Trip',
     gridTitle: 'Handler',
     idField: 'HandlerID', // Primary ID field for this resource type
     columns: [
@@ -212,7 +212,7 @@ const resourceConfigs = {
   Vehicle: {
     messageType: 'GetVehicle-CreateTripPlan',
     title: 'Select Vehicle',
-    buttonText: 'Add Vehicle to CO',
+    buttonText: 'Add Vehicle to Trip',
     gridTitle: 'Vehicle',
     idField: 'VehicleID', // Primary ID field for this resource type
     columns: [
@@ -256,7 +256,7 @@ const resourceConfigs = {
   Schedule: {
     messageType: 'GetSchedules-CreateTripPlan',
     title: 'Select Schedule',
-    buttonText: 'Add Schedule to CO',
+    buttonText: 'Add Schedule to Trip',
     gridTitle: 'Schedule',
     idField: 'SupplierID', // Primary ID field for this resource type
     columns: [

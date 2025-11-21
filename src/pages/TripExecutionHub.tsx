@@ -1107,8 +1107,8 @@ export const TripExecutionHub = () => {
       defaultValue: {
         // from: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
         // to: format(new Date(), 'yyyy-MM-dd')
-        from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
-        to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
+        from: format(subMonths(new Date(), 1), "yyyy-MM-dd"), // 2 months back
+        to: format(addMonths(new Date(), 2), "yyyy-MM-dd"),   // 1 month ahead
       }
     },
     {
