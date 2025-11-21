@@ -79,6 +79,8 @@ interface GridToolbarProps {
   // Selection props
   selectedRowsCount?: number;
   onClearSelection?: () => void;
+  // Save preferences prop
+  onSavePreferences?: () => void;
 }
 
 export function GridToolbar({
@@ -122,7 +124,8 @@ export function GridToolbar({
   hideCheckboxToggle = false,
   hideRightToolbar = false,
   selectedRowsCount = 0,
-  onClearSelection
+  onClearSelection,
+  onSavePreferences
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -424,6 +427,23 @@ export function GridToolbar({
             onSubRowToggle={onSubRowToggle}
           />
         )}
+
+        {/* Save Preferences Star Icon Button */}
+        {/* {onSavePreferences && ( */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSavePreferences}
+            disabled={loading}
+            title="Save Grid Preferences"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white hover:bg-blue-50 p-0"
+            style={{ border: '1px solid #0068CF' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1L9.8541 5.52786L14.8541 6.1459L11.2929 9.47214L12.2918 14.3541L8 12L3.70818 14.3541L4.70711 9.47214L1.1459 6.1459L6.1459 5.52786L8 1Z" fill="#ffffff" stroke="#0068CF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Button>
+        {/* )} */}
 
         {(gridTitle !== 'Plan List' && gridTitle !== 'Actual List' && gridTitle !== 'Leg Details') && (
           <Button
