@@ -89,8 +89,14 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal');
+  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
 
   // Set default location based on OUID
+ const tripResourceDetailsDataRef = useRef(null);
+ useEffect(() => {
+  tripResourceDetailsDataRef.current = tripResourceDetailsData;
+ }, [tripResourceDetailsData]);
+
   useEffect(() => {
     console.log("TRIP STORE  :", tripData)
     console.log("Inside TripPlanning- selected trip : ", selectedTrip)
@@ -153,7 +159,6 @@ const TripPlanning = () => {
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
-  const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
   const [listPopoverOpen, setListPopoverOpen] = useState(false);
   const [EquipmentCount, setEquipmentCount] = useState(0);
   const [EquipmentData, setEquipmentData] = useState(0);
@@ -698,50 +703,58 @@ const TripPlanning = () => {
   };
 
   const changeSupplier = (value: string) => {
-    setSupplier(value);
-    console.log("Supplier:", value);
-    const splitAtPipe = (value: string | null | undefined) => {
-      if (typeof value === "string" && value.includes("||")) {
-        const [first, ...rest] = value.split("||");
-        return first.trim(); // Return only the value part (before pipe)
-      }
-      return value;
-    };
-    const supplierID = splitAtPipe(value);
-    handleAddResource([{
-      "ResourceID": supplierID,
-      "ResourceType": "Agent",
-      "Service": "",
-      "ServiceDescription": "",
-      "SubService": "",
-      "SubServiceDescription": "",
-    }]);
+  setSupplier(value);
+  const splitAtPipe = (v: string | null | undefined) => {
+    if (typeof v === "string" && v.includes("||")) {
+      const [first] = v.split("||");
+      return first.trim();
+    }
+    return v;
   };
+  const supplierID = splitAtPipe(value);
 
-  const changeSchedule = (value: string) => {
-    setSchedule(value);
-    console.log("Schedule:", value);
-    const splitAtPipe = (value: string | null | undefined) => {
-      if (typeof value === "string" && value.includes("||")) {
-        const [first, ...rest] = value.split("||");
-        return first.trim(); // Return only the value part (before pipe)
-      }
-      return value;
-    };
-    const scheduleID = splitAtPipe(value);
-    handleAddResource([{
-      "ResourceID": scheduleID,
-      "ResourceType": "Schedule",
-      "Service": "",
-      "ServiceDescription": "",
-      "SubService": "",
-      "SubServiceDescription": "",
-    }]);
-  };
-  //400--
+  const latestResources = JSON.parse(
+    JSON.stringify(tripResourceDetailsDataRef.current)
+  );
+
+  handleAddResource([
+    {
+      ResourceID: supplierID,
+      ResourceType: "Agent", // Supplier is stored as Agent
+      Service: "",
+      ServiceDescription: "",
+      SubService: "",
+      SubServiceDescription: "",
+    },
+  ]);
+};
+
+const changeSchedule = (value: string) => {
+  setSchedule(value);
+  const splitAtPipe = (v: string) =>
+    typeof v === "string" && v.includes("||")
+      ? v.split("||")[0].trim()
+      : v;
+  const scheduleID = splitAtPipe(value);
+
+  const latestResources = JSON.parse(
+    JSON.stringify(tripResourceDetailsDataRef.current)
+  );
+
+  handleAddResource([
+    {
+      ResourceID: scheduleID,
+      ResourceType: "Schedule",
+      Service: "",
+      ServiceDescription: "",
+      SubService: "",
+      SubServiceDescription: "",
+    },
+  ]);
+};
+
   const transformedResourceKeysEquipment = new Set<string>();
   const transformedResourceKeysHandler = new Set<string>();
-
   const FormatedGroupResources = {
     Equipments: [] as any[],
     Handlers: [] as any[],
@@ -752,543 +765,155 @@ const TripPlanning = () => {
   };
 
   const handleAddResource = (resources: any[]) => {
-    setSelectedResources(resources);
-    console.log('Selected resources:', resources);
-    console.log('Selected customerOrderList:', customerOrderList);
 
-    // Transform the new resources into the required ResourceDetails format
-    const transformedResourceDetails = resources.map(resource => {
-      // For Driver, handle both DriverID and DriverCode
-      const driverId = resource.DriverID || resource.DriverCode;
-      const resourceId = resource.id || resource.ResourceID || resource.EquipmentID || resource.VendorID || driverId || resource.HandlerID || resource.VehicleID || resource.SupplierID;
-      
-      return {
-        "ResourceID": resourceId,
-        "ResourceType": resource.resourceType || resource.ResourceType ||
-          (resource.EquipmentID ? 'Equipment' :
-            resource.VendorID ? 'Agent' :
-              (resource.DriverID || resource.DriverCode) ? 'Driver' :
-                resource.HandlerID ? 'Handler' :
-                  resource.VehicleID ? 'Vehicle' :
-                    resource.SupplierID ? 'Schedule' : 'Unknown'),
-        "Service": resource.Service || "",
-        "ServiceDescription": resource.ServiceDescription || "",
-        "SubService": resource.SubService || "",
-        "SubServiceDescription": resource.SubServiceDescription || "",
-        "EffectiveFromDate": "",
-        "EffectiveToDate": "",
-        "ModeFlag": "Insert",
-        // Include both DriverID and DriverCode for Driver resources
-        ...(driverId && (resource.DriverID || resource.DriverCode) ? {
-          DriverID: resource.DriverID || driverId,
-          DriverCode: resource.DriverCode || driverId
-        } : {})
-      };
-    });
+  setSelectedResources(resources);
 
-    // Create updated customer order list object with ResourceDetails
-    const updatedCustomerList = {
-      ...(typeof customerOrderList === 'object' && customerOrderList !== null ? customerOrderList : {}),
-      "ResourceDetails": transformedResourceDetails,
-      "ModeFlag": "Insert",
+  const latestResourceData = tripResourceDetailsDataRef.current || {};
+  const transformed = resources.map((resource) => {
+    const driverId = resource.DriverID || resource.DriverCode;
+
+    const resourceId =
+      resource.id ||
+      resource.ResourceID ||
+      resource.EquipmentID ||
+      resource.VendorID ||
+      driverId ||
+      resource.HandlerID ||
+      resource.VehicleID ||
+      resource.SupplierID;
+
+    return {
+      ResourceID: resourceId,
+      ResourceType: resource.ResourceType,
+      Service: resource.Service || "",
+      ServiceDescription: resource.ServiceDescription || "",
+      SubService: resource.SubService || "",
+      SubServiceDescription: resource.SubServiceDescription || "",
+      ModeFlag: "Insert",
+      ...(driverId
+        ? {
+            DriverID: resource.DriverID || driverId,
+            DriverCode: resource.DriverCode || driverId,
+          }
+        : {}),
     };
+  });
 
-    // Get existing customer order array or initialize empty array
-    const existingCustomerOrderArray = selectedArrCOData || [];
-
-    // Get the current LegBehaviour from customerOrderList
-    const currentLegBehaviour = (customerOrderList as any)?.LegBehaviour || '';
-    console.log("Current LegBehaviour:", currentLegBehaviour);
-
-    // Check if this customer order with same LegBehaviour already exists in the array
-    const existingIndex = existingCustomerOrderArray.findIndex(item =>
-      item.CustomerOrderID === ((customerOrderList as any)?.CustomerOrderID || '') &&
-      item.LegBehaviour === currentLegBehaviour
-    );
-
-    console.log("Existing index for same CustomerOrderID + LegBehaviour:", existingIndex);
-
-    let updatedCustomerOrderArray;
-    if (existingIndex !== -1) {
-      // Update existing customer order by merging resources
-      updatedCustomerOrderArray = [...existingCustomerOrderArray];
-      const existingCustomerOrder = updatedCustomerOrderArray[existingIndex];
-
-      // Merge existing ResourceDetails with new ones
-      const existingResourceDetails = existingCustomerOrder.ResourceDetails || [];
-      console.log("transformedResourceDetails ===", transformedResourceDetails);
-      console.log("existingResourceDetails ===", existingResourceDetails);
-
-      // Check if any new resources are of type "Agent" or "Schedule"
-      const hasNewAgent = transformedResourceDetails.some(resource => resource.ResourceType === "Agent");
-      const hasNewSchedule = transformedResourceDetails.some(resource => resource.ResourceType === "Schedule");
-
-      let mergedResourceDetails;
-      if (hasNewAgent || hasNewSchedule) {
-        // For Agent and Schedule, remove existing resources with same CustomerOrderID and LegBehaviour
-        const filteredExistingResources = existingResourceDetails.filter(resource => {
-          // Keep resources that are not Agent or Schedule
-          if (resource.ResourceType !== "Agent" && resource.ResourceType !== "Schedule") {
-            return true;
-          }
-          // For Agent and Schedule, check if they have different LegBehaviour
-          // If LegBehaviour is different, keep the existing resource
-          return resource.LegBehaviour !== currentLegBehaviour;
-        });
-
-        // Add LegBehaviour to the new resources
-        const resourcesWithLegBehaviour = transformedResourceDetails.map(resource => ({
-          ...resource,
-          LegBehaviour: currentLegBehaviour
-        }));
-
-        mergedResourceDetails = [...filteredExistingResources, ...resourcesWithLegBehaviour];
-        console.log("Agent/Schedule detected - filtered by LegBehaviour, mergedResourceDetails ===", mergedResourceDetails);
-      } else {
-        // Normal merge for other resource types (Equipment, Driver, Handler, Vehicle)
-        // Check for duplicates before adding - don't add if ResourceID and ResourceType already exist
-
-        // Replace resources of the current type for the active leg (Equipment, Driver, Handler, Vehicle)
-        // Determine the resource type being added from state or payload
-        const resourceTypeBeingAdded = currentResourceType || (transformedResourceDetails[0]?.ResourceType ?? '');
-
-        // Remove existing resources of the same type for the same leg (if leg present)
-        const filteredExistingResources = existingResourceDetails.filter((existing: any) => {
-          const sameType = existing.ResourceType === resourceTypeBeingAdded;
-          const sameLeg = typeof existing.LegBehaviour !== 'undefined' ? (existing.LegBehaviour === currentLegBehaviour) : true;
-          // Keep if not the same type for this leg; otherwise remove to replace
-          return !(sameType && sameLeg);
-        });
-
-        // Add LegBehaviour to the new resources for consistency
-        const resourcesWithLegBehaviour = transformedResourceDetails
-          .map(resource => ({
-            ...resource,
-            LegBehaviour: currentLegBehaviour
-          }))
-          .filter(newResource => {
-            // Check against the filtered existing resources (same-type for this leg removed)
-            const isDuplicate = filteredExistingResources.some((existing: any) => {
-              const sameIdAndType = existing.ResourceID === newResource.ResourceID && existing.ResourceType === newResource.ResourceType;
-              const sameLeg = typeof existing.LegBehaviour !== 'undefined' ? (existing.LegBehaviour === currentLegBehaviour) : true;
-              return sameIdAndType && sameLeg;
-            });
-            if (isDuplicate) {
-              console.log(`Skipping duplicate after filter: ${newResource.ResourceType} - ${newResource.ResourceID}`);
-            }
-            return !isDuplicate; // Only include non-duplicates
-          });
-
-        // Replace same-type resources for the current leg with the latest selection
-        mergedResourceDetails = [...filteredExistingResources, ...resourcesWithLegBehaviour];
-        console.log("Other resource types - normal merge (duplicates filtered, same-type for leg replaced), mergedResourceDetails ===", mergedResourceDetails);
-      }
-      // Update the existing customer order with merged resources
-      updatedCustomerOrderArray[existingIndex] = {
-        ...existingCustomerOrder,
-        "ResourceDetails": mergedResourceDetails,
-        "ModeFlag": "Insert"
-      };
-    } else {
-      // Add new customer order to the array (either completely new CustomerOrderID or same CustomerOrderID with different LegBehaviour)
-      // Filter out duplicates within the new resources before adding
-      const seenResources = new Set<string>();
-      const uniqueResourceDetails = updatedCustomerList.ResourceDetails
-        .map(resource => ({
-          ...resource,
-          LegBehaviour: currentLegBehaviour
-        }))
-        .filter(resource => {
-          const uniqueKey = `${resource.ResourceType}_${resource.ResourceID}`;
-          if (seenResources.has(uniqueKey)) {
-            console.log(`Skipping duplicate resource in new entry: ${resource.ResourceType} - ${resource.ResourceID}`);
-            return false;
-          }
-          seenResources.add(uniqueKey);
-          return true;
-        });
-
-      const updatedCustomerListWithLegBehaviour = {
-        ...updatedCustomerList,
-        "LegBehaviour": currentLegBehaviour, // Add LegBehaviour to the customer order itself
-        "ResourceDetails": uniqueResourceDetails
-      };
-      updatedCustomerOrderArray = [...existingCustomerOrderArray, updatedCustomerListWithLegBehaviour];
-      console.log("Adding new customer order entry (different LegBehaviour or new CustomerOrderID)");
-    }
-    console.log("transformedResourceDetails ", transformedResourceDetails);
-
-    // Determine the resource type being updated
-    const resourceTypeBeingUpdated = currentResourceType || (transformedResourceDetails[0]?.ResourceType ?? '');
-    console.log('Resource type being updated:', resourceTypeBeingUpdated);
-    console.log('New selection from child (transformedResourceDetails):', transformedResourceDetails);
-    
-    // Get the current CustomerOrderID to identify which customer order/leg is being updated
-    // Reuse the currentLegBehaviour already defined above (line 716)
-    const currentCustomerOrderID = (customerOrderList as any)?.CustomerOrderID || '';
-    
-    // Create a Set of ResourceIDs from the child's new selection for quick lookup
-    const newSelectionResourceIDs = new Set(
-      transformedResourceDetails
-        .filter(r => r.ResourceType === resourceTypeBeingUpdated || 
-                    (r.ResourceType === 'Agent' && resourceTypeBeingUpdated === 'Supplier') ||
-                    (r.ResourceType === 'Schedule' && resourceTypeBeingUpdated === 'Schedule'))
-        .map(r => r.ResourceID)
-    );
-    console.log('New selection ResourceIDs:', Array.from(newSelectionResourceIDs));
-    
-    // Use Maps to track unique resources by ID for each resource type
-    // This allows efficient merging: update existing, add new, remove deselected
-    const resourceTypeMaps = {
-      Equipment: new Map<string, { EquipmentID: string }>(),
-      Handler: new Map<string, { HandlerID: string }>(),
-      Vehicle: new Map<string, { VehicleID: string }>(),
-      Driver: new Map<string, { DriverID: string }>(),
-      Agent: new Map<string, { VendorID: string }>(),
-      Schedule: new Map<string, { SupplierID: string }>()
-    };
-
-    // STEP 1: For the resource type being updated, CLEAR the map first
-    // This ensures we start fresh and only use what's in transformedResourceDetails
-    if (resourceTypeBeingUpdated === 'Equipment') {
-      resourceTypeMaps.Equipment.clear();
-    } else if (resourceTypeBeingUpdated === 'Handler') {
-      resourceTypeMaps.Handler.clear();
-    } else if (resourceTypeBeingUpdated === 'Vehicle') {
-      resourceTypeMaps.Vehicle.clear();
-    } else if (resourceTypeBeingUpdated === 'Driver') {
-      resourceTypeMaps.Driver.clear();
-    } else if (resourceTypeBeingUpdated === 'Supplier' || resourceTypeBeingUpdated === 'Agent') {
-      resourceTypeMaps.Agent.clear();
-    } else if (resourceTypeBeingUpdated === 'Schedule') {
-      resourceTypeMaps.Schedule.clear();
-    }
-    
-    console.log(`Cleared ${resourceTypeBeingUpdated} map - will be replaced with transformedResourceDetails`);
-
-    // STEP 2: Collect resources from selectedArrCOData
-    // For the resource type being updated: SKIP ALL (will be completely replaced by transformedResourceDetails)
-    // For other resource types: Keep all (preserve them)
-    updatedCustomerOrderArray.forEach(co => {
-      (co.ResourceDetails || []).forEach((resource: any) => {
-        const resourceID = resource.ResourceID;
-        const resourceType = resource.ResourceType;
-        
-        // For the resource type being updated: SKIP ALL (we'll use only transformedResourceDetails)
-        if (resourceType === resourceTypeBeingUpdated || 
-            (resourceType === 'Agent' && resourceTypeBeingUpdated === 'Supplier') ||
-            (resourceType === 'Schedule' && resourceTypeBeingUpdated === 'Schedule')) {
-          return; // Skip - will be completely replaced by transformedResourceDetails
-        }
-        
-        // Add to appropriate map based on resource type (preserving other resource types)
-        if (resourceType === 'Equipment') {
-          resourceTypeMaps.Equipment.set(resourceID, { EquipmentID: resourceID });
-        } else if (resourceType === 'Handler') {
-          resourceTypeMaps.Handler.set(resourceID, { HandlerID: resourceID });
-        } else if (resourceType === 'Vehicle') {
-          resourceTypeMaps.Vehicle.set(resourceID, { VehicleID: resourceID });
-        } else if (resourceType === 'Driver') {
-          // For Driver, include both DriverID and DriverCode if available
-          const driverData: any = { DriverID: resourceID };
-          // Check if the resource has DriverCode, if not use DriverID as DriverCode
-          if (resource.DriverCode) {
-            driverData.DriverCode = resource.DriverCode;
-          } else if (resource.DriverID) {
-            driverData.DriverCode = resource.DriverID;
-          } else {
-            driverData.DriverCode = resourceID;
-          }
-          resourceTypeMaps.Driver.set(resourceID, driverData);
-        } else if (resourceType === 'Agent') {
-          resourceTypeMaps.Agent.set(resourceID, { VendorID: resourceID });
-        } else if (resourceType === 'Schedule') {
-          resourceTypeMaps.Schedule.set(resourceID, { SupplierID: resourceID });
-        }
-      });
-    });
-
-    // STEP 3: Add ALL resources from transformedResourceDetails (child's current selection)
-    // This COMPLETELY REPLACES the array for the resource type being updated
-    // Items removed in the drawer are NOT in this array, so they won't be added back
-    transformedResourceDetails.forEach((resource: any) => {
-      const resourceID = resource.ResourceID;
-      const resourceType = resource.ResourceType;
-      
-      // Add to the map - for the resource type being updated, this is the ONLY source
-      // For other resource types, this adds to what we already collected
-      if (resourceType === 'Equipment') {
-        resourceTypeMaps.Equipment.set(resourceID, { EquipmentID: resourceID });
-      } else if (resourceType === 'Handler') {
-        resourceTypeMaps.Handler.set(resourceID, { HandlerID: resourceID });
-      } else if (resourceType === 'Vehicle') {
-        resourceTypeMaps.Vehicle.set(resourceID, { VehicleID: resourceID });
-      } else if (resourceType === 'Driver') {
-        // For Driver, include both DriverID and DriverCode if available
-        const driverData: any = { DriverID: resourceID };
-        // Check if the resource has DriverCode, if not use DriverID as DriverCode
-        if (resource.DriverCode) {
-          driverData.DriverCode = resource.DriverCode;
-        } else if (resource.DriverID) {
-          driverData.DriverCode = resource.DriverID;
-        } else {
-          driverData.DriverCode = resourceID;
-        }
-        resourceTypeMaps.Driver.set(resourceID, driverData);
-      } else if (resourceType === 'Agent') {
-        resourceTypeMaps.Agent.set(resourceID, { VendorID: resourceID });
-      } else if (resourceType === 'Schedule') {
-        resourceTypeMaps.Schedule.set(resourceID, { SupplierID: resourceID });
-      }
-    });
-    
-    console.log('After merging - Equipment count:', resourceTypeMaps.Equipment.size);
-    console.log('After merging - Handler count:', resourceTypeMaps.Handler.size);
-    console.log('After merging - Vehicle count:', resourceTypeMaps.Vehicle.size);
-    console.log('After merging - Driver count:', resourceTypeMaps.Driver.size);
-    console.log('After merging - Supplier count:', resourceTypeMaps.Agent.size);
-    console.log('After merging - Schedule count:', resourceTypeMaps.Schedule.size);
-
-    // Convert maps to arrays
-    const groupedResources = {
-      Equipments: Array.from(resourceTypeMaps.Equipment.values()),
-      Handlers: Array.from(resourceTypeMaps.Handler.values()),
-      Vehicle: Array.from(resourceTypeMaps.Vehicle.values()), 
-      Drivers: Array.from(resourceTypeMaps.Driver.values()),
-      Supplier: Array.from(resourceTypeMaps.Agent.values()),
-      Schedule: Array.from(resourceTypeMaps.Schedule.values())
-    };
-
-    console.log('Merged grouped resources (after removal logic):', groupedResources);
-
-    // Update tripResourceDetailsData by intelligently merging with existing data
-    // This ensures we preserve existing resource types that weren't updated
-    // AND properly removes unselected items for the resource type being updated
-    setTripResourceDetailsData((prev: any) => {
-      const prevData = prev || {};
-      
-      // Helper function to get the appropriate array for a resource type
-      const getResourceArray = (
-        resourceType: string,
-        groupedArray: any[],
-        prevArray: any[]
-      ) => {
-        // If this is the resource type being updated, ALWAYS use the new grouped resources
-        // groupedArray contains:
-        // - Resources from other COs/legs (preserved from selectedArrCOData)
-        // - Resources from transformedResourceDetails (current selection from child)
-        // Items removed in the drawer are NOT in transformedResourceDetails, so they're excluded
-        if (resourceType === resourceTypeBeingUpdated || 
-            (resourceType === 'Supplier' && resourceTypeBeingUpdated === 'Agent') ||
-            (resourceType === 'Schedule' && resourceTypeBeingUpdated === 'Schedule')) {
-          // Directly use groupedArray - it already has the correct merged data
-          // This ensures removals are reflected (items not in transformedResourceDetails are gone)
-          console.log(`Updating ${resourceType} array with ${groupedArray.length} items from groupedResources`);
-          return groupedArray;
-        }
-        // For other resource types, use grouped resources if available (from selectedArrCOData),
-        // otherwise preserve existing data from prev (API data or previous state)
-        return groupedArray.length > 0 ? groupedArray : (prevArray || []);
-      };
-      
-      const updatedData = {
-        Equipments: getResourceArray('Equipment', groupedResources.Equipments, prevData.Equipments || []),
-        Handlers: getResourceArray('Handler', groupedResources.Handlers, prevData.Handlers || []),
-        Vehicle: getResourceArray('Vehicle', groupedResources.Vehicle, prevData.Vehicle || []),
-        Drivers: getResourceArray('Driver', groupedResources.Drivers, prevData.Drivers || []),
-        Supplier: getResourceArray('Supplier', groupedResources.Supplier, prevData.Supplier || []),
-        Schedule: getResourceArray('Schedule', groupedResources.Schedule, prevData.Schedule || [])
-      };
-      
-      console.log('=== UPDATED tripResourceDetailsData ===');
-      console.log('Resource type updated:', resourceTypeBeingUpdated);
-      console.log('Items in new selection (transformedResourceDetails):', newSelectionResourceIDs.size);
-      console.log('Updated Equipments count:', updatedData.Equipments.length);
-      console.log('Updated Handlers count:', updatedData.Handlers.length);
-      console.log('Updated Vehicle count:', updatedData.Vehicle.length);
-      console.log('Updated Drivers count:', updatedData.Drivers.length);
-      console.log('Updated Supplier count:', updatedData.Supplier.length);
-      console.log('Updated Schedule count:', updatedData.Schedule.length);
-      console.log('Full updatedData:', updatedData);
-      
-      return updatedData;
-    });
-
-    console.log("Grouped resources:", groupedResources, tripResourceDetailsData);
-
-    // Update the customer order array state
-    setSelectedArrCOData(updatedCustomerOrderArray);
-
-    console.log("Updated selectedArrCOData:", selectedArrCOData);
-
-    // Update tripInformation.ResourceDetails based on formattedDataArray
-    // Compare existing ResourceDetails with new formattedDataArray and set ModeFlag accordingly
-    // ResourceDetails is organized by resource type: { Equipments: [], Handlers: [], Vehicle: [], Drivers: [], Supplier: [], Schedule: [] }
-    setTripInformation((prevTripInfo: any) => {
-      if (!prevTripInfo) {
-        return prevTripInfo;
-      }
-
-      const existingResourceDetails = prevTripInfo.ResourceDetails || {};
-      
-      // Map ResourceType to the key used in ResourceDetails object
-      const getResourceDetailsKey = (resourceType: string): string => {
-        switch (resourceType) {
-          case 'Equipment':
-            return 'Equipments';
-          case 'Handler':
-            return 'Handlers';
-          case 'Vehicle':
-            return 'Vehicle';
-          case 'Driver':
-            return 'Drivers';
-          case 'Agent':
-          case 'Supplier':
-            return 'Supplier';
-          case 'Schedule':
-            return 'Schedule';
-          default:
-            return resourceType;
-        }
-      };
-
-      // Group new resources by ResourceType
-      const newByType: Record<string, any[]> = {};
-      transformedResourceDetails.forEach((resource: any) => {
-        const resourceType = resource.ResourceType || 'Unknown';
-        const detailsKey = getResourceDetailsKey(resourceType);
-        if (!newByType[detailsKey]) {
-          newByType[detailsKey] = [];
-        }
-        newByType[detailsKey].push(resource);
-      });
-
-      // Process each resource type in ResourceDetails
-      const updatedResourceDetails: Record<string, any[]> = { ...existingResourceDetails };
-      const resourceTypeKeys = ['Equipments', 'Handlers', 'Vehicle', 'Drivers', 'Supplier', 'Schedule'];
-
-      resourceTypeKeys.forEach((resourceDetailsKey) => {
-        const existingItems = Array.isArray(existingResourceDetails[resourceDetailsKey]) 
-          ? existingResourceDetails[resourceDetailsKey] 
-          : [];
-        const newItems = newByType[resourceDetailsKey] || [];
-
-        // Create a map of existing items by ResourceID for quick lookup
-        const existingMap = new Map<string, any>();
-        existingItems.forEach((item: any) => {
-          // Handle different ID field names based on resource type
-          let resourceId = '';
-          if (resourceDetailsKey === 'Equipments') {
-            resourceId = item.EquipmentID || item.ResourceID || item.id || '';
-          } else if (resourceDetailsKey === 'Handlers') {
-            resourceId = item.HandlerID || item.ResourceID || item.id || '';
-          } else if (resourceDetailsKey === 'Vehicle') {
-            resourceId = item.VehicleID || item.ResourceID || item.id || '';
-          } else if (resourceDetailsKey === 'Drivers') {
-            resourceId = item.DriverID || item.DriverCode || item.ResourceID || item.id || '';
-          } else if (resourceDetailsKey === 'Supplier') {
-            resourceId = item.VendorID || item.ResourceID || item.id || '';
-          } else if (resourceDetailsKey === 'Schedule') {
-            resourceId = item.SupplierID || item.ResourceID || item.id || '';
-          } else {
-            resourceId = item.ResourceID || item.id || '';
-          }
-          
-          if (resourceId) {
-            existingMap.set(String(resourceId), item);
-          }
-        });
-
-        // Create a set of new ResourceIDs
-        const newResourceIds = new Set<string>();
-        newItems.forEach((item: any) => {
-          const resourceId = item.ResourceID || item.id || '';
-          if (resourceId) {
-            newResourceIds.add(String(resourceId));
-          }
-        });
-
-        // Process each resource type
-        const updatedItems: any[] = [];
-
-        // Process existing items
-        existingItems.forEach((existingItem: any) => {
-          // Get ResourceID based on resource type
-          let resourceId = '';
-          if (resourceDetailsKey === 'Equipments') {
-            resourceId = String(existingItem.EquipmentID || existingItem.ResourceID || existingItem.id || '');
-          } else if (resourceDetailsKey === 'Handlers') {
-            resourceId = String(existingItem.HandlerID || existingItem.ResourceID || existingItem.id || '');
-          } else if (resourceDetailsKey === 'Vehicle') {
-            resourceId = String(existingItem.VehicleID || existingItem.ResourceID || existingItem.id || '');
-          } else if (resourceDetailsKey === 'Drivers') {
-            resourceId = String(existingItem.DriverID || existingItem.DriverCode || existingItem.ResourceID || existingItem.id || '');
-          } else if (resourceDetailsKey === 'Supplier') {
-            resourceId = String(existingItem.VendorID || existingItem.ResourceID || existingItem.id || '');
-          } else if (resourceDetailsKey === 'Schedule') {
-            resourceId = String(existingItem.SupplierID || existingItem.ResourceID || existingItem.id || '');
-          } else {
-            resourceId = String(existingItem.ResourceID || existingItem.id || '');
-          }
-          
-          if (newResourceIds.has(resourceId)) {
-            // Item exists in both - set ModeFlag to "NoChange"
-            const newItem = newItems.find((item: any) => 
-              String(item.ResourceID || item.id || '') === resourceId
-            );
-            updatedItems.push({
-              ...existingItem,
-              ...(newItem || {}),
-              ModeFlag: "NoChange"
-            });
-          } else {
-            // Item exists only in existing array - set ModeFlag to "Deleted"
-            updatedItems.push({
-              ...existingItem,
-              ModeFlag: "Delete"
-            });
-          }
-        });
-
-        // Process new items that don't exist in existing array
-        newItems.forEach((newItem: any) => {
-          const resourceId = String(newItem.ResourceID || newItem.id || '');
-          
-          if (!existingMap.has(resourceId)) {
-            // Item exists only in new array - add with ModeFlag "Update"
-            updatedItems.push({
-              ...newItem,
-              ModeFlag: "Update"
-            });
-          }
-        });
-
-        // Update the resource type array
-        updatedResourceDetails[resourceDetailsKey] = updatedItems;
-      });
-
-      console.log('=== UPDATED tripInformation.ResourceDetails ===');
-      console.log('Existing ResourceDetails:', existingResourceDetails);
-      console.log('New formattedDataArray count:', transformedResourceDetails.length);
-      console.log('Updated ResourceDetails:', updatedResourceDetails);
-
-      return {
-        ...prevTripInfo,
-        ResourceDetails: updatedResourceDetails
-      };
-    });
-    console.log("Updated customer order array:", updatedCustomerOrderArray);
-    console.log("Total customer orders in array:", updatedCustomerOrderArray.length);
-
-    // Show success toast
-    toast({
-      title: "✅ Resources Added",
-      description: `Successfully added ${resources.length} resources to customer order. Total customer orders: ${updatedCustomerOrderArray.length}`,
-      variant: "default",
-    });
+  const updatedCustomerList = {
+    ...(customerOrderList || {}),
+    ResourceDetails: transformed,
+    ModeFlag: "Insert",
   };
 
-  //BreadCrumb data
+  const currentLegBehaviour = customerOrderList?.LegBehaviour || "";
+
+  const updatedCOArray = [...(selectedArrCOData || [])];
+
+  const existingIndex = updatedCOArray.findIndex(
+    (co) =>
+      co.CustomerOrderID === (customerOrderList?.CustomerOrderID || "") &&
+      co.LegBehaviour === currentLegBehaviour
+  );
+
+  if (existingIndex !== -1) {
+    const existingCO = updatedCOArray[existingIndex];
+    const existingDetails = existingCO.ResourceDetails || [];
+
+    const filtered = existingDetails.filter(
+      (x) => x.ResourceType !== transformed[0]?.ResourceType
+    );
+
+    updatedCOArray[existingIndex] = {
+      ...existingCO,
+      ResourceDetails: [
+        ...filtered,
+        ...transformed.map((x) => ({ ...x, LegBehaviour: currentLegBehaviour })),
+      ],
+    };
+  } else {
+    updatedCOArray.push({
+      ...updatedCustomerList,
+      LegBehaviour: currentLegBehaviour,
+      ResourceDetails: transformed.map((x) => ({
+        ...x,
+        LegBehaviour: currentLegBehaviour,
+      })),
+    });
+  }
+
+  // GROUP INTO RESOURCE BUCKETS (ALWAYS READ FROM UPDATED ARRAY)
+  const resourceMaps = {
+    Equipment: new Map(),
+    Handler: new Map(),
+    Vehicle: new Map(),
+    Driver: new Map(),
+    Agent: new Map(),
+    Schedule: new Map(),
+  };
+
+  updatedCOArray.forEach((co) => {
+    (co.ResourceDetails || []).forEach((r: any) => {
+      const id = r.ResourceID;
+      if (!id) return;
+
+      if (r.ResourceType === "Equipment")
+        resourceMaps.Equipment.set(id, { EquipmentID: id });
+
+      else if (r.ResourceType === "Handler")
+        resourceMaps.Handler.set(id, { HandlerID: id });
+
+      else if (r.ResourceType === "Vehicle")
+        resourceMaps.Vehicle.set(id, { VehicleID: id });
+
+      else if (r.ResourceType === "Driver")
+        resourceMaps.Driver.set(id, {
+          DriverID: id,
+          DriverCode: r.DriverCode || id,
+        });
+
+      else if (r.ResourceType === "Agent" || r.ResourceType === "Supplier")
+        resourceMaps.Agent.set(id, { VendorID: id });
+
+      else if (r.ResourceType === "Schedule")
+        resourceMaps.Schedule.set(id, { SupplierID: id });
+    });
+  });
+
+  const grouped = {
+    Equipments: [...resourceMaps.Equipment.values()],
+    Handlers: [...resourceMaps.Handler.values()],
+    Vehicle: [...resourceMaps.Vehicle.values()],
+    Drivers: [...resourceMaps.Driver.values()],
+    Supplier: [...resourceMaps.Agent.values()],
+    Schedule: [...resourceMaps.Schedule.values()],
+  };
+
+  // 🔥 FINAL FIX — ALWAYS USE LATEST DATA, NEVER STALE prev
+ setTripResourceDetailsData(() => {
+  const next = {
+    Equipments: grouped.Equipments,
+    Handlers: grouped.Handlers,
+    Vehicle: grouped.Vehicle,
+    Drivers: grouped.Drivers,
+    Supplier: grouped.Supplier,
+    Schedule: grouped.Schedule,
+  };
+
+  // 🔥 CRITICAL: update ref immediately so UI sees latest values
+  tripResourceDetailsDataRef.current = next;
+
+  return next;
+});
+
+
+  setSelectedArrCOData(updatedCOArray);
+
+  toast({
+    title: "Resources Added",
+    description: `Added ${resources.length} resources`,
+  });
+};
+
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
     { label: 'Transport Planning and Execution', href: '/trip-hub', active: false }, // Updated breadcrumb
@@ -3644,7 +3269,7 @@ const TripPlanning = () => {
                                   </div>
                                 </div>
                                 <div>
-                                  <div className="text-xs text-muted-foreground mb-1">Supplier</div>
+                                  <div className="text-xs text-muted-foreground mb-1">Suppsgfysglier</div>
                                   <div className='flex items-center gap-2'>
                                     <div className="text-sm font-medium w-full">
                                       <DynamicLazySelect
@@ -3666,7 +3291,7 @@ const TripPlanning = () => {
                                   </div>
                                 </div>
                                 <div className='mt-3'>
-                                  <div className="text-xs text-muted-foreground mb-1">Schedule</div>
+                                  <div className="text-xs text-muted-foreground mb-1">Schedulenmjnn</div>
                                   <div className='flex items-center gap-2'>
                                     <div className="text-sm font-medium w-full">
                                       <DynamicLazySelect
@@ -3701,88 +3326,78 @@ const TripPlanning = () => {
                                 const Icon = resource.icon;
                                 return (
                                   <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                        <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
-                                          <Icon className={cn("h-5 w-5", resource.iconColor)} />
-                                        </div>
-                                        <div>
-                                          <h3 className="font-medium text-sm">{resource.title}
-                                            <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource?.count}</span>
-                                          </h3>
-                                          {resource.title == 'Equipment' && (
-                                            <BadgesList
-                                              items={tripResourceDetailsData?.Equipments}
-                                              onRemove={handleRemoveEquipment}
-                                              badgeVariant="secondary"
-                                              idField="EquipmentID"
-                                            />
-                                          )}
-                                          {resource.title == 'Handler' && (
-                                            <BadgesList
-                                              items={tripResourceDetailsData?.Handlers}
-                                              onRemove={handleRemoveHandler}
-                                              badgeVariant="secondary"
-                                              idField="HandlerID"
-                                            />
-                                          )}
-                                          {resource.title == 'Vehicle' && (
-                                            <BadgesList
-                                              items={tripResourceDetailsData?.Vehicle}
-                                              onRemove={handleRemoveVehicle}
-                                              badgeVariant="secondary"
-                                              idField="VehicleID"
-                                            />
-                                          )}
-                                          {resource.title == 'Driver' && (
-                                            <BadgesList
-                                              items={tripResourceDetailsData?.Drivers}
-                                              onRemove={handleRemoveDriver}
-                                              badgeVariant="secondary"
-                                              idField="DriverCode"
-                                              fallbackIdField="DriverID"
-                                            />
-                                          )}
-                                          {/* {resource.subtitle && (
-                                            <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                          )} */}
-                                        </div>
-                                      </div>
-                                      {resource.title === 'Others' ? (
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            handleOthersClick();
-                                          }}
-                                        >
-                                          <Pencil className="h-4 w-4" />
-                                        </Button>
-                                      ) : (
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            if (resource.title === 'Equipment') {
-                                              handleOpenResourceDrawer('Equipment');
-                                            } else if (resource.title === 'Supplier') {
-                                              handleOpenResourceDrawer('Supplier');
-                                            } else if (resource.title === 'Schedule') {
-                                              handleOpenResourceDrawer('Schedule');
-                                            } else if (resource.title === 'Driver') {
-                                              handleOpenResourceDrawer('Driver');
-                                            } else if (resource.title === 'Handler') {
-                                              handleOpenResourceDrawer('Handler');
-                                            } else if (resource.title === 'Vehicle') {
-                                              handleOpenResourceDrawer('Vehicle');
-                                            }
-                                          }}
-                                        >
-                                          <Plus className="h-4 w-4" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </Card>
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+        <Icon className={cn("h-5 w-5", resource.iconColor)} />
+      </div>
+      <div>
+        <h3 id={resource.title} className="font-medium text-sm">
+          {resource.title}
+          <span
+            id={"count"}
+            className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium"
+          >
+            {resource?.count}
+          </span>
+        </h3>
+
+        {resource.title === "Equipment" && (
+          <BadgesList
+            items={tripResourceDetailsDataRef.current?.Equipments ?? []}
+            onRemove={handleRemoveEquipment}
+            badgeVariant="secondary"
+            idField="EquipmentID"
+          />
+        )}
+
+        {resource.title === "Handler" && (
+          <BadgesList
+            items={tripResourceDetailsDataRef.current?.Handlers ?? []}
+            onRemove={handleRemoveHandler}
+            badgeVariant="secondary"
+            idField="HandlerID"
+          />
+        )}
+        {resource.title === "Vehicle" && (
+          <BadgesList
+            items={tripResourceDetailsDataRef.current?.Vehicle ?? []}
+            onRemove={handleRemoveVehicle}
+            badgeVariant="secondary"
+            idField="VehicleID"
+          />
+        )}
+        {resource.title === "Driver" && (
+          <BadgesList
+            items={tripResourceDetailsDataRef.current?.Drivers ?? []}
+            onRemove={handleRemoveDriver}
+            badgeVariant="secondary"
+            idField="DriverCode"
+            fallbackIdField="DriverID"
+          />
+        )}
+      </div>
+    </div>
+
+    {/* Buttons */}
+    {resource.title === "Others" ? (
+      <Button variant="ghost" size="icon" onClick={handleOthersClick}>
+        <Pencil className="h-4 w-4" />
+      </Button>
+    ) : (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          handleOpenResourceDrawer(resource.title as "Equipment" | "Handler" | "Vehicle" | "Driver" | "Supplier" | "Schedule");
+        }}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    )}
+  </div>
+</Card>
+
                                 );
                               })}
                             </div>
