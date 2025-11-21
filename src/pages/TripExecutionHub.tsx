@@ -492,6 +492,14 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
+      key: "WagonID",
+      label: "Wagon ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true,
+    },
+    {
       key: "CustomerOrders",
       label: "Customer Order",
       type: "TextCustom",
