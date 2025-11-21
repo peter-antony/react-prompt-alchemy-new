@@ -17,11 +17,12 @@ export const Config = {
 } as const;
 // const REACT_APP_API_URL = "https://c5x9m1w2-3001.inc1.devtunnels.ms/coreapiops/v1";
 // const REACT_APP_API_URL = "http://192.168.2.17/v1"; // santhanam url
-// const REACT_APP_API_URL = "http://192.168.2.22/v1"; // Local Dev url
+// const REACT_APP_API_URL = "http://10.81.0.2/v1"; // Local Dev url
 const REACT_APP_API_URL = "http://192.168.2.92/v1"; // Local Dev url
 // const REACT_APP_API_URL = "https://forwardis.ramcouat.com/coreapiops/v1"; // UAT url
 // const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1"; // Dev url
 // const REACT_APP_API_URL = "https://forwardissim.ramcouat.com/coreapiops/v1"; // Sim url
+// const REACT_APP_API_URL = "https://forwardis.ramcoes.com/coreapiops/v1"; // Live url
 
 const token: any = localStorage.getItem("token");
 // Function to set user context when user makes selection
@@ -129,7 +130,8 @@ export const API_ENDPOINTS = {
     UPDATE_SELECTION: "manageexecution/planhubupdate",
     TRIP_LEG_LEVEL_UPDATE: "manageexecution/plantriplevelupdate",
     FILE_UPDATEDOWN: '/files/updatedown',
-    SAVE_MANGE_TRIP: '/managetripplan/tripcreate'
+    SAVE_MANGE_TRIP: '/managetripplan/tripcreate',
+    SAVE_VIA_POINT: 'transportexecution/common'
   },
   // Quick Order management
   QUICK_ORDERS: {
