@@ -370,7 +370,7 @@ const TripExecutionFooterActions = () => (
         </Button>
       </div>
       <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-        Confirm Trip
+        Complete Trip
       </Button>
     </div>
   </div>
