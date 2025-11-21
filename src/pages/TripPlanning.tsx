@@ -190,7 +190,7 @@ const TripPlanning = () => {
     if (manageFlag) {
       console.log("🔗 URL Manage flag extracted:", manageFlag);
     }
-  }, [urlTripID, manageFlag]);
+  }, [urlTripID, manageFlag, tripResourceDetailsData]);
   // Ref to store the timeout for debouncing trip ID changes
   const tripIdChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -4079,8 +4079,32 @@ const TripPlanning = () => {
       <ResourceSelectionDrawer
         isOpen={isResourceDrawerOpen}
         onClose={handleCloseResourceDrawer}
-        onAddResource={handleAddResource}
-		tripInformation={tripInformation}
+        // onAddResource={handleAddResource}
+        onAddResource={(selectedItems) => {
+          const selected = selectedItems[0];
+          if (currentResourceType === "Supplier") {
+            const fullSupplier = resourceData.find(
+              (item) => item.VendorID === selected.ResourceID
+            );
+        
+            if (fullSupplier) {
+              const formattedValue = `${fullSupplier.VendorID} || ${fullSupplier.VendorName}`;
+              setSupplier(formattedValue);   // Update supplier dropdown
+            }
+          }
+          if (currentResourceType === "Schedule") {
+            const fullSchedule = resourceData.find(
+              (item) => item.SupplierID === selected.ResourceID
+            );
+        
+            if (fullSchedule) {
+              const formattedValue = `${fullSchedule.SupplierID} || ${fullSchedule.SupplierName}`;
+              setSchedule(formattedValue);  
+            }
+          }
+          handleAddResource(selectedItems);
+        }}
+		    tripInformation={tripInformation}
         onUpdateTripInformation={(updatedTripInformation) => {
           setTripInformation(updatedTripInformation);
           console.log('TripInformation updated from ResourceSelectionDrawer:', updatedTripInformation);

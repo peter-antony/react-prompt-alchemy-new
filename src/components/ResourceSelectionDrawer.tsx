@@ -1247,8 +1247,6 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         // const data = parsedResponse;
         const resourceStatus = (response as any)?.data?.IsSuccess;
         console.log("parsedResponse ====", parsedResponse);
-        onUpdateTripInformation(updatedTripInformation);
-        onAddResource(formattedDataArray);
         if (resourceStatus) {
           console.log("Trip data updated in store");
 
@@ -1261,6 +1259,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
             variant: "default",
           });
+          onUpdateTripInformation(updatedTripInformation);
+          onAddResource(formattedDataArray);
           onClose();
           console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
         } else {
