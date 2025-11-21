@@ -395,7 +395,10 @@ const TripPlanning = () => {
         setEquipmentData(resourceDetails.Equipments)
         setEquipmentCount(resourceDetails.Equipments?.length)
         if (resourceDetails.Supplier?.[0]) {
-          setSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName);
+          setSupplier((resourceDetails.Supplier[0]?.VendorID ?? '-') +" || "+ (resourceDetails.Supplier[0]?.VendorName ?? '-'));
+        }
+        if (resourceDetails.Schedule?.[0]) {
+          setSchedule((resourceDetails.Schedule[0]?.SupplierID ?? '-') +" || "+ (resourceDetails.Schedule[0]?.SupplierName ?? '-'));
         }
         // setSelectedSupplier(resourceDetails.Supplier[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
         // setSelectedSchedule(resourceDetails.Schedule[0]?.VendorID +" || "+ resourceDetails.Supplier[0]?.VendorName)     
@@ -4098,7 +4101,7 @@ const TripPlanning = () => {
             );
         
             if (fullSchedule) {
-              const formattedValue = `${fullSchedule.SupplierID} || ${fullSchedule.SupplierName}`;
+              const formattedValue = `${fullSchedule.SupplierID ?? ''} || ${fullSchedule.SupplierName ?? ''}`;
               setSchedule(formattedValue);  
             }
           }
