@@ -256,13 +256,20 @@ export const TripExecutionHub = () => {
       order: 7
     },
     {
+      key: "WagonID",
+      label: "Wagon ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
       key: "DraftBillNo",
       label: "Draft Bill",
       type: "Link",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 8
     },
     {
       key: "ActualdateandtimeStart",
@@ -271,7 +278,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 9
     },
     {
       key: "PlannedEndDateandTime",
@@ -280,7 +286,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 10
     },
     {
       key: "ActualdateandtimeTo",
@@ -289,7 +294,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 11
     },
     {
       key: "DraftBillstatus",
@@ -486,14 +490,6 @@ export const TripExecutionHub = () => {
     {
       key: "TrainID",
       label: "Train ID",
-      type: "Text",
-      sortable: true,
-      editable: false,
-      subRow: true,
-    },
-    {
-      key: "WagonID",
-      label: "Wagon ID",
       type: "Text",
       sortable: true,
       editable: false,

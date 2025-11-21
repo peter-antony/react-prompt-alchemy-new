@@ -1152,12 +1152,19 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
     console.log("handleCOToTrip - selectedTripData.CustomerOrders ===", selectedTripData?.CustomerOrders);
 
 
+    // Check if CustomerOrders exists and is an array
+    const existingCustomerOrders = selectedTripData?.CustomerOrders && Array.isArray(selectedTripData.CustomerOrders) 
+      ? selectedTripData.CustomerOrders 
+      : [];
+    
+    console.log("existingCustomerOrders count:", existingCustomerOrders.length);
+
     let dataToSave = {
       Header: {
         TripNo: selectedTripData?.Header?.TripNo,
       },
       CustomerOrders: [
-        ...selectedTripData.CustomerOrders.map((order:any) => {
+        ...existingCustomerOrders.map((order:any) => {
           return {
             CustomerOrderNo: order.CustomerOrderID,
             LegBehaviour: order.LegBehaviour,
@@ -1196,6 +1203,15 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
         toast({
           title: errorCode || "Error",
           description: errorMessage || Message || "Failed to save CO",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if(!IsSuccess) {
+        toast({
+          title: "Error",
+          description: Message || "Failed to save CO",
           variant: "destructive",
         });
         return;

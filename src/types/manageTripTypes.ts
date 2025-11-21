@@ -94,6 +94,7 @@ export interface Header {
   ShortClose?: ShortClose;
   Amendment?: Amendment;
   VendorPerformaneFeedback?: VendorPerformanceFeedback;
+  WagonID?: string;
 }
 
 // 🔹 PathConstraints
