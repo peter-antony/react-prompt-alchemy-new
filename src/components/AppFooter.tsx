@@ -82,8 +82,11 @@ const renderButton = (
         if (config.label === "Created By" || "Created Date" || "Last Modified By" || "Last Modified Date") {
           return (
             <div className="flex flex-col text-left">
-              <span className="text-xs text-gray-500">{config.label}</span>
-              <span className="text-sm font-medium">{config.iconName}</span>
+              {/* <span className="text-xs text-gray-500">{config.label}</span>
+              <span className="text-sm font-medium">{config.iconName}</span> */}
+              <span className="text-xs text-gray-500" style={{fontSize: '10px'}}>{config.label}</span>
+              <span className="text-xs font-small" style={{fontSize: '10px'}}>{config.iconName}</span>
+
             </div>
           )
         }

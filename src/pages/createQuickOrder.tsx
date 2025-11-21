@@ -57,9 +57,9 @@ const CreateQuickOrder = () => {
     }
   };
 
-  // function formatDate(dateString: string) {
-  //   return format(new Date(dateString), "dd-MM-yyyy HH:mm");
-  // }
+  function formatDate(dateString: string) {
+    return format(new Date(dateString), "dd-MM-yyyy HH:mm");
+  }
 
   useEffect(() => {
     fetchAll();
@@ -122,10 +122,11 @@ const CreateQuickOrder = () => {
           iconName: footerLabelData?.CreatedBy
         },
         {
-          label: "Created Date",
+          label: "Created Date and Time",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: footerLabelData?.CreatedDate ? format(footerLabelData?.CreatedDate, "dd-MMM-yyyy") : ''
+          // iconName: footerLabelData?.CreatedDate ? format(footerLabelData?.CreatedDate, "dd-MMM-yyyy") : ''
+          iconName: footerLabelData?.CreatedDate ? formatDate(footerLabelData?.CreatedDate) : ''
         },
         {
           label: "Last Modified By",
@@ -134,10 +135,11 @@ const CreateQuickOrder = () => {
           iconName: footerLabelData?.LastModifiedBy
         },
         {
-          label: "Last Modified Date",
+          label: "Last Modified Date and Time",
           // onClick: () => console.log("CIM/CUV Report"),
           type: "Label",
-          iconName: footerLabelData?.LastmodifiedDate ? format(footerLabelData?.LastmodifiedDate, "dd-MMM-yyyy") : ''
+          // iconName: footerLabelData?.LastmodifiedDate ? format(footerLabelData?.LastmodifiedDate, "dd-MMM-yyyy") : ''
+          iconName: footerLabelData?.LastmodifiedDate ? formatDate(footerLabelData?.LastmodifiedDate) : ''
         },
       ],
       rightButtons: [
