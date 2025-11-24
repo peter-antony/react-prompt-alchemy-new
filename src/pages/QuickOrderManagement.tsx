@@ -58,6 +58,7 @@ const QuickOrderManagement = () => {
   const [isFilterApiCallInProgress, setIsFilterApiCallInProgress] = useState(false);
   const [lastFilterCall, setLastFilterCall] = useState<number>(0);
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
+  const [isPersonalizationEmpty, setIsPersonalizationEmpty] = useState(false);
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { config, setFooter, resetFooter } = useFooterStore();
@@ -331,19 +332,22 @@ const QuickOrderManagement = () => {
         });
 
         // Parse and set personalization data to localStorage
+        let isEmptyResponse = true;
         if (personalizationResponse?.data?.ResponseData) {
           const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
 
           if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            isEmptyResponse = false;
             const personalizationData = parsedPersonalization.PersonalizationResult[0];
 
             // Set the JsonData to localStorage
             if (personalizationData.JsonData) {
               localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
-              console.log('Personalization data set to localStorage:', personalizationData.JsonData);
+              console.log('QuickOderManagement SmartGrid Personalization data set to localStorage:', personalizationData.JsonData);
             }
           }
         }
+        setIsPersonalizationEmpty(isEmptyResponse);
 
         const response: any = await quickOrderService.getQuickOrders({
           filters: searchFilters
@@ -417,7 +421,7 @@ const QuickOrderManagement = () => {
       const storedPreferences = localStorage.getItem('smartgrid-preferences');
       const preferencesToSave = storedPreferences ? JSON.parse(storedPreferences) : preferences;
 
-      console.log('Saving preferences:', preferencesToSave);
+      console.log('Saving QuickOderManagement SmartGrid preferences:', preferencesToSave);
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
@@ -426,32 +430,32 @@ const QuickOrderManagement = () => {
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
         IsActive: "1",
-        ModeFlag: "Update"
+        ModeFlag: isPersonalizationEmpty ? "Insert" : "Update"
       });
 
       const apiData = response?.data;
 
-    if (apiData) {
-      const isSuccess = apiData?.IsSuccess;
-      // const message = apiData?.Message || "No message returned";
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+        // const message = apiData?.Message || "No message returned";
 
+        toast({
+          title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save grid preferences:", error);
       toast({
-        title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
-        description: apiData?.Message,
-        variant: isSuccess ? "default" : "destructive",
+        title: "Error",
+        description: "Failed to save grid preferences",
+        variant: "destructive",
       });
-    } else {
-      throw new Error("Invalid API response");
     }
-  } catch (error) {
-    console.error("Failed to save grid preferences:", error);
-    toast({
-      title: "Error",
-      description: "Failed to save grid preferences",
-      variant: "destructive",
-    });
-  }
-};
+  };
 
   // Cleanup timeout on component unmount
   useEffect(() => {

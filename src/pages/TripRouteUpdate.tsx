@@ -60,6 +60,7 @@ export const TripRouteUpdate = () => {
   const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
   const [searchData, setSearchData] = useState<Record<string, any>>({});
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(false); // SmartGrid Preferences loaded state
 
   const gridState = useSmartGridState();
   const { toast } = useToast();
@@ -292,10 +293,54 @@ export const TripRouteUpdate = () => {
     }
   };
 
+  const [preferenceModeFlag, setPreferenceModeFlag] = useState<'Insert' | 'Update'>('Insert');
+
   // Initialize columns and data
   useEffect(() => {
-    fetchTripsAgain();
-  }, []); // Add dependencies if needed
+    const init = async () => {
+      try {
+        const personalizationResponse: any = await quickOrderService.getPersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'TransportRouteUpdate',
+          ComponentName: 'smartgrid-preferences'
+        });
+
+        // Parse and set personalization data to localStorage
+        if (personalizationResponse?.data?.ResponseData) {
+          const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+          if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+            // Set the JsonData to localStorage
+            if (personalizationData.JsonData) {
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
+              console.log('TransportRouteUpdate SmartGrid Personalization data set to localStorage:', personalizationData.JsonData);
+            }
+            // If we have data, next save should be an Update
+            setPreferenceModeFlag('Update');
+          } else {
+            // If result is empty array or no result, next save should be Insert
+            console.log('No existing personalization found, setting mode to Insert');
+            setPreferenceModeFlag('Insert');
+          }
+        } else {
+          // If ResponseData is empty/null, next save should be Insert
+          console.log('Empty personalization response, setting mode to Insert');
+          setPreferenceModeFlag('Insert');
+        }
+      } catch (error) {
+        console.error('Failed to load personalization:', error);
+      } finally {
+        setIsPreferencesLoaded(true); // Set to true after personalization is loaded
+      }
+
+      fetchTripsAgain();
+    };
+
+    init();
+  }, []);
 
   // Initialize columns and processed data in the grid state
   // useEffect(() => {
@@ -563,6 +608,54 @@ export const TripRouteUpdate = () => {
   useEffect(() => {
     console.log("🔍 tripNo updated:", tripNo);
   }, [tripNo]);
+
+  const handleGridPreferenceSave = async (preferences: any) => {
+    try {
+      // Get the latest preferences from localStorage to ensure we have the full state
+      const storedPreferences = localStorage.getItem('smartgrid-preferences');
+      const preferencesToSave = storedPreferences ? JSON.parse(storedPreferences) : preferences;
+
+      console.log('Saving TransportRouteUpdate SmartGrid preferences:', preferencesToSave);
+      console.log('Preference ModeFlag:', preferenceModeFlag);
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'TransportRouteUpdate',
+        ComponentName: 'smartgrid-preferences',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: preferenceModeFlag
+      });
+
+      const apiData = response?.data;
+
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+        // const message = apiData?.Message || "No message returned";
+
+        toast({
+          title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+
+        // If save was successful and we were in Insert mode, switch to Update mode for future saves
+        if (isSuccess && preferenceModeFlag === 'Insert') {
+          setPreferenceModeFlag('Update');
+        }
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save grid preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save grid preferences",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSearchDataChange = (data: Record<string, any>) => {
     setSearchData(data);
@@ -983,48 +1076,59 @@ export const TripRouteUpdate = () => {
                 ]}
                 showSubHeaders={false}
               /> */}
-              <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
-                columns={gridState.columns}
-                data={gridState.gridData}
-                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                showGroupingDropdown={true}
-                editableColumns={['plannedStartEndDateTime']}
-                paginationMode="pagination"
-                onLinkClick={handleLinkClick}
-                onUpdate={handleUpdate}
-                onSubRowToggle={gridState.handleSubRowToggle}
-                selectedRows={selectedRows}
-                onSelectionChange={handleRowSelection}
-                onRowClick={handleRowClick}
-                // onFiltersChange={setCurrentFilters}
-                onSearch={handleServerSideSearch}
-                onClearAll={clearAllFilters}
-                // rowClassName={(row: any, index: number) =>
-                //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-                // }
-                // rowClassName={(row: any, index: number) => {
-                //   return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                // }}
-                nestedRowRenderer={renderSubRow}
-                // configurableButtons={gridConfigurableButtons}
-                showDefaultConfigurableButton={false}
-                gridTitle="Transport Route Update"
-                recordCount={gridState.gridData.length}
-                showCreateButton={true}
-                searchPlaceholder="Search"
-                clientSideSearch={true}
-                showSubHeaders={false}
-                hideAdvancedFilter={true}
-                hideCheckboxToggle={true}
-                serverFilters={dynamicServerFilters}
-                showFilterTypeDropdown={false}
-                showServersideFilter={showServersideFilter}
-                onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                gridId={gridId}
-                userId="current-user"
-                api={filterService}
-              />
+
+              {/* Load the grid only when preferences are loaded */}
+              {isPreferencesLoaded ? (
+                <SmartGridWithGrouping
+                  key={`grid-${gridState.forceUpdate}`}
+                  columns={gridState.columns}
+                  data={gridState.gridData}
+                  groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                  showGroupingDropdown={true}
+                  editableColumns={['plannedStartEndDateTime']}
+                  paginationMode="pagination"
+                  onLinkClick={handleLinkClick}
+                  onUpdate={handleUpdate}
+                  onSubRowToggle={gridState.handleSubRowToggle}
+                  selectedRows={selectedRows}
+                  onSelectionChange={handleRowSelection}
+                  onRowClick={handleRowClick}
+                  // onFiltersChange={setCurrentFilters}
+                  onSearch={handleServerSideSearch}
+                  onClearAll={clearAllFilters}
+                  onPreferenceSave={handleGridPreferenceSave}
+                  // rowClassName={(row: any, index: number) =>
+                  //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                  // }
+                  // rowClassName={(row: any, index: number) => {
+                  //   return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                  // }}
+                  nestedRowRenderer={renderSubRow}
+                  // configurableButtons={gridConfigurableButtons}
+                  showDefaultConfigurableButton={false}
+                  gridTitle="Transport Route Update"
+                  recordCount={gridState.gridData.length}
+                  showCreateButton={true}
+                  searchPlaceholder="Search"
+                  clientSideSearch={true}
+                  showSubHeaders={false}
+                  hideAdvancedFilter={true}
+                  hideCheckboxToggle={true}
+                  serverFilters={dynamicServerFilters}
+                  showFilterTypeDropdown={false}
+                  showServersideFilter={showServersideFilter}
+                  onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                  gridId={gridId}
+                  userId="current-user"
+                  api={filterService}
+                />
+              ) : (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                  <div className="text-lg font-semibold text-blue-700">Loading...</div>
+                  <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+                </div>
+              )}
             </div>
           </div>
         </div>

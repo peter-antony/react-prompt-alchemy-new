@@ -209,7 +209,7 @@ export const quickOrderService = {
 
   savePersonalization: async (
     params?: any
-  ): Promise<PaginatedResponse<QuickOrder>> => {
+  ): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
