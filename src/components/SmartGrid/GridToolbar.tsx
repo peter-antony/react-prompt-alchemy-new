@@ -16,7 +16,8 @@ import {
   EllipsisVertical,
   SlidersHorizontal,
   Calendar,
-  Package
+  Package,
+  Star
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -436,12 +437,13 @@ export function GridToolbar({
             onClick={onSavePreferences}
             disabled={loading}
             title="Save Grid Preferences"
-            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white hover:bg-blue-50 p-0"
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300"
             style={{ border: '1px solid #0068CF' }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 1L9.8541 5.52786L14.8541 6.1459L11.2929 9.47214L12.2918 14.3541L8 12L3.70818 14.3541L4.70711 9.47214L1.1459 6.1459L6.1459 5.52786L8 1Z" fill="#ffffff" stroke="#0068CF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            {/* <Star className="h-4 w-4 text-gray-600" /> */}
           </Button>
         {/* )} */}
 

@@ -147,7 +147,9 @@ export const API_ENDPOINTS = {
     QUICKORDER_GET:"/quickorder/getdata",
     LINKEDORDERS_GET:"/quickorder/showlinked",
     UPLOADFILES: "/files/update",
-    DOWNLOADFILE: "/files/updatedown"
+    DOWNLOADFILE: "/files/updatedown",
+    PERSONALIZATION: "/tripplanningpersonalization/personalizationget",
+    PERSONALIZATION_SAVE: "/tripplanningpersonalization/personalizationcreate",
     // UPLOADFILES: "/fileupload/update",
   },
   // Invoice management
