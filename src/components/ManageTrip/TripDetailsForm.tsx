@@ -1,11 +1,37 @@
 import React from 'react';
-import { Banknote, MapPin, TramFront, UserRound } from 'lucide-react';
+import { Banknote, MapPin, TramFront, UserRound, Container } from 'lucide-react';
 import { TripUserIcon, TramFrontSVG, TripCurrencyIcon, TripTrainIcon } from './TripIcons';
 import { manageTripStore } from '@/stores/mangeTripStore';
 
 export const TripDetailsForm = () => {
   const { tripData } = manageTripStore();
   const { Header } = tripData || {};
+
+  // Helper function to format WagonID
+  const formatWagonID = (wagonID?: string) => {
+    if (!wagonID) return '-';
+    
+    const wagonIDs = wagonID.split(',').map(id => id.trim()).filter(id => id);
+    
+    if (wagonIDs.length > 1) {
+      return `Multiple (${wagonIDs.length})`;
+    }
+    
+    return wagonIDs[0] || '-';
+  };
+
+  // Get full WagonID list for tooltip
+  const getWagonIDTooltip = (wagonID?: string) => {
+    if (!wagonID) return '-';
+    
+    const wagonIDs = wagonID.split(',').map(id => id.trim()).filter(id => id);
+    
+    if (wagonIDs.length > 1) {
+      return `Wagons: ${wagonIDs.join(', ')}`;
+    }
+    
+    return wagonID;
+  };
 
   return (
     <div className="space-y-6 mb-6">
@@ -64,6 +90,16 @@ export const TripDetailsForm = () => {
               {/* <MapPin size={18} color="#0068CF" strokeWidth={1.2} /> */}
               <TramFront size={18} strokeWidth={1.2} />
               <span className='truncate' title={Header?.TripType}>{Header?.TripType}</span>
+            </span>
+          </div>
+          <div>
+            <span className="flex items-center gap-2">
+              {/* <MapPin size={18} color="#0068CF" strokeWidth={1.2} /> */}
+              {/* <TramFront size={18} strokeWidth={1.2} /> */}
+              <Container size={18} strokeWidth={1.2} />
+              <span className='truncate' title={getWagonIDTooltip(Header?.WagonID)}>
+                {formatWagonID(Header?.WagonID)}
+              </span>
             </span>
           </div>
         </div>

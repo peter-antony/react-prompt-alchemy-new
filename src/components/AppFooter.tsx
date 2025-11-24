@@ -15,7 +15,8 @@ const renderButton = (
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary:
       "bg-background text-blue-600 border border-blue-600 hover:bg-blue-50",
-    cancel: "bg-white text-red-300 hover:text-red-600 hover:bg-red-100",
+    cancel: "bg-red-100 text-red-600  hover:bg-red-200 hover:text-red-700",
+    // cancel: "bg-white text-red-300 hover:text-red-600 hover:bg-red-100",
     cancelQuickOrder: "bg-red-100 text-red-600  hover:bg-red-200 hover:text-red-700",
   };
 
@@ -81,8 +82,11 @@ const renderButton = (
         if (config.label === "Created By" || "Created Date" || "Last Modified By" || "Last Modified Date") {
           return (
             <div className="flex flex-col text-left">
-              <span className="text-xs text-gray-500">{config.label}</span>
-              <span className="text-sm font-medium">{config.iconName}</span>
+              {/* <span className="text-xs text-gray-500">{config.label}</span>
+              <span className="text-sm font-medium">{config.iconName}</span> */}
+              <span className="text-xs text-gray-500" style={{fontSize: '10px'}}>{config.label}</span>
+              <span className="text-xs font-small" style={{fontSize: '10px'}}>{config.iconName}</span>
+
             </div>
           )
         }

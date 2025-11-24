@@ -256,13 +256,20 @@ export const TripExecutionHub = () => {
       order: 7
     },
     {
+      key: "WagonID",
+      label: "Wagon ID",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
       key: "DraftBillNo",
       label: "Draft Bill",
       type: "Link",
       sortable: true,
       editable: false,
       subRow: false,
-      order: 8
     },
     {
       key: "ActualdateandtimeStart",
@@ -271,7 +278,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 9
     },
     {
       key: "PlannedEndDateandTime",
@@ -280,7 +286,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 10
     },
     {
       key: "ActualdateandtimeTo",
@@ -289,7 +294,6 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: true,
-      order: 11
     },
     {
       key: "DraftBillstatus",
@@ -1103,8 +1107,8 @@ export const TripExecutionHub = () => {
       defaultValue: {
         // from: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
         // to: format(new Date(), 'yyyy-MM-dd')
-        from: format(subMonths(new Date(), 2), "yyyy-MM-dd"), // 2 months back
-        to: format(addMonths(new Date(), 1), "yyyy-MM-dd"),   // 1 month ahead
+        from: format(subMonths(new Date(), 1), "yyyy-MM-dd"), // 2 months back
+        to: format(addMonths(new Date(), 2), "yyyy-MM-dd"),   // 1 month ahead
       }
     },
     {

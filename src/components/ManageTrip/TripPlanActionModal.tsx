@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +25,10 @@ import {
 import { format } from "date-fns";
 import { DateTimePicker } from "@/components/Common/DateTimePicker";
 import { quickOrderService, tripService } from "@/api/services";
+import { DynamicLazySelect } from "@/components/DynamicPanel/DynamicLazySelect";
 
 interface PopupField {
-  type: "select" | "text" | "textarea" | "date" | "time";
+  type: "select" | "text" | "textarea" | "date" | "time" | "lazyselect";
   label: string;
   name: string;
   placeholder?: string;
@@ -35,6 +36,7 @@ interface PopupField {
   value: string;
   required?: boolean;
   mappedName?: string; // for API mapping if different from 'name'
+  fetchOptions?: (params: { searchTerm: string; offset: number; limit: number }) => Promise<any[]>; // For lazyselect type
 }
 
 interface TripPlanActionModalProps {
@@ -68,6 +70,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
   const [remarks, setRemarks] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetKey, setResetKey] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Determine colors based on action type
   const getColors = () => {
@@ -102,8 +105,17 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
     setRemarks("");
     setResetKey(k => k + 1);
 
-    // Reset all field values to empty
-    fields.forEach((f) => onFieldChange(f.name, ""));
+    // Don't reset field values - preserve pre-populated values from parent
+    // The parent component sets the field values before opening the modal
+    // Only reset if explicitly needed (for new entries without pre-populated data)
+
+    // Remove focus from any auto-focused elements when modal opens
+    setTimeout(() => {
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT')) {
+        activeElement.blur();
+      }
+    }, 0);
 
     // Fetch select options for each select field
     (async () => {
@@ -124,7 +136,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
         }
       }
     })();
-  }, [open, actionType]);
+  }, [open, actionType]); // Removed 'fields' from dependencies to prevent reset when fields change
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
@@ -144,6 +156,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
       <DialogContent
         className="max-w-sm w-full p-0 rounded-xl overflow-hidden gap-0"
         aria-describedby="custom-popup-id"
+        onOpenAutoFocus={(e) => e.preventDefault()} // Prevent auto-focus on first field
       >
         {/* Header */}
         <DialogTitle>
@@ -164,6 +177,7 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
 
         {/* Fields */}
         <form
+          ref={formRef}
           onSubmit={(e) => {
             e.preventDefault();
             if (validateFields()) {
@@ -171,6 +185,13 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
             }
           }}
           className="flex flex-col gap-4 px-4 py-4"
+          onFocus={(e) => {
+            // Only allow focus if user explicitly clicks/tabs to a field
+            // Prevent auto-focus on first field
+            if (e.target === formRef.current?.querySelector('input, textarea, select')) {
+              // Allow focus only if it's user-initiated
+            }
+          }}
         >
           {fields.map((field) => (
             <div key={field.name} className="flex flex-col gap-1">
@@ -199,6 +220,8 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
                   value={field.value}
                   onChange={(e) => onFieldChange(field.name, e.target.value)}
                   rows={3}
+                  tabIndex={0}
+                  autoFocus={false}
                 />
               )}
 
@@ -223,6 +246,19 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
                 </Select>
               )}
 
+              {/* LazySelect (DynamicLazySelect) */}
+              {field.type === "lazyselect" && field.fetchOptions && (
+                <DynamicLazySelect
+                  fetchOptions={field.fetchOptions}
+                  value={field.value}
+                  onChange={(value) => onFieldChange(field.name, value as string)}
+                  placeholder={field.placeholder || "Select"}
+                  className="w-full"
+                  hideSearch={false}
+                  disableLazyLoading={false}
+                />
+              )}
+
               {/* Text Input */}
               {field.type === "text" && (
                 <div className="relative">
@@ -232,6 +268,8 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
                     placeholder={field.placeholder}
                     value={field.value}
                     onChange={(e) => onFieldChange(field.name, e.target.value)}
+                    tabIndex={0}
+                    autoFocus={false}
                   />
                   {field.name.toLowerCase().includes("reason") && (
                     <Search className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" />

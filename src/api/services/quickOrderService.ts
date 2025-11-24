@@ -177,6 +177,78 @@ export const quickOrderService = {
     return response.data;
   },
 
+  getPersonalization: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    const stringifyData = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "GetPersonalization",
+      },
+      SearchCriteria: {
+        LevelType: params?.LevelType || "User",
+        LevelKey: params?.LevelKey || "ramcouser",
+        ScreenName: params?.ScreenName || "",
+        ComponentName: params?.ComponentName || "",
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.PERSONALIZATION,
+      requestBody
+    );
+    return response.data;
+  },
+
+  savePersonalization: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    const stringifyData = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "SavePersonalization",
+      },
+      RequestPayload: {
+        PersonalizationResult: [
+          {
+            PersonalizationID: params?.PersonalizationID || 0,
+            LevelType: params?.LevelType || "User",
+            LevelKey: params?.LevelKey || "ramcouser",
+            ScreenName: params?.ScreenName || "",
+            ComponentName: params?.ComponentName || "",
+            JsonData: params?.JsonData || {},
+            IsActive: params?.IsActive || "1",
+            CreatedBy: params?.CreatedBy || "admin",
+            CreatedOn: params?.CreatedOn || new Date().toISOString(),
+            ModifiedBy: params?.ModifiedBy || "ramcouser",
+            ModifiedOn: new Date().toISOString(),
+            ModeFlag: params?.ModeFlag || "Update"
+          }
+        ]
+      }
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.PERSONALIZATION_SAVE,
+      requestBody
+    );
+    return response.data;
+  },
+
   getMasterCommonDataForIncidnts: async (
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
@@ -258,20 +330,20 @@ export const quickOrderService = {
     );
     return response.data;
   },
-    // Get master common data
+  // Get master common data
   getProductComboData: async (
-      params?: any
-    ): Promise<PaginatedResponse<QuickOrder>> => {
-      const userContext = getUserContext();
-      const stringifyData = JSON.stringify({
-        context: {
-          MessageID: "12345",
-          MessageType: params?.messageType || "",
-          UserID: "ramcouser",
-          OUID: userContext.ouId,
-          Role: userContext.roleName,
-        },
-        SearchCriteria: {
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    const userContext = getUserContext();
+    const stringifyData = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+      },
+      SearchCriteria: {
         "ProductID": params?.productId,
         "ProductDescription": "",
         "UNCode": "",
@@ -284,17 +356,17 @@ export const quickOrderService = {
         "ClassOfStoresDescription": "",
         "Hazardous": "",
         "HazardousDescription": ""
-    }
-      });
-      const requestBody = {
-        RequestData: stringifyData,
-      };
-  
-      const response = await apiClient.post(
-        API_ENDPOINTS.QUICK_ORDERS.COMBO,
-        requestBody
-      );
-      return response.data;
+      }
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
   },
   // Get quick order by ID
   getQuickOrder: async (id: string): Promise<ApiResponse<QuickOrder>> => {
@@ -602,17 +674,17 @@ export const quickOrderService = {
 
     // Check if data is FormData (file upload) or regular object
     // if (data instanceof FormData) {
-      let body :any= JSON.stringify(downloaddata);
-      headers = {
-        "accept": "text/plain",
-        "Is_JSON_Format": "true",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "context-lang-id": "1",
-        "context-ou-id": userContext.ouId,
-        "context-role-name": userContext.roleName,
-      };
-    
+    let body: any = JSON.stringify(downloaddata);
+    headers = {
+      "accept": "text/plain",
+      "Is_JSON_Format": "true",
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "context-lang-id": "1",
+      "context-ou-id": userContext.ouId,
+      "context-role-name": userContext.roleName,
+    };
+
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.DOWNLOADFILE,
       body,

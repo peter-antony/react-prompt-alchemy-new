@@ -146,6 +146,29 @@ export const tripService = {
     return response.data;
   },
 
+  // save trip service call
+  addViaPoint: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "Trip Add Via Point",
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_VIA_POINT}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   // confirm trip service call
   confirmTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
     const userContext = getUserContext();

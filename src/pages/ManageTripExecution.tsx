@@ -509,7 +509,7 @@ const ManageTripExecution = () => {
   useEffect(() => {
     // Check if trip status is "Completed" to determine button label and action
     const isTripCompleted = tripData?.Header?.TripStatus === "Executed";
-    const confirmButtonLabel = isTripCompleted ? "Amend" : "Confirm Trip";
+    const confirmButtonLabel = isTripCompleted ? "Amend" : "Complete Trip";
     const confirmButtonHandler = isTripCompleted ? tripAmendHandler : tripConfirmHandler;
 
     setFooter({

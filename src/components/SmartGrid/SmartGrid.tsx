@@ -186,15 +186,20 @@ export function SmartGrid({
     preferencesColumns,
     true, // persistPreferences
     'smartgrid-preferences',
-    onPreferenceSave ? async (preferences) => {
+    undefined // Pass undefined to prevent auto-save on every change
+  );
+
+  // Manual save handler passed to toolbar
+  const handleSavePreferences = useCallback(async () => {
+    if (onPreferenceSave) {
       try {
-        await Promise.resolve(onPreferenceSave(preferences));
+        await onPreferenceSave(preferences);
       } catch (error) {
         console.error('Failed to save preferences:', error);
         setError('Failed to save preferences');
       }
-    } : undefined
-  );
+    }
+  }, [onPreferenceSave, preferences, setError]);
 
   // Calculate responsive column widths based on content type and available space
   const calculateColumnWidthsCallback = useCallback((visibleColumns: GridColumnConfig[]) => {
@@ -897,6 +902,7 @@ export function SmartGrid({
          // Selection props
         selectedRowsCount={currentSelectedRows.size}
         onClearSelection={handleClearSelection}
+        onSavePreferences={onPreferenceSave ? handleSavePreferences : undefined}
       />
       )}
 

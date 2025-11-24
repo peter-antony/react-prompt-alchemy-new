@@ -47,7 +47,7 @@ export const TripFooterActions = ({ onSaveDraft, onConfirmTrip, loading }: TripF
         onClick={onConfirmTrip}
         disabled={loading}
       >
-        Confirm Trip
+        Complete Trip
       </Button>
     </div>
   </div>

@@ -392,6 +392,23 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       fetchTripData();
     }
   }, [tripId, fetchTripData]);
+
+  // Listen for trip data refresh events from child components (e.g., ConsignmentTrip)
+  useEffect(() => {
+    const handleTripDataRefreshed = async (event: CustomEvent) => {
+      console.log('Trip data refreshed event received:', event.detail);
+      // Refresh trip data when child component dispatches refresh event
+      if (tripId) {
+        await fetchTripData();
+      }
+    };
+
+    window.addEventListener('tripDataRefreshed', handleTripDataRefreshed as EventListener);
+
+    return () => {
+      window.removeEventListener('tripDataRefreshed', handleTripDataRefreshed as EventListener);
+    };
+  }, [tripId, fetchTripData]);
   
   // Get selected leg from legs array
   const selectedLeg = legs.find(leg => leg.LegSequence === selectedLegId) || null;
@@ -505,6 +522,64 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const updatedLegDetails = [...(tripData.LegDetails || [])];
       const currentLeg = updatedLegDetails[legIndex];
       
+      // Validate all activityRef forms before processing - check if ActualDate and ActualTime are present
+      const validationErrors: string[] = [];
+      (selectedLeg.Activities || []).forEach((activity: any, index) => {
+        const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
+        const activityRef = getActivityRef(activityId);
+        
+        if (activityRef?.current?.getFormValues) {
+          try {
+            const formData = activityRef.current.getFormValues();
+            const actualDate = formData.ActualDate;
+            const actualTime = formData.ActualTime;
+            
+            // Check if either ActualDate or ActualTime is empty/null
+            if (!actualDate || actualDate === "" || actualDate === null) {
+              validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Date is required`);
+            }
+            if (!actualTime || actualTime === "" || actualTime === null) {
+              validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Time is required`);
+            }
+          } catch (error) {
+            console.warn(`Error validating form data for activity ${activityId}:`, error);
+          }
+        }
+      });
+      
+      // Validate all new activity forms (forms added via popup) - check if ActualDate and ActualTime are present
+      eventsForms.forEach((newForm: any, index) => {
+        const formRef = getFormRef(newForm.id);
+        
+        if (formRef?.current?.getFormValues) {
+          try {
+            const formData = formRef.current.getFormValues();
+            const actualDate = formData.ActualDate;
+            const actualTime = formData.ActualTime;
+            
+            // Check if either ActualDate or ActualTime is empty/null
+            if (!actualDate || actualDate === "" || actualDate === null) {
+              validationErrors.push(`New Activity ${index + 1}: Actual Date is required`);
+            }
+            if (!actualTime || actualTime === "" || actualTime === null) {
+              validationErrors.push(`New Activity ${index + 1}: Actual Time is required`);
+            }
+          } catch (error) {
+            console.warn(`Error validating form data for new activity ${newForm.id}:`, error);
+          }
+        }
+      });
+      
+      // If validation fails, show error toast and return early (prevent API call)
+      if (validationErrors.length > 0) {
+        toast({
+          title: "⚠️ Mandatory Fields Missing",
+          description: `Please enter Actual Date and Actual Time for activity`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Collect all updated Activities from their respective forms
       const updatedActivities = (selectedLeg.Activities || []).map((activity: any, index) => {
         const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
@@ -513,6 +588,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         if (activityRef?.current?.getFormValues) {
           try {
             const formData = activityRef.current.getFormValues();
+            console.log("formData =====", formData.ActualDate);
+            console.log("formData =====", formData.ActualTime);
             
             // Parse LastIdentifiedLocation
             let LastIdentifiedLocationValue = '';
@@ -561,6 +638,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
               AmendmentNo: formData.AmendmentNo || activity.AmendmentNo,
               ModeFlag: 'Update' as any
             } as any;
+
           } catch (error) {
             console.warn(`Error getting form data for activity ${activityId}:`, error);
             return { ...activity, ModeFlag: 'NoChange' as any } as any;
@@ -1128,7 +1206,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         fieldType: "date",
         width: 'four',
         value: "",
-        mandatory: false,
+        mandatory: true,
         visible: true,
         editable: true,
         order: 3,
@@ -1139,7 +1217,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         fieldType: 'time',
         width: 'four',
         value: "",
-        mandatory: false,
+        mandatory: true,
         visible: true,
         editable: true,
         order: 4
@@ -1997,7 +2075,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       </div>
                     </div>
                     <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-blue rounded-2xl ml-2">
-                      {leg.LegBehaviourDescription}
+                      {leg.LegBehaviourDescription || leg.LegBehaviour || ''}
                     </div>
                     <TooltipProvider>
                       <Tooltip>
