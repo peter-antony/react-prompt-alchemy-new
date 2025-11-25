@@ -35,6 +35,7 @@ interface TripExecutionCreateDrawerScreenProps {
   onClose: () => void;
   tripId?: string;
   onFieldChange?: (name: string, value: string) => void;
+  selectedLegSequence?: string | null; // LegSequence to select when drawer opens
   // tripExecutionRef?: React.RefObject<DynamicPanelRef>;
   // tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
 }
@@ -60,6 +61,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   onClose,
   onFieldChange,
   tripId = 'TRIP00000001',
+  selectedLegSequence,
   // tripExecutionRef,
   // tripAdditionalRef
 }) => {
@@ -363,11 +365,29 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       setTripData(formattedTripData);
       setLegs(formattedTripData.LegDetails || []);
       
-      // Auto-select first leg if available
+      // Select leg based on passed selectedLegSequence, otherwise select first leg
       if (formattedTripData.LegDetails && formattedTripData.LegDetails.length > 0) {
-        const firstLegSequence = formattedTripData.LegDetails[0].LegSequence;
-        console.log('Auto-selecting first leg:', firstLegSequence);
-        setSelectedLegId(firstLegSequence || null);
+        let legToSelect: string | null = null;
+        
+        // If selectedLegSequence is provided, try to find and select that leg
+        if (selectedLegSequence) {
+          const foundLeg = formattedTripData.LegDetails.find(
+            (leg: any) => leg.LegSequence === selectedLegSequence
+          );
+          if (foundLeg) {
+            legToSelect = foundLeg.LegSequence;
+            console.log('Selecting passed leg:', legToSelect);
+          } else {
+            console.warn('Passed leg sequence not found, falling back to first leg:', selectedLegSequence);
+            legToSelect = formattedTripData.LegDetails[0].LegSequence;
+          }
+        } else {
+          // No leg passed, select first leg
+          legToSelect = formattedTripData.LegDetails[0].LegSequence;
+          console.log('Auto-selecting first leg:', legToSelect);
+        }
+        
+        setSelectedLegId(legToSelect || null);
       } else {
         console.warn('No LegDetails found in trip data');
         setLoading(false); // Only set to false if no data
@@ -392,6 +412,17 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       fetchTripData();
     }
   }, [tripId, fetchTripData]);
+
+  // Update selected leg when selectedLegSequence prop changes (e.g., when drawer reopens with different data)
+  useEffect(() => {
+    if (selectedLegSequence && legs.length > 0) {
+      const foundLeg = legs.find((leg) => leg.LegSequence === selectedLegSequence);
+      if (foundLeg) {
+        console.log('Updating selected leg from prop:', selectedLegSequence);
+        setSelectedLegId(selectedLegSequence);
+      }
+    }
+  }, [selectedLegSequence, legs]);
 
   // Listen for trip data refresh events from child components (e.g., ConsignmentTrip)
   useEffect(() => {
@@ -2235,11 +2266,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                    )}
                                  </div>
                                </div>
-                               <div className="flex items-center gap-2">
+                               {/* <div className="flex items-center gap-2">
                                  <Badge variant="outline" className="text-xs">
                                    Seq: {activity.SeqNo || index + 1}
                                  </Badge>
-                               </div>
+                               </div> */}
                              </div>
 
                              {loading ? (
@@ -2303,12 +2334,12 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                         </div>
                       ))}
 
-                      <div className="flex items-center gap-2 justify-end">
+                      {/* <div className="flex items-center gap-2 justify-end">
                         <Button onClick={handlerModalAddEvents} variant="outline" size="sm" className="gap-2">
                           <Plus className="h-4 w-4" />
                           Add Events
                         </Button>
-                      </div>
+                      </div> */}
                     </motion.div>
                   )}
                 </AnimatePresence>

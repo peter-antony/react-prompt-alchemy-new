@@ -48,7 +48,7 @@ const ManageTripExecution = () => {
   const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
-  const { isOpen, drawerType, closeDrawer } = useDrawerStore();
+  const { isOpen, drawerType, closeDrawer, drawerData } = useDrawerStore();
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const [popupOpen, setPopupOpen] = useState(false);
@@ -604,7 +604,7 @@ const ManageTripExecution = () => {
           {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
           {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-          {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
+          {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} selectedLegSequence={drawerData?.selectedLegSequence} />}
           {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'transport-route' && <TripLevelUpdateDrawer  />}

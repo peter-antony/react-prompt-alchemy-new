@@ -331,7 +331,8 @@ export const EnhancedSmartGrid = () => {
           customPageSize={10}
           onRowClick={(row) => {
             console.log('Nested Row clicked:', row);
-            openDrawer('trip-execution-create');
+            // Pass the selected row data (which should contain LegSequence) to the drawer
+            openDrawer('trip-execution-create', { selectedLegSequence: row?.LegSequence, selectedLeg: row });
           }}
         />
       </div>

@@ -5334,33 +5334,33 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           })
           .map((actualRow, index) => {
             try {
-            if (!actualRow || typeof actualRow !== 'object') {
-              throw new Error(`Invalid row data at index ${index}`);
-            }
+              if (!actualRow || typeof actualRow !== 'object') {
+                throw new Error(`Invalid row data at index ${index}`);
+              }
               let modeFlag = 'Update';
               let lineUniqueID = null;
 
-            if (actualRow.ModeFlag === 'Insert') {
+              if (actualRow.ModeFlag === 'Insert') {
                 modeFlag = 'Insert';
                 lineUniqueID = null;
-            } else if (actualRow.ModeFlag === 'Delete') {
+              } else if (actualRow.ModeFlag === 'Delete') {
                 modeFlag = 'Delete';
                 lineUniqueID = actualRow.LineUniqueID || null;
-            }
+              }
 
-            const safeNumeric = (value: any) => {
-              if (value === null || value === undefined || value === '') {
-                return null;
-              }
-              const num = Number(value);
-              return isNaN(num) ? null : num;
-            };
-            const safeString = (value: any) => {
-              if (value === null || value === undefined) {
+              const safeNumeric = (value: any) => {
+                if (value === null || value === undefined || value === '') {
+                  return null;
+                }
+                const num = Number(value);
+                return isNaN(num) ? null : num;
+              };
+              const safeString = (value: any) => {
+                if (value === null || value === undefined) {
                   return '';
-              }
-              return String(value);
-            };
+                }
+                return String(value);
+              };
               // Bug fix, Helper function to safely get string values or null if empty
 			  const safeStringOrNull = (value: any) => {
                 if (value === null || value === undefined || value === '') {
@@ -5368,95 +5368,95 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 }
                 return String(value);
               };
-            const safeDateTimeSplit = (value: any, part: number) => {
-              try {
+              const safeDateTimeSplit = (value: any, part: number) => {
+                try {
                   if (!value || typeof value !== 'string') return '';
-                const parts = value.split(' ');
+                  const parts = value.split(' ');
                   return parts[part] || '';
-              } catch (e) {
+                } catch (e) {
                   return '';
-              }
-            };
+                }
+              };
 
-            const mappedRow = {
+              const mappedRow = {
                 Seqno: (index + 1).toString(),
                 PlanToActualCopy: '',
-              WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
-              WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
+                WagonPosition: safeString(actualRow['Wagon Position'] || actualRow.WagonPosition || actualRow.wagonposition),
+                WagonType: safeString(actualRow['Wagon Type'] || actualRow.WagonType || actualRow.wagontype),
                 WagonTypeDescription: safeString(actualRow['Wagon Type Description'] || actualRow.WagonTypeDescription || actualRow.wagontypedescription),
-              Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
-              WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
-              WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
-              WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
+                Wagon: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.Wagon || actualRow.wagonid),
+                WagonDescription: safeString(actualRow['Wagon ID'] || actualRow.WagonId || actualRow.WagonDescription || actualRow.wagonid),
+                WagonQty: safeNumeric(actualRow['Wagon Qty'] || actualRow.WagonQty || actualRow.wagonqty),
+                WagonQtyUOM: safeString(actualRow['Wagon Qty UOM'] || actualRow.WagonQtyUOM || actualRow.wagonqtyuom),
                 ContainerTypeDescription: safeString(actualRow['Container Type Description'] || actualRow.ContainerTypeDescription || actualRow.containertypedescription),
-              ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
-              ContainerDescription: safeString(actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription),
-              ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
-              ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
-              Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
+                ContainerId: safeString(actualRow['Container ID'] || actualRow.ContainerId || actualRow.containerid),
+                ContainerDescription: safeString(actualRow['Container Description'] || actualRow.ContainerDescription || actualRow.containerdescription),
+                ContainerQty: safeNumeric(actualRow['Container Qty'] || actualRow.ContainerQty || actualRow.containerqty),
+                ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
+                Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
                 ProductDescription: safeString(actualRow['Product Description'] || actualRow.ProductDescription || actualRow.productdescription),
                 ProductWeight: safeString(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
-              ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
-              Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
-              ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
-              ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
-              ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
+                ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
+                Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
+                ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
+                ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
+                ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
                 ThuQtyUom: safeString(actualRow['THU Qty UOM'] || actualRow.ThuQtyUOM || actualRow.thuqtyuom),
                 ThuWeight: safeString(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
-              ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
-              ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
+                ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
+                ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
                 ReplacedWagon: safeString(actualRow['Replaced Wagon'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
-              ShuntingReasonCode: safeString(actualRow['Shunting Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
-              ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
+                ShuntingReasonCode: safeString(actualRow['Shunting Reason Code'] || actualRow.ReasonCode || actualRow.ShuntingReasonCode || actualRow.reasoncode),
+                ShuntInLocation: safeString(actualRow['Shunt In Location'] || actualRow.ShuntInLocation || actualRow.shuntinlocation),
                 ShuntInLocationDescription: safeString(actualRow['Shunt In Location Description'] || actualRow.ShuntInLocationDescription || actualRow.shuntinlocationdescription),
-              ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
+              	ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
                 ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location Description'] || actualRow.ShuntOutLocationDescription || actualRow.shuntoutlocationdescription),
                 ShuntInDate: actualRow['Shunt In Date'] || actualRow.shuntindate,
                 ShuntInTime: actualRow['Shunt In Time'] || actualRow.shuntintime,
                 ShuntOutDate: actualRow['Shunt Out Date'] || actualRow.shuntoutdate,
                 ShuntOutTime: actualRow['Shunt Out Time'] || actualRow.shuntouttime,
-              ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
+                ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
                 ClassOfStoresDescription: safeString(actualRow['Class Of Stores Description'] || actualRow.ClassOfStoresDescription || actualRow.classofstoresdescription),
-              NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
-              NHMDescription: safeString(actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription),
-              UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
-              UNCodeDescription: safeString(actualRow['UN Code Description'] || actualRow.UNCodeDescription || actualRow.uncodedescription),
-              DGClass: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
-              DGClassDescription: safeString(actualRow['DG Class Description'] || actualRow.DGClassDescription || actualRow.dgclassdescription),
-              ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
-              WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
-              ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
+                NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
+                NHMDescription: safeString(actualRow['NHM Description'] || actualRow.NHMDescription || actualRow.nhmdescription),
+                UNCode: safeString(actualRow['UN Code'] || actualRow.UNCode || actualRow.uncode),
+                UNCodeDescription: safeString(actualRow['UN Code Description'] || actualRow.UNCodeDescription || actualRow.uncodedescription),
+                DGClass: safeString(actualRow['DG Class'] || actualRow.DGClass || actualRow.dgclass),
+                DGClassDescription: safeString(actualRow['DG Class Description'] || actualRow.DGClassDescription || actualRow.dgclassdescription),
+                ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
+                WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
+                ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
                 ContainerAvgTareWeight: safeString(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
-              ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
-              LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
+                ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
+                LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
                 LastProductTransportedDate1: safeStringOrNull(actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1),
-              LastProductTransported2: safeString(actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2),
+                LastProductTransported2: safeString(actualRow['Last Product Transported2'] || actualRow.LastProductTransported2 || actualRow.lastproducttransported2),
                 LastProductTransportedDate2: safeStringOrNull(actualRow['Last Product Transported Date2'] || actualRow.LastProductTransportedDate2 || actualRow.lastproducttransporteddate2),
-              LastProductTransported3: safeString(actualRow['Last Product Transported3'] || actualRow.LastProductTransported3 || actualRow.lastproducttransported3),
+                LastProductTransported3: safeString(actualRow['Last Product Transported3'] || actualRow.LastProductTransported3 || actualRow.lastproducttransported3),
                 LastProductTransportedDate3: safeStringOrNull(actualRow['Last Product Transported Date3'] || actualRow.LastProductTransportedDate3 || actualRow.lastproducttransporteddate3),
                 WagonTareWeight: safeStringOrNull(actualRow['Wagon Tare Weight'] || actualRow.TareWeight || actualRow.WagonTareWeight || actualRow.tareweight),
-              WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
-              WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
-              WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
+                WagonTareWeightUOM: safeString(actualRow['Wagon Tare Weight UOM'] || actualRow.TareWeightUOM || actualRow.WagonTareWeightUOM || actualRow.tareweightuom),
+                WagonLength: safeNumeric(actualRow['Wagon Length'] || actualRow.WagonLength || actualRow.wagonlength),
+                WagonLengthUOM: safeString(actualRow['Wagon Length UOM'] || actualRow.WagonLengthUOM || actualRow.wagonlengthuom),
                 GrossWeight: safeStringOrNull(actualRow['Gross Weight'] || actualRow.GrossWeight || actualRow.grossweight),
-              GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
+                GrossWeightUOM: safeString(actualRow['Gross Weight UOM'] || actualRow.GrossWeightUOM || actualRow.grossweightuom),
                 QuickCode1Description: safeString(actualRow['Quick Code1'] || actualRow.QuickCode1Description || actualRow.quickcode1description),
                 QuickCode2Description: safeString(actualRow['Quick Code2'] || actualRow.QuickCode2Description || actualRow.quickcode2description),
                 QuickCode3Description: safeString(actualRow['Quick Code3'] || actualRow.QuickCode3Description || actualRow.quickcode3description),
-              QuickCodeValue1: safeString(actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
-              QuickCodeValue2: safeString(actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
-              QuickCodeValue3: safeString(actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
-              Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
-              Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
-              Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
+                QuickCodeValue1: safeString(actualRow['Quick Code Value 1'] || actualRow.QuickCodeValue1 || actualRow.quickcodevalue1),
+                QuickCodeValue2: safeString(actualRow['Quick Code Value 2'] || actualRow.QuickCodeValue2 || actualRow.quickcodevalue2),
+                QuickCodeValue3: safeString(actualRow['Quick Code Value 3'] || actualRow.QuickCodeValue3 || actualRow.quickcodevalue3),
+                Remarks1: safeString(actualRow['Remarks1'] || actualRow.Remarks1 || actualRow.remarks1),
+                Remarks2: safeString(actualRow['Remarks2'] || actualRow.Remarks2 || actualRow.remarks2),
+                Remarks3: safeString(actualRow['Remarks3'] || actualRow.Remarks3 || actualRow.remarks3),
                 LineUniqueID: lineUniqueID,
-              ModeFlag: modeFlag // Set appropriate mode flag
-            };
-            return mappedRow;
-          } catch (rowError) {
-            throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
-          }
-        });
+                ModeFlag: modeFlag // Set appropriate mode flag
+              };
+              return mappedRow;
+            } catch (rowError) {
+              throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
+            }
+          });
 
       } else {
         // If no user edits, only include new/imported data (original logic)
@@ -5678,7 +5678,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             setActualData([...freshData]);
                           }
                         }
-                        
+
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5699,7 +5699,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
                         // Use the dedicated refresh function
                         forceGridRefresh(allDataToSave, 'saved data fallback');
-                        
+
                         // Close the drawer after successful save and data refresh
                         if (onClose) {
                           setTimeout(() => {
@@ -5942,29 +5942,29 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           : (getConsignments(legId) || []);
 
         console.log('ConsignmentTrip: Loading data for legId:', legId, 'selectedLeg.LegSequence:', selectedLeg?.LegSequence, 'consignments:', cons.length);
-      if (cons.length > 0) {
-        const list = buildCustomerOrderList(cons);
-        setCustomerList(list);
+        if (cons.length > 0) {
+          const list = buildCustomerOrderList(cons);
+          setCustomerList(list);
 
-        setSelectedCustomerIndex('0');
-        const selected = cons[0];
-        setSelectedCustomerData(selected); // Use raw consignment data
-        setPlannedData(selected?.Planned ?? []);
-        setActualData(selected?.Actual ?? []);
-        setActualEditableData(selected?.Actual ?? []);
+          setSelectedCustomerIndex('0');
+          const selected = cons[0];
+          setSelectedCustomerData(selected); // Use raw consignment data
+          setPlannedData(selected?.Planned ?? []);
+          setActualData(selected?.Actual ?? []);
+          setActualEditableData(selected?.Actual ?? []);
           console.log('ConsignmentTrip: Loaded planned:', selected?.Planned?.length, 'actual:', selected?.Actual?.length);
-      } else {
-        // reset everything if no consignment for new leg
-        setCustomerList([]);
-        setSelectedCustomerIndex('');
-        setSelectedCustomerData({});
-        setPlannedData([]);
-        setActualData([]);
-        setActualEditableData([]);
+        } else {
+          // reset everything if no consignment for new leg
+          setCustomerList([]);
+          setSelectedCustomerIndex('');
+          setSelectedCustomerData({});
+          setPlannedData([]);
+          setActualData([]);
+          setActualEditableData([]);
           console.log('ConsignmentTrip: No consignment data available for this leg');
-        // No consignment data available for this leg
+          // No consignment data available for this leg
+        }
       }
-    }
     }
   }, [legId, selectedLeg, currentLeg]); // on leg change or selectedLeg change
 
@@ -6851,8 +6851,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             data={[...visibleActualEditableData]}
                             region={region}
                             gridTitle="Actuals"
-                            inlineRowAddition={!pickupComplete}
-                            inlineRowEditing={!pickupComplete}
+                            inlineRowAddition={true}
+                            inlineRowEditing={true}
+                            // inlineRowAddition={!pickupComplete}
+                            // inlineRowEditing={!pickupComplete}
                             onAddRow={handleAddRow}
                             // Auto-save: update state immediately on edit
                             onInlineEdit={(rowIndex: number, updatedRow: any) => {
@@ -6886,7 +6888,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                               return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
                             }}
                             showDefaultConfigurableButton={false}
-                            recordCount={actualEditableData.length}
+                            recordCount={visibleActualEditableData.length}
                             showCreateButton={false}
                             searchPlaceholder="Search"
                             clientSideSearch={true}
@@ -6899,10 +6901,36 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             // Toolbar delete and add row logic
                             onToolbarDeleteClick={() => {
                               setActualEditableData(prevData => {
-                                const indicesToDelete = Array.from(selectedRows);
+                                const visibleIndicesToDelete = Array.from(selectedRows);
+                                // Map visible indices to actual indices in prevData
+                                // First, get the visible rows (excluding deleted ones)
+                                const visibleRows = prevData.filter(row => row?.ModeFlag !== 'Delete');
+                                // Get the actual rows to delete based on visible indices
+                                const rowsToDelete = visibleIndicesToDelete.map(visibleIdx => visibleRows[visibleIdx]).filter(Boolean);
+                                
                                 // Mark existing rows as deleted, remove new rows
-                                const newData = prevData.map((row, idx) => {
-                                  if (!indicesToDelete.includes(idx)) return row;
+                                const newData = prevData.map((row) => {
+                                  // Check if this row should be deleted
+                                  const shouldDelete = rowsToDelete.some(deleteRow => {
+                                    // Compare by reference first
+                                    if (deleteRow === row) return true;
+                                    // Fallback: compare by unique identifiers
+                                    if (row?.LineUniqueID && deleteRow?.LineUniqueID) {
+                                      return row.LineUniqueID === deleteRow.LineUniqueID;
+                                    }
+                                    // Compare by Seqno if available
+                                    if (row?.Seqno && deleteRow?.Seqno) {
+                                      return row.Seqno === deleteRow.Seqno;
+                                    }
+                                    // Compare by Wagon and WagonPosition if available
+                                    if (row?.Wagon && deleteRow?.Wagon && row?.WagonPosition && deleteRow?.WagonPosition) {
+                                      return row.Wagon === deleteRow.Wagon && row.WagonPosition === deleteRow.WagonPosition;
+                                    }
+                                    return false;
+                                  });
+                                  
+                                  if (!shouldDelete) return row;
+                                  
                                   // Consider a row existing if it has a LineUniqueID
                                   const isExisting = row.LineUniqueID;
                                   if (isExisting) {
@@ -6918,6 +6946,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                               });
                               setSelectedRows(new Set());
                             }}
+                            onDeleteRow={handleDeleteRow}
                             selectedRows={selectedRows}
                             onSelectionChange={setSelectedRows}
                           />
@@ -6930,12 +6959,12 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               )}
               <div className='flex flex-col items-end fixed bottom-0 right-[40px] bg-white w-full border-t p-2'>
                 <div className='flex gap-2'>
-                <Button
+                  <Button
                     className="h-8 bg-blue-600 rounded hover:bg-blue-700"
-                  onClick={handleSavePlanActuals}
-                >
-                  Save Consignment
-                </Button>
+                    onClick={handleSavePlanActuals}
+                  >
+                    Save Consignment
+                  </Button>
                 </div>
               </div>
 
