@@ -945,6 +945,54 @@ export const tripService = {
       requestBody
     );
     return response.data;
-  }
+  },
+
+  // Get Resource From Trip
+  getResourceFromTrip: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "GetResourceFromTrip",
+      },
+      SearchCriteria: {
+        TripID: params?.id,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.GET_RESOURCE}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // save Resource From Trip
+  saveResource: async (params?: any): Promise<ApiResponse<Trip>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "UpdateResourceFromTrip",
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_RESOURCE}`,
+      requestBody
+    );
+    return response.data;
+  },
 
 };

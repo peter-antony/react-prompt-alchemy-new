@@ -12,7 +12,10 @@ import { tripPlanningService } from '@/api/services/tripPlanningService';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { InputDropdown, InputDropdownValue } from '@/components/ui/input-dropdown';
-
+import { tripService } from "@/api/services/tripService";
+import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 interface FormData {
   carrier: string;
@@ -65,93 +68,180 @@ const initialFormData: FormData = {
   QCUserDefinedValue: '',
 };
 
-const initialResources: Resource[] = [
-  { 
-    id: 'SCH32030023', 
-    type: 'Schedule', 
-    name: 'SCH32030023',
+// Helper function to map API response to Resource format
+const mapApiResourceToResource = (apiResource: any): Resource => {
+  let resourceType: 'Schedule' | 'Supplier' | 'Agent' | 'Handler' | 'Driver' | 'Vehicle' = 'Schedule';
+  if (apiResource.ResourceType === 'Scheduler') {
+    resourceType = 'Schedule';
+  } else if (apiResource.ResourceType === 'Supplier') {
+    resourceType = 'Supplier';
+  } else if (apiResource.ResourceType === 'Agent') {
+    resourceType = 'Agent';
+  } else if (apiResource.ResourceType === 'Driver') {
+    resourceType = 'Driver';
+  } else if (apiResource.ResourceType === 'Vehicle') {
+    resourceType = 'Vehicle';
+  } else if (apiResource.ResourceType === 'Handler') {
+    resourceType = 'Handler';
+  }
+
+  // Format carrier (Executive Agent)
+  const carrierValue = apiResource.ExecutiveAgentID || '';
+  const carrierLabel = apiResource.ExecutiveAgentDescription || apiResource.AgencyName || '';
+  const carrier = carrierValue && carrierLabel ? `${carrierValue} || ${carrierLabel}` : carrierValue || carrierLabel || '';
+
+  // Format service
+  const serviceValue = apiResource.Service || '';
+  const serviceLabel = apiResource.ServiceDescription || '';
+  const service = serviceValue && serviceLabel ? `${serviceValue} || ${serviceLabel}` : serviceValue || serviceLabel || '';
+
+  // Format subService
+  const subServiceValue = apiResource.SubService || '';
+  const subServiceLabel = apiResource.SubServiceDescription || '';
+  const subService = subServiceValue && subServiceLabel ? `${subServiceValue} || ${subServiceLabel}` : subServiceValue || subServiceLabel || '';
+
+  // Format legDetails (LegFrom and LegTo)
+  const legDetails = apiResource.LegFrom && apiResource.LegTo 
+    ? `${apiResource.LegFrom} - ${apiResource.LegTo}` 
+    : apiResource.LegFrom || apiResource.LegTo || '';
+
+  // Format departurePoint
+  const departurePointValue = apiResource.DeparturePoint || '';
+  const departurePointLabel = apiResource.DeparturePointDescription || '';
+  const departurePoint = departurePointValue && departurePointLabel 
+    ? `${departurePointValue}, ${departurePointLabel}` 
+    : departurePointValue || departurePointLabel || '';
+
+  // Format arrivalPoint
+  const arrivalPointValue = apiResource.ArrivalPoint || '';
+  const arrivalPointLabel = apiResource.ArrivalPointDescription || '';
+  const arrivalPoint = arrivalPointValue && arrivalPointLabel 
+    ? `${arrivalPointValue}, ${arrivalPointLabel}` 
+    : arrivalPointValue || arrivalPointLabel || '';
+
+  // Format infrastructureManager
+  const infrastructureManagerValue = apiResource.InfrastructureManagerID || '';
+  const infrastructureManagerLabel = apiResource.InfrastructureManagerName || '';
+  const infrastructureManager = infrastructureManagerValue && infrastructureManagerLabel 
+    ? `${infrastructureManagerValue} || ${infrastructureManagerLabel}` 
+    : infrastructureManagerValue || infrastructureManagerLabel || '';
+
+  return {
+    id: apiResource.ResourceID || '',
+    type: resourceType,
+    name: apiResource.ResourceID || '',
     formData: {
-      resourceCategory: 'Schedule',
-      resource: 'SCH32030023',
-      carrier: 'ABC Executive Agent',
-      supplier: 'ABC Supplier',
-      supplierRef: 'REF001',
-      carrierStatus: 'Inprogress',
-      scheduleNo: 'SCH32030023',
-      trainNo: 'TR001',
-      pathNo: 'P001',
-      legDetails: '01 - Voila to Curtici',
-      departurePoint: 'S3-202705, Voila',
-      arrivalPoint: 'S3-21925-3, Curtici',
-      service: 'service1',
-      subService: 'sub1',
-      infrastructureManager: 'IM001',
-      reason: 'reason1',
-      remarks: 'Schedule resource details',
-      QCUserDefined: 'QC1',
-      QCUserDefinedValue: 'QC1 value',
+      resourceCategory: resourceType,
+      resource: apiResource.ResourceID || '',
+      carrier: carrier,
+      supplier: apiResource.AgencyName || '',
+      supplierRef: apiResource.SupplierRefNo || apiResource.VendorReferenceNo || '',
+      carrierStatus: apiResource.CarrierStatus || '',
+      scheduleNo: apiResource.ResourceID || '',
+      trainNo: apiResource.TrainNo || apiResource.LicensePlateNo || '',
+      pathNo: apiResource.PathNo || '',
+      legDetails: legDetails,
+      departurePoint: departurePoint,
+      arrivalPoint: arrivalPoint,
+      service: service,
+      subService: subService,
+      infrastructureManager: infrastructureManager,
+      reason: apiResource.ReasonforSupplierChanges || '',
+      remarks: apiResource.Remarks || '',
+      QCUserDefined: '', // Not in API response, will be handled separately
+      QCUserDefinedValue: '', // Not in API response, will be handled separately
+    },
+    // Store original API data for reference
+    apiData: apiResource
+  } as Resource & { apiData?: any };
+};
+
+// Helper function to map Resource format back to API payload
+const mapResourceToApiPayload = (resource: Resource & { apiData?: any }): any => {
+  const formData = resource.formData;
+  
+  // Split dropdown values
+  const splitDropdownValue = (value: string | undefined) => {
+    if (!value) return { value: '', label: '' };
+    if (typeof value === 'string' && value.includes('||')) {
+      const parts = value.split('||');
+      return {
+        value: parts[0]?.trim() || '',
+        label: parts[1]?.trim() || ''
+      };
     }
-  },
-  { 
-    id: 'DB Cargo', 
-    type: 'Agent', 
-    name: 'DB Cargo',
-    formData: {
-      resourceCategory: 'Agent',
-      resource: 'SCH002',
-      carrier: 'DB Cargo Agent',
-      supplier: 'DB Supplier',
-      supplierRef: 'REF002',
-      carrierStatus: 'Completed',
-      scheduleNo: 'SCH002',
-      trainNo: 'TR002',
-      pathNo: 'P002',
-      legDetails: '01 - Voila to Curtici',
-      departurePoint: 'S3-202705, Voila',
-      arrivalPoint: 'S3-21925-3, Curtici',
-      service: 'service2',
-      subService: 'sub2',
-      infrastructureManager: 'IM002',
-      reason: 'reason2',
-      remarks: 'Agent resource details',
-      QCUserDefined: 'QC2',
-      QCUserDefinedValue: 'QC2 value',
-    }
-  },
-  { 
-    id: '14388 (RAM)', 
-    type: 'Handler', 
-    name: '14388 (RAM)',
-    formData: {
-      resourceCategory: 'Handler',
-      resource: 'HAND001',
-      carrier: 'RAM Executive Agent',
-      supplier: 'RAM Supplier',
-      supplierRef: 'REF003',
-      carrierStatus: 'Pending',
-      scheduleNo: 'SCH003',
-      trainNo: 'TR003',
-      pathNo: 'P003',
-      legDetails: '01 - Voila to Curtici',
-      departurePoint: 'S3-202705, Voila',
-      arrivalPoint: 'S3-21925-3, Curtici',
-      service: 'service1',
-      subService: 'sub1',
-      infrastructureManager: 'IM003',
-      reason: 'reason1',
-      remarks: 'Handler resource details',
-      QCUserDefined: 'QC3',
-      QCUserDefinedValue: 'QC3 value',
-    }
-  },
-];
+    return { value: value, label: value };
+  };
+
+  const carrierData = splitDropdownValue(formData.carrier);
+  const serviceData = splitDropdownValue(formData.service);
+  const subServiceData = splitDropdownValue(formData.subService);
+  const carrierStatusData = splitDropdownValue(formData.carrierStatus);
+  const legDetailsParts = formData.legDetails ? formData.legDetails.split(' - ') : ['', ''];
+  const departurePointParts = formData.departurePoint ? formData.departurePoint.split(', ') : ['', ''];
+  const arrivalPointParts = formData.arrivalPoint ? formData.arrivalPoint.split(', ') : ['', ''];
+  const infrastructureManagerData = splitDropdownValue(formData.infrastructureManager);
+
+  // Map ResourceType
+  let resourceType = 'Supplier';
+  if (formData.resourceCategory === 'Schedule') {
+    resourceType = 'Scheduler';
+  } else if (formData.resourceCategory === 'Agent' || formData.resourceCategory === 'Supplier') {
+    resourceType = 'Supplier';
+  } else if (formData.resourceCategory === 'Handler') {
+    resourceType = 'Handler';
+  } else if (formData.resourceCategory === 'Driver') {
+    resourceType = 'Driver';
+  } else if (formData.resourceCategory === 'Vehicle') {
+    resourceType = 'Vehicle';
+  }
+
+  // Build API payload
+  const payload: any = {
+    ResourceID: formData.resource || resource.apiData?.ResourceID || '',
+    ResourceType: resourceType,
+    Service: serviceData.value || null,
+    ServiceDescription: serviceData.label || null,
+    SubService: subServiceData.value || null,
+    SubServiceDescription: subServiceData.label || null,
+    EffectiveFromDate: resource.apiData?.EffectiveFromDate || null,
+    EffectiveToDate: resource.apiData?.EffectiveToDate || null,
+    ExecutiveAgentID: carrierData.value || null,
+    AgencyID: resource.apiData?.AgencyID || null,
+    AgencyName: formData.supplier || resource.apiData?.AgencyName || null,
+    OwnershipType: resource.apiData?.OwnershipType || null,
+    LicensePlateNo: formData.trainNo || resource.apiData?.LicensePlateNo || null,
+    VendorReferenceNo: formData.supplierRef || resource.apiData?.VendorReferenceNo || null,
+    ExecutiveAgentDescription: carrierData.label || resource.apiData?.ExecutiveAgentDescription || null,
+    PathNo: formData.pathNo || resource.apiData?.PathNo || null,
+    ExecutionCarrier: formData.carrier ? carrierData.value : resource.apiData?.ExecutionCarrier || null,
+    CarrierStatus: carrierStatusData.value || resource.apiData?.CarrierStatus || null,
+    InfrastructureManagerID: infrastructureManagerData.value || null,
+    InfrastructureManagerName: infrastructureManagerData.label || null,
+    TrainNo: formData.trainNo || resource.apiData?.TrainNo || null,
+    LegFrom: legDetailsParts[0] || null,
+    LegTo: legDetailsParts[1] || null,
+    SupplierRefNo: formData.supplierRef || resource.apiData?.SupplierRefNo || null,
+    DeparturePoint: departurePointParts[0] || null,
+    DeparturePointDescription: departurePointParts[1] || null,
+    ArrivalPoint: arrivalPointParts[0] || null,
+    ArrivalPointDescription: arrivalPointParts[1] || null,
+    ReasonforSupplierChanges: formData.reason || null,
+    Remarks: formData.remarks || null,
+    Modeflag: resource.apiData?.Modeflag || 'NoChange'
+  };
+
+  return payload;
+};
+
+const initialResources: Resource[] = [];
 
 export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => {
   const [resources, setResources] = useState<Resource[]>(initialResources);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isResourceSearchDrawerOpen, setIsResourceSearchDrawerOpen] = useState(false);
-  const [currentResourceType, setCurrentResourceType] = useState<'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule'>('Supplier');
+  const [currentResourceType, setCurrentResourceType] = useState<'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule'>('Supplier');
   const [selectedResources, setSelectedResources] = useState<any[]>([]);
   const [resourceData, setResourceData] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
@@ -163,15 +253,62 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   });
   const [QCUserDefined, setQCUserDefined] = useState<InputDropdownValue>(bindQC());
   const [QC, setQC] = useState<any>([]);
+  const [isShowLoaderForResources, setIsShowLoaderForResources] = useState(false);
 
+  const { toast } = useToast();
+  const { tripData } = manageTripStore();
+  const tripId: any = tripData?.Header?.TripNo;
+  
   // Auto-select first resource on mount
   useEffect(() => {
-    if (resources.length > 0) {
-      const firstResource = resources[0];
-      setSelectedResource(firstResource);
-      setFormData(firstResource.formData);
+    // if (resources.length > 0) {
+    //   const firstResource = resources[0];
+    //   setSelectedResource(firstResource);
+    //   setFormData(firstResource.formData);
+    // }
+    console.log('Trip ID:', tripId);
+    fetchResourceFromTrip(tripId);
+
+  }, [tripId]);
+
+  const fetchResourceFromTrip = async (tripId: string) => {
+    setIsShowLoaderForResources(true);
+    try {
+      const response: any = await tripService.getResourceFromTrip({ id: tripId });
+      let parsedResponse: any = null;
+      parsedResponse = JSON.parse(response.data.ResponseData);
+      console.log('Parsed Response:', parsedResponse);
+      console.log('Resources:', parsedResponse.Resources);
+      
+      // Check if Resources array exists in the response
+      if (parsedResponse.Resources && Array.isArray(parsedResponse.Resources) && parsedResponse.Resources.length > 0) {
+        // Map API resources to Resource format
+        const mappedResources = parsedResponse.Resources.map((apiResource: any) => mapApiResourceToResource(apiResource));
+        setResources(mappedResources);
+        
+        if (mappedResources.length > 0) {
+          setSelectedResource(mappedResources[0]);
+          setFormData(mappedResources[0].formData);
+          // Update QCUserDefined state
+          setQCUserDefined({
+            dropdown: mappedResources[0].formData?.QCUserDefined ?? "",
+            input: mappedResources[0].formData?.QCUserDefinedValue ?? "",
+          });
+        }
+        setIsShowLoaderForResources(false);
+      } else {
+        setIsShowLoaderForResources(false);
+        toast({
+          title: "⚠️ Error",
+          description: "No resource found for this trip",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching trip data:', error);
+      setIsShowLoaderForResources(false);
     }
-  }, []);
+  };
 
   // Fetch QC data for InputDropdown
   useEffect(() => {
@@ -236,83 +373,140 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
     return { value: value, label: value };
   };
 
-  const handleSave = () => {
+  const handleSave = async() => {
     console.log("formData ==== before save (changed data from forms):", formData);
     console.log("selectedResource ====", selectedResource);
     console.log("resources array ====", resources);
     
     // Determine ModeFlag based on selectedResource
-    const modeFlag = selectedResource ? "Update" : "Insert";
-    // Split dropdown values
-    const carrierData = splitDropdownValue(formData.carrier);
-    const carrierStatusData = splitDropdownValue(formData.carrierStatus);
-    const legDetailsData = splitDropdownValue(formData.legDetails);
-    const serviceData = splitDropdownValue(formData.service);
-    const subServiceData = splitDropdownValue(formData.subService);
-    
-    const formPayload = {
-      ...formData,
-      carrier: carrierData.value || '',
-      carrierStatus: carrierStatusData.value || '',
-      legDetails: legDetailsData.value || '',
-      service: serviceData.value || '',
-      subService: subServiceData.value || '',
-      ModeFlag: modeFlag
+    // Use existing Modeflag if available, otherwise determine based on selectedResource
+    let modeFlag = "Update";
+    if (selectedResource) {
+      // Check if resource has existing Modeflag from API
+      const existingModeflag = (selectedResource as any).apiData?.Modeflag;
+      if (existingModeflag && (existingModeflag.toUpperCase() === "Update" || existingModeflag.toUpperCase() === "Insert")) {
+        modeFlag = existingModeflag.toUpperCase(); // Keep existing flag (UPDATE/INSERT)
+      } else {
+        modeFlag = "Update"; // Default to UPDATE for existing resources
+      }
+    } else {
+      modeFlag = "Insert"; // New resource
     }
-    // Create payload by updating selectedResource with new formData and ModeFlag
-    let payload: any;
+    
+    // Create updated resource with new formData
+    let updatedResource: Resource & { apiData?: any };
     
     if (selectedResource) {
-      // For update: Take selectedResource structure and update formData with current formData changes
-      // Also add ModeFlag to the payload
-      payload = {
-        ...selectedResource,  // Keep id, type, name, and all existing properties
-        formData: formPayload,  // Update formData with changed data from forms
-        // ModeFlag: modeFlag   // Add ModeFlag
+      // For update: Update existing resource with new formData
+      updatedResource = {
+        ...selectedResource,
+        formData: formData,
+        apiData: (selectedResource as any).apiData || {}
       };
+      // Update Modeflag in apiData
+      if (updatedResource.apiData) {
+        updatedResource.apiData.Modeflag = modeFlag;
+      }
     } else {
       // For insert: Create new resource structure with current formData
-      payload = {
-        id: `RES${Date.now()}`,
+      updatedResource = {
+        id: formData.resource || `RES${Date.now()}`,
         type: formData.resourceCategory as 'Schedule' | 'Agent' | 'Handler' || 'Schedule',
         name: formData.resource || formData.scheduleNo || `Resource ${resources.length + 1}`,
-        formData: formPayload,  // Use current formData
-        // ModeFlag: modeFlag   // Add ModeFlag
+        formData: formData,
+        apiData: {
+          Modeflag: modeFlag
+        }
       };
     }
+    
+    // Update local state first
+    let updatedResources: (Resource & { apiData?: any })[];
+    if (selectedResource) {
+      // Update existing resource in resources array
+      updatedResources = resources.map(r => 
+        r.id === selectedResource.id 
+          ? updatedResource 
+          : r
+      );
+      setResources(updatedResources);
+      setSelectedResource(updatedResource);
+    } else {
+      // Add new resource
+      updatedResources = [...resources, updatedResource];
+      setResources(updatedResources);
+      setSelectedResource(updatedResource);
+      console.log("newResource ====", updatedResource);
+    }
+    
+    // Get Header information from tripData
+    const header = {
+      TripNo: tripData?.Header?.TripNo || '',
+      TripOU: tripData?.Header?.TripOU || 0,
+      TripStatus: tripData?.Header?.TripStatus || '',
+      TripStatusDescription: tripData?.Header?.TripStatusDescription || ''
+    };
+    
+    // Map all resources to API payload format
+    const resourcesPayload = updatedResources.map((resource) => {
+      const apiResource = mapResourceToApiPayload(resource);
+      
+      // Use existing Modeflag if available, otherwise set based on whether it's the updated resource
+      if (resource.id === updatedResource.id) {
+        apiResource.Modeflag = modeFlag; // The resource being saved (UPDATE or INSERT)
+      } else {
+        // For other resources, keep their existing Modeflag or set to "NoChange"
+        const existingModeflag = (resource as any).apiData?.Modeflag;
+        if (existingModeflag && (existingModeflag.toUpperCase() === "Update" || existingModeflag.toUpperCase() === "Insert")) {
+          apiResource.Modeflag = existingModeflag.toUpperCase(); // Preserve existing UPDATE/INSERT flag
+        } else {
+          apiResource.Modeflag = "NoChange"; // Default to NoChange for unmodified resources
+        }
+      }
+      
+      return apiResource;
+    });
+    
+    // Create the full RequestPayload structure
+    const requestPayload = {
+      Header: header,
+      Resources: resourcesPayload
+    };
     
     console.log("SelectedResource (original):", selectedResource);
     console.log("FormData (changed data from forms):", formData);
-    console.log("Final payload (selectedResource + updated formData + ModeFlag):", payload);
-    console.log("formPayload:", formPayload);
+    console.log("Updated Resource:", updatedResource);
+    console.log("Full RequestPayload (ready to send):", requestPayload);
     
-    // Update local state
-    if (selectedResource) {
-      // Update existing resource in resources array with new formData
-      setResources(prev => 
-        prev.map(r => 
-          r.id === selectedResource.id 
-            ? { ...r, formData: formPayload } 
-            : r
-        )
-      );
-    } else {
-      // Create new resource
-      const newResource: Resource = {
-        id: `RES${Date.now()}`,
-        type: formData.resourceCategory as 'Schedule' | 'Agent' | 'Handler' || 'Schedule',
-        name: formData.resource || formData.scheduleNo || `Resource ${resources.length + 1}`,
-        formData: formPayload,
-      };
-      setResources(prev => [...prev, newResource]);
-      setSelectedResource(newResource);
-      console.log("newResource ====", newResource);
+    try {
+      const response: any = await tripService.saveResource(requestPayload);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      
+      if (resourceStatus) {
+        toast({
+          title: "✅ Resource Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+
+        // Refresh trip data after successful save
+        await fetchResourceFromTrip(tripId);
+      } else {
+        toast({
+          title: "⚠️ Submission failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving resources:", error);
+      toast({
+        title: "⚠️ Error",
+        description: "Failed to save resources",
+        variant: "destructive",
+      });
     }
-    
-    // TODO: Call API with payload
-    // Example: await tripPlanningService.saveResource(payload);
-    
-    console.log("Payload ready to send to API:", payload);
+
   };
 
   const handleClear = () => {
@@ -321,7 +515,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   };
 
   // Handle resource drawer open/close
-  const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
+  const handleOpenResourceDrawer = async (resourceType: 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
     console.log(`Opening ${resourceType.toLowerCase()} drawer`);
     setCurrentResourceType(resourceType);
     setIsLoadingResource(true); // Show loader
@@ -343,11 +537,6 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
 
       // Call appropriate API based on resource type
       switch (resourceType) {
-        case 'Equipment':
-          response = await tripPlanningService.getEquipmentList({
-            searchCriteria: finalSearchCriteria
-          });
-          break;
         case 'Supplier':
           response = await tripPlanningService.getAgentsList({
             searchCriteria: finalSearchCriteria
@@ -470,6 +659,10 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const fetchServiceOptions = makeLazyFetcher("Service type Init");
   const fetchSubServiceOptions = makeLazyFetcher("Sub Service type Init");
   const fetchQC = makeLazyFetcher("QCUserDefined Init");
+  const fetchDeparturePoint = makeLazyFetcher("Departure Init");
+  const fetchArrivalPoint = makeLazyFetcher("Arrival Init");
+  const fetchInfrastructureManager = makeLazyFetcher("Infrastructure Manager Init");
+  const fetchReason = makeLazyFetcher("Reason for changes Init");
   
   return (
     <div className="flex flex-col h-full">
@@ -538,7 +731,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
                         const resourceCategory = formData.resourceCategory;
                         if (resourceCategory) {
                           // Pass the selected resourceCategory value to handleOpenResourceDrawer
-                          handleOpenResourceDrawer(resourceCategory as 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule');
+                          handleOpenResourceDrawer(resourceCategory as 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule');
                         }
                       }}
                     />
@@ -609,10 +802,14 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               </div> */}
               <div className="space-y-2">
                 <Label>Infrastructure Manager Name</Label>
-                <Input className="h-10"
-                  placeholder="Enter Infrastructure Manager Name"
+                <DynamicLazySelect
+                  fetchOptions={fetchInfrastructureManager}
                   value={formData.infrastructureManager}
-                  onChange={(e) => setFormData({ ...formData, infrastructureManager: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, infrastructureManager: value as string })}
+                  placeholder="Select Infrastructure Manager Name"
+                  className="w-full"
+                  hideSearch={false}
+                  disableLazyLoading={false}
                 />
               </div>
               <div className="space-y-2">
@@ -653,23 +850,27 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Departure Point</Label>
-                <div className="relative">
-                  <Input className="h-10"
-                    value={formData.departurePoint}
-                    onChange={(e) => setFormData({ ...formData, departurePoint: e.target.value })}
-                  />
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
+                <DynamicLazySelect
+                  fetchOptions={fetchDeparturePoint}
+                  value={formData.departurePoint}
+                  onChange={(value) => setFormData({ ...formData, departurePoint: value as string })}
+                  placeholder="Select Departure Point"
+                  className="w-full"
+                  hideSearch={false}
+                  disableLazyLoading={false}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Arrival Point</Label>
-                <div className="relative">
-                  <Input className="h-10"
-                    value={formData.arrivalPoint}
-                    onChange={(e) => setFormData({ ...formData, arrivalPoint: e.target.value })}
-                  />
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
+                <DynamicLazySelect
+                  fetchOptions={fetchArrivalPoint}
+                  value={formData.arrivalPoint}
+                  onChange={(value) => setFormData({ ...formData, arrivalPoint: value as string })}
+                  placeholder="Select Arrival Point"
+                  className="w-full"
+                  hideSearch={false}
+                  disableLazyLoading={false}
+                />
               </div>
             </div>
 
@@ -722,14 +923,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               </div>
               <div className="space-y-2">
                 <Label>Reason <span className="text-destructive">*</span></Label>
-                <div className="relative">
-                  <Input className="h-10"
-                    placeholder="Enter Reason"
-                    value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  />
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
+                <DynamicLazySelect
+                  fetchOptions={fetchReason}
+                  value={formData.reason}
+                  onChange={(value) => setFormData({ ...formData, reason: value as string })}
+                  placeholder="Select Reason"
+                  className="w-full"
+                  hideSearch={true}
+                  disableLazyLoading={true}
+                />
               </div>
             </div>
 
@@ -757,6 +959,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
         </Button>
       </div>
 
+      {/* Loading Overlay for Resources */}
+      {isShowLoaderForResources && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading Resources...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching Resources data from server, please wait.</div>
+        </div>
+      )}
+
       {/* Resource Selection Drawer */}
       <ResourceSearchDrawer
         isOpen={isResourceSearchDrawerOpen}
@@ -767,7 +978,6 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
           setTripInformation(updatedTripInformation);
           console.log('TripInformation updated from ResourceSelectionDrawer:', updatedTripInformation);
         }}
-        // selectedResourcesRq={EquipmentData}
         selectedResourcesRq={(() => {
           // Return the appropriate selected resources based on current resource type
           switch (currentResourceType) {
