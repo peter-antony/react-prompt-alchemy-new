@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Home, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle } from 'lucide-react';
+import { Home, Logs, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import MenuIcon2 from '../assets/images/Menu-2.svg';
 import MenuIcon3 from '../assets/images/Menu-3.svg';
@@ -101,6 +101,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     { icon: MenuIcon2, label: 'Inventory', path: '/json-creater', tooltip: 'Quick Order Management' }, // Quick Order
     // { icon: MenuIcon4, label: 'Fleet Management', path: '/trp' }, 
     { icon: TripRouteIcon, label: 'Trip Route', path: '/trip-route', tooltip: 'Transport Route Update' }, // transport Route Update
+    { icon: Logs, label: 'Work Order', path: '/work-order-hub', tooltip: 'Work Order Management' }, // transport Route Update
     // { icon: COHubIcon, label: 'RFQ Hub', path: '/rfq-hub', tooltip: 'RFQ Hub' }, // RFQ Hub - sassy
     // { icon: RFQIcon, label: 'RFQ', path: '/rfq', tooltip: 'RFQ' }, // RFQ - sassy
   ];

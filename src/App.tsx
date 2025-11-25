@@ -27,6 +27,7 @@ import SignOut from "./pages/SignOut";
 import ManageTripExecution from "./pages/ManageTripExecution";
 import TripPlanning from "./pages/TripPlanning";
 import { TripRouteUpdate } from "./pages/TripRouteUpdate";
+import { WorkOrderHub } from "./pages/WorkOrderHub";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,11 @@ const App = () => (
           <Route path="trip-route" element={
             <ProtectedRoute>
               <TripRouteUpdate />
+            </ProtectedRoute>
+          } />
+          <Route path="work-order-hub" element={
+            <ProtectedRoute>
+              <WorkOrderHub />
             </ProtectedRoute>
           } />
           <Route path="trip-search-api" element={
