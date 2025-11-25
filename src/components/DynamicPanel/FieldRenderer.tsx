@@ -705,6 +705,37 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         />
       );
 
+    case 'header':
+      return (
+        <Controller
+          name={fieldId}
+          control={control}
+          render={({ field }) => {
+            const eventHandlers = createEventHandlers(field);
+            // Get icon from config if provided
+            const icon = (config as any).icon;
+            return (
+              <div className="flex items-center justify-between w-full">
+                <h3 className="text-sm font-semibold text-gray-800">{config.label}</h3>
+                {icon && (
+                  <div 
+                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+                    onClick={(e) => {
+                      if (events?.onClick) {
+                        events.onClick(e, field.value);
+                      }
+                    }}
+                    {...eventHandlers}
+                  >
+                    {icon}
+                  </div>
+                )}
+              </div>
+            );
+          }}
+        />
+      );
+
     default:
       return (
         <Controller

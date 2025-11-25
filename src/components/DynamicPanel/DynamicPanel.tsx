@@ -373,29 +373,52 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const PanelContent = () => (
     <form name={formName}>
       <div className="grid grid-cols-12 gap-4">
-        {visibleFields.map(({ fieldId, config, tabIndex }) => (
-          <div
-            key={fieldId}
-            className={`space-y-1 ${getFieldWidthClass(config.width)}`}
-          >
-            <label className="text-xs font-medium text-gray-600 block">
-              {config.label}
-              {config.mandatory && (
-                <span className="text-red-500 ml-1">*</span>
-              )}
-            </label>
-            <FieldRenderer
-              config={config}
-              control={control}
-              fieldId={fieldId}
-              tabIndex={tabIndex}
-              validationErrors={validationErrors}
-              // Pass mandatory info
-              mandatory={config.mandatory}
-              tooltip={config.tooltip}
-            />
-          </div>
-        ))}
+        {visibleFields.map(({ fieldId, config, tabIndex }) => {
+          // Special handling for header field type - render without label wrapper
+          if (config.fieldType === 'header') {
+            return (
+              <div
+                key={fieldId}
+                className="col-span-12 border-t border-gray-200 pt-3 mt-1"
+              >
+                <FieldRenderer
+                  config={config}
+                  control={control}
+                  fieldId={fieldId}
+                  tabIndex={tabIndex}
+                  validationErrors={validationErrors}
+                  mandatory={config.mandatory}
+                  tooltip={config.tooltip}
+                />
+              </div>
+            );
+          }
+          
+          // Normal field rendering
+          return (
+            <div
+              key={fieldId}
+              className={`space-y-1 ${getFieldWidthClass(config.width)}`}
+            >
+              <label className="text-xs font-medium text-gray-600 block">
+                {config.label}
+                {config.mandatory && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
+              </label>
+              <FieldRenderer
+                config={config}
+                control={control}
+                fieldId={fieldId}
+                tabIndex={tabIndex}
+                validationErrors={validationErrors}
+                // Pass mandatory info
+                mandatory={config.mandatory}
+                tooltip={config.tooltip}
+              />
+            </div>
+          );
+        })}
       </div>
       {visibleFields.length === 0 && !showPreview && (
         <div className="text-center text-gray-500 py-8 text-sm">

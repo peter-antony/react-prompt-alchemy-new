@@ -35,6 +35,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
   const [showOperstionDetails, setShowOperationDetails] = useState(false);
+  const [qcList1, setqcList1] = useState<any>();
+  const [qcList2, setqcList2] = useState<any>();
+  const [qcList3, setqcList3] = useState<any>();
+  const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
 
   const saveToZustand = () => {
     const values = formRef.current?.getFormValues();
@@ -114,34 +118,11 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         },
       },
     },
-    BillingDetails: {
-      id: "FinacialComments",
-      label: "Accepted By Forwardis",
-      fieldType: "switch",
-      width: "full",
-      value: "",
-      mandatory: true,
-      visible: true,
-      editable: true,
-      order: 15,
-    },
-    BillingDetails1: {
-      id: "FinacialComments",
-      label: "Accepted By Forwardis",
-      fieldType: "switch",
-      width: "full",
-      value: "",
-      mandatory: true,
-      visible: true,
-      editable: true,
-      order: 15,
-    },
-
     WagonCondainterID: {
       id: "WagonCondainterID",
       label: "Wagon/Container ID",
       fieldType: "lazyselect",
-      width: "full",
+      width: "half",
       value: "awd",
       mandatory: true,
       visible: true,
@@ -237,9 +218,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     LoadType: {
       id: "LoadType",
-      label: "",
+      label: "Load Type",
       fieldType: "radio",
-      width: "full",
+      width: "half",
       value: "BUY",
       options: [
         { label: "Loaded", value: "BUY" },
@@ -249,6 +230,17 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       visible: true,
       editable: true,
       order: 10,
+    },
+    Hazardous: {
+      id: "Hazardous",
+      label: "Hazardous",
+      fieldType: "switch",
+      width: "half",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
     },
 
     EventDate: {
@@ -260,7 +252,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      order: 11,
+      order: 12,
     },
 
     PlaceOfEvent: {
@@ -272,10 +264,54 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      order: 12,
+      order: 13,
       fetchOptions: fetchMaster("Location Init"),
     },
-
+    BillingDetailsTitle: {
+      id: "BillingDetailsTitle",
+      label: "Billing Details",
+      fieldType: "header",
+      width: "full",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M5 6H11M5 9H9" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+      events: {
+        onClick: (event, value) => {
+          console.log("Billing Details icon clicked", event, value);
+          
+        },
+      },
+    },
+    AcceptedByForwardis: {
+      id: "AcceptedByForwardis",
+      label: "Accepted By Forwardis",
+      fieldType: "switch",
+      width: "full",
+      value: "",
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 15,
+    },
+    ReInvoiceCost: {
+      id: "ReInvoiceCost",
+      label: "Re-Invoice Cost",
+      fieldType: "switch",
+      width: "full",
+      value: "",
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 16,
+    },
     InvoiceTo: {
       id: "InvoiceTo",
       label: "Invoice To",
@@ -285,56 +321,163 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      order: 13,
+      order: 17,
       fetchOptions: fetchMaster("Cluster Init"),
     },
 
     FinacialComments: {
       id: "FinacialComments",
       label: "Financial Comments",
-      fieldType: "text",
+      fieldType: "textarea",
       width: "full",
       value: "",
       mandatory: false,
       visible: true,
       editable: true,
-      order: 14,
+      order: 18,
     },
-  });
-
-  const moreDetailsPanelConfig = (currentOrderType: string): PanelConfig => ({
+    MoreDetails: {
+      id: "MoreDetails",
+      label: "More Details",
+      fieldType: "header",
+      width: "full",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 19,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M5 6H11M5 9H9" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+      events: {
+        onClick: (event, value) => {
+          console.log("Billing Details icon clicked", event, value);
+          // Toggle visibility of more details fields
+          setShowMoreDetails(prev => !prev);
+        },
+      },
+    },
+    EndDate: {
+      id: "EndDate",
+      label: "End Date",
+      fieldType: "text",
+      width: "half",
+      value: "",
+      mandatory: false,
+      visible: true, 
+      editable: false,
+      order: 20,
+    },
+    User: {
+      id: "User",
+      label: "User",
+      fieldType: "text",
+      width: "half",
+      value: "",
+      mandatory: false,
+      visible: true, 
+      editable: false,
+      order: 21,
+    },
+    NextRevision: {
+      id: "NextRevision",
+      label: "Next Revision",
+      fieldType: "text",
+      width: "half",
+      value: "",
+      mandatory: false,
+      visible: true, 
+      editable: false,
+      order: 22,
+    },
+    PlaceOfRevision: {
+      id: "PlaceOfRevision",
+      label: "Place Of Revision",
+      fieldType: "text",
+      width: "half",
+      value: "",
+      mandatory: false,
+      visible: true, 
+      editable: false,
+      order: 23,
+    },
+    QCUserDefined1: {
+      id: 'QCUserDefined1',
+      label: 'QC Userdefined 1',
+      fieldType: 'inputdropdown',
+      width: 'half',
+      value: '', // <-- Set default dropdown value here
+      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      mandatory: false,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
+      editable: true,
+      order: 24,
+      maxLength: 255,
+      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+    },
+    QCUserDefined2: {
+      id: 'QCUserDefined2',
+      label: 'QC Userdefined 2',
+      fieldType: 'inputdropdown',
+      width: 'half',
+      value: '', // <-- Set default dropdown value here
+      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      mandatory: false,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
+      editable: true,
+      order: 25,
+      maxLength: 255,
+      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+    },
+    QCUserDefined3: {
+      id: 'QCUserDefined3',
+      label: 'QC Userdefined 3',
+      fieldType: 'inputdropdown',
+      width: 'half',
+      value: '', // <-- Set default dropdown value here
+      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      mandatory: false,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
+      editable: true,
+      order: 26,
+      maxLength: 255,
+      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
+    },
     Remarks1: {
       id: "Remarks1",
       label: "Remarks 1",
       fieldType: "text",
-      width: "full",
+      width: "half",
       value: "",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
       editable: true,
-      order: 14,
+      order: 27,
     },
     Remarks2: {
       id: "Remarks2",
       label: "Remarks 2",
       fieldType: "text",
-      width: "full",
+      width: "half",
       value: "",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
       editable: true,
-      order: 14,
+      order: 28,
     },
     Remarks3: {
       id: "Remarks3",
       label: "Remarks 3",
       fieldType: "text",
-      width: "full",
+      width: "half",
       value: "",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails, // Controlled by showMoreDetails state
       editable: true,
-      order: 14,
+      order: 29,
     },
   });
 
@@ -386,35 +529,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
                 {/* Buttons Row */}
                 <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200">
-                  <button
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100"
-                    title="Attachments"
-                    onClick={openWagonMoreDEtails}
-                  >
-                    <Paperclip className="w-5 h-5 text-gray-600" />
-                  </button>
-
-                  <button
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100"
-                    title="Amendment History"
-                  >
-                    <BookX className="w-5 h-5 text-gray-600" />
-                  </button>
-
-                  <button
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100"
-                    title="Linked Orders"
-                  >
-                    <Link className="w-5 h-5 text-gray-600" />
-                  </button>
-
-                  <button
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100"
-                    title="Copy"
-                    onClick={() => setShowCopyModal(true)}
-                  >
-                    <Copy className="w-5 h-5 text-gray-600" />
-                  </button>
+                  
                 </div>
               </div>
             </div>

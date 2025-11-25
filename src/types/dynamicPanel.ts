@@ -1,3 +1,4 @@
+import React from 'react';
 
 export type PanelFieldConfig = 
   | {
@@ -32,7 +33,7 @@ export type PanelFieldConfig =
 export interface FieldConfig {
   id: string;
   label: string;
-  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch';
+  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header';
   value: any;
   mandatory: boolean;
   visible: boolean;
@@ -70,6 +71,7 @@ export interface FieldConfig {
     onMouseLeave?: (event: React.MouseEvent) => void;
   };
   searchData?: string[]; // For search field type, local array for suggestions
+  icon?: React.ReactNode; // For title field type, icon to display
 }
 
 export interface PanelConfig {
