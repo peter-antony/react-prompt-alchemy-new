@@ -235,6 +235,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   const [isPODDrawerOpen, setIsPODDrawerOpen] = useState(false);
   const { isOpen, drawerType, closeDrawer, openDrawer } = useDrawerStore();
 
+  // Personalization state for Planned grid
+  const [preferenceModeFlag, setPreferenceModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(false);
+
   // Track when fields are being programmatically set vs user-initiated changes
   const [isProductBeingSet, setIsProductBeingSet] = useState<boolean>(false);
   const [isUnCodeBeingSet, setIsUnCodeBeingSet] = useState<boolean>(false);
@@ -293,6 +297,51 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       setGridRefreshKey(prev => prev + 1);
 
     }, 50);
+  }, []);
+
+  // Load personalization data for Planned grid on component mount
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const personalizationResponse: any = await quickOrderService.getPersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'ConsignmentTripPlannedGrid',
+          ComponentName: 'smartgrid-preferences'
+        });
+
+        // Parse and set personalization data to localStorage
+        if (personalizationResponse?.data?.ResponseData) {
+          const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+          if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+            // Set the JsonData to localStorage
+            if (personalizationData.JsonData) {
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
+              console.log('ConsignmentTrip Planned Grid Personalization data set to localStorage:', personalizationData.JsonData);
+            }
+            // If we have data, next save should be an Update
+            setPreferenceModeFlag('Update');
+          } else {
+            // If result is empty array or no result, next save should be Insert
+            console.log('ConsignmentTrip Planned Grid: No existing personalization found, setting mode to Insert');
+            setPreferenceModeFlag('Insert');
+          }
+        } else {
+          // If ResponseData is empty/null, next save should be Insert
+          console.log('Empty personalization response, setting mode to Insert');
+          setPreferenceModeFlag('Insert');
+        }
+      } catch (error) {
+        console.error('Failed to load personalization:', error);
+      } finally {
+        setIsPreferencesLoaded(true); // Set to true after personalization is loaded
+      }
+    };
+
+    init();
   }, []);
 
   // Initialize dropdown state variables when selectedCustomerData changes
@@ -6337,6 +6386,54 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     }
   };
 
+  // Handler for saving grid preferences
+  const handleGridPreferenceSave = async (preferences: any) => {
+    try {
+      // Get the latest preferences from localStorage to ensure we have the full state
+      const storedPreferences = localStorage.getItem('smartgrid-preferences');
+      const preferencesToSave = storedPreferences ? JSON.parse(storedPreferences) : preferences;
+
+      console.log('Saving ConsignmentTrip Planned Grid preferences:', preferencesToSave);
+      console.log('Preference ModeFlag:', preferenceModeFlag);
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'ConsignmentTripPlannedGrid',
+        ComponentName: 'smartgrid-preferences',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: preferenceModeFlag
+      });
+
+      const apiData = response?.data;
+
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+
+        toast({
+          title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+
+        // If save was successful and we were in Insert mode, switch to Update mode for future saves
+        if (isSuccess && preferenceModeFlag === 'Insert') {
+          setPreferenceModeFlag('Update');
+        }
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save grid preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save grid preferences",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -6750,6 +6847,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             hideAdvancedFilter={true}
                             gridId={gridPlanId}
                             userId="current-user"
+                            onPreferenceSave={handleGridPreferenceSave}
                           />
                         </div>
                       )}
