@@ -54,6 +54,7 @@ const TripPlanning = () => {
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
+  const urlSearchId = searchParams.get('id'); // Extract id parameter for grid search
   const { routes,
     selectedOrder,
     selectedRoute,
@@ -3845,6 +3846,7 @@ const TripPlanning = () => {
                                 tripID={urlTripID}
                                 manageFlag={manageFlag}
                                 customerOrdersData={tripCustomerOrdersData}
+                                externalSearchQuery={urlSearchId || undefined}
                               />
                             </div>
                             {/* Resources Cards - Right */}
@@ -4003,6 +4005,7 @@ const TripPlanning = () => {
                                 tripID={urlTripID}
                                 manageFlag={manageFlag}
                                 customerOrdersData={tripCustomerOrdersData}
+                                externalSearchQuery={urlSearchId || undefined}
                               />
                             </div>
                           </>

@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
 import { dateFormatter } from "@/utils/formatter";
 
-export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData }) => {
+export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOrdersData, externalSearchQuery }: { onCustomerOrderClick: any; tripID: any; manageFlag: any; customerOrdersData: any; externalSearchQuery?: string }) => {
   const pageSize = 50;
   const gridId = "trip-CO"; // same id you pass to SmartGridWithGrouping
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -1647,6 +1647,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
               showCreateButton={true}
               searchPlaceholder="Search"
               clientSideSearch={true}
+              externalSearchQuery={externalSearchQuery}
               showSubHeaders={false}
               hideAdvancedFilter={true}
               hideCheckboxToggle={true}
