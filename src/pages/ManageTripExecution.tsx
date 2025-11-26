@@ -22,7 +22,7 @@ import { NotebookPen, Search, Clock, Ban } from "lucide-react";
 import { TripAmendModal } from '@/components/ManageTrip/TripAmendModal';
 import TripPlanActionModal from '@/components/ManageTrip/TripPlanActionModal';
 import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
-
+import { getUserContext } from '../api/config';
 
 
 const ManageTripExecution = () => {
@@ -528,6 +528,15 @@ const ManageTripExecution = () => {
           type: "Icon",
           iconName: 'BookText'
         },
+        {
+          label: "Wegan",
+          onClick: () => {
+            console.log("Wegan Report");
+            navigatingToWeganReport(tripData?.Header?.TripNo);
+          },
+          type: "Icon",
+          iconName: 'TramFront'
+        },
       ],
       rightButtons: [
         {
@@ -560,6 +569,17 @@ const ManageTripExecution = () => {
     });
     return () => resetFooter();
   }, [tripData, setFooter, resetFooter, tripAmendHandler, tripConfirmHandler, tripSaveDraftHandler, isConfirmButtonDisabled, tripFormRef]);
+
+  const navigatingToWeganReport = (tripNo: string) => {
+    const userContext = getUserContext();
+    const baseUrl = window.location.origin;
+    console.log("baseUrl ====", baseUrl);
+    const pagePath = "/app/rvw/integration/deep-link";
+    const queryParams = "ouId=" + userContext.ouId + "&roleName=" + userContext.roleName + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
+    const finalUrl = `${baseUrl}${pagePath}?${queryParams}`;
+    console.log("finalUrl ----", finalUrl);
+    window.open(finalUrl, "_self");
+  };
 
   return (
     <AppLayout>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { tripService } from "@/api/services";
 import { GridColumnConfig, FilterConfig, ServerFilter } from '@/types/smartgrid';
-import { Plus, Search, CloudUpload, NotebookPen, X, Ban } from 'lucide-react';
+import { Plus, Search, CloudUpload, NotebookPen, X, Ban, TramFront } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -19,6 +19,7 @@ import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
 import { tripPlanningService } from "@/api/services/tripPlanningService";
+import { getUserContext } from '../api/config';
 
 export const TripExecutionHub = () => {
   const [searchParams] = useSearchParams();
@@ -748,6 +749,15 @@ export const TripExecutionHub = () => {
           iconName: 'BookText'
         },
         {
+          label: "Wegan",
+          onClick: () => {
+            console.log("Wegan Report");
+            navigatingToWeganReport(rowTripId);
+          },
+          type: "Icon",
+          iconName: 'TramFront'
+        },
+        {
           label: "Dropdown Menu",
           onClick: () => console.log("Menu"),
           type: "Icon",
@@ -810,6 +820,29 @@ export const TripExecutionHub = () => {
 
   // Navigate to the create new quick order page
   const navigate = useNavigate();
+
+  const navigatingToWeganReport = (tripNo: string) => {
+    const userContext = getUserContext();
+    const baseUrl = window.location.origin;
+    console.log("baseUrl ====", baseUrl);
+    const pagePath = "/app/rvw/integration/deep-link";
+    const queryParams = "ouId=" + userContext.ouId + "&roleName=" + userContext.roleName + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
+    const finalUrl = `${baseUrl}${pagePath}?${queryParams}`;
+    console.log("finalUrl ----", finalUrl);
+    window.open(finalUrl, "_self");
+    
+    // const { pathname } = window.location;
+    // // Find the base path (e.g., "/Forwardis-dev" or "/")
+    // console.log("Current Pathname:", pathname);
+    // const basePathMatch = pathname.match(/^\/[^/]+/);
+    // const basePath = basePathMatch ? basePathMatch[0] : "";
+    // console.log("Base Path:", basePath);
+    // const weganBaseUrl = "http://ebswarcnv29.pearl.com/app/rvw/integration/deep-link?ouId=" + userContext.ouId + "&roleName=" + userContext.roleName + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
+    // // const reportUrl = `${weganBaseUrl}?tripNo=${encodeURIComponent(tripNo)}`;
+    // // const reportUrl = `${weganBaseUrl}?tripNo=${tripNo}`;
+    // console.log("Navigating to Wegan Report URL:", weganBaseUrl);
+    // // window.open(weganBaseUrl, "_self");
+  };
 
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
