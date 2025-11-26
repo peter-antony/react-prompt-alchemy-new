@@ -199,8 +199,8 @@ export const EnhancedFieldVisibilityModal: React.FC<EnhancedFieldVisibilityModal
           <DialogTitle>Panel Configuration</DialogTitle>
         </DialogHeader> */}
         
-        <Accordion type="single" collapsible defaultValue="panel-settings" className="w-full">
-          {/* <AccordionItem value="panel-settings">
+        <Accordion type="single" defaultValue="field-visibility" collapsible className="w-full">
+          <AccordionItem value="panel-settings" style={{ display: 'none' }}>
             <AccordionTrigger>Panel Settings</AccordionTrigger>
             <AccordionContent className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -268,12 +268,12 @@ export const EnhancedFieldVisibilityModal: React.FC<EnhancedFieldVisibilityModal
                 <Label htmlFor="show-header">Show header section</Label>
               </div>
             </AccordionContent>
-          </AccordionItem> */}
+          </AccordionItem>
 
           <AccordionItem value="field-visibility">
             <AccordionTrigger>Field Visibility & Configuration</AccordionTrigger>
             <AccordionContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="space-y-4">
                 {fieldConfigs.map((fieldConfig, index) => {
                   const isMandatory = panelConfig[fieldConfig.fieldId]?.mandatory;
                   const isVisible = fieldConfig.visible;
@@ -353,7 +353,7 @@ export const EnhancedFieldVisibilityModal: React.FC<EnhancedFieldVisibilityModal
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2" style={{ display: 'none' }}>
                         <Label className="text-xs text-gray-600">Field Width:</Label>
                         <Select 
                           value={fieldConfig.width || 'full'} 

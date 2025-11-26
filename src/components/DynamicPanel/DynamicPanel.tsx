@@ -193,7 +193,16 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
         try {
           const userSettings = await getUserPanelConfig(userId, panelId);
           if (userSettings && Object.keys(userSettings.fields).length > 0) {
-            setPanelConfig(userSettings.fields);
+            // setPanelConfig(userSettings.fields);
+            // Merge user settings with initial config to preserve properties like fetchOptions
+            const mergedConfig: PanelConfig = {};
+            Object.keys(initialPanelConfig).forEach(fieldId => {
+              mergedConfig[fieldId] = {
+                ...initialPanelConfig[fieldId], // Preserve all initial properties
+                ...(userSettings.fields[fieldId] || {}) // Override with user settings
+              };
+            });
+            setPanelConfig(mergedConfig);
             if (userSettings.title) {
               setPanelTitle(userSettings.title);
             }
@@ -217,7 +226,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     };
 
     loadUserConfig();
-  }, [getUserPanelConfig, userId, panelId]);
+  }, [getUserPanelConfig, userId, panelId, initialPanelConfig]);
 
   // Get visible fields sorted by order with calculated tab indices
   const visibleFields = useMemo(() => {
