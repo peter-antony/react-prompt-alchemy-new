@@ -67,7 +67,7 @@ const FlexGridSection: React.FC<SectionProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Gear icon - positioned in top-right corner, only show when not collapsed and on hover */}
-      {!section.collapsed && isHovered && (
+      {/* {!section.collapsed && isHovered && (
         <div className="absolute top-2 right-2 z-20">
           <Popover>
             <PopoverTrigger asChild>
@@ -143,7 +143,7 @@ const FlexGridSection: React.FC<SectionProps> = ({
             </PopoverContent>
           </Popover>
         </div>
-      )}
+      )} */}
 
       {/* Content area - hide when collapsed but keep mounted to preserve state */}
       <div className={cn("p-4 h-full overflow-auto", section.collapsed && "hidden")}>
