@@ -55,6 +55,13 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
           ComponentName: 'smartgrid-preferences'
         });
 
+        // Extract columns with subRow = true from initialColumns
+        const subRowColumns = initialColumns
+          .filter(col => col.subRow === true)
+          .map(col => col.key);
+
+        console.log('TripCOHubMultiple SmartGrid - Extracted subRow columns:', subRowColumns);
+
         // Parse and set personalization data to localStorage
         if (personalizationResponse?.data?.ResponseData) {
           const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
@@ -64,8 +71,16 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
 
             // Set the JsonData to localStorage
             if (personalizationData.JsonData) {
-              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
-              console.log('TripCOHubMultiple SmartGrid Personalization data set to localStorage:', personalizationData.JsonData);
+              const jsonData = personalizationData.JsonData;
+
+              // If subRowColumns is empty in the API response, populate it with extracted columns
+              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                jsonData.subRowColumns = subRowColumns;
+                console.log('TripCOHubMultiple SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
+              }
+
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+              console.log('TripCOHubMultiple SmartGrid Personalization data set to localStorage:', jsonData);
             }
             // If we have data, next save should be an Update
             setPreferenceModeFlag('Update');

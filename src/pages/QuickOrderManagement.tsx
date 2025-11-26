@@ -331,6 +331,13 @@ const QuickOrderManagement = () => {
           ComponentName: 'smartgrid-preferences'
         });
 
+        // Extract columns with subRow = true from initialColumns
+        const subRowColumns = initialColumns
+          .filter(col => col.subRow === true)
+          .map(col => col.key);
+
+        console.log('QuickOderManagement SmartGrid - Extracted subRow columns:', subRowColumns);
+
         // Parse and set personalization data to localStorage
         let isEmptyResponse = true;
         if (personalizationResponse?.data?.ResponseData) {
@@ -342,8 +349,16 @@ const QuickOrderManagement = () => {
 
             // Set the JsonData to localStorage
             if (personalizationData.JsonData) {
-              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
-              console.log('QuickOderManagement SmartGrid Personalization data set to localStorage:', personalizationData.JsonData);
+              const jsonData = personalizationData.JsonData;
+
+              // If subRowColumns is empty in the API response, populate it with extracted columns
+              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                jsonData.subRowColumns = subRowColumns;
+                console.log('QuickOderManagement SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
+              }
+
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+              console.log('QuickOderManagement SmartGrid Personalization data set to localStorage:', jsonData);
             }
           }
         }

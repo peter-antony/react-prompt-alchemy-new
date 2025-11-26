@@ -658,6 +658,13 @@ export const TripExecutionHub = () => {
           ComponentName: 'smartgrid-preferences'
         });
 
+        // Extract columns with subRow = true from initialColumns
+        const subRowColumns = initialColumns
+          .filter(col => col.subRow === true)
+          .map(col => col.key);
+
+        console.log('TripExecutionHub SmartGrid - Extracted subRow columns:', subRowColumns);
+
         // Parse and set personalization data to localStorage
         if (personalizationResponse?.data?.ResponseData) {
           const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
@@ -667,8 +674,16 @@ export const TripExecutionHub = () => {
 
             // Set the JsonData to localStorage
             if (personalizationData.JsonData) {
-              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
-              console.log('TripExecutionHub SmartGrid Personalization data set to localStorage:', personalizationData.JsonData);
+              const jsonData = personalizationData.JsonData;
+
+              // If subRowColumns is empty in the API response, populate it with extracted columns
+              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                jsonData.subRowColumns = subRowColumns;
+                console.log('TripExecutionHub SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
+              }
+
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+              console.log('TripExecutionHub SmartGrid Personalization data set to localStorage:', jsonData);
             }
             // If we have data, next save should be an Update
             setPreferenceModeFlag('Update');

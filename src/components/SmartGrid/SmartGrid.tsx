@@ -180,6 +180,7 @@ export function SmartGrid({
     updateColumnOrder,
     toggleColumnVisibility,
     updateColumnHeader,
+    toggleSubRow,
     updateSubRowColumnOrder,
     savePreferences
   } = useGridPreferences(
@@ -214,7 +215,9 @@ export function SmartGrid({
       .map(id => columnMap.get(id))
       .filter((col): col is GridColumnConfig => col !== undefined)
       .filter(col => !preferences.hiddenColumns.includes(col.key))
-      .filter(col => !col.subRow); // Filter out sub-row columns from main table
+      // .filter(col => !col.subRow); // Filter out sub-row columns from main table
+      .filter(col => !preferences.subRowColumns.includes(col.key)); // Filter out sub-row columns using preferences
+ 
 
     const calculatedWidths = calculateColumnWidthsCallback(visibleColumns);
 
@@ -232,11 +235,15 @@ export function SmartGrid({
     const columnMap = new Map(currentColumns.map(col => [col.key, col]));
 
     // Get columns that are marked as sub-row columns AND not hidden
-    const visibleSubRowColumns = currentColumns
-      .filter(col => col.subRow === true)
+    // const visibleSubRowColumns = currentColumns
+    //   .filter(col => col.subRow === true)
+    const visibleSubRowColumns = preferences.subRowColumns
+      .map(key => columnMap.get(key))
+      .filter((col): col is GridColumnConfig => col !== undefined)
       .filter(col => !preferences.hiddenColumns.includes(col.key))
       .map(col => ({
         ...col,
+        subRow: true, // Ensure subRow is set to true
         label: preferences.columnHeaders[col.key] || col.label // Apply custom headers
       }));
 
@@ -250,13 +257,20 @@ export function SmartGrid({
 
   // Check if any column has collapsibleChild set to true
   const hasCollapsibleColumns = useMemo(() => {
-    return currentColumns.some(col => col.subRow === true);
-  }, [currentColumns]);
+  //   return currentColumns.some(col => col.subRow === true);
+  // }, [currentColumns]);
+    return preferences.subRowColumns.length > 0;
+    }, [preferences.subRowColumns]);
 
   // Get collapsible columns
   const collapsibleColumns = useMemo(() => {
-    return currentColumns.filter(col => col.subRow === true);
-  }, [currentColumns]);
+  //   return currentColumns.filter(col => col.subRow === true);
+  // }, [currentColumns]);
+    const columnMap = new Map(currentColumns.map(col => [col.key, col]));
+    return preferences.subRowColumns
+      .map(key => columnMap.get(key))
+      .filter((col): col is GridColumnConfig => col !== undefined);
+  }, [currentColumns, preferences.subRowColumns]);
 
   // Handle sub-row toggle with proper column updates
   const handleSubRowToggleInternal = useCallback((columnKey: string) => {
@@ -265,11 +279,14 @@ export function SmartGrid({
     // Call the hook's toggle function
     handleSubRowToggle(columnKey);
 
+    // Save to preferences
+    toggleSubRow(columnKey);
+
     // Also call the external handler if provided
     if (onSubRowToggle) {
       onSubRowToggle(columnKey);
     }
-  }, [handleSubRowToggle, onSubRowToggle]);
+  }, [handleSubRowToggle, onSubRowToggle, toggleSubRow]);
 
   // Helper function to render collapsible cell values
   const renderCollapsibleCellValue = useCallback((value: any, column: GridColumnConfig) => {

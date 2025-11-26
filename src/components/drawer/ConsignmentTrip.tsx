@@ -310,6 +310,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           ComponentName: 'smartgrid-preferences'
         });
 
+        // Extract columns with subRow = true from initialColumns
+        const subRowColumns = plannedColumns
+          .filter(col => col.subRow === true)
+          .map(col => col.key);
+
+        console.log('ConsignmentTrip Planned Grid - Extracted subRow columns:', subRowColumns);
+
         // Parse and set personalization data to localStorage
         if (personalizationResponse?.data?.ResponseData) {
           const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
@@ -319,8 +326,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
             // Set the JsonData to localStorage
             if (personalizationData.JsonData) {
-              localStorage.setItem('smartgrid-preferences', JSON.stringify(personalizationData.JsonData));
-              console.log('ConsignmentTrip Planned Grid Personalization data set to localStorage:', personalizationData.JsonData);
+              const jsonData = personalizationData.JsonData;
+
+              // If subRowColumns is empty in the API response, populate it with extracted columns
+              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                jsonData.subRowColumns = subRowColumns;
+                console.log('ConsignmentTrip Planned Grid - subRowColumns was empty, populated with:', subRowColumns);
+              }
+
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+              console.log('ConsignmentTrip Planned Grid Personalization data set to localStorage:', jsonData);
             }
             // If we have data, next save should be an Update
             setPreferenceModeFlag('Update');
@@ -6870,7 +6885,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 Actuals
                 <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
                   {/* {actualData.length} */}
-                  {actualEditableData.length}
+                  {visibleActualEditableData.length}
                 </Badge>
               </h4>
               {expandedActuals ? (
