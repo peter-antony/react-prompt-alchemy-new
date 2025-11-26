@@ -177,6 +177,40 @@ export const quickOrderService = {
     return response.data;
   },
 
+  // Get master common data
+  getMasterLegResourceData: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    console.log("params1 ---", params);
+    const userContext = getUserContext();
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+      },
+      SearchCriteria: {
+        "LegID": params?.searchTerm || '',
+      },
+      AdditionalFilter: [],
+      Pagination: {
+        PageNumber: params?.offset,
+        PageSize: params?.limit,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
+
   getPersonalization: async (
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {

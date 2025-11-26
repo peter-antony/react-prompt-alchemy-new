@@ -35,8 +35,8 @@ interface FormData {
   remarks: string;
   resourceCategory: string;
   resource: string;
-  QCUserDefined: string;
-  QCUserDefinedValue: string;
+  QCCode: string;
+  QCCodeValue: string;
 }
 
 interface Resource {
@@ -64,8 +64,8 @@ const initialFormData: FormData = {
   remarks: '',
   resourceCategory: '',
   resource: '',
-  QCUserDefined: '',
-  QCUserDefinedValue: '',
+  QCCode: '',
+  QCCodeValue: '',
 };
 
 // Helper function to map API response to Resource format
@@ -84,7 +84,7 @@ const mapApiResourceToResource = (apiResource: any): Resource => {
   } else if (apiResource.ResourceType === 'Handler') {
     resourceType = 'Handler';
   }
-
+  console.log("apiResource ====", apiResource);
   // Format carrier (Executive Agent)
   const carrierValue = apiResource.ExecutiveAgentID || '';
   const carrierLabel = apiResource.ExecutiveAgentDescription || apiResource.AgencyName || '';
@@ -100,23 +100,28 @@ const mapApiResourceToResource = (apiResource: any): Resource => {
   const subServiceLabel = apiResource.SubServiceDescription || '';
   const subService = subServiceValue && subServiceLabel ? `${subServiceValue} || ${subServiceLabel}` : subServiceValue || subServiceLabel || '';
 
-  // Format legDetails (LegFrom and LegTo)
-  const legDetails = apiResource.LegFrom && apiResource.LegTo 
-    ? `${apiResource.LegFrom} - ${apiResource.LegTo}` 
-    : apiResource.LegFrom || apiResource.LegTo || '';
+  // Format legDetails (using || separator like other dropdown fields)
+  // Use LegFrom as ID and combine LegFrom - LegTo as description
+  // const legDetailsValue = apiResource.LegFrom || apiResource.LegID || apiResource.LegSequence || '';
+  // const legDetailsLabel = apiResource.LegFrom && apiResource.LegTo 
+  //   ? `${apiResource.LegFrom} - ${apiResource.LegTo}` 
+  //   : apiResource.LegTo || apiResource.LegName || '';
+  // const legDetails = legDetailsValue && legDetailsLabel 
+  //   ? `${legDetailsValue} || ${legDetailsLabel}` 
+  //   : legDetailsValue || legDetailsLabel || '';
 
-  // Format departurePoint
+  // Format departurePoint (using || separator like service/subservice)
   const departurePointValue = apiResource.DeparturePoint || '';
   const departurePointLabel = apiResource.DeparturePointDescription || '';
   const departurePoint = departurePointValue && departurePointLabel 
-    ? `${departurePointValue}, ${departurePointLabel}` 
+    ? `${departurePointValue} || ${departurePointLabel}` 
     : departurePointValue || departurePointLabel || '';
 
-  // Format arrivalPoint
+  // Format arrivalPoint (using || separator like service/subservice)
   const arrivalPointValue = apiResource.ArrivalPoint || '';
   const arrivalPointLabel = apiResource.ArrivalPointDescription || '';
   const arrivalPoint = arrivalPointValue && arrivalPointLabel 
-    ? `${arrivalPointValue}, ${arrivalPointLabel}` 
+    ? `${arrivalPointValue} || ${arrivalPointLabel}` 
     : arrivalPointValue || arrivalPointLabel || '';
 
   // Format infrastructureManager
@@ -140,7 +145,7 @@ const mapApiResourceToResource = (apiResource: any): Resource => {
       scheduleNo: apiResource.ResourceID || '',
       trainNo: apiResource.TrainNo || apiResource.LicensePlateNo || '',
       pathNo: apiResource.PathNo || '',
-      legDetails: legDetails,
+      legDetails: apiResource.LegDetails || '',
       departurePoint: departurePoint,
       arrivalPoint: arrivalPoint,
       service: service,
@@ -148,8 +153,8 @@ const mapApiResourceToResource = (apiResource: any): Resource => {
       infrastructureManager: infrastructureManager,
       reason: apiResource.ReasonforSupplierChanges || '',
       remarks: apiResource.Remarks || '',
-      QCUserDefined: '', // Not in API response, will be handled separately
-      QCUserDefinedValue: '', // Not in API response, will be handled separately
+      QCCode: '', // Not in API response, will be handled separately
+      QCCodeValue: '', // Not in API response, will be handled separately
     },
     // Store original API data for reference
     apiData: apiResource
@@ -177,10 +182,12 @@ const mapResourceToApiPayload = (resource: Resource & { apiData?: any }): any =>
   const serviceData = splitDropdownValue(formData.service);
   const subServiceData = splitDropdownValue(formData.subService);
   const carrierStatusData = splitDropdownValue(formData.carrierStatus);
-  const legDetailsParts = formData.legDetails ? formData.legDetails.split(' - ') : ['', ''];
-  const departurePointParts = formData.departurePoint ? formData.departurePoint.split(', ') : ['', ''];
-  const arrivalPointParts = formData.arrivalPoint ? formData.arrivalPoint.split(', ') : ['', ''];
+  const legDetailsParts = splitDropdownValue(formData.legDetails);
+  // const legDetailsParts = formData.legDetails ? formData.legDetails.split(' - ') : ['', ''];
+  const departurePointData = splitDropdownValue(formData.departurePoint);
+  const arrivalPointData = splitDropdownValue(formData.arrivalPoint);
   const infrastructureManagerData = splitDropdownValue(formData.infrastructureManager);
+  const reasonData = splitDropdownValue(formData.reason);
 
   // Map ResourceType
   let resourceType = 'Supplier';
@@ -195,7 +202,7 @@ const mapResourceToApiPayload = (resource: Resource & { apiData?: any }): any =>
   } else if (formData.resourceCategory === 'Vehicle') {
     resourceType = 'Vehicle';
   }
-
+  console.log("formData ===", formData);
   // Build API payload
   const payload: any = {
     ResourceID: formData.resource || resource.apiData?.ResourceID || '',
@@ -219,18 +226,18 @@ const mapResourceToApiPayload = (resource: Resource & { apiData?: any }): any =>
     InfrastructureManagerID: infrastructureManagerData.value || null,
     InfrastructureManagerName: infrastructureManagerData.label || null,
     TrainNo: formData.trainNo || resource.apiData?.TrainNo || null,
-    LegFrom: legDetailsParts[0] || null,
-    LegTo: legDetailsParts[1] || null,
+    LegDetails: legDetailsParts.value || null,
+    // LegTo: legDetailsParts.label || null,
     SupplierRefNo: formData.supplierRef || resource.apiData?.SupplierRefNo || null,
-    DeparturePoint: departurePointParts[0] || null,
-    DeparturePointDescription: departurePointParts[1] || null,
-    ArrivalPoint: arrivalPointParts[0] || null,
-    ArrivalPointDescription: arrivalPointParts[1] || null,
-    ReasonforSupplierChanges: formData.reason || null,
+    DeparturePoint: departurePointData.value || null,
+    DeparturePointDescription: departurePointData.label || null,
+    ArrivalPoint: arrivalPointData.value || null,
+    ArrivalPointDescription: arrivalPointData.label || null,
+    ReasonforSupplierChanges: reasonData.value || null,
     Remarks: formData.remarks || null,
     Modeflag: resource.apiData?.Modeflag || 'NoChange'
   };
-
+  console.log("form payload ====", payload);
   return payload;
 };
 
@@ -248,10 +255,10 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const [tripInformation, setTripInformation] = useState<any>({});
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
   const bindQC = (): InputDropdownValue => ({
-    dropdown: formData?.QCUserDefined ?? "",
-    input: formData?.QCUserDefinedValue ?? "", // use `input`, not `value`
+    dropdown: formData?.QCCode ?? "",
+    input: formData?.QCCodeValue ?? "", // use `input`, not `value`
   });
-  const [QCUserDefined, setQCUserDefined] = useState<InputDropdownValue>(bindQC());
+  const [QCCode, setQCCode] = useState<InputDropdownValue>(bindQC());
   const [QC, setQC] = useState<any>([]);
   const [isShowLoaderForResources, setIsShowLoaderForResources] = useState(false);
 
@@ -289,10 +296,10 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
         if (mappedResources.length > 0) {
           setSelectedResource(mappedResources[0]);
           setFormData(mappedResources[0].formData);
-          // Update QCUserDefined state
-          setQCUserDefined({
-            dropdown: mappedResources[0].formData?.QCUserDefined ?? "",
-            input: mappedResources[0].formData?.QCUserDefinedValue ?? "",
+          // Update QCCode state
+          setQCCode({
+            dropdown: mappedResources[0].formData?.QCCode ?? "",
+            input: mappedResources[0].formData?.QCCodeValue ?? "",
           });
         }
         setIsShowLoaderForResources(false);
@@ -315,7 +322,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
     const fetchQCData = async () => {
       try {
         const response: any = await quickOrderService.getMasterCommonData({
-          messageType: "QCUserDefined Init",
+          messageType: "Resource QuickCode Init",
           searchTerm: '',
           offset: 0,
           limit: 1000,
@@ -346,10 +353,10 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const handleResourceClick = (resource: Resource) => {
     setSelectedResource(resource);
     setFormData(resource.formData);
-    // Update QCUserDefined state when resource is selected
-    setQCUserDefined({
-      dropdown: resource.formData?.QCUserDefined ?? "",
-      input: resource.formData?.QCUserDefinedValue ?? "",
+    // Update QCCode state when resource is selected
+    setQCCode({
+      dropdown: resource.formData?.QCCode ?? "",
+      input: resource.formData?.QCCodeValue ?? "",
     });
     console.log("resource ====", resource);
     console.log("resource.formData ====", resource.formData);
@@ -374,9 +381,19 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   };
 
   const handleSave = async() => {
-    console.log("formData ==== before save (changed data from forms):", formData);
+    console.log("formData ==== before save (changed data from forms):", formData.reason);
     console.log("selectedResource ====", selectedResource);
     console.log("resources array ====", resources);
+    
+    // Validate required field: reason
+    if (!formData.reason || formData.reason.trim() === '') {
+      toast({
+        title: "⚠️ Required Field Missing",
+        description: "Reason is a required field. Please enter a reason before saving.",
+        variant: "destructive",
+      });
+      return; // Stop execution if validation fails
+    }
     
     // Determine ModeFlag based on selectedResource
     // Use existing Modeflag if available, otherwise determine based on selectedResource
@@ -429,12 +446,12 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
           ? updatedResource 
           : r
       );
-      setResources(updatedResources);
+      // setResources(updatedResources);
       setSelectedResource(updatedResource);
     } else {
       // Add new resource
       updatedResources = [...resources, updatedResource];
-      setResources(updatedResources);
+      // setResources(updatedResources);
       setSelectedResource(updatedResource);
       console.log("newResource ====", updatedResource);
     }
@@ -661,8 +678,82 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const fetchQC = makeLazyFetcher("QCUserDefined Init");
   const fetchDeparturePoint = makeLazyFetcher("Departure Init");
   const fetchArrivalPoint = makeLazyFetcher("Arrival Init");
-  const fetchInfrastructureManager = makeLazyFetcher("Infrastructure Manager Init");
-  const fetchReason = makeLazyFetcher("Reason for changes Init");
+  const fetchInfrastructureManager = makeLazyFetcher("Supplier Init");
+  const fetchReason = makeLazyFetcher("Reason for SupplierChanges Init");
+
+  // Function to fetch location data when legDetails changes
+  const fetchLocationData = async (legDetailsValue: string) => {
+    if (!legDetailsValue || legDetailsValue.trim() === '') {
+      return;
+    }
+
+    try {
+      // Extract leg ID from legDetails
+      // legDetails format might be "LegFrom - LegTo" or "LegID || LegName" or just "LegID"
+      let legId = legDetailsValue.trim();
+      
+      // If format is "LegFrom - LegTo", extract LegFrom (first part)
+      if (legDetailsValue.includes(' - ')) {
+        legId = legDetailsValue.split(' - ')[0].trim();
+      }
+      // If format is "LegID || LegName", extract LegID (first part)
+      else if (legDetailsValue.includes(' || ')) {
+        legId = legDetailsValue.split(' || ')[0].trim();
+      }
+
+      // Call API with "LegID OnSelect" messageType
+      const response: any = await quickOrderService.getMasterLegResourceData({
+        messageType: "LegID OnSelect",
+        searchTerm: legId,
+        offset: 0,
+        limit: 100,
+        AdditionalFilter: [
+          { FilterName: "LegID", FilterValue: legId }
+        ]
+      });
+
+      const rr: any = response?.data;
+      const parsedResponse = rr?.ResponseData ? JSON.parse(rr.ResponseData) : null;
+
+      if (parsedResponse) {
+        // Handle both array and object response formats
+        const responseData = Array.isArray(parsedResponse) ? parsedResponse[0] : parsedResponse;
+        console.log("responseData ====", responseData);
+        if (responseData) {
+          console.log("if ====", responseData);
+          // Extract departurePoint and arrivalPoint from response
+          // Handle various possible field names in the response
+          const departurePointValue = responseData.ResponsePayload.DeparturePoint || '';
+          const departurePointDescription = responseData.ResponsePayload.DeparturePointDescription || '';
+          const departurePoint = departurePointValue && departurePointDescription 
+            ? `${departurePointValue} || ${departurePointDescription}` 
+            : departurePointValue || departurePointDescription || '';
+
+          const arrivalPointValue = responseData.ResponsePayload.ArrivalPoint || '';
+          const arrivalPointDescription = responseData.ResponsePayload.ArrivalPointDescription || '';
+          const arrivalPoint = arrivalPointValue && arrivalPointDescription 
+            ? `${arrivalPointValue} || ${arrivalPointDescription}` 
+            : arrivalPointValue || arrivalPointDescription || '';
+
+          console.log("departurePoint ====", departurePoint);
+          console.log("arrivalPoint ====", arrivalPoint);
+          // Update formData with the fetched values
+          setFormData(prev => ({
+            ...prev,
+            departurePoint: departurePoint,
+            arrivalPoint: arrivalPoint
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching location data for leg:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch location data for the selected leg",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="flex flex-col h-full">
@@ -837,7 +928,12 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
                 <DynamicLazySelect
                   fetchOptions={fetchLegDetails}
                   value={formData.legDetails}
-                  onChange={(value) => setFormData({ ...formData, legDetails: value as string })}
+                  onChange={async (value) => {
+                    const legDetailsValue = value as string;
+                    setFormData({ ...formData, legDetails: legDetailsValue });
+                    // Call API to fetch location data when legDetails changes
+                    await fetchLocationData(legDetailsValue);
+                  }}
                   placeholder="Select Leg Details"
                   className="w-full"
                   hideSearch={false}
@@ -907,14 +1003,14 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               <div className="space-y-2">
                 <Label>Quick Code</Label>
                 <InputDropdown
-                  value={QCUserDefined}
+                  value={QCCode}
                   onChange={(value) => {
-                    setQCUserDefined(value);
+                    setQCCode(value);
                     // Update formData with QC values
                     setFormData({
                       ...formData,
-                      QCUserDefined: value.dropdown || '',
-                      QCUserDefinedValue: value.input || '',
+                      QCCode: value.dropdown || '',
+                      QCCodeValue: value.input || '',
                     });
                   }}
                   options={QC}
