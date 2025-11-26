@@ -69,4 +69,31 @@ export const workOrderService = {
       return response.data; // fallback
     }
   },
+
+  // Work Order Hub Search API, fetching grid data
+  getWorkOrdersForHub: async (params?: any): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "Work order Hub Search",
+      },
+      SearchCriteria: params?.searchCriteria,
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.LIST,
+      requestBody
+    );
+    return response.data;
+  },
 };

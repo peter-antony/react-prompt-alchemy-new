@@ -14,6 +14,7 @@ import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
 import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
 import LocationDetailsTooltip from '@/components/Common/LocationDetailsTooltip';
+import { OperationCountBadge } from './BadgeComponents/OperationCountBadge';
 
 interface CellRendererProps {
   value: any;
@@ -591,6 +592,12 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           className="text-center"
         />
       );
+    }
+    if (column.key === 'OperationDetails') {
+      const operationData = row?.OperationDetails || [];
+      return (
+        <OperationCountBadge OperationDetails={operationData} />
+      )
     }
 
     // if(column.key == "OrderDetailsList") {

@@ -154,6 +154,9 @@ export const API_ENDPOINTS = {
     PERSONALIZATION_SAVE: "/tripplanningpersonalization/personalizationcreate",
     // UPLOADFILES: "/fileupload/update",
   },
+  WORK_ORDER: {
+    LIST: 'workorder/searchhub'
+  },
   // Invoice management
   INVOICES: {
     LIST: "/invoices",

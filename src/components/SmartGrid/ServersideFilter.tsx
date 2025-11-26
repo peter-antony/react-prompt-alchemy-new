@@ -114,6 +114,14 @@ export function ServersideFilter({
     onFiltersChange(currentActiveFilters);
   }, [currentActiveFilters, onFiltersChange]);
 
+  // Also notify parent immediately when the user changes any filter input (dropdown, date, etc.)
+  // This lets parent components react to the selection change without waiting for "Search"
+  useEffect(() => {
+    if (Object.keys(pendingFilters).length > 0) {
+      onFiltersChange(pendingFilters);
+    }
+  }, [pendingFilters, onFiltersChange]);
+
   const loadFilterSets = async () => {
     if (!api) return;
     

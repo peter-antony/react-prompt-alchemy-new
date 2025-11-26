@@ -10,7 +10,7 @@ import { CustomerCountBadge } from './CustomerCountBadge';
 import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
 import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
-
+import { OperationCountBadge } from './BadgeComponents/OperationCountBadge';
 interface DraggableSubRowProps {
   row: any;
   rowIndex: number;
@@ -226,6 +226,12 @@ export const DraggableSubRow: React.FC<DraggableSubRowProps> = ({
             className="text-center"
           />
         );
+      }
+      if (column.key === 'OperationDetails') {
+        const operationData = row?.OperationDetails || [];
+        return (
+          <OperationCountBadge OperationDetails={operationData} />
+        )
       }
     }
     // else if (column.key == "OrderDetailsList" && column.type === 'CustomerCountBadge') {
