@@ -3014,16 +3014,15 @@ const TripPlanning = () => {
                     2. Switch is ON (consolidatedTrip) AND multiple COs are selected (selectedArrCOData.length > 0)
                 */}
                 <div className="relative max-w-md">
-                  <Input
-                    placeholder="Trip No."
-                    value={
-                      (
+                {/* (
                         urlTripID ||
                         (consolidatedTrip && selectedArrCOData.length > 0) ||
                         tripType === "Wagon/Container Movement"
-                      )
-                        ? tripNo
-                        : ''
+                      ) */}
+                  <Input
+                    placeholder="Trip No."
+                    value={
+                      tripNo??''
                     }
                     onChange={(e) => {
                       const newTripId = e.target.value;
