@@ -3581,17 +3581,21 @@ const TripPlanning = () => {
                         Create Trip
                       </button>
                     }
-                    <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
-                      Confirm
-                    </button>
-                    <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
-                      Release
-                    </button>
-                    {tripNo &&
-                      (<button onClick={openAmendPopup} className={buttonClass}>
-                        Amend
-                      </button>)
-                    }
+                    {tripStatus?.toLowerCase() !== 'deleted' && tripStatus?.toLowerCase() !== 'cancelled' && (
+                      <>
+                        <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
+                          Confirm
+                        </button>
+                        <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
+                          Release
+                        </button>
+                        {tripNo &&
+                          (<button onClick={openAmendPopup} className={buttonClass}>
+                            Amend
+                          </button>)
+                        }
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3783,17 +3787,21 @@ const TripPlanning = () => {
                           Create Trip
                         </button>
                       }
-                      <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
-                        Confirm
-                      </button>
-                      <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
-                        Release
-                      </button>
-                      {tripNo &&
-                        (<button onClick={openAmendPopup} className={buttonClass}>
-                          Amend
-                        </button>)
-                      }
+                      {tripStatus?.toLowerCase() !== 'deleted' && tripStatus?.toLowerCase() !== 'cancelled' && (
+                        <>
+                          <button onClick={confirmTripPlanning} disabled={!tripNo} className={buttonClass}>
+                            Confirm
+                          </button>
+                          <button onClick={releseTripPlanning} disabled={!tripNo} className={buttonClass}>
+                            Release
+                          </button>
+                          {tripNo &&
+                            (<button onClick={openAmendPopup} className={buttonClass}>
+                              Amend
+                            </button>)
+                          }
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -4040,21 +4048,24 @@ const TripPlanning = () => {
                             </button>
                           }
                           {/* { showConfirmReleaseBtn && customerOrderList != null && ( */}
-                          <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
-                            Confirm
-                          </button>
-                          {/* )}
-                          { showConfirmReleaseBtn && customerOrderList != null && ( */}
-                          <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
-                            Release
-                          </button>
-                          {/* )} */}
-                          {tripNo &&
-
-                            (<button onClick={openAmendPopup} className={buttonClass}>
-                              Amend
-                            </button>)
-                          }
+                          {tripStatus?.toLowerCase() !== 'deleted' && tripStatus?.toLowerCase() !== 'cancelled' && (
+                            <>
+                              <button onClick={confirmTripPlanning} disabled={isDisabled} className={buttonClass}>
+                                Confirm
+                              </button>
+                              {/* )}
+                              { showConfirmReleaseBtn && customerOrderList != null && ( */}
+                              <button onClick={releseTripPlanning} disabled={isDisabled} className={buttonClass}>
+                                Release
+                              </button>
+                              {/* )} */}
+                              {tripNo &&
+                                (<button onClick={openAmendPopup} className={buttonClass}>
+                                  Amend
+                                </button>)
+                              }
+                            </>
+                          )}
                         </div>
                       </div>
 

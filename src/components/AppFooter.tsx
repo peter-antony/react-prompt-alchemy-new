@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Printer, NotebookPen, MoreHorizontal, BookText, EllipsisVertical } from 'lucide-react';
+import { Settings, Printer, NotebookPen, MoreHorizontal, BookText, EllipsisVertical, TramFront } from 'lucide-react';
 import { Button } from "./ui/button";
 import { useFooterStore, FooterButtonConfig } from "../stores/footerStore";
 import CommonPopup from "@/components/Common/CommonPopup";
@@ -36,6 +36,7 @@ const renderButton = (
 
   const getIconButton = () => {
     if (config.iconName === "BookText") return <BookText size={24} strokeWidth={1.5} />;
+    if (config.iconName === "TramFront") return <TramFront size={24} strokeWidth={1.5} />;
     if (config.iconName === "EllipsisVertical") return <EllipsisVertical size={24} />;
     if (config.iconName === "Printer") return <Printer size={24} />;
     return null; // fallback if icon not found
