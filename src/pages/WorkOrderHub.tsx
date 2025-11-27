@@ -694,7 +694,7 @@ export const WorkOrderHub = () => {
           label: "Cancel",
           onClick: () => {
             console.log("Cancel clicked");
-            setPopupOpen(true);
+            // setPopupOpen(true);
           },
           type: 'Button',
           disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
