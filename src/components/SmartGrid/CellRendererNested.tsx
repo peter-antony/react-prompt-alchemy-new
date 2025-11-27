@@ -455,11 +455,35 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       );
     }
     if(column.key === "Consignment" && column.type === "LegLocationFormat") {
+      const consignmentActualCount = (() => {
+        const consignmentData = row?.Consignment;
+        if (!consignmentData) return 0;
+
+        const normalizeActualCount = (actual: any) => {
+          if (!actual) return 0;
+          if (Array.isArray(actual)) return actual.length;
+          if (typeof actual === 'number') return actual;
+          return 0;
+        };
+
+        if (Array.isArray(consignmentData)) {
+          return consignmentData.reduce((sum, consignment) => {
+            return sum + normalizeActualCount(consignment?.Actual);
+          }, 0);
+        }
+
+        return normalizeActualCount(consignmentData?.Actual);
+      })();
+
+      const indicatorColor = consignmentActualCount > 0 ? 'bg-green-500' : 'bg-orange-400';
+
       return (
         <div className="relative text-sm flex items-center w-full justify-center">
           <div className='relative'>
-            <Package size={16} />
-            <span className="absolute top-0 right-0 block w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
+            <Package width={24} height={20} />
+            <span
+              className={`absolute top-0 right-0 block w-2.5 h-2.5 rounded-full border-1 border-white ${indicatorColor}`}
+            ></span>
           </div>
         </div>
       );

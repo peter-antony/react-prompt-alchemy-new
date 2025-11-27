@@ -137,30 +137,30 @@ export const ActionIconBar = () => {
   return (
     <div className="flex items-center justify-center border-t pt-4 mt-6 gap-3">
       {/* <Button onClick={() => setMoreInfo(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <CircleArrowOutUpRight size={16} strokeWidth={1.2} />
+        <CircleArrowOutUpRight size={16} strokeWidth={1.5} />
         <span className="text-xs">Location</span>
       </Button> */}
       <Button title='Vendor Performance Feedback' onClick={() => setVendorFeedbackOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <MessageSquareText size={16} strokeWidth={1.2} />
+        <MessageSquareText size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Map</span> */}
       </Button>
       <Button title='Odometer' onClick={() => setOdometerOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <MapPin size={16} strokeWidth={1.2} />
+        <MapPin size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Documents</span> */}
       </Button>
       <Button title='Track and Trace' onClick={() => setTrackTraceOpen(true)} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <AlarmClockPlus size={16} strokeWidth={1.2} />
+        <AlarmClockPlus size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Calculate</span> */}
       </Button>
       <Button title='Attachments' onClick={() => setAttachmentsOpen(true)}  variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <FileUp size={16} strokeWidth={1.2} />
+        <Paperclip size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Vehicle</span> */}
       </Button>
       {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
               <Paperclip className="w-5 h-5 text-gray-600" />
       </button> */}
       <Button title='Linked Transactions' onClick={() => openDrawer('linked-transactions')} variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
-        <Link size={16} strokeWidth={1.2} />
+        <Link size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Print</span> */}
       </Button>
       
@@ -178,7 +178,7 @@ export const ActionIconBar = () => {
           />
         )}
 
-        <TramFront size={16} strokeWidth={1.2} />
+        <TramFront size={16} strokeWidth={1.5} />
       </Button>
       {hasAlert && (
         <Alert className=" px-4 py-2 bg-amber-50 border-amber-200" style={{ position: 'fixed', top: '65px', right: '25px', width: '50%' }}>

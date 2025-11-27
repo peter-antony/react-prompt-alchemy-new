@@ -271,8 +271,11 @@ export const SummaryCardsGrid = () => {
           {
             label: 'No. of Resource',
             value:
-              (resources?.Equipments?.length || 0) +
+              // (resources?.Equipments?.length || 0) +
               (resources?.Vehicle?.length || 0) +
+              (resources?.Supplier?.length || 0) +
+              (resources?.Schedule?.length || 0) +
+              (resources?.Handlers?.length || 0) +
               (resources?.Drivers?.length || 0),
           },
           // {
