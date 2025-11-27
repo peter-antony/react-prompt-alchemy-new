@@ -844,7 +844,7 @@ export const TripExecutionHub = () => {
     const queryParams = "ouId=" + userContext.ouId + "&roleName=" + userContext.roleName + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
     const finalUrl = `${baseUrl}${pagePath}?${queryParams}`;
     console.log("finalUrl ----", finalUrl);
-    window.open(finalUrl, "_self");
+    window.open(finalUrl, "_blank");
     
     // const { pathname } = window.location;
     // // Find the base path (e.g., "/Forwardis-dev" or "/")
@@ -856,7 +856,7 @@ export const TripExecutionHub = () => {
     // // const reportUrl = `${weganBaseUrl}?tripNo=${encodeURIComponent(tripNo)}`;
     // // const reportUrl = `${weganBaseUrl}?tripNo=${tripNo}`;
     // console.log("Navigating to Wegan Report URL:", weganBaseUrl);
-    // // window.open(weganBaseUrl, "_self");
+    // // window.open(weganBaseUrl, "_blank");
   };
 
   const handleLinkClick = (value: any, columnKey: any) => {

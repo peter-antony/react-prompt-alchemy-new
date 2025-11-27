@@ -7,7 +7,7 @@ import React, {
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import type { PanelConfig } from "@/types/dynamicPanel";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Copy, BookX, Link, Paperclip } from "lucide-react";
+import { Plus, Search, Copy, BookX, Link, Paperclip, MapPinned } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services";
@@ -30,7 +30,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const formRef = useRef<DynamicPanelRef>(null);
 
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
-  const [resourceGroups, setResourceGroups] = useState<any[]>([]);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
@@ -39,12 +38,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList2, setqcList2] = useState<any>();
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
+  const locationDetailsRef = useRef<DynamicPanelRef>(null);
 
   const saveToZustand = () => {
-    const values = formRef.current?.getFormValues();
-    console.log("FORM VALUES:", values);
+    const mainFormValues = formRef.current?.getFormValues() || {};
+    const locationValues = locationDetailsRef.current?.getFormValues?.() || {};
+    const allValues = {
+      ...mainFormValues,
+      Location: locationValues,
+    };
+    console.log("FORM VALUES:", allValues);
 
-    useWorkOrderFormStore.getState().setFormObject(values);
+    useWorkOrderFormStore.getState().setFormObject(allValues);
 
     alert("Form saved to Zustand!");
   };
@@ -482,7 +487,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
-    getWorkOrderValues: () => formRef.current?.getFormValues() || {},
+    getWorkOrderValues: () => {
+      const mainFormData = formRef.current?.getFormValues() || {};
+      const locationData = locationDetailsRef.current?.getFormValues?.() || {};
+      return {
+        ...mainFormData,
+        Location: locationData,
+      };
+    },
   }));
 
   //All button functions and modals will be here
@@ -500,6 +512,69 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const closeOperationDetails = () => {
     setShowOperationDetails(false);
     console.log("clicked,showOperstionDetails", showOperstionDetails);
+  };
+
+  const locationPanelConfig: PanelConfig = {
+    Origin: {
+      id: "Origin",
+      label: "Origin",
+      fieldType: "lazyselect",
+      width: "six",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    OutboardDest: {
+      id: "OutboardDest",
+      label: "Outboard Destination",
+      fieldType: "lazyselect",
+      width: "six",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    RUForward: {
+      id: "RUForward",
+      label: "RU Forward",
+      fieldType: "lazyselect",
+      width: "six",
+      value: "",
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 3,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    ReturnDest: {
+      id: "ReturnDest",
+      label: "Return Destination",
+      fieldType: "lazyselect",
+      width: "six",
+      value: "",
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 4,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    RUReturn: {
+      id: "RUReturn",
+      label: "RU Return",
+      fieldType: "lazyselect",
+      width: "six",
+      value: "",
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 5,
+      fetchOptions: fetchMaster("Location Init"),
+    },
   };
 
   return (
@@ -533,62 +608,55 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                 </div>
               </div>
             </div>
-            <Button
+            {/* <Button
               className=" mt-3 bg-blue-600 text-white"
               onClick={saveToZustand}
             >
               Save Work Order
-            </Button>
+            </Button> */}
 
             {/* RIGHT SECTION */}
             <div className="lg:col-span-1 w-4/6">
-              {/* If NO resource groups */}
-              {resourceGroups.length === 0 ? (
-                <div className="rounded-lg p-8 flex flex-col items-center justify-center h-full">
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                    <Plus className="w-10 h-10 text-blue-500" />
-                  </div>
+              <div className="bg-white rounded-lg border border-gray-200">
 
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    No Resource Group Added
-                  </h3>
-
-                  <p className="text-gray-500 text-center mb-6 text-sm">
-                    Click the "Add" button to create a resource group.
-                  </p>
-
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={openOperationDetails}
-                  >
-                    Add
-                  </Button>
+              </div>
+              <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
+                <div className="">
+                <DynamicPanel
+                  ref={locationDetailsRef}
+                  panelId="LocationPanel"
+                  panelTitle="Location Details"
+                  panelIcon={<MapPinned className="w-5 h-5 text-blue-500" />}
+                  panelConfig={locationPanelConfig}
+                  collapsible={true}
+                  initialData={workOrderData?.Location || {}}
+                  onDataChange={(data) => {
+                    setWorkOrderData(prev => ({
+                      ...prev,
+                      Location: data
+                    }));
+                  }}
+                />
                 </div>
-              ) : (
-                <div>
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                      Resource Group Details
-                      <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-                        {resourceGroups.length}
-                      </span>
-                    </h2>
-
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          placeholder="Search"
-                          className="border border-gray-300 rounded text-sm px-3 py-1 w-48 h-9"
-                        />
-                        <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
-                      </div>
-
-                     
-                    </div>
-                  </div>
+                {/* <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Plus className="w-10 h-10 text-blue-500" />
                 </div>
-              )}
+
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  No Resource Group Added
+                </h3>
+
+                <p className="text-gray-500 text-center mb-6 text-sm">
+                  Click the "Add" button to create a resource group.
+                </p>
+
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={openOperationDetails}
+                >
+                  Add
+                </Button> */}
+              </div>
             </div>
           
           </div>
