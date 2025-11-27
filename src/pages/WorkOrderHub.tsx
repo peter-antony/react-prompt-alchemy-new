@@ -485,6 +485,7 @@ export const WorkOrderHub = () => {
           CustomerContract: pipedData(row.CustomerContractID, row.CustomerContractDescription),
           CustomerSupport: pipedData(row.CustomerSupportID, row.CustomerSupportIDDescription),
           PlaceOfOperation: pipedData(row.PlaceOfOperationID, row.PlaceOfOperationDescription),
+          SupplierContractNumber: pipedData(row.SupplierContractID, row.SupplierContractDescription),
         }
       });
 
@@ -864,6 +865,7 @@ export const WorkOrderHub = () => {
           CustomerContract: pipedData(row.CustomerContractID, row.CustomerContractDescription),
           CustomerSupport: pipedData(row.CustomerSupportID, row.CustomerSupportIDDescription),
           PlaceOfOperation: pipedData(row.PlaceOfOperationID, row.PlaceOfOperationDescription),
+          SupplierContractNumber: pipedData(row.SupplierContractID, row.SupplierContractDescription),
         };
       });
 
