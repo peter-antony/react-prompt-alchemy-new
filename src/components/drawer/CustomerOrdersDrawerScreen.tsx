@@ -19,6 +19,7 @@ import { Sub } from '@radix-ui/react-dropdown-menu';
 import { filterService } from '@/api/services/filterService';
 import { toast } from '@/hooks/use-toast';
 import { AddCOToTripSidedraw } from '../TripPlanning/AddCOToTripSidedraw';
+import { quickOrderService } from '@/api/services';
 
 interface CustomerOrdersDrawerScreenProps {
   onClose: () => void;
@@ -60,6 +61,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'CustomerOrderNo',
@@ -69,6 +71,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'CustomerName',
@@ -78,6 +81,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'ExecutionPlanID',
@@ -87,6 +91,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'LegBehaviour',
@@ -96,6 +101,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: true,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'DepartureArrival',
@@ -105,6 +111,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: false,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'DepartureArrivalDescription',
@@ -114,6 +121,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: false,
     filterable: true,
     editable: false,
+    subRow: false
   },
   {
     key: 'PickupDelivery',
@@ -123,6 +131,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: false,
     filterable: false,
     editable: false,
+    subRow: false
   },
   {
     key: 'PlanFromToDate',
@@ -132,6 +141,7 @@ const customerOrdersGridColumns: GridColumnConfig[] = [
     sortable: false,
     filterable: false,
     editable: false,
+    subRow: false
   },
   {
     key: 'Consignor',
@@ -227,6 +237,70 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
 
   console.log('tripData', tripData);
+
+  // States for Grid Preferences
+  const [preferenceModeFlag, setPreferenceModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(false);
+
+  // Initialize columns and data
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const personalizationResponse: any = await quickOrderService.getPersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'TripExecutionCustomerOrders',
+          ComponentName: 'smartgrid-preferences'
+        });
+
+        // Extract columns with subRow = true from initialColumns
+        const subRowColumns = gridState.columns
+          .filter(col => col.subRow === true)
+          .map(col => col.key);
+
+        console.log('TripExecution Customer Orders SmartGrid - Extracted subRow columns:', subRowColumns);
+
+        // Parse and set personalization data to localStorage
+        if (personalizationResponse?.data?.ResponseData) {
+          const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+          if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+            // Set the JsonData to localStorage
+            if (personalizationData.JsonData) {
+              const jsonData = personalizationData.JsonData;
+
+              // If subRowColumns is empty in the API response, populate it with extracted columns
+              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                jsonData.subRowColumns = subRowColumns;
+                console.log('TripExecution Customer Orders SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
+              }
+
+              localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+              console.log('TripExecution Customer Orders SmartGrid Personalization data set to localStorage:', jsonData);
+            }
+            // If we have data, next save should be an Update
+            setPreferenceModeFlag('Update');
+          } else {
+            // If result is empty array or no result, next save should be Insert
+            console.log('TripExecution Customer Orders SmartGrid: No existing personalization found, setting mode to Insert');
+            setPreferenceModeFlag('Insert');
+          }
+        } else {
+          // If ResponseData is empty/null, next save should be Insert
+          console.log('Empty personalization response, setting mode to Insert');
+          setPreferenceModeFlag('Insert');
+        }
+      } catch (error) {
+        console.error('Failed to load personalization:', error);
+      } finally {
+        setIsPreferencesLoaded(true); // Set to true after personalization is loaded
+      }
+    };
+
+    init();
+  }, []);
 
   useEffect(() => {
     if (tripData?.CustomerOrders) {
@@ -534,6 +608,55 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
     // window.location.reload();
   };
 
+  const handleGridPreferenceSave = async (preferences: any) => {
+    try {
+      // Get the latest preferences from localStorage to ensure we have the full state
+      const storedPreferences = localStorage.getItem('smartgrid-preferences');
+      const preferencesToSave = storedPreferences ? JSON.parse(storedPreferences) : preferences;
+
+      console.log('Saving TripExecution Customer Orders SmartGrid preferences:', preferencesToSave);
+      console.log('Preference ModeFlag:', preferenceModeFlag);
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'TripExecutionCustomerOrders',
+        ComponentName: 'smartgrid-preferences',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: preferenceModeFlag
+      });
+
+      const apiData = response?.data;
+
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+        // const message = apiData?.Message || "No message returned";
+
+        toast({
+          title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+
+        // If save was successful and we were in Insert mode, switch to Update mode for future saves
+        if (isSuccess && preferenceModeFlag === 'Insert') {
+          setPreferenceModeFlag('Update');
+        }
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save grid preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save grid preferences",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Sub Header with Total Bookings */}
@@ -608,53 +731,62 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
           {/* Grid Container */}
           <div className={`rounded-lg`}>
             {/* Selected rows indicator */}
-            <SmartGridWithGrouping
-              key={`grid-${gridState.forceUpdate}`}
-              columns={gridState.columns}
-              data={gridState.gridData}
-              highlightedRowIndices={highlightedRows}
-              groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-              showGroupingDropdown={true}
-              editableColumns={['plannedStartEndDateTime']}
-              paginationMode="pagination"
-              // customPageSize={pageSize}
-              // onLinkClick={handleLinkClick}
-              // onUpdate={handleUpdate}
-              onSubRowToggle={gridState.handleSubRowToggle}
-              selectedRows={selectedRows}
-              onSelectionChange={handleRowSelection}
-              onRowClick={handleRowClick}
-              // onFiltersChange={setCurrentFilters}
-              // onSearch={handleServerSideSearch}
-              // onClearAll={clearAllFilters}
-              // rowClassName={(row: any, index: number) =>
-              //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-              // }
-              rowClassName={(row: any, index: number) => {
-                // return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
-                const uniqueId = `${row.CustomerOrderID}-${row.LegBehaviour}`;
-                return highlightedRows.includes(uniqueId) ? 'selected' : '';
-              }}
-              nestedRowRenderer={renderSubRow}
-              // configurableButtons={gridConfigurableButtons}
-              showDefaultConfigurableButton={false}
-              gridTitle="Customer Orders"
-              recordCount={gridState.gridData.length}
-              showCreateButton={true}
-              searchPlaceholder="Search"
-              clientSideSearch={true}
-              showSubHeaders={false}
-              hideAdvancedFilter={true}
-              hideCheckboxToggle={true}
-              // hideRightToolbar={tripID ? true : false}
-              // serverFilters={dynamicServerFilters}
-              showFilterTypeDropdown={false}
-              // showServersideFilter={showServersideFilter}
-              // onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-              gridId={gridId}
-              userId="current-user"
-              api={filterService}
-            />
+            {isPreferencesLoaded ? (
+              <SmartGridWithGrouping
+                key={`grid-${gridState.forceUpdate}`}
+                columns={gridState.columns}
+                data={gridState.gridData}
+                highlightedRowIndices={highlightedRows}
+                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                showGroupingDropdown={true}
+                editableColumns={['plannedStartEndDateTime']}
+                paginationMode="pagination"
+                onPreferenceSave={handleGridPreferenceSave}
+                // customPageSize={pageSize}
+                // onLinkClick={handleLinkClick}
+                // onUpdate={handleUpdate}
+                onSubRowToggle={gridState.handleSubRowToggle}
+                selectedRows={selectedRows}
+                onSelectionChange={handleRowSelection}
+                onRowClick={handleRowClick}
+                // onFiltersChange={setCurrentFilters}
+                // onSearch={handleServerSideSearch}
+                // onClearAll={clearAllFilters}
+                // rowClassName={(row: any, index: number) =>
+                //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                // }
+                rowClassName={(row: any, index: number) => {
+                  // return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
+                  const uniqueId = `${row.CustomerOrderID}-${row.LegBehaviour}`;
+                  return highlightedRows.includes(uniqueId) ? 'selected' : '';
+                }}
+                nestedRowRenderer={renderSubRow}
+                // configurableButtons={gridConfigurableButtons}
+                showDefaultConfigurableButton={false}
+                gridTitle="Customer Orders"
+                recordCount={gridState.gridData.length}
+                showCreateButton={true}
+                searchPlaceholder="Search"
+                clientSideSearch={true}
+                showSubHeaders={false}
+                hideAdvancedFilter={true}
+                hideCheckboxToggle={true}
+                // hideRightToolbar={tripID ? true : false}
+                // serverFilters={dynamicServerFilters}
+                showFilterTypeDropdown={false}
+                // showServersideFilter={showServersideFilter}
+                // onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                gridId={gridId}
+                userId="current-user"
+                api={filterService}
+              />
+            ) : (
+              <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                <div className="text-lg font-semibold text-blue-700">Loading...</div>
+                <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
