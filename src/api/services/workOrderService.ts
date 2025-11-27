@@ -1,6 +1,6 @@
 // api/services/workOrderService.ts
 import { apiClient } from "@/api/client";
-import { API_ENDPOINTS } from "@/api/config";
+import { API_ENDPOINTS, getUserContext } from "@/api/config";
 
 // ---- Types for selection payload ----
 export interface WorkOrderSelectionPayload {
@@ -35,6 +35,33 @@ export interface WorkOrderSelectionResult {
 }
 
 export const workOrderService = {
+  getUserContext: () => {
+    try {
+      const selectedContext = localStorage.getItem('selectedUserContext');
+      
+      if (selectedContext) {
+        const parsedContext = JSON.parse(selectedContext);      
+        return {
+          ouId: parsedContext.ouId || 4,
+          roleName: parsedContext.roleName || "RAMCOROLE",
+          ouDescription: parsedContext.ouDescription || "",
+          userInfo: parsedContext
+        };
+      }
+    } catch (error) {
+      console.error('Error retrieving user context from localStorage:', error);
+    }
+    
+    // Default values if nothing is stored
+    const defaultContext = {
+      ouId: 4, 
+      roleName: "RAMCOROLE",
+      ouDescription: "Default OU"
+    };
+    
+    return defaultContext;
+  },
+
   // This calls /workorder/hubselection and parses ResponseData into JSON
   searchWorkOrder: async (
     payload: WorkOrderSelectionPayload
@@ -78,5 +105,32 @@ export const workOrderService = {
       message,
       isSuccess,
     };
+  },
+  
+  // Work Order Hub Search API, fetching grid data
+  getWorkOrdersForHub: async (params?: any): Promise<any> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "Work order Hub Search",
+      },
+      SearchCriteria: params?.searchCriteria,
+      Pagination: {
+        PageNumber: 1,
+        PageSize: 10,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.LIST,
+      requestBody
+    );
+    return response.data;
   },
 };
