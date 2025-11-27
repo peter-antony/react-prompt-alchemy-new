@@ -38,6 +38,11 @@ export const WorkOrderHub = () => {
   const [popupTitle] = useState('Cancel Trip');
   const [popupButtonName] = useState('Cancel');
 
+  // State for server filtering
+  const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering
+  const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
+  const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
+
   // New modal states for createTripPlan actions
   const [fields, setFields] = useState([
     {
@@ -123,6 +128,50 @@ export const WorkOrderHub = () => {
       });
     }
   };
+
+  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
+          console.log('WorkOrderHub: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+          try {
+            const preferencesToSave = {
+              visibleFields,
+              fieldOrder
+            };
+      
+            const response = await quickOrderService.savePersonalization({
+              LevelType: 'User',
+              LevelKey: 'ramcouser',
+              ScreenName: 'WorkOrderHub',
+              ComponentName: 'smartgrid-serverside-filtersearch-preferences',
+              JsonData: preferencesToSave,
+              IsActive: "1",
+              ModeFlag: isServerFilterPersonalizationEmpty ? "Insert" : "Update"
+            });
+      
+            const apiData = response?.data;
+      
+            if (apiData?.IsSuccess) {
+              setServerFilterVisibleFields(visibleFields);
+              setServerFilterFieldOrder(fieldOrder);
+              // Update the empty flag since we now have saved data
+              setIsServerFilterPersonalizationEmpty(false);
+      
+              toast({
+                title: "✅ Filter Preferences Saved",
+                description: "Your search field preferences have been saved.",
+                variant: "default",
+              });
+            } else {
+              throw new Error(apiData?.Message || "Invalid API response");
+            }
+          } catch (error) {
+            console.error("Failed to save server filter preferences:", error);
+            toast({
+              title: "Error",
+              description: "Failed to save filter preferences",
+              variant: "destructive",
+            });
+          }
+        };
 
   const handleTripsCancelSubmit = async (formFields: any) => {
     console.log(formFields);
@@ -550,6 +599,35 @@ export const WorkOrderHub = () => {
           console.log('Empty personalization response, setting mode to Insert');
           setPreferenceModeFlag('Insert');
         }
+
+        // Fetch Server-side Filter Personalization
+        console.log('WorkOrderHub: Fetching server-side filter personalization...');
+        try {
+          const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'WorkOrderHub',
+            ComponentName: 'smartgrid-serverside-filtersearch-preferences'
+          });
+          console.log('WorkOrderHub: Server-side filter personalization response:', serverFilterPersonalizationResponse);
+
+          let isServerFilterEmpty = true;
+          if (serverFilterPersonalizationResponse?.data?.ResponseData) {
+            const parsed = JSON.parse(serverFilterPersonalizationResponse.data.ResponseData);
+            if (parsed?.PersonalizationResult && parsed.PersonalizationResult.length > 0) {
+              isServerFilterEmpty = false;
+              const data = parsed.PersonalizationResult[0].JsonData;
+              if (data) {
+                if (data.visibleFields) setServerFilterVisibleFields(data.visibleFields);
+                if (data.fieldOrder) setServerFilterFieldOrder(data.fieldOrder);
+              }
+            }
+          }
+          setIsServerFilterPersonalizationEmpty(isServerFilterEmpty);
+        } catch (error) {
+          console.error('Failed to fetch server-side filter personalization:', error);
+        }
+
       } catch (error) {
         console.error('Failed to load personalization:', error);
         // On error, default to Insert might be safer, or keep default
@@ -1168,6 +1246,9 @@ export const WorkOrderHub = () => {
                 gridId={gridId}
                 userId="current-user"
                 api={filterService}
+                serverFilterVisibleFields={serverFilterVisibleFields}
+                serverFilterFieldOrder={serverFilterFieldOrder}
+                onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
               />
                ) : (
                  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
