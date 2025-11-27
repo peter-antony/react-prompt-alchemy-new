@@ -29,6 +29,9 @@ interface SmartGridWithGroupingProps extends SmartGridProps {
   gridId?: string;
   userId?: string;
   customPageSize?: number | any;
+  serverFilterVisibleFields?: string[];
+  serverFilterFieldOrder?: string[];
+  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[]) => void;
 }
 
 export function SmartGridWithGrouping({
@@ -49,6 +52,9 @@ export function SmartGridWithGrouping({
   gridId,
   userId,
   customPageSize,
+  serverFilterVisibleFields,
+  serverFilterFieldOrder,
+  onServerFilterPreferenceSave,
   ...props
 }: SmartGridWithGroupingProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -273,6 +279,9 @@ export function SmartGridWithGrouping({
         gridId={gridId || props.gridTitle || 'default'}
         userId={userId || 'default-user'}
         api={api}
+        serverFilterVisibleFields={serverFilterVisibleFields}
+        serverFilterFieldOrder={serverFilterFieldOrder}
+        onServerFilterPreferenceSave={onServerFilterPreferenceSave}
       />
     </div>
   );

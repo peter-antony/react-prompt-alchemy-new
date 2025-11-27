@@ -92,8 +92,16 @@ export function SmartGrid({
   customPageSize,
   onSearch,
   onClearAll,
-  exportFilename = `export-${new Date().toISOString().split('T')[0]}`
-}: SmartGridProps & { exportFilename?: string }) {
+  exportFilename = `export-${new Date().toISOString().split('T')[0]}`,
+  serverFilterVisibleFields,
+  serverFilterFieldOrder,
+  onServerFilterPreferenceSave
+}: SmartGridProps & {
+  exportFilename?: string;
+  serverFilterVisibleFields?: string[];
+  serverFilterFieldOrder?: string[];
+  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[]) => void;
+}) {
   const {
     gridData,
     setGridData,
@@ -936,6 +944,9 @@ export function SmartGrid({
           gridId={gridId || gridTitle || 'default'}
           userId={userId || 'default-user'}
           api={api}
+          initialVisibleFields={serverFilterVisibleFields}
+          initialFieldOrder={serverFilterFieldOrder}
+          onFilterPreferencesSave={onServerFilterPreferenceSave}
         />
       )}
 

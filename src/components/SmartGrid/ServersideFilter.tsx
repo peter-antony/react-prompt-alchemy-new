@@ -24,6 +24,9 @@ interface ServersideFilterProps {
   gridId: string;
   userId: string;
   api?: FilterSystemAPI;
+  initialVisibleFields?: string[];
+  initialFieldOrder?: string[];
+  onFilterPreferencesSave?: (visibleFields: string[], fieldOrder: string[]) => void;
 }
 
 export function ServersideFilter({
@@ -36,7 +39,10 @@ export function ServersideFilter({
   onClearAll,
   gridId,
   userId,
-  api
+  api,
+  initialVisibleFields,
+  initialFieldOrder,
+  onFilterPreferencesSave
 }: ServersideFilterProps) {
   // Use persistent filter store to maintain state across component unmount/mount
   const { activeFilters, setActiveFilters } = useFilterStore();
@@ -87,12 +93,22 @@ export function ServersideFilter({
   
   // Initialize field visibility and order
   useEffect(() => {
-    if (serverFilters.length > 0 && visibleFields.length === 0) {
-      const allFieldKeys = serverFilters.map(f => f.key);
-      setVisibleFields(allFieldKeys);
-      setFieldOrder(allFieldKeys);
+    if (serverFilters.length > 0) {
+      if (initialVisibleFields && initialVisibleFields.length > 0) {
+        setVisibleFields(initialVisibleFields);
+      } else if (visibleFields.length === 0) {
+        const allFieldKeys = serverFilters.map(f => f.key);
+        setVisibleFields(allFieldKeys);
+      }
+
+      if (initialFieldOrder && initialFieldOrder.length > 0) {
+        setFieldOrder(initialFieldOrder);
+      } else if (fieldOrder.length === 0) {
+        const allFieldKeys = serverFilters.map(f => f.key);
+        setFieldOrder(allFieldKeys);
+      }
     }
-  }, [serverFilters]);
+  }, [serverFilters, initialVisibleFields, initialFieldOrder]);
 
   // Load saved filter sets on mount
   useEffect(() => {
@@ -307,8 +323,20 @@ export function ServersideFilter({
   const activeFilterCount = Object.keys(pendingFilters).length;
 
   const handleFieldVisibilitySave = (newVisibleFields: string[], newFieldOrder: string[]) => {
+    console.log('ServersideFilter: handleFieldVisibilitySave called', { newVisibleFields, newFieldOrder });
+
+    // Clear all active filters before saving preferences
+    console.log('ServersideFilter: Clearing all filters before saving preferences');
+    clearAllFilters();
+
     setVisibleFields(newVisibleFields);
     setFieldOrder(newFieldOrder);
+    if (onFilterPreferencesSave) {
+      console.log('ServersideFilter: Calling onFilterPreferencesSave prop');
+      onFilterPreferencesSave(newVisibleFields, newFieldOrder);
+    } else {
+      console.warn('ServersideFilter: onFilterPreferencesSave prop is missing!');
+    }
   };
 
   // Helper function to render filter inputs

@@ -59,6 +59,9 @@ const QuickOrderManagement = () => {
   const [lastFilterCall, setLastFilterCall] = useState<number>(0);
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>({});
   const [isPersonalizationEmpty, setIsPersonalizationEmpty] = useState(false);
+  const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering 
+  const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
+  const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { config, setFooter, resetFooter } = useFooterStore();
@@ -364,6 +367,34 @@ const QuickOrderManagement = () => {
         }
         setIsPersonalizationEmpty(isEmptyResponse);
 
+        // Fetch Server-side Filter Personalization
+        console.log('QuickOrderManagement: Fetching server-side filter personalization...');
+        try {
+          const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'QuickOrderManagement',
+            ComponentName: 'smartgrid-serverside-filtersearch-preferences'
+          });
+          console.log('QuickOrderManagement: Server-side filter personalization response:', serverFilterPersonalizationResponse);
+
+          let isServerFilterEmpty = true;
+          if (serverFilterPersonalizationResponse?.data?.ResponseData) {
+            const parsed = JSON.parse(serverFilterPersonalizationResponse.data.ResponseData);
+            if (parsed?.PersonalizationResult && parsed.PersonalizationResult.length > 0) {
+              isServerFilterEmpty = false;
+              const data = parsed.PersonalizationResult[0].JsonData;
+              if (data) {
+                if (data.visibleFields) setServerFilterVisibleFields(data.visibleFields);
+                if (data.fieldOrder) setServerFilterFieldOrder(data.fieldOrder);
+              }
+            }
+          }
+          setIsServerFilterPersonalizationEmpty(isServerFilterEmpty);
+        } catch (error) {
+          console.error('Failed to fetch server-side filter personalization:', error);
+        }
+
         const response: any = await quickOrderService.getQuickOrders({
           filters: searchFilters
         });
@@ -467,6 +498,53 @@ const QuickOrderManagement = () => {
       toast({
         title: "Error",
         description: "Failed to save grid preferences",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
+    console.log('QuickOrderManagement: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+    try {
+      const preferencesToSave = {
+        visibleFields,
+        fieldOrder
+      };
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'QuickOrderManagement',
+        ComponentName: 'smartgrid-serverside-filtersearch-preferences',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: isServerFilterPersonalizationEmpty ? "Insert" : "Update"
+      });
+
+      const apiData = response?.data;
+
+      if (apiData?.IsSuccess) {
+        setServerFilterVisibleFields(visibleFields);
+        setServerFilterFieldOrder(fieldOrder);
+        // Update the empty flag since we now have saved data
+        setIsServerFilterPersonalizationEmpty(false);
+
+        toast({
+          title: "✅ Filter Preferences Saved",
+          description: "Your search field preferences have been saved.",
+          variant: "default",
+        });
+
+        // Refresh data to reflect any changes (optional, but good practice if filters affect data fetching)
+        // handleServerSideSearch(); 
+      } else {
+        throw new Error(apiData?.Message || "Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save server filter preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save filter preferences",
         variant: "destructive",
       });
     }
@@ -1349,6 +1427,9 @@ const QuickOrderManagement = () => {
                 userId="current-user"
                 customPageSize={pageSize}
                 api={filterService}
+                serverFilterVisibleFields={serverFilterVisibleFields}
+                serverFilterFieldOrder={serverFilterFieldOrder}
+                onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
               />
               {/* {!filtersLoading ? ( */}
               {/* ) : ( */}
