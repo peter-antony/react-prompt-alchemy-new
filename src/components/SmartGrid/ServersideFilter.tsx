@@ -326,8 +326,8 @@ export function ServersideFilter({
     console.log('ServersideFilter: handleFieldVisibilitySave called', { newVisibleFields, newFieldOrder });
 
     // Clear all active filters before saving preferences
-    console.log('ServersideFilter: Clearing all filters before saving preferences');
-    clearAllFilters();
+    // console.log('ServersideFilter: Clearing all filters before saving preferences');
+    // clearAllFilters();
 
     setVisibleFields(newVisibleFields);
     setFieldOrder(newFieldOrder);
