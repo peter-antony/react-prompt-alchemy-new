@@ -110,7 +110,7 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const filteredVasItems = formData.CustomerOrderNo
     ? vasItems.filter(item => item.formData.CustomerOrderNo === formData.CustomerOrderNo)
     : vasItems;
-
+  console.log("filteredVasItems = ",filteredVasItems)
   // Temporary placeholder until real implementation is connected
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -573,7 +573,19 @@ const saveCurrentFormData = () => {
     setSelectedVAS(null);
   };
   console.log("VASDrawerScreen CustomerOrderNo:", tripData.CustomerOrders);
+  const checkCustomerSupplier = (item:any) =>{
+    console.log("ITEM- ",item)
+    if(item.formData.IsApplicableToCustomer && !item.formData.IsApplicableToSupplier)
+    {
+      return 'C'
+    }else if(item.formData.IsApplicableToCustomer && item.formData.IsApplicableToSupplier){
+      return 'C/S'
+    }else{
+      return 'C'
+    }
+ 
 
+  }
   return (
     <div className="flex h-full">
       {/* Left Sidebar - VAS Items List */}
@@ -659,8 +671,12 @@ const saveCurrentFormData = () => {
             onClick={(e) => e.stopPropagation()} // prevent card click
           />
 
-          <div>
-            <div className="font-medium text-sm">{item.name}</div>
+          <div className='w-full' >
+            <div className="font-medium  text-sm flex justify-between">
+              <span>{item.name}</span> 
+              <span>{" "}{checkCustomerSupplier(item)}</span>
+              </div>
+            {/* <div>{checkCustomerSupplier(item)}</div> */}
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-xs">
                 {item.quantity}
