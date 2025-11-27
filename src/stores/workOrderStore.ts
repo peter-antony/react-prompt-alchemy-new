@@ -1,69 +1,53 @@
+// stores/workOrderStore.ts
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { workOrderService } from "@/api/services/workOrderService";
-import { WorkOrderItem, WorkOrderSearchPayload } from "@/types/WorkOrderManagementTypes";
+import {
+  workOrderService,
+  WorkOrderSelectionPayload,
+  WorkOrderDetail,
+} from "@/api/services/workOrderService";
 
 interface WorkOrderState {
-  list: WorkOrderItem[];
+  workOrder: WorkOrderDetail | null;
   loading: boolean;
   error: string | null;
-  message: string | null;
-  searchWorkOrders: (payload: WorkOrderSearchPayload) => Promise<void>;
-}
-
-interface WorkOrderFormState {
-  form: Record<string, any>;
-  setField: (field: string, value: any) => void;
-  resetForm: () => void;
-  setFormObject: (data: Record<string, any>) => void;
+  apiMessage: string | null;
+  isSuccess: boolean;
+  searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
 }
 
 export const useWorkOrderStore = create<WorkOrderState>()(
   devtools(
     (set) => ({
-      list: [],
+      workOrder: null,
       loading: false,
       error: null,
-      message: null,
+      apiMessage: null,
+      isSuccess: false,
 
-      searchWorkOrders: async (payload) => {
-        set({ loading: true, message: null, error: null });
+      searchWorkOrder: async (payload) => {
+        set({ loading: true, error: null, apiMessage: null, isSuccess: false });
 
         try {
-          const data = await workOrderService.searchWorkOrders(payload);
+          const result = await workOrderService.searchWorkOrder(payload);
 
           set({
-            list: data,
+            workOrder: result.data,          // ✅ parsed JSON: { Header, WorkorderSchedule, OperationDetails }
             loading: false,
-            message: "Work orders loaded successfully",
+            apiMessage: result.message,
+            isSuccess: result.isSuccess,
           });
         } catch (err: any) {
+          console.error("WorkOrder search failed:", err);
           set({
-            error: err.message,
             loading: false,
-            message: "Failed to load work orders",
+            error: err?.message ?? "Failed to load Work Order",
+            apiMessage: null,
+            isSuccess: false,
           });
         }
       },
     }),
     { name: "WorkOrderStore", trace: true }
-  )
-);
-
-export const useWorkOrderFormStore = create<WorkOrderFormState>()(
-  devtools(
-    (set) => ({
-      form: {},
-
-      setField: (field, value) =>
-        set((state) => ({
-          form: { ...state.form, [field]: value },
-        })),
-
-      setFormObject: (data) => set({ form: data }),
-
-      resetForm: () => set({ form: {} }),
-    }),
-    { name: "WorkOrderFormStore" }
   )
 );

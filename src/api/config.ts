@@ -155,7 +155,8 @@ export const API_ENDPOINTS = {
     // UPLOADFILES: "/fileupload/update",
   },
   WORK_ORDER: {
-    LIST: 'workorder/searchhub'
+    LIST: 'workorder/searchhub',
+    SELECTION: '/workorder/hubselection'
   },
   // Invoice management
   INVOICES: {

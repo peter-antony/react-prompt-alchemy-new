@@ -94,3 +94,53 @@ export interface GridPreferences {
     direction: 'asc' | 'desc';
   };
 }
+
+
+//work order types
+// Full Work Order response structure
+export interface WorkOrderResponse {
+  Header: Record<string, any>;
+  WorkorderSchedule: Record<string, any>;
+  OperationDetails: OperationDetail[];
+}
+
+export interface OperationDetail {
+  OrderID: string;
+  TypeOfAction: string;
+  Operation: string;
+  OperationStatus: string;
+  ModeFlag: string;
+  QC1Code?: string;
+  QC1Value?: string;
+  Remarks?: string;
+  CodeInformation: CodeInformation[];
+}
+
+export interface CodeInformation {
+  CodeNoCUU: string;
+  Component: string;
+  Irregularities: string;
+  IrregularityClass: string;
+  Criteria: string;
+  Notes: string;
+  ActionToBeTaken: string;
+  ModeFlag: string;
+}
+
+// Request payload interface
+export interface WorkOrderSearchPayload {
+  context: {
+    UserID: string;
+    Role: string;
+    OUID: number;
+    MessageID: string;
+    MessageType: string;
+  };
+  SearchCriteria: {
+    WorkOrderNo: string;
+    AdditionalFilter?: {
+      FilterName: string;
+      FilterValue: string;
+    }[];
+  };
+}

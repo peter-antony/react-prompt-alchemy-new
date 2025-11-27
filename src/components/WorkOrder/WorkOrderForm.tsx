@@ -3,6 +3,7 @@ import React, {
   useRef,
   useState,
   useImperativeHandle,
+  useEffect
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import type { PanelConfig } from "@/types/dynamicPanel";
@@ -11,11 +12,12 @@ import { Plus, Search, Copy, BookX, Link, Paperclip, MapPinned } from "lucide-re
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services";
-import { useWorkOrderFormStore } from "@/stores/workOrderStore";
 // import { SideDrawer } from "@/components/ui/side-drawer";
 import { SideDrawer } from "@/components/Common/SideDrawer";
 import { InputDropdown } from "@/components/ui/input-dropdown";
 import WorkOrderOperationDetails from "./WorkOrderOperationDetails";
+import { buildWorkOrderPayload } from "@/lib/utils";
+import { useWorkOrderStore } from "@/stores/workOrderStore";
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -30,6 +32,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const formRef = useRef<DynamicPanelRef>(null);
 
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
+  const [resourceGroups, setResourceGroups] = useState<any[]>([]);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
@@ -39,6 +42,46 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
+  const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
+
+  useEffect(() => {
+  const payload = {
+    context: {
+      MessageID: "12345",
+      MessageType: "Work Order Selection",
+      OUID: 4,
+      Role: "ramcorole",
+      UserID: "ramcouser",
+    },
+    SearchCriteria: {
+      WorkOrderNo: "RWO-000188",
+      AdditionalFilter: [
+        {
+          FilterName: "ServiceType",
+          FilterValue: "Standard",
+        },
+      ],
+    },
+  };
+
+  searchWorkOrder(payload);
+}, [searchWorkOrder]);
+
+useEffect(() => {
+  if (workOrder) {
+    console.log("📌 Final JSON from store:", workOrder);
+    console.log("Header:", workOrder.Header);
+    console.log("Schedule:", workOrder.WorkorderSchedule);
+    console.log("Operations:", workOrder.OperationDetails);
+  }
+}, [workOrder]);
+
+useEffect(() => {
+  if (workOrder?.Header) {
+    setWorkOrderData(workOrder.Header);
+  }
+}, [workOrder]);
+
 
   const saveToZustand = () => {
     const mainFormValues = formRef.current?.getFormValues() || {};
@@ -49,7 +92,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
     console.log("FORM VALUES:", allValues);
 
-    useWorkOrderFormStore.getState().setFormObject(allValues);
+    // useWorkOrderFormStore.getState().setFormObject(allValues);
 
     alert("Form saved to Zustand!");
   };
@@ -361,7 +404,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         onClick: (event, value) => {
           console.log("Billing Details icon clicked", event, value);
           // Toggle visibility of more details fields
-          setShowMoreDetails(prev => !prev);
+          setShowMoreDetails((prev) => !prev);
         },
       },
     },
@@ -577,6 +620,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     },
   };
 
+  const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`;
+  const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+
   return (
     <AppLayout>
       <div className="main-content-h bg-gray-100">
@@ -659,6 +705,23 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
               </div>
             </div>
           
+          </div>
+
+          <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+            <div className="flex items-center gap-4">
+              
+            </div>
+            <div className='flex items-center gap-4'>
+              <button className={buttonCancel}>
+                Cancel
+              </button>
+              <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                Save
+              </button>
+              <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                Amend
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -757,9 +820,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       </SideDrawer>
 
       <WorkOrderOperationDetails 
-  onClose={closeOperationDetails} 
-  value={showOperstionDetails} 
-/>
+        onClose={closeOperationDetails} 
+        value={showOperstionDetails} 
+      />
 
     </AppLayout>
   );
