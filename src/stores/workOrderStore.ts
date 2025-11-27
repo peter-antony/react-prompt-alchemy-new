@@ -14,6 +14,8 @@ interface WorkOrderState {
   apiMessage: string | null;
   isSuccess: boolean;
   searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
+  updateHeaderField: (field: string, value: any) => void;
+  updateBillingField: (field: string, value: any) => void;
 }
 
 export const useWorkOrderStore = create<WorkOrderState>()(
@@ -25,6 +27,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       apiMessage: null,
       isSuccess: false,
 
+      /** 🔍 Fetch Work Order */
       searchWorkOrder: async (payload) => {
         set({ loading: true, error: null, apiMessage: null, isSuccess: false });
 
@@ -32,7 +35,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           const result = await workOrderService.searchWorkOrder(payload);
 
           set({
-            workOrder: result.data,          // ✅ parsed JSON: { Header, WorkorderSchedule, OperationDetails }
+            workOrder: result.data,
             loading: false,
             apiMessage: result.message,
             isSuccess: result.isSuccess,
@@ -47,6 +50,32 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           });
         }
       },
+      updateHeaderField: (field, value) =>
+        set((state) => ({
+          workOrder: {
+            ...state.workOrder!,
+            Header: {
+              ...state.workOrder!.Header,
+              [field]: value,
+              ModeFlag: "Update",
+            },
+          },
+        })),
+
+      updateBillingField: (field, value) =>
+        set((state) => ({
+          workOrder: {
+            ...state.workOrder!,
+            Header: {
+              ...state.workOrder!.Header,
+              BillingHeaderDetails: {
+                ...state.workOrder!.Header.BillingHeaderDetails,
+                [field]: value,
+              },
+              ModeFlag: "Update",
+            },
+          },
+        })),
     }),
     { name: "WorkOrderStore", trace: true }
   )

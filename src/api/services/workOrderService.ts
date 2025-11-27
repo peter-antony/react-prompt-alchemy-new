@@ -71,7 +71,7 @@ export const workOrderService = {
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.WORK_ORDER.LIST,
+      API_ENDPOINTS.WORK_ORDER.SELECTION,
       requestBody
     );
 
@@ -128,7 +128,7 @@ export const workOrderService = {
       RequestData: requestPayload,
     };
     const response = await apiClient.post(
-      API_ENDPOINTS.WORK_ORDER.LIST,
+      API_ENDPOINTS.WORK_ORDER.SELECTION,
       requestBody
     );
     return response.data;

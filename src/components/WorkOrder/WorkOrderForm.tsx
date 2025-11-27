@@ -3,12 +3,20 @@ import React, {
   useRef,
   useState,
   useImperativeHandle,
-  useEffect
+  useEffect,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import type { PanelConfig } from "@/types/dynamicPanel";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Copy, BookX, Link, Paperclip, MapPinned } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Copy,
+  BookX,
+  Link,
+  Paperclip,
+  MapPinned,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services";
@@ -42,60 +50,53 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
-  const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
+  const {
+    workOrder,
+    searchWorkOrder,
+    loading,
+    updateHeaderField,
+    updateBillingField,
+  } = useWorkOrderStore();
 
   useEffect(() => {
-  const payload = {
-    context: {
-      MessageID: "12345",
-      MessageType: "Work Order Selection",
-      OUID: 4,
-      Role: "ramcorole",
-      UserID: "ramcouser",
-    },
-    SearchCriteria: {
-      WorkOrderNo: "RWO-000188",
-      AdditionalFilter: [
-        {
-          FilterName: "ServiceType",
-          FilterValue: "Standard",
-        },
-      ],
-    },
-  };
-
-  searchWorkOrder(payload);
-}, [searchWorkOrder]);
-
-useEffect(() => {
-  if (workOrder) {
-    console.log("📌 Final JSON from store:", workOrder);
-    console.log("Header:", workOrder.Header);
-    console.log("Schedule:", workOrder.WorkorderSchedule);
-    console.log("Operations:", workOrder.OperationDetails);
-  }
-}, [workOrder]);
-
-useEffect(() => {
-  if (workOrder?.Header) {
-    setWorkOrderData(workOrder.Header);
-  }
-}, [workOrder]);
-
-
-  const saveToZustand = () => {
-    const mainFormValues = formRef.current?.getFormValues() || {};
-    const locationValues = locationDetailsRef.current?.getFormValues?.() || {};
-    const allValues = {
-      ...mainFormValues,
-      Location: locationValues,
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Work Order Selection",
+        OUID: 4,
+        Role: "ramcorole",
+        UserID: "ramcouser",
+      },
+      SearchCriteria: {
+        WorkOrderNo: "RWO-000188",
+        AdditionalFilter: [
+          {
+            FilterName: "ServiceType",
+            FilterValue: "Standard",
+          },
+        ],
+      },
     };
-    console.log("FORM VALUES:", allValues);
 
-    // useWorkOrderFormStore.getState().setFormObject(allValues);
+    searchWorkOrder(payload);
+  }, [searchWorkOrder]);
 
-    alert("Form saved to Zustand!");
-  };
+  useEffect(() => {
+    if (workOrder?.Header) {
+      setWorkOrderData(workOrder.Header);
+    }
+  }, [workOrder]);
+
+  useEffect(() => {
+    if (workOrder) {
+      console.clear();
+      console.log(
+        "📌 Final JSON from store:",
+        workOrder?.Header?.SupplierContractDescription
+      );
+      console.log("📌 WorkorderSchedule:", workOrder);
+    }
+  }, [workOrder]);
 
   const breadcrumbItems = [
     { label: "Home", href: "/dashboard", active: false },
@@ -149,7 +150,7 @@ useEffect(() => {
       label: "",
       fieldType: "radio",
       width: "full",
-      value: currentOrderType,
+      value: workOrder?.Header?.EquipmentType, // "Wagon" / "Container"
       options: [
         { label: "Wagon", value: "Wagon" },
         { label: "Container", value: "Container" },
@@ -159,10 +160,18 @@ useEffect(() => {
       editable: true,
       order: 1,
       events: {
-        onChange: (val: string) => {
-          if (val === "Wagon" || val === "Container") {
-            setOrderType(val as "Wagon" | "Container");
-          }
+        onChange: (val) => {
+          setOrderType(val); // UI
+          useWorkOrderStore.setState((state) => ({
+            workOrder: {
+              ...state.workOrder,
+              Header: {
+                ...state.workOrder.Header,
+                WorkOrderType: val,
+                EquipmentType: val, 
+              },
+            },
+          }));
         },
       },
     },
@@ -171,12 +180,11 @@ useEffect(() => {
       label: "Wagon/Container ID",
       fieldType: "lazyselect",
       width: "half",
-      value: "awd",
+      value: workOrder?.Header?.EquipmentID, // 🔥 correct bind
       mandatory: true,
       visible: true,
       editable: true,
       order: 2,
-      // dynamic message based on orderType
       fetchOptions:
         currentOrderType === "Wagon"
           ? fetchMaster("Wagon id Init")
@@ -188,7 +196,7 @@ useEffect(() => {
       label: "Supplier Contract No",
       fieldType: "lazyselect",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.SupplierContractDescription,
       mandatory: true,
       visible: true,
       editable: true,
@@ -202,11 +210,11 @@ useEffect(() => {
       id: "CustomerContract",
       label: "Customer Contract No./Business Case",
       fieldType: "lazyselect",
-      value: "",
+      width: "full",
+      value: workOrder?.Header?.CustomerContractID,
       mandatory: false,
       visible: true,
       editable: true,
-      width: "full",
       order: 4,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Sell" },
@@ -218,7 +226,7 @@ useEffect(() => {
       label: "Appointment Date",
       fieldType: "date",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.AppointmentDate,
       mandatory: false,
       visible: true,
       editable: true,
@@ -230,7 +238,7 @@ useEffect(() => {
       label: "Cluster/Market",
       fieldType: "lazyselect",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.Cluster,
       mandatory: false,
       visible: true,
       editable: true,
@@ -243,7 +251,7 @@ useEffect(() => {
       label: "Product",
       fieldType: "lazyselect",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.ProductID,
       mandatory: false,
       visible: true,
       editable: true,
@@ -256,7 +264,7 @@ useEffect(() => {
       label: "UN Code",
       fieldType: "lazyselect",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.UNCodeID,
       mandatory: false,
       visible: true,
       editable: true,
@@ -269,7 +277,7 @@ useEffect(() => {
       label: "Load Type",
       fieldType: "radio",
       width: "half",
-      value: "BUY",
+      value: workOrder?.Header?.LoadType?.IsLoaded === "1" ? "BUY" : "SELL",
       options: [
         { label: "Loaded", value: "BUY" },
         { label: "Empty", value: "SELL" },
@@ -278,13 +286,30 @@ useEffect(() => {
       visible: true,
       editable: true,
       order: 10,
+      events: {
+        onChange: (val) => {
+          useWorkOrderStore.setState((state) => ({
+            workOrder: {
+              ...state.workOrder,
+              Header: {
+                ...state.workOrder.Header,
+                LoadType: val,
+                ModeFlag:
+                  state.workOrder.Header.ModeFlag === "NoChange"
+                    ? "Update"
+                    : state.workOrder.Header.ModeFlag,
+              },
+            },
+          }));
+        },
+      },
     },
     Hazardous: {
       id: "Hazardous",
       label: "Hazardous",
       fieldType: "switch",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.Hazardous === "1",
       mandatory: false,
       visible: true,
       editable: true,
@@ -296,7 +321,7 @@ useEffect(() => {
       label: "Event Date",
       fieldType: "date",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.EventDate,
       mandatory: false,
       visible: true,
       editable: true,
@@ -308,7 +333,7 @@ useEffect(() => {
       label: "Place Of Event",
       fieldType: "lazyselect",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.PlaceOfEventID,
       mandatory: false,
       visible: true,
       editable: true,
@@ -326,15 +351,32 @@ useEffect(() => {
       editable: true,
       order: 14,
       icon: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M5 6H11M5 9H9" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 6H11M5 9H9"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       ),
       events: {
         onClick: (event, value) => {
           console.log("Billing Details icon clicked", event, value);
-          
         },
       },
     },
@@ -343,29 +385,32 @@ useEffect(() => {
       label: "Accepted By Forwardis",
       fieldType: "switch",
       width: "full",
-      value: "",
+      value:
+        workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1",
       mandatory: true,
       visible: true,
       editable: true,
       order: 15,
     },
+
     ReInvoiceCost: {
       id: "ReInvoiceCost",
       label: "Re-Invoice Cost",
       fieldType: "switch",
       width: "full",
-      value: "",
+      value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost === "1",
       mandatory: true,
       visible: true,
       editable: true,
       order: 16,
     },
+
     InvoiceTo: {
       id: "InvoiceTo",
       label: "Invoice To",
       fieldType: "lazyselect",
       width: "full",
-      value: "",
+      value: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
       mandatory: false,
       visible: true,
       editable: true,
@@ -378,7 +423,7 @@ useEffect(() => {
       label: "Financial Comments",
       fieldType: "textarea",
       width: "full",
-      value: "",
+      value: workOrder?.Header?.BillingHeaderDetails?.FinancialComments,
       mandatory: false,
       visible: true,
       editable: true,
@@ -395,9 +440,27 @@ useEffect(() => {
       editable: true,
       order: 19,
       icon: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M5 6H11M5 9H9" stroke="#475467" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 6H11M5 9H9"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       ),
       events: {
@@ -413,117 +476,126 @@ useEffect(() => {
       label: "End Date",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.EndDate,
       mandatory: false,
-      visible: true, 
+      visible: true,
       editable: false,
       order: 20,
     },
+
     User: {
       id: "User",
       label: "User",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.User,
       mandatory: false,
-      visible: true, 
+      visible: true,
       editable: false,
       order: 21,
     },
+
     NextRevision: {
       id: "NextRevision",
       label: "Next Revision",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.NextRevisionDate,
       mandatory: false,
-      visible: true, 
+      visible: true,
       editable: false,
       order: 22,
     },
+
     PlaceOfRevision: {
       id: "PlaceOfRevision",
       label: "Place Of Revision",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.PlaceOfRevisionDescription,
       mandatory: false,
-      visible: true, 
+      visible: true,
       editable: false,
       order: 23,
     },
+
     QCUserDefined1: {
-      id: 'QCUserDefined1',
-      label: 'QC Userdefined 1',
-      fieldType: 'inputdropdown',
-      width: 'half',
-      value: '', // <-- Set default dropdown value here
-      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      id: "QCUserDefined1",
+      label: "QC Userdefined 1",
+      fieldType: "inputdropdown",
+      width: "half",
+      value: {
+        dropdown: workOrder?.Header?.QC1Code,
+        input: workOrder?.Header?.QC1Value,
+      },
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 24,
-      maxLength: 255,
-      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
+
     QCUserDefined2: {
-      id: 'QCUserDefined2',
-      label: 'QC Userdefined 2',
-      fieldType: 'inputdropdown',
-      width: 'half',
-      value: '', // <-- Set default dropdown value here
-      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      id: "QCUserDefined2",
+      label: "QC Userdefined 2",
+      fieldType: "inputdropdown",
+      width: "half",
+      value: {
+        dropdown: workOrder?.Header?.QC2Code,
+        input: workOrder?.Header?.QC2Value,
+      },
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 25,
-      maxLength: 255,
-      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
+
     QCUserDefined3: {
-      id: 'QCUserDefined3',
-      label: 'QC Userdefined 3',
-      fieldType: 'inputdropdown',
-      width: 'half',
-      value: '', // <-- Set default dropdown value here
-      // value: { dropdown: qcList1[0]?.id || '', input: '' }, // <-- Set default dropdown value here
+      id: "QCUserDefined3",
+      label: "QC Userdefined 3",
+      fieldType: "inputdropdown",
+      width: "half",
+      value: {
+        dropdown: workOrder?.Header?.QC3Code,
+        input: workOrder?.Header?.QC3Value,
+      },
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 26,
-      maxLength: 255,
-      options: qcList1?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
+
     Remarks1: {
       id: "Remarks1",
       label: "Remarks 1",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.Remarks1,
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 27,
     },
+
     Remarks2: {
       id: "Remarks2",
       label: "Remarks 2",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.Remarks2,
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 28,
     },
+
     Remarks3: {
       id: "Remarks3",
       label: "Remarks 3",
       fieldType: "text",
       width: "half",
-      value: "",
+      value: workOrder?.Header?.Remarks3,
       mandatory: false,
-      visible: showMoreDetails, // Controlled by showMoreDetails state
+      visible: showMoreDetails,
       editable: true,
       order: 29,
     },
@@ -621,70 +693,129 @@ useEffect(() => {
   };
 
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`;
-  const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+  const buttonCancel =
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
 
   return (
-    <AppLayout>
-      <div className="main-content-h bg-gray-100">
-        <div className="p-4 px-6 ">
-          <div className="hidden md:block">
-            <Breadcrumb items={breadcrumbItems} />
-          </div>
-
-          <div className="flex gap-4">
-            {/* LEFT SECTION */}
-            <div className="lg:col-span-1 w-2/6">
-              <div className="bg-white rounded-lg border border-gray-200">
-                <div className="orderFormScroll p-4">
-                  <DynamicPanel
-                    ref={formRef}
-                    panelId="WorkOrder"
-                    panelTitle="Work Order Details"
-                    // pass current orderType so config is reactive
-                    panelConfig={workOrderPanelConfig(orderType)}
-                    initialData={workOrderData}
-                    panelSubTitle="Work Order Info"
-                    className="my-custom-workorder-panel"
-                  />
-                </div>
-
-                {/* Buttons Row */}
-                <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200">
-                  
-                </div>
+    <>
+      {loading ? (
+        <>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
+              <div className="text-sm text-gray-600">
+                Loading equipment data...
               </div>
             </div>
-            {/* <Button
+          </div>
+        </>
+      ) : (
+        <AppLayout>
+          <div className="main-content-h bg-gray-100">
+            <div className="p-4 px-6 ">
+              <div className="hidden md:block">
+                <Breadcrumb items={breadcrumbItems} />
+              </div>
+
+              <div className="flex gap-4">
+                {/* LEFT SECTION */}
+                <div className="lg:col-span-1 w-2/6">
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="orderFormScroll p-4">
+                      <DynamicPanel
+                        ref={formRef}
+                        panelId="WorkOrder"
+                        panelTitle="Work Order Details"
+                        panelConfig={workOrderPanelConfig(orderType)}
+                        initialData={workOrder?.Header}
+                        panelSubTitle="Work Order Info"
+                        className="my-custom-workorder-panel"
+                        onDataChange={(updatedHeader) => {
+                          // Mapping for lazyselect values
+                          if (updatedHeader.WagonCondainterID) {
+                            const [id, desc] =
+                              updatedHeader.WagonCondainterID.split(" || ");
+                            updatedHeader.EquipmentID = id;
+                            updatedHeader.EquipmentDescription = desc;
+                          }
+
+                          if (updatedHeader.SuplierContract) {
+                            const [id, desc] =
+                              updatedHeader.SuplierContract.split(" || ");
+                            updatedHeader.SupplierContractID = id;
+                            updatedHeader.SupplierContractDescription = desc;
+                          }
+
+                          if (updatedHeader.CustomerContract) {
+                            const [id, desc] =
+                              updatedHeader.CustomerContract.split(" || ");
+                            updatedHeader.CustomerContractID = id;
+                            updatedHeader.CustomerContractDescription = desc;
+                          }
+
+                          // Update store
+                          useWorkOrderStore.setState((state) => ({
+                            workOrder: {
+                              ...state.workOrder,
+                              Header: {
+                                ...state.workOrder.Header,
+                                ...updatedHeader,
+                                ModeFlag: "Update", // 🔥 IMPORTANT
+                              },
+                            },
+                          }));
+                        }}
+                      />
+                    </div>
+                    <button
+                      className="bg-green-600 text-white px-4 py-2 rounded"
+                      onClick={() => {
+                        const payload = useWorkOrderStore.getState().workOrder;
+                        console.log(
+                          "🚀 FINAL PAYLOAD TO SAVE:",
+                          JSON.stringify(payload, null, 2)
+                        );
+                        alert("Check console for payload!");
+                      }}
+                    >
+                      Debug Payload
+                    </button>
+
+                    {/* Buttons Row */}
+                    <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200"></div>
+                  </div>
+                </div>
+                {/* <Button
               className=" mt-3 bg-blue-600 text-white"
               onClick={saveToZustand}
             >
               Save Work Order
             </Button> */}
 
-            {/* RIGHT SECTION */}
-            <div className="lg:col-span-1 w-4/6">
-              <div className="bg-white rounded-lg border border-gray-200">
-
-              </div>
-              <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
-                <div className="">
-                <DynamicPanel
-                  ref={locationDetailsRef}
-                  panelId="LocationPanel"
-                  panelTitle="Location Details"
-                  panelIcon={<MapPinned className="w-5 h-5 text-blue-500" />}
-                  panelConfig={locationPanelConfig}
-                  collapsible={true}
-                  initialData={workOrderData?.Location || {}}
-                  onDataChange={(data) => {
-                    setWorkOrderData(prev => ({
-                      ...prev,
-                      Location: data
-                    }));
-                  }}
-                />
-                </div>
-                {/* <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                {/* RIGHT SECTION */}
+                <div className="lg:col-span-1 w-4/6">
+                  <div className="bg-white rounded-lg border border-gray-200"></div>
+                  <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
+                    <div className="">
+                      <DynamicPanel
+                        ref={locationDetailsRef}
+                        panelId="LocationPanel"
+                        panelTitle="Location Details"
+                        panelIcon={
+                          <MapPinned className="w-5 h-5 text-blue-500" />
+                        }
+                        panelConfig={locationPanelConfig}
+                        collapsible={true}
+                        initialData={workOrderData?.Location || {}}
+                        onDataChange={(data) => {
+                          setWorkOrderData((prev) => ({
+                            ...prev,
+                            Location: data,
+                          }));
+                        }}
+                      />
+                    </div>
+                    {/* <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                   <Plus className="w-10 h-10 text-blue-500" />
                 </div>
 
@@ -702,129 +833,125 @@ useEffect(() => {
                 >
                   Add
                 </Button> */}
-              </div>
-            </div>
-          
-          </div>
-
-          <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-            <div className="flex items-center gap-4">
-              
-            </div>
-            <div className='flex items-center gap-4'>
-              <button className={buttonCancel}>
-                Cancel
-              </button>
-              <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                Save
-              </button>
-              <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                Amend
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <SideDrawer
-        isOpen={wagonMoreDetails}
-        onClose={closeWagonMoreDEtails}
-        title="irjgihgie"
-        width="30%"
-        isBack={false}
-      >
-        {/* Fix applied here */}
-        <div className="flex flex-col h-full">
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="border-b p-6 bg-[#F8F9FC] text-sm">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                {[
-                  ["Creation Date", "15-Mar-2025 10:00:00 AM"],
-                  ["Created By", "William Joe"],
-                  ["Modification Date", "15-Mar-2025 10:00:00 AM"],
-                  ["Modified By", "Andrewson"],
-                  ["End Date", "15-Sep-2025"],
-                  ["User", "A. Mussy"],
-                  ["Next Revision", "15-Mar-2027"],
-                  ["Place of Revision", "LEU (RO)"],
-                ].map(([label, value], i) => (
-                  <div key={i}>
-                    <p className="text-xs text-gray-500 mb-1">{label}</p>
-                    <p className="text-[13px] font-semibold text-gray-800">
-                      {value}
-                    </p>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+                <div className="flex items-center gap-4"></div>
+                <div className="flex items-center gap-4">
+                  <button className={buttonCancel}>Cancel</button>
+                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                    Save
+                  </button>
+                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                    Amend
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+          <SideDrawer
+            isOpen={wagonMoreDetails}
+            onClose={closeWagonMoreDEtails}
+            title="irjgihgie"
+            width="30%"
+            isBack={false}
+          >
+            {/* Fix applied here */}
+            <div className="flex flex-col h-full">
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="border-b p-6 bg-[#F8F9FC] text-sm">
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+                    {[
+                      ["Creation Date", "15-Mar-2025 10:00:00 AM"],
+                      ["Created By", "William Joe"],
+                      ["Modification Date", "15-Mar-2025 10:00:00 AM"],
+                      ["Modified By", "Andrewson"],
+                      ["End Date", "15-Sep-2025"],
+                      ["User", "A. Mussy"],
+                      ["Next Revision", "15-Mar-2027"],
+                      ["Place of Revision", "LEU (RO)"],
+                    ].map(([label, value], i) => (
+                      <div key={i}>
+                        <p className="text-xs text-gray-500 mb-1">{label}</p>
+                        <p className="text-[13px] font-semibold text-gray-800">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="px-6 py-4 bg-[#F8F9FC]">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    QC Userdefined {n}
-                  </label>
+                <div className="px-6 py-4 bg-[#F8F9FC]">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        QC Userdefined {n}
+                      </label>
 
-                  <div className="flex items-center">
-                    <div className="relative w-16">
-                      <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option>QC</option>
-                        <option>Value 1</option>
-                        <option>Value 2</option>
-                      </select>
-                      <svg
-                        className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <div className="flex items-center">
+                        <div className="relative w-16">
+                          <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option>QC</option>
+                            <option>Value 1</option>
+                            <option>Value 2</option>
+                          </select>
+                          <svg
+                            className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+
+                        <input
+                          type="text"
+                          placeholder="Enter Value"
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
                     </div>
+                  ))}
 
-                    <input
-                      type="text"
-                      placeholder="Enter Value"
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Remarks {n}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter Remarks"
+                        className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
 
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Remarks {n}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter Remarks"
-                    className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              ))}
+              {/* Fixed footer */}
+              <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
+                <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
+                  Cancel
+                </button>
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  Save
+                </button>
+              </div>
             </div>
-          </div>
+          </SideDrawer>
 
-          {/* Fixed footer */}
-          <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
-            <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
-              Cancel
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Save
-            </button>
-          </div>
-        </div>
-      </SideDrawer>
-
-      <WorkOrderOperationDetails 
-        onClose={closeOperationDetails} 
-        value={showOperstionDetails} 
-      />
-
-    </AppLayout>
+          <WorkOrderOperationDetails
+            onClose={closeOperationDetails}
+            value={showOperstionDetails}
+          />
+        </AppLayout>
+      )}
+    </>
   );
 });
 
