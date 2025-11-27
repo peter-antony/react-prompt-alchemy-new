@@ -919,7 +919,7 @@ export const TripExecutionHub = () => {
     const baseUrl = window.location.origin;
     console.log("baseUrl ====", baseUrl);
     const pagePath = "/app/rvw/integration/deep-link";
-    const queryParams = "ouId=" + userContext.ouId + "&roleName=" + userContext.roleName + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
+    const queryParams = "ouId=" + userContext.ouId + "&roleName=" + "wagonallocation" + "&activityName=tms_triplog&componentName=tms_execution&ilboCode=wagonallocationtotrip&exchangeData=txttextsearch%23%23oldvalue";
     const finalUrl = `${baseUrl}${pagePath}?${queryParams}`;
     console.log("finalUrl ----", finalUrl);
     window.open(finalUrl, "_blank");
