@@ -10,6 +10,8 @@ import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { toast } from '@/hooks/use-toast';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
+import { SmartEquipmentCalendar } from '@/components/SmartEquipmentCalendar';
+import { EquipmentItem, EquipmentCalendarEvent } from '@/types/equipmentCalendar';
 
 interface ResourceSelectionDrawerProps {
   isOpen: boolean;
@@ -412,6 +414,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
   const [rowTripId, setRowTripId] = useState<any>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list'); // View mode state
 
   // Get configuration for current resource type
   const config = resourceConfigs[resourceType];
@@ -645,7 +648,21 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       console.log("Drawer opened with no selected resources - cleared selections");
     }
   }, [isOpen, selectedResourcesRq, currentResourceData, resourceType]);
-  
+
+  // Reset viewMode to 'list' when drawer opens or resource type changes
+  useEffect(() => {
+    if (isOpen) {
+      // Always reset to list view when drawer opens
+      // For non-Equipment types, always show list view
+      // For Equipment, default to list view but allow switching to calendar
+      if (resourceType !== 'Equipment') {
+        setViewMode('list');
+      } else {
+        // For Equipment, reset to list when drawer opens (fresh start)
+        setViewMode('list');
+      }
+    }
+  }, [isOpen, resourceType]);
 
   // Load resource data only if no prop data is provided
   useEffect(() => {
@@ -952,6 +969,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     
     // Pass both original selected items and formatted data array to parent
     onAddResource(formattedDataArray);
+    setViewMode('list');
     onClose();
   };
 
@@ -1261,6 +1279,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           });
           onUpdateTripInformation(updatedTripInformation);
           onAddResource(formattedDataArray);
+          setViewMode('list');
           onClose();
           console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
         } else {
@@ -1287,30 +1306,156 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   };
 
   // Conditionally build footer buttons based on saveButtonEnableFlag
-  const footerButtons = saveButtonEnableFlag
-    ? [
-        {
-          label: 'Save',
-          variant: 'default' as const,
-          action: handleSaveResource,
-          disabled: selectedRowIds.size === 0
-        }
-      ]
-    : [
-        {
-          label: config.buttonText,
-          variant: 'default' as const,
-          action: handleAddResource,
-          disabled: selectedRowIds.size === 0
-        }
-      ];
+  const footerButtons = saveButtonEnableFlag ? [
+    {
+      label: 'Save',
+      variant: 'default' as const,
+      action: handleSaveResource,
+      disabled: selectedRowIds.size === 0
+    }
+  ]
+: [
+    {
+      label: config.buttonText,
+      variant: 'default' as const,
+      action: handleAddResource,
+      disabled: selectedRowIds.size === 0
+    }
+  ];
+
+  // Sample equipment data
+  const equipments: EquipmentItem[] = [
+    { id: 'eq1', title: 'W001', supplier: 'ABC Logistics', status: 'available', type: 'Freight', capacity: '50T' },
+    { id: 'eq2', title: 'W002', supplier: 'XYZ Transport', status: 'available', type: 'Passenger', capacity: '80 seats' },
+    { id: 'eq3', title: 'W003', supplier: 'ABC Logistics', status: 'occupied', type: 'Tank', capacity: '40T' },
+    { id: 'eq4', title: 'W004', supplier: 'Delta Movers', status: 'available', type: 'Freight', capacity: '50T' },
+    { id: 'eq5', title: 'W005', supplier: 'XYZ Transport', status: 'occupied', type: 'Freight', capacity: '55T' },
+    { id: 'eq6', title: 'W006', supplier: 'ABC Logistics', status: 'workshop', type: 'Tank', capacity: '45T' },
+    { id: 'eq7', title: 'W007', supplier: 'Gamma Fleet', status: 'available', type: 'Freight', capacity: '50T' },
+    { id: 'eq8', title: 'W008', supplier: 'Delta Movers', status: 'workshop', type: 'Passenger', capacity: '75 seats' },
+  ];
+
+  // Sample events
+  const events: EquipmentCalendarEvent[] = [
+    {
+      id: 'ev1',
+      equipmentId: 'eq1',
+      label: 'Trip to NYC',
+      type: 'trip',
+      start: '2025-11-17T08:00:00',
+      end: '2025-11-17T16:00:00',
+    },
+    {
+      id: 'ev2',
+      equipmentId: 'eq1',
+      label: 'Trip to Boston',
+      type: 'trip',
+      start: '2025-11-18T10:00:00',
+      end: '2025-11-18T18:00:00',
+    },
+    {
+      id: 'ev3',
+      equipmentId: 'eq2',
+      label: 'Maintenance Check',
+      type: 'maintenance',
+      start: '2025-11-17T09:00:00',
+      end: '2025-11-17T12:00:00',
+    },
+    {
+      id: 'ev4',
+      equipmentId: 'eq2',
+      label: 'Trip to Chicago',
+      type: 'trip',
+      start: '2025-11-18T06:00:00',
+      end: '2025-11-19T14:00:00',
+    },
+    {
+      id: 'ev5',
+      equipmentId: 'eq3',
+      label: 'Hold for Inspection',
+      type: 'hold',
+      start: '2025-11-17T08:00:00',
+      end: '2025-11-17T17:00:00',
+    },
+    {
+      id: 'ev6',
+      equipmentId: 'eq4',
+      label: 'Scheduled Maintenance',
+      type: 'maintenance',
+      start: '2025-11-17T08:00:00',
+      end: '2025-11-19T17:00:00',
+    },
+    {
+      id: 'ev7',
+      equipmentId: 'eq5',
+      label: 'Trip to LA',
+      type: 'trip',
+      start: '2025-11-17T12:00:00',
+      end: '2025-11-20T15:00:00',
+    },
+    {
+      id: 'ev8',
+      equipmentId: 'eq6',
+      label: 'Trip to Seattle',
+      type: 'trip',
+      start: '2025-11-18T07:00:00',
+      end: '2025-11-19T19:00:00',
+    },
+    {
+      id: 'ev9',
+      equipmentId: 'eq7',
+      label: 'Trip to Portland',
+      type: 'trip',
+      start: '2025-11-19T08:00:00',
+      end: '2025-11-20T16:00:00',
+    },
+    {
+      id: 'ev10',
+      equipmentId: 'eq8',
+      label: 'Oil Change',
+      type: 'maintenance',
+      start: '2025-11-17T10:00:00',
+      end: '2025-11-17T14:00:00',
+    },
+  ];
+
+  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const [startDate, setStartDate] = useState(new Date('2025-11-17'));
+  const [showHourView, setShowHourView] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
+
+  const handleEquipmentClick = (equipment: EquipmentItem) => {
+    toast({
+      title: "✅ Equipment Selected Successfully",
+      description: `Supplier: ${equipment.supplier} | Status: ${equipment.status}`,
+      variant: "default",
+    });
+  };
+
+  const handleAddToTrip = (selectedIds: string[]) => {
+    toast({
+      title: "✅ Equipment Added to Trip Successfully",
+      description: `Adding ${selectedIds.length} wagon(s) to CO/Trip`,
+      variant: "default",
+    });
+    setSelectedEquipments([]);
+  };
+
+  const handleBarClick = (event: EquipmentCalendarEvent) => {
+    toast({
+      title: "✅ Equipment Bar Clicked Successfully",
+      description: `Type: ${event.type} | Equipment: ${event.equipmentId}`,
+      variant: "default",
+    });
+  };
 
   return (
     <SideDrawer
       isOpen={isOpen}
       onClose={onClose}
       title={config.title}
-      width="75%"
+      width="85%"
       slideDirection="right"
       showFooter={true}
       footerButtons={footerButtons}
@@ -1345,118 +1490,178 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
         {/* Resource Section */}
         <div className="space-y-4 px-4">
-          {/* Resource Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3>
-               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                 {currentResourceData.length}
-               </Badge>
-               {/* {saveButtonEnableFlag && (
-                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                   Add Resources Enabled
-                 </Badge>
-               )} */}
-            </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 pr-10"
-              />
-            </div>
-          </div>
-
-          {/* Resource Grid */}
-          <div className="border rounded-lg overflow-hidden">
-            {selectedRowObjects.length > 0 && (
-              <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
-                <div className="text-sm text-blue-700">
-                  <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
-                  <span className="ml-2 text-xs">
-                    ({selectedRowObjects.map(row => row[getIdField()]).join(', ')})
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedRows(new Set());
-                    setSelectedRowIds(new Set());
-                    setSelectedRowObjects([]);
-                    setRowTripId([]);
-                  }}
-                  title="Clear row selection"
-                  className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+          {/* View Toggle - Only for Equipment */}
+          {resourceType === 'Equipment' && (
+            <div className="flex items-center justify-start mb-2">
+              <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 shadow-sm">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  <X className="h-3 w-3" />
-                </Button>
+                  List View
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-all ${
+                    viewMode === 'calendar'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Calendar View
+                </button>
               </div>
-            )}
-            
-            <style>{`
-              ${Array.from(selectedRowIds).map((rowId) => {
-                return `
-                tr[data-row-id="${rowId}"] {
-                  background-color: #eff6ff !important;
-                  border-left: 4px solid #3b82f6 !important;
-                }
-                tr[data-row-id="${rowId}"]:hover {
-                  background-color: #dbeafe !important;
-                }
-              `;
-              }).join('\n')}
-            `}</style>
-            
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
-                  <div className="text-sm text-gray-600">Loading {config.gridTitle.toLowerCase()} data...</div>
+            </div>
+          )}
+
+          {viewMode === 'list' ? (
+            <>
+              {/* Resource Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold text-gray-900">{config.gridTitle}</h3>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    {currentResourceData.length}
+                  </Badge>
+                  {/* {saveButtonEnableFlag && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                      Add Resources Enabled
+                    </Badge>
+                  )} */}
+                </div>
+                
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-64 pr-10"
+                  />
                 </div>
               </div>
-            ) : (
-              <SmartGridWithGrouping
-                columns={config.columns}
-                data={currentResourceData}
-                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                showGroupingDropdown={true}
-                editableColumns={['plannedStartEndDateTime']}
-                paginationMode="pagination"
-                selectedRows={selectedRows}
-                onSelectionChange={handleRowSelection}
-                onRowClick={handleRowClick}
-                hideToolbar={true}
-                onClearAll={() => {
-                  setSelectedRows(new Set());
-                  setSelectedRowIds(new Set());
-                  setSelectedRowObjects([]);
-                  setRowTripId([]);
-                }}
-                rowClassName={(row: any, index: number) => {
-                  const idField = getIdField();
-                  return selectedRowIds.has(row[idField]) ? 'selected' : '';
-                }}
-                showDefaultConfigurableButton={false}
-                gridTitle="Planning Equipments"
-                recordCount={currentResourceData.length}
-                showCreateButton={true}
-                searchPlaceholder="Search"
-                clientSideSearch={true}
-                externalSearchQuery={searchTerm}
-                showSubHeaders={false}
-                hideAdvancedFilter={true}
-                hideCheckboxToggle={true}
-                showFilterTypeDropdown={false}
-                showServersideFilter={false}
-                userId="current-user"
-              />
-            )}
-          </div>
+
+              {/* Resource Grid */}
+              <div className="border rounded-lg overflow-hidden">
+                {selectedRowObjects.length > 0 && (
+                  <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
+                    <div className="text-sm text-blue-700">
+                      <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
+                      <span className="ml-2 text-xs">
+                        ({selectedRowObjects.map(row => row[getIdField()]).join(', ')})
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedRows(new Set());
+                        setSelectedRowIds(new Set());
+                        setSelectedRowObjects([]);
+                        setRowTripId([]);
+                      }}
+                      title="Clear row selection"
+                      className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+                
+                <style>{`
+                  ${Array.from(selectedRowIds).map((rowId) => {
+                    return `
+                    tr[data-row-id="${rowId}"] {
+                      background-color: #eff6ff !important;
+                      border-left: 4px solid #3b82f6 !important;
+                    }
+                    tr[data-row-id="${rowId}"]:hover {
+                      background-color: #dbeafe !important;
+                    }
+                  `;
+                  }).join('\n')}
+                `}</style>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
+                      <div className="text-sm text-gray-600">Loading {config.gridTitle.toLowerCase()} data...</div>
+                    </div>
+                  </div>
+                ) : (
+                  <SmartGridWithGrouping
+                    columns={config.columns}
+                    data={currentResourceData}
+                    groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                    showGroupingDropdown={true}
+                    editableColumns={['plannedStartEndDateTime']}
+                    paginationMode="pagination"
+                    selectedRows={selectedRows}
+                    onSelectionChange={handleRowSelection}
+                    onRowClick={handleRowClick}
+                    hideToolbar={true}
+                    onClearAll={() => {
+                      setSelectedRows(new Set());
+                      setSelectedRowIds(new Set());
+                      setSelectedRowObjects([]);
+                      setRowTripId([]);
+                    }}
+                    rowClassName={(row: any, index: number) => {
+                      const idField = getIdField();
+                      return selectedRowIds.has(row[idField]) ? 'selected' : '';
+                    }}
+                    showDefaultConfigurableButton={false}
+                    gridTitle="Planning Equipments"
+                    recordCount={currentResourceData.length}
+                    showCreateButton={true}
+                    searchPlaceholder="Search"
+                    clientSideSearch={true}
+                    externalSearchQuery={searchTerm}
+                    showSubHeaders={false}
+                    hideAdvancedFilter={true}
+                    hideCheckboxToggle={true}
+                    showFilterTypeDropdown={false}
+                    showServersideFilter={false}
+                    userId="current-user"
+                  />
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Calendar View - Empty div for now (Schedule component will be added later) */}
+              <div className="flex-1 overflow-hidden">
+                <SmartEquipmentCalendar
+                  equipments={equipments}
+                  events={events}
+                  view={view}
+                  startDate={startDate}
+                  showHourView={showHourView}
+                  statusFilter={statusFilter}
+                  selectedEquipments={selectedEquipments}
+                  onViewChange={setView}
+                  onShowHourViewChange={setShowHourView}
+                  onStatusFilterChange={setStatusFilter}
+                  onSelectionChange={setSelectedEquipments}
+                  onAddToTrip={handleAddToTrip}
+                  onBarClick={handleBarClick}
+                  onEquipmentClick={handleEquipmentClick}
+                  enableDrag={false}
+                />
+              </div>
+              {/* <div className="flex items-center justify-center py-12 min-h-[400px]">
+                <div className="text-sm text-gray-500">Calendar View - Schedule component will be added here</div>
+              </div> */}
+            </>
+          )}
+          
+          
         </div>
       </div>
     </SideDrawer>
