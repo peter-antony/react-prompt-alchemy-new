@@ -124,7 +124,7 @@ export function FilterSystem({
         await Promise.all(promises);
       }
 
-      const newSet = await api.saveUserFilterSet(userId, name, activeFilters, isDefault);
+      const newSet = await api.saveUserFilterSet(userId, name, activeFilters, isDefault, gridId);
       setFilterSets(prev => [...prev.map(set => ({ ...set, isDefault: false })), newSet]);
 
       toast({

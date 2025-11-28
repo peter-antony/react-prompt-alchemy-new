@@ -22,10 +22,11 @@ export const filterService = {
   },
 
   // Save new filter preset
-  saveUserFilterSet: async (userId: string, name: string, filters: Record<string, any>, isDefault: boolean = false): Promise<FilterPreset> => {
+  saveUserFilterSet: async (userId: string, name: string, filters: Record<string, any>, isDefault: boolean = false, gridId: string = 'default'): Promise<FilterPreset> => {    
     const data: FilterPresetInput = {
       name,
-      gridId: 'default', // This should be passed as parameter in real implementation
+      // gridId: 'default', // This should be passed as parameter in real implementation
+      gridId,
       filters,
       isDefault,
     };
@@ -35,7 +36,7 @@ export const filterService = {
       return response.data.data;
     } catch (error) {
       console.warn('Failed to save filter set to server, using localStorage fallback:', error);
-      return saveLocalFilterSet(userId, name, filters, isDefault);
+      return saveLocalFilterSet(userId, gridId, name, filters, isDefault);
     }
   },
 
@@ -86,8 +87,8 @@ function getLocalFilterSets(userId: string, gridId: string): FilterPreset[] {
   return stored ? JSON.parse(stored) : [];
 }
 
-function saveLocalFilterSet(userId: string, name: string, filters: Record<string, any>, isDefault: boolean): FilterPreset {
-  const gridId = 'default';
+function saveLocalFilterSet(userId: string, gridId: string, name: string, filters: Record<string, any>, isDefault: boolean): FilterPreset {
+  // const gridId = 'default';
   const key = `filterSets_${userId}_${gridId}`;
   const existing = getLocalFilterSets(userId, gridId);
   

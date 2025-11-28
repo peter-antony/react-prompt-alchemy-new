@@ -192,7 +192,7 @@ export function ServersideFilter({
         await Promise.all(promises);
       }
 
-      const newSet = await api.saveUserFilterSet(userId, name, pendingFilters, isDefault);
+      const newSet = await api.saveUserFilterSet(userId, name, pendingFilters, isDefault, gridId);
       setFilterSets(prev => [...prev.map(set => ({ ...set, isDefault: false })), newSet]);
       
       toast({
