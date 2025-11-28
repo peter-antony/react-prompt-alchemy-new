@@ -1837,6 +1837,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
                 showCreateButton={true}
                 searchPlaceholder="Search"
                 clientSideSearch={true}
+                externalSearchQuery={externalSearchQuery}
                 showSubHeaders={false}
                 hideAdvancedFilter={true}
                 hideCheckboxToggle={true}
