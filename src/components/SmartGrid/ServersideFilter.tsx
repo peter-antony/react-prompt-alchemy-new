@@ -110,12 +110,31 @@ export function ServersideFilter({
     }
   }, [serverFilters, initialVisibleFields, initialFieldOrder]);
 
+  const loadFilterSets = useCallback(async () => {
+    if (!api) return;
+    
+    try {
+      setLoading(true);
+      const sets = await api.getUserFilterSets(userId, gridId);
+      setFilterSets(sets);
+    } catch (error) {
+      console.error('Failed to load filter sets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load saved filter sets",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [api, userId, gridId, toast]);
+
   // Load saved filter sets on mount
   useEffect(() => {
     if (api && userId) {
       loadFilterSets();
     }
-  }, [api, userId, gridId]);
+  }, [api, userId, gridId, loadFilterSets]);
 
   // Apply default filter set on load
   useEffect(() => {
@@ -138,24 +157,53 @@ export function ServersideFilter({
     }
   }, [pendingFilters, onFiltersChange]);
 
-  const loadFilterSets = async () => {
-    if (!api) return;
+  // const loadFilterSets = async () => {
+  //   if (!api) return;
     
-    try {
-      setLoading(true);
-      const sets = await api.getUserFilterSets(userId, gridId);
-      setFilterSets(sets);
-    } catch (error) {
-      console.error('Failed to load filter sets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load saved filter sets",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     const sets = await api.getUserFilterSets(userId, gridId);
+  //     setFilterSets(sets);
+  //   } catch (error) {
+  //     console.error('Failed to load filter sets:', error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to load saved filter sets",
+  //       variant: "destructive"
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Listen for localStorage changes (storage event only fires from other tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      const key = `filterSets_${userId}_${gridId}`;
+      if (e.key === key || e.key === null) {
+        loadFilterSets();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [userId, gridId, loadFilterSets]);
+
+  // Poll localStorage to detect changes in the same tab (e.g., manual DevTools edits)
+  useEffect(() => {
+    const key = `filterSets_${userId}_${gridId}`;
+    let lastValue = localStorage.getItem(key);
+
+    const pollInterval = setInterval(() => {
+      const currentValue = localStorage.getItem(key);
+      if (currentValue !== lastValue) {
+        lastValue = currentValue;
+        loadFilterSets();
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(pollInterval);
+  }, [userId, gridId, loadFilterSets]);
 
   const handleFilterChange = useCallback((columnKey: string, value: FilterValue | undefined) => {
     setPendingFilters(prev => {

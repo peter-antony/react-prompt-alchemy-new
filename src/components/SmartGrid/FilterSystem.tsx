@@ -82,6 +82,22 @@ export function FilterSystem({
     }
   };
 
+  // Poll localStorage to detect changes in the same tab (e.g., manual DevTools edits)
+  useEffect(() => {
+    const key = `filterSets_${userId}_${gridId}`;
+    let lastValue = localStorage.getItem(key);
+
+    const pollInterval = setInterval(() => {
+      const currentValue = localStorage.getItem(key);
+      if (currentValue !== lastValue) {
+        lastValue = currentValue;
+        loadFilterSets();
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(pollInterval);
+  }, [userId, gridId, loadFilterSets]);
+
   const handleFilterChange = useCallback((columnKey: string, value: FilterValue | undefined) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
