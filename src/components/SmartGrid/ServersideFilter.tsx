@@ -592,7 +592,7 @@ export function ServersideFilter({
 
       {/* Filter Panel - Always expanded when visible */}
       <div className="bg-white border rounded shadow-sm mb-4">
-        <div className="p-3">
+        <div className="p-3 overflow-auto">
           <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(visibleFields.length, 4)}, 1fr)` }}>
             {renderFilterInputs(serverFilters)}
           </div>

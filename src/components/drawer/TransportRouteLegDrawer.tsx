@@ -605,9 +605,10 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         id: 'LegIDDescription',
         label: 'Leg ID Description',
         fieldType: 'text',
-        value: leg.LegIDDescription?.length > 30
-          ? leg.LegIDDescription.substring(0, 30) + '...'
-          : leg.LegIDDescription,
+        // value: leg.LegIDDescription?.length > 30
+        //   ? leg.LegIDDescription.substring(0, 30) + '...'
+        //   : leg.LegIDDescription,
+        value: leg.LegIDDescription || '',
         tooltip: leg.LegIDDescription || '',
         mandatory: false,
         visible: true,

@@ -81,6 +81,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           <div>
             {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
             <div
+              id={fieldId}
               className="text-[13px] text-gray-700 bg-gray-50 p-2 rounded border h-8 flex items-center w-full"
               title={tooltip ?? (typeof field.value === 'string' ? field.value : '')}
             >
