@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
-import { PanelConfig } from '@/types/dynamicPanel';
+import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { useToast } from '@/hooks/use-toast';
 
 interface TripFormProps {
   // Optional QC lists to avoid duplicate API calls
@@ -22,6 +23,10 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
   const tripExecutionRef = useRef<DynamicPanelRef>(null);
   const { tripData, fetchTrip, updateHeaderField } = manageTripStore();
   const [tripType, setTripType] = useState(tripData?.Header?.IsRoundTrip);
+  const { toast } = useToast();
+
+  // State for Panel Personalization
+  const [panelPersonalizationModeFlag, setPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
 
   // Use props if provided, otherwise use local state
   const [localQcList1, setLocalQcList1] = useState<any>();
@@ -466,6 +471,53 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
     };
   }, [tripData?.Header]); // Include tripData.Header dependency
 
+  // Fetch panel personalization on component mount
+    useEffect(() => {
+      const fetchPanelPersonalization = async () => {
+        try {
+          const personalizationResponse: any = await quickOrderService.getPersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'TripExecution',
+            ComponentName: 'panel-config-current-user-trip-execution-trip-details'
+          });
+  
+          console.log('TripDetails Panel Personalization Response:', personalizationResponse);
+  
+          // Parse and set personalization data to localStorage
+          if (personalizationResponse?.data?.ResponseData) {
+            const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+  
+            if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+              const personalizationData = parsedPersonalization.PersonalizationResult[0];
+  
+              // Set the JsonData to localStorage
+              if (personalizationData.JsonData) {
+                const jsonData = personalizationData.JsonData;
+                localStorage.setItem('panel-config-current-user-trip-execution-trip-details', JSON.stringify(jsonData));
+                console.log('TripDetails Panel Personalization data set to localStorage:', jsonData);
+              }
+              // If we have data, next save should be an Update
+              setPanelPersonalizationModeFlag('Update');
+            } else {
+              // If result is empty array or no result, next save should be Insert
+              console.log('No existing panel personalization found, setting mode to Insert');
+              setPanelPersonalizationModeFlag('Insert');
+            }
+          } else {
+            // If ResponseData is empty/null, next save should be Insert
+            console.log('Empty panel personalization response, setting mode to Insert');
+            setPanelPersonalizationModeFlag('Insert');
+          }
+        } catch (error) {
+          console.error('Failed to load panel personalization:', error);
+          setPanelPersonalizationModeFlag('Insert');
+        }
+      };
+  
+      fetchPanelPersonalization();
+    }, []);
+
   // Debug logging
   useEffect(() => {
     console.log('TripForm: tripData.Header changed:', tripData?.Header);
@@ -621,6 +673,63 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
     console.log('co2List:', co2List);
   }, [qcList1, qcList2, qcList3, co2List]);
 
+  const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
+      const stored = localStorage.getItem(`panel-config-current-user-trip-execution-trip-details`);
+      console.log(`Retrieved config for panel trip-details:`, stored);
+      return stored ? JSON.parse(stored) : null;
+    };
+
+    const saveUserPanelConfig = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+        try {
+          // Save to localStorage first
+          localStorage.setItem(`panel-config-current-user-trip-execution-trip-details`, JSON.stringify(settings));
+          console.log(`Saved config for panel trip-details:`, settings);
+          console.log('====DYNAMIC PANEL SAVE CLICKED====');
+    
+          // Prepare the data to save to the API
+          const preferencesToSave = settings;
+    
+          console.log('Saving TripDetails Panel preferences:', preferencesToSave);
+          console.log('Panel Personalization ModeFlag:', panelPersonalizationModeFlag);
+    
+          const response = await quickOrderService.savePersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'TripExecution',
+            ComponentName: 'panel-config-current-user-trip-execution-trip-details',
+            JsonData: preferencesToSave,
+            IsActive: "1",
+            ModeFlag: panelPersonalizationModeFlag
+          });
+    
+          const apiData = response?.data;
+    
+          if (apiData) {
+            const isSuccess = apiData?.IsSuccess;
+    
+            toast({
+              title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+              description: apiData?.Message,
+              variant: isSuccess ? "default" : "destructive",
+            });
+    
+            // If save was successful and we were in Insert mode, switch to Update mode for future saves
+            if (isSuccess && panelPersonalizationModeFlag === 'Insert') {
+              setPanelPersonalizationModeFlag('Update');
+            }
+          } else {
+            throw new Error("Invalid API response");
+          }
+        } catch (error) {
+          console.error("Failed to save panel preferences:", error);
+          toast({
+            title: "Error",
+            description: "Failed to save panel preferences",
+            variant: "destructive",
+          });
+        }
+      };
+
   return (
     <>
       <DynamicPanel
@@ -630,6 +739,8 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
         panelTitle="Trip Details"
         panelConfig={tripExecutionPanelConfig} // Use the memoized config
         initialData={initialFormData} // Provide initial values for uncontrolled form
+        getUserPanelConfig={getUserPanelConfig}
+        saveUserPanelConfig={saveUserPanelConfig}
       // Removed onDataChange to prevent re-renders
       // Form data will be accessed via ref on save/submit
       />

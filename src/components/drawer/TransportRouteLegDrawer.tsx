@@ -2,7 +2,7 @@ import React, { useState, useRef, useImperativeHandle, forwardRef, useMemo, useE
 import { DynamicPanel } from '@/components/DynamicPanel/DynamicPanel';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { PanelConfig } from '@/types/dynamicPanel';
+import { PanelConfig , PanelSettings } from '@/types/dynamicPanel';
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -113,6 +113,9 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const [QCCode1, setQCCode1] = useState<any[]>([]);
   const { toast } = useToast();
 
+  // states for DynamicPanel Personalization
+  const [panelPersonalizationModeFlag, setPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+
   // Refs for each DynamicPanel
   const dynamicPanelRefs = useRef<{ [key: string]: any }>({});
 
@@ -172,6 +175,53 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const messageTypes = [
     "ManageRouteUpdateCO QC1 Init",
   ]
+
+  // Fetch panel personalization on component mount
+    useEffect(() => {
+      const fetchPanelPersonalization = async () => {
+        try {
+          const personalizationResponse: any = await quickOrderService.getPersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'TransportRouteUpdateCO_LegDetails',
+            ComponentName: 'panel-config-current-user-route-update-co-leg-details'
+          });
+  
+          console.log('RouteUpdateCO Panel Personalization Response:', personalizationResponse);
+  
+          // Parse and set personalization data to localStorage
+          if (personalizationResponse?.data?.ResponseData) {
+            const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+  
+            if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+              const personalizationData = parsedPersonalization.PersonalizationResult[0];
+  
+              // Set the JsonData to localStorage
+              if (personalizationData.JsonData) {
+                const jsonData = personalizationData.JsonData;
+                localStorage.setItem('panel-config-current-user-route-update-co-leg-details', JSON.stringify(jsonData));
+                console.log('RouteUpdateCO Panel Personalization data set to localStorage:', jsonData);
+              }
+              // If we have data, next save should be an Update
+              setPanelPersonalizationModeFlag('Update');
+            } else {
+              // If result is empty array or no result, next save should be Insert
+              console.log('No existing panel personalization found, setting mode to Insert');
+              setPanelPersonalizationModeFlag('Insert');
+            }
+          } else {
+            // If ResponseData is empty/null, next save should be Insert
+            console.log('Empty panel personalization response, setting mode to Insert');
+            setPanelPersonalizationModeFlag('Insert');
+          }
+        } catch (error) {
+          console.error('Failed to load panel personalization:', error);
+          setPanelPersonalizationModeFlag('Insert');
+        }
+      };
+  
+      fetchPanelPersonalization();
+    }, []);
 
   useEffect(() => {
       fetchAll();
@@ -751,6 +801,63 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     };
   };
 
+  const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
+      const stored = localStorage.getItem(`panel-config-current-user-route-update-co-leg-details`);
+      console.log(`Retrieved config for panel route-update-co-leg-details:`, stored);
+      return stored ? JSON.parse(stored) : null;
+    };
+
+    const saveUserPanelConfig = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+        try {
+          // Save to localStorage first
+          localStorage.setItem(`panel-config-current-user-route-update-co-leg-details`, JSON.stringify(settings));
+          console.log(`Saved config for panel route-update-co-leg-details:`, settings);
+          console.log('====DYNAMIC PANEL SAVE CLICKED====');
+    
+          // Prepare the data to save to the API
+          const preferencesToSave = settings;
+    
+          console.log('Saving ROuteUpdateCO Panel preferences:', preferencesToSave);
+          console.log('Panel Personalization ModeFlag:', panelPersonalizationModeFlag);
+    
+          const response = await quickOrderService.savePersonalization({
+            LevelType: 'User',
+            LevelKey: 'ramcouser',
+            ScreenName: 'TransportRouteUpdateCO_LegDetails',
+            ComponentName: 'panel-config-current-user-route-update-co-leg-details',
+            JsonData: preferencesToSave,
+            IsActive: "1",
+            ModeFlag: panelPersonalizationModeFlag
+          });
+    
+          const apiData = response?.data;
+    
+          if (apiData) {
+            const isSuccess = apiData?.IsSuccess;
+    
+            toast({
+              title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+              description: apiData?.Message,
+              variant: isSuccess ? "default" : "destructive",
+            });
+    
+            // If save was successful and we were in Insert mode, switch to Update mode for future saves
+            if (isSuccess && panelPersonalizationModeFlag === 'Insert') {
+              setPanelPersonalizationModeFlag('Update');
+            }
+          } else {
+            throw new Error("Invalid API response");
+          }
+        } catch (error) {
+          console.error("Failed to save panel preferences:", error);
+          toast({
+            title: "Error",
+            description: "Failed to save panel preferences",
+            variant: "destructive",
+          });
+        }
+      };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'INCMPLT':
@@ -930,6 +1037,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                   panelWidth="full"
                   showPreview={false}
                   badgeValue={leg.LegSequence.toString()}
+                  getUserPanelConfig={getUserPanelConfig}
+                  saveUserPanelConfig={saveUserPanelConfig}
                 />
 
                 {/* Trip Details with Badges */}
