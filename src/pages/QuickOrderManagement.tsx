@@ -1351,6 +1351,150 @@ const QuickOrderManagement = () => {
     );
   };
 
+
+  // Helper to fetch filter sets (used internally and exposed via service)
+  const fetchFilterSets = async (userId: string, gridId: string) => {
+    try {
+      console.log(`Fetching filter sets for ${userId} - ${gridId}`);
+      const response: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser', // Should ideally come from user context
+        ScreenName: 'QuickOrderManagement',
+        ComponentName: 'filterSets_serverside-filter_preferences'
+      });
+
+      if (response?.data?.ResponseData) {
+        const parsedData = JSON.parse(response.data.ResponseData);
+        if (parsedData?.PersonalizationResult && parsedData.PersonalizationResult.length > 0) {
+          const jsonData = parsedData.PersonalizationResult[0].JsonData;
+          return {
+            sets: jsonData?.filterSets || [],
+            recordExists: true
+          };
+        }
+      }
+      return { sets: [], recordExists: false };
+    } catch (error) {
+      console.error('Failed to fetch filter sets:', error);
+      return { sets: [], recordExists: false };
+    }
+  };
+
+  // Custom Filter Service to handle Personalization API for Filter Sets
+  const customFilterService = useMemo(() => ({
+    getUserFilterSets: async (userId: string, gridId: string) => {
+      const { sets } = await fetchFilterSets(userId, gridId);
+      return sets;
+    },
+
+    saveUserFilterSet: async (userId: string, name: string, filters: Record<string, any>, isDefault: boolean = false, gridId: string = 'default') => {
+      try {
+        // 1. Get existing sets first
+        const { sets: existingSets, recordExists } = await fetchFilterSets(userId, gridId);
+
+        // 2. Create new set
+        const newSet = {
+          id: `set_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name,
+          userId,
+          gridId,
+          filters,
+          isDefault,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        // 3. Update list (handle default logic)
+        let updatedSets = [...existingSets];
+        if (isDefault) {
+          updatedSets = updatedSets.map((s: any) => ({ ...s, isDefault: false }));
+        }
+        updatedSets.push(newSet);
+
+        // 4. Save to API
+        await quickOrderService.savePersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'QuickOrderManagement',
+          ComponentName: 'filterSets_serverside-filter_preferences',
+          JsonData: { filterSets: updatedSets },
+          IsActive: "1",
+          ModeFlag: recordExists ? "Update" : "Insert"
+        });
+
+        return newSet;
+      } catch (error) {
+        console.error('Failed to save filter set:', error);
+        throw error;
+      }
+    },
+
+    updateFilterSet: async (filterId: string, updates: any) => {
+      try {
+        // 1. Get existing sets
+        const { sets: existingSets } = await fetchFilterSets('ramcouser', 'quick-order-management'); // Hardcoded for now as per context
+
+        // 2. Find and update
+        const index = existingSets.findIndex((s: any) => s.id === filterId);
+        if (index === -1) throw new Error('Filter set not found');
+
+        const updatedSet = { ...existingSets[index], ...updates, updatedAt: new Date().toISOString() };
+
+        let updatedSets = [...existingSets];
+        if (updates.isDefault) {
+          updatedSets = updatedSets.map((s: any) => ({ ...s, isDefault: false }));
+        }
+        updatedSets[index] = updatedSet;
+
+        // 3. Save to API
+        await quickOrderService.savePersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'QuickOrderManagement',
+          ComponentName: 'filterSets_serverside-filter_preferences',
+          JsonData: { filterSets: updatedSets },
+          IsActive: "1",
+          ModeFlag: "Update"
+        });
+
+        return updatedSet;
+      } catch (error) {
+        console.error('Failed to update filter set:', error);
+        throw error;
+      }
+    },
+
+    deleteFilterSet: async (filterId: string) => {
+      try {
+        // 1. Get existing sets
+        const { sets: existingSets } = await fetchFilterSets('ramcouser', 'quick-order-management');
+
+        // 2. Filter out
+        const updatedSets = existingSets.filter((s: any) => s.id !== filterId);
+
+        // 3. Save to API
+        await quickOrderService.savePersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'QuickOrderManagement',
+          ComponentName: 'filterSets_serverside-filter_preferences',
+          JsonData: { filterSets: updatedSets },
+          IsActive: "1",
+          ModeFlag: "Update"
+        });
+      } catch (error) {
+        console.error('Failed to delete filter set:', error);
+        throw error;
+      }
+    },
+
+    applyGridFilters: async (filters: Record<string, any>) => {
+      // Delegate to the global filterService so handleServerSideSearch can pick it up
+      console.log('CustomFilterService: Applying filters via global service', filters);
+      return filterService.applyGridFilters(filters);
+    }
+  }), []);
+
   const [isMoreInfoOpen, setMoreInfoOpen] = useState(false);
 
   return (
@@ -1426,7 +1570,7 @@ const QuickOrderManagement = () => {
                 gridId="quick-order-management"
                 userId="current-user"
                 customPageSize={pageSize}
-                api={filterService}
+                api={customFilterService}
                 serverFilterVisibleFields={serverFilterVisibleFields}
                 serverFilterFieldOrder={serverFilterFieldOrder}
                 onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
