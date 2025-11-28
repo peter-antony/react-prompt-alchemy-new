@@ -32,6 +32,7 @@ export type GridColumnType =
   | 'Time'                 // Time picker
   | 'Select'               // Select dropdown
   | 'LazySelect'           // Lazy-loaded select with search
+  | 'MultiselectLazySelect' // Lazy-loaded multi-select with search
   | 'CurrencyWithSymbol'   // Currency with symbol
   | 'ActionButton'         // Action button column
   | 'LegLocationFormat'   // Location format for legs

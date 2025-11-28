@@ -8,18 +8,20 @@ interface EnhancedCellEditorProps {
   value: any;
   column: GridColumnConfig;
   onChange: (value: any) => void;
+  onSave?: () => void;
   error?: string;
+  shouldAutoFocus?: boolean;
 }
 
-export function EnhancedCellEditor({ value, column, onChange, error }: EnhancedCellEditorProps) {
+export function EnhancedCellEditor({ value, column, onChange, onSave, error, shouldAutoFocus = false }: EnhancedCellEditorProps) {
   const [editValue, setEditValue] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (inputRef.current && !['LazySelect', 'Select'].includes(column.type)) {
+    if (shouldAutoFocus && inputRef.current && !['LazySelect', 'MultiselectLazySelect', 'Select'].includes(column.type)) {
       inputRef.current.focus();
     }
-  }, [column.type]);
+  }, [column.type, shouldAutoFocus]);
 
   const handleChange = (newValue: any) => {
     setEditValue(newValue);
@@ -41,6 +43,13 @@ export function EnhancedCellEditor({ value, column, onChange, error }: EnhancedC
     }
     
     onChange(finalValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && onSave) {
+      e.preventDefault();
+      onSave();
+    }
   };
 
   // LazySelect renderer
@@ -65,6 +74,28 @@ export function EnhancedCellEditor({ value, column, onChange, error }: EnhancedC
     );
   }
 
+  // MultiselectLazySelect renderer
+  if (column.type === 'MultiselectLazySelect' && column.fetchOptions) {
+    return (
+      <div className="w-full">
+        <DynamicLazySelect
+          fetchOptions={column.fetchOptions}
+          value={editValue}
+          onChange={handleChange}
+          placeholder="Select multiple..."
+          multiSelect={true}
+          hideSearch={column.hideSearch}
+          disableLazyLoading={column.disableLazyLoading}
+        />
+        {error && (
+          <div className="mt-1 text-xs text-destructive">
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // Select/Dropdown renderer
   if ((column.type === 'Select' || column.type === 'Dropdown') && column.options) {
     return (
@@ -72,11 +103,12 @@ export function EnhancedCellEditor({ value, column, onChange, error }: EnhancedC
         <select
           value={editValue}
           onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           className={cn(
             "w-full px-3 py-2 text-sm border rounded-md bg-background",
             error && 'border-destructive focus-visible:ring-destructive'
           )}
-          autoFocus
+          autoFocus={shouldAutoFocus}
         >
           <option value="">Select...</option>
           {column.options.map((option) => (
@@ -118,6 +150,7 @@ export function EnhancedCellEditor({ value, column, onChange, error }: EnhancedC
         type={inputType}
         value={editValue}
         onChange={(e) => handleChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         className={cn(
           'w-full',
           error && 'border-destructive focus-visible:ring-destructive'
