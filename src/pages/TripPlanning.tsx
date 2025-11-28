@@ -17,7 +17,7 @@ import {
   UserCog, Car, UserCircle, Plus, NotebookPen, Pencil,
   HelpCircle, InfoIcon, EllipsisVertical,
   CreditCard, Zap, FileUp, Route, TramFront,
-  ChevronLeft,
+  ChevronLeft, File,
   ChevronDown, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,6 +38,7 @@ import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
 import { SideDrawer } from '@/components/SideDrawer';
+import { SideDrawer as AttachmentDrawer  } from '@/components/Common/SideDrawer';
 import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { useDrawerStore } from '@/stores/drawerStore';
@@ -46,6 +47,8 @@ import { BadgesList } from '@/components/ui/badges-list';
 import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedraw';
+import Attachments from '@/components/ManageTrip/Attachments';
+
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -90,6 +93,7 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal');
+  const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
 
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
  
@@ -3141,6 +3145,16 @@ const TripPlanning = () => {
                         <Settings className="h-4 w-4" />
                         <span>VAS</span>
                       </button>
+                      <button onClick={() => {
+                        console.log('Attachments');
+                        // openDrawer('leg-and-events');
+                        // setIsLegEventsDrawerOpen(true);
+                        setAttachmentsOpen(true);
+                        setListPopoverOpen(false);
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <FileUp className="h-4 w-4" />
+                        <span>Attachments</span>
+                      </button>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -4174,6 +4188,12 @@ const TripPlanning = () => {
         onAddCO={handleAddCO}
         selectedTripData={tripInformation}
       />
+      {/* Attachment Drawer */}
+      <AttachmentDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripNo} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} tripId={tripNo} /></div>
+            </div>
+      </AttachmentDrawer>
       {/* Loading Overlay for Resources */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">

@@ -159,7 +159,12 @@ export const quickOrderService = {
           FilterName: "ScreenName",
           FilterValue: params?.ScreenName,
         },
-      ] :
+      ] :params?.messageType === "Attachment File Category Init" ? [
+        // {
+        //   FilterName: "ScreenName",
+        //   FilterValue: params?.ScreenName,
+        // },
+      ]:
         [],
       Pagination: {
         PageNumber: params?.offset,

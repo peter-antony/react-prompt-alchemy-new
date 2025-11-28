@@ -35,6 +35,7 @@ const mockAttachments = [
 
 interface NewAttachmentGroupProps {
   isTripLogAttachments?: boolean;
+  tripId?:any;
   isEditQuickOrder?: boolean;
   isResourceGroupAttchment?: boolean;
   isResourceID?: any;
@@ -42,12 +43,13 @@ interface NewAttachmentGroupProps {
 
 const Attachments = ({
   isTripLogAttachments,
+  tripId,
   isEditQuickOrder,
   isResourceGroupAttchment,
   isResourceID,
 }: NewAttachmentGroupProps) => {
   // export default function Attachments() {
-  const [fileCategory, setFileCategory] = useState("BR Ammend");
+  const [fileCategory, setFileCategory] = useState([]);
   const [remarks, setRemarks] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [uploadedFile, setUploadedFile] = useState({
@@ -66,8 +68,22 @@ const Attachments = ({
     "2362e1a23a5a49f99c077072b7f0f8b9.png"
   );
 
+  const fetchData = async (messageType) => {
+    const data: any = await quickOrderService.getMasterCommonData({ messageType: messageType});
+    const parsedData:any=JSON.parse(data?.data?.ResponseData);
+    console.log("Parsed Category: ",parsedData)
+    const idArray = parsedData.filter(item => item.id !== null && item.id !== "" && item.id !== undefined)
+    .map(item => item.id);
+    setFileCategory(idArray);
+
+  }
   useEffect(() => {
     setLoading(false);
+    // if(tripUniqueID==undefined || tripUniqueID==null || tripUniqueID==''){
+    //   tripUniqueID=tripId;
+    // }
+    const fetchLegBehaviours = fetchData("Attachment File Category Init");
+   console.log("fetchLegBehaviours = ",fetchLegBehaviours)
     console.log("isResourceGroupAttchment", isResourceGroupAttchment);
     console.log("isResourceID", isResourceID);
     getAttachments();
@@ -103,7 +119,8 @@ const Attachments = ({
   }, [isResourceGroupAttchment, isResourceID]);
 
   const getAttachments = async () => {
-    const response = await tripService.getAttachments(tripUniqueID);
+    let id=tripUniqueID?tripUniqueID:tripId;
+    const response = await tripService.getAttachments(id);
     const res: any = response.data;
     console.log("GET ALL ATTACHMENTS : ", response.data);
     setLoading(true);
@@ -181,7 +198,7 @@ const Attachments = ({
         // Send to API with FormData containing binary file
         const response: any = await tripService.saveAttachments(
           fileData,
-          tripUniqueID
+          tripUniqueID?tripUniqueID:tripId
         );
         console.log("Upload Trip attachments response:", response);
         getAttachments();
@@ -236,7 +253,7 @@ const Attachments = ({
     console.log("fileData for delete : ", fileData);
     const response: any = await tripService.saveAttachments(
       fileData,
-      tripUniqueID
+      tripUniqueID?tripUniqueID:tripId
     );
     const responseData = response as any;
     if (responseData && responseData.data) {
@@ -323,6 +340,7 @@ const Attachments = ({
       throw err;
     }
   }
+ 
   function getMimeType(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase();
 
@@ -353,7 +371,8 @@ const Attachments = ({
           // key={attachmentData?.TotalAttachment}
           key={reloadKey}
           config={{
-            categories: ["BR Amendment", "Invoice", "Contract", "Other"],
+            // categories: ["BR Amendment", "Invoice", "Contract", "Other"],
+            categories: fileCategory,
             maxFiles: 10,
             maxFileSizeMB: 2,
             allowedTypes: [

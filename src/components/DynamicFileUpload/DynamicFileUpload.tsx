@@ -296,6 +296,7 @@ const handleDownloadFile = useCallback(async (file: any) => {
     console.log("📥 Starting download for file:", file);
 
     if (onDownload) {
+      setOpenMenuId(null);
       const result :any = await onDownload(file);
       if (result && result.blob) {
         const url = URL.createObjectURL(result.blob);
@@ -358,7 +359,18 @@ const handleDownloadFile = useCallback(async (file: any) => {
       });
     }
   }, [onDelete, toast]);
-
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    }
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
   console.log("uploadedFiles ", uploadedFiles);
   const filteredFiles = uploadedFiles.filter(file => {
     console.log("uploadedFiles ", file);
