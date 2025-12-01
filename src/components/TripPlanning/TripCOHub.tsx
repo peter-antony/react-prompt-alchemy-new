@@ -55,11 +55,15 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           ComponentName: 'smartgrid-preferences'
         });
 
-        // Extract columns with subRow = true from initialColumns
-        const subRowColumns = initialColumns
+        // Use tripColumns if tripID is available, otherwise use initialColumns
+        const columnsToUse = tripID ? tripColumns : initialColumns;
+        
+        // Extract columns with subRow = true from the appropriate column set
+        const subRowColumns = columnsToUse
           .filter(col => col.subRow === true)
           .map(col => col.key);
 
+        console.log('TripCOHub SmartGrid - Using columns:', tripID ? 'tripColumns' : 'initialColumns');
         console.log('TripCOHub SmartGrid - Extracted subRow columns:', subRowColumns);
 
         // Parse and set personalization data to localStorage
@@ -73,11 +77,10 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             if (personalizationData.JsonData) {
               const jsonData = personalizationData.JsonData;
 
-              // If subRowColumns is empty in the API response, populate it with extracted columns
-              if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
-                jsonData.subRowColumns = subRowColumns;
-                console.log('TripCOHub SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
-              }
+              // Always update subRowColumns with the correct values based on current column set (tripColumns or initialColumns)
+              // This ensures subRowColumns match the columns being used
+              jsonData.subRowColumns = subRowColumns;
+              console.log('TripCOHub SmartGrid - Updated subRowColumns with:', subRowColumns);
 
               localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
               console.log('TripCOHub SmartGrid Personalization data set to localStorage:', jsonData);
@@ -87,11 +90,23 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           } else {
             // If result is empty array or no result, next save should be Insert
             console.log('TripCOHub SmartGrid: No existing personalization found, setting mode to Insert');
+            // Create initial localStorage entry with correct subRowColumns
+            const initialJsonData = {
+              subRowColumns: subRowColumns
+            };
+            localStorage.setItem('smartgrid-preferences', JSON.stringify(initialJsonData));
+            console.log('TripCOHub SmartGrid - Created initial localStorage with subRowColumns:', subRowColumns);
             setPreferenceModeFlag('Insert');
           }
         } else {
           // If ResponseData is empty/null, next save should be Insert
           console.log('Empty personalization response, setting mode to Insert');
+          // Create initial localStorage entry with correct subRowColumns
+          const initialJsonData = {
+            subRowColumns: subRowColumns
+          };
+          localStorage.setItem('smartgrid-preferences', JSON.stringify(initialJsonData));
+          console.log('TripCOHub SmartGrid - Created initial localStorage with subRowColumns:', subRowColumns);
           setPreferenceModeFlag('Insert');
         }
 
@@ -131,7 +146,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
     };
 
     init();
-  }, []);
+  }, [tripID]); // Re-run when tripID changes to extract subRowColumns from correct column set
 
   console.log('filtersForThisGrid: ', filtersForThisGrid);
   console.log('TripCOHub received props - tripID:', tripID, 'manageFlag:', manageFlag, 'customerOrdersData:', customerOrdersData);
@@ -972,6 +987,11 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   // Log when tripID or manageFlag props change
   useEffect(() => {
     console.log('TripCOHub props updated - tripID:', tripID, 'manageFlag:', manageFlag);
+    
+    // Set columns based on tripID presence
+    const columnsToUse = tripID ? tripColumns : initialColumns;
+    gridState.setColumns(columnsToUse);
+    console.log('TripCOHub - Columns set based on tripID:', tripID ? 'tripColumns' : 'initialColumns');
   }, [tripID, manageFlag]);
 
   // Handle CustomerOrders data from parent component

@@ -17,7 +17,7 @@ import {
   UserCog, Car, UserCircle, Plus, NotebookPen, Pencil,
   HelpCircle, InfoIcon, EllipsisVertical,
   CreditCard, Zap, FileUp, Route, TramFront,
-  ChevronLeft, File,
+  ChevronLeft,
   ChevronDown, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,7 +38,6 @@ import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
 import { SideDrawer } from '@/components/SideDrawer';
-import { SideDrawer as AttachmentDrawer  } from '@/components/Common/SideDrawer';
 import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { useDrawerStore } from '@/stores/drawerStore';
@@ -47,8 +46,6 @@ import { BadgesList } from '@/components/ui/badges-list';
 import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedraw';
-import Attachments from '@/components/ManageTrip/Attachments';
-
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -93,7 +90,6 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal');
-  const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
 
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
  
@@ -819,130 +815,134 @@ const TripPlanning = () => {
     Schedule: [] as any[]
   };
 
-  const handleAddResource = (resources: any[]) => {
-    setSelectedResources(resources);
-  
-    const latestResourceData = tripResourceDetailsDataRef.current || {};
-    const transformed = resources.map((resource) => {
-      const driverId = resource.DriverID || resource.DriverCode;
-  
-      const resourceId =
-        resource.id ||
-        resource.ResourceID ||
-        resource.EquipmentID ||
-        resource.VendorID ||
-        driverId ||
-        resource.HandlerID ||
-        resource.VehicleID ||
-        resource.SupplierID;
-  
-      return {
-        ResourceID: resourceId,
-        ResourceType: resource.ResourceType,
-        Service: resource.Service || "",
-        ServiceDescription: resource.ServiceDescription || "",
-        SubService: resource.SubService || "",
-        SubServiceDescription: resource.SubServiceDescription || "",
-        ModeFlag: "Insert",
-        ...(driverId
-          ? {
-              DriverID: resource.DriverID || driverId,
-              DriverCode: resource.DriverCode || driverId,
-            }
-          : {}),
-      };
-    });
-  
-    const updatedCustomerList = {
-      ...(customerOrderList || {}),
-      ResourceDetails: transformed,
+ const handleAddResource = (resources: any[]) => {
+  setSelectedResources(resources);
+
+  const latestResourceData = tripResourceDetailsDataRef.current || {};
+
+  // 1) NORMALIZE INCOMING RESOURCES
+  const transformed = resources.map((resource) => {
+    const driverId = resource.DriverID || resource.DriverCode;
+
+    const resourceId =
+      resource.id ||
+      resource.ResourceID ||
+      resource.EquipmentID ||
+      resource.VendorID ||
+      driverId ||
+      resource.HandlerID ||
+      resource.VehicleID ||
+      resource.SupplierID;
+
+    return {
+      ResourceID: resourceId,
+      ResourceType: resource.ResourceType,
+      Service: resource.Service || "",
+      ServiceDescription: resource.ServiceDescription || "",
+      SubService: resource.SubService || "",
+      SubServiceDescription: resource.SubServiceDescription || "",
       ModeFlag: "Insert",
+      ...(driverId
+        ? {
+            DriverID: resource.DriverID || driverId,
+            DriverCode: resource.DriverCode || driverId,
+          }
+        : {}),
     };
-  
-    const currentLegBehaviour = customerOrderList?.LegBehaviour || "";
-  
-    const updatedCOArray = [...(selectedArrCOData || [])];
-  
-    const existingIndex = updatedCOArray.findIndex(
-      (co) =>
-        co.CustomerOrderID === (customerOrderList?.CustomerOrderID || "") &&
-        co.LegBehaviour === currentLegBehaviour
+  });
+
+  const updatedCustomerList = {
+    ...(customerOrderList || {}),
+    ResourceDetails: transformed,
+    ModeFlag: "Insert",
+  };
+
+  const currentLegBehaviour = customerOrderList?.LegBehaviour || "";
+  const updatedCOArray = [...(selectedArrCOData || [])];
+
+  const existingIndex = updatedCOArray.findIndex(
+    (co) =>
+      co.CustomerOrderID === (customerOrderList?.CustomerOrderID || "") &&
+      co.LegBehaviour === currentLegBehaviour
+  );
+
+  const resourceTypeBeingUpdated = transformed[0]?.ResourceType;
+
+  // 2) REPLACE RESOURCES OF SAME TYPE FOR THIS LEG (NO MERGE BUGS)
+  if (existingIndex !== -1) {
+    const existingCO = updatedCOArray[existingIndex];
+    const existingDetails = existingCO.ResourceDetails || [];
+
+    // remove ALL previous rows of this ResourceType for this leg
+    const filteredDetails = existingDetails.filter(
+      (r: any) => r.ResourceType !== resourceTypeBeingUpdated
     );
-  
-    if (existingIndex !== -1) {
-      const existingCO = updatedCOArray[existingIndex];
-      const existingDetails = existingCO.ResourceDetails || [];
-  
-      const filtered = existingDetails.filter(
-        (x) => x.ResourceType !== transformed[0]?.ResourceType
-      );
-  
-      updatedCOArray[existingIndex] = {
-        ...existingCO,
-        ResourceDetails: [
-          ...filtered,
-          ...transformed.map((x) => ({ ...x, LegBehaviour: currentLegBehaviour })),
-        ],
-      };
-    } else {
-      updatedCOArray.push({
-        ...updatedCustomerList,
-        LegBehaviour: currentLegBehaviour,
-        ResourceDetails: transformed.map((x) => ({
+
+    updatedCOArray[existingIndex] = {
+      ...existingCO,
+      ResourceDetails: [
+        ...filteredDetails,
+        ...transformed.map((x) => ({
           ...x,
           LegBehaviour: currentLegBehaviour,
         })),
-      });
-    }
-  
-    // GROUP INTO RESOURCE BUCKETS (ALWAYS READ FROM UPDATED ARRAY)
-    const resourceMaps = {
-      Equipment: new Map(),
-      Handler: new Map(),
-      Vehicle: new Map(),
-      Driver: new Map(),
-      Agent: new Map(),
-      Schedule: new Map(),
+      ],
     };
-  
-    updatedCOArray.forEach((co) => {
-      (co.ResourceDetails || []).forEach((r: any) => {
-        const id = r.ResourceID;
-        if (!id) return;
-  
-        if (r.ResourceType === "Equipment")
-          resourceMaps.Equipment.set(id, { EquipmentID: id });
-  
-        else if (r.ResourceType === "Handler")
-          resourceMaps.Handler.set(id, { HandlerID: id });
-  
-        else if (r.ResourceType === "Vehicle")
-          resourceMaps.Vehicle.set(id, { VehicleID: id });
-  
-        else if (r.ResourceType === "Driver")
-          resourceMaps.Driver.set(id, {
-            DriverID: id,
-            DriverCode: r.DriverCode || id,
-          });
-  
-        else if (r.ResourceType === "Agent" || r.ResourceType === "Supplier")
-          resourceMaps.Agent.set(id, { VendorID: id });
-  
-        else if (r.ResourceType === "Schedule")
-          resourceMaps.Schedule.set(id, { SupplierID: id });
-      });
+  } else {
+    // first time this CO + LegBehaviour combination
+    updatedCOArray.push({
+      ...updatedCustomerList,
+      LegBehaviour: currentLegBehaviour,
+      ResourceDetails: transformed.map((x) => ({
+        ...x,
+        LegBehaviour: currentLegBehaviour,
+      })),
     });
-  
-    const grouped = {
-      Equipments: [...resourceMaps.Equipment.values()],
-      Handlers: [...resourceMaps.Handler.values()],
-      Vehicle: [...resourceMaps.Vehicle.values()],
-      Drivers: [...resourceMaps.Driver.values()],
-      Supplier: [...resourceMaps.Agent.values()],
-      Schedule: [...resourceMaps.Schedule.values()],
-    };
-  
-    // 🔥 FINAL FIX — ALWAYS USE LATEST DATA, NEVER STALE prev
+  }
+
+  // 3) GROUP INTO RESOURCE BUCKETS FROM updatedCOArray
+  const resourceMaps = {
+    Equipment: new Map(),
+    Handler: new Map(),
+    Vehicle: new Map(),
+    Driver: new Map(),
+    Agent: new Map(),
+    Schedule: new Map(),
+  };
+
+  updatedCOArray.forEach((co) => {
+    (co.ResourceDetails || []).forEach((r: any) => {
+      const id = r.ResourceID;
+      if (!id) return;
+
+      if (r.ResourceType === "Equipment")
+        resourceMaps.Equipment.set(id, { EquipmentID: id });
+      else if (r.ResourceType === "Handler")
+        resourceMaps.Handler.set(id, { HandlerID: id });
+      else if (r.ResourceType === "Vehicle")
+        resourceMaps.Vehicle.set(id, { VehicleID: id });
+      else if (r.ResourceType === "Driver")
+        resourceMaps.Driver.set(id, {
+          DriverID: id,
+          DriverCode: r.DriverCode || id,
+        });
+      else if (r.ResourceType === "Agent" || r.ResourceType === "Supplier")
+        resourceMaps.Agent.set(id, { VendorID: id });
+      else if (r.ResourceType === "Schedule")
+        resourceMaps.Schedule.set(id, { SupplierID: id });
+    });
+  });
+
+  const grouped = {
+    Equipments: [...resourceMaps.Equipment.values()],
+    Handlers: [...resourceMaps.Handler.values()],
+    Vehicle: [...resourceMaps.Vehicle.values()],
+    Drivers: [...resourceMaps.Driver.values()],
+    Supplier: [...resourceMaps.Agent.values()],
+    Schedule: [...resourceMaps.Schedule.values()],
+  };
+
+  // 4) UPDATE STATE + REF (AS YOU PREFER)
   setTripResourceDetailsData(() => {
     const next = {
       Equipments: grouped.Equipments,
@@ -952,21 +952,20 @@ const TripPlanning = () => {
       Supplier: grouped.Supplier,
       Schedule: grouped.Schedule,
     };
-  
-    // 🔥 CRITICAL: update ref immediately so UI sees latest values
+
     tripResourceDetailsDataRef.current = next;
-  
     return next;
   });
-  
-  
-    setSelectedArrCOData(updatedCOArray);
-  
-    toast({
-      title: "Resources Added",
-      description: `Added ${resources.length} resources`,
-    });
-  };
+
+  setSelectedArrCOData(updatedCOArray);
+
+  toast({
+    title: "Resources Added",
+    description: `Added ${resources.length} resources`,
+  });
+};
+
+
 
   // const handleAddResource = (resources: any[]) => {
   //   setSelectedResources(resources);
@@ -3145,16 +3144,6 @@ const TripPlanning = () => {
                         <Settings className="h-4 w-4" />
                         <span>VAS</span>
                       </button>
-                      <button onClick={() => {
-                        console.log('Attachments');
-                        // openDrawer('leg-and-events');
-                        // setIsLegEventsDrawerOpen(true);
-                        setAttachmentsOpen(true);
-                        setListPopoverOpen(false);
-                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
-                        <FileUp className="h-4 w-4" />
-                        <span>Attachments</span>
-                      </button>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -3262,7 +3251,7 @@ const TripPlanning = () => {
             </div>
 
             {isWagonContainer && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Reference Doc. Type</label>
                   <DynamicLazySelect
@@ -3282,7 +3271,7 @@ const TripPlanning = () => {
                       placeholder="Enter Reference Doc. No."
                       value={referenceDocNo}
                       onChange={(e) => setReferenceDocNo(e.target.value)}
-                      className="pr-10"
+                      className="pr-10 h-10"
                     />
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
@@ -3481,100 +3470,87 @@ const TripPlanning = () => {
                         </div>
                       </div>
                       {[
-                        // { title: 'Others', subtitle: '', count: '', icon: Users, color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                        // { title: 'Supplier', icon: Truck, color: 'bg-cyan-100', count: '', iconColor: 'text-cyan-600' },
-                        // { title: 'Schedule', icon: CalendarIcon2, color: 'bg-lime-100', count: '', iconColor: 'text-lime-600' },
-                        { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (EquipmentCount != 0) ? EquipmentCount : '', iconColor: 'text-red-600' },
-                        { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
-                        { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
-                        { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
+                      //  section2
+                       { title: 'Equipment', icon: Box, color: 'bg-red-100', count: (tripResourceDetailsData?.Equipments?.length != 0) ? tripResourceDetailsData?.Equipments?.length : '', iconColor: 'text-red-600' },
+                       { title: 'Handler', icon: UserCog, color: 'bg-cyan-100', count: (tripResourceDetailsData?.Handlers?.length != 0) ? tripResourceDetailsData?.Handlers?.length : '', iconColor: 'text-cyan-600' },
+                       { title: 'Vehicle', icon: Car, color: 'bg-amber-100', count: (tripResourceDetailsData?.Vehicle?.length != 0) ? tripResourceDetailsData?.Vehicle?.length : '', iconColor: 'text-amber-600' },
+                       { title: 'Driver', icon: UserCircle, color: 'bg-indigo-100', count: (tripResourceDetailsData?.Drivers?.length != 0) ? tripResourceDetailsData?.Drivers?.length : '', iconColor: 'text-indigo-600' },
 
                       ].map((resource) => {
                         const Icon = resource.icon;
                         return (
-                          <Card key={resource.title} className="p-4 hover:shadow-md mb-3 transition-shadow cursor-pointer">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
-                                  <Icon className={cn("h-5 w-5", resource.iconColor)} />
-                                </div>
-                                <div>
-                                  <h3 className="font-medium text-sm">{resource.title}
-                                    <span className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium">{resource.count}</span>
-                                  </h3>
-                                  {resource.title == 'Equipment' && (
-                                    <BadgesList
-                                      items={tripResourceDetailsData?.Equipments}
-                                      onRemove={handleRemoveEquipment}
-                                      badgeVariant="secondary"
-                                      idField="EquipmentID"
-                                    />
-                                  )}
-                                  {resource.title == 'Handler' && (
-                                    <BadgesList
-                                      items={tripResourceDetailsData?.Handlers}
-                                      onRemove={handleRemoveHandler}
-                                      badgeVariant="secondary"
-                                      idField="HandlerID"
-                                    />
-                                  )}
-                                  {resource.title == 'Vehicle' && (
-                                    <BadgesList
-                                      items={tripResourceDetailsData?.Vehicle}
-                                      onRemove={handleRemoveVehicle}
-                                      badgeVariant="secondary"
-                                      idField="VehicleID"
-                                    />
-                                  )}
-                                  {resource.title == 'Driver' && (
-                                    <BadgesList
-                                      items={tripResourceDetailsData?.Drivers}
-                                      onRemove={handleRemoveDriver}
-                                      badgeVariant="secondary"
-                                      idField="DriverCode"
-                                      fallbackIdField="DriverID"
-                                    />
-                                  )}
-                                  {/* {resource.subtitle && (
-                                    <p className="text-xs text-muted-foreground">{resource.subtitle}</p>
-                                  )} */}
-                                </div>
-                              </div>
-                              {resource.title === 'Others' ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    handleOthersClick()
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (resource.title === 'Equipment') {
-                                      handleOpenResourceDrawer('Equipment');
-                                    } else if (resource.title === 'Supplier') {
-                                      handleOpenResourceDrawer('Supplier');
-                                    } else if (resource.title === 'Schedule') {
-                                      handleOpenResourceDrawer('Schedule');
-                                    } else if (resource.title === 'Driver') {
-                                      handleOpenResourceDrawer('Driver');
-                                    } else if (resource.title === 'Handler') {
-                                      handleOpenResourceDrawer('Handler');
-                                    } else if (resource.title === 'Vehicle') {
-                                      handleOpenResourceDrawer('Vehicle');
-                                    }
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </Card>
+                           <Card key={resource.title} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", resource.color)}>
+                                          <Icon className={cn("h-5 w-5", resource.iconColor)} />
+                                        </div>
+                                        <div>
+                                          <h3 id={resource.title} className="font-medium text-sm">
+                                            {resource.title}
+                                            <span
+                                              id={"count"}
+                                              className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium"
+                                            >
+                                              {resource?.count}
+                                            </span>
+                                          </h3>
+                                  
+                                          {resource.title === "Equipment" && (
+                                            <BadgesList
+                                              items={tripResourceDetailsDataRef.current?.Equipments ?? []}
+                                              onRemove={handleRemoveEquipment}
+                                              badgeVariant="secondary"
+                                              idField="EquipmentID"
+                                            />
+                                          )}
+                                  
+                                          {resource.title === "Handler" && (
+                                            <BadgesList
+                                              items={tripResourceDetailsDataRef.current?.Handlers ?? []}
+                                              onRemove={handleRemoveHandler}
+                                              badgeVariant="secondary"
+                                              idField="HandlerID"
+                                            />
+                                          )}
+                                          {resource.title === "Vehicle" && (
+                                            <BadgesList
+                                              items={tripResourceDetailsDataRef.current?.Vehicle ?? []}
+                                              onRemove={handleRemoveVehicle}
+                                              badgeVariant="secondary"
+                                              idField="VehicleID"
+                                            />
+                                          )}
+                                          {resource.title === "Driver" && (
+                                            <BadgesList
+                                              items={tripResourceDetailsDataRef.current?.Drivers ?? []}
+                                              onRemove={handleRemoveDriver}
+                                              badgeVariant="secondary"
+                                              idField="DriverCode"
+                                              fallbackIdField="DriverID"
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+                                  
+                                      {/* Buttons */}
+                                      {resource.title === "Others" ? (
+                                        <Button variant="ghost" size="icon" onClick={handleOthersClick}>
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            handleOpenResourceDrawer(resource.title as "Equipment" | "Handler" | "Vehicle" | "Driver" | "Supplier" | "Schedule");
+                                          }}
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </Card>
                         );
                       })}
                     </div>
@@ -4188,12 +4164,6 @@ const TripPlanning = () => {
         onAddCO={handleAddCO}
         selectedTripData={tripInformation}
       />
-      {/* Attachment Drawer */}
-      <AttachmentDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripNo} onScrollPanel={true} isBadgeRequired={true}>
-            <div className="">
-              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} tripId={tripNo} /></div>
-            </div>
-      </AttachmentDrawer>
       {/* Loading Overlay for Resources */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
