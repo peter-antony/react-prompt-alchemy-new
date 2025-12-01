@@ -3167,6 +3167,14 @@ const TripPlanning = () => {
                         <Settings className="h-4 w-4" />
                         <span>VAS</span>
                       </button>
+                      <button onClick={() => {
+                        console.log('Attachments');
+                        setAttachmentsOpen(true);
+                        setListPopoverOpen(false);
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                        <FileUp className="h-4 w-4" />
+                        <span>Attachments</span>
+                      </button>
                     </div>
                   </PopoverContent>
                 </Popover>
