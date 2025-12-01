@@ -36,6 +36,7 @@ interface TripExecutionCreateDrawerScreenProps {
   tripId?: string;
   onFieldChange?: (name: string, value: string) => void;
   selectedLegSequence?: string | null; // LegSequence to select when drawer opens
+  onSaveSuccess?: () => void; // Callback to refresh parent component data after successful save
   // tripExecutionRef?: React.RefObject<DynamicPanelRef>;
   // tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
 }
@@ -62,6 +63,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   onFieldChange,
   tripId = 'TRIP00000001',
   selectedLegSequence,
+  onSaveSuccess,
   // tripExecutionRef,
   // tripAdditionalRef
 }) => {
@@ -553,63 +555,64 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const updatedLegDetails = [...(tripData.LegDetails || [])];
       const currentLeg = updatedLegDetails[legIndex];
       
+      // REmoved validation 
       // Validate all activityRef forms before processing - check if ActualDate and ActualTime are present
-      const validationErrors: string[] = [];
-      (selectedLeg.Activities || []).forEach((activity: any, index) => {
-        const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
-        const activityRef = getActivityRef(activityId);
+      // const validationErrors: string[] = [];
+      // (selectedLeg.Activities || []).forEach((activity: any, index) => {
+      //   const activityId = `activity-${selectedLeg.LegSequence}-${activity.SeqNo || index}`;
+      //   const activityRef = getActivityRef(activityId);
         
-        if (activityRef?.current?.getFormValues) {
-          try {
-            const formData = activityRef.current.getFormValues();
-            const actualDate = formData.ActualDate;
-            const actualTime = formData.ActualTime;
+      //   if (activityRef?.current?.getFormValues) {
+      //     try {
+      //       const formData = activityRef.current.getFormValues();
+      //       const actualDate = formData.ActualDate;
+      //       const actualTime = formData.ActualTime;
             
-            // Check if either ActualDate or ActualTime is empty/null
-            if (!actualDate || actualDate === "" || actualDate === null) {
-              validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Date is required`);
-            }
-            if (!actualTime || actualTime === "" || actualTime === null) {
-              validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Time is required`);
-            }
-          } catch (error) {
-            console.warn(`Error validating form data for activity ${activityId}:`, error);
-          }
-        }
-      });
+      //       // Check if either ActualDate or ActualTime is empty/null
+      //       if (!actualDate || actualDate === "" || actualDate === null) {
+      //         validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Date is required`);
+      //       }
+      //       if (!actualTime || actualTime === "" || actualTime === null) {
+      //         validationErrors.push(`Activity ${activity.SeqNo || index + 1}: Actual Time is required`);
+      //       }
+      //     } catch (error) {
+      //       console.warn(`Error validating form data for activity ${activityId}:`, error);
+      //     }
+      //   }
+      // });
       
       // Validate all new activity forms (forms added via popup) - check if ActualDate and ActualTime are present
-      eventsForms.forEach((newForm: any, index) => {
-        const formRef = getFormRef(newForm.id);
+      // eventsForms.forEach((newForm: any, index) => {
+      //   const formRef = getFormRef(newForm.id);
         
-        if (formRef?.current?.getFormValues) {
-          try {
-            const formData = formRef.current.getFormValues();
-            const actualDate = formData.ActualDate;
-            const actualTime = formData.ActualTime;
+      //   if (formRef?.current?.getFormValues) {
+      //     try {
+      //       const formData = formRef.current.getFormValues();
+      //       const actualDate = formData.ActualDate;
+      //       const actualTime = formData.ActualTime;
             
-            // Check if either ActualDate or ActualTime is empty/null
-            if (!actualDate || actualDate === "" || actualDate === null) {
-              validationErrors.push(`New Activity ${index + 1}: Actual Date is required`);
-            }
-            if (!actualTime || actualTime === "" || actualTime === null) {
-              validationErrors.push(`New Activity ${index + 1}: Actual Time is required`);
-            }
-          } catch (error) {
-            console.warn(`Error validating form data for new activity ${newForm.id}:`, error);
-          }
-        }
-      });
+      //       // Check if either ActualDate or ActualTime is empty/null
+      //       if (!actualDate || actualDate === "" || actualDate === null) {
+      //         validationErrors.push(`New Activity ${index + 1}: Actual Date is required`);
+      //       }
+      //       if (!actualTime || actualTime === "" || actualTime === null) {
+      //         validationErrors.push(`New Activity ${index + 1}: Actual Time is required`);
+      //       }
+      //     } catch (error) {
+      //       console.warn(`Error validating form data for new activity ${newForm.id}:`, error);
+      //     }
+      //   }
+      // });
       
       // If validation fails, show error toast and return early (prevent API call)
-      if (validationErrors.length > 0) {
-        toast({
-          title: "⚠️ Mandatory Fields Missing",
-          description: `Please enter Actual Date and Actual Time for activity`,
-          variant: "destructive",
-        });
-        return;
-      }
+      // if (validationErrors.length > 0) {
+      //   toast({
+      //     title: "⚠️ Mandatory Fields Missing",
+      //     description: `Please enter Actual Date and Actual Time for activity`,
+      //     variant: "destructive",
+      //   });
+      //   return;
+      // }
       
       // Collect all updated Activities from their respective forms
       const updatedActivities = (selectedLeg.Activities || []).map((activity: any, index) => {
@@ -927,6 +930,11 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         
         // Refresh trip data after successful save
         await fetchTripData();
+        
+        // Call parent component callback to refresh events & consignment table
+        if (onSaveSuccess) {
+          onSaveSuccess();
+        }
       } else {
         toast({
           title: "⚠️ Submission failed",
@@ -1237,7 +1245,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         fieldType: "date",
         width: 'four',
         value: "",
-        mandatory: true,
+        mandatory: false,
         visible: true,
         editable: true,
         order: 3,
@@ -1248,7 +1256,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         fieldType: 'time',
         width: 'four',
         value: "",
-        mandatory: true,
+        mandatory: false,
         visible: true,
         editable: true,
         order: 4

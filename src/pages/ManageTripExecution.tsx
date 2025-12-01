@@ -624,7 +624,19 @@ const ManageTripExecution = () => {
           {drawerType === 'incidents' && <IncidentsDrawerScreen onClose={closeDrawer} />}
           {drawerType === 'customer-orders' && <CustomerOrdersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'supplier-billing' && <SupplierBillingDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
-          {drawerType === 'trip-execution-create' && <TripExecutionCreateDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} selectedLegSequence={drawerData?.selectedLegSequence} />}
+          {drawerType === 'trip-execution-create' && (
+            <TripExecutionCreateDrawerScreen 
+              onClose={closeDrawer} 
+              tripId={tripUniqueID || undefined} 
+              selectedLegSequence={drawerData?.selectedLegSequence}
+              onSaveSuccess={async () => {
+                // Refresh trip data in parent component to update events & consignment table
+                if (tripUniqueID) {
+                  await fetchTrip(tripUniqueID);
+                }
+              }}
+            />
+          )}
           {drawerType === 'linked-transactions' && <LinkedTransactionsDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={tripUniqueID || undefined} />}
           {drawerType === 'transport-route' && <TripLevelUpdateDrawer  />}

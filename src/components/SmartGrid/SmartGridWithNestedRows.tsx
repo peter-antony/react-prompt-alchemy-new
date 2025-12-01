@@ -53,7 +53,8 @@ export function SmartGridWithNestedRows({
     }
 
     const nestedData = row[nestedSectionConfig.nestedDataKey] || [];
-    const isExpanded = expandedNestedSections.has(rowIndex);
+    // const isExpanded = expandedNestedSections.has(rowIndex);
+    const isExpanded = !expandedNestedSections.has(rowIndex); // Expanded by default
     const rowCount = Array.isArray(nestedData) ? nestedData.length : 0;
 
     return (
@@ -69,6 +70,7 @@ export function SmartGridWithNestedRows({
         <div className="bg-background">
           {/* Nested section header */}
           <div
+            style={{ display: 'none' }}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 cursor-pointer",
               "bg-muted/30 hover:bg-muted/50 transition-colors",
