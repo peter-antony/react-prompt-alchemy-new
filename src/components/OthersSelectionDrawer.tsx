@@ -106,10 +106,10 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
 }) => {
   const { toast } = useToast();
   const bindQC = (): InputDropdownValue => ({
-    dropdown: otherInfoData?.QuickCode1 ?? "",
-    input: otherInfoData?.QuickCodeValue1 ?? "", // use `input`, not `value`
+    dropdown: otherInfoData?.QuickCode1 ?otherInfoData?.QuickCode1 : "",
+    input: otherInfoData?.QuickCodeValue1 ?otherInfoData?.QuickCodeValue1: "", // use `input`, not `value`
   });
-  const { tripData, fetchTrip,setTrip } = manageTripStore();
+  const { tripData, fetchTrip, setTrip } = manageTripStore();
   const [serviceType, setServiceType] = useState<string>();
   const [subServiceType, setSubServiceType] = useState<string>();
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -156,7 +156,21 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   };
 
   useEffect(() => {
-    console.log("<> Useeffect")
+    console.log("<> Useeffect-- OTHER INFO CHANGED",otherInfoData)
+    if(otherInfoData){
+      setRemark(otherInfoData.Remarks);
+      setSupplierRefNo(otherInfoData.SupplierRefNo);
+      setPlanType(otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay");
+      setLoadType(otherInfoData.LoadType);
+      setPassNo(otherInfoData.PassNoFromSchedule);
+  
+      setTripStartDate(otherInfoData.PlanStartDate);
+      setTripStartTime(otherInfoData.PlanStartTime);
+      setTripEndDate(otherInfoData.PlanEndDate);
+      setTripEndTime(otherInfoData.PlanEndTime);
+      
+      setQCUserDefined(bindQC())
+    }
     fetchAll();
 
   }, [otherInfoData]);
@@ -166,7 +180,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   //API Call for dropdown data
   const fetchData = async (messageType) => {
     console.log("fetch data");
-    console.log("OTHER INFO : ",otherInfoData)
+    console.log("OTHER INFO IN DRAWER: ", otherInfoData)
     setLoading(false);
     // setError(null);
     try {
@@ -176,14 +190,14 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       console.log("load inside try", data);
 
       if (messageType == "QCUserDefined Init") {
-        console.log("JSON.parse(data?.data?.ResponseData = ",JSON.parse(data?.data?.ResponseData))
+        console.log("JSON.parse(data?.data?.ResponseData = ", JSON.parse(data?.data?.ResponseData))
         let responseData = JSON.parse(data?.data?.ResponseData) || [];
-          const formattedData = responseData
-            .filter((qc: any) => qc.id)
-            .map((qc: any) => ({
-              label: qc.name,
-              value: qc.id,
-            }));
+        const formattedData = responseData
+          .filter((qc: any) => qc.id)
+          .map((qc: any) => ({
+            label: qc.name,
+            value: qc.id,
+          }));
         setQC(formattedData || []);
       }
       // if (messageType == "Load type Init") {
@@ -231,7 +245,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const fetchLoadType = fetchMasterData("Load type Init");
   const fetchQC = fetchMasterData("QC Userdefined");
 
- 
+
   // Service Type options fetch function (real API)
   const fetchServiceTypeOptions = async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -296,7 +310,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
     }
   };
 
- 
+
   const handleQcChange = (dropdownValue: string, inputValue: string) => {
     // setQc3Dropdown(dropdownValue);
     // setQc3Input(inputValue);
@@ -319,12 +333,12 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       QCUserDefined,
       supplierRefNo
     };
-  
+
     // find which required fields are empty
     const emptyFields = Object.entries(requiredFields)
       .filter(([_, value]) => isEmpty(value))
       .map(([key]) => key);
-  
+
     // if (emptyFields.length > 0) {
     //   const pretty = emptyFields
     //     .map((f) =>
@@ -333,7 +347,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
     //         .replace(/^./, (s) => s.toUpperCase())
     //     )
     //     .join(", ");
-  
+
     //   // you can use toast instead of alert
     //   toast({
     //     title: "⚠️ Save Failed",
@@ -342,7 +356,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
     //   });
     //   return;
     // }
-  
+
     // build payload after validation
     const payload = {
       tripNo,
@@ -358,9 +372,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       remark,
       supplierRefNo
     };
-  
+
     console.log("✅ Valid payload:", payload);
-    console.log("STORE DATA - tripData - ",tripData)
+    console.log("STORE DATA - tripData - ", tripData)
 
     if (onSubmit) onSubmit(payload);
     onClose();
