@@ -17,7 +17,7 @@ import {
   UserCog, Car, UserCircle, Plus, NotebookPen, Pencil,
   HelpCircle, InfoIcon, EllipsisVertical,
   CreditCard, Zap, FileUp, Route, TramFront,
-  ChevronLeft,
+  ChevronLeft, File,
   ChevronDown, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,6 +38,7 @@ import { TripCOHubMultiple } from '@/components/TripPlanning/TripCOHubMultiple';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { useTransportRouteStore as useTripLevelRouteStore } from '@/stores/tripLevelRouteStore';
 import { SideDrawer } from '@/components/SideDrawer';
+import { SideDrawer as AttachmentDrawer  } from '@/components/Common/SideDrawer';
 import { TripLevelUpdateDrawer } from '@/components/drawer/TripLevelUpdateDrawer';
 import { TrainParametersDrawerScreen } from '@/components/drawer/TrainParametersDrawerScreen';
 import { useDrawerStore } from '@/stores/drawerStore';
@@ -46,6 +47,8 @@ import { BadgesList } from '@/components/ui/badges-list';
 import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedraw';
+import Attachments from '@/components/ManageTrip/Attachments';
+
 
 const TripPlanning = () => {
   const navigate = useNavigate();
@@ -90,6 +93,7 @@ const TripPlanning = () => {
   const [location, setLocation] = useState('');
   const [cluster, setCluster] = useState('');
   const [tripType, setTripType] = useState('Normal');
+  const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
 
   const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
  
@@ -191,7 +195,7 @@ const TripPlanning = () => {
     if (manageFlag) {
       console.log("🔗 URL Manage flag extracted:", manageFlag);
     }
-  }, [urlTripID, manageFlag, tripResourceDetailsData]);
+  }, [urlTripID, manageFlag, tripResourceDetailsData,tripNo]);
   // Ref to store the timeout for debouncing trip ID changes
   const tripIdChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -267,15 +271,23 @@ const TripPlanning = () => {
 
     if (data.Header?.SupplierRefNo != undefined && data.Header?.SupplierRefNo != null) {
       otherInfoData.SupplierRefNo = data.Header?.SupplierRefNo;
+    }else{
+      otherInfoData.SupplierRefNo = '';
     }
     if (data.Header?.LoadType != undefined && data.Header?.LoadType != null) {
       otherInfoData.LoadType = data.Header?.LoadType;
+    }else{
+      otherInfoData.LoadType = '';
     }
     if (data.Header?.IsRoundTrip == "1") {
       otherInfoData.IsRoundTrip = data.Header?.IsRoundTrip;
+    }else{
+      otherInfoData.IsRoundTrip = false;
     }
     if (data.Header?.IsOneWay == "1") {
       otherInfoData.IsOneWay = data.Header?.IsOneWay;
+    }else{
+      otherInfoData.IsOneWay = true;
     }
     if (data.Header?.PlanStartDate != undefined && data.Header?.PlanStartDate != null) {
       otherInfoData.PlanStartDate = data.Header?.PlanStartDate;
@@ -291,19 +303,27 @@ const TripPlanning = () => {
     }
     if (data.Header?.Remarks != undefined && data.Header?.Remarks != null) {
       otherInfoData.Remarks = data.Header?.Remarks;
+    }else{
+      otherInfoData.Remarks = '';
     }
     if (data.Header?.PassNoFromSchedule != undefined && data.Header?.PassNoFromSchedule != null) {
       otherInfoData.PassNoFromSchedule = data.Header?.PassNoFromSchedule;
+    }else{
+      otherInfoData.PassNoFromSchedule = '';
     }
     if (data.Header?.QuickCode1 != undefined && data.Header?.QuickCode1 != null) {
       otherInfoData.QuickCode1 = data.Header?.QuickCode1;
+    }else{
+      otherInfoData.QuickCode1 = '';
     }
     if (data.Header?.QuickCodeValue1 != undefined && data.Header?.QuickCodeValue1 != null) {
       otherInfoData.QuickCodeValue1 = data.Header?.QuickCodeValue1;
+    }else{
+      otherInfoData.QuickCodeValue1 ='';
+
     }
-    otherInfoData
     setOtherInfo(otherInfoData);
-    console.log("otherInfoData == ", otherInfoData)
+    console.log("otherInfoData == ON OPENING", otherInfoData)
 
 
     return { tripFromAPI: data };
@@ -313,7 +333,7 @@ const TripPlanning = () => {
     // Do whatever you need with the UPDATED value here!
     console.log("Resource details data updated:", tripResourceDetailsData);
     // API calls, calculations, etc.
-  }, [tripResourceDetailsData]);
+  }, [tripResourceDetailsData,otherInfo]);
   
   // Debug useEffect to track location data state changes (this will show the updated value)
   useEffect(() => {
@@ -1662,7 +1682,10 @@ const TripPlanning = () => {
           if (existingIndex !== -1) {
             const updated = prev.filter(item => item.TripID !== tripIDToRemove);
             console.log("🗑️ Removed TripID from selectedTripIDs:", tripIDToRemove);
-            console.log("📊 Remaining selected TripIDs:", updated);
+            // console.log("📊 Remaining selected TripIDs:", updated[(updated.length)-1].TripID);
+            if(updated.length>0)
+            setTripNo(updated[(updated.length)-1].TripID);
+
             return updated;
           } else {
             console.log("⚠️ TripID not found in selectedTripIDs:", tripIDToRemove);
@@ -4164,6 +4187,12 @@ const TripPlanning = () => {
         onAddCO={handleAddCO}
         selectedTripData={tripInformation}
       />
+      {/* Attachment Drawer */}
+      <AttachmentDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripNo} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} tripId={tripNo} /></div>
+            </div>
+      </AttachmentDrawer>
       {/* Loading Overlay for Resources */}
       {isLoadingResource && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
