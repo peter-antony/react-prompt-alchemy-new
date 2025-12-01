@@ -1298,6 +1298,239 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
   const [defaultResourceId, setDefaultResourceId] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
+  // State for Panel Personalization Mode Flags
+const [wagonDetailsPanelPersonalizationModeFlag, setWagonDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [containerDetailsPanelPersonalizationModeFlag, setContainerDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [productDetailsPanelPersonalizationModeFlag, setProductDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [thuDetailsPanelPersonalizationModeFlag, setThuDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [journeyDetailsPanelPersonalizationModeFlag, setJourneyDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [otherDetailsPanelPersonalizationModeFlag, setOtherDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+const [bulkUpdatePanelPersonalizationModeFlag, setBulkUpdatePanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+
+// Fetch Wagon Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-wagon-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-wagon-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setWagonDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setWagonDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setWagonDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load wagon details panel personalization:', error);
+      setWagonDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Container Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-container-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-container-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setContainerDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setContainerDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setContainerDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load container details panel personalization:', error);
+      setContainerDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Product Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-product-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-product-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setProductDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setProductDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setProductDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load product details panel personalization:', error);
+      setProductDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch THU Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-thu-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-thu-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setThuDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setThuDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setThuDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load thu details panel personalization:', error);
+      setThuDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Journey Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-journey-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-journey-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setJourneyDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setJourneyDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setJourneyDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load journey details panel personalization:', error);
+      setJourneyDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Other Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-other-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-other-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setOtherDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setOtherDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setOtherDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load other details panel personalization:', error);
+      setOtherDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Bulk Update panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'PlanAndActualDetailsDrawer',
+        ComponentName: 'panel-config-current-user-bulk-update'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-bulk-update', JSON.stringify(personalizationData.JsonData));
+          }
+          setBulkUpdatePanelPersonalizationModeFlag('Update');
+        } else {
+          setBulkUpdatePanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setBulkUpdatePanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load bulk-update panel personalization:', error);
+      setBulkUpdatePanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
   // Iterate through all messageTypes
   const fetchAll = async () => {
     setLoading(false);
@@ -2915,6 +3148,296 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
      setSelectedPlan(undefined);
   }
 
+  const getUserPanelConfig_wagonDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-wagon-details`);
+  console.log(`Retrieved config for panel wagon-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_containerDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-container-details`);
+  console.log(`Retrieved config for panel container-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_productDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-product-details`);
+  console.log(`Retrieved config for panel product-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_thuDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-thu-details`);
+  console.log(`Retrieved config for panel thu-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_journeyDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-journey-details`);
+  console.log(`Retrieved config for panel journey-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_otherDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-other-details`);
+  console.log(`Retrieved config for panel other-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+
+
+const getUserPanelConfig_bulkUpdate = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-bulk-update`);
+  console.log(`Retrieved config for panel bulk-update:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+
+const saveUserPanelConfig_wagonDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-wagon-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel wagon-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-wagon-details',
+      JsonData: settings,
+      ModeFlag: wagonDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && wagonDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setWagonDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_containerDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-container-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel container-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-container-details',
+      JsonData: settings,
+      ModeFlag: containerDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && containerDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setContainerDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_productDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-product-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel product-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-product-details',
+      JsonData: settings,
+      ModeFlag: productDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && productDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setProductDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_thuDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-thu-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel thu-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-thu-details',
+      JsonData: settings,
+      ModeFlag: thuDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && thuDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setThuDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_journeyDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-journey-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel journey-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-journey-details',
+      JsonData: settings,
+      ModeFlag: journeyDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && journeyDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setJourneyDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_otherDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-other-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel other-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-other-details',
+      JsonData: settings,
+      ModeFlag: otherDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && otherDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setOtherDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-bulk-update`, JSON.stringify(settings));
+    console.log(`Saved config for panel other-details:`, settings);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'PlanAndActualDetailsDrawer',
+      ComponentName: 'panel-config-current-user-bulk-update',
+      JsonData: settings,
+      ModeFlag: bulkUpdatePanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && bulkUpdatePanelPersonalizationModeFlag === 'Insert') {
+        setBulkUpdatePanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
   return (
     <>
       <div className="flex flex-col h-full">
@@ -3114,8 +3637,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             initialData={wagonDetailsData}
                             onTitleChange={setWagonDetailsTitle}
                             // onWidthChange={setBasicDetailsWidth}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_wagonDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_wagonDetails}
                             userId="current-user"
                           // panelWidth={basicDetailsWidth}
                           />
@@ -3138,8 +3661,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             initialData={containerDetailsData}
                             formName="containerDetailsForm"
                             onTitleChange={setContainerDetailsTitle}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_containerDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_containerDetails}
                             userId="current-user"
                           />
                         );
@@ -3161,8 +3684,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             initialData={productDetailsData}
                             formName="productDetailsForm"
                             onTitleChange={setProductDetailsTitle}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_productDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_productDetails}
                             userId="current-user"
                           />
                         );
@@ -3184,8 +3707,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             initialData={thuDetailsData}
                             formName="thuDetailsForm"
                             onTitleChange={setTHUDetailsTitle}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_thuDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_thuDetails}
                             userId="current-user"
                           />
                         );
@@ -3207,8 +3730,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             initialData={journeyDetailsData}
                             formName="journeyDetailsForm"
                             onTitleChange={setJourneyDetailsTitle}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_journeyDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_journeyDetails}
                             userId="current-user"
                           />
                         );
@@ -3230,8 +3753,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
                             startingTabIndex={currentTabIndex}
                             formName="otherDetailsForm"
                             onTitleChange={setOtherDetailsTitle}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={handleSaveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_otherDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_otherDetails}
                             userId="current-user"
                           />
                         );
@@ -3291,8 +3814,8 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
               initialData={bulkUpdateData}
               formName="bulkUpdateForm"
               onTitleChange={setbulkUpdateTitle}
-              getUserPanelConfig={getUserPanelConfig}
-              saveUserPanelConfig={saveUserPanelConfig}
+              getUserPanelConfig={getUserPanelConfig_bulkUpdate}
+              saveUserPanelConfig={saveUserPanelConfig_bulkUpdate}
               userId="current-user"
               onScrollPanel={true}
             />

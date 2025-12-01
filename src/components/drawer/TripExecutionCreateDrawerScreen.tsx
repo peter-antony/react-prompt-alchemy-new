@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
-import { PanelConfig } from '@/types/dynamicPanel';
+import { PanelConfig, PanelSettings } from '@/types/dynamicPanel';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { ConsignmentTrip } from './ConsignmentTrip';
 import { tripService } from "@/api/services/tripService";
@@ -80,6 +80,10 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const tripAdditionalRef = useRef<DynamicPanelRef>(null);
   const [resetKey, setResetKey] = useState(0);
   const [dates, setDates] = useState<Record<string, Date | undefined>>({});
+
+  // State for Panel Personalization
+  const [panelPersonalizationModeFlag, setPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [additionalEventspanelPersonalizationModeFlag, setadditionalEventspanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
   
   // Refs for multiple forms - using Map to store refs by form ID
   const formRefs = useRef<Map<string, React.RefObject<DynamicPanelRef>>>(new Map());
@@ -407,6 +411,101 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       setIsLoadingTrip(false);
     }
   }, [tripId, toast]);
+
+  // Fetch panel personalization on component mount
+  useEffect(() => {
+    const fetchPanelPersonalization = async () => {
+      try {
+        const personalizationResponse: any = await quickOrderService.getPersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'Events&ConsignmentsDrawer',
+          ComponentName: 'panel-config-current-user-trip-activities'
+        });
+
+        console.log('TripActivities Panel Personalization Response:', personalizationResponse);
+
+        // Parse and set personalization data to localStorage
+        if (personalizationResponse?.data?.ResponseData) {
+          const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+          if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+            // Set the JsonData to localStorage
+            if (personalizationData.JsonData) {
+              const jsonData = personalizationData.JsonData;
+              localStorage.setItem('panel-config-current-user-trip-activities', JSON.stringify(jsonData));
+              console.log('TripActivities Panel Personalization data set to localStorage:', jsonData);
+            }
+            // If we have data, next save should be an Update
+            setPanelPersonalizationModeFlag('Update');
+          } else {
+            // If result is empty array or no result, next save should be Insert
+            console.log('No existing panel personalization found, setting mode to Insert');
+            setPanelPersonalizationModeFlag('Insert');
+          }
+        } else {
+          // If ResponseData is empty/null, next save should be Insert
+          console.log('Empty panel personalization response, setting mode to Insert');
+          setPanelPersonalizationModeFlag('Insert');
+        }
+      } catch (error) {
+        console.error('Failed to load panel personalization:', error);
+        setPanelPersonalizationModeFlag('Insert');
+      }
+    };
+
+    fetchPanelPersonalization();
+  }, []);
+
+
+  // Fetch Additional Events panel personalization on component mount
+  useEffect(() => {
+    const fetchPanelPersonalization = async () => {
+      try {
+        const personalizationResponse: any = await quickOrderService.getPersonalization({
+          LevelType: 'User',
+          LevelKey: 'ramcouser',
+          ScreenName: 'Events&ConsignmentsDrawer',
+          ComponentName: 'panel-config-current-user-additional-events'
+        });
+
+        console.log('AdditionalEvents Panel Personalization Response:', personalizationResponse);
+
+        // Parse and set personalization data to localStorage
+        if (personalizationResponse?.data?.ResponseData) {
+          const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+          if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+            const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+            // Set the JsonData to localStorage
+            if (personalizationData.JsonData) {
+              const jsonData = personalizationData.JsonData;
+              localStorage.setItem('panel-config-current-user-additional-events', JSON.stringify(jsonData));
+              console.log('AdditionalEvents Panel Personalization data set to localStorage:', jsonData);
+            }
+            // If we have data, next save should be an Update
+            setadditionalEventspanelPersonalizationModeFlag('Update');
+          } else {
+            // If result is empty array or no result, next save should be Insert
+            console.log('No existing panel personalization found, setting mode to Insert');
+            setadditionalEventspanelPersonalizationModeFlag('Insert');
+          }
+        } else {
+          // If ResponseData is empty/null, next save should be Insert
+          console.log('Empty panel personalization response, setting mode to Insert');
+          setadditionalEventspanelPersonalizationModeFlag('Insert');
+        }
+      } catch (error) {
+        console.error('Failed to load panel personalization:', error);
+        setadditionalEventspanelPersonalizationModeFlag('Insert');
+      }
+    };
+
+    fetchPanelPersonalization();
+  }, []);
   
   // Fetch trip data directly from API on component mount
   useEffect(() => {
@@ -2033,6 +2132,120 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     const diff = target.getTime() - actual.getTime();
     return formatDelay(diff);
   };
+
+  const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
+    const stored = localStorage.getItem(`panel-config-current-user-trip-activities`);
+    console.log(`Retrieved config for panel trip-activities:`, stored);
+    return stored ? JSON.parse(stored) : null;
+  };
+
+  const getUserPanelConfig_AdditionalEvents = (userId: string, panelId: string): PanelSettings | null => {
+    const stored = localStorage.getItem(`panel-config-current-user-additional-events`);
+    console.log(`Retrieved config for panel additional-events:`, stored);
+    return stored ? JSON.parse(stored) : null;
+  };
+
+  const saveUserPanelConfig = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+    try {
+      // Save to localStorage first
+      localStorage.setItem(`panel-config-current-user-trip-activities`, JSON.stringify(settings));
+      console.log(`Saved config for panel trip-activities:`, settings);
+      console.log('====DYNAMIC PANEL SAVE CLICKED====');
+
+      // Prepare the data to save to the API
+      const preferencesToSave = settings;
+
+      console.log('Saving TripActivities Panel preferences:', preferencesToSave);
+      console.log('Panel Personalization ModeFlag:', panelPersonalizationModeFlag);
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'Events&ConsignmentsDrawer',
+        ComponentName: 'panel-config-current-user-trip-activities',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: panelPersonalizationModeFlag
+      });
+
+      const apiData = response?.data;
+
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+
+        toast({
+          title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+
+        // If save was successful and we were in Insert mode, switch to Update mode for future saves
+        if (isSuccess && panelPersonalizationModeFlag === 'Insert') {
+          setPanelPersonalizationModeFlag('Update');
+        }
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save panel preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save panel preferences",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveUserPanelConfig_AdditionalEvents = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+    try {
+      // Save to localStorage first
+      localStorage.setItem(`panel-config-current-user-additional-events`, JSON.stringify(settings));
+      console.log(`Saved config for panel additional-events:`, settings);
+      console.log('====DYNAMIC PANEL SAVE CLICKED====');
+
+      // Prepare the data to save to the API
+      const preferencesToSave = settings;
+
+      console.log('Saving AdditionalEvents Panel preferences:', preferencesToSave);
+      console.log('Panel Personalization ModeFlag:', additionalEventspanelPersonalizationModeFlag);
+
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'Events&ConsignmentsDrawer',
+        ComponentName: 'panel-config-current-user-additional-events',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: additionalEventspanelPersonalizationModeFlag
+      });
+
+      const apiData = response?.data;
+
+      if (apiData) {
+        const isSuccess = apiData?.IsSuccess;
+
+        toast({
+          title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+          description: apiData?.Message,
+          variant: isSuccess ? "default" : "destructive",
+        });
+
+        // If save was successful and we were in Insert mode, switch to Update mode for future saves
+        if (isSuccess && additionalEventspanelPersonalizationModeFlag === 'Insert') {
+          setadditionalEventspanelPersonalizationModeFlag('Update');
+        }
+      } else {
+        throw new Error("Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save panel preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save panel preferences",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <>
@@ -2290,6 +2503,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                  panelConfig={tripExecutionPanelConfig}
                                  formName={`operationalDetailsForm-${activityId}`}
                                  initialData={formData}
+                                 getUserPanelConfig={getUserPanelConfig}
+                                 saveUserPanelConfig={saveUserPanelConfig}
                                />
                              ) : null}
                            </div>
@@ -2418,6 +2633,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                  panelConfig={tripExecutionAdditionalPanelConfig}
                                  formName={`operationalDetailsForm-additional-${activityId}`}
                                  initialData={formattedAdditionalActivity}
+                                 getUserPanelConfig={getUserPanelConfig_AdditionalEvents}
+                                 saveUserPanelConfig={saveUserPanelConfig_AdditionalEvents}
                                />
                              ) : null}
                            </div>

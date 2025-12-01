@@ -1667,16 +1667,324 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
 
   const [view, setView] = useState("list");
 
+  // State for Panel Personalization Mode Flags
+  const [basicDetailsPanelPersonalizationModeFlag, setBasicDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [operationalDetailsPanelPersonalizationModeFlag, setOperationalDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [moreInfoPanelPersonalizationModeFlag, setMoreInfoPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+  const [billingDetailsPanelPersonalizationModeFlag, setBillingDetailsPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
+
+  // Fetch Basic Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'ResourceGroupDetailsDrawer',
+        ComponentName: 'panel-config-current-user-basic-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-basic-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setBasicDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setBasicDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setBasicDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load basic details panel personalization:', error);
+      setBasicDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Operational Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'ResourceGroupDetailsDrawer',
+        ComponentName: 'panel-config-current-user-operational-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-operational-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setOperationalDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setOperationalDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setOperationalDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load operational details panel personalization:', error);
+      setOperationalDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch More Info panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'ResourceGroupDetailsDrawer',
+        ComponentName: 'panel-config-current-user-more-info'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-more-info', JSON.stringify(personalizationData.JsonData));
+          }
+          setMoreInfoPanelPersonalizationModeFlag('Update');
+        } else {
+          setMoreInfoPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setMoreInfoPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load more info panel personalization:', error);
+      setMoreInfoPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
+// Fetch Billing Details panel personalization
+useEffect(() => {
+  const fetchPanelPersonalization = async () => {
+    try {
+      const personalizationResponse: any = await quickOrderService.getPersonalization({
+        LevelType: 'User',
+        LevelKey: 'ramcouser',
+        ScreenName: 'ResourceGroupDetailsDrawer',
+        ComponentName: 'panel-config-current-user-billing-details'
+      });
+      if (personalizationResponse?.data?.ResponseData) {
+        const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+        if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+          const personalizationData = parsedPersonalization.PersonalizationResult[0];
+          if (personalizationData.JsonData) {
+            localStorage.setItem('panel-config-current-user-billing-details', JSON.stringify(personalizationData.JsonData));
+          }
+          setBillingDetailsPanelPersonalizationModeFlag('Update');
+        } else {
+          setBillingDetailsPanelPersonalizationModeFlag('Insert');
+        }
+      } else {
+        setBillingDetailsPanelPersonalizationModeFlag('Insert');
+      }
+    } catch (error) {
+      console.error('Failed to load billing details panel personalization:', error);
+      setBillingDetailsPanelPersonalizationModeFlag('Insert');
+    }
+  };
+  fetchPanelPersonalization();
+}, []);
+
   // Mock functions for user config management
   const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
     const stored = localStorage.getItem(`panel-config-${userId}-${panelId}`);
     return stored ? JSON.parse(stored) : null;
   };
 
+  const getUserPanelConfig_basicDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-basic-details`);
+  console.log(`Retrieved config for panel basic-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_operationalDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-operational-details`);
+  console.log(`Retrieved config for panel operational-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_moreInfo = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-more-info`);
+  console.log(`Retrieved config for panel more-info:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+const getUserPanelConfig_billingDetails = (userId: string, panelId: string): PanelSettings | null => {
+  const stored = localStorage.getItem(`panel-config-current-user-billing-details`);
+  console.log(`Retrieved config for panel billing-details:`, stored);
+  return stored ? JSON.parse(stored) : null;
+};
+
   const saveUserPanelConfig = (userId: string, panelId: string, settings: PanelSettings): void => {
     localStorage.setItem(`panel-config-${userId}-${panelId}`, JSON.stringify(settings));
     console.log(`Saved config for panel ${panelId}:`, settings);
   };
+
+  const saveUserPanelConfig_basicDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-basic-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel basic-details:`, settings);
+    const preferencesToSave = settings;
+    console.log('Saving BasicDetails Panel preferences:', preferencesToSave);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'ResourceGroupDetailsDrawer',
+      ComponentName: 'panel-config-current-user-basic-details',
+      JsonData: preferencesToSave,
+      ModeFlag: basicDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && basicDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setBasicDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_operationalDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-operational-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel operational-details:`, settings);
+    const preferencesToSave = settings;
+    console.log('Saving operationalDetails Panel preferences:', preferencesToSave);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'ResourceGroupDetailsDrawer',
+      ComponentName: 'panel-config-current-user-operational-details',
+      JsonData: preferencesToSave,
+      ModeFlag: operationalDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && operationalDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setOperationalDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_moreInfo = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-more-info`, JSON.stringify(settings));
+    console.log(`Saved config for panel more-info:`, settings);
+    const preferencesToSave = settings;
+    console.log('Saving MoreInfo Panel preferences:', preferencesToSave);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'ResourceGroupDetailsDrawer',
+      ComponentName: 'panel-config-current-user-more-info',
+      JsonData: preferencesToSave,
+      ModeFlag: moreInfoPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && moreInfoPanelPersonalizationModeFlag === 'Insert') {
+        setMoreInfoPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
+const saveUserPanelConfig_billingDetails = async (userId: string, panelId: string, settings: PanelSettings): Promise<void> => {
+  try {
+    localStorage.setItem(`panel-config-current-user-billing-details`, JSON.stringify(settings));
+    console.log(`Saved config for panel billing-details:`, settings);
+    const preferencesToSave = settings;
+    console.log('Saving billingDetails Panel preferences:', preferencesToSave);
+    const response: any = await quickOrderService.savePersonalization({
+      LevelType: 'User',
+      LevelKey: 'ramcouser',
+      ScreenName: 'ResourceGroupDetailsDrawer',
+      ComponentName: 'panel-config-current-user-billing-details',
+      JsonData: preferencesToSave,
+      ModeFlag: billingDetailsPanelPersonalizationModeFlag
+    });
+    const apiData = response?.data;
+    if (apiData) {
+      const isSuccess = JSON.parse(response.data.IsSuccess);
+      toast({
+        title: isSuccess ? "✅ Panel Preferences Saved Successfully" : "⚠️ Error Saving Panel Preferences",
+        description: apiData?.Message,
+        variant: isSuccess ? "default" : "destructive",
+      });
+      if (isSuccess && billingDetailsPanelPersonalizationModeFlag === 'Insert') {
+        setBillingDetailsPanelPersonalizationModeFlag('Update');
+      }
+    } else {
+      throw new Error("Invalid API response");
+    }
+  } catch (error) {
+    console.error("Failed to save panel preferences:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save panel preferences",
+      variant: "destructive",
+    });
+  }
+};
+
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDropdown, setLoadingDropdown] = useState(false);
@@ -2825,8 +3133,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             initialData={basicDetailsData}
                             onTitleChange={setBasicDetailsTitle}
                             onWidthChange={setBasicDetailsWidth}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={saveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_basicDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_basicDetails}
                             userId="current-user"
                             panelWidth={basicDetailsWidth}
                             validationErrors={validationResults['basic-details']?.errors || {}}
@@ -2852,8 +3160,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             initialData={operationalDetailsData}
                             onTitleChange={setOperationalDetailsTitle}
                             onWidthChange={setOperationalDetailsWidth}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={saveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_operationalDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_operationalDetails}
                             userId="current-user"
                             panelWidth={operationalDetailsWidth}
                             validationErrors={validationResults['operational-details']?.errors || {}}
@@ -2879,8 +3187,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             initialData={moreInfoDetailsData}
                             onTitleChange={setmoreInfoTitle}
                             onWidthChange={setBasicDetailsWidth}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={saveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_moreInfo}
+                            saveUserPanelConfig={saveUserPanelConfig_moreInfo}
                             userId="current-user"
                             panelWidth={basicDetailsWidth}
                           />
@@ -2911,8 +3219,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
                             initialData={billingDetailsData}
                             onTitleChange={setBillingDetailsTitle}
                             onWidthChange={setBillingDetailsWidth}
-                            getUserPanelConfig={getUserPanelConfig}
-                            saveUserPanelConfig={saveUserPanelConfig}
+                            getUserPanelConfig={getUserPanelConfig_billingDetails}
+                            saveUserPanelConfig={saveUserPanelConfig_billingDetails}
                             userId="current-user"
                             panelWidth={billingDetailsWidth}
                             panelSubTitle={billingDetailsTitle}
