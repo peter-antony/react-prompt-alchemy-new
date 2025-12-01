@@ -2720,6 +2720,21 @@ const TripPlanning = () => {
     }
   };
 
+  const getTripForRefresh = async (tripNo: string) => {
+    console.log("getTripForRefresh")
+    const response: any = await tripPlanningService.getTripDataByID(tripNo);
+    console.log("getTripForRefresh ===", JSON.parse(response?.data?.ResponseData || "{}"));
+    const data = JSON.parse(response?.data?.ResponseData || "{}");
+    const tripNoFromAPI = data?.Header?.TripNo;
+    setOldTripData(data)
+    console.log("getTripForRefresh data ===", data);
+    setTripInformation(data);
+    // Update tripNo state with the trip ID from API response or the passed tripID
+    // if (tripNoFromAPI) {
+    //   setTripNo(tripNoFromAPI);
+    // }
+  }
+
   const createWagonContainerTripData = async () => {
     console.log("createWagonContainerTripData", departureLocationData);
     console.log("createWagonContainerTripData", arrivalLocationData);
@@ -2829,6 +2844,7 @@ const TripPlanning = () => {
         setTripNo(parsedResponse?.RequestPayload?.Header?.TripNo);
         setTripStatus(parsedResponse?.RequestPayload?.Header?.TripStatus);
         setShowConfirmReleaseBtn(true);
+        getTripForRefresh(parsedResponse?.RequestPayload?.Header?.TripNo);
         // setcustomerOrderList(null);
         // Reload TripCOHub component
         // setTripCOHubReloadKey(prev => prev + 1);
@@ -3145,7 +3161,7 @@ const TripPlanning = () => {
                       </button>
                       <button onClick={() => {
                         console.log('Leg and Events');
-                        openTripDrawer(urlTripID);
+                        openTripDrawer(urlTripID || tripNo);
                         setListPopoverOpen(false);
                       }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
                         <Route className="h-4 w-4" />
@@ -4269,16 +4285,16 @@ const TripPlanning = () => {
         onClose={closeDrawer}
         onBack={drawerType === 'transport-route' ? closeDrawer : undefined}
         title={drawerType === 'resources' ? 'Resources' : drawerType === 'vas-trip' ? 'VAS' : drawerType === 'incidents' ? 'Incident' : drawerType === 'customer-orders' ? 'Customer Order' : drawerType === 'supplier-billing' ? 'Supplier Billing' : drawerType === 'trip-execution-create' ? 'Events & Consignment' : drawerType === 'linked-transactions' ? 'Linked Transactions' : drawerType === 'train-parameters' ? 'Train Parameters' : drawerType === 'transport-route' ? 'Leg Details' : drawerType === 'leg-and-events' ? 'Leg and Events' : ''}
-        titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'leg-and-events' ? urlTripID || 'TRIP0000000001' : undefined}
+        titleBadge={drawerType === 'vas' || drawerType === 'incidents' || drawerType === 'customer-orders' || drawerType === 'supplier-billing' || drawerType === 'trip-execution-create' || drawerType === 'leg-and-events' ? (urlTripID || tripNo) || '-' : undefined}
         slideDirection="right"
         width={drawerType === 'train-parameters' || drawerType === 'leg-and-events' ? '100%' : '75%'}
         smoothness="smooth"
         showBackButton={drawerType === 'transport-route' || drawerType === 'leg-and-events'}
         showCloseButton={true}
       >
-        {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || undefined} tripInformationData={tripInformation}/>}
-        {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || undefined} />}
-        {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || undefined} />}
+        {drawerType === 'vas-trip' && <VASTripDrawerScreen tripUniqueNo={urlTripID || tripNo || undefined} tripInformationData={tripInformation}/>}
+        {drawerType === 'train-parameters' && <TrainParametersDrawerScreen onClose={closeDrawer} tripId={urlTripID || tripNo || undefined} />}
+        {drawerType === 'leg-and-events' && <LegEventsDrawer tripId={urlTripID || tripNo || undefined} />}
       </SideDrawer>
     </AppLayout>
   );
