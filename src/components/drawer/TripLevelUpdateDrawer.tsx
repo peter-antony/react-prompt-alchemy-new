@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { tripService } from '@/api/services/tripService';
 import { InputDropdown } from '../ui/input-dropdown';
+import { manageTripStore } from '@/stores/mangeTripStore';
  
 // Helper functions for handling pipe-separated values
 const splitAtPipe = (value: string | null | undefined) => {
@@ -122,6 +123,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
   const [qc1Options, setQc1Options] = useState<{ label: string; value: string }[]>([]);
+  const { fetchTrip } = manageTripStore();
  
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
@@ -267,16 +269,18 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
       console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
 
-      const isNewLeg = !execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0;
-      const hasModifiedFields =
-        execLeg.LegID !== legIdParts.value ||
-        execLeg.Departure !== departureParts.value ||
-        execLeg.Arrival !== arrivalParts.value ||
-        execLeg.LegBehaviour !== legBehaviourParts.value ||
-        execLeg.Remarks;
 
-      if (isNewLeg) modeFlag = 'Insert';
-      else if (hasModifiedFields) modeFlag = 'Update';
+        // const isNewLeg = !execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0;
+        const hasModifiedFields =
+          execLeg.LegID !== legIdParts.value ||
+          execLeg.Departure !== departureParts.value ||
+          execLeg.Arrival !== arrivalParts.value ||
+          execLeg.LegBehaviour !== legBehaviourParts.value ||
+          execLeg.Remarks;
+
+        // Insert logic commented out as per request
+        // if (isNewLeg) modeFlag = 'Insert';
+        if (hasModifiedFields) modeFlag = 'Update';
 
       // 🟡 If Departure or Arrival changed, reset LegID to null
       const isDepartureOrArrivalChanged =
@@ -315,9 +319,15 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
    
     console.log('💾 formatFinalRouteData:', formatFinalRouteData);
     try {
-      const response = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
+      const response: any = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
       console.log('💾 response:', response);
       
+      // if (response?.data) {
+      const { IsSuccess, ResponseData, Message } = response.data;
+      // }
+      if(IsSuccess) {
+        fetchTrip(tripData?.Header.TripID || '');
+      }
       // Access the response data safely
       const responseData = response as any;
       
@@ -519,9 +529,9 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
             <h2 className="text-lg font-semibold">Leg Details</h2>
             {tripData?.Header && (
               <>
-                <Badge className="border badge-blue rounded-2xl" variant="outline">{tripData.Header.TripID || 'N/A'}</Badge>
+                <Badge className="border badge-blue rounded-2xl" variant="outline">{tripData.Header.TripID || '-'}</Badge>
                 <Badge className={cn("border rounded-2xl", getTripStatusBadgeClass(tripData.Header.TripStatus || ''))}>
-                  {tripData.Header.TripStatusDescription || tripData.Header.TripStatus || 'N/A'}
+                  {tripData.Header.TripStatusDescription || tripData.Header.TripStatus || '-'}
                 </Badge>
               </>
             )}
