@@ -1,6 +1,7 @@
 // api/services/workOrderService.ts
 import { apiClient } from "@/api/client";
 import { API_ENDPOINTS, getUserContext } from "@/api/config";
+import { ApiResponse } from "../types";
 
 // ---- Types for selection payload ----
 export interface WorkOrderSelectionPayload {
@@ -146,4 +147,33 @@ export const workOrderService = {
     );
     return response.data;
   },
+
+  // Get billing details for work order
+    getBillingDetails: async (
+      workOrderNo: string
+    ): Promise<ApiResponse<any>> => {
+      const userContext = getUserContext();
+      const requestPayload = JSON.stringify({
+        context: {
+          UserID: "ramcouser",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
+          MessageID: "12345",
+          MessageType: "WorkOrder-Get Billing Details"
+        },
+        SearchCriteria: {
+          WorkOrderNo: workOrderNo
+        }
+      });
+  
+      const requestBody = {
+        RequestData: requestPayload,
+      };
+  
+      const response = await apiClient.post(
+        API_ENDPOINTS.WORK_ORDER.GET_BILLING_DETAILS,
+        requestBody
+      );
+      return response.data;
+    },
 };

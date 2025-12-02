@@ -20,6 +20,8 @@ import { buildWorkOrderPayload } from "@/lib/utils";
 import { useWorkOrderStore } from "@/stores/workOrderStore";
 import { SmartGridPlus } from "../SmartGrid/SmartGridPlus";
 import { GridColumnConfig } from "@/types/smartgrid";
+import BillingDetails from "./BillingDetails";
+import { useSearchParams } from "react-router-dom"; // Import useSearchParams for URL search parameters
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -32,6 +34,8 @@ export type WorkOrderFormHandle = {
  * ---------------------------------------------------*/
 const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const formRef = useRef<DynamicPanelRef>(null);
+  const [searchParams] = useSearchParams(); // Import useSearchParams
+  const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
 
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
   const [resourceGroups, setResourceGroups] = useState<any[]>([]);
@@ -43,6 +47,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList2, setqcList2] = useState<any>();
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
+  const [showBillingDetails, setShowBillingDetails] = useState(false); // State for billing details drawer
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
@@ -54,27 +59,30 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     saveWorkOrder();
   };
   useEffect(() => {
-    const payload = {
-      context: {
-        MessageID: "12345",
-        MessageType: "Work Order Selection",
-        OUID: 4,
-        Role: "ramcorole",
-        UserID: "ramcouser",
-      },
-      SearchCriteria: {
-        WorkOrderNo: "RWO-000188",
-        AdditionalFilter: [
-          {
-            FilterName: "ServiceType",
-            FilterValue: "Standard",
-          },
-        ],
-      },
-    };
+    // Fetch work order data when workOrderNo changes
+    if (workOrderNo) {
+      const payload = {
+        context: {
+          MessageID: "12345",
+          MessageType: "Work Order Selection",
+          OUID: 4,
+          Role: "ramcorole",
+          UserID: "ramcouser",
+        },
+        SearchCriteria: {
+          WorkOrderNo: workOrderNo,
+          AdditionalFilter: [
+            {
+              FilterName: "ServiceType",
+              FilterValue: "Standard",
+            },
+          ],
+        },
+      };
 
-    searchWorkOrder(payload);
-  }, []);
+      searchWorkOrder(payload);
+    }
+  }, [workOrderNo]);
 
   useEffect(() => {
     if (workOrder?.Header) {
@@ -434,6 +442,48 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
     },
 
+    BillingDetailsTitle: {
+      id: "BillingDetailsTitle",
+      label: "Billing Details",
+      fieldType: "header",
+      width: "full",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+      icon: (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 6H11M5 9H9"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      events: {
+        onClick: (event, value) => {
+          console.log("Billing Details icon clicked", event, value);
+          setShowBillingDetails(true);
+        },
+      },
+    },
+
     /** Billing */
     AcceptedByForwardis: {
       id: "AcceptedByForwardis",
@@ -509,6 +559,96 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       order: 18,
     },
 
+    MoreDetails: {
+      id: "MoreDetails",
+      label: "More Details",
+      fieldType: "header",
+      width: "full",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 19,
+      icon: (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 6H11M5 9H9"
+            stroke="#475467"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      events: {
+        onClick: (event, value) => {
+          console.log("Billing Details icon clicked", event, value);
+          // Toggle visibility of more details fields
+          setShowMoreDetails((prev) => !prev);
+        },
+      },
+    },
+    EndDate: {
+      id: "EndDate",
+      label: "End Date",
+      fieldType: "text",
+      width: "half",
+      value: workOrder?.Header?.EndDate,
+      mandatory: false,
+      visible: true,
+      editable: false,
+      order: 20,
+    },
+
+    User: {
+      id: "User",
+      label: "User",
+      fieldType: "text",
+      width: "half",
+      value: workOrder?.Header?.User,
+      mandatory: false,
+      visible: true,
+      editable: false,
+      order: 21,
+    },
+
+    NextRevision: {
+      id: "NextRevision",
+      label: "Next Revision",
+      fieldType: "text",
+      width: "half",
+      value: workOrder?.Header?.NextRevisionDate,
+      mandatory: false,
+      visible: true,
+      editable: false,
+      order: 22,
+    },
+
+    PlaceOfRevision: {
+      id: "PlaceOfRevision",
+      label: "Place Of Revision",
+      fieldType: "text",
+      width: "half",
+      value: workOrder?.Header?.PlaceOfRevisionDescription,
+      mandatory: false,
+      visible: true,
+      editable: false,
+      order: 23,
+    },
+
     /** QC fields */
     QCUserDefined1: {
       id: "QCUserDefined1",
@@ -516,7 +656,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: {
         dropdown: workOrder?.Header?.QC1Code,
@@ -537,7 +677,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: {
         dropdown: workOrder?.Header?.QC2Code,
@@ -558,7 +698,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: {
         dropdown: workOrder?.Header?.QC3Code,
@@ -579,7 +719,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "text",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: workOrder?.Header?.Remarks1,
       order: 27,
@@ -592,7 +732,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "text",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: workOrder?.Header?.Remarks2,
       order: 28,
@@ -605,13 +745,41 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fieldType: "text",
       width: "half",
       mandatory: false,
-      visible: true,
+      visible: showMoreDetails,
       editable: true,
       value: workOrder?.Header?.Remarks3,
       order: 29,
       // events: { onChange: (val) => updateHeader("Remarks3", val) },
     },
   });
+
+  useImperativeHandle(ref, () => ({
+    getWorkOrderValues: () => {
+      const mainFormData = formRef.current?.getFormValues() || {};
+      const locationData = locationDetailsRef.current?.getFormValues?.() || {};
+      return {
+        ...mainFormData,
+        Location: locationData,
+      };
+    },
+  }));
+
+  //All button functions and modals will be here
+  const openWagonMoreDEtails = () => {
+    setWagonMoreDetails(true);
+  };
+  const closeWagonMoreDEtails = () => {
+    setWagonMoreDetails(false);
+  };
+  //slider
+  const openOperationDetails = () => {
+    setShowOperationDetails(true);
+    console.log("clicked,showOperstionDetails", showOperstionDetails);
+  };
+  const closeOperationDetails = () => {
+    setShowOperationDetails(false);
+    console.log("clicked,showOperstionDetails", showOperstionDetails);
+  };
 
   const locationPanelConfig: PanelConfig = {
     Origin: {
@@ -1194,7 +1362,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
                 {/* RIGHT SECTION */}
                 <div className="lg:col-span-1 w-4/6">
-                  <div className="bg-white rounded-lg border border-gray-200 mb-6">
+                  <div className="bg-white rounded-lg border border-gray-200 mb-6 p-4">
                     <SmartGridPlus
                       columns={columns}
                       data={data}
@@ -1300,6 +1468,118 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
               </div>
             </div>
           </div>
+
+          <SideDrawer
+            isOpen={wagonMoreDetails}
+            onClose={closeWagonMoreDEtails}
+            title="irjgihgie"
+            width="30%"
+            isBack={false}
+          >
+            {/* Fix applied here */}
+            <div className="flex flex-col h-full">
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="border-b p-6 bg-[#F8F9FC] text-sm">
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+                    {[
+                      ["Creation Date", "15-Mar-2025 10:00:00 AM"],
+                      ["Created By", "William Joe"],
+                      ["Modification Date", "15-Mar-2025 10:00:00 AM"],
+                      ["Modified By", "Andrewson"],
+                      ["End Date", "15-Sep-2025"],
+                      ["User", "A. Mussy"],
+                      ["Next Revision", "15-Mar-2027"],
+                      ["Place of Revision", "LEU (RO)"],
+                    ].map(([label, value], i) => (
+                      <div key={i}>
+                        <p className="text-xs text-gray-500 mb-1">{label}</p>
+                        <p className="text-[13px] font-semibold text-gray-800">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 bg-[#F8F9FC]">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        QC Userdefined {n}
+                      </label>
+
+                      <div className="flex items-center">
+                        <div className="relative w-16">
+                          <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option>QC</option>
+                            <option>Value 1</option>
+                            <option>Value 2</option>
+                          </select>
+                          <svg
+                            className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+
+                        <input
+                          type="text"
+                          placeholder="Enter Value"
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Remarks {n}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter Remarks"
+                        className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fixed footer */}
+              <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
+                <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
+                  Cancel
+                </button>
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  Save
+                </button>
+              </div>
+            </div>
+          </SideDrawer>
+
+          {/* Billing Details SideDrawer */}
+          <SideDrawer
+            isOpen={showBillingDetails}
+            onClose={() => setShowBillingDetails(false)}
+            width="100%"
+            title="Billing Details"
+            isBack={true}
+            badgeContent={workOrder?.Header?.WorkorderNo || "-"}
+            isBadgeRequired={true}
+          >
+            <BillingDetails workOrderNumber={workOrder?.Header?.WorkorderNo} />
+          </SideDrawer>
+
+          <WorkOrderOperationDetails
+            onClose={closeOperationDetails}
+            value={showOperstionDetails}
+          />
         </AppLayout>
       )}
     </>
