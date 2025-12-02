@@ -6,17 +6,9 @@ import React, {
   useEffect,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
+import { debounce } from "lodash";
 import type { PanelConfig } from "@/types/dynamicPanel";
-import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Copy,
-  BookX,
-  Link,
-  Paperclip,
-  MapPinned,
-} from "lucide-react";
+import { MapPinned } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services";
@@ -52,14 +44,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
-  const {
-    workOrder,
-    searchWorkOrder,
-    loading,
-    updateHeaderField,
-    updateBillingField,
-  } = useWorkOrderStore();
+  const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
+  const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
 
+  const updateHeader = useWorkOrderStore((state) => state.updateHeader);
+  const saveWorkOrder = useWorkOrderStore.getState().saveWorkOrder;
+
+  const handleSave = () => {
+    saveWorkOrder();
+  };
   useEffect(() => {
     const payload = {
       context: {
@@ -81,24 +74,13 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
 
     searchWorkOrder(payload);
-  }, [searchWorkOrder]);
+  }, []);
 
   useEffect(() => {
     if (workOrder?.Header) {
       setWorkOrderData(workOrder.Header);
     }
-  }, [workOrder]);
-
-  useEffect(() => {
-    if (workOrder) {
-      console.clear();
-      console.log(
-        "📌 Final JSON from store:",
-        workOrder?.Header?.SupplierContractDescription
-      );
-      console.log("📌 WorkorderSchedule:", workOrder);
-    }
-  }, [workOrder]);
+  }, []);
 
   const breadcrumbItems = [
     { label: "Home", href: "/dashboard", active: false },
@@ -147,50 +129,56 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
    * PanelConfig factory — depends on currentOrderType
    */
   const workOrderPanelConfig = (currentOrderType: string): PanelConfig => ({
-    WorkOrderType: {
-      id: "WorkOrderType",
-      label: "",
+    EquipmentType: {
+      id: "EquipmentType",
+      label: "EquipmentType",
       fieldType: "radio",
       width: "full",
-      value: workOrder?.Header?.EquipmentType, // "Wagon" / "Container"
+      mandatory: false,
+      visible: true,
+      editable: true,
+      value: workOrder?.Header?.EquipmentType,
       options: [
         { label: "Wagon", value: "Wagon" },
         { label: "Container", value: "Container" },
       ],
-      mandatory: false,
-      visible: true,
-      editable: true,
       order: 1,
       events: {
         onChange: (val) => {
-          setOrderType(val); // UI
-          useWorkOrderStore.setState((state) => ({
-            workOrder: {
-              ...state.workOrder,
-              Header: {
-                ...state.workOrder.Header,
-                WorkOrderType: val,
-                EquipmentType: val, 
-              },
-            },
-          }));
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+          updateHeader("EquipmentType", val);
+          updateHeader("ModeFlag", "Update"); // ⚠️ correct key
+          console.log("Work Order Type changed:", val);
         },
       },
     },
+
     WagonCondainterID: {
       id: "WagonCondainterID",
       label: "Wagon/Container ID",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.EquipmentID, // 🔥 correct bind
       mandatory: true,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.EquipmentID,
       order: 2,
       fetchOptions:
         currentOrderType === "Wagon"
           ? fetchMaster("Wagon id Init")
           : fetchMaster("Container id Init"),
+      events: {
+        onChange: (val) => {
+          // const updateHeader = useWorkOrderStore.getState().updateHeader;
+          // updateHeader("EquipmentType", val);
+          // updateHeader("ModeFlag", "Update"); // ⚠️ correct key
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+          updateHeader("EquipmentID", id);
+          updateHeader("EquipmentDescription", desc);
+          console.log("Work Order Type changed:", val);
+        },
+      },
     },
 
     SuplierContract: {
@@ -198,14 +186,24 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Supplier Contract No",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.SupplierContractDescription,
       mandatory: true,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.SupplierContractDescription,
       order: 3,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Buy" },
       ]),
+      events: {
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("SupplierContractID", id);
+          updateHeader("SupplierContractDescription", desc);
+        },
+      },
     },
 
     CustomerContract: {
@@ -213,14 +211,24 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Customer Contract No./Business Case",
       fieldType: "lazyselect",
       width: "full",
-      value: workOrder?.Header?.CustomerContractID,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.CustomerContractID,
       order: 4,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Sell" },
       ]),
+      events: {
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("CustomerContractID", id);
+          updateHeader("CustomerContractDescription", desc);
+        },
+      },
     },
 
     AppoinmentDate: {
@@ -228,11 +236,28 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Appointment Date",
       fieldType: "date",
       width: "half",
-      value: workOrder?.Header?.AppointmentDate,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.AppointmentDate
+        ? workOrder.Header.AppointmentDate.slice(0, 10) // "YYYY-MM-DD"
+        : "",
       order: 6,
+      events: {
+        onChange: (val) => {
+          console.log("Event Date changed:", val);
+
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+          updateHeader("EventDate", val);
+
+          setTimeout(() => {
+            console.log(
+              "Updated EventDate:",
+              useWorkOrderStore.getState().workOrder?.Header?.EventDate
+            );
+          }, 0);
+        },
+      },
     },
 
     ClusterMarket: {
@@ -240,12 +265,22 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Cluster/Market",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.Cluster,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.Cluster,
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
+      events: {
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("Cluster", id);
+          updateHeader("ClusterDescription", desc);
+        },
+      },
     },
 
     product: {
@@ -253,12 +288,22 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Product",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.ProductID,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.ProductID,
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
+      events: {
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("ProductID", id);
+          updateHeader("ProductDescription", desc);
+        },
+      },
     },
 
     UNCODE: {
@@ -266,12 +311,22 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "UN Code",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.UNCodeID,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.UNCodeID,
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
+      events: {
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("Cluster", id);
+          updateHeader("ClusterDescription", desc);
+        },
+      },
     },
 
     LoadType: {
@@ -279,43 +334,54 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Load Type",
       fieldType: "radio",
       width: "half",
-      value: workOrder?.Header?.LoadType?.IsLoaded === "1" ? "BUY" : "SELL",
-      options: [
-        { label: "Loaded", value: "BUY" },
-        { label: "Empty", value: "SELL" },
-      ],
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.LoadType?.IsLoaded === "1" ? "1" : "0",
+      options: [
+        { label: "Loaded", value: "1" },
+        { label: "Empty", value: "0" },
+      ],
       order: 10,
+
       events: {
         onChange: (val) => {
-          useWorkOrderStore.setState((state) => ({
-            workOrder: {
-              ...state.workOrder,
-              Header: {
-                ...state.workOrder.Header,
-                LoadType: val,
-                ModeFlag:
-                  state.workOrder.Header.ModeFlag === "NoChange"
-                    ? "Update"
-                    : state.workOrder.Header.ModeFlag,
-              },
-            },
-          }));
+          const loadTypeObj = {
+            IsLoaded: val === "1" ? "1" : "0",
+            IsEmpty: val === "0" ? "1" : "0",
+          };
+
+          console.log("📌 Final LoadType JSON:", {
+            LoadType: loadTypeObj,
+          });
+          updateHeader("LoadType", loadTypeObj);
         },
       },
     },
+
     Hazardous: {
       id: "Hazardous",
       label: "Hazardous",
       fieldType: "switch",
       width: "half",
-      value: workOrder?.Header?.Hazardous === "1",
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.Hazardous === "1", 
       order: 11,
+
+      events: {
+        onChange: (val) => {
+          
+          const hazardousValue = val ? "1" : "0"; 
+
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+          updateHeader("Hazardous", hazardousValue);
+          updateHeader("ModeFlag", "Update");
+
+         
+        },
+      },
     },
 
     EventDate: {
@@ -323,11 +389,26 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Event Date",
       fieldType: "date",
       width: "half",
-      value: workOrder?.Header?.EventDate,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.EventDate,
       order: 12,
+      events: {
+        onChange: (val) => {
+          console.log("Event Date changed:", val);
+
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+          updateHeader("EventDate", val);
+
+          setTimeout(() => {
+            console.log(
+              "Updated EventDate:",
+              useWorkOrderStore.getState().workOrder?.Header?.EventDate
+            );
+          }, 0);
+        },
+      },
     },
 
     PlaceOfEvent: {
@@ -335,64 +416,44 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Place Of Event",
       fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.PlaceOfEventID,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.PlaceOfEventID,
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
-    },
-    BillingDetailsTitle: {
-      id: "BillingDetailsTitle",
-      label: "Billing Details",
-      fieldType: "header",
-      width: "full",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 14,
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 6H11M5 9H9"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
       events: {
-        onClick: (event, value) => {
-          console.log("Billing Details icon clicked", event, value);
+        onChange: (val) => {
+          const updateHeader = useWorkOrderStore.getState().updateHeader;
+
+          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+
+          updateHeader("PlaceOfEventID", id);
+          updateHeader("PlaceOfEventIDDescription", desc);
         },
       },
     },
+
+    /** Billing */
     AcceptedByForwardis: {
       id: "AcceptedByForwardis",
       label: "Accepted By Forwardis",
       fieldType: "switch",
       width: "full",
-      value:
-        workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1",
       mandatory: true,
       visible: true,
       editable: true,
+      value:
+        workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1",
       order: 15,
+      // events: {
+      //   onChange: (val) =>
+      //     updateHeader("BillingHeaderDetails", {
+      //       ...workOrder?.Header?.BillingHeaderDetails,
+      //       IsAcceptedByForwardis: val ? "1" : "0",
+      //       ModeFlag: "Update",
+      //     }),
+      // },
     },
 
     ReInvoiceCost: {
@@ -400,11 +461,19 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Re-Invoice Cost",
       fieldType: "switch",
       width: "full",
-      value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost === "1",
       mandatory: true,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost === "1",
       order: 16,
+      // events: {
+      //   onChange: (val) =>
+      //     updateHeader("BillingHeaderDetails", {
+      //       ...workOrder?.Header?.BillingHeaderDetails,
+      //       IsReinvoiceCost: val ? "1" : "0",
+      //       ModeFlag: "Update",
+      //     }),
+      // },
     },
 
     InvoiceTo: {
@@ -412,12 +481,20 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Invoice To",
       fieldType: "lazyselect",
       width: "full",
-      value: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
       mandatory: false,
       visible: true,
       editable: true,
+      value: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
       order: 17,
       fetchOptions: fetchMaster("Cluster Init"),
+      // events: {
+      //   onChange: (val) =>
+      //     updateHeader("BillingHeaderDetails", {
+      //       ...workOrder?.Header?.BillingHeaderDetails,
+      //       InvoiceTo: val,
+      //       ModeFlag: "Update",
+      //     }),
+      // },
     },
 
     FinacialComments: {
@@ -425,115 +502,33 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Financial Comments",
       fieldType: "textarea",
       width: "full",
-      value: workOrder?.Header?.BillingHeaderDetails?.FinancialComments,
       mandatory: false,
       visible: true,
       editable: true,
+      value: "",
       order: 18,
     },
-    MoreDetails: {
-      id: "MoreDetails",
-      label: "More Details",
-      fieldType: "header",
-      width: "full",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 19,
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 6H11M5 9H9"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
-      events: {
-        onClick: (event, value) => {
-          console.log("Billing Details icon clicked", event, value);
-          // Toggle visibility of more details fields
-          setShowMoreDetails((prev) => !prev);
-        },
-      },
-    },
-    EndDate: {
-      id: "EndDate",
-      label: "End Date",
-      fieldType: "text",
-      width: "half",
-      value: workOrder?.Header?.EndDate,
-      mandatory: false,
-      visible: true,
-      editable: false,
-      order: 20,
-    },
 
-    User: {
-      id: "User",
-      label: "User",
-      fieldType: "text",
-      width: "half",
-      value: workOrder?.Header?.User,
-      mandatory: false,
-      visible: true,
-      editable: false,
-      order: 21,
-    },
-
-    NextRevision: {
-      id: "NextRevision",
-      label: "Next Revision",
-      fieldType: "text",
-      width: "half",
-      value: workOrder?.Header?.NextRevisionDate,
-      mandatory: false,
-      visible: true,
-      editable: false,
-      order: 22,
-    },
-
-    PlaceOfRevision: {
-      id: "PlaceOfRevision",
-      label: "Place Of Revision",
-      fieldType: "text",
-      width: "half",
-      value: workOrder?.Header?.PlaceOfRevisionDescription,
-      mandatory: false,
-      visible: true,
-      editable: false,
-      order: 23,
-    },
-
+    /** QC fields */
     QCUserDefined1: {
       id: "QCUserDefined1",
       label: "QC Userdefined 1",
       fieldType: "inputdropdown",
       width: "half",
+      mandatory: false,
+      visible: true,
+      editable: true,
       value: {
         dropdown: workOrder?.Header?.QC1Code,
         input: workOrder?.Header?.QC1Value,
       },
-      mandatory: false,
-      visible: showMoreDetails,
-      editable: true,
       order: 24,
+      // events: {
+      //   onChange: (val) => {
+      //     updateHeader("QC1Code", val.dropdown);
+      //     updateHeader("QC1Value", val.input);
+      //   },
+      // },
     },
 
     QCUserDefined2: {
@@ -541,14 +536,20 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "QC Userdefined 2",
       fieldType: "inputdropdown",
       width: "half",
+      mandatory: false,
+      visible: true,
+      editable: true,
       value: {
         dropdown: workOrder?.Header?.QC2Code,
         input: workOrder?.Header?.QC2Value,
       },
-      mandatory: false,
-      visible: showMoreDetails,
-      editable: true,
       order: 25,
+      // events: {
+      //   onChange: (val) => {
+      //     updateHeader("QC2Code", val.dropdown);
+      //     updateHeader("QC2Value", val.input);
+      //   },
+      // },
     },
 
     QCUserDefined3: {
@@ -556,14 +557,20 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "QC Userdefined 3",
       fieldType: "inputdropdown",
       width: "half",
+      mandatory: false,
+      visible: true,
+      editable: true,
       value: {
         dropdown: workOrder?.Header?.QC3Code,
         input: workOrder?.Header?.QC3Value,
       },
-      mandatory: false,
-      visible: showMoreDetails,
-      editable: true,
       order: 26,
+      // events: {
+      //   onChange: (val) => {
+      //     updateHeader("QC3Code", val.dropdown);
+      //     updateHeader("QC3Value", val.input);
+      //   },
+      // },
     },
 
     Remarks1: {
@@ -571,11 +578,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Remarks 1",
       fieldType: "text",
       width: "half",
-      value: workOrder?.Header?.Remarks1,
       mandatory: false,
-      visible: showMoreDetails,
+      visible: true,
       editable: true,
+      value: workOrder?.Header?.Remarks1,
       order: 27,
+      // events: { onChange: (val) => updateHeader("Remarks1", val) },
     },
 
     Remarks2: {
@@ -583,11 +591,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Remarks 2",
       fieldType: "text",
       width: "half",
-      value: workOrder?.Header?.Remarks2,
       mandatory: false,
-      visible: showMoreDetails,
+      visible: true,
       editable: true,
+      value: workOrder?.Header?.Remarks2,
       order: 28,
+      // events: { onChange: (val) => updateHeader("Remarks2", val) },
     },
 
     Remarks3: {
@@ -595,13 +604,146 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       label: "Remarks 3",
       fieldType: "text",
       width: "half",
-      value: workOrder?.Header?.Remarks3,
       mandatory: false,
-      visible: showMoreDetails,
+      visible: true,
       editable: true,
+      value: workOrder?.Header?.Remarks3,
       order: 29,
+      // events: { onChange: (val) => updateHeader("Remarks3", val) },
     },
   });
+
+  const locationPanelConfig: PanelConfig = {
+    Origin: {
+      id: "Origin",
+      label: "Origin",
+      fieldType: "lazyselect",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.OriginID,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    OutboardDest: {
+      id: "OutboardDest",
+      label: "Outboard Destination",
+      fieldType: "lazyselect",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    RUForward: {
+      id: "RUForward",
+      label: "RU Forward",
+      fieldType: "lazyselect",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.RUForwardID,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 3,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    ReturnDest: {
+      id: "ReturnDest",
+      label: "Return Destination",
+      fieldType: "lazyselect",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.ReturnDestinationID,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 4,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+    RUReturn: {
+      id: "RUReturn",
+      label: "RU Return",
+      fieldType: "lazyselect",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.RUReturnID,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 5,
+      fetchOptions: fetchMaster("Location Init"),
+    },
+  };
+
+  const SchedulePanelConfig: PanelConfig = {
+    DepartureDate: {
+      id: "DepartureDate",
+      label: "DepartureDate",
+      fieldType: "date",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.DepartureDate,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+    },
+    Arrivaldate: {
+      id: "Arrivaldate",
+      label: "Arrival date",
+      fieldType: "date",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.ArrivalDate,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+    },
+    EntryDate: {
+      id: "EntryDate",
+      label: "Entry Date",
+      fieldType: "date",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.EntryDate,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 3,
+    },
+    ScheduledExitDate: {
+      id: "ScheduledExitDate",
+      label: "Scheduled Exit Date",
+      fieldType: "date",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.ScheduledExitDate,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 4,
+    },
+    ActualExitDate: {
+      id: "ActualExitDate",
+      label: "Actual Exit Date",
+      fieldType: "date",
+      width: "six",
+      value: workOrder?.WorkorderSchedule?.ScheduledExitDate,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 5,
+    },
+    Comments: {
+      id: "Comments",
+      label: "Comments",
+      fieldType: "text",
+      width: "full",
+      value: workOrder?.WorkorderSchedule?.Comments,
+      visible: true,
+      mandatory: false,
+      editable: true,
+      order: 6,
+    },
+  };
 
   useImperativeHandle(ref, () => ({
     getWorkOrderValues: () => {
@@ -614,85 +756,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     },
   }));
 
-  //All button functions and modals will be here
-  const openWagonMoreDEtails = () => {
-    setWagonMoreDetails(true);
-  };
-  const closeWagonMoreDEtails = () => {
-    setWagonMoreDetails(false);
-  };
-  //slider
-  const openOperationDetails = () => {
-    setShowOperationDetails(true);
-    console.log("clicked,showOperstionDetails", showOperstionDetails);
-  };
-  const closeOperationDetails = () => {
-    setShowOperationDetails(false);
-    console.log("clicked,showOperstionDetails", showOperstionDetails);
-  };
-
-  const locationPanelConfig: PanelConfig = {
-    Origin: {
-      id: "Origin",
-      label: "Origin",
-      fieldType: "lazyselect",
-      width: "six",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    OutboardDest: {
-      id: "OutboardDest",
-      label: "Outboard Destination",
-      fieldType: "lazyselect",
-      width: "six",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    RUForward: {
-      id: "RUForward",
-      label: "RU Forward",
-      fieldType: "lazyselect",
-      width: "six",
-      value: "",
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 3,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    ReturnDest: {
-      id: "ReturnDest",
-      label: "Return Destination",
-      fieldType: "lazyselect",
-      width: "six",
-      value: "",
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 4,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    RUReturn: {
-      id: "RUReturn",
-      label: "RU Return",
-      fieldType: "lazyselect",
-      width: "six",
-      value: "",
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 5,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-  };
+  const updateWorkOrderHeaderDebounced = debounce((updatedHeader) => {
+    useWorkOrderStore.setState((state) => ({
+      workOrder: {
+        ...state.workOrder,
+        Header: {
+          ...state.workOrder.Header,
+          ...updatedHeader,
+          ModeFlag: "Update",
+        },
+      },
+    }));
+  }, 500);
 
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`;
   const buttonCancel =
@@ -928,7 +1003,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         { id: "Height-Adj", name: "Height: Adjustable" },
         { id: "Wheels-Caster", name: "Wheels: Caster Wheels" },
       ],
-      reviews: [{ reviewer: "Mike R.", rating: 4, comment: "Very comfortable" }],
+      reviews: [
+        { reviewer: "Mike R.", rating: 4, comment: "Very comfortable" },
+      ],
       notes: "Ergonomic design, suitable for long hours",
       internalCode: "FURN-CHR-002",
       warehouse: "Warehouse B",
@@ -948,7 +1025,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         { id: "Camera-108MP", name: "Camera: 108MP Triple" },
         { id: "Battery-4500", name: "Battery: 4500mAh" },
       ],
-      reviews: [{ reviewer: "Sarah T.", rating: 5, comment: "Amazing camera quality" }],
+      reviews: [
+        { reviewer: "Sarah T.", rating: 5, comment: "Amazing camera quality" },
+      ],
       notes: "Latest model with 5G connectivity",
       internalCode: "MOB-PHN-003",
       warehouse: "Warehouse A",
@@ -1033,7 +1112,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
               </div>
 
               <div className="flex gap-4">
-                {/* LEFT SECTION */}
                 <div className="lg:col-span-1 w-2/6">
                   <div className="bg-white rounded-lg border border-gray-200">
                     <div className="orderFormScroll p-4">
@@ -1046,12 +1124,28 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                         panelSubTitle="Work Order Info"
                         className="my-custom-workorder-panel"
                         onDataChange={(updatedHeader) => {
-                          // Mapping for lazyselect values
+                          const mapLazyHeader = (field, idKey, descKey) => {
+                            if (updatedHeader[field]) {
+                              const [id, desc] =
+                                updatedHeader[field].split(" || ");
+                              updatedHeader[idKey] = id;
+                              updatedHeader[descKey] = desc;
+                            }
+                          };
+
                           if (updatedHeader.WagonCondainterID) {
                             const [id, desc] =
                               updatedHeader.WagonCondainterID.split(" || ");
                             updatedHeader.EquipmentID = id;
                             updatedHeader.EquipmentDescription = desc;
+                          }
+
+                          if (updatedHeader.LoadType) {
+                            const val = updatedHeader.LoadType;
+                            updatedHeader.LoadType = {
+                              IsLoaded: val === "1" ? 1 : 0,
+                              IsEmpty: val === "0" ? 1 : 0,
+                            };
                           }
 
                           if (updatedHeader.SuplierContract) {
@@ -1068,44 +1162,35 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                             updatedHeader.CustomerContractDescription = desc;
                           }
 
-                          // Update store
-                          useWorkOrderStore.setState((state) => ({
-                            workOrder: {
-                              ...state.workOrder,
-                              Header: {
-                                ...state.workOrder.Header,
-                                ...updatedHeader,
-                                ModeFlag: "Update", // 🔥 IMPORTANT
-                              },
-                            },
-                          }));
+                          mapLazyHeader(
+                            "ClusterMarket",
+                            "Cluster",
+                            "ClusterDescription"
+                          );
+                          mapLazyHeader(
+                            "product",
+                            "ProductID",
+                            "ProductDescription"
+                          );
+                          mapLazyHeader(
+                            "UNCODE",
+                            "UNCodeID",
+                            "UNCodeDescription"
+                          );
+                          mapLazyHeader(
+                            "PlaceOfEvent",
+                            "PlaceOfEventID",
+                            "PlaceOfEventIDDescription"
+                          );
+                          updateWorkOrderHeaderDebounced(updatedHeader);
                         }}
                       />
                     </div>
-                    <button
-                      className="bg-green-600 text-white px-4 py-2 rounded"
-                      onClick={() => {
-                        const payload = useWorkOrderStore.getState().workOrder;
-                        console.log(
-                          "🚀 FINAL PAYLOAD TO SAVE:",
-                          JSON.stringify(payload, null, 2)
-                        );
-                        alert("Check console for payload!");
-                      }}
-                    >
-                      Debug Payload
-                    </button>
 
                     {/* Buttons Row */}
                     <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200"></div>
                   </div>
                 </div>
-                {/* <Button
-              className=" mt-3 bg-blue-600 text-white"
-              onClick={saveToZustand}
-            >
-              Save Work Order
-            </Button> */}
 
                 {/* RIGHT SECTION */}
                 <div className="lg:col-span-1 w-4/6">
@@ -1138,32 +1223,62 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                         panelConfig={locationPanelConfig}
                         collapsible={true}
                         initialData={workOrderData?.Location || {}}
-                        onDataChange={(data) => {
-                          setWorkOrderData((prev) => ({
-                            ...prev,
-                            Location: data,
+                        onDataChange={(updatedSchedule) => {
+                          // Send directly to store
+                          useWorkOrderStore.setState((state) => ({
+                            workOrder: {
+                              ...state.workOrder,
+                              WorkorderSchedule: {
+                                ...state.workOrder.WorkorderSchedule,
+                                ...updatedSchedule,
+                                ModeFlag:
+                                  state.workOrder.WorkorderSchedule
+                                    ?.ModeFlag === "NoChange"
+                                    ? "Update"
+                                    : state.workOrder.WorkorderSchedule
+                                        ?.ModeFlag,
+                              },
+                            },
                           }));
                         }}
                       />
                     </div>
-                    {/* <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <Plus className="w-10 h-10 text-blue-500" />
-                </div>
 
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                  No Resource Group Added
-                </h3>
-
-                <p className="text-gray-500 text-center mb-6 text-sm">
-                  Click the "Add" button to create a resource group.
-                </p>
-
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={openOperationDetails}
-                >
-                  Add
-                </Button> */}
+                    <div className="lg:col-span-1 ">
+                      <div className="bg-white rounded-lg border border-gray-200"></div>
+                      <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
+                        <div className="">
+                          <DynamicPanel
+                            ref={scheduleDetailsRef}
+                            panelId="scheduleDetails"
+                            panelTitle="schedule Details"
+                            panelIcon={
+                              <MapPinned className="w-5 h-5 text-blue-500" />
+                            }
+                            panelConfig={SchedulePanelConfig}
+                            collapsible={true}
+                            initialData={workOrderData?.Location || {}}
+                            onDataChange={(updatedSchedule) => {
+                              useWorkOrderStore.setState((state) => ({
+                                workOrder: {
+                                  ...state.workOrder,
+                                  WorkorderSchedule: {
+                                    ...state.workOrder.WorkorderSchedule,
+                                    ...updatedSchedule,
+                                    ModeFlag:
+                                      state.workOrder.WorkorderSchedule
+                                        ?.ModeFlag === "NoChange"
+                                        ? "Update"
+                                        : state.workOrder.WorkorderSchedule
+                                            ?.ModeFlag,
+                                  },
+                                },
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1172,7 +1287,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                 <div className="flex items-center gap-4"></div>
                 <div className="flex items-center gap-4">
                   <button className={buttonCancel}>Cancel</button>
-                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                  <button
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                    onClick={handleSave}
+                  >
                     Save
                   </button>
                   <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
@@ -1182,104 +1300,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
               </div>
             </div>
           </div>
-          <SideDrawer
-            isOpen={wagonMoreDetails}
-            onClose={closeWagonMoreDEtails}
-            title="irjgihgie"
-            width="30%"
-            isBack={false}
-          >
-            {/* Fix applied here */}
-            <div className="flex flex-col h-full">
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="border-b p-6 bg-[#F8F9FC] text-sm">
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                    {[
-                      ["Creation Date", "15-Mar-2025 10:00:00 AM"],
-                      ["Created By", "William Joe"],
-                      ["Modification Date", "15-Mar-2025 10:00:00 AM"],
-                      ["Modified By", "Andrewson"],
-                      ["End Date", "15-Sep-2025"],
-                      ["User", "A. Mussy"],
-                      ["Next Revision", "15-Mar-2027"],
-                      ["Place of Revision", "LEU (RO)"],
-                    ].map(([label, value], i) => (
-                      <div key={i}>
-                        <p className="text-xs text-gray-500 mb-1">{label}</p>
-                        <p className="text-[13px] font-semibold text-gray-800">
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-6 py-4 bg-[#F8F9FC]">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        QC Userdefined {n}
-                      </label>
-
-                      <div className="flex items-center">
-                        <div className="relative w-16">
-                          <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option>QC</option>
-                            <option>Value 1</option>
-                            <option>Value 2</option>
-                          </select>
-                          <svg
-                            className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-
-                        <input
-                          type="text"
-                          placeholder="Enter Value"
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Remarks {n}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter Remarks"
-                        className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fixed footer */}
-              <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
-                <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
-                  Cancel
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Save
-                </button>
-              </div>
-            </div>
-          </SideDrawer>
-
-          <WorkOrderOperationDetails
-            onClose={closeOperationDetails}
-            value={showOperstionDetails}
-          />
         </AppLayout>
       )}
     </>

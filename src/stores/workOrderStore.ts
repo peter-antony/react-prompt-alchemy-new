@@ -14,8 +14,8 @@ interface WorkOrderState {
   apiMessage: string | null;
   isSuccess: boolean;
   searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
-  updateHeaderField: (field: string, value: any) => void;
-  updateBillingField: (field: string, value: any) => void;
+  updateHeader: (key: string, value: any) => void;
+  saveWorkOrder: () => Promise<void>;
 }
 
 export const useWorkOrderStore = create<WorkOrderState>()(
@@ -50,33 +50,146 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           });
         }
       },
-      updateHeaderField: (field, value) =>
-        set((state) => ({
-          workOrder: {
-            ...state.workOrder!,
-            Header: {
-              ...state.workOrder!.Header,
-              [field]: value,
-              ModeFlag: "Update",
-            },
-          },
-        })),
 
-      updateBillingField: (field, value) =>
-        set((state) => ({
-          workOrder: {
-            ...state.workOrder!,
-            Header: {
-              ...state.workOrder!.Header,
-              BillingHeaderDetails: {
-                ...state.workOrder!.Header.BillingHeaderDetails,
-                [field]: value,
-              },
-              ModeFlag: "Update",
-            },
+      saveWorkOrder: async () => {
+        set({ loading: true, error: null, apiMessage: null });
+
+        const state = useWorkOrderStore.getState();
+        const workOrder = state.workOrder;
+
+        if (!workOrder) {
+          set({ loading: false, error: "No Work Order found to save" });
+          return;
+        }
+
+        const payload = {
+          context: {
+            UserID: "ramcouser",
+            Role: "ramcorole",
+            OUID: 4,
+            MessageID: "12345",
+            MessageType: "WorkOrder-Save",
           },
-        })),
+          RequestPayload: workOrder,
+        };
+
+        try {
+          const result = await workOrderService.saveWorkOrder(payload);
+
+          // save success
+          const success = result?.IsSuccess ?? true;
+          const message = result?.Message ?? "Save Completed";
+
+          set({
+            apiMessage: message,
+            isSuccess: success,
+            loading: false,
+          });
+
+          if (success) {
+            // 1️⃣ RESET STORE
+            set({ workOrder: null });
+
+            // 2️⃣ CALL GET / SEARCH AGAIN (REFRESH)
+            const refreshPayload = {
+              context: {
+                MessageID: "12345",
+                MessageType: "WorkOrder-Save",
+                OUID: 4,
+                Role: "ramcorole",
+                UserID: "ramcouser",
+              },
+              SearchCriteria: {
+                WorkOrderNo: workOrder.Header.WorkorderNo,
+                AdditionalFilter: [],
+              },
+            };
+
+            await state.searchWorkOrder(refreshPayload);
+          }
+        } catch (err: any) {
+          console.error("WorkOrder save failed:", err);
+          set({
+            loading: false,
+            error: err?.message ?? "Save failed",
+            isSuccess: false,
+          });
+        }
+      },
+
+      //     saveWorkOrder: async () => {
+      //   set({ loading: true, error: null, apiMessage: null });
+
+      //   const state = useWorkOrderStore.getState();
+      //   const workOrder = state.workOrder;
+
+      //   if (!workOrder) {
+      //     set({ loading: false, error: "No Work Order found to save" });
+      //     return;
+      //   }
+
+      //   const payload = {
+      //     context: {
+      //       UserID: "ramcouser",
+      //       Role: "ramcorole",
+      //       OUID: 4,
+      //       MessageID: "12345",
+      //       MessageType: "WorkOrder-Save",
+      //     },
+      //     RequestPayload: workOrder,
+      //   };
+
+      //   try {
+      //     const result = await workOrderService.saveWorkOrder(payload);
+
+      //     set({
+      //       loading: false,
+      //       apiMessage: result?.Message ?? "Save Completed",
+      //       isSuccess: result?.IsSuccess ?? true,
+      //     });
+      //   } catch (err: any) {
+      //     console.error("WorkOrder save failed:", err);
+      //     set({
+      //       loading: false,
+      //       error: err?.message ?? "Save failed",
+      //       isSuccess: false,
+      //     });
+      //   }
+      // },
+
+      // updateHeaderField: (field, value) =>
+      //   set((state) => ({
+      //     workOrder: {
+      //       ...state.workOrder!,
+      //       Header: {
+      //         ...state.workOrder!.Header,
+      //         [field]: value,
+      //         ModeFlag: "Update",
+      //       },
+      //     },
+      //   })),
+      updateHeader: (key: string, value: any) =>
+        set((state) => {
+          console.log("🔹 updateHeader called");
+          console.log("   key:", key);
+          console.log("   new value:", value);
+          console.log("   old value:", state.workOrder?.Header?.[key]);
+
+          const updated = state.workOrder
+            ? {
+                ...state.workOrder,
+                Header: {
+                  ...state.workOrder.Header,
+                  [key]: value,
+                },
+              }
+            : state.workOrder;
+
+          console.log("   updated Header:", updated?.Header);
+          return { workOrder: updated };
+        }),
     }),
+
     { name: "WorkOrderStore", trace: true }
   )
 );

@@ -156,7 +156,8 @@ export const API_ENDPOINTS = {
   },
   WORK_ORDER: {
     LIST: 'workorder/searchhub',
-    SELECTION: '/workorder/hubselection'
+    SELECTION: '/workorder/hubselection',
+    SAVE: '/workorder/update',
   },
   // Invoice management
   INVOICES: {

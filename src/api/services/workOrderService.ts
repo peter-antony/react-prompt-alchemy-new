@@ -106,6 +106,19 @@ export const workOrderService = {
       isSuccess,
     };
   },
+
+  saveWorkOrder: async (payload: any): Promise<any> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.SAVE,
+      requestBody
+    );
+    return response.data;
+  },
+
   
   // Work Order Hub Search API, fetching grid data
   getWorkOrdersForHub: async (params?: any): Promise<any> => {
