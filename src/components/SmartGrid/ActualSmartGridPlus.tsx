@@ -43,6 +43,7 @@ export function ActualSmartGridPlus({
   onInlineEdit,
   onBulkUpdate,
   onPreferenceSave,
+  setCurrentEditingRowIndex,
   onDataFetch,
   onUpdate,
   onLinkClick,
@@ -973,6 +974,7 @@ export function ActualSmartGridPlus({
   // Add Row functionality
   const handleAddRowClick = useCallback(() => {
     setIsAddingRow(true);
+    setCurrentEditingRowIndex(88);
     setNewRowValues(defaultRowValues);
     // Scroll to top if needed
     if (addRowButtonPosition === "top") {
@@ -1028,7 +1030,7 @@ export function ActualSmartGridPlus({
   // Edit Row functionality
   const handleStartEditRow = useCallback((rowIndex: number, row: any) => {
     setEditingRow(rowIndex);
-
+    setCurrentEditingRowIndex(rowIndex);
     // Initialize editingValues with proper defaults for String fields
     const initialEditingValues = { ...row };
     stateColumns.forEach(column => {

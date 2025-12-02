@@ -234,6 +234,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   const [listPopoverOpen, setListPopoverOpen] = useState(false);
   const [isPODDrawerOpen, setIsPODDrawerOpen] = useState(false);
   const { isOpen, drawerType, closeDrawer, openDrawer } = useDrawerStore();
+  const [getDropDownValue , setGetDropDownValue] = useState<number | null>(null);
+  const [productId, setProductId] = useState<string>("");
 
   // Personalization state for Planned grid
   const [preferenceModeFlag, setPreferenceModeFlag] = useState<'Insert' | 'Update'>('Insert');
@@ -298,6 +300,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
     }, 50);
   }, []);
+
+  useEffect(() => {
+    if (currentEditingRowIndex === -1) {
+      createUnCodeFetchOptions
+    }
+  }, [currentEditingRowIndex]); 
+ 
+  useEffect(()=>{createUnCodeFetchOptions},[currentEditingRowIndex,productId])
 
   // Load personalization data for Planned grid on component mount
   useEffect(() => {
@@ -378,24 +388,54 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     }
   }, [selectedCustomerData]);
 
-  useEffect(() => {
-    if (productChangeTracker && userInitiatedProductChange && !isUnCodeBeingSet) {
-      productOnSelectUncodeLoad();
-      setProductChangeTracker(null);
-      setUserInitiatedProductChange(false);
-    } else if (productChangeTracker && !userInitiatedProductChange) {
-      setProductChangeTracker(null);
-    }
-  }, [productChangeTracker, userInitiatedProductChange, isUnCodeBeingSet]);
+  // useEffect(() => {
+  //   if (productChangeTracker && userInitiatedProductChange && !isUnCodeBeingSet) {
+  //     productOnSelectUncodeLoad();
+  //     setProductChangeTracker(null);
+  //     setUserInitiatedProductChange(false);
+  //   } else if (productChangeTracker && !userInitiatedProductChange) {
+  //     setProductChangeTracker(null);
+  //   }
+  // }, [productChangeTracker, userInitiatedProductChange, isUnCodeBeingSet]);
+
+  // useEffect(() => {
+  //   if (unCodeChangeTracker && userInitiatedUnCodeChange && !isProductBeingSet) {
+  //     unCodeOnSelectProductLoad();
+  //     unCodeOnSelectDGClassLoad();
+  //     setUnCodeChangeTracker(null);
+  //     setUserInitiatedUnCodeChange(false);
+  //   } else if (unCodeChangeTracker && !userInitiatedUnCodeChange) {
+  //     setUnCodeChangeTracker(null);
+  //   }
+  // }, [unCodeChangeTracker, userInitiatedUnCodeChange, isProductBeingSet]);
 
   useEffect(() => {
+    if (productChangeTracker && userInitiatedProductChange && !isUnCodeBeingSet) {
+      (async () => {
+        try {
+          await productOnSelectUncodeLoad();
+        } catch (err) {
+          console.error("UN Code load failed after Product change:", err);
+        } finally {
+          setProductChangeTracker(null);
+          setUserInitiatedProductChange(false);
+        }
+      })();
+    }
+  }, [productChangeTracker, userInitiatedProductChange, isUnCodeBeingSet]);
+ 
+  useEffect(() => {
     if (unCodeChangeTracker && userInitiatedUnCodeChange && !isProductBeingSet) {
-      unCodeOnSelectProductLoad();
-      unCodeOnSelectDGClassLoad();
-      setUnCodeChangeTracker(null);
-      setUserInitiatedUnCodeChange(false);
-    } else if (unCodeChangeTracker && !userInitiatedUnCodeChange) {
-      setUnCodeChangeTracker(null);
+      (async () => {
+        try {
+          // await unCodeOnSelectProductLoad();
+          await unCodeOnSelectDGClassLoad();
+        } catch (err) {
+        } finally {
+          setUnCodeChangeTracker(null);
+          setUserInitiatedUnCodeChange(false);
+        }
+      })();
     }
   }, [unCodeChangeTracker, userInitiatedUnCodeChange, isProductBeingSet]);
 
@@ -1201,93 +1241,185 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   //     subRow: true
   //   },
   // ];
+  
+  // const createProductFetchOptions = useMemo(() => {
+  //   // Reset the refresh flag when function is recreated
+  //   if (forceProductRefresh) {
+  //     setForceProductRefresh(false);
+  //   }
+
+  //   return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+  //     let unCodeValue = '';
+
+  //     // Try multiple sources to get the UN Code in order of preference:
+  //     // 1. From unCodeChangeTracker (if active UN Code selection is happening)
+  //     if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
+  //       unCodeValue = unCodeChangeTracker.unCode;
+  //     }
+  //     // 2. From current editing row data
+  //     else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+  //       unCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
+  //     }
+  //     // 3. If we have cached data, use the lastUnCodeForProduct as a fallback
+  //     else if (cachedProductOptions.length > 0 && lastUnCodeForProduct) {
+  //       unCodeValue = lastUnCodeForProduct;
+  //     }
+
+
+  //     // Check if there's an active unCodeChangeTracker (indicates UN Code was just selected)
+  //     // If so, don't make API call as unCodeOnSelectProductLoad will handle it
+  //     if (unCodeChangeTracker && unCodeChangeTracker.unCode === unCodeValue) {
+
+  //       // Return cached data if available, otherwise empty (will be populated soon by unCodeOnSelectProductLoad)
+  //       if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
+  //         if (searchTerm) {
+  //           const filtered = cachedProductOptions.filter(option =>
+  //             option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //             option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+  //           );
+  //           return filtered.slice(offset, offset + limit);
+  //         }
+  //         return cachedProductOptions.slice(offset, offset + limit);
+  //       } else {
+  //         return [];
+  //       }
+  //     }
+
+
+  //     if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
+  //       // Apply search term filtering if provided
+  //       if (searchTerm) {
+  //         const filtered = cachedProductOptions.filter(option =>
+  //           option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //           option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+  //         );
+  //         return filtered.slice(offset, offset + limit);
+  //       }
+  //       return cachedProductOptions.slice(offset, offset + limit);
+  //     }
+
+  //     const response = await quickOrderService.getDynamicSearchData({
+  //       messageType: "Product ID Init",
+  //       searchTerm: searchTerm || '',
+  //       offset,
+  //       limit,
+  //       searchCriteria: {
+  //         id: searchTerm,
+  //         name: searchTerm
+  //       },
+  //       additionalFilter: [
+  //         {
+  //           FilterName: "Uncode",
+  //           FilterValue: unCodeValue
+  //         }
+  //       ]
+  //     });
+
+  //     const rr: any = response.data
+  //     return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+  //       ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+  //         ? {
+  //           label: `${item.id} || ${item.name}`,
+  //           value: `${item.id} || ${item.name}`,
+  //         }
+  //         : {})
+  //     }));
+  //   };
+  // }, [cachedProductOptions, lastUnCodeForProduct, unCodeChangeTracker, currentEditingRowIndex, actualEditableData, forceProductRefresh]);
+  
   const createProductFetchOptions = useMemo(() => {
-    // Reset the refresh flag when function is recreated
     if (forceProductRefresh) {
       setForceProductRefresh(false);
     }
-
-    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-      let unCodeValue = '';
-
-      // Try multiple sources to get the UN Code in order of preference:
-      // 1. From unCodeChangeTracker (if active UN Code selection is happening)
-      if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
-        unCodeValue = unCodeChangeTracker.unCode;
-      }
-      // 2. From current editing row data
-      else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
-        unCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
-      }
-      // 3. If we have cached data, use the lastUnCodeForProduct as a fallback
-      else if (cachedProductOptions.length > 0 && lastUnCodeForProduct) {
-        unCodeValue = lastUnCodeForProduct;
-      }
-
-
-      // Check if there's an active unCodeChangeTracker (indicates UN Code was just selected)
-      // If so, don't make API call as unCodeOnSelectProductLoad will handle it
-      if (unCodeChangeTracker && unCodeChangeTracker.unCode === unCodeValue) {
-
-        // Return cached data if available, otherwise empty (will be populated soon by unCodeOnSelectProductLoad)
-        if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
-          if (searchTerm) {
-            const filtered = cachedProductOptions.filter(option =>
-              option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              option.value?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            return filtered.slice(offset, offset + limit);
+  
+    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }): Promise<{ label: string; value: string }[]> => {
+      try {
+        const response = await quickOrderService.getDynamicSearchData({
+          messageType: "Product ID Init",
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          searchCriteria: {
+            id: searchTerm || "",
+            name: searchTerm || "",
           }
-          return cachedProductOptions.slice(offset, offset + limit);
-        } else {
+          // ❗ STRICT dependency mode — do NOT add additionalFilter here
+        });
+  
+        const rr: any = response.data;
+        let parsed: any[] = [];
+  
+        try {
+          parsed = JSON.parse(rr.ResponseData) || [];
+        } catch (err) {
+          console.error("Invalid Product ResponseData:", err, rr);
           return [];
         }
-      }
-
-
-      if (cachedProductOptions.length > 0 && lastUnCodeForProduct === unCodeValue) {
-        // Apply search term filtering if provided
-        if (searchTerm) {
-          const filtered = cachedProductOptions.filter(option =>
-            option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            option.value?.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          return filtered.slice(offset, offset + limit);
-        }
-        return cachedProductOptions.slice(offset, offset + limit);
-      }
-
-      const response = await quickOrderService.getDynamicSearchData({
-        messageType: "Product ID Init",
-        searchTerm: searchTerm || '',
-        offset,
-        limit,
-        searchCriteria: {
-          id: searchTerm,
-          name: searchTerm
-        },
-        additionalFilter: [
-          {
-            FilterName: "Uncode",
-            FilterValue: unCodeValue
-          }
-        ]
-      });
-
-      const rr: any = response.data
-      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-          ? {
+  
+        return parsed
+          .filter((item: any) => item.id && item.name)
+          .map((item: any) => ({
             label: `${item.id} || ${item.name}`,
             value: `${item.id} || ${item.name}`,
-          }
-          : {})
-      }));
+          }));
+      } catch (error) {
+        console.error("Failed to fetch Product options:", error);
+        return [];
+      }
     };
-  }, [cachedProductOptions, lastUnCodeForProduct, unCodeChangeTracker, currentEditingRowIndex, actualEditableData, forceProductRefresh]);
+  }, [forceProductRefresh]);
+
+  // const productOnSelectUncodeLoad = async () => {
+  //   let productIDValue = '';
+  //   // Use productChangeTracker.productId if available, otherwise get from existing row data
+  //   if (productChangeTracker && productChangeTracker.productId) {
+  //     productIDValue = productChangeTracker.productId;
+  //   } else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+  //     productIDValue = actualEditableData[currentEditingRowIndex].Product || '';
+  //   }
+  //   // Now productIDValue will have the correct value for both new rows (-1) and existing rows
+  //   const response = await quickOrderService.getDynamicSearchData({
+  //     messageType: "UN Code Init",
+  //     searchTerm: '',
+  //     additionalFilter: [
+  //       {
+  //         FilterName: "ProductId",
+  //         FilterValue: productIDValue
+  //       }
+  //     ]
+  //   });
+  //   const rr: any = response.data
+  //   const unCodeOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+  //     ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+  //       ? {
+  //         label: `${item.id} || ${item.name}`,
+  //         value: `${item.id} || ${item.name}`,
+  //       }
+  //       : {})
+  //   }));
+
+  //   // Cache the results and the product ID they were fetched for
+  //   setCachedUnCodeOptions(unCodeOptions);
+  //   setLastProductIdForUnCode(productIDValue);
+
+  //   // Clear the productChangeTracker to indicate that caching is complete
+  //   setProductChangeTracker(null);
+
+  //   // Trigger refresh flag to force UN Code dropdown refresh
+  //   setForceUnCodeRefresh(true);
+
+  // };
+
   const productOnSelectUncodeLoad = async () => {
     let productIDValue = '';
     // Use productChangeTracker.productId if available, otherwise get from existing row data
+    if (!productIDValue || !productIDValue.trim()) {
+      setCachedUnCodeOptions([]);
+      setLastProductIdForUnCode("");
+      setForceUnCodeRefresh(true);
+      return [];
+    }
+ 
     if (productChangeTracker && productChangeTracker.productId) {
       productIDValue = productChangeTracker.productId;
     } else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
@@ -1313,63 +1445,70 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         }
         : {})
     }));
-
+ 
     // Cache the results and the product ID they were fetched for
     setCachedUnCodeOptions(unCodeOptions);
     setLastProductIdForUnCode(productIDValue);
-
+ 
     // Clear the productChangeTracker to indicate that caching is complete
     setProductChangeTracker(null);
-
+ 
     // Trigger refresh flag to force UN Code dropdown refresh
     setForceUnCodeRefresh(true);
-
+ 
   };
-  const unCodeOnSelectProductLoad = async () => {
+
+  // const unCodeOnSelectProductLoad = async () => {
+  //   let unCodeValue = '';
+  //   // Use unCodeChangeTracker.unCode if available, otherwise get from existing row data
+  //   if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
+  //     unCodeValue = unCodeChangeTracker.unCode;
+  //   } else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+  //     unCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
+  //   }
+  //   // Now unCodeValue will have the correct value for both new rows (-1) and existing rows
+  //   const response = await quickOrderService.getDynamicSearchData({
+  //     messageType: "Product ID Init",
+  //     searchTerm: '',
+  //     additionalFilter: [
+  //       {
+  //         FilterName: "Uncode",
+  //         FilterValue: unCodeValue
+  //       }
+  //     ]
+  //   });
+  //   const rr: any = response.data
+  //   const productOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+  //     ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+  //       ? {
+  //         label: `${item.id} || ${item.name}`,
+  //         value: `${item.id} || ${item.name}`,
+  //       }
+  //       : {})
+  //   }));
+
+  //   // Cache the results and the UN Code they were fetched for
+  //   setCachedProductOptions(productOptions);
+  //   setLastUnCodeForProduct(unCodeValue);
+
+  //   // Clear the unCodeChangeTracker to indicate that caching is complete
+  //   setUnCodeChangeTracker(null);
+
+  //   // Trigger refresh flag to force Product dropdown refresh
+  //   setForceProductRefresh(true);
+
+
+  //   return productOptions;
+  // };
+
+ const unCodeOnSelectDGClassLoad = async () => {
     let unCodeValue = '';
-    // Use unCodeChangeTracker.unCode if available, otherwise get from existing row data
-    if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
-      unCodeValue = unCodeChangeTracker.unCode;
-    } else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
-      unCodeValue = actualEditableData[currentEditingRowIndex].UNCode || '';
+    if (!unCodeValue || !unCodeValue.trim()) {
+      setCachedProductOptions([]);
+      setLastUnCodeForProduct("");
+      setForceProductRefresh(true);
+      return [];
     }
-    // Now unCodeValue will have the correct value for both new rows (-1) and existing rows
-    const response = await quickOrderService.getDynamicSearchData({
-      messageType: "Product ID Init",
-      searchTerm: '',
-      additionalFilter: [
-        {
-          FilterName: "Uncode",
-          FilterValue: unCodeValue
-        }
-      ]
-    });
-    const rr: any = response.data
-    const productOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-      ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-        ? {
-          label: `${item.id} || ${item.name}`,
-          value: `${item.id} || ${item.name}`,
-        }
-        : {})
-    }));
-
-    // Cache the results and the UN Code they were fetched for
-    setCachedProductOptions(productOptions);
-    setLastUnCodeForProduct(unCodeValue);
-
-    // Clear the unCodeChangeTracker to indicate that caching is complete
-    setUnCodeChangeTracker(null);
-
-    // Trigger refresh flag to force Product dropdown refresh
-    setForceProductRefresh(true);
-
-
-    return productOptions;
-  };
-
-  const unCodeOnSelectDGClassLoad = async () => {
-    let unCodeValue = '';
     // Use unCodeChangeTracker.unCode if available, otherwise get from existing row data
     if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
       unCodeValue = unCodeChangeTracker.unCode;
@@ -1446,94 +1585,201 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     return dgClassOptions;
   };
 
+  useEffect(() => {
+    if (currentEditingRowIndex === 88) {
+      setProductId("");
+    }
+  }, [currentEditingRowIndex]);
+
   const createUnCodeFetchOptions = useMemo(() => {
-    // Reset the refresh flag when function is recreated
     if (forceUnCodeRefresh) {
       setForceUnCodeRefresh(false);
     }
-
-    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-      let productIDValue = '';
-
-      // Try multiple sources to get the product ID in order of preference:
-      // 1. From productChangeTracker (if active product selection is happening)
-      if (productChangeTracker && productChangeTracker.productId) {
-        productIDValue = productChangeTracker.productId;
-      }
-      // 2. From current editing row data
-      else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
-        productIDValue = actualEditableData[currentEditingRowIndex].Product || '';
-      }
-      // 3. If we have cached data, use the lastProductIdForUnCode as a fallback
-      else if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode) {
-        productIDValue = lastProductIdForUnCode;
-      }
-
-
-      // Check if there's an active productChangeTracker (indicates product was just selected)
-      // If so, don't make API call as productOnSelectUncodeLoad will handle it
-      if (productChangeTracker && productChangeTracker.productId === productIDValue) {
-
-        // Return cached data if available, otherwise empty (will be populated soon by productOnSelectUncodeLoad)
-        if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
-          if (searchTerm) {
-            const filtered = cachedUnCodeOptions.filter(option =>
-              option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              option.value?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            return filtered.slice(offset, offset + limit);
-          }
-          return cachedUnCodeOptions.slice(offset, offset + limit);
-        } else {
-          return [];
+  
+    return async ({
+      searchTerm,
+      offset,
+      limit,
+    }: {
+      searchTerm: string;
+      offset: number;
+      limit: number;
+    }): Promise<{ label: string; value: string }[]> => {
+      try {
+        let productIDValue = "";            // for existing table rows
+        let productIDValueForNewRow = "";   // for new row (index 88)
+  
+        /** 🔥 GET PRODUCT ID BASED ON CONTEXT **/
+  
+        // NEW ROW — but no product selected → show ALL UN CODES
+        if (currentEditingRowIndex === 88 && !productId) {
+          productIDValueForNewRow = "";
         }
-      }
-
-      // Check if we have cached results for the same productIDValue
-
-      if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
-        // Apply search term filtering if provided
-        if (searchTerm) {
-          const filtered = cachedUnCodeOptions.filter(option =>
-            option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            option.value?.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          return filtered.slice(offset, offset + limit);
+        // NEW ROW — product selected → use stored productId
+        else if (currentEditingRowIndex === 88 && productId) {
+          productIDValueForNewRow = productId;
         }
-        return cachedUnCodeOptions.slice(offset, offset + limit);
+        // EXISTING TABLE ROW
+        else if (
+          currentEditingRowIndex !== null &&
+          currentEditingRowIndex >= 0 &&
+          actualEditableData[currentEditingRowIndex]
+        ) {
+          const rawProductValue =
+            actualEditableData[currentEditingRowIndex].Product || "";
+          productIDValue = safeSplit(rawProductValue, " || ", 0) || "";
+        }
+  
+        // 👉 Decide which product ID to pass finally
+        const finalProductID =
+          currentEditingRowIndex === 88
+            ? productIDValueForNewRow
+            : productIDValue;
+  
+        /** 🔥 CASE 1: No Product → return ALL UN CODES **/
+        if (!finalProductID || finalProductID.trim() === "") {
+          const response = await quickOrderService.getDynamicSearchData({
+            messageType: "UN Code Init",
+            searchTerm: searchTerm || "",
+            offset,
+            limit,
+            searchCriteria: {
+              id: searchTerm || "",
+              name: searchTerm || "",
+            },
+          });
+  
+          const rr: any = response.data;
+          const parsed = JSON.parse(rr.ResponseData) || [];
+        // const parsedr = JSON.parse(rr) || [];
+          return parsed.map((item: any) => ({
+            label: `${item.id ?? ""} || ${item.name ?? ""}`,
+            value: `${item.id ?? ""} || ${item.name ?? ""}`,
+          }));
+        }
+  
+        /** 🔥 CASE 2: Product selected → mapped UN CODES only **/
+        const response = await quickOrderService.getDynamicSearchData({
+          messageType: "UN Code Init",
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          searchCriteria: {
+            id: searchTerm || "",
+            name: searchTerm || "",
+          },
+          additionalFilter: [
+            {
+              FilterName: "ProductId",
+              FilterValue: finalProductID,
+            },
+          ],
+        });
+  
+        const rr: any = response.data;
+        const parsed = JSON.parse(rr.ResponseData) || [];
+      
+        return parsed.map((item: any) => ({
+          label: `${item.id ?? ""} || ${item.name ?? ""}`,
+          value: `${item.id ?? ""} || ${item.name ?? ""}`,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch UN Code options:", error);
+        return [];
       }
-
-      // Only make API call if we don't have cached data and no active product selection
-      const response = await quickOrderService.getDynamicSearchData({
-        messageType: "UN Code Init",
-        searchTerm: searchTerm || '',
-        offset,
-        limit,
-        searchCriteria: {
-          id: searchTerm,
-          name: searchTerm
-        },
-        additionalFilter: [
-          {
-            FilterName: "ProductId",
-            FilterValue: productIDValue
-          }
-        ]
-      });
-
-      const rr: any = response.data
-      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-          ? {
-            label: `${item.id} || ${item.name}`,
-            value: `${item.id} || ${item.name}`,
-          }
-          : {})
-      }));
     };
-  }, [cachedUnCodeOptions, lastProductIdForUnCode, productChangeTracker, currentEditingRowIndex, actualEditableData, forceUnCodeRefresh]);
+  }, [currentEditingRowIndex, actualEditableData, forceUnCodeRefresh, productId]);
+
+  // const createUnCodeFetchOptions = useMemo(() => {
+  //   console.log("createUnCodeFetchOptions");
+  //   // Reset the refresh flag when function is recreated
+  //   if (forceUnCodeRefresh) {
+  //     setForceUnCodeRefresh(false);
+  //   }
+
+  //   return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+  //     let productIDValue = '';
+
+  //     // Try multiple sources to get the product ID in order of preference:
+  //     // 1. From productChangeTracker (if active product selection is happening)
+  //     if (productChangeTracker && productChangeTracker.productId) {
+  //       productIDValue = productChangeTracker.productId;
+  //     }
+  //     // 2. From current editing row data
+  //     else if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
+  //       productIDValue = actualEditableData[currentEditingRowIndex].Product || '';
+  //     }
+  //     // 3. If we have cached data, use the lastProductIdForUnCode as a fallback
+  //     else if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode) {
+  //       productIDValue = lastProductIdForUnCode;
+  //     }
+
+
+  //     // Check if there's an active productChangeTracker (indicates product was just selected)
+  //     // If so, don't make API call as productOnSelectUncodeLoad will handle it
+  //     if (productChangeTracker && productChangeTracker.productId === productIDValue) {
+
+  //       // Return cached data if available, otherwise empty (will be populated soon by productOnSelectUncodeLoad)
+  //       if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
+  //         if (searchTerm) {
+  //           const filtered = cachedUnCodeOptions.filter(option =>
+  //             option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //             option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+  //           );
+  //           return filtered.slice(offset, offset + limit);
+  //         }
+  //         return cachedUnCodeOptions.slice(offset, offset + limit);
+  //       } else {
+  //         return [];
+  //       }
+  //     }
+
+  //     // Check if we have cached results for the same productIDValue
+
+  //     if (cachedUnCodeOptions.length > 0 && lastProductIdForUnCode === productIDValue) {
+  //       // Apply search term filtering if provided
+  //       if (searchTerm) {
+  //         const filtered = cachedUnCodeOptions.filter(option =>
+  //           option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //           option.value?.toLowerCase().includes(searchTerm.toLowerCase())
+  //         );
+  //         return filtered.slice(offset, offset + limit);
+  //       }
+  //       return cachedUnCodeOptions.slice(offset, offset + limit);
+  //     }
+
+  //     // Only make API call if we don't have cached data and no active product selection
+  //     const response = await quickOrderService.getDynamicSearchData({
+  //       messageType: "UN Code Init",
+  //       searchTerm: searchTerm || '',
+  //       offset,
+  //       limit,
+  //       searchCriteria: {
+  //         id: searchTerm,
+  //         name: searchTerm
+  //       },
+  //       additionalFilter: [
+  //         {
+  //           FilterName: "ProductId",
+  //           FilterValue: productIDValue
+  //         }
+  //       ]
+  //     });
+
+  //     const rr: any = response.data
+  //     return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+  //       ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+  //         ? {
+  //           label: `${item.id} || ${item.name}`,
+  //           value: `${item.id} || ${item.name}`,
+  //         }
+  //         : {})
+  //     }));
+  //   };
+  // }, [cachedUnCodeOptions, lastProductIdForUnCode, productChangeTracker, currentEditingRowIndex, actualEditableData, forceUnCodeRefresh]);
 
   const createDGClassFetchOptions = useMemo(() => {
+    console.log("createDGClassFetchOptions");
     // Reset the refresh flag when function is recreated
     if (forceDGClassRefresh) {
       setForceDGClassRefresh(false);
@@ -1542,15 +1788,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
       let unCodeValue = '';
 
-
       // Try multiple sources to get the UN Code in order of preference:
       // 1. From unCodeChangeTracker (if active UN Code selection is happening)
       if (unCodeChangeTracker && unCodeChangeTracker.unCode) {
         unCodeValue = unCodeChangeTracker.unCode;
       }
-      // 2. For new rows (index -1), try to get from lastUnCodeForDGClass
+      // 2. For new rows (index -1), try to get from lastUnCodeForDGClass (but only if it's not 'all')
       else if (currentEditingRowIndex === -1) {
-        if (lastUnCodeForDGClass) {
+        if (lastUnCodeForDGClass && lastUnCodeForDGClass !== 'all') {
           unCodeValue = lastUnCodeForDGClass;
         }
       }
@@ -1560,8 +1805,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         // Extract just the UN Code part if it's in "UN XXX || Description" format
         unCodeValue = safeSplit(fullUnCodeValue, ' || ', 0) || fullUnCodeValue;
       }
-      // 4. If still no value, try lastUnCodeForDGClass as ultimate fallback
-      else if (lastUnCodeForDGClass) {
+      // 4. If still no value, try lastUnCodeForDGClass as ultimate fallback (but only if it's not 'all')
+      else if (lastUnCodeForDGClass && lastUnCodeForDGClass !== 'all') {
         unCodeValue = lastUnCodeForDGClass;
       }
       // 5. Last resort: check if any row has UN Code data (for cases where currentEditingRowIndex is not set correctly)
@@ -1576,6 +1821,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         }
       }
 
+      // Determine cache key: use UNCode if available, otherwise use 'all' to indicate all DG Classes
+      const cacheKey = unCodeValue && unCodeValue.trim() !== '' ? unCodeValue : 'all';
+
       // if (currentEditingRowIndex !== null && currentEditingRowIndex >= 0 && actualEditableData[currentEditingRowIndex]) {
       //   console.log('createDGClassFetchOptions: DEBUG - Current row data:', actualEditableData[currentEditingRowIndex]);
       // }
@@ -1584,9 +1832,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       // Check if there's an active unCodeChangeTracker (indicates UN Code was just selected)
       // If so, don't make API call as we'll use cached data or wait for it to load
       if (unCodeChangeTracker && unCodeChangeTracker.unCode === unCodeValue) {
-
         // Return cached data if available, otherwise empty (DG Class will be populated by UN Code onChange)
-        if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === unCodeValue) {
+        if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === cacheKey) {
           if (searchTerm) {
             const filtered = cachedDGClassOptions.filter(option =>
               option.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1596,13 +1843,18 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           }
           return cachedDGClassOptions.slice(offset, offset + limit);
         } else {
-          return [];
+          // If no cached data and UNCode is not available, still allow API call to load all DG Classes
+          // Don't return empty array - let it proceed to API call
+          if (!unCodeValue || unCodeValue.trim() === '') {
+            // Continue to API call below to load all DG Classes
+          } else {
+            return [];
+          }
         }
       }
 
-      // Check if we have cached results for the same unCodeValue
-
-      if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === unCodeValue && !forceDGClassRefresh) {
+      // Check if we have cached results for the same cacheKey
+      if (cachedDGClassOptions.length > 0 && lastUnCodeForDGClass === cacheKey && !forceDGClassRefresh) {
         // Apply search term filtering if provided
         if (searchTerm) {
           const filtered = cachedDGClassOptions.filter(option =>
@@ -1616,13 +1868,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
       // Only make API call if we don't have cached data, no active UN Code selection, or forced refresh
 
-      // If no UN Code value is available, return empty array - DG Class depends on UN Code
-      if (!unCodeValue || unCodeValue.trim() === '') {
-        return [];
-      }
-
-
-      const response = await quickOrderService.getDynamicSearchData({
+      // Call API with "DG Class Init" messageType
+      // If UNCode is available, filter by it; otherwise, load all DG Class options
+      console.log("unCodeValue", unCodeValue);
+      
+      const apiPayload: any = {
         messageType: "DG Class Init",
         searchTerm: searchTerm || '',
         offset,
@@ -1630,16 +1880,23 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         searchCriteria: {
           id: searchTerm,
           name: searchTerm
-        },
-        additionalFilter: [
+        }
+      };
+
+      // Only add UNCode filter if UNCode value is available
+      if (unCodeValue && unCodeValue.trim() !== '') {
+        apiPayload.additionalFilter = [
           {
             FilterName: "Uncode",
             FilterValue: unCodeValue
           }
-        ]
-      });
+        ];
+      }
 
-      const rr: any = response.data
+      const response = await quickOrderService.getDynamicSearchData(apiPayload);
+      console.log("response", response);
+      const rr: any = response.data;
+      console.log("rr", rr);
       const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
         ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
           ? {
@@ -1647,17 +1904,138 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             value: `${item.id} || ${item.name}`,
           }
           : {})
-      }));
+      })).filter((item: any) => item.label && item.value); // Filter out empty objects
 
       // Update cache with new results
-      if (unCodeValue) {
-        setCachedDGClassOptions(dgClassOptions);
-        setLastUnCodeForDGClass(unCodeValue);
-      }
+      // Cache key: use UNCode if available, otherwise use 'all' to indicate all DG Classes
+      setCachedDGClassOptions(dgClassOptions);
+      setLastUnCodeForDGClass(cacheKey);
 
       return dgClassOptions;
     };
   }, [cachedDGClassOptions, lastUnCodeForDGClass, unCodeChangeTracker, currentEditingRowIndex, actualEditableData, forceDGClassRefresh]);
+
+  const fetchUnCodesForNewRow = async ({
+    searchTerm,
+    offset,
+    limit,
+  }: {
+    searchTerm: string;
+    offset: number;
+    limit: number;
+  }): Promise<{ label: string; value: string }[]> => {
+    try {
+      // If no product selected in new row → return ALL UN codes
+      if (!productId || productId.trim() === "") {
+        const response = await quickOrderService.getDynamicSearchData({
+          messageType: "UN Code Init",
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          searchCriteria: {
+            id: searchTerm || "",
+            name: searchTerm || "",
+          },
+        });
+  
+        const rr: any = response.data;
+        const parsed = JSON.parse(rr.ResponseData) || [];
+        return parsed.map((item: any) => ({
+          label: `${item.id ?? ""} || ${item.name ?? ""}`,
+          value: `${item.id ?? ""} || ${item.name ?? ""}`,
+        }));
+      }
+  
+      // Product selected → return mapped UN Codes
+      const response = await quickOrderService.getDynamicSearchData({
+        messageType: "UN Code Init",
+        searchTerm: searchTerm || "",
+        offset,
+        limit,
+        searchCriteria: {
+          id: searchTerm || "",
+          name: searchTerm || "",
+        },
+        additionalFilter: [
+          {
+            FilterName: "ProductId",
+            FilterValue: productId,
+          },
+        ],
+      });
+  
+      const rr: any = response.data;
+      const parsed = JSON.parse(rr.ResponseData) || [];
+      return parsed.map((item: any) => ({
+        label: `${item.id ?? ""} || ${item.name ?? ""}`,
+        value: `${item.id ?? ""} || ${item.name ?? ""}`,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch UN Code options:", error);
+      return [];
+    }
+  };
+
+  const fetchDGClassForNewRow = async ({
+    searchTerm,
+    offset,
+    limit,
+  }: {
+    searchTerm: string;
+    offset: number;
+    limit: number;
+  }): Promise<{ label: string; value: string }[]> => {
+    try {
+      // If no product selected in new row → return ALL UN codes
+      if (!productId || productId.trim() === "") {
+        const response = await quickOrderService.getDynamicSearchData({
+          messageType: "DG Class Init",
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          searchCriteria: {
+            id: searchTerm || "",
+            name: searchTerm || "",
+          },
+        });
+  
+        const rr: any = response.data;
+        const parsed = JSON.parse(rr.ResponseData) || [];
+        return parsed.map((item: any) => ({
+          label: `${item.id ?? ""} || ${item.name ?? ""}`,
+          value: `${item.id ?? ""} || ${item.name ?? ""}`,
+        }));
+      }
+  
+      // Product selected → return mapped UN Codes
+      const response = await quickOrderService.getDynamicSearchData({
+        messageType: "DG Class Init",
+        searchTerm: searchTerm || "",
+        offset,
+        limit,
+        searchCriteria: {
+          id: searchTerm || "",
+          name: searchTerm || "",
+        },
+        additionalFilter: [
+          {
+            FilterName: "ProductId",
+            FilterValue: productId,
+          },
+        ],
+      });
+  
+      const rr: any = response.data;
+      const parsed = JSON.parse(rr.ResponseData) || [];
+      return parsed.map((item: any) => ({
+        label: `${item.id ?? ""} || ${item.name ?? ""}`,
+        value: `${item.id ?? ""} || ${item.name ?? ""}`,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch UN Code options:", error);
+      return [];
+    }
+  };
 
   const actualEditableColumns: GridColumnConfig[] = [
     {
@@ -2071,6 +2449,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
+          const selectedProductId = safeSplit(value, " || ", 0);
+          setProductId(selectedProductId);
 
           // Check if this is a manual clear operation (empty value)
           const isManualClear = !value || value === '' || value === null || value === undefined;
@@ -2093,6 +2473,12 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             setCachedDGClassOptions([]);
             setLastUnCodeForDGClass('');
             setForceDGClassRefresh(true);
+
+            setProductChangeTracker(null);
+            setUnCodeChangeTracker(null);
+            setCachedProductOptions([]);
+            setLastProductIdForUnCode("");
+            setForceProductRefresh(true);
 
             // Clear Product options cache and force refresh to recall Product ID Init
             setCachedProductOptions([]);
@@ -2181,6 +2567,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 UNCodeDescription: productfetchData.UNDescription || '',
                 DGClass: productfetchData.DGClass || '',
                 DGClassDescription: productfetchData.DGClassDescription || '',
+                ContainsHazardousGoods: productfetchData.Hazardous ? (productfetchData.Hazardous === "YES" || productfetchData.Hazardous === "Yes" ? "Yes" : "No") : '',
               }));
 
               // Preserve product values for new row (index -1)
@@ -2199,7 +2586,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               }
 
               // Set currentEditingRowIndex to -1 for new rows
-              setCurrentEditingRowIndex(-1);
+              // setCurrentEditingRowIndex(-1);
               setProductChangeTracker({
                 rowIndex: -1,
                 productId: safeSplit(value, ' || ', 0)
@@ -2216,6 +2603,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 UNCodeDescription: '',
                 DGClass: '',
                 DGClassDescription: '',
+                ContainsHazardousGoods: '',
               }));
 
               // Preserve product values for new row (index -1) even when API returns empty
@@ -2234,7 +2622,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               }
 
               // Also set tracker when API returns empty response
-              setCurrentEditingRowIndex(-1);
+              // setCurrentEditingRowIndex(-1);
               setProductChangeTracker({
                 rowIndex: -1,
                 productId: safeSplit(value, ' || ', 0)
@@ -2275,9 +2663,9 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   UNCodeDescription: productfetchData.UNDescription || '',
                   DGClass: productfetchData.DGClass || '',
                   DGClassDescription: productfetchData.DGClassDescription || '',
+                  ContainsHazardousGoods: productfetchData.Hazardous ? (productfetchData.Hazardous === "YES" || productfetchData.Hazardous === "Yes" ? "Yes" : "No") : '',
                   // NHM: productfetchData.NHMCode || '',
                   // NHMDescription: productfetchData.NHMDescription || '', // Stand Alone
-                  //...(productfetchData.Hazardous && { ContainsHazardousGoods: productfetchData.Hazardous === "YES" ? "Yes" : "No" }),
                 };
 
                 // Reset the UN Code being set flag after a short delay
@@ -2300,11 +2688,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                   ProductDescription: safeSplit(value, ' || ', 1),
                   UNCode: '',
                   UNCodeDescription: '',
-                  // NHM: '',
-                  // NHMDescription: '',
-                  // ContainsHazardousGoods: '',
                   DGClass: '',
                   DGClassDescription: '',
+                  ContainsHazardousGoods: '',
+                  // NHM: '',
+                  // NHMDescription: '',
                 };
 
                 // Reset the UN Code being set flag after a short delay
@@ -2426,6 +2814,334 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         }
       },
     },
+    // {
+    //   key: 'UNCode',
+    //   label: 'UN Code',
+    //   type: 'LazySelect',
+    //   sortable: true,
+    //   editable: true,
+    //   subRow: false,
+    //   width: 200,
+    //   fetchOptions: createUnCodeFetchOptions,
+    //   onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
+    //     try {
+    //       const rowIndex = actualRowIndex ?? 0;
+
+    //       // Check if this is a manual clear operation (empty value)
+    //       const isManualClear = !value || value === '' || value === null || value === undefined;
+
+    //       // Mark this as a user-initiated change
+    //       setUserInitiatedUnCodeChange(true);
+    //       setIsUnCodeBeingSet(true);
+
+    //       // If user manually cleared the field, don't trigger Product loading
+    //       if (isManualClear) {
+    //         setUserInitiatedUnCodeChange(false);
+
+    //         // Clear DG Class cache since UN Code is cleared
+    //         setCachedDGClassOptions([]);
+    //         setLastUnCodeForDGClass('');
+    //         setForceDGClassRefresh(true);
+
+    //         // Trigger DG Class Init API without UNCode filter to load all DG classes
+    //         const triggerDGClassInit = async () => {
+    //           try {
+    //             const response = await quickOrderService.getDynamicSearchData({
+    //               messageType: "DG Class Init",
+    //               searchTerm: '',
+    //               offset: 1,
+    //               limit: 1000,
+    //               searchCriteria: {
+    //                 id: '',
+    //                 name: ''
+    //               },
+    //               // No additionalFilter since UNCode is cleared - load all DG classes
+    //             });
+
+    //             const rr: any = response.data;
+    //             const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+    //               ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+    //                 ? {
+    //                   label: `${item.id} || ${item.name}`,
+    //                   value: `${item.id} || ${item.name}`,
+    //                 }
+    //                 : {})
+    //             }));
+
+    //             // Update cached DG Class options with all available options
+    //             setCachedDGClassOptions(dgClassOptions);
+    //             setForceDGClassRefresh(true);
+    //           } catch (error) {
+    //             console.error('Failed to trigger DG Class Init API after UN Code clear:', error);
+    //           }
+    //         };
+
+    //         // Clear the UN Code field and related Product data
+    //         if (actualRowIndex === -1 && setNewRowValues) {
+    //           setIsProductBeingSet(true);
+    //           setNewRowValues((prev: any) => ({
+    //             ...prev,
+    //             Product: '',
+    //             ProductDescription: '',
+    //             UNCode: '',
+    //             UNCodeDescription: '',
+    //             NHM: '',
+    //             NHMDescription: '',
+    //             ContainsHazardousGoods: '',
+    //             DGClass: '',
+    //             DGClassDescription: '',
+    //           }));
+    //           setTimeout(() => setIsProductBeingSet(false), 100);
+
+    //           // Reset field priority when manually cleared in new row
+    //           setNewRowFieldPriority(null);
+    //         } else {
+    //           setActualEditableData(prevData => {
+    //             const newData = [...prevData];
+    //             if (newData[rowIndex]) {
+    //               setIsProductBeingSet(true);
+    //               newData[rowIndex] = {
+    //                 ...newData[rowIndex],
+    //                 Product: '',
+    //                 ProductDescription: '',
+    //                 UNCode: '',
+    //                 UNCodeDescription: '',
+    //                 NHM: '',
+    //                 NHMDescription: '',
+    //                 ContainsHazardousGoods: '',
+    //                 DGClass: '',
+    //                 DGClassDescription: '',
+    //               };
+    //               setTimeout(() => setIsProductBeingSet(false), 100);
+    //             }
+    //             hasUserEditsRef.current = true;
+    //             return newData;
+    //           });
+    //         }
+
+    //         // Trigger DG Class Init API after clearing fields
+    //         triggerDGClassInit();
+
+    //         setIsUnCodeBeingSet(false);
+    //         return;
+    //       }
+
+    //       // Handle new row case (rowIndex = -1)
+    //       if (actualRowIndex === -1 && setNewRowValues) {
+    //         // Check if Product ID was selected first and has priority
+    //         if (newRowFieldPriority === 'product') {
+    //           // Just update the UN Code fields without calling Product API
+    //           setNewRowValues((prev: any) => ({
+    //             ...prev,
+    //             UNCode: safeSplit(value, ' || ', 0),
+    //             UNCodeDescription: safeSplit(value, ' || ', 1),
+    //           }));
+
+    //           // Set currentEditingRowIndex and trigger DG Class loading even when Product has priority
+    //           // setCurrentEditingRowIndex(-1);
+    //           setUnCodeChangeTracker({
+    //             rowIndex: -1,
+    //             unCode: safeSplit(value, ' || ', 0)
+    //           });
+
+    //           setTimeout(() => {
+    //             unCodeOnSelectDGClassLoad();
+    //           }, 100);
+
+    //           // Reset UN Code being set flag
+    //           setIsUnCodeBeingSet(false);
+    //           return;
+    //         }
+
+    //         // If no priority set or UN Code has priority, proceed with API call
+    //         const response = await quickOrderService.getDynamicSearchData({
+    //           messageType: "UnCode On Select",
+    //           searchCriteria: {
+    //             UNCode: safeSplit(value, ' || ', 0),
+    //           },
+    //         });
+    //         const rr: any = response.data;
+    //         const payload = JSON.parse(rr.ResponseData);
+
+    //         if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+    //           const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
+
+    //           // Mark Product as being programmatically set
+    //           setIsProductBeingSet(true);
+
+    //           // Check if we have preserved product values for this row to restore
+    //           const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
+    //           const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
+    //           const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
+
+
+    //           setNewRowValues((prev: any) => ({
+    //             ...prev,
+    //             UNCode: safeSplit(value, ' || ', 0),
+    //             UNCodeDescription: safeSplit(value, ' || ', 1),
+    //             Product: productToSet,
+    //             ProductDescription: productDescToSet,
+    //             DGClass: unCodefetchData.DGClass || '',
+    //             DGClassDescription: unCodefetchData.DGClassDescription || '',
+    //           }));
+
+    //           // Reset the Product being set flag after a short delay
+    //           setTimeout(() => setIsProductBeingSet(false), 100);
+
+    //           // Set priority to UN Code since it was selected first
+    //           if (newRowFieldPriority === null) {
+    //             setNewRowFieldPriority('uncode');
+    //           }
+
+    //           // Set currentEditingRowIndex to -1 for new rows
+    //           // setCurrentEditingRowIndex(-1);
+    //           setUnCodeChangeTracker({
+    //             rowIndex: -1,
+    //             unCode: safeSplit(value, ' || ', 0)
+    //           });
+
+    //           // Explicitly trigger DG Class loading for new rows
+    //           setTimeout(() => {
+    //             unCodeOnSelectDGClassLoad();
+    //           }, 100);
+    //         } else {
+    //           // API returned empty response - clear related fields for new row
+    //           // Mark Product as being programmatically set (cleared)
+    //           setIsProductBeingSet(true);
+
+    //           // Check if we have preserved product values for this row to restore
+    //           const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
+    //           const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
+    //           const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
+
+
+    //           setNewRowValues((prev: any) => ({
+    //             ...prev,
+    //             Product: productToSet,
+    //             ProductDescription: productDescToSet,
+    //             UNCode: safeSplit(value, ' || ', 0),
+    //             UNCodeDescription: safeSplit(value, ' || ', 1),
+    //             NHM: '',
+    //             NHMDescription: '',
+    //             ContainsHazardousGoods: '',
+    //             DGClass: '',
+    //             DGClassDescription: '',
+    //           }));
+
+    //           // Reset the Product being set flag after a short delay
+    //           setTimeout(() => setIsProductBeingSet(false), 100);
+
+    //           // Set priority to UN Code since it was selected first
+    //           if (newRowFieldPriority === null) {
+    //             setNewRowFieldPriority('uncode');
+    //           }
+
+    //           // Also set tracker when API returns empty response
+    //           // setCurrentEditingRowIndex(-1);
+    //           setUnCodeChangeTracker({
+    //             rowIndex: -1,
+    //             unCode: safeSplit(value, ' || ', 0)
+    //           });
+
+    //           // Even when API returns empty, trigger DG Class loading for new rows
+    //           setTimeout(() => {
+    //             unCodeOnSelectDGClassLoad();
+    //           }, 100);
+    //         }
+
+    //         // Reset UN Code being set flag
+    //         setIsUnCodeBeingSet(false);
+    //         return;
+    //       }
+
+    //       const response = await quickOrderService.getDynamicSearchData({
+    //         messageType: "UnCode On Select",
+    //         searchCriteria: {
+    //           UNCode: safeSplit(value, ' || ', 0),
+    //         },
+    //       });
+    //       const rr: any = response.data;
+    //       const payload = JSON.parse(rr.ResponseData);
+
+    //       setActualEditableData(prevData => {
+    //         const newData = [...prevData];
+
+    //         if (newData[rowIndex]) {
+    //           if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
+    //             const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
+
+    //             // Mark Product as being programmatically set
+    //             setIsProductBeingSet(true);
+
+    //             // Check if we have preserved product values for this row to restore
+    //             const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
+    //             const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
+    //             const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
+
+
+    //             newData[rowIndex] = {
+    //               ...newData[rowIndex],
+    //               UNCode: safeSplit(value, ' || ', 0),
+    //               UNCodeDescription: safeSplit(value, ' || ', 1),
+    //               Product: productToSet,
+    //               ProductDescription: productDescToSet,
+    //               DGClass: unCodefetchData.DGClass || '',
+    //               DGClassDescription: unCodefetchData.DGClassDescription || '',
+    //               // NHM: unCodefetchData.NHMCode || '',
+    //               // NHMDescription: unCodefetchData.NHMDescription || '',
+    //               //...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
+    //             };
+
+    //             // Reset the Product being set flag after a short delay
+    //             setTimeout(() => setIsProductBeingSet(false), 100);
+    //           } else {
+    //             // API returned empty response - clear related fields
+    //             // Mark Product as being programmatically set (cleared)
+    //             setIsProductBeingSet(true);
+
+    //             // Check if we have preserved product values for this row to restore
+    //             const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
+    //             const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
+    //             const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
+
+    //             newData[rowIndex] = {
+    //               ...newData[rowIndex],
+    //               Product: productToSet,
+    //               ProductDescription: productDescToSet,
+    //               UNCode: safeSplit(value, ' || ', 0),
+    //               UNCodeDescription: safeSplit(value, ' || ', 1),
+    //               NHM: '',
+    //               NHMDescription: '',
+    //               ContainsHazardousGoods: '',
+    //               DGClass: '',
+    //               DGClassDescription: '',
+    //             };
+
+    //             // Reset the Product being set flag after a short delay
+    //             setTimeout(() => setIsProductBeingSet(false), 100);
+    //           }
+
+    //         } else {
+    //           console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+    //         }
+
+    //         hasUserEditsRef.current = true;
+    //         return newData;
+    //       });
+
+    //       setUnCodeChangeTracker({
+    //         rowIndex: rowIndex,
+    //         unCode: safeSplit(value, ' || ', 0)
+    //       });
+
+    //       // Reset UN Code being set flag
+    //       setIsUnCodeBeingSet(false);
+    //     } catch (error) {
+    //       console.error('Failed to fetch wagon details:', error);
+    //     }
+
+    //   },
+    // },
     {
       key: 'UNCode',
       label: 'UN Code',
@@ -2434,324 +3150,118 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       editable: true,
       subRow: false,
       width: 200,
-      fetchOptions: createUnCodeFetchOptions,
+    
+      fetchOptions:
+        currentEditingRowIndex === 88
+          ? fetchUnCodesForNewRow      
+          : createUnCodeFetchOptions,
+    
+      // 🔥 Most important fix — this guarantees row index always updates
       onChange: async (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
-
-          // Check if this is a manual clear operation (empty value)
+          // ⬅ ALWAYS update currentEditingRowIndex
+          if (actualRowIndex !== undefined) {
+    
+            setCurrentEditingRowIndex(actualRowIndex);
+          
+          }
+    
           const isManualClear = !value || value === '' || value === null || value === undefined;
-
-          // Mark this as a user-initiated change
+    
           setUserInitiatedUnCodeChange(true);
           setIsUnCodeBeingSet(true);
-
-          // If user manually cleared the field, don't trigger Product loading
+    
+          // ------------------ MANUAL CLEAR ------------------
           if (isManualClear) {
             setUserInitiatedUnCodeChange(false);
-
-            // Clear DG Class cache since UN Code is cleared
+    
+            // Clear DG Class cache
             setCachedDGClassOptions([]);
             setLastUnCodeForDGClass('');
             setForceDGClassRefresh(true);
-
-            // Trigger DG Class Init API without UNCode filter to load all DG classes
-            const triggerDGClassInit = async () => {
-              try {
-                const response = await quickOrderService.getDynamicSearchData({
-                  messageType: "DG Class Init",
-                  searchTerm: '',
-                  offset: 1,
-                  limit: 1000,
-                  searchCriteria: {
-                    id: '',
-                    name: ''
-                  },
-                  // No additionalFilter since UNCode is cleared - load all DG classes
-                });
-
-                const rr: any = response.data;
-                const dgClassOptions = (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
-                  ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
-                    ? {
-                      label: `${item.id} || ${item.name}`,
-                      value: `${item.id} || ${item.name}`,
-                    }
-                    : {})
-                }));
-
-                // Update cached DG Class options with all available options
-                setCachedDGClassOptions(dgClassOptions);
-                setForceDGClassRefresh(true);
-              } catch (error) {
-                console.error('Failed to trigger DG Class Init API after UN Code clear:', error);
-              }
-            };
-
-            // Clear the UN Code field and related Product data
+    
+            // Clear UN Code + DG Class (not Product)
             if (actualRowIndex === -1 && setNewRowValues) {
-              setIsProductBeingSet(true);
               setNewRowValues((prev: any) => ({
                 ...prev,
-                Product: '',
-                ProductDescription: '',
                 UNCode: '',
                 UNCodeDescription: '',
-                NHM: '',
-                NHMDescription: '',
-                ContainsHazardousGoods: '',
                 DGClass: '',
                 DGClassDescription: '',
               }));
-              setTimeout(() => setIsProductBeingSet(false), 100);
-
-              // Reset field priority when manually cleared in new row
-              setNewRowFieldPriority(null);
             } else {
-              setActualEditableData(prevData => {
-                const newData = [...prevData];
+              setActualEditableData(prev => {
+                const newData = [...prev];
                 if (newData[rowIndex]) {
-                  setIsProductBeingSet(true);
                   newData[rowIndex] = {
                     ...newData[rowIndex],
-                    Product: '',
-                    ProductDescription: '',
+                        Product: '',
+                        ProductDescription: '',
                     UNCode: '',
                     UNCodeDescription: '',
-                    NHM: '',
-                    NHMDescription: '',
-                    ContainsHazardousGoods: '',
+                        NHM: '',
+                        NHMDescription: '',
+                        ContainsHazardousGoods: '',
                     DGClass: '',
                     DGClassDescription: '',
                   };
-                  setTimeout(() => setIsProductBeingSet(false), 100);
+                      setTimeout(() => setIsProductBeingSet(false), 100);
                 }
                 hasUserEditsRef.current = true;
                 return newData;
               });
             }
-
-            // Trigger DG Class Init API after clearing fields
-            triggerDGClassInit();
-
+    
             setIsUnCodeBeingSet(false);
             return;
           }
-
-          // Handle new row case (rowIndex = -1)
+    
+          // ------------------ NEW ROW ------------------
           if (actualRowIndex === -1 && setNewRowValues) {
-            // Check if Product ID was selected first and has priority
-            if (newRowFieldPriority === 'product') {
-              // Just update the UN Code fields without calling Product API
-              setNewRowValues((prev: any) => ({
-                ...prev,
-                UNCode: safeSplit(value, ' || ', 0),
-                UNCodeDescription: safeSplit(value, ' || ', 1),
-              }));
-
-              // Set currentEditingRowIndex and trigger DG Class loading even when Product has priority
-              setCurrentEditingRowIndex(-1);
-              setUnCodeChangeTracker({
-                rowIndex: -1,
-                unCode: safeSplit(value, ' || ', 0)
-              });
-
-              setTimeout(() => {
-                unCodeOnSelectDGClassLoad();
-              }, 100);
-
-              // Reset UN Code being set flag
-              setIsUnCodeBeingSet(false);
-              return;
-            }
-
-            // If no priority set or UN Code has priority, proceed with API call
-            const response = await quickOrderService.getDynamicSearchData({
-              messageType: "UnCode On Select",
-              searchCriteria: {
-                UNCode: safeSplit(value, ' || ', 0),
-              },
+            setNewRowValues((prev: any) => ({
+              ...prev,
+              UNCode: safeSplit(value, ' || ', 0),
+              UNCodeDescription: safeSplit(value, ' || ', 1),
+            }));
+    
+            setUnCodeChangeTracker({
+              rowIndex: -1,
+              unCode: safeSplit(value, ' || ', 0)
             });
-            const rr: any = response.data;
-            const payload = JSON.parse(rr.ResponseData);
-
-            if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
-              const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
-
-              // Mark Product as being programmatically set
-              setIsProductBeingSet(true);
-
-              // Check if we have preserved product values for this row to restore
-              const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
-              const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
-              const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
-
-
-              setNewRowValues((prev: any) => ({
-                ...prev,
-                UNCode: safeSplit(value, ' || ', 0),
-                UNCodeDescription: safeSplit(value, ' || ', 1),
-                Product: productToSet,
-                ProductDescription: productDescToSet,
-                DGClass: unCodefetchData.DGClass || '',
-                DGClassDescription: unCodefetchData.DGClassDescription || '',
-              }));
-
-              // Reset the Product being set flag after a short delay
-              setTimeout(() => setIsProductBeingSet(false), 100);
-
-              // Set priority to UN Code since it was selected first
-              if (newRowFieldPriority === null) {
-                setNewRowFieldPriority('uncode');
-              }
-
-              // Set currentEditingRowIndex to -1 for new rows
-              setCurrentEditingRowIndex(-1);
-              setUnCodeChangeTracker({
-                rowIndex: -1,
-                unCode: safeSplit(value, ' || ', 0)
-              });
-
-              // Explicitly trigger DG Class loading for new rows
-              setTimeout(() => {
-                unCodeOnSelectDGClassLoad();
-              }, 100);
-            } else {
-              // API returned empty response - clear related fields for new row
-              // Mark Product as being programmatically set (cleared)
-              setIsProductBeingSet(true);
-
-              // Check if we have preserved product values for this row to restore
-              const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === -1;
-              const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
-              const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
-
-
-              setNewRowValues((prev: any) => ({
-                ...prev,
-                Product: productToSet,
-                ProductDescription: productDescToSet,
-                UNCode: safeSplit(value, ' || ', 0),
-                UNCodeDescription: safeSplit(value, ' || ', 1),
-                NHM: '',
-                NHMDescription: '',
-                ContainsHazardousGoods: '',
-                DGClass: '',
-                DGClassDescription: '',
-              }));
-
-              // Reset the Product being set flag after a short delay
-              setTimeout(() => setIsProductBeingSet(false), 100);
-
-              // Set priority to UN Code since it was selected first
-              if (newRowFieldPriority === null) {
-                setNewRowFieldPriority('uncode');
-              }
-
-              // Also set tracker when API returns empty response
-              setCurrentEditingRowIndex(-1);
-              setUnCodeChangeTracker({
-                rowIndex: -1,
-                unCode: safeSplit(value, ' || ', 0)
-              });
-
-              // Even when API returns empty, trigger DG Class loading for new rows
-              setTimeout(() => {
-                unCodeOnSelectDGClassLoad();
-              }, 100);
-            }
-
-            // Reset UN Code being set flag
+    
+            setTimeout(() => unCodeOnSelectDGClassLoad(), 50);
             setIsUnCodeBeingSet(false);
             return;
           }
-
-          const response = await quickOrderService.getDynamicSearchData({
-            messageType: "UnCode On Select",
-            searchCriteria: {
-              UNCode: safeSplit(value, ' || ', 0),
-            },
-          });
-          const rr: any = response.data;
-          const payload = JSON.parse(rr.ResponseData);
-
-          setActualEditableData(prevData => {
-            const newData = [...prevData];
-
+    
+          // ------------------ EXISTING ROW ------------------
+          setActualEditableData(prev => {
+            const newData = [...prev];
             if (newData[rowIndex]) {
-              if (payload && payload.ResponsePayload && payload.ResponsePayload.length > 0) {
-                const unCodefetchData = payload.ResponsePayload[0]; // Get first element from array
-
-                // Mark Product as being programmatically set
-                setIsProductBeingSet(true);
-
-                // Check if we have preserved product values for this row to restore
-                const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
-                const productToSet = shouldPreserveProduct ? preservedProductValues.product : (unCodefetchData.ProductID || '');
-                const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : (unCodefetchData.ProductDescription || '');
-
-
-                newData[rowIndex] = {
-                  ...newData[rowIndex],
-                  UNCode: safeSplit(value, ' || ', 0),
-                  UNCodeDescription: safeSplit(value, ' || ', 1),
-                  Product: productToSet,
-                  ProductDescription: productDescToSet,
-                  DGClass: unCodefetchData.DGClass || '',
-                  DGClassDescription: unCodefetchData.DGClassDescription || '',
-                  // NHM: unCodefetchData.NHMCode || '',
-                  // NHMDescription: unCodefetchData.NHMDescription || '',
-                  //...(unCodefetchData.Hazardous && { ContainsHazardousGoods: unCodefetchData.Hazardous === "YES" ? "Yes" : "No" }),
-                };
-
-                // Reset the Product being set flag after a short delay
-                setTimeout(() => setIsProductBeingSet(false), 100);
-              } else {
-                // API returned empty response - clear related fields
-                // Mark Product as being programmatically set (cleared)
-                setIsProductBeingSet(true);
-
-                // Check if we have preserved product values for this row to restore
-                const shouldPreserveProduct = preservedProductValues && preservedProductValues.rowIndex === rowIndex;
-                const productToSet = shouldPreserveProduct ? preservedProductValues.product : '';
-                const productDescToSet = shouldPreserveProduct ? preservedProductValues.productDescription : '';
-
-                newData[rowIndex] = {
-                  ...newData[rowIndex],
-                  Product: productToSet,
-                  ProductDescription: productDescToSet,
-                  UNCode: safeSplit(value, ' || ', 0),
-                  UNCodeDescription: safeSplit(value, ' || ', 1),
-                  NHM: '',
-                  NHMDescription: '',
-                  ContainsHazardousGoods: '',
-                  DGClass: '',
-                  DGClassDescription: '',
-                };
-
-                // Reset the Product being set flag after a short delay
-                setTimeout(() => setIsProductBeingSet(false), 100);
-              }
-
-            } else {
-              console.log('Row does not exist at index:', rowIndex, 'Data length:', newData.length);
+              newData[rowIndex] = {
+                ...newData[rowIndex],
+                UNCode: safeSplit(value, ' || ', 0),
+                UNCodeDescription: safeSplit(value, ' || ', 1),
+              };
             }
-
             hasUserEditsRef.current = true;
             return newData;
           });
-
+    
           setUnCodeChangeTracker({
-            rowIndex: rowIndex,
+            rowIndex,
             unCode: safeSplit(value, ' || ', 0)
           });
-
-          // Reset UN Code being set flag
+    
+          // Load DG Class only
+          setTimeout(() => unCodeOnSelectDGClassLoad(), 50);
+    
           setIsUnCodeBeingSet(false);
         } catch (error) {
-          console.error('Failed to fetch wagon details:', error);
+          console.error("UN Code onChange failed:", error);
+          setIsUnCodeBeingSet(false);
         }
-
       },
     },
     {
@@ -2772,7 +3282,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       editable: true,
       subRow: false,
       width: 250,
-      fetchOptions: createDGClassFetchOptions,
+      // fetchOptions: createDGClassFetchOptions,
+      fetchOptions:
+        currentEditingRowIndex === 88
+          ? fetchDGClassForNewRow      
+          : createDGClassFetchOptions,
       onChange: (value: string, rowData: any, actualRowIndex?: number, setNewRowValues?: Function) => {
         try {
           const rowIndex = actualRowIndex ?? 0;
@@ -5475,10 +5989,10 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 ShuntInLocationDescription: safeString(actualRow['Shunt In Location Description'] || actualRow.ShuntInLocationDescription || actualRow.shuntinlocationdescription),
               	ShuntOutLocation: safeString(actualRow['Shunt Out Location'] || actualRow.ShuntOutLocation || actualRow.shuntoutlocation),
                 ShuntOutLocationDescription: safeString(actualRow['Shunt Out Location Description'] || actualRow.ShuntOutLocationDescription || actualRow.shuntoutlocationdescription),
-                ShuntInDate: actualRow['Shunt In Date'] || actualRow.ShuntInDate,
-                ShuntInTime: actualRow['Shunt In Time'] || actualRow.ShuntInTime,
-                ShuntOutDate: actualRow['Shunt Out Date'] || actualRow.ShuntOutDate,
-                ShuntOutTime: actualRow['Shunt Out Time'] || actualRow.ShuntOutTime,
+                // ShuntInDate: actualRow['Shunt In Date'] || actualRow.ShuntInDate,
+                // ShuntInTime: actualRow['Shunt In Time'] || actualRow.ShuntInTime,
+                // ShuntOutDate: actualRow['Shunt Out Date'] || actualRow.ShuntOutDate,
+                // ShuntOutTime: actualRow['Shunt Out Time'] || actualRow.ShuntOutTime,
                 ClassOfStores: safeString(actualRow['Class Of Stores'] || actualRow.ClassOfStores || actualRow.classofstores),
                 ClassOfStoresDescription: safeString(actualRow['Class Of Stores Description'] || actualRow.ClassOfStoresDescription || actualRow.classofstoresdescription),
                 NHM: safeString(actualRow['NHM'] || actualRow.NHM || actualRow.nhm),
@@ -6966,11 +7480,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             gridTitle="Actuals"
                             inlineRowAddition={true}
                             inlineRowEditing={true}
+                            setCurrentEditingRowIndex={setCurrentEditingRowIndex}
+                            setGetDropDownValue={setGetDropDownValue}
                             // inlineRowAddition={!pickupComplete}
                             // inlineRowEditing={!pickupComplete}
                             onAddRow={handleAddRow}
                             // Auto-save: update state immediately on edit
                             onInlineEdit={(rowIndex: number, updatedRow: any) => {
+                              setCurrentEditingRowIndex(rowIndex);
                               setActualEditableData(prevData => {
                                 const newData = [...prevData];
                                 const visibleRow = visibleActualEditableData[rowIndex];

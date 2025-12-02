@@ -59,7 +59,8 @@ export interface GridColumnConfig {
   statusMap?: Record<string, string>;
   
   // Link specific properties
-  onClick?: (rowData: any) => void;
+  // onClick?: (rowData: any) => void;
+    onClick?: (rowData: any, rowIndex: number) => void;
   
   // TextWithTooltip specific properties
   infoTextField?: string;
@@ -337,4 +338,7 @@ export interface SmartGridPlusProps extends SmartGridProps {
   
   // Regional formatting
   region?: 'german' | 'indian';
+
+  setCurrentEditingRowIndex?: (rowIndex: number) => void; // <-- add this
+  setGetDropDownValue?: (value: any) => void;
 }
