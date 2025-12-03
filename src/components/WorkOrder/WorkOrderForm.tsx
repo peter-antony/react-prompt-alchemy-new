@@ -53,6 +53,86 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
 
+const debounce = (fn: (...args: any[]) => void, delay = 300) => {
+  let timer: any;
+  return (...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+const workOrderPanelRef = useRef<DynamicPanelRef>(null);
+const remarks2Ref = useRef<HTMLInputElement | null>(null);
+const remarks3Ref = useRef<HTMLInputElement | null>(null);
+ const [remarks, setRemarks] = useState<any>();
+
+const handleGetFormValues = () => {
+  const uiValues = workOrderPanelRef.current?.getFormValues() || {};
+  const backendValues = formatForBackend(uiValues);
+  useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+  saveWorkOrder();
+};
+
+
+
+const updateWholeWorkOrder = () => {
+  const uiValues = workOrderPanelRef.current?.getFormValues() || {};
+  const backendValues = formatForBackend(uiValues);
+  useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+};
+
+const formatForBackend = (values) => {
+  const formatted = { ...values };
+
+  // Load Type
+  if (formatted.LoadType) {
+    formatted.LoadType = {
+      IsLoaded: formatted.LoadType === "1" ? 1 : 0,
+      IsEmpty: formatted.LoadType === "0" ? 1 : 0,
+    };
+  }
+
+  // Lazy selects using " || "
+  const applySplit = (field, idKey, descKey) => {
+    if (typeof formatted[field] === "string" && formatted[field].includes(" || ")) {
+      const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
+      formatted[idKey] = id;
+      formatted[descKey] = desc;
+    }
+  };
+
+  applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
+  applySplit("SuplierContract", "SupplierContractID", "SupplierContractDescription");
+  applySplit("CustomerContract", "CustomerContractID", "CustomerContractDescription");
+  applySplit("ClusterMarket", "Cluster", "ClusterDescription");
+  applySplit("product", "ProductID", "ProductDescription");
+  applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
+  applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
+
+  // QC dropdowns
+  if (formatted.QCUserDefined1) {
+    formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
+    formatted.QC1Value = formatted.QCUserDefined1.input || "";
+  }
+  if (formatted.QCUserDefined2) {
+    formatted.QC2Code = formatted.QCUserDefined2.dropdown || "";
+    formatted.QC2Value = formatted.QCUserDefined2.input || "";
+  }
+  if (formatted.QCUserDefined3) {
+    formatted.QC3Code = formatted.QCUserDefined3.dropdown || "";
+    formatted.QC3Value = formatted.QCUserDefined3.input || "";
+  }
+
+  return formatted;
+};
+
+
+// const handleSaveAllRemarks = () => {
+//   updateHeader("Remarks1", remarks1Ref.current?.value || "");
+//   updateHeader("Remarks2", remarks2Ref.current?.value || "");
+//   updateHeader("Remarks3", remarks3Ref.current?.value || "");
+// };
+
+
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
   const saveWorkOrder = useWorkOrderStore.getState().saveWorkOrder;
 
@@ -90,6 +170,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       setWorkOrderData(workOrder.Header);
     }
   }, []);
+
+    useEffect(()=>{
+     console.log("mk",workOrder)
+    },[])
 
   useEffect(() => {
     const loadQcMasters = async () => {
@@ -179,14 +263,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         { label: "Container", value: "Container" },
       ],
       order: 1,
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("EquipmentType", val);
-          updateHeader("ModeFlag", "Update"); // ⚠️ correct key
-          console.log("Work Order Type changed:", val);
-        },
-      },
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("EquipmentType", val);
+      //     updateHeader("ModeFlag", "Update"); // ⚠️ correct key
+      //     console.log("Work Order Type changed:", val);
+      //   },
+      // },
     },
 
     WagonCondainterID: {
@@ -203,18 +287,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         currentOrderType === "Wagon"
           ? fetchMaster("Wagon id Init")
           : fetchMaster("Container id Init"),
-      events: {
-        onChange: (val) => {
-          // const updateHeader = useWorkOrderStore.getState().updateHeader;
-          // updateHeader("EquipmentType", val);
-          // updateHeader("ModeFlag", "Update"); // ⚠️ correct key
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-          updateHeader("EquipmentID", id);
-          updateHeader("EquipmentDescription", desc);
-          console.log("Work Order Type changed:", val);
-        },
-      },
+      // events: {
+      //   onChange: (val) => {
+      //     // const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     // updateHeader("EquipmentType", val);
+      //     // updateHeader("ModeFlag", "Update"); // ⚠️ correct key
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     updateHeader("EquipmentID", id);
+      //     updateHeader("EquipmentDescription", desc);
+      //     console.log("Work Order Type changed:", val);
+      //   },
+      // },
     },
 
     SuplierContract: {
@@ -230,32 +314,32 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Buy" },
       ]),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
 
-          updateHeader("SupplierContractID", id);
-          updateHeader("SupplierContractDescription", desc);
-        },
-        // onChange: (val) => {
-        //   const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("SupplierContractID", id);
+      //     updateHeader("SupplierContractDescription", desc);
+      //   },
+      //   // onChange: (val) => {
+      //   //   const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-        //   // If user-selected value contains " || ", extract ID + Description
-        //   if (val?.value?.includes(" || ")) {
-        //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-        //     updateHeader("SupplierContractID", id);
-        //     updateHeader("SupplierContractDescription", desc);
+      //   //   // If user-selected value contains " || ", extract ID + Description
+      //   //   if (val?.value?.includes(" || ")) {
+      //   //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //   //     updateHeader("SupplierContractID", id);
+      //   //     updateHeader("SupplierContractDescription", desc);
 
-        //     // Keep full label in UI so next change doesn't break
-        //     updateHeader("product", `${id} || ${desc}`);
-        //   } else {
-        //     // If value contains only ID
-        //     updateHeader("SuplierContract", val.value);
-        //   }
-        // },
-      },
+      //   //     // Keep full label in UI so next change doesn't break
+      //   //     updateHeader("product", `${id} || ${desc}`);
+      //   //   } else {
+      //   //     // If value contains only ID
+      //   //     updateHeader("SuplierContract", val.value);
+      //   //   }
+      //   // },
+      // },
     },
 
     CustomerContract: {
@@ -271,16 +355,16 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Sell" },
       ]),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
 
-          updateHeader("CustomerContractID", id);
-          updateHeader("CustomerContractDescription", desc);
-        },
-      },
+      //     updateHeader("CustomerContractID", id);
+      //     updateHeader("CustomerContractDescription", desc);
+      //   },
+      // },
     },
 
     AppoinmentDate: {
@@ -295,21 +379,21 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         ? workOrder.Header.AppointmentDate.slice(0, 10) // "YYYY-MM-DD"
         : "",
       order: 6,
-      events: {
-        onChange: (val) => {
-          console.log("Event Date changed:", val);
+      // events: {
+      //   onChange: (val) => {
+      //     console.log("Event Date changed:", val);
 
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("EventDate", val);
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("EventDate", val);
 
-          setTimeout(() => {
-            console.log(
-              "Updated EventDate:",
-              useWorkOrderStore.getState().workOrder?.Header?.EventDate
-            );
-          }, 0);
-        },
-      },
+      //     setTimeout(() => {
+      //       console.log(
+      //         "Updated EventDate:",
+      //         useWorkOrderStore.getState().workOrder?.Header?.EventDate
+      //       );
+      //     }, 0);
+      //   },
+      // },
     },
 
     ClusterMarket: {
@@ -323,16 +407,16 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.Cluster,
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
 
-          updateHeader("Cluster", id);
-          updateHeader("ClusterDescription", desc);
-        },
-      },
+      //     updateHeader("Cluster", id);
+      //     updateHeader("ClusterDescription", desc);
+      //   },
+      // },
     },
 
     product: {
@@ -346,20 +430,20 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.ProductID,
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          if (val?.value?.includes(" || ")) {
-            const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-            updateHeader("ProductID", id);
-            updateHeader("ProductDescription", desc);
-            updateHeader("product", `${id} || ${desc}`);
-          } else {
-            updateHeader("ProductID", val.value);
-          }
-        },
-      },
+      //     if (val?.value?.includes(" || ")) {
+      //       const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //       updateHeader("ProductID", id);
+      //       updateHeader("ProductDescription", desc);
+      //       updateHeader("product", `${id} || ${desc}`);
+      //     } else {
+      //       updateHeader("ProductID", val.value);
+      //     }
+      //   },
+      // },
     },
 
     UNCODE: {
@@ -373,16 +457,16 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.UNCodeID,
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
 
-          updateHeader("Cluster", id);
-          updateHeader("ClusterDescription", desc);
-        },
-      },
+      //     updateHeader("Cluster", id);
+      //     updateHeader("ClusterDescription", desc);
+      //   },
+      // },
     },
 
     LoadType: {
@@ -400,19 +484,19 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       ],
       order: 10,
 
-      events: {
-        onChange: (val) => {
-          const loadTypeObj = {
-            IsLoaded: val === "1" ? "1" : "0",
-            IsEmpty: val === "0" ? "1" : "0",
-          };
+      // events: {
+      //   onChange: (val) => {
+      //     const loadTypeObj = {
+      //       IsLoaded: val === "1" ? "1" : "0",
+      //       IsEmpty: val === "0" ? "1" : "0",
+      //     };
 
-          console.log("📌 Final LoadType JSON:", {
-            LoadType: loadTypeObj,
-          });
-          updateHeader("LoadType", loadTypeObj);
-        },
-      },
+      //     console.log("📌 Final LoadType JSON:", {
+      //       LoadType: loadTypeObj,
+      //     });
+      //     updateHeader("LoadType", loadTypeObj);
+      //   },
+      // },
     },
 
     Hazardous: {
@@ -426,15 +510,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.Hazardous === "1",
       order: 11,
 
-      events: {
-        onChange: (val) => {
-          const hazardousValue = val ? "1" : "0";
+      // events: {
+      //   onChange: (val) => {
+      //     const hazardousValue = val ? "1" : "0";
 
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("Hazardous", hazardousValue);
-          updateHeader("ModeFlag", "Update");
-        },
-      },
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("Hazardous", hazardousValue);
+      //     updateHeader("ModeFlag", "Update");
+      //   },
+      // },
     },
 
     EventDate: {
@@ -447,21 +531,21 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.EventDate,
       order: 12,
-      events: {
-        onChange: (val) => {
-          console.log("Event Date changed:", val);
+      // events: {
+      //   onChange: (val) => {
+      //     console.log("Event Date changed:", val);
 
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("EventDate", val);
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("EventDate", val);
 
-          setTimeout(() => {
-            console.log(
-              "Updated EventDate:",
-              useWorkOrderStore.getState().workOrder?.Header?.EventDate
-            );
-          }, 0);
-        },
-      },
+      //     setTimeout(() => {
+      //       console.log(
+      //         "Updated EventDate:",
+      //         useWorkOrderStore.getState().workOrder?.Header?.EventDate
+      //       );
+      //     }, 0);
+      //   },
+      // },
     },
 
     PlaceOfEvent: {
@@ -475,16 +559,16 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.PlaceOfEventID,
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
 
-          const [id, desc] = val.value.split(" || ").map((v) => v.trim());
+      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
 
-          updateHeader("PlaceOfEventID", id);
-          updateHeader("PlaceOfEventIDDescription", desc);
-        },
-      },
+      //     updateHeader("PlaceOfEventID", id);
+      //     updateHeader("PlaceOfEventIDDescription", desc);
+      //   },
+      // },
     },
 
     BillingDetailsTitle: {
@@ -521,12 +605,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
           />
         </svg>
       ),
-      events: {
-        onClick: (event, value) => {
-          console.log("Billing Details icon clicked", event, value);
-          setShowBillingDetails(true);
-        },
-      },
+      // events: {
+      //   onClick: (event, value) => {
+      //     console.log("Billing Details icon clicked", event, value);
+      //     setShowBillingDetails(true);
+      //   },
+      // },
     },
 
     /** Billing */
@@ -640,8 +724,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       ),
       events: {
         onClick: (event, value) => {
-          console.log("Billing Details icon clicked", event, value);
-          // Toggle visibility of more details fields
           setShowMoreDetails((prev) => !prev);
         },
       },
@@ -708,14 +790,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
       order: 24,
       options: getQcOptions(qcList1),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          console.log("change", val);
-          updateHeader("QC1Code", val?.dropdown || "");
-          updateHeader("QC1Value", val?.input || "");
-        },
-      },
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     console.log("change", val);
+      //     updateHeader("QC1Code", val?.dropdown || "");
+      //     updateHeader("QC1Value", val?.input || "");
+      //   },
+      // },
     },
 
     QCUserDefined2: {
@@ -732,13 +814,13 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
       order: 25,
       options: getQcOptions(qcList2),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("QC2Code", val?.dropdown || "");
-          updateHeader("QC2Value", val?.input || "");
-        },
-      },
+      // events: {
+      //   onChange: (val) => {
+      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
+      //     updateHeader("QC2Code", val?.dropdown || "");
+      //     updateHeader("QC2Value", val?.input || "");
+      //   },
+      // },
     },
 
     QCUserDefined3: {
@@ -780,20 +862,19 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     Remarks1: {
       id: "Remarks1",
       label: "Remarks 1",
-      fieldType: "textarea",
+      fieldType: "text",
       width: "half",
       mandatory: false,
       visible: showMoreDetails,
       editable: true,
       value: workOrder?.Header?.Remarks1,
       order: 27,
-      events: {
-        onChange: (val) => {
-          console.log("val", val), updateHeader("Remarks1", val);
-        },
-      },
+      // events: {
+      //   onChange: (val) => {
+      //     console.log("val", val), updateHeader("Remarks1", val);
+      //   },
+      // },
     },
-
     Remarks2: {
       id: "Remarks2",
       label: "Remarks 2",
@@ -804,11 +885,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Remarks2,
       order: 28,
-       events: {
-        onChange: (val) => {
-          console.log("val", val), updateHeader("Remarks2", val);
-        },
-      },
+     
     },
 
     Remarks3: {
@@ -821,7 +898,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Remarks3,
       order: 29,
-      // events: { onChange: (val) => updateHeader("Remarks3", val) },
+      events: {
+        onKeyDown: (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            const val = (event.target as HTMLInputElement).value;
+            updateHeader("Remarks2", val);
+          }
+        },
+        onBlur: (val) => {
+          updateHeader("Remarks2", val);
+        },
+      },
     },
   });
 
@@ -844,10 +932,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     setWagonMoreDetails(false);
   };
   //slider
-  const openOperationDetails = () => {
-    setShowOperationDetails(true);
-    console.log("clicked,showOperstionDetails", showOperstionDetails);
-  };
   const closeOperationDetails = () => {
     setShowOperationDetails(false);
     console.log("clicked,showOperstionDetails", showOperstionDetails);
@@ -1073,13 +1157,13 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       workOrder: {
         ...state.workOrder,
         Header: {
-          ...state.workOrder.Header,
+          ...state.workOrder?.Header,
           ...updatedHeader,
           ModeFlag: "Update",
         },
       },
     }));
-  }, 500);
+  }, 1000);
 
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`;
   const buttonCancel =
@@ -1427,115 +1511,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                 <div className="lg:col-span-1 w-2/6">
                   <div className="bg-white rounded-lg border border-gray-200">
                     <div className="orderFormScroll p-4">
-                      <DynamicPanel
-                        ref={formRef}
-                        panelId="WorkOrder"
-                        panelTitle="Work Order Details"
-                        panelConfig={workOrderPanelConfig(orderType)}
-                        initialData={workOrder?.Header}
-                        panelSubTitle="Work Order Info"
-                        className="my-custom-workorder-panel"
-                        onDataChange={(updatedHeader) => {
-                          if (
-                            "QCUserDefined1" in updatedHeader ||
-                            "QCUserDefined2" in updatedHeader ||
-                            "QCUserDefined3" in updatedHeader ||
-                            "Remarks1" in updatedHeader ||
-                            "Remarks2" in updatedHeader ||
-                            "Remarks3" in updatedHeader
-                          ) {
-                            return;
-                          }
-                          const mapLazyHeader = (field, idKey, descKey) => {
-                           
+                     <DynamicPanel
+  ref={workOrderPanelRef}
+  panelId="WorkOrder"
+  panelTitle="Work Order Details"
+  panelConfig={workOrderPanelConfig(orderType)}
+  initialData={workOrder?.Header}
+/>
 
-                            const value = updatedHeader[field];
-
-                            if (!value) return;
-
-                            // Only split when the value contains " || "
-                            if (value.includes(" || ")) {
-                              const [id, desc] = value
-                                .split(" || ")
-                                .map((v) => v.trim());
-                              updatedHeader[idKey] = id;
-                              updatedHeader[descKey] = desc;
-
-                              // Keep full string in UI value so next time does not break
-                              updatedHeader[field] = `${id} || ${desc}`;
-                            }
-                          };
-
-                          /** Equipment */
-                          if (
-                            updatedHeader.WagonCondainterID?.includes(" || ")
-                          ) {
-                            const [id, desc] =
-                              updatedHeader.WagonCondainterID.split(" || ").map(
-                                (v) => v.trim()
-                              );
-                            updatedHeader.EquipmentID = id;
-                            updatedHeader.EquipmentDescription = desc;
-                            updatedHeader.WagonCondainterID = `${id} || ${desc}`;
-                          }
-
-                          /** Load Type */
-                          if (updatedHeader.LoadType) {
-                            const val = updatedHeader.LoadType;
-                            updatedHeader.LoadType = {
-                              IsLoaded: val === "1" ? 1 : 0,
-                              IsEmpty: val === "0" ? 1 : 0,
-                            };
-                          }
-
-                          /** Contract Mappings */
-                          if (updatedHeader.SuplierContract?.includes(" || ")) {
-                            const [id, desc] =
-                              updatedHeader.SuplierContract.split(" || ").map(
-                                (v) => v.trim()
-                              );
-                            updatedHeader.SupplierContractID = id;
-                            updatedHeader.SupplierContractDescription = desc;
-                            updatedHeader.SuplierContract = `${id} || ${desc}`;
-                          }
-
-                          if (
-                            updatedHeader.CustomerContract?.includes(" || ")
-                          ) {
-                            const [id, desc] =
-                              updatedHeader.CustomerContract.split(" || ").map(
-                                (v) => v.trim()
-                              );
-                            updatedHeader.CustomerContractID = id;
-                            updatedHeader.CustomerContractDescription = desc;
-                            updatedHeader.CustomerContract = `${id} || ${desc}`;
-                          }
-
-                          /** Generic dropdowns */
-                          mapLazyHeader(
-                            "ClusterMarket",
-                            "Cluster",
-                            "ClusterDescription"
-                          );
-                          mapLazyHeader(
-                            "product",
-                            "ProductID",
-                            "ProductDescription"
-                          );
-                          mapLazyHeader(
-                            "UNCODE",
-                            "UNCodeID",
-                            "UNCodeDescription"
-                          );
-                          mapLazyHeader(
-                            "PlaceOfEvent",
-                            "PlaceOfEventID",
-                            "PlaceOfEventIDDescription"
-                          );
-
-                          updateWorkOrderHeaderDebounced(updatedHeader);
-                        }}
-                      />
                     </div>
 
                     {/* Buttons Row */}
@@ -1697,10 +1680,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                   <button className={buttonCancel}>Cancel</button>
                   <button
                     className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                    onClick={handleSave}
+                    onClick={handleGetFormValues}
                   >
                     Save
                   </button>
+                  <button >Save Remarks</button>
+
                   <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                     Amend
                   </button>

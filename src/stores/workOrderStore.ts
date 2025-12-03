@@ -16,6 +16,7 @@ interface WorkOrderState {
   isSuccess: boolean;
   searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
   updateHeader: (key: string, value: any) => void;
+  updateHeaderBulk: (payload: Record<string, any>) => void;
   saveWorkOrder: () => Promise<void>;
 }
 
@@ -51,6 +52,18 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           });
         }
       },
+
+      updateHeaderBulk: (payload) =>
+        set((state) => ({
+          workOrder: {
+            ...state.workOrder,
+            Header: {
+              ...state.workOrder.Header,
+              ...payload,
+               ModeFlag: "Update",
+            },
+          },
+        })),
 
       saveWorkOrder: async () => {
         set({ loading: true, error: null, apiMessage: null });
@@ -171,7 +184,6 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       //   })),
       updateHeader: (key: string, value: any) =>
         set((state) => {
-         
           const updated = state.workOrder
             ? {
                 ...state.workOrder,
@@ -184,7 +196,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
             : state.workOrder;
 
           console.log("   updated Header:", updated?.Header);
-         console.log("change", useWorkOrderStore.getState().workOrder);
+          console.log("change", useWorkOrderStore.getState().workOrder);
 
           return { workOrder: updated };
         }),
