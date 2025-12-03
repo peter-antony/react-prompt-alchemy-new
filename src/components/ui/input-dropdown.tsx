@@ -27,6 +27,7 @@ export interface InputDropdownProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onKeyUp?: (e: React.KeyboardEvent) => void;
   title?: any;
+  editable?: boolean;
 }
 
 const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
@@ -39,6 +40,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     tabIndex,
     maxLength,
     title,
+    editable = true,
     onDropdownClick,
     onInputClick,
     onFocus,
@@ -73,7 +75,11 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           <select
             value={dropdownValue}
             onChange={handleDropdownChange}
-            className="h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none"
+            disabled={!editable}
+            className={cn(
+              "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+              !editable && "opacity-80 bg-gray-100"
+            )}
             tabIndex={tabIndex}
             onClick={onDropdownClick}
             onFocus={onFocus}
@@ -96,8 +102,12 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           type="text"
           value={inputValue}
           onChange={handleInputChange}
+          disabled={!editable}
           placeholder={placeholder}
-          className="rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500"
+          className={cn(
+            "rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500",
+            !editable && "opacity-80 bg-gray-100"
+          )}
           tabIndex={tabIndex ? tabIndex + 1 : undefined}
           onClick={onInputClick}
           onFocus={onFocus}

@@ -159,6 +159,7 @@ export const API_ENDPOINTS = {
     SELECTION: '/workorder/hubselection',
     SAVE: '/workorder/update',
     GET_BILLING_DETAILS: '/workorder/getbillingdetail',
+    SAVE_BILLING_DETAILS: '/workorder/updatebillingdetail',
   },
   // Invoice management
   INVOICES: {

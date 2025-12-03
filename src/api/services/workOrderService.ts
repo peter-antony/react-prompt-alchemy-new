@@ -149,31 +149,44 @@ export const workOrderService = {
   },
 
   // Get billing details for work order
-    getBillingDetails: async (
-      workOrderNo: string
-    ): Promise<ApiResponse<any>> => {
-      const userContext = getUserContext();
-      const requestPayload = JSON.stringify({
-        context: {
-          UserID: "ramcouser",
-          OUID: userContext.ouId,
-          Role: userContext.roleName,
-          MessageID: "12345",
-          MessageType: "WorkOrder-Get Billing Details"
-        },
-        SearchCriteria: {
-          WorkOrderNo: workOrderNo
-        }
-      });
-  
-      const requestBody = {
-        RequestData: requestPayload,
-      };
-  
-      const response = await apiClient.post(
-        API_ENDPOINTS.WORK_ORDER.GET_BILLING_DETAILS,
-        requestBody
-      );
-      return response.data;
-    },
+  getBillingDetails: async (
+    workOrderNo: string
+  ): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Get Billing Details"
+      },
+      SearchCriteria: {
+        WorkOrderNo: workOrderNo
+      }
+    });
+
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.GET_BILLING_DETAILS,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Save billing details
+  saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.SAVE_BILLING_DETAILS,
+      requestBody
+    );
+    return response.data;
+  },
 };
