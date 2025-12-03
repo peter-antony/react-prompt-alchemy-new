@@ -188,7 +188,7 @@ const TripPlanning = () => {
       getTripDataByID(urlTripID)
       setTripNo(urlTripID);
       setAddResourcesFlag(true);
-	  setSaveButtonEnableFlag(true);
+	    setSaveButtonEnableFlag(true);
       // setConsolidatedTrip(true);
       console.log("🔗 URL TripID extracted:", urlTripID);
     }
@@ -1972,6 +1972,8 @@ const TripPlanning = () => {
           setTripStatus(parsedResponse?.CustomerOrders?.[0]?.TripStatus);
           setShowConfirmReleaseBtn(true);
           setcustomerOrderList(null);
+          // setSaveButtonEnableFlag(true);
+          // getTripDataForResource(parsedResponse?.CustomerOrders?.[0]?.TripID);
           // Reload TripCOHub component
           setTripCOHubReloadKey(prev => prev + 1);
           console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
@@ -1996,6 +1998,14 @@ const TripPlanning = () => {
       }
     }
   }
+
+  // const getTripDataForResource = async (tripNo: string) => {
+  //   console.log("getTripDataForResource")
+  //   const response: any = await tripPlanningService.getTripDataByID(tripNo);
+  //   console.log("getTripDataForResource ===", JSON.parse(response?.data?.ResponseData || "{}"));
+  //   const data = JSON.parse(response?.data?.ResponseData || "{}");
+  //   setTripInformation(data);
+  // }
 
   useEffect(() => {
     console.log("showConfirmReleaseBtn ===", showConfirmReleaseBtn);
@@ -4185,7 +4195,7 @@ const TripPlanning = () => {
         resourceType={currentResourceType}
         resourceData={resourceData}
         isLoading={isLoadingResource}
-		saveButtonEnableFlag={saveButtonEnableFlag}
+		    saveButtonEnableFlag={saveButtonEnableFlag}
       />
       { /* Others Selection Drawer */}
       {otherInfo ?

@@ -557,6 +557,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     if (isOpen && selectedResourcesRq && Array.isArray(selectedResourcesRq) && selectedResourcesRq.length > 0) {
       console.log("INSIDE useEffect, isOpen-true", selectedResourcesRq);
       console.log("Current resourceType:", resourceType);
+      console.log("saveButtonEnableFlag:", saveButtonEnableFlag);
   
       // Step 1: Clear previous selections
       setSelectedRows(new Set());
@@ -1055,6 +1056,15 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       
       console.log("resourceTypeValue -----", resourceTypeValue);
       // For Equipment, use EquipmentID and EquipmentType
+      if (resourceTypeValue === 'Agent') {
+        return {
+          ...baseObj,
+          VendorID: resourceId,
+          // EquipmentType: rowObj.EquipmentType || rowObj['Equipment Type'] || '',
+          ResourceID: resourceId, // Keep for backward compatibility if needed
+          ResourceType: resourceTypeValue // Keep for backward compatibility if needed
+        };
+      }
       if (resourceTypeValue === 'Equipment') {
         return {
           ...baseObj,
