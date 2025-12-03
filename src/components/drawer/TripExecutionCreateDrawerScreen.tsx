@@ -654,6 +654,18 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       const updatedLegDetails = [...(tripData.LegDetails || [])];
       const currentLeg = updatedLegDetails[legIndex];
       
+      // Helper to split dropdown values (needed for validation)
+      const splitDropdownValue = (value: any) => {
+        if (typeof value === 'string' && value.includes('||')) {
+          const [val, ...labelParts] = value.split('||');
+          return { value: val.trim(), label: labelParts.join('||').trim() };
+        } else if (typeof value === 'object' && value !== null) {
+          const splitData = splitDropdowns(value);
+          return { value: splitData.value || splitData.dropdown || value, label: splitData.label || value };
+        }
+        return { value: value || '', label: value || '' };
+      };
+      
       // REmoved validation 
       // Validate all activityRef forms before processing - check if ActualDate and ActualTime are present
       // const validationErrors: string[] = [];
@@ -702,16 +714,70 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       //     }
       //   }
       // });
+
+      // Validate Sequence field for Additional Activities BEFORE processing
+      const validationErrors: string[] = [];
       
-      // If validation fails, show error toast and return early (prevent API call)
-      // if (validationErrors.length > 0) {
-      //   toast({
-      //     title: "⚠️ Mandatory Fields Missing",
-      //     description: `Please enter Actual Date and Actual Time for activity`,
-      //     variant: "destructive",
-      //   });
-      //   return;
-      // }
+      // Validate existing Additional Activities - check if Sequence is present
+      (selectedLeg.AdditionalActivities || []).forEach((activity: any, index) => {
+        const activityId = `additional-activity-${selectedLeg.LegSequence}-${activity.Sequence || index}`;
+        const additionalActivityRef = getAdditionalActivityRef(activityId);
+        
+        if (additionalActivityRef?.current?.getFormValues) {
+          try {
+            const formData = additionalActivityRef.current.getFormValues();
+            const sequenceNo = formData.Sequence;
+            
+            // Check if Sequence No is empty/null
+            if (!sequenceNo || sequenceNo === "" || sequenceNo === null || sequenceNo === undefined) {
+              validationErrors.push(`Additional Activity ${activity.Sequence || index + 1}: Sequence is required`);
+            }
+          } catch (error) {
+            console.warn(`Error validating form data for additional activity ${activityId}:`, error);
+            validationErrors.push(`Additional Activity ${activity.Sequence || index + 1}: Unable to validate Sequence field`);
+          }
+        } else {
+          // If ref is not available, check if Sequence exists in the activity object
+          if (!activity.Sequence || activity.Sequence === "" || activity.Sequence === null || activity.Sequence === undefined) {
+            validationErrors.push(`Additional Activity ${index + 1}: Sequence is required`);
+          }
+        }
+      });
+      
+      // Validate new Additional Activity forms (forms added via popup) - check if Sequence is present
+      additionalEventsForms.forEach((newForm: any, index) => {
+        const formRef = getFormRef(`additional-${newForm.id}`);
+        
+        if (formRef?.current?.getFormValues) {
+          try {
+            const formData = formRef.current.getFormValues();
+            const sequenceNo = formData.Sequence;
+            
+            // Check if Sequence No is empty/null
+            if (!sequenceNo || sequenceNo === "" || sequenceNo === null || sequenceNo === undefined) {
+              validationErrors.push(`New Additional Activity ${index + 1}: Sequence is required`);
+            }
+          } catch (error) {
+            console.warn(`Error validating form data for new additional activity ${newForm.id}:`, error);
+            validationErrors.push(`New Additional Activity ${index + 1}: Unable to validate Sequence field`);
+          }
+        } else {
+          // If ref is not available, check if Sequence exists in the newForm object
+          if (!newForm.Sequence || newForm.Sequence === "" || newForm.Sequence === null || newForm.Sequence === undefined) {
+            validationErrors.push(`New Additional Activity ${index + 1}: Sequence is required`);
+          }
+        }
+      });
+      
+      // If validation fails, show error toast and return early (prevent API call and data collection)
+      if (validationErrors.length > 0) {
+        toast({
+          title: "⚠️ Mandatory Field Missing",
+          description: validationErrors.join('. ') || "Please enter Sequence for all additional activities",
+          variant: "destructive",
+        });
+        return;
+      }
       
       // Collect all updated Activities from their respective forms
       const updatedActivities = (selectedLeg.Activities || []).map((activity: any, index) => {
@@ -864,19 +930,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       
       console.log("All Activities (existing + new):", allActivities);
       console.log("New activities count:", newActivities.length);
-      
-      // Helper to split dropdown values
-      const splitDropdownValue = (value: any) => {
-        if (typeof value === 'string' && value.includes('||')) {
-          const [val, ...labelParts] = value.split('||');
-          return { value: val.trim(), label: labelParts.join('||').trim() };
-        } else if (typeof value === 'object' && value !== null) {
-          const splitData = splitDropdowns(value);
-          return { value: splitData.value || splitData.dropdown || value, label: splitData.label || value };
-        }
-        return { value: value || '', label: value || '' };
-      };
-      
+
       // Collect all updated AdditionalActivities from their respective forms (existing activities)
       const updatedAdditionalActivities = (selectedLeg.AdditionalActivities || []).map((additionalActivity: any, index) => {
         const activityId = `additional-activity-${selectedLeg.LegSequence}-${additionalActivity.Sequence || index}`;
@@ -1687,7 +1741,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       fieldType: "text",
       width: 'four',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 1,
@@ -2614,14 +2668,14 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                    </div>
                                  </div>
                                </div>
-                               <div className="flex items-center gap-2">
+                               {/* <div className="flex items-center gap-2">
                                  <Badge variant="outline" className="text-xs">
                                    Seq: {activity.Sequence || index + 1}
                                  </Badge>
                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
                                    <Trash2 className="h-4 w-4" />
                                  </Button>
-                               </div>
+                               </div> */}
                              </div>
 
                              {loading ? (
@@ -2683,7 +2737,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                       ))}
 
                       <div className="flex items-center gap-2 justify-end">
-                        <Button onClick={handlerModalAdditionalEvents} variant="outline" size="sm" className="gap-2">
+                        {/* <Button onClick={handlerModalAdditionalEvents} variant="outline" size="sm" className="gap-2"> */}
+                        <Button onClick={handleAdditionalEventsPopupSave} variant="outline" size="sm" className="gap-2">
                           <Plus className="h-4 w-4" />
                           Additional Events
                         </Button>
