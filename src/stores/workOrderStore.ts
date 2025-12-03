@@ -6,6 +6,7 @@ import {
   WorkOrderSelectionPayload,
   WorkOrderDetail,
 } from "@/api/services/workOrderService";
+import { workerData } from "worker_threads";
 
 interface WorkOrderState {
   workOrder: WorkOrderDetail | null;
@@ -170,22 +171,21 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       //   })),
       updateHeader: (key: string, value: any) =>
         set((state) => {
-          console.log("🔹 updateHeader called");
-          console.log("   key:", key);
-          console.log("   new value:", value);
-          console.log("   old value:", state.workOrder?.Header?.[key]);
-
+         
           const updated = state.workOrder
             ? {
                 ...state.workOrder,
                 Header: {
                   ...state.workOrder.Header,
                   [key]: value,
+                  ModeFlag: "Update",
                 },
               }
             : state.workOrder;
 
           console.log("   updated Header:", updated?.Header);
+         console.log("change", useWorkOrderStore.getState().workOrder);
+
           return { workOrder: updated };
         }),
     }),
