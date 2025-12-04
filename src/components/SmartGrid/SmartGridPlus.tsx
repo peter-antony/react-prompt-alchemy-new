@@ -299,23 +299,27 @@ export function SmartGridPlus({
   const renderSubRowContent = useCallback((row: any, rowIndex: number) => {
     if (hasSubRowColumns && subRowColumns.length > 0) {
       return (
-        <DraggableSubRow
-          row={row}
-          rowIndex={rowIndex}
-          columns={subRowColumns}
-          subRowColumnOrder={preferences.subRowColumnOrder}
-          editingCell={editingCell}
-          onReorderSubRowColumns={updateSubRowColumnOrder}
-          onSubRowEdit={handleSubRowEdit}
-          onSubRowEditStart={handleSubRowEditStart}
-          onSubRowEditCancel={handleSubRowEditCancel}
-        />
+        <div className="space-y-0">
+          <DraggableSubRow
+            row={row}
+            rowIndex={rowIndex}
+            columns={subRowColumns}
+            subRowColumnOrder={preferences.subRowColumnOrder}
+            editingCell={editingCell}
+            onReorderSubRowColumns={updateSubRowColumnOrder}
+            onSubRowEdit={handleSubRowEdit}
+            onSubRowEditStart={handleSubRowEditStart}
+            onSubRowEditCancel={handleSubRowEditCancel}
+          />
+          {/* Also render the nestedRowRenderer content if it exists */}
+          {nestedRowRenderer && nestedRowRenderer(row, rowIndex)}
+        </div>
       );
     }
 
     // Fallback to collapsible content if no sub-row columns
     return renderCollapsibleContent(row);
-  }, [hasSubRowColumns, subRowColumns, preferences.subRowColumnOrder, editingCell, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent]);
+  }, [hasSubRowColumns, subRowColumns, preferences.subRowColumnOrder, editingCell, updateSubRowColumnOrder, handleSubRowEdit, handleSubRowEditStart, handleSubRowEditCancel, renderCollapsibleContent, nestedRowRenderer]);
 
   // Use sub-row renderer if we have sub-row columns, otherwise use collapsible or custom renderer
   const effectiveNestedRowRenderer = hasSubRowColumns ? renderSubRowContent : (hasCollapsibleColumns ? renderCollapsibleContent : nestedRowRenderer);
