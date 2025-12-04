@@ -5,6 +5,7 @@ import React, {
   useImperativeHandle,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { Paperclip, BookX, Link, Copy, Shuffle, Plus } from "lucide-react";
@@ -49,6 +50,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [qcList2, setqcList2] = useState<any>();
   const [qcList3, setqcList3] = useState<any>();
   const [showMoreDetails, setShowMoreDetails] = useState(false); // State to toggle more details fields
+  const [selectedOperation, setSelectedOperation] = useState<any>(null); // Track selected operation row
+  const [isWorkShop, setIsWorkShop] = useState<number | null>(null); // Track IsWorkShop value (1 or 0)
   const [showBillingDetails, setShowBillingDetails] = useState(false); // State for billing details drawer
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
@@ -937,130 +940,134 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     setShowOperationDetails(false);
     console.log("clicked,showOperstionDetails", showOperstionDetails);
   };
-  //mobile
-  const locationPanelConfig: PanelConfig = {
-    Origin: {
-      id: "Origin",
-      label: "Origin",
-      fieldType: "lazyselect",
-      width: "six",
-      value: workOrder?.WorkorderSchedule?.OriginID,
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    OutboardDest: {
-      id: "OutboardDest",
-      label: "Outboard Destination",
-      fieldType: "lazyselect",
-      width: "six",
-      value: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    RUForward: {
-      id: "RUForward",
-      label: "RU Forward",
-      fieldType: "lazyselect",
-      width: "six",
-      value: workOrder?.WorkorderSchedule?.RUForwardID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 3,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    ReturnDest: {
-      id: "ReturnDest",
-      label: "Return Destination",
-      fieldType: "lazyselect",
-      width: "six",
-      value: workOrder?.WorkorderSchedule?.ReturnDestinationID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 4,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    RUReturn: {
-      id: "RUReturn",
-      label: "RU Return",
-      fieldType: "lazyselect",
-      width: "six",
-      value: workOrder?.WorkorderSchedule?.RUReturnID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 5,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-  };
-
-  const mobileLocationPanelConfig: PanelConfig = {
-    PlaceOfOperation: {
-      id: "PlaceOfOperation",
-      label: "PlaceOfOperation",
-      fieldType: "lazyselect",
-      width: "four",
-      value: workOrder?.WorkorderSchedule?.OriginID,
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    Provider: {
-      id: "Provider",
-      label: "Provider",
-      fieldType: "lazyselect",
-      width: "four",
-      value: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    ExpectedDate: {
-      id: "ExpectedDate",
-      label: "Expected Date",
-      fieldType: "date",
-      width: "four",
-      value: workOrder?.WorkorderSchedule?.RUForwardID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 3,
-    },
-    ActualDate: {
-      id: "ActualDate",
-      label: "Actual Date",
-      fieldType: "date",
-      width: "four",
-      value: workOrder?.WorkorderSchedule?.ReturnDestinationID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 4,
-      fetchOptions: fetchMaster("Location Init"),
-    },
-    RUReturn: {
-      id: "Comments",
-      label: "Comments",
-      fieldType: "text",
-      width: "half",
-      value: workOrder?.WorkorderSchedule?.RUReturnID,
-      visible: true,
-      mandatory: false,
-      editable: true,
-      order: 5,
-    },
-  };
+  // Dynamic locationPanelConfig based on IsWorkShop value
+  // If IsWorkShop === 1: Show (Origin, OutboardDest, RUForward, ReturnDest, RUReturn)
+  // If IsWorkShop === 0: Show (PlaceOfOperation, Provider, ExpectedDate, ActualDate, Comments)
+  const locationPanelConfig: PanelConfig = useMemo(() => {
+    const isWorkshop = isWorkShop === 1;
+    
+    return {
+      // Fields for IsWorkShop === 1 (Workshop mode)
+      Origin: {
+        id: "Origin",
+        label: "Origin",
+        fieldType: "lazyselect",
+        width: "six",
+        value: workOrder?.WorkorderSchedule?.OriginID,
+        mandatory: false,
+        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        editable: true,
+        order: 1,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      OutboardDest: {
+        id: "OutboardDest",
+        label: "Outboard Destination",
+        fieldType: "lazyselect",
+        width: "six",
+        value: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+        mandatory: false,
+        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        editable: true,
+        order: 2,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      RUForward: {
+        id: "RUForward",
+        label: "RU Forward",
+        fieldType: "lazyselect",
+        width: "six",
+        value: workOrder?.WorkorderSchedule?.RUForwardID,
+        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 3,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      ReturnDest: {
+        id: "ReturnDest",
+        label: "Return Destination",
+        fieldType: "lazyselect",
+        width: "six",
+        value: workOrder?.WorkorderSchedule?.ReturnDestinationID,
+        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 4,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      RUReturn: {
+        id: "RUReturn",
+        label: "RU Return",
+        fieldType: "lazyselect",
+        width: "six",
+        value: workOrder?.WorkorderSchedule?.RUReturnID,
+        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 5,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      // Fields for IsWorkShop === 0 (Mobile mode)
+      PlaceOfOperation: {
+        id: "PlaceOfOperation",
+        label: "PlaceOfOperation",
+        fieldType: "lazyselect",
+        width: "four",
+        value: workOrder?.WorkorderSchedule?.PlaceOfOperationID,
+        mandatory: false,
+        visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
+        editable: true,
+        order: 1,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      Provider: {
+        id: "Provider",
+        label: "Provider",
+        fieldType: "lazyselect",
+        width: "four",
+        value: workOrder?.WorkorderSchedule?.ProviderID,
+        mandatory: false,
+        visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
+        editable: true,
+        order: 2,
+        fetchOptions: fetchMaster("Location Init"),
+      },
+      ExpectedDate: {
+        id: "ExpectedDate",
+        label: "Expected Date",
+        fieldType: "date",
+        width: "four",
+        value: workOrder?.WorkorderSchedule?.ExpectedDate,
+        visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 3,
+      },
+      ActualDate: {
+        id: "ActualDate",
+        label: "Actual Date",
+        fieldType: "date",
+        width: "four",
+        value: workOrder?.WorkorderSchedule?.ActualDate,
+        visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 4,
+      },
+      Comments: {
+        id: "Comments",
+        label: "Comments",
+        fieldType: "text",
+        width: "half",
+        value: workOrder?.WorkorderSchedule?.Comments,
+        visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
+        mandatory: false,
+        editable: true,
+        order: 5,
+      },
+    };
+  }, [isWorkShop, selectedOperation, workOrder?.WorkorderSchedule]);
 
   const SchedulePanelConfig: PanelConfig = {
     DepartureDate: {
@@ -1639,6 +1646,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
           </div>
         </>
       ) : (
+        <>
         <AppLayout>
           <div className="main-content-h bg-gray-100">
             <div className="p-4 px-6 ">
@@ -1694,114 +1702,36 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                         console.log("Link clicked:", transformedRowData);
                         console.log("Column key:", columnKey);
                         console.log("Row index:", rowIndex);
+                        
+                        // Extract IsWorkShop value (1 or 0) and set state
+                        const isWorkShopValue = transformedRowData.IsWorkShop;
+                        const numericIsWorkShop = isWorkShopValue === 1 || isWorkShopValue === "1" ? 1 : 
+                                                  isWorkShopValue === 0 || isWorkShopValue === "0" ? 0 : null;
+                        
+                        // Update state to control field visibility
+                        setSelectedOperation(transformedRowData);
+                        setIsWorkShop(numericIsWorkShop);
+                        console.log("Selected operation IsWorkShop value:", numericIsWorkShop);
                       }}
                     />
                   </div>
                   <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
-                    <div className="">
-                      <DynamicPanel
-                        ref={locationDetailsRef}
-                        panelId="LocationPanel"
-                        panelTitle="Location Details"
-                        panelIcon={
-                          <MapPinned className="w-5 h-5 text-blue-500" />
-                        }
-                        panelConfig={locationPanelConfig}
-                        collapsible={true}
-                        initialData={workOrderData?.Location || {}}
-                        onDataChange={(updatedSchedule) => {
-                          // Send directly to store
-                          useWorkOrderStore.setState((state) => ({
-                            workOrder: {
-                              ...state.workOrder,
-                              WorkorderSchedule: {
-                                ...state.workOrder.WorkorderSchedule,
-                                ...updatedSchedule,
-                                ModeFlag:
-                                  state.workOrder.WorkorderSchedule
-                                    ?.ModeFlag === "NoChange"
-                                    ? "Update"
-                                    : state.workOrder.WorkorderSchedule
-                                      ?.ModeFlag,
-                              },
-                            },
-                          }));
-                        }}
-                      />
-                    </div>
-
-                    <div className="">
-                      <DynamicPanel
-                        ref={locationDetailsRef}
-                        panelId="LocationPanel"
-                        panelTitle="Location Details"
-                        panelIcon={
-                          <MapPinned className="w-5 h-5 text-blue-500" />
-                        }
-                        panelConfig={mobileLocationPanelConfig}
-                        collapsible={true}
-                        initialData={workOrderData?.Location || {}}
-                        onDataChange={(updatedSchedule) => {
-                          // Send directly to store
-                          useWorkOrderStore.setState((state) => ({
-                            workOrder: {
-                              ...state.workOrder,
-                              WorkorderSchedule: {
-                                ...state.workOrder.WorkorderSchedule,
-                                ...updatedSchedule,
-                                ModeFlag:
-                                  state.workOrder.WorkorderSchedule
-                                    ?.ModeFlag === "NoChange"
-                                    ? "Update"
-                                    : state.workOrder.WorkorderSchedule
-                                      ?.ModeFlag,
-                              },
-                            },
-                          }));
-                        }}
-                      />
-                      <div className="flex justify-start items-center gap-8 py-4 border-t border-gray-200 bg-white">
-                        {/* Create Forward Trip */}
-                        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-100">
-                          <Plus className="w-5 h-5 text-gray-600" />
-                          <span>Create Forward Trip</span>
-                        </button>
-
-                        {/* Forward Trip Execution */}
-                        <div className="flex items-center gap-2 text-blue-600 font-semibold cursor-pointer">
-                          <Shuffle className="w-5 h-5" />
-                          Forward Trip Execution – TRIP000234
-                        </div>
-
-                        {/* Create Return Trip */}
-                        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-100">
-                          <Plus className="w-5 h-5 text-gray-600" />
-                          <span>Create Return Trip</span>
-                        </button>
-
-                        {/* Return Trip Execution */}
-                        <div className="flex items-center gap-2 text-blue-600 font-semibold cursor-pointer">
-                          <Shuffle className="w-5 h-5" />
-                          Return Trip Execution – TRIP000235
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="lg:col-span-1 ">
-                      <div className="bg-white rounded-lg border border-gray-200"></div>
-                      <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
-                        <div className="">
+                    {/* Only show Location Details panel when an operation is selected */}
+                    {selectedOperation !== null && (
+                      <>
+                        <div className="bg-white mb-6 rounded-lg">
                           <DynamicPanel
-                            ref={scheduleDetailsRef}
-                            panelId="scheduleDetails"
-                            panelTitle="schedule Details"
+                            ref={locationDetailsRef}
+                            panelId="LocationPanel"
+                            panelTitle="Location Details"
                             panelIcon={
                               <MapPinned className="w-5 h-5 text-blue-500" />
                             }
-                            panelConfig={SchedulePanelConfig}
+                            panelConfig={locationPanelConfig}
                             collapsible={true}
                             initialData={workOrderData?.Location || {}}
                             onDataChange={(updatedSchedule) => {
+                              // Send directly to store
                               useWorkOrderStore.setState((state) => ({
                                 workOrder: {
                                   ...state.workOrder,
@@ -1813,15 +1743,102 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                                         ?.ModeFlag === "NoChange"
                                         ? "Update"
                                         : state.workOrder.WorkorderSchedule
-                                          ?.ModeFlag,
+                                            ?.ModeFlag,
                                   },
                                 },
                               }));
                             }}
                           />
+                          {/* Location Details Action Buttons - Only show when operation is selected */}
+                          {isWorkShop === 1 && (
+                            <div className="flex border-b border-l border-r border-gray-200 p-2 rounded-md" style={{ marginTop: '-1.5rem' }}>
+                              {/* Create Forward Trip Button */}
+                              <button
+                                onClick={() => {
+                                  console.log("Create Forward Trip clicked");
+                                  // Add your click handler here
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                              >
+                                <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                <span>Create Forward Trip</span>
+                              </button>
+                              
+                              {/* Forward Trip Execution Button */}
+                              <button
+                                onClick={() => {
+                                  console.log("Forward Trip Execution clicked");
+                                  // Add your click handler here
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                              >
+                                <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                <span>Forward Trip Execution - TRIP0000234</span>
+                              </button>
+                              
+                              {/* Create Return Trip Button */}
+                              <button
+                                onClick={() => {
+                                  console.log("Create Return Trip clicked");
+                                  // Add your click handler here
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                              >
+                                <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                <span>Create Return Trip</span>
+                              </button>
+                              
+                              {/* Return Trip Execution Button */}
+                              <button
+                                onClick={() => {
+                                  console.log("Return Trip Execution clicked");
+                                  // Add your click handler here
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                              >
+                                <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                <span>Return Trip Execution - TRIP0000235</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </div>
+
+                        {isWorkShop === 1 && (
+                        <div className="bg-white mb-6 rounded-lg">
+                          <div className="">
+                            <DynamicPanel
+                              ref={scheduleDetailsRef}
+                              panelId="scheduleDetails"
+                              panelTitle="schedule Details"
+                              panelIcon={
+                                <MapPinned className="w-5 h-5 text-blue-500" />
+                              }
+                              panelConfig={SchedulePanelConfig}
+                              collapsible={true}
+                              initialData={workOrderData?.Location || {}}
+                              onDataChange={(updatedSchedule) => {
+                                useWorkOrderStore.setState((state) => ({
+                                  workOrder: {
+                                    ...state.workOrder,
+                                    WorkorderSchedule: {
+                                      ...state.workOrder.WorkorderSchedule,
+                                      ...updatedSchedule,
+                                      ModeFlag:
+                                        state.workOrder.WorkorderSchedule
+                                          ?.ModeFlag === "NoChange"
+                                          ? "Update"
+                                          : state.workOrder.WorkorderSchedule
+                                            ?.ModeFlag,
+                                    },
+                                  },
+                                }));
+                              }}
+                            />
+                          </div>
+                        </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1829,18 +1846,30 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
               <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                 <div className="flex items-center gap-4"></div>
                 <div className="flex items-center gap-4">
-                  <button className={buttonCancel}>Cancel</button>
-                  <button
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                    onClick={handleGetFormValues}
-                  >
-                    Save
-                  </button>
-                  <button >Save Remarks</button>
-
-                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                    Amend
-                  </button>
+                {selectedOperation !== null && (
+                  <>
+                    <button
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                      onClick={handleGetFormValues}
+                    >
+                      Save Details
+                    </button>
+                  </>
+                )}
+                {selectedOperation === null && (
+                  <>
+                    <button className={buttonCancel}>Cancel</button>
+                    <button
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                      onClick={handleGetFormValues}
+                    >
+                      Save
+                    </button>
+                    {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                      Amend
+                    </button> */}
+                  </>
+                )}
                 </div>
               </div>
             </div>
@@ -1958,6 +1987,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
             value={showOperstionDetails}
           />
         </AppLayout>
+        </>
       )}
     </>
   );
