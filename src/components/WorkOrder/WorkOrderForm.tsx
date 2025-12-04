@@ -4,6 +4,7 @@ import React, {
   useState,
   useImperativeHandle,
   useEffect,
+  useCallback,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { Paperclip, BookX, Link, Copy, Shuffle, Plus } from "lucide-react";
@@ -53,84 +54,84 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
 
-const debounce = (fn: (...args: any[]) => void, delay = 300) => {
-  let timer: any;
-  return (...args: any[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
-};
-const workOrderPanelRef = useRef<DynamicPanelRef>(null);
-const remarks2Ref = useRef<HTMLInputElement | null>(null);
-const remarks3Ref = useRef<HTMLInputElement | null>(null);
- const [remarks, setRemarks] = useState<any>();
-
-const handleGetFormValues = () => {
-  const uiValues = workOrderPanelRef.current?.getFormValues() || {};
-  const backendValues = formatForBackend(uiValues);
-  useWorkOrderStore.getState().updateHeaderBulk(backendValues);
-  saveWorkOrder();
-};
-
-
-
-const updateWholeWorkOrder = () => {
-  const uiValues = workOrderPanelRef.current?.getFormValues() || {};
-  const backendValues = formatForBackend(uiValues);
-  useWorkOrderStore.getState().updateHeaderBulk(backendValues);
-};
-
-const formatForBackend = (values) => {
-  const formatted = { ...values };
-
-  // Load Type
-  if (formatted.LoadType) {
-    formatted.LoadType = {
-      IsLoaded: formatted.LoadType === "1" ? 1 : 0,
-      IsEmpty: formatted.LoadType === "0" ? 1 : 0,
+  const debounce = (fn: (...args: any[]) => void, delay = 300) => {
+    let timer: any;
+    return (...args: any[]) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
     };
-  }
+  };
+  const workOrderPanelRef = useRef<DynamicPanelRef>(null);
+  const remarks2Ref = useRef<HTMLInputElement | null>(null);
+  const remarks3Ref = useRef<HTMLInputElement | null>(null);
+  const [remarks, setRemarks] = useState<any>();
 
-  // Lazy selects using " || "
-  const applySplit = (field, idKey, descKey) => {
-    if (typeof formatted[field] === "string" && formatted[field].includes(" || ")) {
-      const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
-      formatted[idKey] = id;
-      formatted[descKey] = desc;
-    }
+  const handleGetFormValues = () => {
+    const uiValues = workOrderPanelRef.current?.getFormValues() || {};
+    const backendValues = formatForBackend(uiValues);
+    useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+    saveWorkOrder();
   };
 
-  applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
-  applySplit("SuplierContract", "SupplierContractID", "SupplierContractDescription");
-  applySplit("CustomerContract", "CustomerContractID", "CustomerContractDescription");
-  applySplit("ClusterMarket", "Cluster", "ClusterDescription");
-  applySplit("product", "ProductID", "ProductDescription");
-  applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
-  applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
-
-  // QC dropdowns
-  if (formatted.QCUserDefined1) {
-    formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
-    formatted.QC1Value = formatted.QCUserDefined1.input || "";
-  }
-  if (formatted.QCUserDefined2) {
-    formatted.QC2Code = formatted.QCUserDefined2.dropdown || "";
-    formatted.QC2Value = formatted.QCUserDefined2.input || "";
-  }
-  if (formatted.QCUserDefined3) {
-    formatted.QC3Code = formatted.QCUserDefined3.dropdown || "";
-    formatted.QC3Value = formatted.QCUserDefined3.input || "";
-  }
-
-  return formatted;
-};
 
 
-// const handleSaveAllRemarks = () => {
-//   updateHeader("Remarks1", remarks1Ref.current?.value || "");
-//   updateHeader("Remarks2", remarks2Ref.current?.value || "");
-//   updateHeader("Remarks3", remarks3Ref.current?.value || "");
-// };
+  const updateWholeWorkOrder = () => {
+    const uiValues = workOrderPanelRef.current?.getFormValues() || {};
+    const backendValues = formatForBackend(uiValues);
+    useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+  };
+
+  const formatForBackend = (values) => {
+    const formatted = { ...values };
+
+    // Load Type
+    if (formatted.LoadType) {
+      formatted.LoadType = {
+        IsLoaded: formatted.LoadType === "1" ? 1 : 0,
+        IsEmpty: formatted.LoadType === "0" ? 1 : 0,
+      };
+    }
+
+    // Lazy selects using " || "
+    const applySplit = (field, idKey, descKey) => {
+      if (typeof formatted[field] === "string" && formatted[field].includes(" || ")) {
+        const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
+        formatted[idKey] = id;
+        formatted[descKey] = desc;
+      }
+    };
+
+    applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
+    applySplit("SuplierContract", "SupplierContractID", "SupplierContractDescription");
+    applySplit("CustomerContract", "CustomerContractID", "CustomerContractDescription");
+    applySplit("ClusterMarket", "Cluster", "ClusterDescription");
+    applySplit("product", "ProductID", "ProductDescription");
+    applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
+    applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
+
+    // QC dropdowns
+    if (formatted.QCUserDefined1) {
+      formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
+      formatted.QC1Value = formatted.QCUserDefined1.input || "";
+    }
+    if (formatted.QCUserDefined2) {
+      formatted.QC2Code = formatted.QCUserDefined2.dropdown || "";
+      formatted.QC2Value = formatted.QCUserDefined2.input || "";
+    }
+    if (formatted.QCUserDefined3) {
+      formatted.QC3Code = formatted.QCUserDefined3.dropdown || "";
+      formatted.QC3Value = formatted.QCUserDefined3.input || "";
+    }
+
+    return formatted;
+  };
+
+
+  // const handleSaveAllRemarks = () => {
+  //   updateHeader("Remarks1", remarks1Ref.current?.value || "");
+  //   updateHeader("Remarks2", remarks2Ref.current?.value || "");
+  //   updateHeader("Remarks3", remarks3Ref.current?.value || "");
+  // };
 
 
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
@@ -171,9 +172,9 @@ const formatForBackend = (values) => {
     }
   }, []);
 
-    useEffect(()=>{
-     console.log("mk",workOrder)
-    },[])
+  useEffect(() => {
+    console.log("mk", workOrder)
+  }, [])
 
   useEffect(() => {
     const loadQcMasters = async () => {
@@ -885,7 +886,7 @@ const formatForBackend = (values) => {
       editable: true,
       value: workOrder?.Header?.Remarks2,
       order: 28,
-     
+
     },
 
     Remarks3: {
@@ -1168,186 +1169,280 @@ const formatForBackend = (values) => {
   const buttonClass = `inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm`;
   const buttonCancel =
     "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+  // Fetch cities - always returns Workshop and Mobile (not dependent on state)
+  const fetchWorkshopMobile = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    console.log("Fetching cities (Workshop/Mobile):", rowData);
 
-  const columns: GridColumnConfig[] = [
+    // Always return Workshop and Mobile as options
+    const staticOptions = [
+      { id: "Workshop", name: "Workshop" },
+      { id: "Mobile", name: "Mobile" }
+    ];
+
+    // Filter based on search term if provided
+    const filtered = staticOptions.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Return in the same format as fetchMaster in WorkOrderForm.tsx
+    return filtered.map((item: any) => {
+      const id = item.id ?? "";
+      const name = item.name ?? "";
+      return {
+        label: `${id}`,
+        value: `${id}`,
+      };
+    });
+  }, []);
+
+  const fetchForwardReturn = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    console.log("Fetching Forward/Return:", rowData);
+
+    // Always return Forward/Return and One-Way as options
+    const staticOptions = [
+      { id: "Forward/Return", name: "Forward/Return" },
+      { id: "One-Way", name: "One-Way" }
+    ];
+
+    // Filter based on search term if provided
+    const filtered = staticOptions.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Return in the same format as fetchMaster in WorkOrderForm.tsx
+    return filtered.map((item: any) => {
+      const id = item.id ?? "";
+      const name = item.name ?? "";
+      return {
+        label: `${id}`,
+        value: `${id}`,
+      };
+    });
+  }, []);
+
+  const fetchMasterOperations = (
+    {TypeOfAction, messageType}: {TypeOfAction: string, messageType: string}
+  ) => {
+    return async ({ searchTerm, offset, limit }) => {
+      try {
+        const response = await quickOrderService.fetOperationFromTypeOfAction({
+          TypeOfAction: TypeOfAction || "",
+          messageType: messageType || "",
+        });
+
+        const rr: any = response?.data;
+        const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+
+        return arr
+        .filter((item: any) => item.id)  // filter out items with no id
+        .map((item: any) => {
+          const id = item.id ?? "";
+          const name = item.name ?? "";
+          return {
+            label: `${id} || ${name}`,
+            value: `${id} || ${name}`,
+          };
+        });
+      } catch (err) {
+        return [];
+      }
+    };
+  };
+
+  // Operational details fetch masters
+  const fetchMasterOperationDetails = (
+    messageType: string,
+    additionalFilter?: { FilterName: string; FilterValue: string }[]
+  ) => {
+    return async ({ searchTerm, offset, limit }) => {
+      try {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType,
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          AdditionalFilter: additionalFilter || [], // <-- FIXED HERE
+        });
+
+        const rr: any = response?.data;
+        const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+
+        return arr
+        .filter((item: any) => item.id)
+        .map((item: any) => {
+          const id = item.id ?? "";
+          const name = item.name ?? "";
+          return {
+            label: `${id} || ${name}`,
+            value: `${id} || ${name}`,
+          };
+        });
+      } catch (err) {
+        return [];
+      }
+    };
+  };
+
+  // Fetch countries (first level) - using fetchMaster
+  const fetchTypeOfAction = useCallback(
+    fetchMasterOperationDetails("WO Type of Action Init"),
+    []
+  );
+
+  // Fetch states based on selected country (second level) - using fetchMaster
+  const fetchOperations = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
+    // Extract countryId from piped format "id || name"
+    const countryId = rowData?.TypeOfAction?.split(" || ")[0] || "";
+    console.log("Fetching states for country:", countryId, "Row data:", rowData);
+    // Use fetchMaster with TypeOfAction filter
+    const fetchOperations = fetchMasterOperations({messageType: "WO Type of Action Onselect Init", TypeOfAction: countryId });
+    return fetchOperations({ searchTerm, offset, limit });
+  }, []);
+
+  // Columns for OperationDetails grid
+  const operationDetailsColumns: GridColumnConfig[] = [
     {
-      key: "productName",
-      label: "Product Name",
-      type: "String",
+      key: "OrderID",
+      label: "Operation No.",
+      type: "Link",
       sortable: true,
       filterable: true,
-      editable: true,
-      width: 200,
-    },
-    {
-      key: "quantity",
-      label: "Quantity",
-      type: "Integer",
-      sortable: true,
-      filterable: true,
-      editable: true,
+      editable: false,
       width: 100,
     },
     {
-      key: "unitPrice",
-      label: "Unit Price",
-      type: "Integer",
-      sortable: true,
-      filterable: true,
-      editable: true,
-      width: 120,
-    },
-    {
-      key: "category",
-      label: "Category",
-      type: "Select",
-      sortable: true,
-      filterable: true,
-      editable: true,
-      width: 120,
-      options: ["Electronics", "Furniture", "Office Supplies", "Tools"],
-    },
-    {
-      key: "status",
+      key: "OperationStatus",
       label: "Status",
       type: "Badge",
       sortable: true,
       filterable: true,
-      width: 100,
+      editable: false,
+      width: 150,
       statusMap: {
-        Active: "green",
-        "Low Stock": "orange",
-        "Out of Stock": "red",
+        Active: "badge-green rounded-2xl",
+        Pending: "badge-yellow rounded-2xl",
+        Completed: "badge-blue rounded-2xl",
+        Cancelled: "badge-red rounded-2xl",
+        "In-progress": "badge-orange rounded-2xl",
       },
     },
     {
-      key: "dateAdded",
-      label: "Date Added",
-      type: "Date",
+      key: "TypeOfAction",
+      label: "Type of Action",
+      type: "LazySelect",
       sortable: true,
       filterable: true,
       editable: true,
-      width: 120,
+      width: 180,
+      fetchOptions: fetchTypeOfAction,
+      dependentFields: ["Operation"],
+      onChange: (newValue, row) => {
+        // `newValue` is whatever the editor emits (string, object, etc.)
+        // Return the final value you want stored in the row.
+        const cleanValue = typeof newValue === 'string' ? newValue.trim() : newValue?.value;
+        console.log('TypeOfAction changed →', cleanValue, 'Row:', row);
+        return cleanValue;
+      },
     },
     {
-      key: "deliveryTime",
-      label: "Delivery Time",
-      type: "Time",
+      key: "Operation",
+      label: "Operation",
+      type: "LazySelect",
       sortable: true,
       filterable: true,
       editable: true,
-      width: 130,
+      width: 180,
+      fetchOptions: fetchOperations,
+      onChange: (value, rowData) => {
+        console.log("Operation changed:", value, "Row data:", rowData);
+      },
     },
     {
-      key: "supplier",
-      label: "Supplier",
+      key: "IsWorkShop",
+      label: "Service Mode",
       type: "LazySelect",
       sortable: true,
       filterable: true,
       editable: true,
       width: 150,
-      fetchOptions: fetchMaster("Supplier Init"),
-      // fetchOptions: async ({ searchTerm, offset, limit }) => {
-      //   // Mock async data fetching - simulate API call
-      //   await new Promise((resolve) => setTimeout(resolve, 300));
-      //   const allSuppliers = [
-      //     "TechCorp",
-      //     "FurniCorp",
-      //     "MobileTech",
-      //     "OfficeMax",
-      //     "ToolMasters",
-      //     "ElectroHub",
-      //     "SmartDevices",
-      //     "HomeGoods",
-      //   ];
-      //   const filtered = allSuppliers.filter((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
-      //   return filtered.slice(offset, offset + limit).map((s) => ({ id: s, name: s }));
-      // },
+      // options: ["Workshop", "Mobile"],
+      fetchOptions: fetchWorkshopMobile,
       onChange: (value, rowData) => {
-        console.log("Supplier changed:", value, "Row data:", rowData);
+        console.log("IsWorkShop changed:", value, "Row data:", rowData);
       },
+      hideSearch: true,
+      disableLazyLoading: true
     },
     {
-      key: "specifications",
-      label: "Specifications",
-      type: "MultiselectLazySelect",
-      sortable: false,
-      filterable: false,
+      key: "IsForwardReturn",
+      label: "Shipment Type",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
       editable: true,
-      width: 200,
-      fetchOptions: fetchMaster("Location Init"),
-      // fetchOptions: async ({ searchTerm, offset, limit }) => {
-      //   // Mock async data fetching for specifications
-      //   await new Promise((resolve) => setTimeout(resolve, 300));
-      //   const allSpecs = [
-      //     { id: "RAM-16GB", name: "RAM: 16GB DDR4" },
-      //     { id: "RAM-32GB", name: "RAM: 32GB DDR4" },
-      //     { id: "Storage-512GB", name: "Storage: 512GB SSD" },
-      //     { id: "Storage-1TB", name: "Storage: 1TB SSD" },
-      //     { id: "Processor-i7", name: "Processor: Intel i7" },
-      //     { id: "Processor-i9", name: "Processor: Intel i9" },
-      //     { id: "Screen-6.5", name: 'Screen: 6.5" OLED' },
-      //     { id: "Screen-7", name: 'Screen: 7" AMOLED' },
-      //     { id: "Camera-108MP", name: "Camera: 108MP Triple" },
-      //     { id: "Camera-200MP", name: "Camera: 200MP Quad" },
-      //     { id: "Battery-4500", name: "Battery: 4500mAh" },
-      //     { id: "Battery-5000", name: "Battery: 5000mAh" },
-      //     { id: "Material-Mesh", name: "Material: Mesh Back" },
-      //     { id: "Material-Leather", name: "Material: Leather" },
-      //     { id: "Height-Adj", name: "Height: Adjustable" },
-      //     { id: "Wheels-Caster", name: "Wheels: Caster Wheels" },
-      //   ];
-      //   const filtered = allSpecs.filter((s) => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      //   return filtered.slice(offset, offset + limit);
-      // },
+      width: 180,
+      // options: ["Forward/Return", "One-Way"],
+      fetchOptions: fetchForwardReturn,
       onChange: (value, rowData) => {
-        console.log("Specifications changed:", value, "Row data:", rowData);
+        console.log("IsForwardReturn changed:", value, "Row data:", rowData);
+      },
+      hideSearch: true,
+      disableLazyLoading: true
+    },
+    {
+      key: "CodeNo",
+      label: "CUU Codes",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
+      editable: true,
+      width: 150,
+      fetchOptions: fetchMasterOperationDetails("Code No Init"),
+      onChange: (value, rowData) => {
+        console.log("CodeNo changed:", value, "Row data:", rowData);
       },
     },
     {
-      key: "reviews",
-      label: "Reviews",
-      type: "SubRow",
-      sortable: false,
-      filterable: false,
+      key: "QC1Code",
+      label: "QC1 Code",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
+      editable: true,
       width: 150,
-      subRowColumns: [
-        { key: "reviewer", label: "Reviewer", type: "Text", width: 80 },
-        { key: "rating", label: "Rating", type: "Text", width: 60 },
-        { key: "comment", label: "Comment", type: "Text", width: 150 },
-      ],
+      fetchOptions: fetchMasterOperationDetails("Operation details QC1 Init"),
+      onChange: (value, rowData) => {
+        // Extract only the ID from piped format "id || name"
+        if (typeof value === 'string' && value.includes(' || ')) {
+          const id = value.split(' || ')[0].trim();
+          console.log("QC1Code changed - extracted ID:", id, "from:", value);
+          return id; // Return only the ID to be stored
+        }
+        return value; // Return as-is if not in piped format
+      },
+      hideSearch: true,
+      disableLazyLoading: true
     },
-    // Subrow columns (collapsed by default)
     {
-      key: "notes",
-      label: "Notes",
+      key: "QC1Value",
+      label: "QC1 Value",
+      type: "Text",
+      sortable: true,
+      filterable: true,
+      editable: true,
+      width: 150,
+    },
+    {
+      key: "Remarks",
+      label: "Remarks",
       type: "Text",
       sortable: false,
-      filterable: false,
+      filterable: true,
       editable: true,
       width: 200,
       subRow: true,
-    },
-    {
-      key: "internalCode",
-      label: "Internal Code",
-      type: "String",
-      sortable: false,
-      filterable: false,
-      editable: true,
-      width: 150,
-      subRow: true,
-    },
-    {
-      key: "warehouse",
-      label: "Warehouse",
-      type: "Select",
-      sortable: false,
-      filterable: false,
-      editable: true,
-      width: 150,
-      subRow: true,
-      options: ["Warehouse A", "Warehouse B", "Warehouse C", "Warehouse D"],
     },
     {
       key: "actions",
@@ -1359,128 +1454,172 @@ const formatForBackend = (values) => {
     },
   ];
 
-  // Mock data for the demo
-  const initialData = [
-    {
-      id: "1",
-      productName: "Laptop Pro",
-      quantity: null,
-      unitPrice: 1299.99,
-      category: "Electronics",
-      status: "Active",
-      dateAdded: "2024-01-15",
-      deliveryTime: "14:30",
-      supplier: "TechCorp",
-      specifications: [
-        { id: "RAM-16GB", name: "RAM: 16GB DDR4" },
-        { id: "Storage-512GB", name: "Storage: 512GB SSD" },
-        { id: "Processor-i7", name: "Processor: Intel i7" },
-      ],
-      reviews: [
-        { reviewer: "John D.", rating: 5, comment: "Excellent performance" },
-        { reviewer: "Jane S.", rating: 4, comment: "Great value for money" },
-      ],
-      notes: "Premium product with extended warranty",
-      internalCode: "TECH-LAP-001",
-      warehouse: "Warehouse A",
-    },
-    {
-      id: "2",
-      productName: "Office Chair",
-      quantity: 12,
-      unitPrice: 199.99,
-      category: "Furniture",
-      status: "Active",
-      dateAdded: "2024-01-10",
-      deliveryTime: "10:00",
-      supplier: "FurniCorp",
-      specifications: [
-        { id: "Material-Mesh", name: "Material: Mesh Back" },
-        { id: "Height-Adj", name: "Height: Adjustable" },
-        { id: "Wheels-Caster", name: "Wheels: Caster Wheels" },
-      ],
-      reviews: [
-        { reviewer: "Mike R.", rating: 4, comment: "Very comfortable" },
-      ],
-      notes: "Ergonomic design, suitable for long hours",
-      internalCode: "FURN-CHR-002",
-      warehouse: "Warehouse B",
-    },
-    {
-      id: "3",
-      productName: "Smartphone X",
-      quantity: 8,
-      unitPrice: 899.99,
-      category: "Electronics",
-      status: "Low Stock",
-      dateAdded: "2024-01-08",
-      deliveryTime: "16:45",
-      supplier: "MobileTech",
-      specifications: [
-        { id: "Screen-6.5", name: 'Screen: 6.5" OLED' },
-        { id: "Camera-108MP", name: "Camera: 108MP Triple" },
-        { id: "Battery-4500", name: "Battery: 4500mAh" },
-      ],
-      reviews: [
-        { reviewer: "Sarah T.", rating: 5, comment: "Amazing camera quality" },
-      ],
-      notes: "Latest model with 5G connectivity",
-      internalCode: "MOB-PHN-003",
-      warehouse: "Warehouse A",
-    },
-  ];
+  // Transform IsWorkShop value to display string
+  const transformIsWorkShopForDisplay = (value: any): string => {
+    if (value === undefined || value === null) return "Workshop";
+    if (typeof value === 'object' && value.IsWorkShop !== undefined) {
+      return value.IsWorkShop === 1 || value.IsWorkShop === "1" ? "Workshop" : "Mobile";
+    }
+    if (value === 1 || value === "1") return "Workshop";
+    if (value === 0 || value === "0") return "Mobile";
+    return typeof value === 'string' ? value : "Workshop";
+  };
 
-  const [data, setData] = useState(initialData);
+  // Transform IsWorkShop display value to store format (final numeric flag on the row)
+  const transformIsWorkShopForSave = (value: string | any): any => {
+    // If already an object like { IsWorkShop: 1 }, normalize to 1/0
+    if (typeof value === 'object' && value !== null && value.IsWorkShop !== undefined) {
+      return value.IsWorkShop === 1 || value.IsWorkShop === "1" ? 1 : 0;
+    }
+
+    // If it's a display string or primitive, map to 1/0
+    if (value === "Workshop" || value === 1 || value === "1") return 1;
+    if (value === "Mobile" || value === 0 || value === "0") return 0;
+
+    // Fallback: return as-is
+    return value;
+  };
+
+  // Transform IsForwardReturn value to display string
+  const transformIsForwardReturnForDisplay = (value: any): string => {
+    if (value === undefined || value === null) return "Forward/Return";
+    if (typeof value === 'object' && value.IsForwardReturn !== undefined) {
+      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1" ? "Forward/Return" : "One-Way";
+    }
+    if (value === 1 || value === "1") return "Forward/Return";
+    if (value === 0 || value === "0") return "One-Way";
+    return typeof value === 'string' ? value : "Forward/Return";
+  };
+
+  // Transform IsForwardReturn display value to store format (final numeric flag on the row)
+  const transformIsForwardReturnForSave = (value: string | any): any => {
+    if (typeof value === 'object' && value !== null && value.IsForwardReturn !== undefined) {
+      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1" ? 1 : 0;
+    }
+    if (value === "Forward/Return" || value === 1 || value === "1") return 1;
+    if (value === "One-Way" || value === 0 || value === "0") return 0;
+    return value;
+  };
+
+  // Transform OperationDetails data for display (convert IsWorkShop & IsForwardReturn values to strings)
+  const transformDataForDisplay = (data: any[]) => {
+    return data.map(row => ({
+      ...row,
+      IsWorkShop: transformIsWorkShopForDisplay(row.IsWorkShop),
+      IsForwardReturn: transformIsForwardReturnForDisplay(row.IsForwardReturn),
+    }));
+  };
+
+  // Extract ID from piped format (format: "id || name")
+  const extractIdFromPipedFormat = (value: any): string => {
+    if (!value) return "";
+    if (typeof value === 'string' && value.includes(' || ')) {
+      return value.split(' || ')[0].trim();
+    }
+    return value;
+  };
+
   const handleAddRow = async (newRow: any) => {
-    console.log("Adding new row:", newRow);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("Adding new operation detail:", newRow);
+    // Convert IsWorkShop & IsForwardReturn values back to store format
+    // Extract ID from QC1Code if it's in piped format
+    const transformedRow = {
+      ...newRow,
+      IsWorkShop: transformIsWorkShopForSave(newRow.IsWorkShop),
+      IsForwardReturn: transformIsForwardReturnForSave(newRow.IsForwardReturn),
+      QC1Code: extractIdFromPipedFormat(newRow.QC1Code),
+      ModeFlag: "Insert",
+    };
+
+    // Update store with new operation detail
+    const currentOperationDetails = workOrder?.OperationDetails || [];
+    const updatedOperationDetails = [...currentOperationDetails, transformedRow];
+
+    useWorkOrderStore.setState((state) => {
+      const updatedWorkOrder = {
+        ...state.workOrder!,
+        OperationDetails: updatedOperationDetails,
+      };
+
+      console.log('🔁 WorkOrder Store after Add Row:', updatedWorkOrder);
+
+      return { workOrder: updatedWorkOrder };
+    });
   };
 
   const handleEditRow = async (editedRow: any, rowIndex: number) => {
-    console.log("Editing row:", editedRow, "at index:", rowIndex);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("Editing operation detail:", editedRow, "at index:", rowIndex);
+    // Convert IsWorkShop & IsForwardReturn values back to store format
+    // Extract ID from QC1Code if it's in piped format
+    const transformedRow = {
+      ...editedRow,
+      IsWorkShop: transformIsWorkShopForSave(editedRow.IsWorkShop),
+      IsForwardReturn: transformIsForwardReturnForSave(editedRow.IsForwardReturn),
+      QC1Code: extractIdFromPipedFormat(editedRow.QC1Code),
+      ModeFlag: "Update",
+    };
+
+    // Update store with edited operation detail
+    const currentOperationDetails = workOrder?.OperationDetails || [];
+    const updatedOperationDetails = [...currentOperationDetails];
+    updatedOperationDetails[rowIndex] = transformedRow;
+
+    useWorkOrderStore.setState((state) => {
+      const updatedWorkOrder = {
+        ...state.workOrder!,
+        OperationDetails: updatedOperationDetails,
+      };
+
+      console.log('✏️ WorkOrder Store after Edit Row:', updatedWorkOrder);
+
+      return { workOrder: updatedWorkOrder };
+    });
   };
 
   const handleDeleteRow = async (row: any, rowIndex: number) => {
-    console.log("Deleting row:", row, "at index:", rowIndex);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("Deleting operation detail:", row, "at index:", rowIndex);
+    // Update store by removing the operation detail
+    const currentOperationDetails = workOrder?.OperationDetails || [];
+    const updatedOperationDetails = currentOperationDetails.filter((_, index) => index !== rowIndex);
+
+    useWorkOrderStore.setState((state) => ({
+      workOrder: {
+        ...state.workOrder!,
+        OperationDetails: updatedOperationDetails,
+      },
+    }));
   };
 
+  // Default row values - IsWorkShop stored as display string (converted on save)
   const defaultRowValues = {
-    productName: "",
-    quantity: 0,
-    unitPrice: 0,
-    category: "Electronics",
-    status: "Active",
-    dateAdded: new Date().toISOString().split("T")[0],
-    deliveryTime: "09:00",
-    supplier: "",
-    specifications: [],
-    reviews: [{ reviewer: "", rating: 5, comment: "" }],
-    notes: "",
-    internalCode: "",
-    warehouse: "Warehouse A",
+    OrderID: "",
+    TypeOfAction: "",
+    Operation: "",
+    OperationStatus: "",
+    CodeNo: "",
+    IsWorkShop: "",
+    IsForwardReturn: "",
+    QC1Code: "",
+    QC1Value: "",
+    Remarks: "",
+    ModeFlag: "Insert",
   };
 
   const validationRules = {
-    requiredFields: ["productName", "supplier"],
+    requiredFields: ["TypeOfAction", "Operation"],
+    // requiredFields: [],
     maxLength: {
-      productName: 50,
-      supplier: 30,
+      OrderID: 50,
+      TypeOfAction: 100,
+      Operation: 100,
+      Remarks: 500,
     },
     customValidationFn: (values: Record<string, any>) => {
       const errors: Record<string, string> = {};
 
-      if (values.quantity && values.quantity < 0) {
-        errors.quantity = "Quantity must be positive";
-      }
-
-      if (values.unitPrice && values.unitPrice < 0) {
-        errors.unitPrice = "Unit price must be positive";
-      }
+      // if (values.QC1Value && isNaN(Number(values.QC1Value))) {
+      //   errors.QC1Value = "QC1 Value must be a number";
+      // }
 
       return errors;
     },
@@ -1511,13 +1650,13 @@ const formatForBackend = (values) => {
                 <div className="lg:col-span-1 w-2/6">
                   <div className="bg-white rounded-lg border border-gray-200">
                     <div className="orderFormScroll p-4">
-                     <DynamicPanel
-  ref={workOrderPanelRef}
-  panelId="WorkOrder"
-  panelTitle="Work Order Details"
-  panelConfig={workOrderPanelConfig(orderType)}
-  initialData={workOrder?.Header}
-/>
+                      <DynamicPanel
+                        ref={workOrderPanelRef}
+                        panelId="WorkOrder"
+                        panelTitle="Work Order Details"
+                        panelConfig={workOrderPanelConfig(orderType)}
+                        initialData={workOrder?.Header}
+                      />
 
                     </div>
 
@@ -1528,11 +1667,12 @@ const formatForBackend = (values) => {
 
                 {/* RIGHT SECTION */}
                 <div className="lg:col-span-1 w-4/6">
-                  <div className="bg-white rounded-lg border border-gray-200 mb-6 p-4">
+                  <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
                     <SmartGridPlus
-                      columns={columns}
-                      data={data}
-                      gridTitle="Product Inventory"
+                      columns={operationDetailsColumns}
+                      data={transformDataForDisplay(workOrder?.OperationDetails || [])}
+                      recordCount={workOrder?.OperationDetails?.length || 0}
+                      gridTitle="Operation Details"
                       inlineRowAddition={true}
                       inlineRowEditing={true}
                       onAddRow={handleAddRow}
@@ -1540,9 +1680,21 @@ const formatForBackend = (values) => {
                       onDeleteRow={handleDeleteRow}
                       defaultRowValues={defaultRowValues}
                       validationRules={validationRules}
-                      addRowButtonLabel="Add Product"
-                      addRowButtonPosition="top-left"
+                      addRowButtonLabel="Add Operation"
+                      addRowButtonPosition="top-right"
                       paginationMode="pagination"
+                      showDefaultConfigurableButton={false}
+                      onLinkClick={(rowData, columnKey, rowIndex) => {
+                        // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
+                        const transformedRowData = {
+                          ...rowData,
+                          IsWorkShop: transformIsWorkShopForSave(rowData.IsWorkShop),
+                          IsForwardReturn: transformIsForwardReturnForSave(rowData.IsForwardReturn),
+                        };
+                        console.log("Link clicked:", transformedRowData);
+                        console.log("Column key:", columnKey);
+                        console.log("Row index:", rowIndex);
+                      }}
                     />
                   </div>
                   <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
@@ -1570,7 +1722,7 @@ const formatForBackend = (values) => {
                                     ?.ModeFlag === "NoChange"
                                     ? "Update"
                                     : state.workOrder.WorkorderSchedule
-                                        ?.ModeFlag,
+                                      ?.ModeFlag,
                               },
                             },
                           }));
@@ -1602,7 +1754,7 @@ const formatForBackend = (values) => {
                                     ?.ModeFlag === "NoChange"
                                     ? "Update"
                                     : state.workOrder.WorkorderSchedule
-                                        ?.ModeFlag,
+                                      ?.ModeFlag,
                               },
                             },
                           }));
@@ -1661,7 +1813,7 @@ const formatForBackend = (values) => {
                                         ?.ModeFlag === "NoChange"
                                         ? "Update"
                                         : state.workOrder.WorkorderSchedule
-                                            ?.ModeFlag,
+                                          ?.ModeFlag,
                                   },
                                 },
                               }));

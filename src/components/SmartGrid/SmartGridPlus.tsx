@@ -793,10 +793,28 @@ export function SmartGridPlus({
 
   const handleEditingCellChange = useCallback((rowIndex: number, columnKey: string, value: any) => {
     if (editingRow === rowIndex) {
-      setEditingValues(prev => ({
-        ...prev,
-        [columnKey]: value
-      }));
+      // setEditingValues(prev => ({
+      //   ...prev,
+      //   [columnKey]: value
+      // }));
+       // Find the column to check for dependent fields
+       const column = columns.find(c => c.key === columnKey);
+      
+       setEditingValues(prev => {
+         const newValues = {
+           ...prev,
+           [columnKey]: value
+         };
+         
+         // Clear dependent fields if specified
+         if (column?.dependentFields) {
+           column.dependentFields.forEach(depField => {
+             newValues[depField] = '';
+           });
+         }
+         
+         return newValues;
+       });
       
       // Clear validation error for this field
       if (validationErrors[columnKey]) {
@@ -807,7 +825,7 @@ export function SmartGridPlus({
         });
       }
     }
-  }, [editingRow, validationErrors]);
+  }, [editingRow, validationErrors, columns]);
 
   // renderCell function
   const renderCell = useCallback((row: any, column: GridColumnConfig, rowIndex: number, columnIndex: number) => {
@@ -849,12 +867,14 @@ export function SmartGridPlus({
                 onChange={(value) => {
                   handleEditingCellChange(rowIndex, column.key, value);
                   if (column.onChange) {
-                    column.onChange(value, row);
+                    // column.onChange(value, row);
+                    column.onChange(value, editingValues);
                   }
                 }}
                 onSave={() => handleSaveEditRow(rowIndex)}
                 error={validationErrors[column.key]}
                 shouldAutoFocus={shouldAutoFocus}
+                rowData={editingValues}
               />
             </div>
           </div>
@@ -869,12 +889,14 @@ export function SmartGridPlus({
           onChange={(value) => {
             handleEditingCellChange(rowIndex, column.key, value);
             if (column.onChange) {
-              column.onChange(value, row);
+              // column.onChange(value, row);
+              column.onChange(value, editingValues);
             }
           }}
           onSave={() => handleSaveEditRow(rowIndex)}
           error={validationErrors[column.key]}
           shouldAutoFocus={shouldAutoFocus}
+          rowData={editingValues}
         />
       );
     }
@@ -1007,10 +1029,24 @@ export function SmartGridPlus({
                     value={newRowValues[column.key]}
                     column={column}
                     onChange={(value) => {
-                      setNewRowValues(prev => ({
-                        ...prev,
-                        [column.key]: value
-                      }));
+                      // setNewRowValues(prev => ({
+                      //   ...prev,
+                      //   [column.key]: value
+                      // }));
+                      setNewRowValues(prev => {
+                        const newValues = {
+                          ...prev,
+                          [column.key]: value
+                        };
+                        // Clear dependent fields if specified
+                        if (column.dependentFields) {
+                          column.dependentFields.forEach(depField => {
+                            newValues[depField] = '';
+                          });
+                        }
+                        return newValues;
+                      });
+                      
                       // Clear validation error for this field
                       if (validationErrors[column.key]) {
                         setValidationErrors(prev => {
@@ -1021,10 +1057,11 @@ export function SmartGridPlus({
                       }
                       // Call column-specific onChange if provided
                       if (column.onChange) {
-                        column.onChange(value, newRowValues);
+                        column.onChange(value, { ...newRowValues, [column.key]: value });
                       }
                     }}
                     error={validationErrors[column.key]}
+                    rowData={newRowValues}
                   />
                 </div>
               )}
@@ -1062,10 +1099,23 @@ export function SmartGridPlus({
                           value={newRowValues[column.key]}
                           column={column}
                           onChange={(value) => {
-                            setNewRowValues(prev => ({
-                              ...prev,
-                              [column.key]: value
-                            }));
+                            // setNewRowValues(prev => ({
+                            //   ...prev,
+                            //   [column.key]: value
+                            // }));
+                            setNewRowValues(prev => {
+                              const newValues = {
+                                ...prev,
+                                [column.key]: value
+                              };
+                              // Clear dependent fields if specified
+                              if (column.dependentFields) {
+                                column.dependentFields.forEach(depField => {
+                                  newValues[depField] = '';
+                                });
+                              }
+                              return newValues;
+                            });
                             // Clear validation error for this field
                             if (validationErrors[column.key]) {
                               setValidationErrors(prev => {
@@ -1076,10 +1126,11 @@ export function SmartGridPlus({
                             }
                             // Call column-specific onChange if provided
                             if (column.onChange) {
-                              column.onChange(value, newRowValues);
+                              column.onChange(value, { ...newRowValues, [column.key]: value });
                             }
                           }}
                           error={validationErrors[column.key]}
+                          rowData={newRowValues}
                         />
                       )}
                     </div>
@@ -1186,7 +1237,7 @@ export function SmartGridPlus({
       />
 
        {/* Advanced Filter System */}
-      <FilterSystem
+      {/* <FilterSystem
         columns={orderedColumns}
         subRowColumns={subRowColumns}
         showFilterRow={showFilterRow}
@@ -1195,7 +1246,7 @@ export function SmartGridPlus({
         gridId="smart-grid-plus"
         userId="demo-user"
         api={mockFilterAPI}
-      />
+      /> */}
       
       {/* Table Container with horizontal scroll prevention */}
       <div className="bg-white rounded-lg border shadow-sm">
@@ -1430,6 +1481,12 @@ export function SmartGridPlus({
                             rowClassName?.(row, actualIndex)
                           )}
                           onDoubleClick={() => handleCellDoubleClick(actualIndex, row)}
+                          onKeyDown={(e) => {
+                            if (isRowEditing && e.key === 'Escape') {
+                              e.preventDefault();
+                              handleCancelEditRow();
+                            }
+                          }}
                         >
                           {/* Checkbox column */}
                           {showCheckboxes && (
@@ -1508,7 +1565,7 @@ export function SmartGridPlus({
                     {!loading && inlineRowAddition && (
                       <TableRow 
                         className={cn(
-                          "border-b border-gray-200 transition-all duration-200",
+                          "border-b border-gray-200 transition-all duration-200 h-[41px]",
                           isAddingRow ? "bg-blue-50" : "bg-gray-50/30 hover:bg-gray-50/60"
                         )}
                         onDoubleClick={!isAddingRow ? handleAddRowClick : undefined}
@@ -1586,10 +1643,23 @@ export function SmartGridPlus({
                                       value={newRowValues[column.key]}
                                       column={column}
                                       onChange={(value) => {
-                                        setNewRowValues(prev => ({
-                                          ...prev,
-                                          [column.key]: value
-                                        }));
+                                        // setNewRowValues(prev => ({
+                                        //   ...prev,
+                                        //   [column.key]: value
+                                        // }));
+                                        setNewRowValues(prev => {
+                                          const newValues = {
+                                            ...prev,
+                                            [column.key]: value
+                                          };
+                                          // Clear dependent fields if specified
+                                          if (column.dependentFields) {
+                                            column.dependentFields.forEach(depField => {
+                                              newValues[depField] = '';
+                                            });
+                                          }
+                                          return newValues;
+                                        });
                                         if (validationErrors[column.key]) {
                                           setValidationErrors(prev => {
                                             const newErrors = { ...prev };
@@ -1598,10 +1668,11 @@ export function SmartGridPlus({
                                           });
                                         }
                                         if (column.onChange) {
-                                          column.onChange(value, newRowValues);
+                                          column.onChange(value, { ...newRowValues, [column.key]: value });
                                         }
                                       }}
                                       error={validationErrors[column.key]}
+                                      rowData={newRowValues}
                                     />
                                   </div>
                                 )

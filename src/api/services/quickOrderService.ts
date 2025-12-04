@@ -913,4 +913,32 @@ export const quickOrderService = {
     );
     return response.data;
   },
+
+  fetOperationFromTypeOfAction: async (
+    params?: any
+  ): Promise<PaginatedResponse<QuickOrder>> => {
+    console.log("params1 ---", params);
+    const userContext = getUserContext();
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+      },
+      SearchCriteria: {
+        TypeOfAction: params?.TypeOfAction || "",
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
 };

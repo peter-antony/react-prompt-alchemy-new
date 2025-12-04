@@ -12,7 +12,7 @@ interface LazySelectOption {
 }
 
 interface DynamicLazySelectProps {
-  fetchOptions: (params: { searchTerm: string; offset: number; limit: number }) => Promise<LazySelectOption[]>;
+  fetchOptions: (params: { searchTerm: string; offset: number; limit: number, rowData?: any }) => Promise<LazySelectOption[]>;
   value?: string | string[];
   onChange: (value: string | string[] | undefined) => void;
   placeholder?: string;
@@ -25,6 +25,7 @@ interface DynamicLazySelectProps {
   onBlur?: (e: React.FocusEvent) => void;
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
+  rowData?: any;
   tooltip?: any;
 }
 
@@ -44,6 +45,7 @@ export function DynamicLazySelect({
   onBlur,
   hideSearch = false,
   disableLazyLoading = false,
+  rowData,
   tooltip,
 }: DynamicLazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,7 +95,8 @@ export function DynamicLazySelect({
       const newOptions = await fetchOptions({
         searchTerm: debouncedSearchTerm,
         offset: currentOffset,
-        limit: ITEMS_PER_PAGE
+        limit: ITEMS_PER_PAGE,
+        rowData
       });
 
       if (reset) {
@@ -114,7 +117,7 @@ export function DynamicLazySelect({
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [fetchOptions, debouncedSearchTerm, offset]);
+  }, [fetchOptions, debouncedSearchTerm, offset, rowData]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);

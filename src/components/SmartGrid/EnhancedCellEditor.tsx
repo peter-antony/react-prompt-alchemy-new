@@ -11,11 +11,17 @@ interface EnhancedCellEditorProps {
   onSave?: () => void;
   error?: string;
   shouldAutoFocus?: boolean;
+  rowData?: any;
 }
 
-export function EnhancedCellEditor({ value, column, onChange, onSave, error, shouldAutoFocus = false }: EnhancedCellEditorProps) {
+export function EnhancedCellEditor({ value, column, onChange, onSave, error, shouldAutoFocus = false, rowData }: EnhancedCellEditorProps) {
   const [editValue, setEditValue] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync internal state when external value changes (e.g., when dependent fields are cleared)
+  useEffect(() => {
+    setEditValue(value ?? '');
+  }, [value]);
 
   useEffect(() => {
     if (shouldAutoFocus && inputRef.current && !['LazySelect', 'MultiselectLazySelect', 'Select'].includes(column.type)) {
@@ -55,7 +61,7 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
   // LazySelect renderer
   if (column.type === 'LazySelect' && column.fetchOptions) {
     return (
-      <div className="w-full">
+      <div className="w-full" onKeyDown={handleKeyDown}>
         <DynamicLazySelect
           fetchOptions={column.fetchOptions}
           value={editValue}
@@ -64,6 +70,7 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
           multiSelect={column.multiSelect}
           hideSearch={column.hideSearch}
           disableLazyLoading={column.disableLazyLoading}
+          rowData={rowData}
         />
         {error && (
           <div className="mt-1 text-xs text-destructive">
@@ -77,7 +84,7 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
   // MultiselectLazySelect renderer
   if (column.type === 'MultiselectLazySelect' && column.fetchOptions) {
     return (
-      <div className="w-full">
+      <div className="w-full" onKeyDown={handleKeyDown}>
         <DynamicLazySelect
           fetchOptions={column.fetchOptions}
           value={editValue}
@@ -86,6 +93,7 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
           multiSelect={true}
           hideSearch={column.hideSearch}
           disableLazyLoading={column.disableLazyLoading}
+          rowData={rowData}
         />
         {error && (
           <div className="mt-1 text-xs text-destructive">
