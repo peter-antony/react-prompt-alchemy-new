@@ -605,12 +605,12 @@ const formatForBackend = (values) => {
           />
         </svg>
       ),
-      // events: {
-      //   onClick: (event, value) => {
-      //     console.log("Billing Details icon clicked", event, value);
-      //     setShowBillingDetails(true);
-      //   },
-      // },
+      events: {
+        onClick: (event, value) => {
+          console.log("Billing Details icon clicked", event, value);
+          setShowBillingDetails(true);
+        },
+      },
     },
 
     /** Billing */
