@@ -8,8 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
-import { Paperclip, BookX, Link, Copy, Shuffle, Plus } from "lucide-react";
-import { debounce } from "lodash";
+import { Shuffle, Plus } from "lucide-react";
 import type { PanelConfig } from "@/types/dynamicPanel";
 import { MapPinned } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -17,9 +16,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services";
 // import { SideDrawer } from "@/components/ui/side-drawer";
 import { SideDrawer } from "@/components/Common/SideDrawer";
-import { InputDropdown } from "@/components/ui/input-dropdown";
 import WorkOrderOperationDetails from "./WorkOrderOperationDetails";
-import { buildWorkOrderPayload } from "@/lib/utils";
 import { useWorkOrderStore } from "@/stores/workOrderStore";
 import { SmartGridPlus } from "../SmartGrid/SmartGridPlus";
 import { GridColumnConfig } from "@/types/smartgrid";
@@ -41,8 +38,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
 
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
-  const [resourceGroups, setResourceGroups] = useState<any[]>([]);
-  const [showCopyModal, setShowCopyModal] = useState(false);
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
   const [showOperstionDetails, setShowOperationDetails] = useState(false);
@@ -55,6 +50,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [showBillingDetails, setShowBillingDetails] = useState(false); // State for billing details drawer
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
+  const workOrderPanelRef = useRef<DynamicPanelRef>(null);
   const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
 
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
@@ -64,24 +60,100 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       timer = setTimeout(() => fn(...args), delay);
     };
   };
-  const workOrderPanelRef = useRef<DynamicPanelRef>(null);
-  const remarks2Ref = useRef<HTMLInputElement | null>(null);
-  const remarks3Ref = useRef<HTMLInputElement | null>(null);
-  const [remarks, setRemarks] = useState<any>();
 
-  const handleGetFormValues = () => {
-    const uiValues = workOrderPanelRef.current?.getFormValues() || {};
-    const backendValues = formatForBackend(uiValues);
-    useWorkOrderStore.getState().updateHeaderBulk(backendValues);
-    saveWorkOrder();
+ const handleGetFormValues = async () => {
+  const headerUI = workOrderPanelRef.current?.getFormValues() || {};
+  const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
+  const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
+
+  const headerBackend = formatHeaderForBackend(headerUI);
+  const locationBackend = formatLocationForBackend(locationUI);
+  const scheduleBackend = formatScheduleForBackend(scheduleUI);
+
+  const finalPayload = {
+    Header: headerBackend,
+    WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+    OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
   };
 
+  useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
+  console.clear()
+  console.log("finalPayload",finalPayload)
+  console.log("store after update:", useWorkOrderStore.getState().workOrder);
+
+};
 
 
-  const updateWholeWorkOrder = () => {
-    const uiValues = workOrderPanelRef.current?.getFormValues() || {};
-    const backendValues = formatForBackend(uiValues);
-    useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+  // const handleGetFormValues = () => {
+  //   const uiValues = workOrderPanelRef.current?.getFormValues() || {};
+  //   const backendValues = formatForBackend(uiValues);
+  //   useWorkOrderStore.getState().updateHeaderBulk(backendValues);
+  //   saveWorkOrder();
+  // };
+
+  const formatHeaderForBackend = (values) => {
+    const formatted = { ...values };
+
+    if (formatted.LoadType) {
+      formatted.LoadType = {
+        IsLoaded: formatted.LoadType === "1" ? 1 : 0,
+        IsEmpty: formatted.LoadType === "0" ? 1 : 0,
+      };
+    }
+
+    const applySplit = (field, idKey, descKey) => {
+      if (
+        typeof formatted[field] === "string" &&
+        formatted[field].includes(" || ")
+      ) {
+        const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
+        formatted[idKey] = id;
+        formatted[descKey] = desc;
+      }
+    };
+
+    applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
+    applySplit(
+      "SuplierContract",
+      "SupplierContractID",
+      "SupplierContractDescription"
+    );
+    applySplit(
+      "CustomerContract",
+      "CustomerContractID",
+      "CustomerContractDescription"
+    );
+    applySplit("ClusterMarket", "Cluster", "ClusterDescription");
+    applySplit("product", "ProductID", "ProductDescription");
+    applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
+    applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
+
+    if (formatted.QCUserDefined1) {
+      formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
+      formatted.QC1Value = formatted.QCUserDefined1.input || "";
+    }
+    if (formatted.QCUserDefined2) {
+      formatted.QC2Code = formatted.QCUserDefined2.dropdown || "";
+      formatted.QC2Value = formatted.QCUserDefined2.input || "";
+    }
+    if (formatted.QCUserDefined3) {
+      formatted.QC3Code = formatted.QCUserDefined3.dropdown || "";
+      formatted.QC3Value = formatted.QCUserDefined3.input || "";
+    }
+
+    // ⭐ ModeFlag logic added here
+    formatted.ModeFlag =
+      values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
+
+    return formatted;
+  };
+
+  const formatScheduleForBackend = (values) => {
+    return {
+      ...values,
+      ModeFlag:
+        values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update",
+    };
   };
 
   const formatForBackend = (values) => {
@@ -97,7 +169,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     // Lazy selects using " || "
     const applySplit = (field, idKey, descKey) => {
-      if (typeof formatted[field] === "string" && formatted[field].includes(" || ")) {
+      if (
+        typeof formatted[field] === "string" &&
+        formatted[field].includes(" || ")
+      ) {
         const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
         formatted[idKey] = id;
         formatted[descKey] = desc;
@@ -105,8 +180,16 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
 
     applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
-    applySplit("SuplierContract", "SupplierContractID", "SupplierContractDescription");
-    applySplit("CustomerContract", "CustomerContractID", "CustomerContractDescription");
+    applySplit(
+      "SuplierContract",
+      "SupplierContractID",
+      "SupplierContractDescription"
+    );
+    applySplit(
+      "CustomerContract",
+      "CustomerContractID",
+      "CustomerContractDescription"
+    );
     applySplit("ClusterMarket", "Cluster", "ClusterDescription");
     applySplit("product", "ProductID", "ProductDescription");
     applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
@@ -128,21 +211,38 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     return formatted;
   };
+  const formatLocationForBackend = (values) => {
+    const formatted = { ...values };
 
+    const applySplit = (field) => {
+      if (formatted[field]?.includes(" || ")) {
+        const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
+        formatted[field + "ID"] = id;
+        formatted[field + "Description"] = desc;
+      }
+    };
 
-  // const handleSaveAllRemarks = () => {
-  //   updateHeader("Remarks1", remarks1Ref.current?.value || "");
-  //   updateHeader("Remarks2", remarks2Ref.current?.value || "");
-  //   updateHeader("Remarks3", remarks3Ref.current?.value || "");
-  // };
+    [
+      "Origin",
+      "OutboardDest",
+      "RUForward",
+      "ReturnDest",
+      "RUReturn",
+      "PlaceOfOperation",
+      "Provider",
+    ].forEach(applySplit);
 
+    // ⭐ ModeFlag rule (same as Schedule panel)
+    formatted.ModeFlag =
+      values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
 
+    return formatted;
+  };
+
+  //actionSlice from store
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
   const saveWorkOrder = useWorkOrderStore.getState().saveWorkOrder;
 
-  const handleSave = () => {
-    saveWorkOrder();
-  };
   useEffect(() => {
     // Fetch work order data when workOrderNo changes
     if (workOrderNo) {
@@ -174,10 +274,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       setWorkOrderData(workOrder.Header);
     }
   }, []);
-
-  useEffect(() => {
-    console.log("mk", workOrder)
-  }, [])
 
   useEffect(() => {
     const loadQcMasters = async () => {
@@ -267,14 +363,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         { label: "Container", value: "Container" },
       ],
       order: 1,
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     updateHeader("EquipmentType", val);
-      //     updateHeader("ModeFlag", "Update"); // ⚠️ correct key
-      //     console.log("Work Order Type changed:", val);
-      //   },
-      // },
     },
 
     WagonCondainterID: {
@@ -285,24 +373,13 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: true,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.EquipmentID,
+      value: `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}`,
+
       order: 2,
       fetchOptions:
         currentOrderType === "Wagon"
           ? fetchMaster("Wagon id Init")
           : fetchMaster("Container id Init"),
-      // events: {
-      //   onChange: (val) => {
-      //     // const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     // updateHeader("EquipmentType", val);
-      //     // updateHeader("ModeFlag", "Update"); // ⚠️ correct key
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-      //     updateHeader("EquipmentID", id);
-      //     updateHeader("EquipmentDescription", desc);
-      //     console.log("Work Order Type changed:", val);
-      //   },
-      // },
     },
 
     SuplierContract: {
@@ -313,7 +390,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: true,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.SupplierContractDescription,
+      value: `${workOrder?.Header?.SupplierContractID} || ${workOrder?.Header?.SupplierContractDescription}`,
+
       order: 3,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Buy" },
@@ -354,7 +432,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.CustomerContractID,
+      value: `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}`,
       order: 4,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Sell" },
@@ -383,21 +461,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         ? workOrder.Header.AppointmentDate.slice(0, 10) // "YYYY-MM-DD"
         : "",
       order: 6,
-      // events: {
-      //   onChange: (val) => {
-      //     console.log("Event Date changed:", val);
-
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     updateHeader("EventDate", val);
-
-      //     setTimeout(() => {
-      //       console.log(
-      //         "Updated EventDate:",
-      //         useWorkOrderStore.getState().workOrder?.Header?.EventDate
-      //       );
-      //     }, 0);
-      //   },
-      // },
     },
 
     ClusterMarket: {
@@ -408,7 +471,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.Cluster,
+      value: `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}`,
+
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
       // events: {
@@ -431,7 +495,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.ProductID,
+      value: `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}`,
+
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
       // events: {
@@ -458,7 +523,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.UNCodeID,
+      value: `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}`,
+
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
       // events: {
@@ -487,20 +553,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         { label: "Empty", value: "0" },
       ],
       order: 10,
-
-      // events: {
-      //   onChange: (val) => {
-      //     const loadTypeObj = {
-      //       IsLoaded: val === "1" ? "1" : "0",
-      //       IsEmpty: val === "0" ? "1" : "0",
-      //     };
-
-      //     console.log("📌 Final LoadType JSON:", {
-      //       LoadType: loadTypeObj,
-      //     });
-      //     updateHeader("LoadType", loadTypeObj);
-      //   },
-      // },
     },
 
     Hazardous: {
@@ -513,16 +565,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Hazardous === "1",
       order: 11,
-
-      // events: {
-      //   onChange: (val) => {
-      //     const hazardousValue = val ? "1" : "0";
-
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     updateHeader("Hazardous", hazardousValue);
-      //     updateHeader("ModeFlag", "Update");
-      //   },
-      // },
     },
 
     EventDate: {
@@ -535,21 +577,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.EventDate,
       order: 12,
-      // events: {
-      //   onChange: (val) => {
-      //     console.log("Event Date changed:", val);
-
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     updateHeader("EventDate", val);
-
-      //     setTimeout(() => {
-      //       console.log(
-      //         "Updated EventDate:",
-      //         useWorkOrderStore.getState().workOrder?.Header?.EventDate
-      //       );
-      //     }, 0);
-      //   },
-      // },
     },
 
     PlaceOfEvent: {
@@ -560,19 +587,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.PlaceOfEventID,
+      value: `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}`,
+
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-
-      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-
-      //     updateHeader("PlaceOfEventID", id);
-      //     updateHeader("PlaceOfEventIDDescription", desc);
-      //   },
-      // },
     },
 
     BillingDetailsTitle: {
@@ -629,14 +647,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value:
         workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1",
       order: 15,
-      // events: {
-      //   onChange: (val) =>
-      //     updateHeader("BillingHeaderDetails", {
-      //       ...workOrder?.Header?.BillingHeaderDetails,
-      //       IsAcceptedByForwardis: val ? "1" : "0",
-      //       ModeFlag: "Update",
-      //     }),
-      // },
     },
 
     ReInvoiceCost: {
@@ -649,14 +659,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost === "1",
       order: 16,
-      // events: {
-      //   onChange: (val) =>
-      //     updateHeader("BillingHeaderDetails", {
-      //       ...workOrder?.Header?.BillingHeaderDetails,
-      //       IsReinvoiceCost: val ? "1" : "0",
-      //       ModeFlag: "Update",
-      //     }),
-      // },
     },
 
     InvoiceTo: {
@@ -670,14 +672,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
       order: 17,
       fetchOptions: fetchMaster("Cluster Init"),
-      // events: {
-      //   onChange: (val) =>
-      //     updateHeader("BillingHeaderDetails", {
-      //       ...workOrder?.Header?.BillingHeaderDetails,
-      //       InvoiceTo: val,
-      //       ModeFlag: "Update",
-      //     }),
-      // },
     },
 
     FinacialComments: {
@@ -794,14 +788,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
       order: 24,
       options: getQcOptions(qcList1),
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     console.log("change", val);
-      //     updateHeader("QC1Code", val?.dropdown || "");
-      //     updateHeader("QC1Value", val?.input || "");
-      //   },
-      // },
     },
 
     QCUserDefined2: {
@@ -818,13 +804,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
       order: 25,
       options: getQcOptions(qcList2),
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-      //     updateHeader("QC2Code", val?.dropdown || "");
-      //     updateHeader("QC2Value", val?.input || "");
-      //   },
-      // },
     },
 
     QCUserDefined3: {
@@ -841,26 +820,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       },
       order: 26,
       options: getQcOptions(qcList3),
-      events: {
-        onChange: (val) => {
-          const updateHeader = useWorkOrderStore.getState().updateHeader;
-          updateHeader("QC3Code", val?.dropdown || "");
-          updateHeader("QC3Value", val?.input || "");
-        },
-      },
-    },
-
-    PlaceOfEvent2: {
-      id: "PlaceOfEvent2",
-      label: "PlaceOfEvent2",
-      fieldType: "lazyselect",
-      width: "full",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      value: workOrder?.Header?.PlaceOfEventID,
-      order: 26,
-      fetchOptions: fetchMaster("Work Order QC1 Init"),
     },
 
     Remarks1: {
@@ -873,11 +832,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Remarks1,
       order: 27,
-      // events: {
-      //   onChange: (val) => {
-      //     console.log("val", val), updateHeader("Remarks1", val);
-      //   },
-      // },
     },
     Remarks2: {
       id: "Remarks2",
@@ -889,7 +843,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Remarks2,
       order: 28,
-
     },
 
     Remarks3: {
@@ -902,18 +855,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       value: workOrder?.Header?.Remarks3,
       order: 29,
-      events: {
-        onKeyDown: (event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            const val = (event.target as HTMLInputElement).value;
-            updateHeader("Remarks2", val);
-          }
-        },
-        onBlur: (val) => {
-          updateHeader("Remarks2", val);
-        },
-      },
     },
   });
 
@@ -945,7 +886,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   // If IsWorkShop === 0: Show (PlaceOfOperation, Provider, ExpectedDate, ActualDate, Comments)
   const locationPanelConfig: PanelConfig = useMemo(() => {
     const isWorkshop = isWorkShop === 1;
-    
+
     return {
       // Fields for IsWorkShop === 1 (Workshop mode)
       Origin: {
@@ -953,7 +894,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Origin",
         fieldType: "lazyselect",
         width: "six",
-        value: workOrder?.WorkorderSchedule?.OriginID,
+        value: `${workOrder?.WorkorderSchedule?.OriginID} || ${workOrder?.WorkorderSchedule?.OriginDescription}`,
+
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         editable: true,
@@ -965,7 +907,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Outboard Destination",
         fieldType: "lazyselect",
         width: "six",
-        value: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+        value: `${workOrder?.WorkorderSchedule?.OutBoundDestinationID} || ${workOrder?.WorkorderSchedule?.OutBoundDestinationDescription}`,
+
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         editable: true,
@@ -977,7 +920,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "RU Forward",
         fieldType: "lazyselect",
         width: "six",
-        value: workOrder?.WorkorderSchedule?.RUForwardID,
+        value: `${workOrder?.WorkorderSchedule?.RUForwardID} || ${workOrder?.WorkorderSchedule?.RUForwardDescription}`,
+
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
         editable: true,
@@ -989,7 +933,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Return Destination",
         fieldType: "lazyselect",
         width: "six",
-        value: workOrder?.WorkorderSchedule?.ReturnDestinationID,
+        value: `${workOrder?.WorkorderSchedule?.ReturnDestinationID} || ${workOrder?.WorkorderSchedule?.ReturnDestinationDescription}`,
+
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
         editable: true,
@@ -1001,7 +946,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "RU Return",
         fieldType: "lazyselect",
         width: "six",
-        value: workOrder?.WorkorderSchedule?.RUReturnID,
+        value: `${workOrder?.WorkorderSchedule?.RUReturnID} || ${workOrder?.WorkorderSchedule?.RUReturnDescription}`,
+
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
         editable: true,
@@ -1014,7 +960,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "PlaceOfOperation",
         fieldType: "lazyselect",
         width: "four",
-        value: workOrder?.WorkorderSchedule?.PlaceOfOperationID,
+        value: `${workOrder?.WorkorderSchedule?.ReturnDestinationID} || ${workOrder?.WorkorderSchedule?.ReturnDestinationDescription}`,
+
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         editable: true,
@@ -1026,7 +973,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Provider",
         fieldType: "lazyselect",
         width: "four",
-        value: workOrder?.WorkorderSchedule?.ProviderID,
+        value: `${workOrder?.WorkorderSchedule?.Provider} || ${workOrder?.WorkorderSchedule?.ProviderDescription}`,
+
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         editable: true,
@@ -1177,61 +1125,91 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const buttonCancel =
     "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
   // Fetch cities - always returns Workshop and Mobile (not dependent on state)
-  const fetchWorkshopMobile = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    console.log("Fetching cities (Workshop/Mobile):", rowData);
+  const fetchWorkshopMobile = useCallback(
+    async ({
+      searchTerm,
+      offset,
+      limit,
+      rowData,
+    }: {
+      searchTerm: string;
+      offset: number;
+      limit: number;
+      rowData?: any;
+    }) => {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      console.log("Fetching cities (Workshop/Mobile):", rowData);
 
-    // Always return Workshop and Mobile as options
-    const staticOptions = [
-      { id: "Workshop", name: "Workshop" },
-      { id: "Mobile", name: "Mobile" }
-    ];
+      // Always return Workshop and Mobile as options
+      const staticOptions = [
+        { id: "Workshop", name: "Workshop" },
+        { id: "Mobile", name: "Mobile" },
+      ];
 
-    // Filter based on search term if provided
-    const filtered = staticOptions.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      // Filter based on search term if provided
+      const filtered = staticOptions.filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-    // Return in the same format as fetchMaster in WorkOrderForm.tsx
-    return filtered.map((item: any) => {
-      const id = item.id ?? "";
-      const name = item.name ?? "";
-      return {
-        label: `${id}`,
-        value: `${id}`,
-      };
-    });
-  }, []);
+      // Return in the same format as fetchMaster in WorkOrderForm.tsx
+      return filtered.map((item: any) => {
+        const id = item.id ?? "";
+        const name = item.name ?? "";
+        return {
+          label: `${id}`,
+          value: `${id}`,
+        };
+      });
+    },
+    []
+  );
 
-  const fetchForwardReturn = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    console.log("Fetching Forward/Return:", rowData);
+  const fetchForwardReturn = useCallback(
+    async ({
+      searchTerm,
+      offset,
+      limit,
+      rowData,
+    }: {
+      searchTerm: string;
+      offset: number;
+      limit: number;
+      rowData?: any;
+    }) => {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      console.log("Fetching Forward/Return:", rowData);
 
-    // Always return Forward/Return and One-Way as options
-    const staticOptions = [
-      { id: "Forward/Return", name: "Forward/Return" },
-      { id: "One-Way", name: "One-Way" }
-    ];
+      // Always return Forward/Return and One-Way as options
+      const staticOptions = [
+        { id: "Forward/Return", name: "Forward/Return" },
+        { id: "One-Way", name: "One-Way" },
+      ];
 
-    // Filter based on search term if provided
-    const filtered = staticOptions.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      // Filter based on search term if provided
+      const filtered = staticOptions.filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-    // Return in the same format as fetchMaster in WorkOrderForm.tsx
-    return filtered.map((item: any) => {
-      const id = item.id ?? "";
-      const name = item.name ?? "";
-      return {
-        label: `${id}`,
-        value: `${id}`,
-      };
-    });
-  }, []);
+      // Return in the same format as fetchMaster in WorkOrderForm.tsx
+      return filtered.map((item: any) => {
+        const id = item.id ?? "";
+        const name = item.name ?? "";
+        return {
+          label: `${id}`,
+          value: `${id}`,
+        };
+      });
+    },
+    []
+  );
 
-  const fetchMasterOperations = (
-    {TypeOfAction, messageType}: {TypeOfAction: string, messageType: string}
-  ) => {
+  const fetchMasterOperations = ({
+    TypeOfAction,
+    messageType,
+  }: {
+    TypeOfAction: string;
+    messageType: string;
+  }) => {
     return async ({ searchTerm, offset, limit }) => {
       try {
         const response = await quickOrderService.fetOperationFromTypeOfAction({
@@ -1243,15 +1221,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
         return arr
-        .filter((item: any) => item.id)  // filter out items with no id
-        .map((item: any) => {
-          const id = item.id ?? "";
-          const name = item.name ?? "";
-          return {
-            label: `${id} || ${name}`,
-            value: `${id} || ${name}`,
-          };
-        });
+          .filter((item: any) => item.id) // filter out items with no id
+          .map((item: any) => {
+            const id = item.id ?? "";
+            const name = item.name ?? "";
+            return {
+              label: `${id} || ${name}`,
+              value: `${id} || ${name}`,
+            };
+          });
       } catch (err) {
         return [];
       }
@@ -1277,15 +1255,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
         return arr
-        .filter((item: any) => item.id)
-        .map((item: any) => {
-          const id = item.id ?? "";
-          const name = item.name ?? "";
-          return {
-            label: `${id} || ${name}`,
-            value: `${id} || ${name}`,
-          };
-        });
+          .filter((item: any) => item.id)
+          .map((item: any) => {
+            const id = item.id ?? "";
+            const name = item.name ?? "";
+            return {
+              label: `${id} || ${name}`,
+              value: `${id} || ${name}`,
+            };
+          });
       } catch (err) {
         return [];
       }
@@ -1299,14 +1277,35 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   );
 
   // Fetch states based on selected country (second level) - using fetchMaster
-  const fetchOperations = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
-    // Extract countryId from piped format "id || name"
-    const countryId = rowData?.TypeOfAction?.split(" || ")[0] || "";
-    console.log("Fetching states for country:", countryId, "Row data:", rowData);
-    // Use fetchMaster with TypeOfAction filter
-    const fetchOperations = fetchMasterOperations({messageType: "WO Type of Action Onselect Init", TypeOfAction: countryId });
-    return fetchOperations({ searchTerm, offset, limit });
-  }, []);
+  const fetchOperations = useCallback(
+    async ({
+      searchTerm,
+      offset,
+      limit,
+      rowData,
+    }: {
+      searchTerm: string;
+      offset: number;
+      limit: number;
+      rowData?: any;
+    }) => {
+      // Extract countryId from piped format "id || name"
+      const countryId = rowData?.TypeOfAction?.split(" || ")[0] || "";
+      console.log(
+        "Fetching states for country:",
+        countryId,
+        "Row data:",
+        rowData
+      );
+      // Use fetchMaster with TypeOfAction filter
+      const fetchOperations = fetchMasterOperations({
+        messageType: "WO Type of Action Onselect Init",
+        TypeOfAction: countryId,
+      });
+      return fetchOperations({ searchTerm, offset, limit });
+    },
+    []
+  );
 
   // Columns for OperationDetails grid
   const operationDetailsColumns: GridColumnConfig[] = [
@@ -1348,8 +1347,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       onChange: (newValue, row) => {
         // `newValue` is whatever the editor emits (string, object, etc.)
         // Return the final value you want stored in the row.
-        const cleanValue = typeof newValue === 'string' ? newValue.trim() : newValue?.value;
-        console.log('TypeOfAction changed →', cleanValue, 'Row:', row);
+        const cleanValue =
+          typeof newValue === "string" ? newValue.trim() : newValue?.value;
+        console.log("TypeOfAction changed →", cleanValue, "Row:", row);
         return cleanValue;
       },
     },
@@ -1380,7 +1380,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         console.log("IsWorkShop changed:", value, "Row data:", rowData);
       },
       hideSearch: true,
-      disableLazyLoading: true
+      disableLazyLoading: true,
     },
     {
       key: "IsForwardReturn",
@@ -1396,7 +1396,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         console.log("IsForwardReturn changed:", value, "Row data:", rowData);
       },
       hideSearch: true,
-      disableLazyLoading: true
+      disableLazyLoading: true,
     },
     {
       key: "CodeNo",
@@ -1422,15 +1422,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fetchOptions: fetchMasterOperationDetails("Operation details QC1 Init"),
       onChange: (value, rowData) => {
         // Extract only the ID from piped format "id || name"
-        if (typeof value === 'string' && value.includes(' || ')) {
-          const id = value.split(' || ')[0].trim();
+        if (typeof value === "string" && value.includes(" || ")) {
+          const id = value.split(" || ")[0].trim();
           console.log("QC1Code changed - extracted ID:", id, "from:", value);
           return id; // Return only the ID to be stored
         }
         return value; // Return as-is if not in piped format
       },
       hideSearch: true,
-      disableLazyLoading: true
+      disableLazyLoading: true,
     },
     {
       key: "QC1Value",
@@ -1464,18 +1464,24 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   // Transform IsWorkShop value to display string
   const transformIsWorkShopForDisplay = (value: any): string => {
     if (value === undefined || value === null) return "Workshop";
-    if (typeof value === 'object' && value.IsWorkShop !== undefined) {
-      return value.IsWorkShop === 1 || value.IsWorkShop === "1" ? "Workshop" : "Mobile";
+    if (typeof value === "object" && value.IsWorkShop !== undefined) {
+      return value.IsWorkShop === 1 || value.IsWorkShop === "1"
+        ? "Workshop"
+        : "Mobile";
     }
     if (value === 1 || value === "1") return "Workshop";
     if (value === 0 || value === "0") return "Mobile";
-    return typeof value === 'string' ? value : "Workshop";
+    return typeof value === "string" ? value : "Workshop";
   };
 
   // Transform IsWorkShop display value to store format (final numeric flag on the row)
   const transformIsWorkShopForSave = (value: string | any): any => {
     // If already an object like { IsWorkShop: 1 }, normalize to 1/0
-    if (typeof value === 'object' && value !== null && value.IsWorkShop !== undefined) {
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      value.IsWorkShop !== undefined
+    ) {
       return value.IsWorkShop === 1 || value.IsWorkShop === "1" ? 1 : 0;
     }
 
@@ -1490,18 +1496,26 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   // Transform IsForwardReturn value to display string
   const transformIsForwardReturnForDisplay = (value: any): string => {
     if (value === undefined || value === null) return "Forward/Return";
-    if (typeof value === 'object' && value.IsForwardReturn !== undefined) {
-      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1" ? "Forward/Return" : "One-Way";
+    if (typeof value === "object" && value.IsForwardReturn !== undefined) {
+      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1"
+        ? "Forward/Return"
+        : "One-Way";
     }
     if (value === 1 || value === "1") return "Forward/Return";
     if (value === 0 || value === "0") return "One-Way";
-    return typeof value === 'string' ? value : "Forward/Return";
+    return typeof value === "string" ? value : "Forward/Return";
   };
 
   // Transform IsForwardReturn display value to store format (final numeric flag on the row)
   const transformIsForwardReturnForSave = (value: string | any): any => {
-    if (typeof value === 'object' && value !== null && value.IsForwardReturn !== undefined) {
-      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1" ? 1 : 0;
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      value.IsForwardReturn !== undefined
+    ) {
+      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1"
+        ? 1
+        : 0;
     }
     if (value === "Forward/Return" || value === 1 || value === "1") return 1;
     if (value === "One-Way" || value === 0 || value === "0") return 0;
@@ -1510,7 +1524,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
   // Transform OperationDetails data for display (convert IsWorkShop & IsForwardReturn values to strings)
   const transformDataForDisplay = (data: any[]) => {
-    return data.map(row => ({
+    return data.map((row) => ({
       ...row,
       IsWorkShop: transformIsWorkShopForDisplay(row.IsWorkShop),
       IsForwardReturn: transformIsForwardReturnForDisplay(row.IsForwardReturn),
@@ -1520,8 +1534,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   // Extract ID from piped format (format: "id || name")
   const extractIdFromPipedFormat = (value: any): string => {
     if (!value) return "";
-    if (typeof value === 'string' && value.includes(' || ')) {
-      return value.split(' || ')[0].trim();
+    if (typeof value === "string" && value.includes(" || ")) {
+      return value.split(" || ")[0].trim();
     }
     return value;
   };
@@ -1540,7 +1554,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     // Update store with new operation detail
     const currentOperationDetails = workOrder?.OperationDetails || [];
-    const updatedOperationDetails = [...currentOperationDetails, transformedRow];
+    const updatedOperationDetails = [
+      ...currentOperationDetails,
+      transformedRow,
+    ];
 
     useWorkOrderStore.setState((state) => {
       const updatedWorkOrder = {
@@ -1548,7 +1565,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         OperationDetails: updatedOperationDetails,
       };
 
-      console.log('🔁 WorkOrder Store after Add Row:', updatedWorkOrder);
+      console.log("🔁 WorkOrder Store after Add Row:", updatedWorkOrder);
 
       return { workOrder: updatedWorkOrder };
     });
@@ -1561,7 +1578,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     const transformedRow = {
       ...editedRow,
       IsWorkShop: transformIsWorkShopForSave(editedRow.IsWorkShop),
-      IsForwardReturn: transformIsForwardReturnForSave(editedRow.IsForwardReturn),
+      IsForwardReturn: transformIsForwardReturnForSave(
+        editedRow.IsForwardReturn
+      ),
       QC1Code: extractIdFromPipedFormat(editedRow.QC1Code),
       ModeFlag: "Update",
     };
@@ -1577,7 +1596,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         OperationDetails: updatedOperationDetails,
       };
 
-      console.log('✏️ WorkOrder Store after Edit Row:', updatedWorkOrder);
+      console.log("✏️ WorkOrder Store after Edit Row:", updatedWorkOrder);
 
       return { workOrder: updatedWorkOrder };
     });
@@ -1587,7 +1606,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     console.log("Deleting operation detail:", row, "at index:", rowIndex);
     // Update store by removing the operation detail
     const currentOperationDetails = workOrder?.OperationDetails || [];
-    const updatedOperationDetails = currentOperationDetails.filter((_, index) => index !== rowIndex);
+    const updatedOperationDetails = currentOperationDetails.filter(
+      (_, index) => index !== rowIndex
+    );
 
     useWorkOrderStore.setState((state) => ({
       workOrder: {
@@ -1647,346 +1668,353 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         </>
       ) : (
         <>
-        <AppLayout>
-          <div className="main-content-h bg-gray-100">
-            <div className="p-4 px-6 ">
-              <div className="hidden md:block">
-                <Breadcrumb items={breadcrumbItems} />
-              </div>
-
-              <div className="flex gap-4">
-                <div className="lg:col-span-1 w-2/6">
-                  <div className="bg-white rounded-lg border border-gray-200">
-                    <div className="orderFormScroll p-4">
-                      <DynamicPanel
-                        ref={workOrderPanelRef}
-                        panelId="WorkOrder"
-                        panelTitle="Work Order Details"
-                        panelConfig={workOrderPanelConfig(orderType)}
-                        initialData={workOrder?.Header}
-                      />
-
-                    </div>
-
-                    {/* Buttons Row */}
-                    <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200"></div>
-                  </div>
+          <AppLayout>
+            <div className="main-content-h bg-gray-100">
+              <div className="p-4 px-6 ">
+                <div className="hidden md:block">
+                  <Breadcrumb items={breadcrumbItems} />
                 </div>
 
-                {/* RIGHT SECTION */}
-                <div className="lg:col-span-1 w-4/6">
-                  <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
-                    <SmartGridPlus
-                      columns={operationDetailsColumns}
-                      data={transformDataForDisplay(workOrder?.OperationDetails || [])}
-                      recordCount={workOrder?.OperationDetails?.length || 0}
-                      gridTitle="Operation Details"
-                      inlineRowAddition={true}
-                      inlineRowEditing={true}
-                      onAddRow={handleAddRow}
-                      onEditRow={handleEditRow}
-                      onDeleteRow={handleDeleteRow}
-                      defaultRowValues={defaultRowValues}
-                      validationRules={validationRules}
-                      addRowButtonLabel="Add Operation"
-                      addRowButtonPosition="top-right"
-                      paginationMode="pagination"
-                      showDefaultConfigurableButton={false}
-                      onLinkClick={(rowData, columnKey, rowIndex) => {
-                        // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
-                        const transformedRowData = {
-                          ...rowData,
-                          IsWorkShop: transformIsWorkShopForSave(rowData.IsWorkShop),
-                          IsForwardReturn: transformIsForwardReturnForSave(rowData.IsForwardReturn),
-                        };
-                        console.log("Link clicked:", transformedRowData);
-                        console.log("Column key:", columnKey);
-                        console.log("Row index:", rowIndex);
-                        
-                        // Extract IsWorkShop value (1 or 0) and set state
-                        const isWorkShopValue = transformedRowData.IsWorkShop;
-                        const numericIsWorkShop = isWorkShopValue === 1 || isWorkShopValue === "1" ? 1 : 
-                                                  isWorkShopValue === 0 || isWorkShopValue === "0" ? 0 : null;
-                        
-                        // Update state to control field visibility
-                        setSelectedOperation(transformedRowData);
-                        setIsWorkShop(numericIsWorkShop);
-                        console.log("Selected operation IsWorkShop value:", numericIsWorkShop);
-                      }}
-                    />
-                  </div>
-                  <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
-                    {/* Only show Location Details panel when an operation is selected */}
-                    {selectedOperation !== null && (
-                      <>
-                        <div className="bg-white mb-6 rounded-lg">
-                          <DynamicPanel
-                            ref={locationDetailsRef}
-                            panelId="LocationPanel"
-                            panelTitle="Location Details"
-                            panelIcon={
-                              <MapPinned className="w-5 h-5 text-blue-500" />
-                            }
-                            panelConfig={locationPanelConfig}
-                            collapsible={true}
-                            initialData={workOrderData?.Location || {}}
-                            onDataChange={(updatedSchedule) => {
-                              // Send directly to store
-                              useWorkOrderStore.setState((state) => ({
-                                workOrder: {
-                                  ...state.workOrder,
-                                  WorkorderSchedule: {
-                                    ...state.workOrder.WorkorderSchedule,
-                                    ...updatedSchedule,
-                                    ModeFlag:
-                                      state.workOrder.WorkorderSchedule
-                                        ?.ModeFlag === "NoChange"
-                                        ? "Update"
-                                        : state.workOrder.WorkorderSchedule
-                                            ?.ModeFlag,
-                                  },
-                                },
-                              }));
-                            }}
-                          />
-                          {/* Location Details Action Buttons - Only show when operation is selected */}
-                          {isWorkShop === 1 && (
-                            <div className="flex border-b border-l border-r border-gray-200 p-2 rounded-md" style={{ marginTop: '-1.5rem' }}>
-                              {/* Create Forward Trip Button */}
-                              <button
-                                onClick={() => {
-                                  console.log("Create Forward Trip clicked");
-                                  // Add your click handler here
-                                }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                <span>Create Forward Trip</span>
-                              </button>
-                              
-                              {/* Forward Trip Execution Button */}
-                              <button
-                                onClick={() => {
-                                  console.log("Forward Trip Execution clicked");
-                                  // Add your click handler here
-                                }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                <span>Forward Trip Execution - TRIP0000234</span>
-                              </button>
-                              
-                              {/* Create Return Trip Button */}
-                              <button
-                                onClick={() => {
-                                  console.log("Create Return Trip clicked");
-                                  // Add your click handler here
-                                }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                <span>Create Return Trip</span>
-                              </button>
-                              
-                              {/* Return Trip Execution Button */}
-                              <button
-                                onClick={() => {
-                                  console.log("Return Trip Execution clicked");
-                                  // Add your click handler here
-                                }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                <span>Return Trip Execution - TRIP0000235</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                <div className="flex gap-4">
+                  <div className="lg:col-span-1 w-2/6">
+                    <div className="bg-white rounded-lg border border-gray-200">
+                      <div className="orderFormScroll p-4">
+                        <DynamicPanel
+                          ref={workOrderPanelRef}
+                          panelId="WorkOrder"
+                          panelTitle="Work Order Details"
+                          panelConfig={workOrderPanelConfig(orderType)}
+                          initialData={workOrder?.Header}
+                        />
+                      </div>
 
-                        {isWorkShop === 1 && (
-                        <div className="bg-white mb-6 rounded-lg">
-                          <div className="">
+                      {/* Buttons Row */}
+                      <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200"></div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT SECTION */}
+                  <div className="lg:col-span-1 w-4/6">
+                    <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
+                      <SmartGridPlus
+                        columns={operationDetailsColumns}
+                        data={transformDataForDisplay(
+                          workOrder?.OperationDetails || []
+                        )}
+                        recordCount={workOrder?.OperationDetails?.length || 0}
+                        gridTitle="Operation Details"
+                        inlineRowAddition={true}
+                        inlineRowEditing={true}
+                        onAddRow={handleAddRow}
+                        onEditRow={handleEditRow}
+                        onDeleteRow={handleDeleteRow}
+                        defaultRowValues={defaultRowValues}
+                        validationRules={validationRules}
+                        addRowButtonLabel="Add Operation"
+                        addRowButtonPosition="top-right"
+                        paginationMode="pagination"
+                        showDefaultConfigurableButton={false}
+                        onLinkClick={(rowData, columnKey, rowIndex) => {
+                          // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
+                          const transformedRowData = {
+                            ...rowData,
+                            IsWorkShop: transformIsWorkShopForSave(
+                              rowData.IsWorkShop
+                            ),
+                            IsForwardReturn: transformIsForwardReturnForSave(
+                              rowData.IsForwardReturn
+                            ),
+                          };
+                          console.log("Link clicked:", transformedRowData);
+                          console.log("Column key:", columnKey);
+                          console.log("Row index:", rowIndex);
+
+                          // Extract IsWorkShop value (1 or 0) and set state
+                          const isWorkShopValue = transformedRowData.IsWorkShop;
+                          const numericIsWorkShop =
+                            isWorkShopValue === 1 || isWorkShopValue === "1"
+                              ? 1
+                              : isWorkShopValue === 0 || isWorkShopValue === "0"
+                              ? 0
+                              : null;
+
+                          // Update state to control field visibility
+                          setSelectedOperation(transformedRowData);
+                          setIsWorkShop(numericIsWorkShop);
+                          console.log(
+                            "Selected operation IsWorkShop value:",
+                            numericIsWorkShop
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
+                      {/* Only show Location Details panel when an operation is selected */}
+                      {selectedOperation !== null && (
+                        <>
+                          <div className="bg-white mb-6 rounded-lg">
                             <DynamicPanel
-                              ref={scheduleDetailsRef}
-                              panelId="scheduleDetails"
-                              panelTitle="schedule Details"
+                              ref={locationDetailsRef}
+                              panelId="LocationPanel"
+                              panelTitle="Location Details"
                               panelIcon={
                                 <MapPinned className="w-5 h-5 text-blue-500" />
                               }
-                              panelConfig={SchedulePanelConfig}
+                              panelConfig={locationPanelConfig}
                               collapsible={true}
                               initialData={workOrderData?.Location || {}}
-                              onDataChange={(updatedSchedule) => {
-                                useWorkOrderStore.setState((state) => ({
-                                  workOrder: {
-                                    ...state.workOrder,
-                                    WorkorderSchedule: {
-                                      ...state.workOrder.WorkorderSchedule,
-                                      ...updatedSchedule,
-                                      ModeFlag:
-                                        state.workOrder.WorkorderSchedule
-                                          ?.ModeFlag === "NoChange"
-                                          ? "Update"
-                                          : state.workOrder.WorkorderSchedule
-                                            ?.ModeFlag,
-                                    },
-                                  },
-                                }));
-                              }}
                             />
+                            {/* Location Details Action Buttons - Only show when operation is selected */}
+                            {isWorkShop === 1 && (
+                              <div
+                                className="flex border-b border-l border-r border-gray-200 p-2 rounded-md"
+                                style={{ marginTop: "-1.5rem" }}
+                              >
+                                {/* Create Forward Trip Button */}
+                                <button
+                                  onClick={() => {
+                                    console.log("Create Forward Trip clicked");
+                                    // Add your click handler here
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                  <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                  <span>Create Forward Trip</span>
+                                </button>
+
+                                {/* Forward Trip Execution Button */}
+                                <button
+                                  onClick={() => {
+                                    console.log(
+                                      "Forward Trip Execution clicked"
+                                    );
+                                    // Add your click handler here
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                  <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                  <span>
+                                    Forward Trip Execution - TRIP0000234
+                                  </span>
+                                </button>
+
+                                {/* Create Return Trip Button */}
+                                <button
+                                  onClick={() => {
+                                    console.log("Create Return Trip clicked");
+                                    // Add your click handler here
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                  <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                  <span>Create Return Trip</span>
+                                </button>
+
+                                {/* Return Trip Execution Button */}
+                                <button
+                                  onClick={() => {
+                                    console.log(
+                                      "Return Trip Execution clicked"
+                                    );
+                                    // Add your click handler here
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                  <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
+                                  <span>
+                                    Return Trip Execution - TRIP0000235
+                                  </span>
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        )}
+
+                          {isWorkShop === 1 && (
+                            <div className="bg-white mb-6 rounded-lg">
+                              <div className="">
+                                <DynamicPanel
+                                  ref={scheduleDetailsRef}
+                                  panelId="scheduleDetails"
+                                  panelTitle="schedule Details"
+                                  panelIcon={
+                                    <MapPinned className="w-5 h-5 text-blue-500" />
+                                  }
+                                  panelConfig={SchedulePanelConfig}
+                                  collapsible={true}
+                                  initialData={workOrderData?.Location || {}}
+                                  onDataChange={(updatedSchedule) => {
+                                    useWorkOrderStore.setState((state) => ({
+                                      workOrder: {
+                                        ...state.workOrder,
+                                        WorkorderSchedule: {
+                                          ...state.workOrder.WorkorderSchedule,
+                                          ...updatedSchedule,
+                                          ModeFlag:
+                                            state.workOrder.WorkorderSchedule
+                                              ?.ModeFlag === "NoChange"
+                                              ? "Update"
+                                              : state.workOrder
+                                                  .WorkorderSchedule?.ModeFlag,
+                                        },
+                                      },
+                                    }));
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+                  <div className="flex items-center gap-4"></div>
+                  <div className="flex items-center gap-4">
+                    {selectedOperation !== null && (
+                      <>
+                        <button
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                          onClick={handleGetFormValues}
+                        >
+                          Save Details
+                        </button>
+                      </>
+                    )}
+                    {selectedOperation === null && (
+                      <>
+                        <button className={buttonCancel}>Cancel</button>
+                        <button
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                          onClick={handleGetFormValues}
+                        >
+                          Save
+                        </button>
+                        {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                      Amend
+                    </button> */}
                       </>
                     )}
                   </div>
                 </div>
               </div>
-
-              <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-                <div className="flex items-center gap-4"></div>
-                <div className="flex items-center gap-4">
-                {selectedOperation !== null && (
-                  <>
-                    <button
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                      onClick={handleGetFormValues}
-                    >
-                      Save Details
-                    </button>
-                  </>
-                )}
-                {selectedOperation === null && (
-                  <>
-                    <button className={buttonCancel}>Cancel</button>
-                    <button
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                      onClick={handleGetFormValues}
-                    >
-                      Save
-                    </button>
-                    {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                      Amend
-                    </button> */}
-                  </>
-                )}
-                </div>
-              </div>
             </div>
-          </div>
 
-          <SideDrawer
-            isOpen={wagonMoreDetails}
-            onClose={closeWagonMoreDEtails}
-            title="irjgihgie"
-            width="30%"
-            isBack={false}
-          >
-            {/* Fix applied here */}
-            <div className="flex flex-col h-full">
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="border-b p-6 bg-[#F8F9FC] text-sm">
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                    {[
-                      ["Creation Date", "15-Mar-2025 10:00:00 AM"],
-                      ["Created By", "William Joe"],
-                      ["Modification Date", "15-Mar-2025 10:00:00 AM"],
-                      ["Modified By", "Andrewson"],
-                      ["End Date", "15-Sep-2025"],
-                      ["User", "A. Mussy"],
-                      ["Next Revision", "15-Mar-2027"],
-                      ["Place of Revision", "LEU (RO)"],
-                    ].map(([label, value], i) => (
-                      <div key={i}>
-                        <p className="text-xs text-gray-500 mb-1">{label}</p>
-                        <p className="text-[13px] font-semibold text-gray-800">
-                          {value}
-                        </p>
+            <SideDrawer
+              isOpen={wagonMoreDetails}
+              onClose={closeWagonMoreDEtails}
+              title="irjgihgie"
+              width="30%"
+              isBack={false}
+            >
+              {/* Fix applied here */}
+              <div className="flex flex-col h-full">
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="border-b p-6 bg-[#F8F9FC] text-sm">
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+                      {[
+                        ["Creation Date", "15-Mar-2025 10:00:00 AM"],
+                        ["Created By", "William Joe"],
+                        ["Modification Date", "15-Mar-2025 10:00:00 AM"],
+                        ["Modified By", "Andrewson"],
+                        ["End Date", "15-Sep-2025"],
+                        ["User", "A. Mussy"],
+                        ["Next Revision", "15-Mar-2027"],
+                        ["Place of Revision", "LEU (RO)"],
+                      ].map(([label, value], i) => (
+                        <div key={i}>
+                          <p className="text-xs text-gray-500 mb-1">{label}</p>
+                          <p className="text-[13px] font-semibold text-gray-800">
+                            {value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 bg-[#F8F9FC]">
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          QC Userdefined {n}
+                        </label>
+
+                        <div className="flex items-center">
+                          <div className="relative w-16">
+                            <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                              <option>QC</option>
+                              <option>Value 1</option>
+                              <option>Value 2</option>
+                            </select>
+                            <svg
+                              className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+
+                          <input
+                            type="text"
+                            placeholder="Enter Value"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Remarks {n}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter Remarks"
+                          className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="px-6 py-4 bg-[#F8F9FC]">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        QC Userdefined {n}
-                      </label>
-
-                      <div className="flex items-center">
-                        <div className="relative w-16">
-                          <select className="appearance-none w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option>QC</option>
-                            <option>Value 1</option>
-                            <option>Value 2</option>
-                          </select>
-                          <svg
-                            className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-
-                        <input
-                          type="text"
-                          placeholder="Enter Value"
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Remarks {n}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter Remarks"
-                        className="w-full border border-gray-300 rounded-md px-3 py-[10px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  ))}
+                {/* Fixed footer */}
+                <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
+                  <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
+                    Cancel
+                  </button>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Save
+                  </button>
                 </div>
               </div>
+            </SideDrawer>
 
-              {/* Fixed footer */}
-              <div className="bg-white border-t border-gray-300 p-3 flex justify-end gap-3 mb-16">
-                <button className="px-4 border border-gray-300 rounded-md hover:bg-gray-100">
-                  Cancel
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Save
-                </button>
-              </div>
-            </div>
-          </SideDrawer>
+            {/* Billing Details SideDrawer */}
+            <SideDrawer
+              isOpen={showBillingDetails}
+              onClose={() => setShowBillingDetails(false)}
+              width="100%"
+              title="Billing Details"
+              isBack={true}
+              badgeContent={workOrder?.Header?.WorkorderNo || "-"}
+              isBadgeRequired={true}
+            >
+              <BillingDetails
+                workOrderNumber={workOrder?.Header?.WorkorderNo}
+              />
+            </SideDrawer>
 
-          {/* Billing Details SideDrawer */}
-          <SideDrawer
-            isOpen={showBillingDetails}
-            onClose={() => setShowBillingDetails(false)}
-            width="100%"
-            title="Billing Details"
-            isBack={true}
-            badgeContent={workOrder?.Header?.WorkorderNo || "-"}
-            isBadgeRequired={true}
-          >
-            <BillingDetails workOrderNumber={workOrder?.Header?.WorkorderNo} />
-          </SideDrawer>
-
-          <WorkOrderOperationDetails
-            onClose={closeOperationDetails}
-            value={showOperstionDetails}
-          />
-        </AppLayout>
+            <WorkOrderOperationDetails
+              onClose={closeOperationDetails}
+              value={showOperstionDetails}
+            />
+          </AppLayout>
         </>
       )}
     </>

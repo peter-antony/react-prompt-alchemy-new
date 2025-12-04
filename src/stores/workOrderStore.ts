@@ -16,7 +16,8 @@ interface WorkOrderState {
   isSuccess: boolean;
   searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
   updateHeader: (key: string, value: any) => void;
-  updateHeaderBulk: (payload: Record<string, any>) => void;
+  updateHeaderBulk: (payload: WorkOrderDetail) => void;
+
   saveWorkOrder: () => Promise<void>;
 }
 
@@ -54,16 +55,25 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       },
 
       updateHeaderBulk: (payload) =>
-        set((state) => ({
-          workOrder: {
-            ...state.workOrder,
-            Header: {
-              ...state.workOrder.Header,
-              ...payload,
-               ModeFlag: "Update",
-            },
+  set((state) => ({
+    workOrder: state.workOrder
+      ? {
+          ...state.workOrder,
+          Header: {
+            ...state.workOrder.Header,
+            ...payload.Header,
+            ModeFlag: "Update",
           },
-        })),
+          WorkorderSchedule: {
+            ...state.workOrder.WorkorderSchedule,
+            ...payload.WorkorderSchedule,
+            ModeFlag: "Update",
+          },
+          OperationDetails: payload.OperationDetails,
+        }
+      : null,
+  })),
+
 
       saveWorkOrder: async () => {
         set({ loading: true, error: null, apiMessage: null });
