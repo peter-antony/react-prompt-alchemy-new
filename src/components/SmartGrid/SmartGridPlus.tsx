@@ -54,6 +54,7 @@ export function SmartGridPlus({
   selectedRows,
   onSelectionChange,
   onSelectedRowsChange,
+  selectionMode = 'multi',
   rowClassName,
   highlightedRowIndices = [],
   configurableButtons,
@@ -1294,10 +1295,10 @@ export function SmartGridPlus({
             <Table className="w-full">
               <TableHeader className="sticky top-0 z-20 bg-white shadow-sm border-b-2 border-gray-100">
                 <TableRow className="hover:bg-transparent">
-                  {/* Checkbox header */}
+                  {/* Checkbox/Radio header */}
                   {showCheckboxes && (
                     <TableHead className="bg-gray-50/80 backdrop-blur-sm font-semibold text-gray-900 px-3 py-3 border-r border-gray-100 w-[50px] flex-shrink-0">
-                      <input 
+                      {/* <input 
                         type="checkbox" 
                         className="rounded" 
                         onChange={(e) => {
@@ -1309,7 +1310,29 @@ export function SmartGridPlus({
                           }
                         }}
                         checked={currentSelectedRows.size === paginatedData.length && paginatedData.length > 0}
-                      />
+                      /> */}
+                      {selectionMode === 'multi' ? (
+                        <input 
+                          type="checkbox" 
+                          className="rounded" 
+                          onChange={(e) => {
+                            const target = e.target as HTMLInputElement;
+                            if (target.checked) {
+                              const newSet = new Set(Array.from({ length: paginatedData.length }, (_, i) => i));
+                              handleSelectionChange(newSet);
+                              if (onSelectedRowsChange) {
+                                onSelectedRowsChange([...paginatedData]);
+                              }
+                            } else {
+                              handleSelectionChange(new Set());
+                              if (onSelectedRowsChange) {
+                                onSelectedRowsChange([]);
+                              }
+                            }
+                          }}
+                          checked={currentSelectedRows.size === paginatedData.length && paginatedData.length > 0}
+                        />
+                      ) : null}
                     </TableHead>
                   )}
                   {orderedColumns.map((column, index) => {
@@ -1527,24 +1550,39 @@ export function SmartGridPlus({
                             }
                           }}
                         >
-                          {/* Checkbox column */}
+                          {/* Checkbox/Radio column */}
                           {showCheckboxes && (
                             <TableCell className="px-3 py-2 w-[50px]">
                               <input 
-                                type="checkbox" 
+                                type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                                name="grid-selection"
                                 className="rounded" 
                                 checked={isSelected}
                                 onChange={(e) => {
-                                  const newSet = new Set(currentSelectedRows);
-                                  if (e.target.checked) {
-                                    newSet.add(index);
+                                  let newSet: Set<number>;
+                                  if (selectionMode === 'single') {
+                                    // Single selection: only one row can be selected
+                                    newSet = e.target.checked ? new Set([index]) : new Set();
                                   } else {
-                                    newSet.delete(index);
+                                    // Multi selection: toggle current row
+                                    newSet = new Set(currentSelectedRows);
+                                    if (e.target.checked) {
+                                      newSet.add(index);
+                                    } else {
+                                      newSet.delete(index);
+                                    }
                                   }
                                   handleSelectionChange(newSet);
+                                  
                                   // Call onSelectedRowsChange with actual row objects
                                   if (onSelectedRowsChange) {
-                                    const selectedRowObjects = paginatedData.filter((_, idx) => newSet.has(idx));
+                                    const selectedRowObjects: any[] = [];
+                                    paginatedData.forEach((r, idx) => {
+                                      if (newSet.has(idx)) {
+                                        selectedRowObjects.push(r);
+                                      }
+                                    });
+                                    console.log('Selected rows:', selectedRowObjects);
                                     onSelectedRowsChange(selectedRowObjects);
                                   }
                                 }}

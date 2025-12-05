@@ -1627,6 +1627,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 customPageSize={10}
                                 inlineRowEditing={true}
                                 inlineRowAddition={false}
+                                selectionMode="single"
                                 onSelectedRowsChange={(selectedRows) => {
                                     console.log('Selected rows:', selectedRows);
                                 }}

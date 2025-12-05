@@ -210,6 +210,7 @@ export interface SmartGridProps {
   defaultSelectedRows?: Set<number>;
   onSelectionChange?(selectedRows: Set<number>): void;
   onSelectedRowsChange?(selectedRows: any[]): void;
+  selectionMode?: 'single' | 'multi';
   onRowClick?(row: any, index: number): void;
   rowClassName?: (row: any, index: number) => string;
   highlightedRowIndices?: (number | string)[];
