@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { DynamicPanel } from "@/components/DynamicPanel";
 import type { PanelConfig } from "@/types/dynamicPanel";
-import { Expand, FileChartColumn, FileText, Maximize2, Trash, Truck, User, Wrench, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Expand, FileChartColumn, FileText, Maximize2, Trash, Truck, User, Wrench, ChevronDown, ChevronUp, X, Search } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { SideDrawer } from '@/components/Common/SideDrawer';
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { SmartGridPlusWithNestedRows } from '@/components/SmartGrid/SmartGridPlusWithNestedRows';
+import CodeInformationDrawer from "./CodeInformationDrawer";
 
 interface BillingDetailsProps {
     workOrderNumber?: string;
@@ -83,6 +84,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const [contractType, setContractType] = useState<"full" | "dry">("full");
     const [isAllExpanded, setIsAllExpanded] = useState(true);
     const [showBillingSummary, setShowBillingSummary] = useState(false);
+    const [isConfirmed, setIsConfirmed] = useState(false); // dummy state to track confirm/amend for item service panel
+
     const { toast } = useToast();
 
     // Billing data state
@@ -93,6 +96,96 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const [quantityUOMOptions, setQuantityUOMOptions] = useState<{ label: string; value: string }[]>([]);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+
+    const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
+    const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
+
+    // Billing Summary states
+    const [supplierSearchTerm, setSupplierSearchTerm] = useState("");
+    const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+
+    // Mock data for Billing Summary Grids
+    const supplierBillingColumns: GridColumnConfig[] = [
+        { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
+        { key: "Supplier", label: "Supplier", width: 200, type: "Text" },
+        { key: "Status", label: "Status", width: 120, type: "Badge" },
+        { key: "TotalItems", label: "Total Items", width: 150, type: "Text" },
+        { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
+    ];
+
+    const customerBillingColumns: GridColumnConfig[] = [
+        { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
+        { key: "Customer", label: "Customer", width: 200, type: "Text" },
+        { key: "Status", label: "Status", width: 120, type: "Badge" },
+        { key: "TotalItems", label: "Total Items", width: 150, type: "Text" },
+        { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
+    ];
+
+    const supplierBillingData = [
+        {
+            DraftBillNo: "DRB000348",
+            Supplier: "ABC Supplier",
+            Status: "Draft",
+            TotalItems: "Rate Per Wagon by Distance +3",
+            TotalAmount: 1200.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Supplier: "ABC Supplier",
+            Status: "Submitted",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 1200.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Supplier: "UIO Supplier",
+            Status: "Draft",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 300.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Supplier: "IOT Supplier",
+            Status: "Submitted",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 765.00
+        },
+    ];
+
+    const customerBillingData = [
+        {
+            DraftBillNo: "DRB000348",
+            Customer: "ABC Customer",
+            Status: "Draft",
+            TotalItems: "Rate Per Wagon by Distance +3",
+            TotalAmount: 1200.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Customer: "ABC Customer",
+            Status: "Submitted",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 1200.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Customer: "UIO Customer",
+            Status: "Draft",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 300.00
+        },
+        {
+            DraftBillNo: "DRB000348",
+            Customer: "IOT Customer",
+            Status: "Submitted",
+            TotalItems: "Rate Per Wagon by Distance +4",
+            TotalAmount: 765.00
+        },
+    ];
+
+    // Calculate total costs
+    const supplierTotalCost = supplierBillingData.reduce((sum, item) => sum + item.TotalAmount, 0);
+    const customerTotalCost = customerBillingData.reduce((sum, item) => sum + item.TotalAmount, 0);
 
     const gridColumns: GridColumnConfig[] = [
         { key: "ItemName", label: "Item Name", width: 150, type: "Text" },
@@ -331,8 +424,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
                         // ReinvoiceCostTo
                         ReinvoiceCostTo: {
-                            ...billingData.BillingDetails.ReinvoiceCostTo,
-                            ReinvoiceCostToDetails: billingData.BillingDetails.ReinvoiceCostTo.ReinvoiceCostToDetails.map((item: any) => {
+                            ...billingData?.BillingDetails?.ReinvoiceCostTo,
+                            ReinvoiceCostToDetails: billingData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails.map((item: any) => {
                                 // Check if this item (or its group) is selected
                                 // Logic from handleRowClick: if item.ItemName is in selectedRowIds
                                 const isSelected = selectedRowIds.has(item.ItemName);
@@ -397,6 +490,294 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
         } catch (error: any) {
             console.error("Error saving billing details:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handler for Confirm Disposal
+    const handleConfirmDisposal = async () => {
+        if (!billingData) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Supplier Billing Confrim"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        Disposal: {
+                            ...billingData.BillingDetails.Disposal,
+                            ModeFlag: "Update"
+                        }
+                    }
+                }
+            };
+
+            console.log("Confirm Disposal Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.supplierBillingConfirm(payload);
+            console.log("Confirm Disposal Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Disposal Confirmed Successfully",
+                    description: response.data.Message || "Disposal confirmed successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Confirming Disposal",
+                    description: response?.data?.Message || "Confirm failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error confirming disposal:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handler for Amend Disposal
+    const handleAmendDisposal = async () => {
+        if (!billingData) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Supplier Billing Amend"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        Disposal: {
+                            ...billingData.BillingDetails.Disposal,
+                            ModeFlag: "Update"
+                        }
+                    }
+                }
+            };
+
+            console.log("Amend Disposal Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.supplierBillingAmend(payload);
+            console.log("Amend Disposal Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Disposal Amended Successfully",
+                    description: response.data.Message || "Disposal amended successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Amending Disposal",
+                    description: response?.data?.Message || "Amend failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error amending disposal:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handler for Confirm Re-Invoice
+    const handleConfirmReinvoice = async () => {
+        if (!billingData) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Customer Billing Confirm"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        ReinvoiceCostTo: {
+                            ...billingData.BillingDetails.ReinvoiceCostTo,
+                            ModeFlag: "Update"
+                        }
+                    }
+                }
+            };
+
+            console.log("Confirm Re-Invoice Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.customerBillingConfirm(payload);
+            console.log("Confirm Re-Invoice Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Re-Invoice Confirmed Successfully",
+                    description: response.data.Message || "Re-Invoice confirmed successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Confirming Re-Invoice",
+                    description: response?.data?.Message || "Confirm failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error confirming re-invoice:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handler for Amend Re-Invoice
+    const handleAmendReinvoice = async () => {
+        if (!billingData) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Customer Billing Amend"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        ReinvoiceCostTo: {
+                            ...billingData.BillingDetails.ReinvoiceCostTo,
+                            ModeFlag: "Update"
+                        }
+                    }
+                }
+            };
+
+            console.log("Amend Re-Invoice Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.customerBillingAmend(payload);
+            console.log("Amend Re-Invoice Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Re-Invoice Amended Successfully",
+                    description: response.data.Message || "Re-Invoice amended successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Amending Re-Invoice",
+                    description: response?.data?.Message || "Amend failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error amending re-invoice:", error);
             toast({
                 title: "Error",
                 description: error.message || "An unexpected error occurred",
@@ -638,6 +1019,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             sortable: true,
             filterable: true,
             editable: false
+        },
+        {
+            key: "ActionButton",
+            label: "Actions",
+            type: "Text",
+            sortable: false,
+            filterable: false,
+            editable: false,
+            width: 50,
         }
     ];
 
@@ -649,7 +1039,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             type: 'LazySelect',
             width: 300,
             sortable: true,
-            fetchOptions: fetchMaster('Service Init'),
+            fetchOptions: fetchMaster('Work Order Services Init'),
             onChange: (value: any, rowData: any) => {
                 // Extract ID and Description from piped format "id || name"
                 if (typeof value === 'string' && value.includes(' || ')) {
@@ -674,7 +1064,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         {
             key: 'CostEXVat',
             label: 'Cost EX VAT',
-            type: 'EditableText',
+            // type: 'CurrencyWithSymbol',
+            type: 'Integer',
             width: 180,
             sortable: true,
         }
@@ -1007,7 +1398,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 <div className="border-t border-gray-200 pt-3">
                                     <div className="grid grid-cols-3 gap-3 mb-3">
 
-                                         {/* Invoicing Reference */}
+                                        {/* Invoicing Reference */}
                                         <div>
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Invoicing Reference</label>
                                             <Input
@@ -1059,9 +1450,9 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             />
                                         </div>
 
-                                       
 
-                                    
+
+
 
                                         {/* Draft Bill No */}
                                         <div>
@@ -1137,7 +1528,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 <div className="border-t border-gray-200 pt-3">
                                     <div className="grid grid-cols-3 gap-3 mb-3">
 
-                                         {/* Invoicing Reference */}
+                                        {/* Invoicing Reference */}
                                         <div>
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Invoicing Reference</label>
                                             <Input
@@ -1189,9 +1580,9 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             />
                                         </div>
 
-                                       
 
-                                   
+
+
 
                                         {/* Draft Bill No */}
                                         <div>
@@ -1235,7 +1626,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         title="Item Service"
                         icon={<Wrench className="w-5 h-5 text-green-500" />}
                         isExpanded={isAllExpanded}
+                        badge={
+                            <span className="text-xs bg-blue-50 text-blue-600 border border-blue-200 font-medium px-3 py-1 rounded-full">
+                                Total Cost : € {(
+                                    operationBillingData.reduce((sum, operation) => sum + (operation.TotalCost || 0), 0)
+                                ).toFixed(2)}
+                            </span>
+                        }
                     >
+                        {/* item service panel - nested editable grid */}
                         <div className="">
                             <SmartGridPlusWithNestedRows
                                 gridTitle="Item Service"
@@ -1263,9 +1662,43 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onDeleteRow: handleDeleteOrderItem,
                                     defaultRowValues: defaultOrderItemValues
                                 }}
+                                onInfoClick={(rowData, rowIndex) => {
+                                    console.log("Info clicked:", rowData, "at index:", rowIndex);
+                                    setSelectedCode(rowData);
+                                    setShowCodeInformation(true);
+                                }}
                             />
                         </div>
-                        {/* Panel content goes here */}
+
+                        {/* Item Service Panel Footer with Confirm/Amend Buttons */}
+                        {/* {billingData?.BillingDetails?.OperationBillingDetails && (
+                            <div className="flex justify-end mt-4 pt-3">
+                                {isConfirmed ? (
+                                    // Amend Button
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={() => {
+                                            console.log("amend clicked");
+                                            setIsConfirmed(false); // Switch back to Confirm
+                                        }}
+                                    >
+                                        Amend Item Service
+                                    </button>
+                                ) : (
+                                    // Confirm Button
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={() => {
+                                            console.log("confirm clicked");
+                                            setIsConfirmed(true); // Switch to Amend
+                                        }}
+                                    >
+                                        Confirm Item Service
+                                    </button>
+                                )}
+                            </div>
+                        )} */}
+
                     </CollapsibleBillingPanel>
 
                     {/* 3. Disposal Panel */}
@@ -1284,7 +1717,24 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         title="Disposal"
                         icon={<Trash className="w-5 h-5 text-orange-500" />}
                         isExpanded={isAllExpanded}
-                        badge={`Total Cost : € ${billingData?.BillingDetails?.Disposal?.TotalCost?.toFixed(2) || "0.00"}`}
+                        badge={
+                            <>
+                                {billingData?.BillingDetails?.Disposal?.BillStatus && (
+                                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${billingData.BillingDetails.Disposal.BillStatus === 'InProgress' ? 'badge-orange rounded-2xl' :
+                                        billingData.BillingDetails.Disposal.BillStatus === 'Approved' ? 'badge-green rounded-2xl' :
+                                            billingData.BillingDetails.Disposal.BillStatus === 'Pending' ? 'badge-yellow rounded-2xl' :
+                                                billingData.BillingDetails.Disposal.BillStatus === 'Cancelled' ? 'badge-red rounded-2xl' :
+                                                    'bg-gray-500 text-white'
+                                        }`}>
+                                        {billingData.BillingDetails.Disposal.BillStatus === 'InProgress' ? 'In-Progress' :
+                                            billingData.BillingDetails.Disposal.BillStatus === 'Approved' ? 'Approved' : "-"}
+                                    </span>
+                                )}
+                                <span className="text-xs bg-blue-50 text-blue-600 border border-blue-200 font-medium px-3 py-1 rounded-full">
+                                    Total Cost : € {billingData?.BillingDetails?.Disposal?.TotalCost?.toFixed(2) || "0.00"}
+                                </span>
+                            </>
+                        }
                     >
                         {/* Panel content */}
                         <div className="grid grid-cols-4 gap-3 mb-3">
@@ -1379,7 +1829,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     placeholder="Enter Processing Reference"
                                 />
                             </div>
-                      
+
                             {/* Quatity Processed */}
                             <div>
                                 <label className="text-sm font-medium text-gray-600 block mb-1">Quatity Processed</label>
@@ -1441,6 +1891,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                         handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
                                     }}
                                     placeholder="Enter Quick Order No"
+                                    disabled
                                 />
                             </div>
 
@@ -1458,6 +1909,32 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 />
                             </div> */}
                         </div>
+
+                        {/* Disposal Panel Footer with Confirm/Amend Buttons */}
+                        {billingData?.BillingDetails?.Disposal && (
+                            <div className="flex justify-end mt-4 pt-3">
+                                {billingData.BillingDetails.Disposal.BillStatus === "InProgress" && (
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={handleConfirmDisposal}
+                                    // disabled={loading}
+                                    >
+                                        {/* {loading ? "Processing..." : "Confirm Disposal"} */}
+                                        Confirm Disposal
+                                    </button>
+                                )}
+                                {billingData.BillingDetails.Disposal.BillStatus === "Approved" && (
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={handleAmendDisposal}
+                                    // disabled={loading}
+                                    >
+                                        {/* {loading ? "Processing..." : "Amend Disposal"} */}
+                                        Amend Disposal
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </CollapsibleBillingPanel>
 
                     {/* 4. Re-Invoice Cost to Panel */}
@@ -1467,6 +1944,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         isExpanded={isAllExpanded}
                         badge={
                             <>
+                                {billingData?.BillingDetails?.ReinvoiceCostTo?.BillStatus && (
+                                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'InProgress' ? 'badge-orange rounded-2xl' :
+                                        billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'Approved' ? 'badge-green rounded-2xl' :
+                                            billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'Pending' ? 'badge-yellow rounded-2xl' :
+                                                billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'Cancelled' ? 'badge-red rounded-2xl' :
+                                                    'bg-gray-500 text-white'
+                                        }`}>
+                                        {billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'InProgress' ? 'In-Progress' :
+                                            billingData.BillingDetails.ReinvoiceCostTo.BillStatus === 'Approved' ? 'Approved' : "-"}
+                                    </span>
+                                )}
                                 <span className="text-xs bg-blue-50 text-blue-600 border border-blue-200 font-medium px-3 py-1 rounded-full">
                                     Total Cost : € {billingData?.BillingDetails?.ReinvoiceCostTo?.TotalCost?.toFixed(2) || "0.00"}
                                 </span>
@@ -1570,6 +2058,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
                                     }}
                                     placeholder="Enter Quick Order No"
+                                    disabled
                                 />
                             </div>
 
@@ -1586,7 +2075,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     placeholder="Enter Bill Status"
                                 />
                             </div> */}
-                   
+
                             {/* Total Bill Cost */}
                             <div>
                                 <label className="text-sm font-medium text-gray-600 block mb-1">Total Bill Cost</label>
@@ -1645,6 +2134,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                             </div>
                         </div>
 
+
+                        {/* Grid for Re-Invoicing */}
                         <div className="mt-6">
                             <div className="flex items-center gap-2 mb-2">
                                 <h4 className="text-sm font-semibold text-gray-800">Re-Invoicing Selection</h4>
@@ -1712,6 +2203,32 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 />
                             </div>
                         </div>
+
+                        {/* Re-Invoice Panel Footer with Confirm/Amend Buttons */}
+                        {billingData?.BillingDetails?.ReinvoiceCostTo && (
+                            <div className="flex justify-end mt-4 pt-3">
+                                {billingData.BillingDetails.ReinvoiceCostTo.BillStatus === "InProgress" && (
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={handleConfirmReinvoice}
+                                    // disabled={loading}
+                                    >
+                                        {/* {loading ? "Processing..." : "Confirm Re-Invoice"} */}
+                                        Confirm Re-Invoice
+                                    </button>
+                                )}
+                                {billingData.BillingDetails.ReinvoiceCostTo.BillStatus === "Approved" && (
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={handleAmendReinvoice}
+                                    // disabled={loading}
+                                    >
+                                        {/* {loading ? "Processing..." : "Amend Re-Invoice"} */}
+                                        Amend Re-Invoice
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </CollapsibleBillingPanel>
                 </div>
             </div>
@@ -1726,9 +2243,12 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                     {/* {loading ? "Saving..." : "Save"} */}
                     Save
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                {/* <button
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                    onClick={() => { console.log('confirm button clicked') }}
+                >
                     Confirm
-                </button>
+                </button> */}
             </div>
 
             {/* Billing Summary SideDrawer */}
@@ -1741,10 +2261,122 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 badgeContent={workOrderNumber || "-"}
                 isBadgeRequired={true}
             >
-                <div className="p-6">
-                    {/* billing summary content */}
+                <div className="p-6 space-y-20">
+                    {/* Total Supplier Billing Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-semibold text-gray-900">Total Supplier Billing</h3>
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                    {supplierBillingData.length}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm bg-blue-50 text-blue-600 border border-blue-200 font-medium px-4 py-2 rounded-full">
+                                    Total Cost : € {supplierTotalCost.toFixed(2)}
+                                </span>
+                                {/* Search bar for Supplier Billing */}
+                                <div className="relative">
+                                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Search"
+                                        value={supplierSearchTerm}
+                                        onChange={(e) => setSupplierSearchTerm(e.target.value)}
+                                        className="w-64"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="border rounded-lg overflow-hidden">
+                            <SmartGridWithGrouping
+                                gridId="supplier-billing-summary"
+                                columns={supplierBillingColumns}
+                                data={supplierBillingData}
+                                groupableColumns={[]}
+                                showGroupingDropdown={false}
+                                paginationMode="pagination"
+                                customPageSize={10}
+                                hideToolbar={true}
+                                showDefaultConfigurableButton={false}
+                                gridTitle=""
+                                recordCount={supplierBillingData.length}
+                                showCreateButton={false}
+                                clientSideSearch={false}
+                                externalSearchQuery={supplierSearchTerm}
+                                showSubHeaders={false}
+                                hideAdvancedFilter={true}
+                                hideCheckboxToggle={true}
+                                showFilterTypeDropdown={false}
+                                showServersideFilter={false}
+                                userId="current-user"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Total Customer Billing Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-semibold text-gray-900">Total Customer Billing</h3>
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                    {customerBillingData.length}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm bg-blue-50 text-blue-600 border border-blue-200 font-medium px-4 py-2 rounded-full">
+                                    Total Cost : € {customerTotalCost.toFixed(2)}
+                                </span>
+                                {/* Search bar for Customer Billing */}
+                                <div className="relative">
+                                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Search"
+                                        value={customerSearchTerm}
+                                        onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                                        className="w-64"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="border rounded-lg overflow-hidden">
+                            <SmartGridWithGrouping
+                                gridId="customer-billing-summary"
+                                columns={customerBillingColumns}
+                                data={customerBillingData}
+                                groupableColumns={[]}
+                                showGroupingDropdown={false}
+                                paginationMode="pagination"
+                                customPageSize={10}
+                                hideToolbar={true}
+                                showDefaultConfigurableButton={false}
+                                gridTitle=""
+                                recordCount={customerBillingData.length}
+                                showCreateButton={false}
+                                clientSideSearch={false}
+                                externalSearchQuery={customerSearchTerm}
+                                showSubHeaders={false}
+                                hideAdvancedFilter={true}
+                                hideCheckboxToggle={true}
+                                showFilterTypeDropdown={false}
+                                showServersideFilter={false}
+                                userId="current-user"
+                            />
+                        </div>
+                    </div>
                 </div>
             </SideDrawer>
+
+            {/* Code Information Drawer */}
+            <CodeInformationDrawer
+                isOpen={showCodeInformation}
+                onClose={() => setShowCodeInformation(false)}
+                operationCode={selectedCode?.OrderID ? `${selectedCode.OrderID}` : "Operation"}
+                // selectedCode={selectedCode?.CodeNo}
+                onCodeSelect={(code) => {
+                console.log("Code selected:", code);
+                // Handle code selection if needed
+                }}
+            />
         </div>
     );
 };

@@ -190,6 +190,58 @@ export const workOrderService = {
     return response.data;
   },
 
+  // Supplier billing confirm
+  supplierBillingConfirm: async (payload: any): Promise<ApiResponse<any>> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.SUPPLIER_BILLING_CONFIRM,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Supplier billing amend
+  supplierBillingAmend: async (payload: any): Promise<ApiResponse<any>> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.SUPPLIER_BILLING_AMEND,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Customer billing confirm
+  customerBillingConfirm: async (payload: any): Promise<ApiResponse<any>> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.CUSTOMER_BILLING_CONFIRM,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Customer billing amend
+  customerBillingAmend: async (payload: any): Promise<ApiResponse<any>> => {
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.CUSTOMER_BILLING_AMEND,
+      requestBody
+    );
+    return response.data;
+  },
+
   // Get Code CUU Details for work order
   getCodeCUUDetails: async (
   ): Promise<ApiResponse<any>> => {

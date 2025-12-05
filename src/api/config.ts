@@ -33,7 +33,7 @@ export const setUserContext = (ouId: number, roleName: string, ouDescription?: s
     ouDescription,
     selectedAt: new Date().toISOString()
   };
-  
+
   localStorage.setItem('selectedUserContext', JSON.stringify(contextData));
   console.log('User context saved to localStorage:', contextData);
 };
@@ -42,9 +42,9 @@ export const setUserContext = (ouId: number, roleName: string, ouDescription?: s
 export const getUserContext = () => {
   try {
     const selectedContext = localStorage.getItem('selectedUserContext');
-    
+
     if (selectedContext) {
-      const parsedContext = JSON.parse(selectedContext);      
+      const parsedContext = JSON.parse(selectedContext);
       return {
         ouId: parsedContext.ouId || 4,
         roleName: parsedContext.roleName || "RAMCOROLE",
@@ -55,21 +55,21 @@ export const getUserContext = () => {
   } catch (error) {
     console.error('Error retrieving user context from localStorage:', error);
   }
-  
+
   // Default values if nothing is stored
   const defaultContext = {
-    ouId: 4, 
+    ouId: 4,
     roleName: "RAMCOROLE",
     ouDescription: "Default OU"
   };
-  
+
   return defaultContext;
 };
 
 const createHeaders = () => {
   const userContext = getUserContext();
   const parsedToken = token ? JSON.parse(token) : null;
-  
+
   const headers = {
     Authorization: `Bearer ${parsedToken?.access_token}`,
     Accept: "application/json",
@@ -78,9 +78,9 @@ const createHeaders = () => {
     "context-ou-id": userContext.ouId,
     "context-role-name": userContext.roleName,
   };
-  
+
   console.log('API Headers:', headers);
-  
+
   return headers;
 };
 export const API_CONFIG = {
@@ -102,7 +102,7 @@ export const API_ENDPOINTS = {
     PROFILE: "/auth/profile",
   },
   //Context
-  Context:{
+  Context: {
     CONTEXT: "/me/contexts",
   },
   // Trip management
@@ -124,7 +124,7 @@ export const API_ENDPOINTS = {
     SAVE_INCIDENT: "/transportexecution/common",
     SAVE_ATTACHMENT: "/transportexecution/saveattachment",
     GET_ATTACHMENT: "/transportexecution/getattachment",
-    CREATE_TRIP_CO:"/tripplanexecution/createtripplan",
+    CREATE_TRIP_CO: "/tripplanexecution/createtripplan",
     ROUTE_UPDATE: "manageexecution/planhubsearch",
     CO_SELECTION: "manageexecution/planhubselection",
     UPDATE_SELECTION: "manageexecution/planhubupdate",
@@ -146,8 +146,8 @@ export const API_ENDPOINTS = {
     COMBO: "/common/combo",
     SCREEN_FETCH: '/quickorderhub/screenfetch',
     ORDERFORM: "/quickorderhub/update",
-    QUICKORDER_GET:"/quickorder/getdata",
-    LINKEDORDERS_GET:"/quickorder/showlinked",
+    QUICKORDER_GET: "/quickorder/getdata",
+    LINKEDORDERS_GET: "/quickorder/showlinked",
     UPLOADFILES: "/files/update",
     DOWNLOADFILE: "/files/updatedown",
     PERSONALIZATION: "/tripplanningpersonalization/personalizationget",
@@ -160,6 +160,10 @@ export const API_ENDPOINTS = {
     SAVE: '/workorder/update',
     GET_BILLING_DETAILS: '/workorder/getbillingdetail',
     SAVE_BILLING_DETAILS: '/workorder/updatebillingdetail',
+    SUPPLIER_BILLING_CONFIRM: '/workorder/supplierbillingconfirm',
+    SUPPLIER_BILLING_AMEND: '/workorder/supplierbillingamend',
+    CUSTOMER_BILLING_CONFIRM: '/workorder/customerbillingconfirm',
+    CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
   },
   // Invoice management
   INVOICES: {
