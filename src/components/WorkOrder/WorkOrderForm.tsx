@@ -22,6 +22,7 @@ import { SmartGridPlus } from "../SmartGrid/SmartGridPlus";
 import { GridColumnConfig } from "@/types/smartgrid";
 import BillingDetails from "./BillingDetails";
 import { useSearchParams } from "react-router-dom"; // Import useSearchParams for URL search parameters
+import CodeInformationDrawer from "./CodeInformationDrawer";
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -52,6 +53,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const workOrderPanelRef = useRef<DynamicPanelRef>(null);
   const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
+  const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
+  const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
 
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
     let timer: any;
@@ -1927,13 +1930,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     <>
       {loading ? (
         <>
-          <div className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 border-b-2 border-gray-200"></div>
-              <div className="text-sm text-gray-600">
-                Loading equipment data...
-              </div>
-            </div>
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+            <div className="text-lg font-semibold text-gray-700">Loading data...</div>
           </div>
         </>
       ) : (
@@ -1982,6 +1981,11 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                       addRowButtonPosition="top-right"
                       paginationMode="pagination"
                       showDefaultConfigurableButton={false}
+                      onInfoClick={(rowData, rowIndex) => {
+                        console.log("Info clicked:", rowData, "at index:", rowIndex);
+                        setSelectedCode(rowData);
+                        setShowCodeInformation(true);
+                      }}
                       onLinkClick={(rowData, columnKey, rowIndex) => {
                         // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
                         const transformedRowData = {
@@ -2092,7 +2096,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                                 <DynamicPanel
                                   ref={scheduleDetailsRef}
                                   panelId="scheduleDetails"
-                                  panelTitle="schedule Details"
+                                  panelTitle="Schedule Details"
                                   panelIcon={
                                     <MapPinned className="w-5 h-5 text-blue-500" />
                                   }
@@ -2129,7 +2133,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                 <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                   <div className="flex items-center gap-4"></div>
                   <div className="flex items-center gap-4">
-                    {selectedOperation !== null && (
+                    {/* {selectedOperation !== null && (
                       <>
                         <button
                           className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
@@ -2140,7 +2144,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                       </>
                     )}
                     {selectedOperation === null && (
-                      <>
+                      <> */}
                         <button className={buttonCancel}>Cancel</button>
                         <button
                           className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
@@ -2151,8 +2155,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                         {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                       Amend
                     </button> */}
-                      </>
-                    )}
+                      {/* </>
+                    )} */}
                   </div>
                 </div>
               </div>
@@ -2270,6 +2274,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
             <WorkOrderOperationDetails
               onClose={closeOperationDetails}
               value={showOperstionDetails}
+            />
+
+            {/* Code Information Drawer */}
+            <CodeInformationDrawer
+              isOpen={showCodeInformation}
+              onClose={() => setShowCodeInformation(false)}
+              operationCode={selectedCode?.OrderID ? `${selectedCode.OrderID}` : "Operation"}
+              // selectedCode={selectedCode?.CodeNo}
+              onCodeSelect={(code) => {
+                console.log("Code selected:", code);
+                // Handle code selection if needed
+              }}
             />
           </AppLayout>
         </>

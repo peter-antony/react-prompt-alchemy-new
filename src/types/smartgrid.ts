@@ -336,6 +336,7 @@ export interface SmartGridPlusProps extends SmartGridProps {
   // UI configuration
   addRowButtonLabel?: string;
   addRowButtonPosition?: "top-left" | "top-right" | "top";
+  onInfoClick?: (rowData: any, rowIndex: number) => void; // Handler for info icon click
   
   // Regional formatting
   region?: 'german' | 'indian';

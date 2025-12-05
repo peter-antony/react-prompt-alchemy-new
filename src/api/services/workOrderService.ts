@@ -189,4 +189,32 @@ export const workOrderService = {
     );
     return response.data;
   },
+
+  // Get Code CUU Details for work order
+  getCodeCUUDetails: async (
+  ): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "Code CUU"
+      },
+      SearchCriteria: {
+        CUUCode: ""
+      }
+    });
+
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
 };

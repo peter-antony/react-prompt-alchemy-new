@@ -15,7 +15,8 @@ import {
   Plus,
   Trash2,
   Check,
-  X
+  X,
+  Info
 } from 'lucide-react';
 import { SmartGridPlusProps, GridColumnConfig, SortConfig, FilterConfig, GridAPI } from '@/types/smartgrid';
 import { exportToCSV, exportToExcel } from '@/utils/gridExport';
@@ -70,7 +71,8 @@ export function SmartGridPlus({
   defaultRowValues = {},
   validationRules = {},
   addRowButtonLabel = "Add Row",
-  addRowButtonPosition = "top-left"
+  addRowButtonPosition = "top-left",
+  onInfoClick
 }: SmartGridPlusProps) {
   const {
     gridData,
@@ -951,7 +953,7 @@ export function SmartGridPlus({
     if (column.key === 'actions') {
       return (
         <div className="flex items-center gap-1">
-          {inlineRowEditing && !isRowEditing && (
+          {inlineRowEditing && !isRowEditing && !onInfoClick && (
             <Button
               size="sm"
               variant="ghost"
@@ -959,6 +961,16 @@ export function SmartGridPlus({
               className="h-8 w-8 p-0"
             >
               <Edit2 className="h-4 w-4" />
+            </Button>
+          )}
+          {onInfoClick && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onInfoClick(row, rowIndex)}
+              className="h-8 w-8 p-0"
+            >
+              <Info className="h-4 w-4" />
             </Button>
           )}
           <Button
@@ -969,6 +981,24 @@ export function SmartGridPlus({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
+        </div>
+      );
+    }
+
+    // Handle SmartGridPlus specific actions column
+    if (column.key === 'ActionButton') {
+      return (
+        <div className="flex items-center gap-1">
+          {/* {inlineRowEditing && !isRowEditing && ( */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onInfoClick(row, rowIndex)}
+              className="h-8 w-8 p-0"
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+          {/* )} */}
         </div>
       );
     }
