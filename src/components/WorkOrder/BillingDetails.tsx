@@ -81,7 +81,7 @@ const CollapsibleBillingPanel: React.FC<CollapsibleBillingPanelProps> = ({ title
 
 const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const [contractType, setContractType] = useState<"full" | "dry">("full");
-    const [isAllExpanded, setIsAllExpanded] = useState(false);
+    const [isAllExpanded, setIsAllExpanded] = useState(true);
     const [showBillingSummary, setShowBillingSummary] = useState(false);
     const { toast } = useToast();
 
@@ -294,6 +294,41 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         // Disposal: Pass as is
                         Disposal: billingData.BillingDetails.Disposal,
 
+                        // OperationBillingDetails: Clean up any remaining || symbols
+                        OperationBillingDetails: (billingData.BillingDetails.OperationBillingDetails || []).map((operation: any) => {
+                            // Clean up main operation fields
+                            const cleanedOperation: any = { ...operation };
+
+                            // Remove || from Supplier if it exists
+                            if (typeof cleanedOperation.Supplier === 'string' && cleanedOperation.Supplier.includes(' || ')) {
+                                const [id] = cleanedOperation.Supplier.split(' || ').map((v: string) => v.trim());
+                                cleanedOperation.Supplier = id;
+                            }
+
+                            // Remove || from SupplierContractID if it exists
+                            if (typeof cleanedOperation.SupplierContractID === 'string' && cleanedOperation.SupplierContractID.includes(' || ')) {
+                                const [id] = cleanedOperation.SupplierContractID.split(' || ').map((v: string) => v.trim());
+                                cleanedOperation.SupplierContractID = id;
+                            }
+
+                            // Clean up ItemService array
+                            if (cleanedOperation.ItemService && Array.isArray(cleanedOperation.ItemService)) {
+                                cleanedOperation.ItemService = cleanedOperation.ItemService.map((item: any) => {
+                                    const cleanedItem = { ...item };
+
+                                    // Remove || from Service if it exists
+                                    if (typeof cleanedItem.Service === 'string' && cleanedItem.Service.includes(' || ')) {
+                                        const [id] = cleanedItem.Service.split(' || ').map((v: string) => v.trim());
+                                        cleanedItem.Service = id;
+                                    }
+
+                                    return cleanedItem;
+                                });
+                            }
+
+                            return cleanedOperation;
+                        }),
+
                         // ReinvoiceCostTo
                         ReinvoiceCostTo: {
                             ...billingData.BillingDetails.ReinvoiceCostTo,
@@ -439,7 +474,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     };
     const reInvoiceCostConfig: PanelConfig = {};
 
-    // Mock data for orders with nested order items
+    // Mock data for orders with nested order items (COMMENTED - Using API data instead)
+    /*
     const initialOrdersData = [
         {
             id: 1,
@@ -490,273 +526,341 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             ]
         }
     ];
+    */
 
-    const [ordersData, setOrdersData] = useState(initialOrdersData);
-    // Order columns configuration
+    // Use API data from billingData.BillingDetails.OperationBillingDetails
+    const operationBillingData = billingData?.BillingDetails?.OperationBillingDetails || [];
+
+    // Operation Billing columns configuration (Main rows)
     const orderColumns: GridColumnConfig[] = [
         {
-        key: 'orderNumber',
-        label: 'Order Number',
-        type: 'EditableText',
-        width: 150,
-        sortable: true,
-        filterable: true
+            key: 'OrderID',
+            label: 'Order ID',
+            type: 'EditableText',
+            width: 150,
+            sortable: true,
+            filterable: true,
+            editable: false
         },
         {
-        key: 'customer',
-        label: 'Customer',
-        type: 'EditableText',
-        width: 200,
-        sortable: true,
-        filterable: true
+            key: 'TypeOfAction',
+            label: 'Type of Action',
+            type: 'EditableText',
+            width: 200,
+            sortable: true,
+            filterable: true,
+            editable: false
         },
         {
-        key: 'orderDate',
-        label: 'Order Date',
-        type: 'Date',
-        width: 130,
-        sortable: true,
-        filterable: true
+            key: 'Operation',
+            label: 'Operation',
+            type: 'EditableText',
+            width: 130,
+            sortable: true,
+            filterable: true,
+            editable: false
         },
         {
-        key: 'status',
-        label: 'Status',
-        type: 'Badge',
-        width: 120,
-        sortable: true,
-        filterable: true,
-        statusMap: {
-            'Delivered': 'bg-green-500 text-white',
-            'Processing': 'bg-blue-500 text-white',
-            'Pending': 'bg-yellow-500 text-white',
-            'Cancelled': 'bg-red-500 text-white'
-        }
+            key: 'Supplier',
+            label: 'Supplier',
+            type: 'LazySelect',
+            width: 300,
+            sortable: true,
+            filterable: true,
+            fetchOptions: fetchMaster('Supplier Init'),
+            onChange: (value: any, rowData: any) => {
+                // Extract ID and Description from piped format "id || name"
+                if (typeof value === 'string' && value.includes(' || ')) {
+                    const [id, desc] = value.split(' || ').map((v: string) => v.trim());
+                    console.log("Supplier changed - ID:", id, "Description:", desc);
+                    // Update both Supplier and SupplierDescription
+                    return {
+                        Supplier: id,
+                        SupplierDescription: desc
+                    };
+                }
+                return value;
+            }
         },
         {
-        key: 'totalAmount',
-        label: 'Total Amount',
-        type: 'CurrencyWithSymbol',
-        width: 140,
-        sortable: true,
-        filterable: true
+            key: 'SupplierContractID',
+            label: 'Supplier Contract',
+            type: 'LazySelect',
+            width: 350,
+            sortable: true,
+            filterable: true,
+            subRow: true,
+            fetchOptions: fetchMaster('Contract Init'),
+            onChange: (value: any, rowData: any) => {
+                // Extract ID and Description from piped format "id || name"
+                if (typeof value === 'string' && value.includes(' || ')) {
+                    const [id, desc] = value.split(' || ').map((v: string) => v.trim());
+                    console.log("SupplierContractID changed - ID:", id, "Description:", desc);
+                    // Update both SupplierContractID and SupplierContractDescription
+                    return {
+                        SupplierContractID: id,
+                        SupplierContractDescription: desc
+                    };
+                }
+                return value;
+            }
         },
         {
-        key: 'shippingAddress',
-        label: 'Shipping Address',
-        type: 'EditableText',
-        width: 250,
-        sortable: true,
-        filterable: true,
-        subRow: true
+            key: 'QuickOrderNo',
+            label: 'Quick Order No',
+            type: 'EditableText',
+            width: 150,
+            sortable: true,
+            filterable: true,
+            subRow: true,
+            editable: false
         },
         {
-        key: 'contactPerson',
-        label: 'Contact Person',
-        type: 'EditableText',
-        width: 180,
-        sortable: true,
-        filterable: true,
-        subRow: true
+            key: 'BillStatus',
+            label: 'Bill Status',
+            type: 'Badge',
+            width: 120,
+            sortable: true,
+            filterable: true,
+            statusMap: {
+                'InProgress': 'bg-blue-500 text-white',
+                'Completed': 'bg-green-500 text-white',
+                'Pending': 'bg-yellow-500 text-white',
+                'Cancelled': 'bg-red-500 text-white'
+            },
+            editable: false
         },
         {
-        key: 'contactPhone',
-        label: 'Contact Phone',
-        type: 'EditableText',
-        width: 150,
-        sortable: true,
-        filterable: true,
-        subRow: true
-        },
-        {
-        key: 'deliveryNotes',
-        label: 'Delivery Notes',
-        type: 'EditableText',
-        width: 300,
-        sortable: true,
-        filterable: true,
-        subRow: true
+            key: 'TotalCost',
+            label: 'Total Cost',
+            type: 'CurrencyWithSymbol',
+            width: 140,
+            sortable: true,
+            filterable: true,
+            editable: false
         }
     ];
 
-    // Order items (nested) columns configuration
+    // Item Service columns configuration (Nested rows)
     const orderItemColumns: GridColumnConfig[] = [
         {
-        key: 'itemName',
-        label: 'Item Name',
-        type: 'EditableText',
-        width: 200,
-        sortable: true
+            key: 'Service',
+            label: 'Service',
+            type: 'LazySelect',
+            width: 300,
+            sortable: true,
+            fetchOptions: fetchMaster('Service Init'),
+            onChange: (value: any, rowData: any) => {
+                // Extract ID and Description from piped format "id || name"
+                if (typeof value === 'string' && value.includes(' || ')) {
+                    const [id, desc] = value.split(' || ').map((v: string) => v.trim());
+                    console.log("Service changed - ID:", id, "Description:", desc);
+                    // Update both Service and ServiceDescription
+                    return {
+                        Service: id,
+                        ServiceDescription: desc
+                    };
+                }
+                return value;
+            }
         },
         {
-        key: 'quantity',
-        label: 'Quantity',
-        type: 'Integer',
-        width: 100,
-        sortable: true
+            key: 'Reference',
+            label: 'Reference',
+            type: 'EditableText',
+            width: 180,
+            sortable: true
         },
         {
-        key: 'unitPrice',
-        label: 'Unit Price',
-        type: 'CurrencyWithSymbol',
-        width: 120,
-        sortable: true
-        },
-        {
-        key: 'total',
-        label: 'Total',
-        type: 'CurrencyWithSymbol',
-        width: 120,
-        sortable: true,
-        editable: false
-        },
-        {
-        key: 'status',
-        label: 'Status',
-        type: 'Badge',
-        width: 120,
-        sortable: true,
-        statusMap: {
-            'Delivered': 'bg-green-500 text-white',
-            'Shipped': 'bg-blue-500 text-white',
-            'Processing': 'bg-yellow-500 text-white',
-            'Pending': 'bg-gray-500 text-white'
-        }
+            key: 'CostEXVat',
+            label: 'Cost EX VAT',
+            type: 'EditableText',
+            width: 180,
+            sortable: true,
         }
     ];
 
-    // Handle parent order row addition
+    // Handle parent operation row addition
     const handleAddOrder = async (newOrder: any) => {
-        console.log('Adding new order:', newOrder);
-        const orderWithId = {
-        ...newOrder,
-        id: Math.max(...ordersData.map(o => o.id)) + 1,
-        orderItems: []
+        console.log('Adding new operation:', newOrder);
+
+        // Split LazySelect values (ID || Description format)
+        const processedOrder = { ...newOrder };
+
+        // Split Supplier
+        if (typeof processedOrder.Supplier === 'string' && processedOrder.Supplier.includes(' || ')) {
+            const [id, desc] = processedOrder.Supplier.split(' || ').map((v: string) => v.trim());
+            processedOrder.Supplier = id;
+            processedOrder.SupplierDescription = desc;
+        }
+
+        // Split SupplierContractID
+        if (typeof processedOrder.SupplierContractID === 'string' && processedOrder.SupplierContractID.includes(' || ')) {
+            const [id, desc] = processedOrder.SupplierContractID.split(' || ').map((v: string) => v.trim());
+            processedOrder.SupplierContractID = id;
+            processedOrder.SupplierContractDescription = desc;
+        }
+
+        const updatedData = {
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: [
+                    ...operationBillingData,
+                    {
+                        ...processedOrder,
+                        ItemService: [],
+                        ModeFlag: 'Insert'
+                    }
+                ]
+            }
         };
-        setOrdersData(prev => [...prev, orderWithId]);
-        return orderWithId;
+        setBillingData(updatedData);
+        return newOrder;
     };
 
-    // Handle parent order row editing
+    // Handle parent operation row editing
     const handleEditOrder = async (updatedOrder: any, rowIndex: number) => {
-        console.log('Editing order:', { rowIndex, updatedOrder });
-        setOrdersData(prev => {
-        const updated = [...prev];
-        updated[rowIndex] = { ...updated[rowIndex], ...updatedOrder };
-        return updated;
+        console.log('Editing operation:', { rowIndex, updatedOrder });
+        const updated = [...operationBillingData];
+        updated[rowIndex] = {
+            ...updated[rowIndex],
+            ...updatedOrder,
+            ModeFlag: 'Update'
+        };
+        setBillingData({
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: updated
+            }
         });
     };
 
-    // Handle parent order row deletion
+    // Handle parent operation row deletion
     const handleDeleteOrder = async (rowIndex: number) => {
-        console.log('Deleting order at index:', rowIndex);
-        setOrdersData(prev => prev.filter((_, idx) => idx !== rowIndex));
+        console.log('Deleting operation at index:', rowIndex);
+        const updated = operationBillingData.filter((_, idx) => idx !== rowIndex);
+        setBillingData({
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: updated
+            }
+        });
     };
 
-    // Handle nested order item inline edit
+    // Handle nested item service inline edit
     const handleOrderItemEdit = async (
         parentRowIndex: number,
         nestedRowIndex: number,
         updatedItem: any
     ) => {
-        console.log('Editing order item:', { parentRowIndex, nestedRowIndex, updatedItem });
-        
-        setOrdersData(prev => {
-        const updated = [...prev];
-        const order = { ...updated[parentRowIndex] };
-        const items = [...order.orderItems];
-        
-        // Merge the updated fields with existing item
-        const existingItem = items[nestedRowIndex];
-        const item = { ...existingItem, ...updatedItem };
-        
-        // Recalculate total if quantity or unitPrice changed
-        if (item.quantity !== undefined && item.unitPrice !== undefined) {
-            item.total = Number(item.quantity) * Number(item.unitPrice);
-        }
-        
-        items[nestedRowIndex] = item;
-        order.orderItems = items;
-        
-        // Recalculate order total
-        order.totalAmount = items.reduce((sum, item) => sum + (item.total || 0), 0);
-        
-        updated[parentRowIndex] = order;
-        
-        console.log('Updated order data:', updated[parentRowIndex]);
-        return updated;
+        console.log('Editing item service:', { parentRowIndex, nestedRowIndex, updatedItem });
+
+        const updated = [...operationBillingData];
+        const operation = { ...updated[parentRowIndex] };
+        const items = [...(operation.ItemService || [])];
+
+        items[nestedRowIndex] = {
+            ...items[nestedRowIndex],
+            ...updatedItem,
+            ModeFlag: 'Update'
+        };
+
+        operation.ItemService = items;
+        operation.TotalCost = items.reduce((sum, item) => sum + (item.CostEXVat || 0), 0);
+        operation.ModeFlag = 'Update';
+
+        updated[parentRowIndex] = operation;
+
+        setBillingData({
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: updated
+            }
         });
     };
 
-    // Handle adding new nested order item
+    // Handle adding new nested item service
     const handleAddOrderItem = async (
         parentRowIndex: number,
         newItem: any
     ) => {
-        console.log('Adding new order item:', { parentRowIndex, newItem });
-        setOrdersData(prev => {
-        const updated = [...prev];
-        const order = { ...updated[parentRowIndex] };
-        const items = [...order.orderItems];
-        
-        // Generate new ID and calculate total
-        const newItemWithId = {
+        console.log('Adding new item service:', { parentRowIndex, newItem });
+        const updated = [...operationBillingData];
+        const operation = { ...updated[parentRowIndex] };
+        const items = [...(operation.ItemService || [])];
+
+        const newItemWithModeFlag = {
             ...newItem,
-            id: Math.max(...items.map(i => i.id), 0) + 1,
-            total: (newItem.quantity || 0) * (newItem.unitPrice || 0)
+            ModeFlag: 'Insert'
         };
-        
-        items.push(newItemWithId);
-        order.orderItems = items;
-        
-        // Recalculate order total
-        order.totalAmount = items.reduce((sum, item) => sum + (item.total || 0), 0);
-        
-        updated[parentRowIndex] = order;
-        return updated;
+
+        items.push(newItemWithModeFlag);
+        operation.ItemService = items;
+        operation.TotalCost = items.reduce((sum, item) => sum + (item.CostEXVat || 0), 0);
+        operation.ModeFlag = 'Update';
+
+        updated[parentRowIndex] = operation;
+
+        setBillingData({
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: updated
+            }
         });
     };
 
-    // Handle deleting nested order item
+    // Handle deleting nested item service
     const handleDeleteOrderItem = async (
         parentRowIndex: number,
         nestedRowIndex: number
     ) => {
-        console.log('Deleting order item:', { parentRowIndex, nestedRowIndex });
-        setOrdersData(prev => {
-        const updated = [...prev];
-        const order = { ...updated[parentRowIndex] };
-        const items = [...order.orderItems];
-        
+        console.log('Deleting item service:', { parentRowIndex, nestedRowIndex });
+        const updated = [...operationBillingData];
+        const operation = { ...updated[parentRowIndex] };
+        const items = [...(operation.ItemService || [])];
+
         items.splice(nestedRowIndex, 1);
-        order.orderItems = items;
-        
-        // Recalculate order total
-        order.totalAmount = items.reduce((sum, item) => sum + (item.total || 0), 0);
-        
-        updated[parentRowIndex] = order;
-        return updated;
+        operation.ItemService = items;
+        operation.TotalCost = items.reduce((sum, item) => sum + (item.CostEXVat || 0), 0);
+        operation.ModeFlag = 'Update';
+
+        updated[parentRowIndex] = operation;
+
+        setBillingData({
+            ...billingData,
+            BillingDetails: {
+                ...billingData.BillingDetails,
+                OperationBillingDetails: updated
+            }
         });
     };
 
-    // Default values for new order rows
+    // Default values for new operation rows
     const defaultOrderValues = {
-        orderNumber: '',
-        customer: '',
-        orderDate: '',
-        status: '',
-        totalAmount: '',
-        shippingAddress: '',
-        contactPerson: '',
-        contactPhone: '',
-        deliveryNotes: ''
+        OrderID: '',
+        TypeOfAction: '',
+        Operation: '',
+        Supplier: '',
+        SupplierDescription: '',
+        SupplierContractID: '',
+        SupplierContractDescription: '',
+        QuickOrderNo: '',
+        BillStatus: '',
+        TotalCost: 0
     };
 
-    // Default values for new order item rows
+    // Default values for new item service rows
     const defaultOrderItemValues = {
-        itemName: '',
-        quantity: '',
-        unitPrice: '',
-        status: ''
+        Service: '',
+        ServiceDescription: '',
+        Reference: '',
+        CostEXVat: 0,
+        CostEXVatUom: ''
     };
 
     return (
@@ -901,16 +1005,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 </div>
 
                                 <div className="border-t border-gray-200 pt-3">
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-3 gap-3 mb-3">
 
-                                        {/* Invoice */}
+                                         {/* Invoicing Reference */}
                                         <div>
-                                            <label className="text-sm font-medium text-gray-700 block mb-1">Invoice Reference</label>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Invoicing Reference</label>
                                             <Input
                                                 type="text"
-                                                value={billingData?.BillingDetails?.TransportCharges?.RUForward?.DraftBillNo || ""}
-                                                onChange={(e) => handleNestedChange("BillingDetails.TransportCharges.RUForward.DraftBillNo", e.target.value)}
-                                                placeholder="Enter Invoice Reference"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUForward?.InvoicingReference || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.InvoicingReference", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Invoicing Reference"
                                             />
                                         </div>
 
@@ -919,12 +1026,13 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Cost</label>
                                             <InputDropdown
                                                 value={{
-                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUForward?.CostCurrency,
+                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUForward?.CurrencyUOM,
                                                     input: billingData?.BillingDetails?.TransportCharges?.RUForward?.Cost?.toString()
                                                 }}
                                                 onChange={(val) => {
-                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.CostCurrency", val.dropdown);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.CurrencyUOM", val.dropdown);
                                                     handleNestedChange("BillingDetails.TransportCharges.RUForward.Cost", val.input);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
                                                 }}
                                                 options={currencyOptions}
                                                 placeholder="0.00"
@@ -937,16 +1045,50 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Fee AT</label>
                                             <InputDropdown
                                                 value={{
-                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUForward?.FeeAtCurrency,
+                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUForward?.CurrencyUOM,
                                                     input: billingData?.BillingDetails?.TransportCharges?.RUForward?.FeeAt?.toString()
                                                 }}
                                                 onChange={(val) => {
-                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.FeeAtCurrency", val.dropdown);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.CurrencyUOM", val.dropdown);
                                                     handleNestedChange("BillingDetails.TransportCharges.RUForward.FeeAt", val.input);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
                                                 }}
                                                 options={currencyOptions}
                                                 placeholder="0.00"
                                                 editable={false}
+                                            />
+                                        </div>
+
+                                       
+
+                                    
+
+                                        {/* Draft Bill No */}
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Draft Bill No.</label>
+                                            <Input
+                                                type="text"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUForward?.DraftBillNo || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.DraftBillNo", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Draft Bill No"
+                                            />
+                                        </div>
+
+                                        {/* Trip No */}
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Trip No.</label>
+                                            <Input
+                                                type="text"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUForward?.TripNo || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.TripNo", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Trip No"
+                                                disabled={true}
                                             />
                                         </div>
 
@@ -993,16 +1135,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 </div>
 
                                 <div className="border-t border-gray-200 pt-3">
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-3 gap-3 mb-3">
 
-                                        {/* Invoice Reference */}
+                                         {/* Invoicing Reference */}
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600 block mb-1">Invoice Reference</label>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Invoicing Reference</label>
                                             <Input
                                                 type="text"
-                                                value={billingData?.BillingDetails?.TransportCharges?.RUReturn?.DraftBillNo || ""}
-                                                onChange={(e) => handleNestedChange("BillingDetails.TransportCharges.RUReturn.DraftBillNo", e.target.value)}
-                                                placeholder="Enter Invoice Reference"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUReturn?.InvoicingReference || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.InvoicingReference", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Invoicing Reference"
                                             />
                                         </div>
 
@@ -1011,12 +1156,13 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Cost</label>
                                             <InputDropdown
                                                 value={{
-                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUReturn?.CostCurrency,
+                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUReturn?.CurrencyUOM,
                                                     input: billingData?.BillingDetails?.TransportCharges?.RUReturn?.Cost?.toString()
                                                 }}
                                                 onChange={(val) => {
-                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.CostCurrency", val.dropdown);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.CurrencyUOM", val.dropdown);
                                                     handleNestedChange("BillingDetails.TransportCharges.RUReturn.Cost", val.input);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
                                                 }}
                                                 options={currencyOptions}
                                                 placeholder="0.00"
@@ -1029,16 +1175,50 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                             <label className="text-sm font-medium text-gray-600 block mb-1">Fee AT</label>
                                             <InputDropdown
                                                 value={{
-                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUReturn?.FeeAtCurrency,
+                                                    dropdown: billingData?.BillingDetails?.TransportCharges?.RUReturn?.CurrencyUOM,
                                                     input: billingData?.BillingDetails?.TransportCharges?.RUReturn?.FeeAt?.toString()
                                                 }}
                                                 onChange={(val) => {
-                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.FeeAtCurrency", val.dropdown);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.CurrencyUOM", val.dropdown);
                                                     handleNestedChange("BillingDetails.TransportCharges.RUReturn.FeeAt", val.input);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
                                                 }}
                                                 options={currencyOptions}
                                                 placeholder="0.00"
                                                 editable={false}
+                                            />
+                                        </div>
+
+                                       
+
+                                   
+
+                                        {/* Draft Bill No */}
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Draft Bill No</label>
+                                            <Input
+                                                type="text"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUReturn?.DraftBillNo || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.DraftBillNo", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Draft Bill No"
+                                            />
+                                        </div>
+
+                                        {/* Trip No */}
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 block mb-1">Trip No</label>
+                                            <Input
+                                                type="text"
+                                                value={billingData?.BillingDetails?.TransportCharges?.RUReturn?.TripNo || ""}
+                                                onChange={(e) => {
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.TripNo", e.target.value);
+                                                    handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
+                                                }}
+                                                placeholder="Enter Trip No"
+                                                disabled={true}
                                             />
                                         </div>
 
@@ -1058,19 +1238,25 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                     >
                         <div className="">
                             <SmartGridPlusWithNestedRows
+                                gridTitle="Item Service"
                                 columns={orderColumns}
-                                data={ordersData}
+                                data={operationBillingData}
                                 onAddRow={handleAddOrder}
                                 onEditRow={handleEditOrder}
                                 onDeleteRow={handleDeleteOrder}
                                 defaultRowValues={defaultOrderValues}
+                                hideToolbar={false}
                                 paginationMode="pagination"
                                 customPageSize={10}
                                 inlineRowEditing={true}
+                                inlineRowAddition={false}
+                                onSelectedRowsChange={(selectedRows) => {
+                                    console.log('Selected rows:', selectedRows);
+                                }}
                                 nestedSectionConfig={{
-                                    nestedDataKey: 'orderItems',
+                                    nestedDataKey: 'ItemService',
                                     columns: orderItemColumns,
-                                    title: 'Order Items',
+                                    title: 'Item Services Nested',
                                     showNestedRowCount: true,
                                     onInlineEdit: handleOrderItemEdit,
                                     onAddRow: handleAddOrderItem,
@@ -1101,7 +1287,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         badge={`Total Cost : € ${billingData?.BillingDetails?.Disposal?.TotalCost?.toFixed(2) || "0.00"}`}
                     >
                         {/* Panel content */}
-                        <div className="grid grid-cols-5 gap-3">
+                        <div className="grid grid-cols-4 gap-3 mb-3">
                             {/* Supplier */}
                             <div>
                                 <label className="text-sm font-medium text-gray-600 block mb-1">Supplier</label>
@@ -1128,26 +1314,75 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 />
                             </div>
 
-                            {/* Processing Reference */}
+                            {/* Supplier Contract */}
                             <div>
-                                <label className="text-sm font-medium text-gray-600 block mb-1">Processing Reference</label>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Supplier Contract</label>
                                 <DynamicLazySelect
                                     className="h-8"
-                                    fetchOptions={fetchMaster("Processing reference")}
-                                    value={billingData?.BillingDetails?.Disposal?.ProcessingReference || ""}
+                                    fetchOptions={fetchMaster("Contract Init")}
+                                    value={billingData?.BillingDetails?.Disposal?.SupplierContractID
+                                        ? `${billingData.BillingDetails.Disposal.SupplierContractID} || ${billingData.BillingDetails.Disposal.SupplierContractDescription || ""}`
+                                        : ""}
                                     onChange={(val) => {
-                                        handleNestedChange("BillingDetails.Disposal.ProcessingReference", val);
+                                        if (val) {
+                                            const [id, desc] = val.split(" || ");
+                                            handleNestedChange("BillingDetails.Disposal.SupplierContractID", id);
+                                            handleNestedChange("BillingDetails.Disposal.SupplierContractDescription", desc);
+                                        } else {
+                                            handleNestedChange("BillingDetails.Disposal.SupplierContractID", "");
+                                            handleNestedChange("BillingDetails.Disposal.SupplierContractDescription", "");
+                                        }
                                         handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
                                     }}
                                     hideSearch={false}
                                     disableLazyLoading={false}
-                                    placeholder="Select Processing Reference"
+                                    placeholder="Select Supplier Contract"
                                 />
                             </div>
 
-                            {/* Quality Processed */}
+                            {/* WBS */}
                             <div>
-                                <label className="text-sm font-medium text-gray-600 block mb-1">Quality Processed</label>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">WBS</label>
+                                <DynamicLazySelect
+                                    className="h-8"
+                                    fetchOptions={fetchMaster("WBS Init")}
+                                    value={billingData?.BillingDetails?.Disposal?.WBS
+                                        ? `${billingData.BillingDetails.Disposal.WBS} || ${billingData.BillingDetails.Disposal.WBSDescription || ""}`
+                                        : ""}
+                                    onChange={(val) => {
+                                        if (val) {
+                                            const [id, desc] = val.split(" || ");
+                                            handleNestedChange("BillingDetails.Disposal.WBS", id);
+                                            handleNestedChange("BillingDetails.Disposal.WBSDescription", desc);
+                                        } else {
+                                            handleNestedChange("BillingDetails.Disposal.WBS", "");
+                                            handleNestedChange("BillingDetails.Disposal.WBSDescription", "");
+                                        }
+                                        handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
+                                    }}
+                                    hideSearch={false}
+                                    disableLazyLoading={false}
+                                    placeholder="Select WBS"
+                                />
+                            </div>
+
+                            {/* Processing Reference */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Processing Reference</label>
+                                <Input
+                                    type="text"
+                                    value={billingData?.BillingDetails?.Disposal?.ProcessingReference || ""}
+                                    onChange={(e) => {
+                                        handleNestedChange("BillingDetails.Disposal.ProcessingReference", e.target.value);
+                                        handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
+                                    }}
+                                    placeholder="Enter Processing Reference"
+                                />
+                            </div>
+                      
+                            {/* Quatity Processed */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Quatity Processed</label>
                                 <Input
                                     type="text"
                                     value={billingData?.BillingDetails?.Disposal?.QuantityProcessed?.toString() || ""}
@@ -1194,6 +1429,34 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     placeholder="0.00"
                                 />
                             </div>
+
+                            {/* Quick Order No */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Quick Order No</label>
+                                <Input
+                                    type="text"
+                                    value={billingData?.BillingDetails?.Disposal?.QuickOrderNo || ""}
+                                    onChange={(e) => {
+                                        handleNestedChange("BillingDetails.Disposal.QuickOrderNo", e.target.value);
+                                        handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
+                                    }}
+                                    placeholder="Enter Quick Order No"
+                                />
+                            </div>
+
+                            {/* Bill Status */}
+                            {/* <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Bill Status</label>
+                                <Input
+                                    type="text"
+                                    value={billingData?.BillingDetails?.Disposal?.BillStatus || ""}
+                                    onChange={(e) => {
+                                        handleNestedChange("BillingDetails.Disposal.BillStatus", e.target.value);
+                                        handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
+                                    }}
+                                    placeholder="Enter Bill Status"
+                                />
+                            </div> */}
                         </div>
                     </CollapsibleBillingPanel>
 
@@ -1216,7 +1479,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         }
                     >
                         {/* panel fields */}
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-4 gap-4 mb-3">
                             {/* Stakeholder */}
                             <div>
                                 <label className="text-sm font-medium text-gray-600 block mb-1">Stakeholder</label>
@@ -1244,6 +1507,86 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 />
                             </div>
 
+                            {/* Customer Contract */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Customer Contract</label>
+                                <DynamicLazySelect
+                                    className="h-8"
+                                    fetchOptions={fetchMaster("Contract Init")}
+                                    value={billingData?.BillingDetails?.ReinvoiceCostTo?.CustomerContractID
+                                        ? `${billingData.BillingDetails.ReinvoiceCostTo.CustomerContractID} || ${billingData.BillingDetails.ReinvoiceCostTo.CustomerContractDescription || ""}`
+                                        : ""}
+                                    onChange={(val) => {
+                                        if (val) {
+                                            const [id, desc] = val.split(" || ");
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.CustomerContractID", id);
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.CustomerContractDescription", desc);
+                                        } else {
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.CustomerContractID", "");
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.CustomerContractDescription", "");
+                                        }
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
+                                    }}
+                                    hideSearch={false}
+                                    disableLazyLoading={false}
+                                    placeholder="Select Customer Contract"
+                                />
+                            </div>
+
+                            {/* WBS */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">WBS</label>
+                                <DynamicLazySelect
+                                    className="h-8"
+                                    fetchOptions={fetchMaster("WBS Init")}
+                                    value={billingData?.BillingDetails?.ReinvoiceCostTo?.WBS
+                                        ? `${billingData.BillingDetails.ReinvoiceCostTo.WBS} || ${billingData.BillingDetails.ReinvoiceCostTo.WBSDescription || ""}`
+                                        : ""}
+                                    onChange={(val) => {
+                                        if (val) {
+                                            const [id, desc] = val.split(" || ");
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.WBS", id);
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.WBSDescription", desc);
+                                        } else {
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.WBS", "");
+                                            handleNestedChange("BillingDetails.ReinvoiceCostTo.WBSDescription", "");
+                                        }
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
+                                    }}
+                                    hideSearch={false}
+                                    disableLazyLoading={false}
+                                    placeholder="Select WBS"
+                                />
+                            </div>
+
+                            {/* Quick Order No */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Quick Order No</label>
+                                <Input
+                                    type="text"
+                                    value={billingData?.BillingDetails?.ReinvoiceCostTo?.QuickOrderNo || ""}
+                                    onChange={(e) => {
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.QuickOrderNo", e.target.value);
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
+                                    }}
+                                    placeholder="Enter Quick Order No"
+                                />
+                            </div>
+
+                            {/* Bill Status */}
+                            {/* <div>
+                                <label className="text-sm font-medium text-gray-600 block mb-1">Bill Status</label>
+                                <Input
+                                    type="text"
+                                    value={billingData?.BillingDetails?.ReinvoiceCostTo?.BillStatus || ""}
+                                    onChange={(e) => {
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.BillStatus", e.target.value);
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
+                                    }}
+                                    placeholder="Enter Bill Status"
+                                />
+                            </div> */}
+                   
                             {/* Total Bill Cost */}
                             <div>
                                 <label className="text-sm font-medium text-gray-600 block mb-1">Total Bill Cost</label>
@@ -1255,6 +1598,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onChange={(val) => {
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.CurrencyUOM", val.dropdown);
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.TotalBillCost", val.input);
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
                                     }}
                                     options={currencyOptions}
                                     placeholder="0.00"
@@ -1273,6 +1617,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onChange={(val) => {
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.CurrencyUOM", val.dropdown);
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.TotalMarginAmount", val.input);
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
                                     }}
                                     options={currencyOptions}
                                     placeholder="0.00"
@@ -1291,6 +1636,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onChange={(val) => {
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.CurrencyUOM", val.dropdown);
                                         handleNestedChange("BillingDetails.ReinvoiceCostTo.OverAllSubTotal", val.input);
+                                        handleNestedChange("BillingDetails.ReinvoiceCostTo.ModeFlag", "Update");
                                     }}
                                     options={currencyOptions}
                                     placeholder="0.00"
@@ -1299,7 +1645,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                             </div>
                         </div>
 
-                        <div className="mt-4">
+                        <div className="mt-6">
                             <div className="flex items-center gap-2 mb-2">
                                 <h4 className="text-sm font-semibold text-gray-800">Re-Invoicing Selection</h4>
                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">

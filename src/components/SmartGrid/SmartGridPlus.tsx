@@ -52,6 +52,7 @@ export function SmartGridPlus({
   plugins = [],
   selectedRows,
   onSelectionChange,
+  onSelectedRowsChange,
   rowClassName,
   highlightedRowIndices = [],
   configurableButtons,
@@ -59,6 +60,7 @@ export function SmartGridPlus({
   defaultConfigurableButtonLabel,
   gridTitle,
   recordCount,
+  hideToolbar = false,
   // SmartGridPlus specific props
   inlineRowAddition = true,
   inlineRowEditing = true,
@@ -1200,7 +1202,7 @@ export function SmartGridPlus({
     <div className="space-y-4 w-full">
       {/* Add Row Button */}
       {inlineRowAddition && addRowButtonPosition === "top-left" && (
-        <div className="flex justify-start">
+        <div className="flex justify-start" style={{ display: 'none' }}>
           <Button
             onClick={handleAddRowClick}
             disabled={isAddingRow}
@@ -1213,6 +1215,8 @@ export function SmartGridPlus({
       )}
 
       {/* Toolbar */}
+      <div style={{ display: hideToolbar ? 'none' : undefined }}>
+ 
       <GridToolbar
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
@@ -1239,6 +1243,7 @@ export function SmartGridPlus({
         showAdvancedFilter={false}
         onToggleAdvancedFilter={() => {}}
       />
+      </div>
 
        {/* Advanced Filter System */}
       {/* <FilterSystem
@@ -1507,6 +1512,11 @@ export function SmartGridPlus({
                                     newSet.delete(index);
                                   }
                                   handleSelectionChange(newSet);
+                                  // Call onSelectedRowsChange with actual row objects
+                                  if (onSelectedRowsChange) {
+                                    const selectedRowObjects = paginatedData.filter((_, idx) => newSet.has(idx));
+                                    onSelectedRowsChange(selectedRowObjects);
+                                  }
                                 }}
                               />
                             </TableCell>
