@@ -1557,7 +1557,8 @@ export function SmartGridPlus({
                             return (
                               <TableCell 
                                 key={column.key}
-                                className="px-2 py-2 border-r border-gray-100 last:border-r-0 cursor-pointer"
+                                // className="px-2 py-2 border-r border-gray-100 last:border-r-0 cursor-pointer"
+                                className={`px-2 py-2 border-r border-gray-100 last:border-r-0 cursor-pointer ${column.key == 'OrderID' ? 'pl-8' : ''}`}
                                 style={{ 
                                   width: `${widthPercentage}%`,
                                   minWidth: `${Math.max(80, column.width * 0.8)}px`,

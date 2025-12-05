@@ -1124,6 +1124,21 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   
   // fetch shipment type
   const fetchShipmentType = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
+    // Check if Mobile mode is enabled - check both IsMobile and IsWorkShop
+    // IsMobile = 1 means Mobile, IsWorkShop = "Mobile" or 0 also means Mobile
+    const isMobile = rowData?.IsMobile;
+    const isWorkShop = rowData?.IsWorkShop;
+    
+    // Check if Mobile mode is enabled
+    const isMobileMode = 
+      isMobile === 1 || isMobile === "1" || // IsMobile explicitly set to 1
+      isWorkShop === "Mobile" || isWorkShop === 0 || isWorkShop === "0"; // IsWorkShop indicates Mobile
+    
+    if (isMobileMode) {
+      console.log("Mobile mode is enabled, returning empty Shipment Type options");
+      return [];
+    }
+    
     // Extract typeOfAction and operationType from piped format "id || name"
     const typeOfAction = rowData?.TypeOfAction || rowData.TypeOfActionDescription?.split('||')[0].trim() || "";
     const operationType = rowData?.Operation || rowData.OperationDescription?.split('||')[0].trim() || "";
@@ -1392,7 +1407,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       statusMap: {
         Active: "badge-green rounded-2xl",
         Pending: "badge-yellow rounded-2xl",
-        Completed: "badge-blue rounded-2xl",
+        Completed: "badge-green rounded-2xl",
         Cancelled: "badge-red rounded-2xl",
         "In-progress": "badge-orange rounded-2xl",
       },
@@ -1406,7 +1421,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       editable: true,
       width: 180,
       fetchOptions: fetchTypeOfAction,
-      dependentFields: ["OperationDescription", "IsWorkShop"],
+      dependentFields: ["OperationDescription", "IsWorkShop", "IsForwardReturn"],
       onChange: (newValue, rowData) => {
         // `newValue` is whatever the editor emits (string, object, etc.)
         // Return the final value you want stored in the row.
@@ -1472,6 +1487,11 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fetchOptions: fetchServiceMode,
       onChange: (value, rowData) => {
         console.log("IsWorkShop changed:", value, "Row data:", rowData);
+        // Automatically set IsMobile as opposite of IsWorkShop
+        const isWorkShopValue = transformIsWorkShopForSave(value);
+        rowData.IsWorkShop = isWorkShopValue;
+        rowData.IsMobile = isWorkShopValue === 1 ? 0 : 1;
+        console.log("Updated IsWorkShop:", isWorkShopValue, "IsMobile:", rowData.IsMobile);
       },
       hideSearch: true,
       disableLazyLoading: true
@@ -1488,6 +1508,23 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       fetchOptions: fetchShipmentType,
       onChange: (value, rowData) => {
         console.log("IsForwardReturn changed:", value, "Row data:", rowData);
+        // Automatically set IsOneWay as opposite of IsForwardReturn
+        const isForwardReturnValue = transformIsForwardReturnForSave(value);
+        
+        if (isForwardReturnValue === 1) {
+          // Forward/Return selected
+          rowData.IsForwardReturn = 1;
+          rowData.IsOneWay = 0;
+        } else if (isForwardReturnValue === 0) {
+          // One-Way selected
+          rowData.IsForwardReturn = 0;
+          rowData.IsOneWay = 1;
+        } else {
+          // Neither selected
+          rowData.IsForwardReturn = "";
+          rowData.IsOneWay = "";
+        }
+        console.log("Updated IsForwardReturn:", rowData.IsForwardReturn, "IsOneWay:", rowData.IsOneWay);
       },
       hideSearch: true,
       disableLazyLoading: true
@@ -1571,18 +1608,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   };
 
   // Transform IsWorkShop display value to store format (final numeric flag on the row)
-  const transformIsWorkShopForSave = (value: string | any): any => {
+  const transformIsWorkShopForSave = (value: string | any): number => {
     // If already an object like { IsWorkShop: 1 }, normalize to 1/0
     if (typeof value === 'object' && value !== null && value.IsWorkShop !== undefined) {
       return value.IsWorkShop === 1 || value.IsWorkShop === "1" ? 1 : 0;
     }
 
-    // If it's a display string or primitive, map to 1/0
+    // If it's a display string or primitive, map to 1/0 (always return number)
     if (value === "Workshop" || value === 1 || value === "1") return 1;
     if (value === "Mobile" || value === 0 || value === "0") return 0;
 
-    // Fallback: return as-is
-    return value;
+    // Fallback: default to 0 if value is undefined/null/empty
+    return 0;
   };
 
   // Transform IsForwardReturn value to display string
@@ -1597,13 +1634,25 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   };
 
   // Transform IsForwardReturn display value to store format (final numeric flag on the row)
-  const transformIsForwardReturnForSave = (value: string | any): any => {
-    if (typeof value === 'object' && value !== null && value.IsForwardReturn !== undefined) {
-      return value.IsForwardReturn === 1 || value.IsForwardReturn === "1" ? 1 : 0;
+  // Returns: 1 if Forward/Return, 0 if One-Way, "" if not selected
+  const transformIsForwardReturnForSave = (value: string | any): number | string => {
+    // Handle empty/null/undefined values - return empty string if not selected
+    if (value === undefined || value === null || value === "" || (typeof value === 'string' && value.trim() === "")) {
+      return "";
     }
+    
+    if (typeof value === 'object' && value !== null && value.IsForwardReturn !== undefined) {
+      const forwardReturnValue = value.IsForwardReturn;
+      if (forwardReturnValue === 1 || forwardReturnValue === "1") return 1;
+      if (forwardReturnValue === 0 || forwardReturnValue === "0") return 0;
+      return "";
+    }
+    
     if (value === "Forward/Return" || value === 1 || value === "1") return 1;
     if (value === "One-Way" || value === 0 || value === "0") return 0;
-    return value;
+    
+    // If value doesn't match any known pattern, return empty string
+    return "";
   };
 
   // Transform CodeInformation for display (extract CodeNoCUU values as array of strings)
@@ -1710,10 +1759,37 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     // Convert IsWorkShop & IsForwardReturn values back to store format
     // Extract ID from QC1Code if it's in piped format
     // Transform CodeInformation to {CodeNoCUU: value} format
+    const isWorkShopValue = transformIsWorkShopForSave(rowWithSplitData.IsWorkShop);
+    
+    // Create transformed row, explicitly setting IsMobile to override any existing value
+    const { IsMobile: _, IsOneWay: __, ...rowWithoutMobileAndOneWay } = rowWithSplitData; // Remove existing IsMobile and IsOneWay if present
+    
+    // Handle IsForwardReturn and IsOneWay (mutually exclusive)
+    const isForwardReturnValue = transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn);
+    let isForwardReturn: number | string = "";
+    let isOneWay: number | string = "";
+    
+    if (isForwardReturnValue === 1) {
+      // Forward/Return selected
+      isForwardReturn = 1;
+      isOneWay = 0;
+    } else if (isForwardReturnValue === 0) {
+      // One-Way selected
+      isForwardReturn = 0;
+      isOneWay = 1;
+    } else {
+      // Neither selected
+      isForwardReturn = "";
+      isOneWay = "";
+    }
+    
     const transformedRow = {
-      ...rowWithSplitData,
-      IsWorkShop: transformIsWorkShopForSave(rowWithSplitData.IsWorkShop),
-      IsForwardReturn: transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn),
+      ...rowWithoutMobileAndOneWay,
+      IsWorkShop: isWorkShopValue,
+      // Set IsMobile as opposite of IsWorkShop: if IsWorkShop = 1, then IsMobile = 0, and vice versa
+      IsMobile: isWorkShopValue === 1 ? 0 : 1,
+      IsForwardReturn: isForwardReturn,
+      IsOneWay: isOneWay,
       QC1Code: extractIdFromPipedFormat(rowWithSplitData.QC1Code),
       CodeInformation: transformCodeInformationForSave(rowWithSplitData.CodeInformation),
       ModeFlag: "Insert",
@@ -1752,10 +1828,38 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     const orderID = editedRow?.OrderID || originalRow?.OrderID || "";
     const modeFlag = (!orderID || orderID.trim() === "") ? "Insert" : "Update";
     
+    // Convert IsWorkShop value and set IsMobile as opposite
+    const isWorkShopValue = transformIsWorkShopForSave(rowWithSplitData.IsWorkShop);
+    
+    // Create transformed row, explicitly setting IsMobile to override any existing value
+    const { IsMobile: _, IsOneWay: __, ...rowWithoutMobileAndOneWay } = rowWithSplitData; // Remove existing IsMobile and IsOneWay if present
+    
+    // Handle IsForwardReturn and IsOneWay (mutually exclusive)
+    const isForwardReturnValue = transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn);
+    let isForwardReturn: number | string = "";
+    let isOneWay: number | string = "";
+    
+    if (isForwardReturnValue === 1) {
+      // Forward/Return selected
+      isForwardReturn = 1;
+      isOneWay = 0;
+    } else if (isForwardReturnValue === 0) {
+      // One-Way selected
+      isForwardReturn = 0;
+      isOneWay = 1;
+    } else {
+      // Neither selected
+      isForwardReturn = "";
+      isOneWay = "";
+    }
+    
     const transformedRow = {
-      ...rowWithSplitData,
-      IsWorkShop: transformIsWorkShopForSave(rowWithSplitData.IsWorkShop),
-      IsForwardReturn: transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn),
+      ...rowWithoutMobileAndOneWay,
+      IsWorkShop: isWorkShopValue,
+      // Set IsMobile as opposite of IsWorkShop: if IsWorkShop = 1, then IsMobile = 0, and vice versa
+      IsMobile: isWorkShopValue === 1 ? 0 : 1,
+      IsForwardReturn: isForwardReturn,
+      IsOneWay: isOneWay,
       QC1Code: extractIdFromPipedFormat(rowWithSplitData.QC1Code),
       CodeInformation: transformCodeInformationForSave(rowWithSplitData.CodeInformation),
       ModeFlag: modeFlag,
@@ -1875,7 +1979,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   };
 
   const validationRules = {
-    requiredFields: ["TypeOfActionDescription", "OperationDescription"],
+    requiredFields: ["TypeOfActionDescription", "OperationDescription", "IsWorkShop"],
     // requiredFields: [],
     maxLength: {
       OrderID: 50,

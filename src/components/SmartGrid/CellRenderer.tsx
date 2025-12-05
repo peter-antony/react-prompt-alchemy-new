@@ -909,7 +909,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           return (
             <div className="flex flex-wrap gap-1">
               {value.map((item, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
+                <Badge key={idx} variant="secondary" className="text-xs badge-blue rounded-2xl">
                   {typeof item === 'object' ? (item.label || item.name || item.value || String(item)) : String(item)}
                 </Badge>
               ))}
