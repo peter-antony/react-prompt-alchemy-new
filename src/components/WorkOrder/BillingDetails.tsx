@@ -84,7 +84,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const [contractType, setContractType] = useState<"full" | "dry">("full");
     const [isAllExpanded, setIsAllExpanded] = useState(false);
     const [showBillingSummary, setShowBillingSummary] = useState(false);
-    const [isConfirmed, setIsConfirmed] = useState(false); // dummy state to track confirm/amend for item service panel
+    const [selectedOperationRow, setSelectedOperationRow] = useState<any>(null); // Track selected operation row for confirm/amend
 
     const { toast } = useToast();
 
@@ -114,7 +114,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
         { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
         { key: "NoOfLines", label: "No. of Lines", width: 120, type: "Text" },
-        { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
+        { key: "TotalAmount", label: "Total Amount", width: 150, type: "CurrencyWithSymbol" },
     ];
 
     const customerBillingColumns: GridColumnConfig[] = [
@@ -124,7 +124,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
         { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
         { key: "NoOfLines", label: "No. of Lines", width: 120, type: "Text" },
-        { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
+        { key: "TotalAmount", label: "Total Amount", width: 150, type: "CurrencyWithSymbol" },
     ];
 
     // Get data from API response
@@ -738,7 +738,172 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         }
     };
 
+    // Handler for Confirm Item Service
+    const handleConfirmItemService = async () => {
+        if (!billingData || !selectedOperationRow) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+
+            // Construct the selected operation with all its ItemService data
+            const selectedOperation = {
+                ...selectedOperationRow,
+                ModeFlag: "Update",
+                ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
+                    ...item,
+                    ModeFlag: item.ModeFlag || "NoChange"
+                })) || []
+            };
+
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Supplier Billing Confrim"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        OperationBillingDetails: [selectedOperation]
+                    }
+                }
+            };
+
+            console.log("Confirm Item Service Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.supplierBillingConfirm(payload);
+            console.log("Confirm Item Service Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Item Service Confirmed Successfully",
+                    description: response.data.Message || "Item Service confirmed successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                        // Clear selection after successful confirm
+                        setSelectedOperationRow(null);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Confirming Item Service",
+                    description: response?.data?.Message || "Confirm failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error confirming item service:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handler for Amend Item Service
+    const handleAmendItemService = async () => {
+        if (!billingData || !selectedOperationRow) return;
+
+        try {
+            setLoading(true);
+
+            const userContext = workOrderService.getUserContext();
+
+            // Construct the selected operation with all its ItemService data
+            const selectedOperation = {
+                ...selectedOperationRow,
+                ModeFlag: "Update",
+                ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
+                    ...item,
+                    ModeFlag: item.ModeFlag || "NoChange"
+                })) || []
+            };
+
+            const payload = {
+                context: {
+                    UserID: "ramcouser",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
+                    MessageID: "12345",
+                    MessageType: "WorkOrder-Supplier Billing Amend"
+                },
+                RequestPayload: {
+                    Header: {
+                        ...billingData.Header,
+                        BillingHeaderDetails: {
+                            ...billingData.Header.BillingHeaderDetails,
+                            ModeFlag: "NoChanges"
+                        }
+                    },
+                    BillingDetails: {
+                        OperationBillingDetails: [selectedOperation]
+                    }
+                }
+            };
+
+            console.log("Amend Item Service Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await workOrderService.supplierBillingAmend(payload);
+            console.log("Amend Item Service Response:", response);
+
+            if (response?.data?.IsSuccess) {
+                toast({
+                    title: "Item Service Amended Successfully",
+                    description: response.data.Message || "Item Service amended successfully",
+                    variant: "default",
+                });
+
+                // Re-fetch billing details to get updated status
+                if (workOrderNumber) {
+                    const updatedResponse = await workOrderService.getBillingDetails(workOrderNumber);
+                    if (updatedResponse?.data?.ResponseData) {
+                        const parsedData = JSON.parse(updatedResponse.data.ResponseData);
+                        setBillingData(parsedData);
+                        // Clear selection after successful amend
+                        setSelectedOperationRow(null);
+                    }
+                }
+            } else {
+                toast({
+                    title: "Error Amending Item Service",
+                    description: response?.data?.Message || "Amend failed",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error amending item service:", error);
+            toast({
+                title: "Error",
+                description: error.message || "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     //  panel configs for now
+
     const transportChargesConfig: PanelConfig = {};
     const itemServiceConfig: PanelConfig = {};
     const disposalConfig: PanelConfig = {
@@ -1630,6 +1795,12 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 selectionMode="single"
                                 onSelectedRowsChange={(selectedRows) => {
                                     console.log('Selected rows:', selectedRows);
+                                    // Since selectionMode is "single", selectedRows will have 0 or 1 item
+                                    if (selectedRows && selectedRows.length === 1) {
+                                        setSelectedOperationRow(selectedRows[0]);
+                                    } else {
+                                        setSelectedOperationRow(null);
+                                    }
                                 }}
                                 nestedSectionConfig={{
                                     nestedDataKey: 'ItemService',
@@ -1650,33 +1821,30 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         </div>
 
                         {/* Item Service Panel Footer with Confirm/Amend Buttons */}
-                        {/* {billingData?.BillingDetails?.OperationBillingDetails && (
+                        {selectedOperationRow && (
                             <div className="flex justify-end mt-4 pt-3">
-                                {isConfirmed ? (
-                                    // Amend Button
+                                {selectedOperationRow.BillStatus === "InProgress" && (
                                     <button
                                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                        onClick={() => {
-                                            console.log("amend clicked");
-                                            setIsConfirmed(false); // Switch back to Confirm
-                                        }}
+                                        onClick={handleConfirmItemService}
+                                        // disabled={loading}
                                     >
-                                        Amend Item Service
-                                    </button>
-                                ) : (
-                                    // Confirm Button
-                                    <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                        onClick={() => {
-                                            console.log("confirm clicked");
-                                            setIsConfirmed(true); // Switch to Amend
-                                        }}
-                                    >
+                                        {/* {loading ? "Processing..." : "Confirm Item Service"} */}
                                         Confirm Item Service
                                     </button>
                                 )}
+                                {selectedOperationRow.BillStatus === "Approved" && (
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={handleAmendItemService}
+                                        // disabled={loading}
+                                    >
+                                        {/* {loading ? "Processing..." : "Amend Item Service"} */}
+                                        Amend Item Service
+                                    </button>
+                                )}
                             </div>
-                        )} */}
+                        )}
 
                     </CollapsibleBillingPanel>
 
