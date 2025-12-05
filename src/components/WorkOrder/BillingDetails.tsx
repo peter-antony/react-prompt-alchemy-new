@@ -109,7 +109,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     // Billing Summary Grid Columns
     const supplierBillingColumns: GridColumnConfig[] = [
         { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
-        { key: "SupplierID", label: "Supplier ID", width: 150, type: "Text" },
+        // { key: "SupplierDescription", label: "Supplier ID", width: 150, type: "Text" },
         { key: "SupplierDescription", label: "Supplier", width: 200, type: "Text" },
         { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
         { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
@@ -119,7 +119,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
     const customerBillingColumns: GridColumnConfig[] = [
         { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
-        { key: "CustomerID", label: "Customer ID", width: 150, type: "Text" },
+        // { key: "CustomerID", label: "Customer ID", width: 150, type: "Text" },
         { key: "CustomerDescription", label: "Customer", width: 200, type: "Text" },
         { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
         { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
