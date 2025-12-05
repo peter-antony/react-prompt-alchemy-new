@@ -28,6 +28,9 @@ export interface DynamicPanelRef {
 interface DynamicPanelPropsExtended extends DynamicPanelProps {
   badgeValue?: string;
   quickOrderNoCallback?: (value: string) => void;
+  workOrderNo?: string;
+  workOrderStatus?: string;
+  workOrderNoCallback?: (value: string) => void;
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
 }
 
@@ -56,6 +59,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   validationErrors = {},
   badgeValue = '',
   quickOrderNoCallback,
+  workOrderNo = '',
+  workOrderStatus = '',
+  workOrderNoCallback,
   // onBadgeChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
@@ -71,6 +77,12 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [isHovered, setIsHovered] = useState(false);
   const [currentBadgeValue, setCurrentBadgeValue] = useState(badgeValue);
   const [quickOrderNoValue, setQuickOrderNoValue] = useState(jsonStore.getQuickOrderNo() || '');
+  const [workOrderNoValue, setWorkOrderNoValue] = useState(workOrderNo || '');
+
+  // Keep badge in sync with prop
+  useEffect(() => {
+    setCurrentBadgeValue(badgeValue || '');
+  }, [badgeValue]);
 
   // Keep internal panelConfig in sync with incoming prop so option updates reflect
   useEffect(() => {
@@ -84,6 +96,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       setQuickOrderNoValue(storeValue);
     }
   }, [jsonStore.getQuickOrderNo()]);
+
+  // Sync workOrderNoValue with prop when it changes
+  useEffect(() => {
+    setWorkOrderNoValue(workOrderNo || '');
+  }, [workOrderNo]);
 
   // Create default values from panel config
   const createDefaultValues = useMemo(() => {
@@ -502,6 +519,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                      formData={getValues() || {}}
                      showStatus={showStatusIndicator}
                    />
+                  {!!currentBadgeValue && (
+                    <span className="px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[11px] font-semibold">
+                      {currentBadgeValue}
+                    </span>
+                  )}
                   {panelSubTitle && (
                     <span className="text-xs text-blue-600 font-medium">DB000023</span>
                   )}
@@ -569,6 +591,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 formData={getValues() || {}}
                 showStatus={showStatusIndicator}
               />
+              {!!currentBadgeValue && (
+                <span className="px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[11px] font-semibold">
+                  {currentBadgeValue}
+                </span>
+              )}
               {/* {panelSubTitle == "Order Details" && !!jsonStore.getQuickOrderNo?.() && (
                 <EditableBadge
                   // value={currentBadgeValue}
@@ -626,6 +653,47 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   </span>
                 );
               })()}
+
+              {panelSubTitle == "Work Order Details" && (
+                <Input 
+                  type="text" 
+                  value={workOrderNoValue} 
+                  className="text-xs text-blue-600 border px-3 py-1 rounded-lg cursor-pointer" 
+                  style={{width: '160px'}}
+                  onChange={(e) => setWorkOrderNoValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      workOrderNoCallback?.(workOrderNoValue.trim());
+                      e.currentTarget.blur();
+                    }
+                  }}
+                />
+              )}
+              {panelSubTitle == "Work Order Details" && (() => {
+                const status = workOrderStatus || "";
+                if (!status) {
+                  return null;
+                }
+                let statusClass = "bg-gray-100 text-gray-600 border border-gray-300";
+                let label = status;
+                if (status.toLowerCase() === "completed") {
+                  statusClass = "bg-green-100 text-green-600 border border-green-300";
+                } else if (status.toLowerCase() === "closed") {
+                  statusClass = "bg-gray-100 text-gray-600 border border-gray-300";
+                } else if (status.toLowerCase() === "in-progress") {
+                  statusClass = "bg-orange-100 text-orange-600 border border-orange-300";
+                } else if (status.toLowerCase() === "fresh") {
+                  statusClass = "bg-blue-100 text-blue-600 border border-blue-300";
+                }
+                return (
+                  <span
+                    className={`text-xs ${statusClass} font-semibold px-3 py-1 rounded-full cursor-pointer`}
+                  >
+                    {label}
+                  </span>
+                );
+              })()}
+
               {/* {panelSubTitle == "Billing Details" && (
                 <span
                   onClick={() => setSwitchModalOpen(true)}

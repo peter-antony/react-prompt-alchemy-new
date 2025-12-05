@@ -99,12 +99,12 @@ export function SmartGridPlusWithNestedRows({
           {/* Nested grid content */}
           {isExpanded && (
             <div className="bg-background border-b border-border/30">
-              {rowCount === 0 ? (
+              {/* {rowCount === 0 ? (
                 <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                   No nested records available
                 </div>
-              ) : (
-                <div className="p-3">
+              ) : ( */}
+                <div className="">
                   <SmartGridPlus
                     key={`nested-grid-${rowIndex}-${nestedData.length}`}
                     columns={nestedSectionConfig.columns}
@@ -137,7 +137,7 @@ export function SmartGridPlusWithNestedRows({
                       : undefined}
                   />
                 </div>
-              )}
+              {/* )} */}
             </div>
           )}
         </div>

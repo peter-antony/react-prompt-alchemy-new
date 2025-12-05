@@ -56,6 +56,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const { workOrder, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm } = useWorkOrderStore();
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
+  const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+  const isWorkShopLabel = useMemo(() => {
+    if (isWorkShop === 1) return "Workshop";
+    if (isWorkShop === 0) return "Mobile";
+    return "";
+  }, [isWorkShop]);
 
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
     let timer: any;
@@ -2026,6 +2032,21 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                           panelTitle="Work Order Details"
                           panelConfig={workOrderPanelConfig(orderType)}
                           initialData={workOrder?.Header}
+                          panelSubTitle="Work Order Details"
+                          workOrderNo={workOrder?.Header?.WorkorderNo || workOrderNo || ''}
+                          workOrderStatus={workOrder?.Header?.Status || ''}
+                          workOrderNoCallback={(value) => {
+                            // Update workOrderNo in the store
+                            console.log("===============", value);
+                            useWorkOrderStore.getState().updateHeader('WorkorderNo', value);
+                            
+                            // Update URL with new ID and trigger page refresh
+                            if (value && value.trim() !== '') {
+                              setSearchParams({ id: value.trim() });
+                              // The useEffect will automatically trigger when workOrderNo changes
+                              // No need for manual refresh as the useEffect handles data fetching
+                            }
+                          }}
                         />
                       </div>
 
@@ -2096,6 +2117,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                               panelConfig={locationPanelConfig}
                               collapsible={true}
                               initialData={workOrderData?.Location || {}}
+                              badgeValue={isWorkShopLabel}
                             />
                             {/* Location Details Action Buttons - Only show when operation is selected */}
                             {isWorkShop === 1 && (
@@ -2174,6 +2196,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                                   }
                                   panelConfig={SchedulePanelConfig}
                                   collapsible={true}
+                                  badgeValue={isWorkShopLabel}
                                   initialData={workOrderData?.Location || {}}
                                   onDataChange={(updatedSchedule) => {
                                     useWorkOrderStore.setState((state) => ({
