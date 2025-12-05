@@ -18,7 +18,7 @@ interface WorkOrderState {
   searchWorkOrder: (workOrderNo: string | null) => Promise<void>;
   updateHeader: (key: string, value: any) => void;
   updateHeaderBulk: (payload: WorkOrderDetail) => void;
-  saveWorkOrder: () => Promise<{ success: boolean; message: string }>;
+  saveWorkOrder: () => Promise<{ success: boolean; message: string; workorderNo?: string }>;
 
   resetWorkOrderForm: () => Promise<void>;
   resetStatus: () => void;
@@ -149,6 +149,10 @@ saveWorkOrder: async () => {
     const parsedResponse = JSON.parse(result?.data.ResponseData || "{}");
     const resourceStatus = (result as any)?.data?.IsSuccess;
     console.log("parsedResponse ===", parsedResponse);
+    
+    // Extract workorderNo from the response
+    const workorderNo = parsedResponse?.Header?.WorkorderNo || null;
+    console.log("workorderNo=======", workorderNo);
     if (resourceStatus) {
       toast({
         title: "✅ Work Order Created Successfully",
@@ -176,7 +180,7 @@ saveWorkOrder: async () => {
       set({ workOrder: null });
     }
 
-    return { success, message };
+    return { success, message, workorderNo: workorderNo || undefined };
   } catch (err: any) {
     const message = err?.message ?? "Save failed";
     set({

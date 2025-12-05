@@ -38,9 +38,9 @@ export type WorkOrderFormHandle = {
 const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     const { toast } = useToast();
   const formRef = useRef<DynamicPanelRef>(null);
-  const [searchParams] = useSearchParams(); // Import useSearchParams
+  const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
@@ -58,7 +58,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const { workOrder,isSuccess,error,apiMessage, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm,resetStatus } = useWorkOrderStore();
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
-  const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+  // const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const isWorkShopLabel = useMemo(() => {
     if (isWorkShop === 1) return "Workshop";
     if (isWorkShop === 0) return "Mobile";
@@ -100,6 +100,19 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     console.log("store after update:", useWorkOrderStore.getState().workOrder);
   }, 50);
   console.log(workOrder)
+  
+  // Save work order and handle response
+  const result = await saveWorkOrder();
+  
+  // If save is successful and we have a workorderNo, update URL and refresh
+  console.log("result=======", result);
+  console.log("result=======", result.workorderNo);
+  if (result.workorderNo) {
+    console.log("if=====");
+    setSearchParams({ id: result.workorderNo });
+    // The useEffect will automatically trigger when workOrderNo changes
+    // No need for manual refresh as the useEffect handles data fetching
+  }
   saveWorkOrder();
 };
 
