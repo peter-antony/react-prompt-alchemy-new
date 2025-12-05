@@ -39,7 +39,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
   set({ loading: true, error: null, apiMessage: null, isSuccess: false });
 
   const result = await workOrderService.searchWorkOrder(workOrderNo);
-
+  {console.log(result , "result")}
   set({
     workOrder: result.data,
     loading: false,
@@ -49,7 +49,9 @@ export const useWorkOrderStore = create<WorkOrderState>()(
 },
 
 
-      updateHeaderBulk: (payload) =>
+     updateHeaderBulk: (payload) =>{
+      console.log("123",payload.Header?.Hazardous),
+      console.log(payload),
   set((state) => ({
     workOrder: state.workOrder
       ? {
@@ -57,6 +59,10 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           Header: {
             ...state.workOrder.Header,
             ...payload.Header,
+            Hazardous:
+              payload.Header?.Hazardous == true
+                ? '1'
+                : '0',
           },
           WorkorderSchedule: {
             ...state.workOrder.WorkorderSchedule,
@@ -65,7 +71,8 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           OperationDetails: payload.OperationDetails,
         }
       : null,
-  })),
+  }))},
+
 
 
       // saveWorkOrder: async () => {
@@ -223,7 +230,9 @@ saveWorkOrder: async () => {
                 ...state.workOrder,
                 Header: {
                   ...state.workOrder.Header,
+                 
                   [key]: value,
+
                   ModeFlag: "Update",
                 },
               }

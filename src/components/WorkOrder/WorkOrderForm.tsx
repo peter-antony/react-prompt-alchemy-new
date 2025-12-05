@@ -68,6 +68,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
  const [uiHeader, setUiHeader] = useState<any>({});
   const [uiLocation, setUiLocation] =useState<any>({});
  const [uiSchedule, setUiSchedule] = useState<any>({});
+ const [selectedProduct, setSelectedProduct] = useState<string>("");
 
 
 
@@ -106,29 +107,44 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
   }
 
-  setTimeout(() => {
+  /*setTimeout(() => {
     console.log("store after update:", useWorkOrderStore.getState().workOrder);
-  }, 50);
-  console.log(workOrder)
+  }, 50);*/
+  console.log("mk",workOrder);
+  console.log("<<>>",workOrder.Header?.Hazardous);
+  if(workOrder.Header?.Hazardous){
+    workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+  }
+  else{
+    workOrder.Header.Hazardous = "0";
+  }
+  
+  
+  console.log("Payload",workOrder)
   
   // Save work order and handle response
-  const result = await saveWorkOrder();
+  // const result = await
+    setTimeout(() => {
+     saveWorkOrder(); 
+  }, 500);
   
   // If save is successful and we have a workorderNo, update URL and refresh
-  console.log("result=======", result);
-  console.log("result=======", result.workorderNo);
-  if (result.workorderNo) {
-    console.log("if=====");
-    setSearchParams({ id: result.workorderNo });
-    // The useEffect will automatically trigger when workOrderNo changes
-    // No need for manual refresh as the useEffect handles data fetching
-  }
-  saveWorkOrder();
+  // console.log("result=======", result);
+  // console.log("result=======", result.workorderNo);
+  // if (result.workorderNo) {
+  //   console.log("if=====");
+  //   setSearchParams({ id: result.workorderNo });
+  //   // The useEffect will automatically trigger when workOrderNo changes
+  //   // No need for manual refresh as the useEffect handles data fetching
+  // }
+  // console.log()
+  // saveWorkOrder();
   setUiHeader({});
     setUiLocation({});
     setUiSchedule({});
 
-  console.clear()
+
+  console.log(locationUI)
 
 };
 
@@ -255,7 +271,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     [
       "Origin",
-      "OutboardDest",
+      "OutBoundDestination",
       "RUForward",
       "ReturnDest",
       "RUReturn",
@@ -548,6 +564,14 @@ value:
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
+      events: {
+    onChange: (value) => {
+      console.log("Product changed:", value);
+      setSelectedProduct(value?.value || "");
+      // Clear UNCODE when product changes
+      setUiHeader(prev => ({ ...prev, UNCODE: "" }));
+    }
+  },
     },
 
     UNCODE: {
@@ -564,7 +588,8 @@ value:
     : uiHeader?.UNCODE || "",
 
       order: 9,
-      fetchOptions: fetchMaster("UN Code Init"),
+      // fetchOptions: fetchMaster("UN Code Init"),
+      fetchOptions: fetchMaster("UN Code Init", { productId: selectedProduct }),
     },
 
     LoadType: {
@@ -575,7 +600,7 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.LoadType?.IsLoaded === "1" ? "1" : "0",
+      value: workOrder?.Header?.LoadType?.IsLoaded == "1" ? "1" : "0",
       options: [
         { label: "Loaded", value: "1" },
         { label: "Empty", value: "0" },
@@ -936,8 +961,8 @@ value:
         order: 1,
         fetchOptions: fetchMaster("Location Init"),
       },
-      OutboardDest: {
-        id: "OutboardDest",
+      OutBoundDestination: {
+        id: "OutBoundDestination",
         label: "Outboard Destination",
         fieldType: "lazyselect",
         width: "six",
@@ -967,7 +992,7 @@ value:
         label: "Return Destination",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.ReturnDestinationID} || ${workOrder?.WorkorderSchedule?.ReturnDestinationDescription}`,
+        value: `${workOrder?.WorkorderSchedule?.ReturnDestID} || ${workOrder?.WorkorderSchedule?.ReturnDestDescription}`,
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
@@ -994,7 +1019,7 @@ value:
         label: "PlaceOfOperation",
         fieldType: "lazyselect",
         width: "four",
-        value: `${workOrder?.WorkorderSchedule?.ReturnDestinationID} || ${workOrder?.WorkorderSchedule?.ReturnDestinationDescription}`,
+        value: `${workOrder?.WorkorderSchedule?.PlaceOfOperationID} || ${workOrder?.WorkorderSchedule?.PlaceOfOperationDescription}`,
 
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
@@ -1015,7 +1040,7 @@ value:
         order: 2,
         fetchOptions: fetchMaster("Location Init"),
       },
-      ExpectedDate: {
+      MobileExpectedDate: {
         id: "ExpectedDate",
         label: "Expected Date",
         fieldType: "date",
@@ -1026,8 +1051,8 @@ value:
         editable: true,
         order: 3,
       },
-      ActualDate: {
-        id: "ActualDate",
+      MobileActualDate: {
+        id: "MobileActualDate",
         label: "Actual Date",
         fieldType: "date",
         width: "four",
