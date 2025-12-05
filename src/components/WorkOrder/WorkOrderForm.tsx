@@ -317,7 +317,8 @@ if(isSuccess){
    */
   const fetchMaster = (
     messageType: string,
-    additionalFilter?: { FilterName: string; FilterValue: string }[]
+    // additionalFilter?: { FilterName: string; FilterValue: string }[]
+    extraParams?: Record<string, any>
   ) => {
     return async ({ searchTerm, offset, limit }) => {
       try {
@@ -326,7 +327,7 @@ if(isSuccess){
           searchTerm: searchTerm || "",
           offset,
           limit,
-          AdditionalFilter: additionalFilter || [], // <-- FIXED HERE
+          ...(extraParams || {}),
         });
 
         const rr: any = response?.data;
@@ -396,9 +397,7 @@ if(isSuccess){
       value: workOrderNo ? `${workOrder?.Header?.SupplierContractID} || ${workOrder?.Header?.SupplierContractDescription}` : " ",
 
       order: 3,
-      fetchOptions: fetchMaster("Contract Init", [
-        { FilterName: "Buy", FilterValue: "Buy" },
-      ]),
+      fetchOptions: fetchMaster("Contract Init", { OrderType: "Buy" }),
       // events: {
       //   onChange: (val) => {
       //     const updateHeader = useWorkOrderStore.getState().updateHeader;
@@ -437,9 +436,7 @@ if(isSuccess){
       editable: true,
       value: workOrderNo ?  `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}` : "",
       order: 4,
-      fetchOptions: fetchMaster("Contract Init", [
-        { FilterName: "ContractType", FilterValue: "Sell" },
-      ]),
+      fetchOptions: fetchMaster("Contract Init", { OrderType: "Sell" }),
       // events: {
       //   onChange: (val) => {
       //     const updateHeader = useWorkOrderStore.getState().updateHeader;
