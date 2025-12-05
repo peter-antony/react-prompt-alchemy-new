@@ -39,9 +39,9 @@ export const workOrderService = {
   getUserContext: () => {
     try {
       const selectedContext = localStorage.getItem('selectedUserContext');
-      
+
       if (selectedContext) {
-        const parsedContext = JSON.parse(selectedContext);      
+        const parsedContext = JSON.parse(selectedContext);
         return {
           ouId: parsedContext.ouId || 4,
           roleName: parsedContext.roleName || "RAMCOROLE",
@@ -52,14 +52,14 @@ export const workOrderService = {
     } catch (error) {
       console.error('Error retrieving user context from localStorage:', error);
     }
-    
+
     // Default values if nothing is stored
     const defaultContext = {
-      ouId: 4, 
+      ouId: 4,
       roleName: "RAMCOROLE",
       ouDescription: "Default OU"
     };
-    
+
     return defaultContext;
   },
 
@@ -120,7 +120,7 @@ export const workOrderService = {
     return response.data;
   },
 
-  
+
   // Work Order Hub Search API, fetching grid data
   getWorkOrdersForHub: async (params?: any): Promise<any> => {
     const userContext = getUserContext();
@@ -265,6 +265,35 @@ export const workOrderService = {
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // Get billing summary for work order
+  getBillingSummary: async (
+    workOrderNo: string
+  ): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Get Billing Summary"
+      },
+      SearchCriteria: {
+        WorkOrderNo: workOrderNo
+      }
+    });
+
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.GET_BILLING_SUMMARY,
       requestBody
     );
     return response.data;

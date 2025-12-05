@@ -82,7 +82,7 @@ const CollapsibleBillingPanel: React.FC<CollapsibleBillingPanelProps> = ({ title
 
 const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const [contractType, setContractType] = useState<"full" | "dry">("full");
-    const [isAllExpanded, setIsAllExpanded] = useState(true);
+    const [isAllExpanded, setIsAllExpanded] = useState(false);
     const [showBillingSummary, setShowBillingSummary] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false); // dummy state to track confirm/amend for item service panel
 
@@ -103,89 +103,39 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     // Billing Summary states
     const [supplierSearchTerm, setSupplierSearchTerm] = useState("");
     const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+    const [billingSummaryData, setBillingSummaryData] = useState<any>(null);
+    const [loadingBillingSummary, setLoadingBillingSummary] = useState(false);
 
-    // Mock data for Billing Summary Grids
+    // Billing Summary Grid Columns
     const supplierBillingColumns: GridColumnConfig[] = [
         { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
-        { key: "Supplier", label: "Supplier", width: 200, type: "Text" },
-        { key: "Status", label: "Status", width: 120, type: "Badge" },
-        { key: "TotalItems", label: "Total Items", width: 150, type: "Text" },
+        { key: "SupplierID", label: "Supplier ID", width: 150, type: "Text" },
+        { key: "SupplierDescription", label: "Supplier", width: 200, type: "Text" },
+        { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
+        { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
+        { key: "NoOfLines", label: "No. of Lines", width: 120, type: "Text" },
         { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
     ];
 
     const customerBillingColumns: GridColumnConfig[] = [
         { key: "DraftBillNo", label: "Draft Bill No.", width: 150, type: "Text" },
-        { key: "Customer", label: "Customer", width: 200, type: "Text" },
-        { key: "Status", label: "Status", width: 120, type: "Badge" },
-        { key: "TotalItems", label: "Total Items", width: 150, type: "Text" },
+        { key: "CustomerID", label: "Customer ID", width: 150, type: "Text" },
+        { key: "CustomerDescription", label: "Customer", width: 200, type: "Text" },
+        { key: "TariffType", label: "Tariff Type", width: 200, type: "Text" },
+        { key: "DraftBillStatus", label: "Status", width: 120, type: "Badge" },
+        { key: "NoOfLines", label: "No. of Lines", width: 120, type: "Text" },
         { key: "TotalAmount", label: "Total Amount", width: 150, type: "Currency" },
     ];
 
-    const supplierBillingData = [
-        {
-            DraftBillNo: "DRB000348",
-            Supplier: "ABC Supplier",
-            Status: "Draft",
-            TotalItems: "Rate Per Wagon by Distance +3",
-            TotalAmount: 1200.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Supplier: "ABC Supplier",
-            Status: "Submitted",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 1200.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Supplier: "UIO Supplier",
-            Status: "Draft",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 300.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Supplier: "IOT Supplier",
-            Status: "Submitted",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 765.00
-        },
-    ];
+    // Get data from API response
+    const supplierBillingData = billingSummaryData?.SupplierBilling?.Entries || [];
+    const customerBillingData = billingSummaryData?.CustomerBilling?.Entries || [];
 
-    const customerBillingData = [
-        {
-            DraftBillNo: "DRB000348",
-            Customer: "ABC Customer",
-            Status: "Draft",
-            TotalItems: "Rate Per Wagon by Distance +3",
-            TotalAmount: 1200.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Customer: "ABC Customer",
-            Status: "Submitted",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 1200.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Customer: "UIO Customer",
-            Status: "Draft",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 300.00
-        },
-        {
-            DraftBillNo: "DRB000348",
-            Customer: "IOT Customer",
-            Status: "Submitted",
-            TotalItems: "Rate Per Wagon by Distance +4",
-            TotalAmount: 765.00
-        },
-    ];
-
-    // Calculate total costs
-    const supplierTotalCost = supplierBillingData.reduce((sum, item) => sum + item.TotalAmount, 0);
-    const customerTotalCost = customerBillingData.reduce((sum, item) => sum + item.TotalAmount, 0);
+    // Get total costs and counts directly from API
+    const supplierTotalCost = billingSummaryData?.SupplierBilling?.TotalCost || 0;
+    const customerTotalCost = billingSummaryData?.CustomerBilling?.TotalCost || 0;
+    const supplierTotalCount = billingSummaryData?.SupplierBilling?.TotalCounts || 0;
+    const customerTotalCount = billingSummaryData?.CustomerBilling?.TotalCounts || 0;
 
     const gridColumns: GridColumnConfig[] = [
         { key: "ItemName", label: "Item Name", width: 150, type: "Text" },
@@ -1306,9 +1256,37 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         <button
                             className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100"
                             aria-label="Document"
-                            onClick={() => {
-                                setShowBillingSummary(true)
+                            onClick={async () => {
+                                setShowBillingSummary(true);
                                 console.log("Billing Summary clicked");
+
+                                // Fetch billing summary data
+                                if (workOrderNumber) {
+                                    setLoadingBillingSummary(true);
+                                    try {
+                                        const response = await workOrderService.getBillingSummary(workOrderNumber);
+                                        const parsedData = response?.data?.ResponseData
+                                            ? JSON.parse(response.data.ResponseData)
+                                            : response?.data;
+
+                                        console.log("Billing Summary Response:", parsedData);
+                                        setBillingSummaryData(parsedData);
+
+                                        // toast({
+                                        //     title: "Success",
+                                        //     description: "Billing summary loaded successfully",
+                                        // });
+                                    } catch (error) {
+                                        console.error("Error fetching billing summary:", error);
+                                        toast({
+                                            title: "Error",
+                                            description: "Failed to load billing summary",
+                                            variant: "destructive",
+                                        });
+                                    } finally {
+                                        setLoadingBillingSummary(false);
+                                    }
+                                }
                             }}
                         >
                             <FileChartColumn className="w-5 h-5 text-gray-500 cursor-pointer" />
@@ -2268,7 +2246,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                             <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-semibold text-gray-900">Total Supplier Billing</h3>
                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                                    {supplierBillingData.length}
+                                    {supplierTotalCount}
                                 </Badge>
                             </div>
                             <div className="flex items-center gap-4">
@@ -2299,9 +2277,9 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 hideToolbar={true}
                                 showDefaultConfigurableButton={false}
                                 gridTitle=""
-                                recordCount={supplierBillingData.length}
+                                recordCount={supplierTotalCount}
                                 showCreateButton={false}
-                                clientSideSearch={false}
+                                clientSideSearch={true}
                                 externalSearchQuery={supplierSearchTerm}
                                 showSubHeaders={false}
                                 hideAdvancedFilter={true}
@@ -2319,7 +2297,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                             <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-semibold text-gray-900">Total Customer Billing</h3>
                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                                    {customerBillingData.length}
+                                    {customerTotalCount}
                                 </Badge>
                             </div>
                             <div className="flex items-center gap-4">
@@ -2350,9 +2328,9 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 hideToolbar={true}
                                 showDefaultConfigurableButton={false}
                                 gridTitle=""
-                                recordCount={customerBillingData.length}
+                                recordCount={customerTotalCount}
                                 showCreateButton={false}
-                                clientSideSearch={false}
+                                clientSideSearch={true}
                                 externalSearchQuery={customerSearchTerm}
                                 showSubHeaders={false}
                                 hideAdvancedFilter={true}
@@ -2373,8 +2351,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 operationCode={selectedCode?.OrderID ? `${selectedCode.OrderID}` : "Operation"}
                 // selectedCode={selectedCode?.CodeNo}
                 onCodeSelect={(code) => {
-                console.log("Code selected:", code);
-                // Handle code selection if needed
+                    console.log("Code selected:", code);
+                    // Handle code selection if needed
                 }}
             />
         </div>
