@@ -700,7 +700,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 }}
                 tabIndex={tabIndex}
               />
-              <span className="text-sm font-medium text-foreground">{config.label}</span>
+              {/* <span className="text-sm font-medium text-foreground">{config.label}</span> */}
             </div>
           )}
         />

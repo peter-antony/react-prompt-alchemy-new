@@ -650,7 +650,7 @@ if(isSuccess){
       editable: true,
       value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : " ",
       order: 17,
-      fetchOptions: fetchMaster("Cluster Init"),
+      fetchOptions: fetchMaster("Work Order Invoice to Init"),
       onChange: (newValue) => {
 },
 
