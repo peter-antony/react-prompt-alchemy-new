@@ -64,61 +64,92 @@ export const workOrderService = {
   },
 
   // This calls /workorder/hubselection and parses ResponseData into JSON
-  searchWorkOrder: async (
-    payload: WorkOrderSelectionPayload
-  ): Promise<WorkOrderSelectionResult> => {
-    const requestBody = {
-      RequestData: JSON.stringify(payload),
-    };
+ searchWorkOrder: async (
+  workOrderNo: string | null
+): Promise<WorkOrderSelectionResult> => {
 
-    const response = await apiClient.post(
-      API_ENDPOINTS.WORK_ORDER.SELECTION,
-      requestBody
-    );
+  if (!workOrderNo) {
+    return { data: null, message: "", isSuccess: false };
+  }
 
-    const raw = response.data;
+  const userContext = getUserContext();
 
-    // Handle both shapes:
-    // 1) { ResponseData, Message, IsSuccess }
-    // 2) { data: { ResponseData, Message, IsSuccess }, message? }
-    const responseDataString: string | undefined =
-      raw?.ResponseData ?? raw?.data?.ResponseData;
+  const payload = {
+    context: {
+      MessageID: "12345",
+      MessageType: "Work Order Selection",
+      OUID: userContext.ouId,
+      Role: userContext.roleName,
+      UserID: "ramcouser",
+    },
+    SearchCriteria: {
+      WorkOrderNo: workOrderNo,
+      AdditionalFilter: [
+        {
+          FilterName: "ServiceType",
+          FilterValue: "Standard",
+        },
+      ],
+    },
+  };
 
-    const message: string =
-      raw?.Message ?? raw?.data?.Message ?? raw?.message ?? "";
+  const requestBody = {
+    RequestData: JSON.stringify(payload),
+  };
 
-    const isSuccess: boolean =
-      raw?.IsSuccess ?? raw?.data?.IsSuccess ?? false;
+  const response = await apiClient.post(
+    API_ENDPOINTS.WORK_ORDER.SELECTION,
+    requestBody
+  );
 
-    let parsed: WorkOrderDetail | null = null;
+  const raw = response.data;
+  const responseDataString = raw?.ResponseData ?? raw?.data?.ResponseData;
+  const message = raw?.Message ?? raw?.data?.Message ?? raw?.message ?? "";
+  const isSuccess = raw?.IsSuccess ?? raw?.data?.IsSuccess ?? false;
 
-    if (responseDataString && typeof responseDataString === "string") {
-      try {
-        parsed = JSON.parse(responseDataString) as WorkOrderDetail;
-      } catch (err) {
-        console.error("Failed to parse WorkOrder ResponseData:", err);
-        parsed = null;
-      }
+  let parsed: WorkOrderDetail | null = null;
+  if (responseDataString && typeof responseDataString === "string") {
+    try {
+      parsed = JSON.parse(responseDataString);
+    } catch (err) {
+      console.error("❌ Failed to parse WorkOrder ResponseData:", err);
     }
+  }
 
-    return {
-      data: parsed,
-      message,
-      isSuccess,
-    };
-  },
+  return {
+    data: parsed,
+    message,
+    isSuccess,
+  };
+},
 
-  saveWorkOrder: async (payload: any): Promise<any> => {
-    const requestBody = {
-      RequestData: JSON.stringify(payload),
-    };
 
-    const response = await apiClient.post(
-      API_ENDPOINTS.WORK_ORDER.SAVE,
-      requestBody
-    );
-    return response.data;
-  },
+ saveWorkOrder: async (workOrder: any): Promise<any> => {
+  const userContext = getUserContext();
+
+  const payload = {
+    context: {
+      UserID: "ramcouser",
+      Role: userContext.roleName,
+      OUID: userContext.ouId,
+      MessageID: "12345",
+      MessageType: "WorkOrder-Save",
+    },
+    RequestPayload: workOrder,
+  };
+
+  const requestBody = {
+    RequestData: JSON.stringify(payload),
+  };
+
+  const response = await apiClient.post(
+    API_ENDPOINTS.WORK_ORDER.SAVE,
+    requestBody
+  );
+
+  return response.data;
+},
+  
 
 
   // Work Order Hub Search API, fetching grid data

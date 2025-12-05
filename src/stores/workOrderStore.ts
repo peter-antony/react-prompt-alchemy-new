@@ -7,6 +7,7 @@ import {
   WorkOrderDetail,
 } from "@/api/services/workOrderService";
 import { workerData } from "worker_threads";
+import { toast } from '@/hooks/use-toast';
 
 interface WorkOrderState {
   workOrder: WorkOrderDetail | null;
@@ -14,11 +15,14 @@ interface WorkOrderState {
   error: string | null;
   apiMessage: string | null;
   isSuccess: boolean;
-  searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
+  searchWorkOrder: (workOrderNo: string | null) => Promise<void>;
   updateHeader: (key: string, value: any) => void;
   updateHeaderBulk: (payload: WorkOrderDetail) => void;
-  saveWorkOrder: () => Promise<void>;  
+  saveWorkOrder: () => Promise<{ success: boolean; message: string }>;
+
   resetWorkOrderForm: () => Promise<void>;
+  resetStatus: () => void;
+
 }
 
 export const useWorkOrderStore = create<WorkOrderState>()(
@@ -31,28 +35,19 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       isSuccess: false,
 
       /** 🔍 Fetch Work Order */
-      searchWorkOrder: async (payload) => {
-        set({ loading: true, error: null, apiMessage: null, isSuccess: false });
+     searchWorkOrder: async (workOrderNo) => {
+  set({ loading: true, error: null, apiMessage: null, isSuccess: false });
 
-        try {
-          const result = await workOrderService.searchWorkOrder(payload);
+  const result = await workOrderService.searchWorkOrder(workOrderNo);
 
-          set({
-            workOrder: result.data,
-            loading: false,
-            apiMessage: result.message,
-            isSuccess: result.isSuccess,
-          });
-        } catch (err: any) {
-          console.error("WorkOrder search failed:", err);
-          set({
-            loading: false,
-            error: err?.message ?? "Failed to load Work Order",
-            apiMessage: null,
-            isSuccess: false,
-          });
-        }
-      },
+  set({
+    workOrder: result.data,
+    loading: false,
+    apiMessage: result.message,
+    isSuccess: result.isSuccess,
+  });
+},
+
 
       updateHeaderBulk: (payload) =>
   set((state) => ({
@@ -73,86 +68,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
   })),
 
 
-      saveWorkOrder: async () => {
-        set({ loading: true, error: null, apiMessage: null });
-
-        const state = useWorkOrderStore.getState();
-        const workOrder = state.workOrder;
-
-        if (!workOrder) {
-          set({ loading: false, error: "No Work Order found to save" });
-          return;
-        }
-
-        const payload = {
-          context: {
-            UserID: "ramcouser",
-            Role: "ramcorole",
-            OUID: 4,
-            MessageID: "12345",
-            MessageType: "WorkOrder-Save",
-          },
-          RequestPayload: workOrder,
-        };
-
-        try {
-          const result = await workOrderService.saveWorkOrder(payload);
-
-          // save success
-          const success = result?.IsSuccess ?? true;
-          const message = result?.Message ?? "Save Completed";
-
-          set({
-            apiMessage: message,
-            isSuccess: success,
-            loading: false,
-          });
-       
-          if (success) {
-            // 1️⃣ RESET STORE
-            set({ workOrder: null });
-
-            // 2️⃣ CALL GET / SEARCH AGAIN (REFRESH)
-            const refreshPayload = {
-              context: {
-                MessageID: "12345",
-                MessageType: "WorkOrder-Save",
-                OUID: 4,
-                Role: "ramcorole",
-                UserID: "ramcouser",
-              },
-              SearchCriteria: {
-                WorkOrderNo: workOrder.Header.WorkorderNo,
-                AdditionalFilter: [],
-              },
-            };
-
-            await state.searchWorkOrder(refreshPayload);
-          }
-        } catch (err: any) {
-          console.error("WorkOrder save failed:", err);
-          set({
-            loading: false,
-            error: err?.message ?? "Save failed",
-            isSuccess: false,
-          });
-        }
-      },
-
-
-       resetWorkOrderForm: () =>
-  set(state => ({
-    workOrder: state.workOrder
-      ? {
-          ...state.workOrder,
-          Header: {},
-          WorkorderSchedule: {},
-          OperationDetails: [],
-        }
-      : null,
-  })),
-
-      //     saveWorkOrder: async () => {
+      // saveWorkOrder: async () => {
       //   set({ loading: true, error: null, apiMessage: null });
 
       //   const state = useWorkOrderStore.getState();
@@ -177,11 +93,37 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       //   try {
       //     const result = await workOrderService.saveWorkOrder(payload);
 
+      //     // save success
+      //     const success = result?.IsSuccess ?? true;
+      //     const message = result?.Message ?? "Save Completed";
+
       //     set({
+      //       apiMessage: message,
+      //       isSuccess: success,
       //       loading: false,
-      //       apiMessage: result?.Message ?? "Save Completed",
-      //       isSuccess: result?.IsSuccess ?? true,
       //     });
+       
+      //     if (success) {
+      //       // 1️⃣ RESET STORE
+      //       set({ workOrder: null });
+
+      //       // 2️⃣ CALL GET / SEARCH AGAIN (REFRESH)
+      //       const refreshPayload = {
+      //         context: {
+      //           MessageID: "12345",
+      //           MessageType: "WorkOrder-Save",
+      //           OUID: 4,
+      //           Role: "ramcorole",
+      //           UserID: "ramcouser",
+      //         },
+      //         SearchCriteria: {
+      //           WorkOrderNo: workOrder.Header.WorkorderNo,
+      //           AdditionalFilter: [],
+      //         },
+      //       };
+
+      //       // await state.searchWorkOrder(refreshPayload);
+      //     }
       //   } catch (err: any) {
       //     console.error("WorkOrder save failed:", err);
       //     set({
@@ -192,17 +134,84 @@ export const useWorkOrderStore = create<WorkOrderState>()(
       //   }
       // },
 
-      // updateHeaderField: (field, value) =>
-      //   set((state) => ({
-      //     workOrder: {
-      //       ...state.workOrder!,
-      //       Header: {
-      //         ...state.workOrder!.Header,
-      //         [field]: value,
-      //         ModeFlag: "Update",
-      //       },
-      //     },
-      //   })),
+
+saveWorkOrder: async () => {
+  set({ loading: true, error: null, apiMessage: null });
+
+  const workOrder = useWorkOrderStore.getState().workOrder; 
+  try {
+    const result = await workOrderService.saveWorkOrder(workOrder);
+    console.log("result ===========", result);
+    // 🔥 Correct handling of backend validation
+    const success = result && result.IsSuccess === true; 
+    const message = result?.Message ?? "Unknown response";
+
+    const parsedResponse = JSON.parse(result?.data.ResponseData || "{}");
+    const resourceStatus = (result as any)?.data?.IsSuccess;
+    console.log("parsedResponse ===", parsedResponse);
+    if (resourceStatus) {
+      toast({
+        title: "✅ Work Order Created Successfully",
+        description: (result as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+        variant: "default",
+      });
+    } else {
+      console.log("error as any ===", (result as any)?.data?.Message);
+      toast({
+        title: "⚠️ Save Failed",
+        description: (result as any)?.data?.Message || "Failed to save changes.",
+        variant: "destructive",
+      });
+
+    }
+
+    set({
+      apiMessage: message,
+      isSuccess: success,
+      loading: false,
+    });
+
+    // 🔥 Only clear data if true success
+    if (success) {
+      set({ workOrder: null });
+    }
+
+    return { success, message };
+  } catch (err: any) {
+    const message = err?.message ?? "Save failed";
+    set({
+      loading: false,
+      error: message,
+      isSuccess: false,
+    });
+
+    return { success: false, message };
+  }
+},
+
+
+
+
+       resetWorkOrderForm: () =>
+  set(state => ({
+    workOrder: state.workOrder
+      ? {
+          ...state.workOrder,
+          Header: {},
+          WorkorderSchedule: {},
+          OperationDetails: [],
+        }
+      : null,
+  })),
+
+     resetStatus: () =>
+  set({
+    loading: false,
+    error: null,
+    apiMessage: null,
+    isSuccess: null,
+  }),
+
       updateHeader: (key: string, value: any) =>
         set((state) => {
           const updated = state.workOrder

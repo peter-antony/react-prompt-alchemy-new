@@ -24,6 +24,7 @@ import BillingDetails from "./BillingDetails";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom"; // Import useSearchParams for URL search parameters
 import CodeInformationDrawer from "./CodeInformationDrawer";
+import { useNavigate } from 'react-router-dom';
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -35,10 +36,11 @@ export type WorkOrderFormHandle = {
  * Component
  * ---------------------------------------------------*/
 const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
+    const { toast } = useToast();
   const formRef = useRef<DynamicPanelRef>(null);
   const [searchParams] = useSearchParams(); // Import useSearchParams
   const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
-
+  const navigate = useNavigate();
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
@@ -53,7 +55,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const workOrderPanelRef = useRef<DynamicPanelRef>(null);
-  const { workOrder, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm } = useWorkOrderStore();
+  const { workOrder,isSuccess,error,apiMessage, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm,resetStatus } = useWorkOrderStore();
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
   const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
@@ -71,7 +73,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
   };
 
- const handleGetFormValues = async () => {
+  const handleGetFormValues = async () => {
   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
@@ -87,11 +89,38 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   };
 
   useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
-  console.clear()
-  console.log("finalPayload",finalPayload)
-  console.log("store after update:", useWorkOrderStore.getState().workOrder);
-  saveWorkOrder();
+  
+ console.clear();
+ console.log("finalPayload",finalPayload)
+  console.log("store",workOrder)
+ saveWorkOrder(); // <-- returns result
+
+
+
 };
+
+
+//  const handleGetFormValues = async () => {
+//   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
+//   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
+//   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
+
+//   const headerBackend = formatHeaderForBackend(headerUI);
+//   const locationBackend = formatLocationForBackend(locationUI);
+//   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
+
+//   const finalPayload = {
+//     Header: headerBackend,
+//     WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+//     OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
+//   };
+
+//   useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
+//   console.clear()
+//   console.log("finalPayload",finalPayload)
+//   console.log("store after update:", useWorkOrderStore.getState().workOrder);
+//   saveWorkOrder();
+// };
 
 
   // const handleGetFormValues = () => {
@@ -214,6 +243,17 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
   //actionSlice from store
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
+ useEffect(() => {
+  console.log("state changed -->", isSuccess, apiMessage);
+  console.log("state changed -->", isSuccess, apiMessage);
+
+}, [isSuccess, apiMessage]);
+
+useEffect(()=>{
+if(isSuccess){
+  searchWorkOrder(workOrderNo)
+}
+},[saveWorkOrder])
 
   useEffect(() => {
     // Fetch work order data when workOrderNo changes
@@ -221,29 +261,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     resetWorkOrderForm();
     return;                
   } 
+  if(workOrderNo){
+     searchWorkOrder(workOrderNo);  
+  }
   
-    if (workOrderNo) {
-      const payload = {
-        context: {
-          MessageID: "12345",
-          MessageType: "Work Order Selection",
-          OUID: 4,
-          Role: "ramcorole",
-          UserID: "ramcouser",
-        },
-        SearchCriteria: {
-          WorkOrderNo: workOrderNo,
-          AdditionalFilter: [
-            {
-              FilterName: "ServiceType",
-              FilterValue: "Standard",
-            },
-          ],
-        },
-      };
-
-      searchWorkOrder(payload);
-    }
   }, [workOrderNo]);
 
   useEffect(() => {
@@ -334,7 +355,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.EquipmentType,
+      value:workOrderNo ?  workOrder?.Header?.EquipmentType : "Wagon",
       options: [
         { label: "Wagon", value: "Wagon" },
         { label: "Container", value: "Container" },
@@ -476,20 +497,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-
-      //     if (val?.value?.includes(" || ")) {
-      //       const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-      //       updateHeader("ProductID", id);
-      //       updateHeader("ProductDescription", desc);
-      //       updateHeader("product", `${id} || ${desc}`);
-      //     } else {
-      //       updateHeader("ProductID", val.value);
-      //     }
-      //   },
-      // },
     },
 
     UNCODE: {
@@ -504,16 +511,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
-      // events: {
-      //   onChange: (val) => {
-      //     const updateHeader = useWorkOrderStore.getState().updateHeader;
-
-      //     const [id, desc] = val.value.split(" || ").map((v) => v.trim());
-
-      //     updateHeader("Cluster", id);
-      //     updateHeader("ClusterDescription", desc);
-      //   },
-      // },
     },
 
     LoadType: {
@@ -617,7 +614,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       id: "AcceptedByForwardis",
       label: "Accepted By Forwardis",
       fieldType: "switch",
-      width: "full",
+      width: "half",
       mandatory: true,
       visible: true,
       editable: true,
@@ -630,7 +627,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       id: "ReInvoiceCost",
       label: "Re-Invoice Cost",
       fieldType: "switch",
-      width: "full",
+      width: "half",
       mandatory: true,
       visible: true,
       editable: true,
@@ -640,7 +637,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
     InvoiceTo: {
       id: "InvoiceTo",
-      label: "Invoice To",
+      label: "Stakeholder",
       fieldType: "lazyselect",
       width: "full",
       mandatory: false,
@@ -649,6 +646,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : " ",
       order: 17,
       fetchOptions: fetchMaster("Cluster Init"),
+      onChange: (newValue) => {
+},
+
     },
 
     FinacialComments: {
@@ -963,7 +963,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Expected Date",
         fieldType: "date",
         width: "four",
-        value: workOrder?.WorkorderSchedule?.ExpectedDate,
+        value: workOrder?.WorkorderSchedule?.MobileExpectedDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
         editable: true,
@@ -974,7 +974,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         label: "Actual Date",
         fieldType: "date",
         width: "four",
-        value: workOrder?.WorkorderSchedule?.ActualDate,
+        value: workOrder?.WorkorderSchedule?.MobileActualDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
         editable: true,
