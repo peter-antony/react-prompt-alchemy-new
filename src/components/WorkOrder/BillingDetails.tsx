@@ -1810,7 +1810,10 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onInlineEdit: handleOrderItemEdit,
                                     onAddRow: handleAddOrderItem,
                                     onDeleteRow: handleDeleteOrderItem,
-                                    defaultRowValues: defaultOrderItemValues
+                                    defaultRowValues: defaultOrderItemValues,
+                                    validationRules: {
+                                        requiredFields: ['Service']
+                                    }
                                 }}
                                 onInfoClick={(rowData, rowIndex) => {
                                     console.log("Info clicked:", rowData, "at index:", rowIndex);

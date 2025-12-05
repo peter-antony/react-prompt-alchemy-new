@@ -17,6 +17,11 @@ export interface NestedSectionConfig {
   onAddRow?: (parentRowIndex: number, newRow: any) => Promise<void>;
   onDeleteRow?: (parentRowIndex: number, nestedRowIndex: number) => Promise<void>;
   defaultRowValues?: Record<string, any>;
+  validationRules?: {
+    requiredFields?: string[];
+    maxLength?: Record<string, number>;
+    customValidationFn?: (values: Record<string, any>) => Record<string, string>;
+  };
 }
 
 export interface SmartGridPlusWithNestedRowsProps extends SmartGridPlusProps {
@@ -104,39 +109,40 @@ export function SmartGridPlusWithNestedRows({
                   No nested records available
                 </div>
               ) : ( */}
-                <div className="">
-                  <SmartGridPlus
-                    key={`nested-grid-${rowIndex}-${nestedData.length}`}
-                    columns={nestedSectionConfig.columns}
-                    data={nestedData}
-                    paginationMode="infinite"
-                    hideToolbar={true}
-                    customPageSize={rowCount}
-                    inlineRowEditing={true}
-                    onEditRow={nestedSectionConfig.onInlineEdit 
-                      ? async (updatedRow, nestedRowIndex) => {
-                          await nestedSectionConfig.onInlineEdit!(rowIndex, nestedRowIndex, updatedRow);
-                          if (nestedSectionConfig.onServerUpdate) {
-                            await nestedSectionConfig.onServerUpdate(row, nestedData[nestedRowIndex], updatedRow);
-                          }
-                        }
-                      : undefined}
-                    onAddRow={nestedSectionConfig.onAddRow
-                      ? async (newRow) => {
-                          await nestedSectionConfig.onAddRow!(rowIndex, newRow);
-                        }
-                      : undefined}
-                    onDeleteRow={nestedSectionConfig.onDeleteRow
-                      ? async (_row, nestedRowIndex) => {
-                          await nestedSectionConfig.onDeleteRow!(rowIndex, nestedRowIndex);
-                        }
-                      : undefined}
-                    defaultRowValues={nestedSectionConfig.defaultRowValues}
-                    onUpdate={nestedSectionConfig.onUpdate
-                      ? (updatedRow) => nestedSectionConfig.onUpdate!(rowIndex, nestedData.findIndex((item: any) => item === updatedRow), updatedRow)
-                      : undefined}
-                  />
-                </div>
+              <div className="">
+                <SmartGridPlus
+                  key={`nested-grid-${rowIndex}-${nestedData.length}`}
+                  columns={nestedSectionConfig.columns}
+                  data={nestedData}
+                  paginationMode="infinite"
+                  hideToolbar={true}
+                  customPageSize={rowCount}
+                  inlineRowEditing={true}
+                  onEditRow={nestedSectionConfig.onInlineEdit
+                    ? async (updatedRow, nestedRowIndex) => {
+                      await nestedSectionConfig.onInlineEdit!(rowIndex, nestedRowIndex, updatedRow);
+                      if (nestedSectionConfig.onServerUpdate) {
+                        await nestedSectionConfig.onServerUpdate(row, nestedData[nestedRowIndex], updatedRow);
+                      }
+                    }
+                    : undefined}
+                  onAddRow={nestedSectionConfig.onAddRow
+                    ? async (newRow) => {
+                      await nestedSectionConfig.onAddRow!(rowIndex, newRow);
+                    }
+                    : undefined}
+                  onDeleteRow={nestedSectionConfig.onDeleteRow
+                    ? async (_row, nestedRowIndex) => {
+                      await nestedSectionConfig.onDeleteRow!(rowIndex, nestedRowIndex);
+                    }
+                    : undefined}
+                  defaultRowValues={nestedSectionConfig.defaultRowValues}
+                  validationRules={nestedSectionConfig.validationRules}
+                  onUpdate={nestedSectionConfig.onUpdate
+                    ? (updatedRow) => nestedSectionConfig.onUpdate!(rowIndex, nestedData.findIndex((item: any) => item === updatedRow), updatedRow)
+                    : undefined}
+                />
+              </div>
               {/* )} */}
             </div>
           )}
