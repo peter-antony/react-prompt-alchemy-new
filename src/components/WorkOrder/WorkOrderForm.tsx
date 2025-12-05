@@ -21,6 +21,7 @@ import { useWorkOrderStore } from "@/stores/workOrderStore";
 import { SmartGridPlus } from "../SmartGrid/SmartGridPlus";
 import { GridColumnConfig } from "@/types/smartgrid";
 import BillingDetails from "./BillingDetails";
+import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom"; // Import useSearchParams for URL search parameters
 import CodeInformationDrawer from "./CodeInformationDrawer";
 
@@ -52,7 +53,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const workOrderPanelRef = useRef<DynamicPanelRef>(null);
-  const { workOrder, searchWorkOrder, loading } = useWorkOrderStore();
+  const { workOrder, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm } = useWorkOrderStore();
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
 
@@ -71,7 +72,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
   const headerBackend = formatHeaderForBackend(headerUI);
   const locationBackend = formatLocationForBackend(locationUI);
-  const scheduleBackend = formatScheduleForBackend(scheduleUI);
+  const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
 
   const finalPayload = {
     Header: headerBackend,
@@ -144,76 +145,34 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       formatted.QC3Value = formatted.QCUserDefined3.input || "";
     }
 
-    // ⭐ ModeFlag logic added here
+    if (!workOrderNo) {
+    formatted.ModeFlag = "Insert";  
+  } else {
     formatted.ModeFlag =
       values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
+  }
 
     return formatted;
   };
 
-  const formatScheduleForBackend = (values) => {
-    return {
-      ...values,
-      ModeFlag:
-        values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update",
-    };
-  };
+  const formatScheduleForBackend = (values, workOrderNo) => {
+  let formatted = { ...values };
 
-  const formatForBackend = (values) => {
-    const formatted = { ...values };
+  if (!workOrderNo) {
+    // Create mode
+    formatted.ModeFlag = "NoChange";
+  } else {
+    // Edit mode
+    formatted.ModeFlag =
+      values.ModeFlag === "NoChange"
+        ? "NoChange"
+        : values.ModeFlag || "Update";
+  }
 
-    // Load Type
-    if (formatted.LoadType) {
-      formatted.LoadType = {
-        IsLoaded: formatted.LoadType === "1" ? 1 : 0,
-        IsEmpty: formatted.LoadType === "0" ? 1 : 0,
-      };
-    }
+  return formatted;
+};
 
-    // Lazy selects using " || "
-    const applySplit = (field, idKey, descKey) => {
-      if (
-        typeof formatted[field] === "string" &&
-        formatted[field].includes(" || ")
-      ) {
-        const [id, desc] = formatted[field].split(" || ").map((v) => v.trim());
-        formatted[idKey] = id;
-        formatted[descKey] = desc;
-      }
-    };
 
-    applySplit("WagonCondainterID", "EquipmentID", "EquipmentDescription");
-    applySplit(
-      "SuplierContract",
-      "SupplierContractID",
-      "SupplierContractDescription"
-    );
-    applySplit(
-      "CustomerContract",
-      "CustomerContractID",
-      "CustomerContractDescription"
-    );
-    applySplit("ClusterMarket", "Cluster", "ClusterDescription");
-    applySplit("product", "ProductID", "ProductDescription");
-    applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
-    applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
-
-    // QC dropdowns
-    if (formatted.QCUserDefined1) {
-      formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
-      formatted.QC1Value = formatted.QCUserDefined1.input || "";
-    }
-    if (formatted.QCUserDefined2) {
-      formatted.QC2Code = formatted.QCUserDefined2.dropdown || "";
-      formatted.QC2Value = formatted.QCUserDefined2.input || "";
-    }
-    if (formatted.QCUserDefined3) {
-      formatted.QC3Code = formatted.QCUserDefined3.dropdown || "";
-      formatted.QC3Value = formatted.QCUserDefined3.input || "";
-    }
-
-    return formatted;
-  };
   const formatLocationForBackend = (values) => {
     const formatted = { ...values };
 
@@ -235,19 +194,28 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       "Provider",
     ].forEach(applySplit);
 
-    // ⭐ ModeFlag rule (same as Schedule panel)
+     if (!workOrderNo) {
+    // Create mode
+    formatted.ModeFlag = "Insert";
+  } else {
+    // Edit mode
     formatted.ModeFlag =
       values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
+  }
 
     return formatted;
   };
 
   //actionSlice from store
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
-  const saveWorkOrder = useWorkOrderStore.getState().saveWorkOrder;
 
   useEffect(() => {
     // Fetch work order data when workOrderNo changes
+    if (!workOrderNo) {
+    resetWorkOrderForm();
+    return;                
+  } 
+  
     if (workOrderNo) {
       const payload = {
         context: {
@@ -376,7 +344,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: true,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}`,
+      value: workOrderNo ? `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}` : "",
 
       order: 2,
       fetchOptions:
@@ -393,11 +361,11 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: true,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.SupplierContractID} || ${workOrder?.Header?.SupplierContractDescription}`,
+      value: workOrderNo ? `${workOrder?.Header?.SupplierContractID} || ${workOrder?.Header?.SupplierContractDescription}` : " ",
 
       order: 3,
       fetchOptions: fetchMaster("Contract Init", [
-        { FilterName: "ContractType", FilterValue: "Buy" },
+        { FilterName: "Buy", FilterValue: "Buy" },
       ]),
       // events: {
       //   onChange: (val) => {
@@ -435,7 +403,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}`,
+      value: workOrderNo ?  `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}` : "",
       order: 4,
       fetchOptions: fetchMaster("Contract Init", [
         { FilterName: "ContractType", FilterValue: "Sell" },
@@ -452,8 +420,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       // },
     },
 
-    AppoinmentDate: {
-      id: "AppoinmentDate",
+    AppointmentDate: {
+      id: "AppointmentDate",
       label: "Appointment Date",
       fieldType: "date",
       width: "half",
@@ -474,7 +442,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}`,
+      value: workOrderNo ? `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}` : " ",
 
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
@@ -498,7 +466,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}`,
+      value: workOrderNo ? `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}` : " ",
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
@@ -526,7 +494,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}`,
+      value: workOrderNo ?  `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}` : " ",
 
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
@@ -590,7 +558,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}`,
+      value: workOrderNo ? `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}` : " ",
 
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
@@ -672,7 +640,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
+      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : " ",
       order: 17,
       fetchOptions: fetchMaster("Cluster Init"),
     },

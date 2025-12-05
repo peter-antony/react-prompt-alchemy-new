@@ -17,8 +17,8 @@ interface WorkOrderState {
   searchWorkOrder: (payload: WorkOrderSelectionPayload) => Promise<void>;
   updateHeader: (key: string, value: any) => void;
   updateHeaderBulk: (payload: WorkOrderDetail) => void;
-
-  saveWorkOrder: () => Promise<void>;
+  saveWorkOrder: () => Promise<void>;  
+  resetWorkOrderForm: () => Promise<void>;
 }
 
 export const useWorkOrderStore = create<WorkOrderState>()(
@@ -62,12 +62,10 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           Header: {
             ...state.workOrder.Header,
             ...payload.Header,
-            ModeFlag: "Update",
           },
           WorkorderSchedule: {
             ...state.workOrder.WorkorderSchedule,
             ...payload.WorkorderSchedule,
-            ModeFlag: "Update",
           },
           OperationDetails: payload.OperationDetails,
         }
@@ -109,7 +107,7 @@ export const useWorkOrderStore = create<WorkOrderState>()(
             isSuccess: success,
             loading: false,
           });
-
+       
           if (success) {
             // 1️⃣ RESET STORE
             set({ workOrder: null });
@@ -140,6 +138,19 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           });
         }
       },
+
+
+       resetWorkOrderForm: () =>
+  set(state => ({
+    workOrder: state.workOrder
+      ? {
+          ...state.workOrder,
+          Header: {},
+          WorkorderSchedule: {},
+          OperationDetails: [],
+        }
+      : null,
+  })),
 
       //     saveWorkOrder: async () => {
       //   set({ loading: true, error: null, apiMessage: null });
@@ -211,6 +222,8 @@ export const useWorkOrderStore = create<WorkOrderState>()(
           return { workOrder: updated };
         }),
     }),
+
+    
 
     { name: "WorkOrderStore", trace: true }
   )
