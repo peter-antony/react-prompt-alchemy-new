@@ -65,6 +65,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     return "";
   }, [isWorkShop]);
 
+ const [uiHeader, setUiHeader] = useState<any>({});
+  const [uiLocation, setUiLocation] =useState<any>({});
+ const [uiSchedule, setUiSchedule] = useState<any>({});
+
+
+
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
     let timer: any;
     return (...args: any[]) => {
@@ -77,6 +83,10 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
+
+   setUiHeader(headerUI);
+  setUiLocation(locationUI);
+  setUiSchedule(scheduleUI);
 
   const headerBackend = formatHeaderForBackend(headerUI);
   const locationBackend = formatLocationForBackend(locationUI);
@@ -114,6 +124,12 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     // No need for manual refresh as the useEffect handles data fetching
   }
   saveWorkOrder();
+  setUiHeader({});
+    setUiLocation({});
+    setUiSchedule({});
+
+  console.clear()
+
 };
 
 
@@ -261,11 +277,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 
   //actionSlice from store
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
- useEffect(() => {
-  console.log("state changed -->", isSuccess, apiMessage);
-  console.log("state changed -->", isSuccess, apiMessage);
+  
+useEffect(() => {
+  // when API data arrives, hydrate dynamic panel
+  if (workOrder && workOrderPanelRef.current) {
+    workOrderPanelRef.current.setFormValues(workOrder.Header);
+  }
+}, [workOrderPanelRef]);
 
-}, [isSuccess, apiMessage]);
 
 useEffect(()=>{
 if(isSuccess){
@@ -390,7 +409,10 @@ if(isSuccess){
       mandatory: true,
       visible: true,
       editable: true,
-      value: workOrderNo ? `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}` : "",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}`
+    : uiHeader?.WagonCondainterID || "",
 
       order: 2,
       fetchOptions:
@@ -407,7 +429,12 @@ if(isSuccess){
       mandatory: true,
       visible: true,
       editable: true,
-      value: workOrderNo ? `${workOrder?.Header?.SupplierContractID} || ${workOrder?.Header?.SupplierContractDescription}` : " ",
+value:
+  workOrder?.Header?.SupplierContractID &&
+  workOrder?.Header?.SupplierContractDescription
+    ? `${workOrder.Header.SupplierContractID} || ${workOrder.Header.SupplierContractDescription}`
+    : uiHeader?.SuplierContract || "",
+
 
       order: 3,
       fetchOptions: fetchMaster("Contract Init", { OrderType: "Buy" }),
@@ -447,7 +474,10 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrderNo ?  `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}` : "",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}`
+    : uiHeader?.CustomerContract || "",
       order: 4,
       fetchOptions: fetchMaster("Contract Init", { OrderType: "Sell" }),
       // events: {
@@ -484,7 +514,10 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrderNo ? `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}` : " ",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}`
+    : uiHeader?.ClusterMarket || "",
 
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
@@ -508,7 +541,10 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrderNo ? `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}` : " ",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}`
+    : uiHeader?.product || "",
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
@@ -522,7 +558,10 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrderNo ?  `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}` : " ",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}`
+    : uiHeader?.UNCODE || "",
 
       order: 9,
       fetchOptions: fetchMaster("UN Code Init"),
@@ -576,7 +615,10 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrderNo ? `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}` : " ",
+value:
+  workOrderNo
+    ? `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}`
+    : uiHeader?.PlaceOfEvent || "",
 
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
