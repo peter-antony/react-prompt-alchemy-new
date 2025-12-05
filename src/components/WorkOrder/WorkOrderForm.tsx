@@ -73,7 +73,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
   };
 
-  const handleGetFormValues = async () => {
+ const handleGetFormValues = async () => {
   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
@@ -88,16 +88,21 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
   };
 
-  useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
-  
- console.clear();
- console.log("finalPayload",finalPayload)
-  console.log("store",workOrder)
- saveWorkOrder(); // <-- returns result
+  const store = useWorkOrderStore.getState().workOrder;
 
+  if (!store) {
+    useWorkOrderStore.setState({ workOrder: finalPayload }); // ⭐ Create workOrder first
+  } else {
+    useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
+  }
 
-
+  setTimeout(() => {
+    console.log("store after update:", useWorkOrderStore.getState().workOrder);
+  }, 50);
+  console.log(workOrder)
+  saveWorkOrder();
 };
+
 
 
 //  const handleGetFormValues = async () => {
@@ -2047,6 +2052,7 @@ if(isSuccess){
                               // No need for manual refresh as the useEffect handles data fetching
                             }
                           }}
+                          
                         />
                       </div>
 
