@@ -205,7 +205,7 @@ export function DynamicLazySelect({
           type="button"
           aria-expanded={isOpen}
           className={cn(
-            "w-full justify-between text-left font-normal",
+            "w-full justify-between text-left font-normal group",
             !hasValue && "text-muted-foreground",
             className
           )}
@@ -222,7 +222,7 @@ export function DynamicLazySelect({
               <button
                 type="button"
                 onClick={handleClear}
-                className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100 flex items-center justify-center"
+                className="h-4 w-4 shrink-0 opacity-0 group-hover:opacity-50 hover:!opacity-100 flex items-center justify-center transition-opacity"
               >
                 <X className="h-4 w-4" />
               </button>

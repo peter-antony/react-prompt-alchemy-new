@@ -654,7 +654,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 );
               })()}
 
-              {panelSubTitle == "Work Order Details" && (
+              {panelSubTitle == "Work Order Details" && !!workOrderNoValue && (
                 <Input 
                   type="text" 
                   value={workOrderNoValue} 
