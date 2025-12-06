@@ -59,6 +59,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
   // const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+  const [equipmentType, setEquipmentType] = useState(workOrder?.Header?.EquipmentType || "Wagon");
+
   const isWorkShopLabel = useMemo(() => {
     if (isWorkShop === 1) return "Workshop";
     if (isWorkShop === 0) return "Mobile";
@@ -142,11 +144,13 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   setUiHeader({});
     setUiLocation({});
     setUiSchedule({});
-
-
   console.log(locationUI)
 
 };
+
+useEffect(()=>{
+ setUiHeader({});
+},[])
 
 
 
@@ -312,6 +316,20 @@ if(isSuccess){
     // Fetch work order data when workOrderNo changes
     if (!workOrderNo) {
     resetWorkOrderForm();
+    setUiHeader("");
+    return;                
+  } 
+  if(workOrderNo){
+     searchWorkOrder(workOrderNo);  
+  }
+  
+  }, [workOrderNo]);
+
+   useEffect(() => {
+    // Fetch work order data when workOrderNo changes
+    if (!workOrderNo) {
+    resetWorkOrderForm();
+    setUiHeader("");
     return;                
   } 
   if(workOrderNo){
@@ -394,12 +412,16 @@ if(isSuccess){
       }
     };
   };
+
+
+
   /**
    * PanelConfig factory — depends on currentOrderType
    */
   const getQcOptions = (list: any[]) =>
     list?.filter((qc) => qc.id).map((qc) => ({ label: qc.id, value: qc.id })) ||
     [];
+    //123
   const workOrderPanelConfig = (currentOrderType: string): PanelConfig => ({
     EquipmentType: {
       id: "EquipmentType",
@@ -409,12 +431,18 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value:workOrderNo ?  workOrder?.Header?.EquipmentType : "Wagon",
+      value:workOrderNo ?  workOrder?.Header?.EquipmentType  : "Wagon",
+      
       options: [
         { label: "Wagon", value: "Wagon" },
         { label: "Container", value: "Container" },
       ],
       order: 1,
+     events: {
+    onChange: (value) => {
+      setEquipmentType(value);   
+    },
+  },
     },
 
     WagonCondainterID: {
@@ -432,9 +460,9 @@ value:
 
       order: 2,
       fetchOptions:
-        currentOrderType === "Wagon"
-          ? fetchMaster("Wagon id Init")
-          : fetchMaster("Container id Init"),
+    equipmentType === "Wagon"
+      ? fetchMaster("Wagon id Init")
+      : fetchMaster("Container id Init"),
     },
 
     SuplierContract: {
@@ -564,11 +592,13 @@ value:
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
-      events: {
+       events: {
     onChange: (value) => {
       console.log("Product changed:", value);
-      setSelectedProduct(value?.value || "");
-      // Clear UNCODE when product changes
+
+      const [id] = (value?.value || "").split(" || ");
+      setSelectedProduct(id || "");
+
       setUiHeader(prev => ({ ...prev, UNCODE: "" }));
     }
   },
@@ -583,15 +613,13 @@ value:
       visible: true,
       editable: true,
 value:
-  workOrderNo
-    ? `${workOrder?.Header?.UNCodeID} || ${workOrder?.Header?.UNCodeDescription}`
+  workOrder?.Header?.UNCodeID && workOrder?.Header?.UNCodeDescription
+    ? `${workOrder.Header.UNCodeID} || ${workOrder.Header.UNCodeDescription}`
     : uiHeader?.UNCODE || "",
 
-      order: 9,
-      // fetchOptions: fetchMaster("UN Code Init"),
-      fetchOptions: fetchMaster("UN Code Init", { productId: selectedProduct }),
-    },
-
+  order: 9,
+  fetchOptions: fetchMaster("UN Code Init", { productId: selectedProduct }),
+},
     LoadType: {
       id: "LoadType",
       label: "Load Type",
@@ -953,8 +981,9 @@ value:
         label: "Origin",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.OriginID} || ${workOrder?.WorkorderSchedule?.OriginDescription}`,
-
+value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.OriginDescription)
+  ? `${workOrder.WorkorderSchedule.OriginID} || ${workOrder.WorkorderSchedule.OriginDescription}`
+  : "",
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         editable: true,
@@ -966,7 +995,9 @@ value:
         label: "Outboard Destination",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.OutBoundDestinationID} || ${workOrder?.WorkorderSchedule?.OutBoundDestinationDescription}`,
+value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
+  ? `${workOrder.WorkorderSchedule.OutBoundDestinationID} || ${workOrder.WorkorderSchedule.OutBoundDestinationDescription}`
+  : "",
 
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
@@ -979,20 +1010,24 @@ value:
         label: "RU Forward",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.RUForwardID} || ${workOrder?.WorkorderSchedule?.RUForwardDescription}`,
+value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedule?.RUForwardDescription)
+  ? `${workOrder.WorkorderSchedule.RUForwardID} || ${workOrder.WorkorderSchedule.RUForwardDescription}`
+  : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
         editable: true,
         order: 3,
-        fetchOptions: fetchMaster("Location Init"),
+        fetchOptions: fetchMaster("Supplier Init"),
       },
       ReturnDest: {
         id: "ReturnDest",
         label: "Return Destination",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.ReturnDestID} || ${workOrder?.WorkorderSchedule?.ReturnDestDescription}`,
+value: (workOrder?.WorkorderSchedule?.ReturnDestID && workOrder?.WorkorderSchedule?.ReturnDestDescription)
+  ? `${workOrder.WorkorderSchedule.ReturnDestID} || ${workOrder.WorkorderSchedule.ReturnDestDescription}`
+  : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
@@ -1005,13 +1040,15 @@ value:
         label: "RU Return",
         fieldType: "lazyselect",
         width: "six",
-        value: `${workOrder?.WorkorderSchedule?.RUReturnID} || ${workOrder?.WorkorderSchedule?.RUReturnDescription}`,
+value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule?.RUReturnDescription)
+  ? `${workOrder.WorkorderSchedule.RUReturnID} || ${workOrder.WorkorderSchedule.RUReturnDescription}`
+  : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
         editable: true,
         order: 5,
-        fetchOptions: fetchMaster("Location Init"),
+        fetchOptions: fetchMaster("Supplier Init"),
       },
       // Fields for IsWorkShop === 0 (Mobile mode)
       PlaceOfOperation: {
@@ -1088,8 +1125,8 @@ value:
       editable: true,
       order: 1,
     },
-    Arrivaldate: {
-      id: "Arrivaldate",
+    ArrivalDate: {
+      id: "ArrivalDate",
       label: "Arrival date",
       fieldType: "date",
       width: "six",
