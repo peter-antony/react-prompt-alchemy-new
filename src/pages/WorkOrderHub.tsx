@@ -476,6 +476,14 @@ export const WorkOrderHub = () => {
     return id || desc || '-';
   }
 
+  // Helper function From & To date formatter
+  const formatDateRange = (from: string | null, to: string | null): string => {
+    if (!from && !to) return '-';
+    if (!from) return `${dateFormatter(to)}`;
+    if (!to) return `${dateFormatter(from)}`;
+    return `${dateFormatter(from)} to ${dateFormatter(to)}`;
+  };
+
   const fetchWorkOrders = async () => {
     gridState.setColumns(initialColumns);
     gridState.setLoading(true);
@@ -518,7 +526,7 @@ export const WorkOrderHub = () => {
             'Initiated': 'badge-blue rounded-2xl',
             'Under Execution': 'badge-purple rounded-2xl',
             // Trip Billing Status colors
-            'In Progress': 'badge-orange rounded-2xl',
+            'In-progress': 'badge-orange rounded-2xl',
             'Draft': 'badge-blue rounded-2xl'
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
@@ -529,7 +537,7 @@ export const WorkOrderHub = () => {
             value: row.WorkOrderStatus,
             variant: getStatusColorLocal(row.WorkOrderStatus),
           },
-          WorkOrderFrom: dateFormatter(row.WorkOrderFrom) + ' to ' + dateFormatter(row.WorkOrderTo),
+          WorkOrderFrom: formatDateRange(row.WorkOrderFrom, row.WorkOrderTo),
           SupplierName: pipedData(row.SupplierID, row.SupplierDescription),
           CustomerContract: pipedData(row.CustomerContractID, row.CustomerContractDescription),
           CustomerSupport: pipedData(row.CustomerSupportID, row.CustomerSupportIDDescription),
@@ -926,7 +934,7 @@ export const WorkOrderHub = () => {
             'Initiated': 'badge-blue rounded-2xl',
             'Under Execution': 'badge-purple rounded-2xl',
             // Trip Billing Status colors
-            'In Progress': 'badge-orange rounded-2xl',
+            'In-progress': 'badge-orange rounded-2xl',
             'Draft': 'badge-blue rounded-2xl'
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
@@ -938,7 +946,7 @@ export const WorkOrderHub = () => {
             value: row.WorkOrderStatus,
             variant: getStatusColorLocal(row.WorkOrderStatus),
           },
-          WorkOrderFrom: dateFormatter(row.WorkOrderFrom) + ' to ' + dateFormatter(row.WorkOrderTo),
+          WorkOrderFrom: formatDateRange(row.WorkOrderFrom, row.WorkOrderTo),
           SupplierName: pipedData(row.SupplierID, row.SupplierDescription),
           CustomerContract: pipedData(row.CustomerContractID, row.CustomerContractDescription),
           CustomerSupport: pipedData(row.CustomerSupportID, row.CustomerSupportIDDescription),
