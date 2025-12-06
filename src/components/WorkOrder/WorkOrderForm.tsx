@@ -113,9 +113,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     console.log("store after update:", useWorkOrderStore.getState().workOrder);
   }, 50);*/
   console.log("mk",workOrder);
-  console.log("<<>>",workOrder.Header?.Hazardous);
-  if(workOrder.Header?.Hazardous){
-    workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+  console.log("<<>>",workOrder?.Header?.Hazardous);
+  if(workOrder?.Header?.Hazardous){
+    workOrder.Header.Hazardous = workOrder?.Header?.Hazardous ? "1" : "0";
   }
   else{
     workOrder.Header.Hazardous = "0";
@@ -131,14 +131,15 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   }, 500);
   
   // If save is successful and we have a workorderNo, update URL and refresh
-  // console.log("result=======", result);
-  // console.log("result=======", result.workorderNo);
-  // if (result.workorderNo) {
-  //   console.log("if=====");
-  //   setSearchParams({ id: result.workorderNo });
-  //   // The useEffect will automatically trigger when workOrderNo changes
-  //   // No need for manual refresh as the useEffect handles data fetching
-  // }
+  const result = await saveWorkOrder();
+  console.log("result=======", result);
+  console.log("result=======", result.workorderNo);
+  if (result.workorderNo) {
+    console.log("if=====");
+    setSearchParams({ id: result.workorderNo });
+    // The useEffect will automatically trigger when workOrderNo changes
+    // No need for manual refresh as the useEffect handles data fetching
+  }
   // console.log()
   // saveWorkOrder();
   setUiHeader({});
