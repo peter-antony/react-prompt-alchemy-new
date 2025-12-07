@@ -60,6 +60,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
   // const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const [equipmentType, setEquipmentType] = useState(workOrder?.Header?.EquipmentType || "Wagon");
+  const [reInvoice, setReInvoice] = useState(false);
 
   const isWorkShopLabel = useMemo(() => {
     if (isWorkShop === 1) return "Workshop";
@@ -73,6 +74,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
  const [selectedProduct, setSelectedProduct] = useState<string>("");
 
 
+   const formatIdDesc = (id?: any, desc?: any) =>
+  [id, desc].filter(v => v && v.toString().trim()).join(" || ") || null;
 
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
     let timer: any;
@@ -95,16 +98,29 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const locationBackend = formatLocationForBackend(locationUI);
   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
 
-  const finalPayload = {
-    Header: headerBackend,
-    WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
-    OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
-  };
+  const billingUI = {
+  IsAcceptedByForwardis: headerUI.AcceptedByForwardis ? "1" : "0",
+  IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
+  InvoiceTo: headerUI.InvoiceTo || null,
+  FinancialComments: headerUI.FinacialComments || null,
+  ModeFlag: "NoChange",
+};
+
+
+ const finalPayload = {
+  Header: {
+    ...headerBackend,
+    BillingHeaderDetails: billingUI,
+  },
+  WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+  OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails ?? [],
+};
+
 
   const store = useWorkOrderStore.getState().workOrder;
 
   if (!store) {
-    useWorkOrderStore.setState({ workOrder: finalPayload }); // ⭐ Create workOrder first
+    useWorkOrderStore.setState({ workOrder: finalPayload }); 
   } else {
     useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
   }
@@ -112,35 +128,37 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   /*setTimeout(() => {
     console.log("store after update:", useWorkOrderStore.getState().workOrder);
   }, 50);*/
-  console.log("mk",workOrder);
-  console.log("<<>>",workOrder?.Header?.Hazardous);
-  if(workOrder?.Header?.Hazardous){
-    workOrder.Header.Hazardous = workOrder?.Header?.Hazardous ? "1" : "0";
-  }
-  else{
-    workOrder.Header.Hazardous = "0";
-  }
+ 
+  // if(workOrder.Header?.Hazardous){
+  //   workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+  // }
+  // else{
+  //   workOrder!.Header!.Hazardous = "0";
+  // }
+
+  if (workOrder && workOrder.Header) {
+  workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+}
+
   
   
   console.log("Payload",workOrder)
   
   // Save work order and handle response
-  // const result = await
-    setTimeout(() => {
-     saveWorkOrder(); 
-  }, 500);
+  const result = await saveWorkOrder()
+ 
   
   // If save is successful and we have a workorderNo, update URL and refresh
-  const result = await saveWorkOrder();
   console.log("result=======", result);
   console.log("result=======", result.workorderNo);
   if (result.workorderNo) {
     console.log("if=====");
     setSearchParams({ id: result.workorderNo });
+    searchWorkOrder(result.workorderNo);
     // The useEffect will automatically trigger when workOrderNo changes
     // No need for manual refresh as the useEffect handles data fetching
   }
-  // console.log()
+  console.log()
   // saveWorkOrder();
   setUiHeader({});
     setUiLocation({});
@@ -278,7 +296,7 @@ useEffect(()=>{
       "Origin",
       "OutBoundDestination",
       "RUForward",
-      "ReturnDest",
+      "ReturnDestination",
       "RUReturn",
       "PlaceOfOperation",
       "Provider",
@@ -454,10 +472,10 @@ if(isSuccess){
       mandatory: true,
       visible: true,
       editable: true,
-value:
-  workOrderNo
-    ? `${workOrder?.Header?.EquipmentID} || ${workOrder?.Header?.EquipmentDescription}`
-    : uiHeader?.WagonCondainterID || "",
+value: workOrderNo
+  ? formatIdDesc(workOrder?.Header?.EquipmentID, workOrder?.Header?.EquipmentDescription)
+  : uiHeader?.WagonCondainterID || "",
+
 
       order: 2,
       fetchOptions:
@@ -474,11 +492,10 @@ value:
       mandatory: true,
       visible: true,
       editable: true,
-value:
-  workOrder?.Header?.SupplierContractID &&
-  workOrder?.Header?.SupplierContractDescription
-    ? `${workOrder.Header.SupplierContractID} || ${workOrder.Header.SupplierContractDescription}`
-    : uiHeader?.SuplierContract || "",
+value: workOrderNo
+  ? formatIdDesc(workOrder?.Header?.SupplierContractID, workOrder?.Header?.SupplierContractDescription)
+  : uiHeader?.SuplierContract || "",
+
 
 
       order: 3,
@@ -519,10 +536,11 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-value:
-  workOrderNo
-    ? `${workOrder?.Header?.CustomerContractID} || ${workOrder?.Header?.CustomerContractDescription}`
-    : uiHeader?.CustomerContract || "",
+value: formatIdDesc(
+  workOrder?.Header?.CustomerContractID,
+  workOrder?.Header?.CustomerContractDescription
+) ?? uiHeader?.CustomerContract ?? "",
+
       order: 4,
       fetchOptions: fetchMaster("Contract Init", { OrderType: "Sell" }),
       // events: {
@@ -559,10 +577,10 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-value:
-  workOrderNo
-    ? `${workOrder?.Header?.Cluster} || ${workOrder?.Header?.ClusterDescription}`
-    : uiHeader?.ClusterMarket || "",
+value: workOrderNo
+  ? formatIdDesc(workOrder?.Header?.Cluster, workOrder?.Header?.ClusterDescription)
+  : uiHeader?.ClusterMarket || "",
+
 
       order: 7,
       fetchOptions: fetchMaster("Cluster Init"),
@@ -586,10 +604,10 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-value:
-  workOrderNo
-    ? `${workOrder?.Header?.ProductID} || ${workOrder?.Header?.ProductDescription}`
-    : uiHeader?.product || "",
+value: workOrderNo
+  ? formatIdDesc(workOrder?.Header?.ProductID, workOrder?.Header?.ProductDescription)
+  : uiHeader?.product || "",
+
 
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
@@ -669,10 +687,10 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-value:
-  workOrderNo
-    ? `${workOrder?.Header?.PlaceOfEventID} || ${workOrder?.Header?.PlaceOfEventIDDescription}`
-    : uiHeader?.PlaceOfEvent || "",
+value: workOrderNo
+  ? formatIdDesc(workOrder?.Header?.PlaceOfEventID, workOrder?.Header?.PlaceOfEventIDDescription)
+  : uiHeader?.PlaceOfEvent || "",
+
 
       order: 13,
       fetchOptions: fetchMaster("Location Init"),
@@ -735,32 +753,34 @@ value:
     },
 
     ReInvoiceCost: {
-      id: "ReInvoiceCost",
-      label: "Re-Invoice Cost",
-      fieldType: "switch",
-      width: "half",
-      mandatory: true,
-      visible: true,
-      editable: true,
-      value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost === "1",
-      order: 16,
-    },
-
-    InvoiceTo: {
-      id: "InvoiceTo",
-      label: "Stakeholder",
-      fieldType: "lazyselect",
-      width: "full",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : " ",
-      order: 17,
-      fetchOptions: fetchMaster("Work Order Invoice to Init"),
-      onChange: (newValue) => {
+  id: "ReInvoiceCost",
+  label: "Re-Invoice Cost",
+  fieldType: "switch",
+  width: "half",
+  mandatory: true,
+  visible: true,
+  editable: true,
+  value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1",
+  order: 16,
+  events: {
+    onChange: (v) => setReInvoice(v)   // 👈 switch drives state
+  }
 },
 
-    },
+
+   InvoiceTo: {
+  id: "InvoiceTo",
+  label: "Stakeholder",
+  fieldType: "lazyselect",
+  width: "full",
+  mandatory: reInvoice, 
+  visible: true,
+  editable: true,
+  value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
+  order: 17,
+  fetchOptions: fetchMaster("Work Order Invoice to Init"),
+},
+
 
     FinacialComments: {
       id: "FinacialComments",
@@ -1021,13 +1041,13 @@ value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedul
         order: 3,
         fetchOptions: fetchMaster("Supplier Init"),
       },
-      ReturnDest: {
-        id: "ReturnDest",
+      ReturnDestination: {
+        id: "ReturnDestination",
         label: "Return Destination",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.ReturnDestID && workOrder?.WorkorderSchedule?.ReturnDestDescription)
-  ? `${workOrder.WorkorderSchedule.ReturnDestID} || ${workOrder.WorkorderSchedule.ReturnDestDescription}`
+value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.WorkorderSchedule?.ReturnDestinationDescription)
+  ? `${workOrder.WorkorderSchedule.ReturnDestinationID} || ${workOrder.WorkorderSchedule.ReturnDestinationDescription}`
   : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
@@ -1057,7 +1077,10 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
         label: "PlaceOfOperation",
         fieldType: "lazyselect",
         width: "four",
-        value: `${workOrder?.WorkorderSchedule?.PlaceOfOperationID} || ${workOrder?.WorkorderSchedule?.PlaceOfOperationDescription}`,
+value: formatIdDesc(
+  workOrder?.WorkorderSchedule?.PlaceOfOperationID,
+  workOrder?.WorkorderSchedule?.PlaceOfOperationDescription
+),
 
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
@@ -1070,7 +1093,10 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
         label: "Provider",
         fieldType: "lazyselect",
         width: "four",
-        value: `${workOrder?.WorkorderSchedule?.Provider} || ${workOrder?.WorkorderSchedule?.ProviderDescription}`,
+value: formatIdDesc(
+  workOrder?.WorkorderSchedule?.Provider,
+  workOrder?.WorkorderSchedule?.ProviderDescription
+),
 
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
@@ -1100,12 +1126,12 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
         editable: true,
         order: 4,
       },
-      Comments: {
-        id: "Comments",
+      MobileComments: {
+        id: "MobileComments",
         label: "Comments",
         fieldType: "text",
         width: "half",
-        value: workOrder?.WorkorderSchedule?.Comments,
+        value: workOrder?.WorkorderSchedule?.MobileComments,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
         editable: true,
@@ -1164,18 +1190,18 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
       label: "Actual Exit Date",
       fieldType: "date",
       width: "six",
-      value: workOrder?.WorkorderSchedule?.ScheduledExitDate,
+      value: workOrder?.WorkorderSchedule?.ActualExitDate,
       visible: true,
       mandatory: false,
       editable: true,
       order: 5,
     },
-    ReturnToOperationDate: {
-      id: "ReturnToOperationDate",
+    ReturnToOperation: {
+      id: "ReturnToOperation",
       label: "Return To Operation Date",
       fieldType: "date",
       width: "half",
-      value: workOrder?.WorkorderSchedule?.ScheduledExitDate,
+      value: workOrder?.WorkorderSchedule?.ReturnToOperation,
       visible: true,
       mandatory: false,
       editable: true,
@@ -2319,23 +2345,23 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
                                   collapsible={true}
                                   badgeValue={isWorkShopLabel}
                                   initialData={workOrderData?.Location || {}}
-                                  onDataChange={(updatedSchedule) => {
-                                    useWorkOrderStore.setState((state) => ({
-                                      workOrder: {
-                                        ...state.workOrder,
-                                        WorkorderSchedule: {
-                                          ...state.workOrder.WorkorderSchedule,
-                                          ...updatedSchedule,
-                                          ModeFlag:
-                                            state.workOrder.WorkorderSchedule
-                                              ?.ModeFlag === "NoChange"
-                                              ? "Update"
-                                              : state.workOrder
-                                                  .WorkorderSchedule?.ModeFlag,
-                                        },
-                                      },
-                                    }));
-                                  }}
+                                  // onDataChange={(updatedSchedule) => {
+                                  //   useWorkOrderStore.setState((state) => ({
+                                  //     workOrder: {
+                                  //       ...state.workOrder,
+                                  //       WorkorderSchedule: {
+                                  //         ...state.workOrder.WorkorderSchedule,
+                                  //         ...updatedSchedule,
+                                  //         ModeFlag:
+                                  //           state.workOrder.WorkorderSchedule
+                                  //             ?.ModeFlag === "NoChange"
+                                  //             ? "Update"
+                                  //             : state.workOrder
+                                  //                 .WorkorderSchedule?.ModeFlag,
+                                  //       },
+                                  //     },
+                                  //   }));
+                                  // }}
                                 />
                               </div>
                             </div>
