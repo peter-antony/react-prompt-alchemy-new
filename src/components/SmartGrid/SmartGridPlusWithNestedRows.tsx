@@ -113,7 +113,7 @@ export function SmartGridPlusWithNestedRows({
                 <SmartGridPlus
                   key={`nested-grid-${rowIndex}-${nestedData.length}`}
                   columns={nestedSectionConfig.columns}
-                  data={nestedData}
+                  data={nestedData.filter((item: any) => item.ModeFlag !== 'Delete')}
                   paginationMode="infinite"
                   hideToolbar={true}
                   customPageSize={rowCount}

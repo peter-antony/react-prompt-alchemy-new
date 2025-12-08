@@ -1004,6 +1004,22 @@ export function SmartGridPlus({
       );
     }
 
+    // Handle DeleteAction column - shows only delete button
+    if (column.key === 'DeleteAction') {
+      return (
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleDeleteRowAction(rowIndex, row)}
+            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <div className="min-w-0 truncate">
         <CellRenderer
