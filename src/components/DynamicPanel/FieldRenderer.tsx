@@ -715,18 +715,24 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const eventHandlers = createEventHandlers(field);
             // Get icon from config if provided
             const icon = (config as any).icon;
+            // Check if field is disabled
+            const isDisabled = (config as any).disabled === true;
             return (
               <div className="flex items-center justify-between w-full">
                 <h3 className="text-sm font-semibold text-gray-800">{config.label}</h3>
                 {icon && (
                   <div 
-                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+                    className={`w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center transition-colors ${
+                      isDisabled 
+                        ? 'cursor-not-allowed opacity-50' 
+                        : 'cursor-pointer hover:bg-gray-200'
+                    }`}
                     onClick={(e) => {
-                      if (events?.onClick) {
+                      if (!isDisabled && events?.onClick) {
                         events.onClick(e, field.value);
                       }
                     }}
-                    {...eventHandlers}
+                    {...(isDisabled ? {} : eventHandlers)}
                   >
                     {icon}
                   </div>

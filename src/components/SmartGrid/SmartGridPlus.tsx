@@ -1554,7 +1554,8 @@ export function SmartGridPlus({
                           {showCheckboxes && (
                             <TableCell className="px-3 py-2 w-[50px]">
                               <input 
-                                type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                                // type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                                type="checkbox"
                                 name="grid-selection"
                                 className="rounded" 
                                 checked={isSelected}

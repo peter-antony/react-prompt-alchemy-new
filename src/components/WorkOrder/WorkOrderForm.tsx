@@ -40,7 +40,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const formRef = useRef<DynamicPanelRef>(null);
   const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [workOrderData, setWorkOrderData] = useState<Record<string, any>>({});
   const [orderType, setOrderType] = useState<"Wagon" | "Container">("Wagon");
   const [wagonMoreDetails, setWagonMoreDetails] = useState(false);
@@ -706,36 +706,53 @@ value: workOrderNo
       visible: true,
       editable: true,
       order: 14,
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 6H11M5 9H9"
-            stroke="#475467"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
+      icon: (() => {
+        const status = workOrder?.Header?.Status?.toLowerCase() || "";
+        const isEnabled = status === "completed" || status === "closed";
+        return (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={isEnabled ? "" : "opacity-50"}
+          >
+            <path
+              d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z"
+              stroke={isEnabled ? "#475467" : "#9CA3AF"}
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5 6H11M5 9H9"
+              stroke={isEnabled ? "#475467" : "#9CA3AF"}
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        );
+      })(),
       events: {
         onClick: (event, value) => {
-          console.log("Billing Details icon clicked", event, value);
-          setShowBillingDetails(true);
+          const status = workOrder?.Header?.Status?.toLowerCase() || "";
+          const isEnabled = status === "completed" || status === "closed";
+          
+          if (isEnabled) {
+            console.log("Billing Details icon clicked", event, value);
+            setShowBillingDetails(true);
+          } else {
+            event.preventDefault();
+            event.stopPropagation();
+          }
         },
       },
+      disabled: (() => {
+        const status = workOrder?.Header?.Status?.toLowerCase() || "";
+        return !(status === "completed" || status === "closed");
+      })(),
     },
 
     /** Billing */
@@ -2277,6 +2294,7 @@ value: formatIdDesc(
                                   onClick={() => {
                                     console.log("Create Forward Trip clicked");
                                     // Add your click handler here
+                                    navigate("/trip-planning");
                                   }}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
@@ -2296,7 +2314,7 @@ value: formatIdDesc(
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
                                   <span>
-                                    Forward Trip Execution - TRIP0000234
+                                    Forward Trip Execution - {workOrder?.WorkorderSchedule?.RUForwardTripID || ""}
                                   </span>
                                 </button>
 
@@ -2305,6 +2323,7 @@ value: formatIdDesc(
                                   onClick={() => {
                                     console.log("Create Return Trip clicked");
                                     // Add your click handler here
+                                    navigate("/trip-planning");
                                   }}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
@@ -2324,7 +2343,7 @@ value: formatIdDesc(
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
                                   <span>
-                                    Return Trip Execution - TRIP0000235
+                                    Return Trip Execution - {workOrder?.WorkorderSchedule?.RUReturnTripID || ""}
                                   </span>
                                 </button>
                               </div>

@@ -72,6 +72,7 @@ export interface FieldConfig {
   };
   searchData?: string[]; // For search field type, local array for suggestions
   icon?: React.ReactNode; // For title field type, icon to display
+  disabled?: boolean; // For disabling field interactions (e.g., header icon)
 }
 
 export interface PanelConfig {
