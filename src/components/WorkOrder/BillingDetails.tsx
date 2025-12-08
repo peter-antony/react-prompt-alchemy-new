@@ -375,7 +375,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         // ReinvoiceCostTo
                         ReinvoiceCostTo: {
                             ...billingData?.BillingDetails?.ReinvoiceCostTo,
-                            ReinvoiceCostToDetails: billingData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails.map((item: any) => {
+                            ReinvoiceCostToDetails: (billingData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails || []).map((item: any) => {
                                 // Check if this item (or its group) is selected
                                 // Logic from handleRowClick: if item.ItemName is in selectedRowIds
                                 const isSelected = selectedRowIds.has(item.ItemName);
