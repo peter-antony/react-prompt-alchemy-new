@@ -111,8 +111,8 @@ saveWorkOrder: async () => {
     console.log("workorder123", billingPayload)
     
     // Call the billing details save API with the same payload
-    const billingResult = await workOrderService.saveWorkOrderBillingDetails(billingPayload);
-    console.log("billing result ===========", billingResult);
+    // const billingResult = await workOrderService.saveWorkOrderBillingDetails(billingPayload);
+    // console.log("billing result ===========", billingResult);
     
     // 🔥 Correct handling of backend validation
     const success = result && result.IsSuccess === true; 

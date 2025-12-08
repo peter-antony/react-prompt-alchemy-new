@@ -176,6 +176,33 @@ export const workOrderService = {
 
     return response.data;
   },
+
+  // Create Trip - Tug Operation Creation
+  createTugOperation: async (payload: any): Promise<any> => {
+    const userContext = getUserContext();
+
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Create Trip - Tug Operation Creation",
+      },
+      RequestPayload: payload,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.CREATE_TRIP_CO,
+      requestBody
+    );
+
+    return response.data;
+  },
   
 
 

@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
-import { Shuffle, Plus } from "lucide-react";
+import { Shuffle, Plus, ExternalLink, MapPin } from "lucide-react";
 import type { PanelConfig } from "@/types/dynamicPanel";
 import { MapPinned } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -94,6 +94,195 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mappedName: 'CancellationRemarks'
     },
   ]);
+
+  // const forwardTripId = "TP/2021/00025724";
+  const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
+  const handleCreateTugOperation = async () => {
+    console.log("handleCreate TugOperation", workOrder);
+    console.log("handleCreate TugOperation", workOrder?.WorkorderSchedule);
+    const payload = {
+      Header: {
+        TripRunNo: "",
+        TripNo: "",
+        TripStatus: "",
+        TripType: "Tug Operations",
+        PlanningProfileID: "General-GMBH",
+        Location: "FWDS_GMBH",
+        Cluster: workOrder?.Header?.Cluster,
+        PlanDate: null,
+        LoadType: "Loaded",
+        PlanStartDate: null,
+        PlanStartTime: null,
+        PlanEndDate: null,
+        PlanEndTime: null,
+        RefDocType: "WO",
+        RefDocNo: workOrder?.Header?.WorkorderNo,
+        TugTransportMode: "",
+        "AddressInfo": {
+            "Departure": {
+                "DepartureID": workOrder?.WorkorderSchedule?.OriginID,
+                "DepartureDescription": workOrder?.WorkorderSchedule?.OriginDescription,
+                "AddressLine1": "",
+                "AddressLine2": "",
+                "PostalCode": "",
+                "Suburb": "",
+                "City": "",
+                "State": "",
+                "Country": ""
+            },
+            "Arrival": {
+                "ArrivalID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+                "ArrivalDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
+                "AddressLine1": "",
+                "AddressLine2": "",
+                "PostalCode": "",
+                "Suburb": "",
+                "City": "",
+                "State": "",
+                "Country": ""
+            }
+        },
+        "ResourceDetails": [
+          {
+            "ResourceID": workOrder?.WorkorderSchedule?.RUForwardID,
+            "ResourceType": "Agent",
+            "Service": "",
+            "ServiceDescription": "",
+            "SubService": "",
+            "SubServiceDescription": "",
+            "EffectiveFromDate": null,
+            "EffectiveToDate": null,
+            "ModeFlag": "Insert"
+          },
+          {
+            "ResourceID": workOrder?.Header?.EquipmentID,
+            "ResourceType": "Equipment",
+            "Service": "",
+            "ServiceDescription": "",
+            "SubService": "",
+            "SubServiceDescription": "",
+            "EffectiveFromDate": null,
+            "EffectiveToDate": null,
+            "ModeFlag": "Insert"
+          }
+        ]
+      },
+    };
+    try {
+      const res = await workOrderService.createTugOperation(payload);
+      const isSuccess = res?.IsSuccess ?? res?.data?.IsSuccess;
+      const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "Tug operation creation completed";
+
+      if (isSuccess) {
+        toast({
+          title: "✅ Tug Operation Created",
+          description: message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "⚠️ Tug Operation Failed",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Create Tug Operation failed:", error);
+      toast({
+        title: "⚠️ Tug Operation Failed",
+        description: error?.message || "Failed to create tug operation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateReturnTugOperation = async () => {
+    console.log("handleCreate TugOperation", workOrder);
+    console.log("handleCreate TugOperation", workOrder?.WorkorderSchedule);
+    const payload = {
+      Header: {
+        TripRunNo: "",
+        TripNo: "",
+        TripStatus: "",
+        TripType: "Tug Operations",
+        PlanningProfileID: "General-GMBH",
+        Location: "10-00004",
+        Cluster: "",
+        PlanDate: "2025-10-10",
+        LoadType: "Empty",
+        PlanStartDate: null,
+        PlanStartTime: null,
+        PlanEndDate: null,
+        PlanEndTime: null,
+        RefDocType: "TL",
+        RefDocNo: workOrder?.Header?.WorkorderNo,
+        TugTransportMode: "Rail",
+        "AddressInfo": {
+            "Departure": {
+                "DepartureID": workOrder?.WorkorderSchedule?.OriginID,
+                "DepartureDescription": workOrder?.WorkorderSchedule?.OriginDescription,
+                "AddressLine1": "",
+                "AddressLine2": "",
+                "PostalCode": "",
+                "Suburb": "",
+                "City": "",
+                "State": "",
+                "Country": ""
+            },
+            "Arrival": {
+                "ArrivalID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+                "ArrivalDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
+                "AddressLine1": "",
+                "AddressLine2": "",
+                "PostalCode": "",
+                "Suburb": "",
+                "City": "",
+                "State": "",
+                "Country": ""
+            }
+        },
+        "ResourceDetails": [
+          {
+            "ResourceID": workOrder?.WorkorderSchedule?.RUForwardID,
+            "ResourceType": "Agent",
+            "Service": "",
+            "ServiceDescription": "",
+            "SubService": "",
+            "SubServiceDescription": "",
+            "EffectiveFromDate": null,
+            "EffectiveToDate": null,
+            "ModeFlag": "Insert"
+          }
+        ]
+      },
+    };
+    try {
+      const res = await workOrderService.createTugOperation(payload);
+      const isSuccess = res?.IsSuccess ?? res?.data?.IsSuccess;
+      const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "Tug operation creation completed";
+
+      if (isSuccess) {
+        toast({
+          title: "✅ Tug Operation Created",
+          description: message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "⚠️ Tug Operation Failed",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Create Tug Operation failed:", error);
+      toast({
+        title: "⚠️ Tug Operation Failed",
+        description: error?.message || "Failed to create tug operation",
+        variant: "destructive",
+      });
+    }
+  };
 
   const isWorkShopLabel = useMemo(() => {
     if (isWorkShop === 1) return "Workshop";
@@ -2639,11 +2828,7 @@ useEffect(() => {
                               >
                                 {/* Create Forward Trip Button */}
                                 <button
-                                  onClick={() => {
-                                    console.log("Create Forward Trip clicked");
-                                    // Add your click handler here
-                                    navigate("/trip-planning");
-                                  }}
+                                  onClick={handleCreateTugOperation}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                   <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
@@ -2656,23 +2841,49 @@ useEffect(() => {
                                     console.log(
                                       "Forward Trip Execution clicked"
                                     );
+                                    // navigate("/manage-trip?id=TP/2021/00025724");
                                     // Add your click handler here
                                   }}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                  <span>
-                                    Forward Trip Execution - {workOrder?.WorkorderSchedule?.RUForwardTripID || ""}
+                                  <span className="flex items-center gap-2">
+                                    Forward Trip Execution - {/*{forwardTripId || "N/A"} */}
+                                    <button type="button" disabled={!forwardTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (forwardTripId) {
+                                          navigate(`/manage-trip?id=${(forwardTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        forwardTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Manage Trip ${forwardTripId}`}
+                                    >
+                                      <ExternalLink className="w-4 h-4 text-gray-600" />
+                                    </button>
+                                    <button type="button" disabled={!forwardTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (forwardTripId) {
+                                          navigate(`/trip-planning?manage=true&tripId=${(forwardTripId)}`);
+                                          // navigate(`/trip-planning?id=${encodeURIComponent(forwardTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        forwardTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Trip Planning ${forwardTripId}`}
+                                    >
+                                      <MapPin className="w-4 h-4 text-gray-600" />
+                                    </button>
                                   </span>
                                 </button>
 
                                 {/* Create Return Trip Button */}
                                 <button
-                                  onClick={() => {
-                                    console.log("Create Return Trip clicked");
-                                    // Add your click handler here
-                                    navigate("/trip-planning");
-                                  }}
+                                  onClick={handleCreateReturnTugOperation}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                   <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
