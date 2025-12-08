@@ -118,67 +118,71 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         RefDocType: "WO",
         RefDocNo: workOrder?.Header?.WorkorderNo,
         TugTransportMode: "",
-        "AddressInfo": {
-            "Departure": {
-                "DepartureID": workOrder?.WorkorderSchedule?.OriginID,
-                "DepartureDescription": workOrder?.WorkorderSchedule?.OriginDescription,
-                "AddressLine1": "",
-                "AddressLine2": "",
-                "PostalCode": "",
-                "Suburb": "",
-                "City": "",
-                "State": "",
-                "Country": ""
-            },
-            "Arrival": {
-                "ArrivalID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
-                "ArrivalDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
-                "AddressLine1": "",
-                "AddressLine2": "",
-                "PostalCode": "",
-                "Suburb": "",
-                "City": "",
-                "State": "",
-                "Country": ""
-            }
-        },
-        "ResourceDetails": [
-          {
-            "ResourceID": workOrder?.WorkorderSchedule?.RUForwardID,
-            "ResourceType": "Agent",
-            "Service": "",
-            "ServiceDescription": "",
-            "SubService": "",
-            "SubServiceDescription": "",
-            "EffectiveFromDate": null,
-            "EffectiveToDate": null,
-            "ModeFlag": "Insert"
-          },
-          {
-            "ResourceID": workOrder?.Header?.EquipmentID,
-            "ResourceType": "Equipment",
-            "Service": "",
-            "ServiceDescription": "",
-            "SubService": "",
-            "SubServiceDescription": "",
-            "EffectiveFromDate": null,
-            "EffectiveToDate": null,
-            "ModeFlag": "Insert"
-          }
-        ]
       },
+      AddressInfo: {
+        "Departure": {
+          "DepartureID": workOrder?.WorkorderSchedule?.OriginID,
+          "DepartureDescription": workOrder?.WorkorderSchedule?.OriginDescription,
+          "AddressLine1": "",
+          "AddressLine2": "",
+          "PostalCode": "",
+          "Suburb": "",
+          "City": "",
+          "State": "",
+          "Country": ""
+        },
+        "Arrival": {
+          "ArrivalID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+          "ArrivalDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
+          "AddressLine1": "",
+          "AddressLine2": "",
+          "PostalCode": "",
+          "Suburb": "",
+          "City": "",
+          "State": "",
+          "Country": ""
+        }
+      },
+      ResourceDetails: [
+        {
+          "ResourceID": workOrder?.WorkorderSchedule?.RUForwardID,
+          "ResourceType": "Agent",
+          "Service": "",
+          "ServiceDescription": "",
+          "SubService": "",
+          "SubServiceDescription": "",
+          "EffectiveFromDate": null,
+          "EffectiveToDate": null,
+          "ModeFlag": "Insert"
+        },
+        {
+          "ResourceID": workOrder?.Header?.EquipmentID,
+          "ResourceType": "Equipment",
+          "Service": "",
+          "ServiceDescription": "",
+          "SubService": "",
+          "SubServiceDescription": "",
+          "EffectiveFromDate": null,
+          "EffectiveToDate": null,
+          "ModeFlag": "Insert"
+        }
+      ]
     };
     try {
       const res = await workOrderService.createTugOperation(payload);
       const isSuccess = res?.IsSuccess ?? res?.data?.IsSuccess;
       const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "Tug operation creation completed";
-
+      console.log("res", res);
+      const parsedResponse = JSON.parse(res?.data.ResponseData || "{}");
+      console.log("parsedResponse", parsedResponse);
+      console.log("parsedResponse", parsedResponse?.RequestPayload?.Header?.RefDocNo);
       if (isSuccess) {
         toast({
           title: "✅ Tug Operation Created",
           description: message,
           variant: "default",
         });
+        searchWorkOrder(parsedResponse?.RequestPayload?.Header?.RefDocNo);
       } else {
         toast({
           title: "⚠️ Tug Operation Failed",
