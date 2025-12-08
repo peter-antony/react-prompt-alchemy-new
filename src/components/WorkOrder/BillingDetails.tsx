@@ -740,7 +740,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
     // Handler for Confirm Item Service
     const handleConfirmItemService = async () => {
-        if (!billingData || !selectedOperationRow) return;
+        if (!billingData) return;
+
+        // Validation: Must select a row
+        if (!selectedOperationRow) {
+            toast({
+                title: "Selection Required",
+                description: "Please select any row before confirming",
+                variant: "destructive",
+            });
+            return;
+        }
 
         try {
             setLoading(true);
@@ -797,8 +807,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                     if (updatedResponse?.data?.ResponseData) {
                         const parsedData = JSON.parse(updatedResponse.data.ResponseData);
                         setBillingData(parsedData);
-                        // Clear selection after successful confirm
-                        setSelectedOperationRow(null);
+                        // Update selection with the updated row from response
+                        if (selectedOperationRow?.OrderID) {
+                            const updatedRow = parsedData.BillingDetails?.OperationBillingDetails?.find(
+                                (row: any) => row.OrderID === selectedOperationRow.OrderID
+                            );
+                            if (updatedRow) {
+                                setSelectedOperationRow(updatedRow);
+                            } else {
+                                setSelectedOperationRow(null);
+                            }
+                        }
                     }
                 }
             } else {
@@ -822,7 +841,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
     // Handler for Amend Item Service
     const handleAmendItemService = async () => {
-        if (!billingData || !selectedOperationRow) return;
+        if (!billingData) return;
+
+        // Validation: Must select a row
+        if (!selectedOperationRow) {
+            toast({
+                title: "Selection Required",
+                description: "Please select any row before amending",
+                variant: "destructive",
+            });
+            return;
+        }
 
         try {
             setLoading(true);
@@ -879,8 +908,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                     if (updatedResponse?.data?.ResponseData) {
                         const parsedData = JSON.parse(updatedResponse.data.ResponseData);
                         setBillingData(parsedData);
-                        // Clear selection after successful amend
-                        setSelectedOperationRow(null);
+                        // Update selection with the updated row from response
+                        if (selectedOperationRow?.OrderID) {
+                            const updatedRow = parsedData.BillingDetails?.OperationBillingDetails?.find(
+                                (row: any) => row.OrderID === selectedOperationRow.OrderID
+                            );
+                            if (updatedRow) {
+                                setSelectedOperationRow(updatedRow);
+                            } else {
+                                setSelectedOperationRow(null);
+                            }
+                        }
                     }
                 }
             } else {
@@ -1173,7 +1211,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             key: 'Reference',
             label: 'Reference',
             type: 'EditableText',
-            width: 180,
+            width: 200,
             sortable: true
         },
         {
@@ -1181,9 +1219,18 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             label: 'Cost EX VAT',
             // type: 'CurrencyWithSymbol',
             type: 'Integer',
-            width: 180,
+            width: 200,
             sortable: true,
-        }
+        },
+        // {
+        //     key: "DeleteAction",
+        //     label: "Actions",
+        //     type: "Text",
+        //     sortable: false,
+        //     filterable: false,
+        //     editable: false,
+        //     width: 40,
+        // }
     ];
 
     // Handle parent operation row addition
@@ -1330,10 +1377,18 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         const operation = { ...updated[parentRowIndex] };
         const items = [...(operation.ItemService || [])];
 
-        items.splice(nestedRowIndex, 1);
-        operation.ItemService = items;
-        operation.TotalCost = items.reduce((sum, item) => sum + (item.CostEXVat || 0), 0);
-        operation.ModeFlag = 'Update';
+        // Mark the item as deleted instead of removing it
+        items[nestedRowIndex] = {
+            ...items[nestedRowIndex],
+            ModeFlag: 'Delete'
+        };
+
+        // Filter out deleted items for display purposes
+        const visibleItems = items.filter(item => item.ModeFlag !== 'Delete');
+
+        operation.ItemService = items; // Keep all items including deleted ones
+        operation.TotalCost = visibleItems.reduce((sum, item) => sum + (item.CostEXVat || 0), 0);
+        // Don't change the parent's ModeFlag - keep it as is (NoChange or whatever it was)
 
         updated[parentRowIndex] = operation;
 
@@ -1824,30 +1879,29 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                         </div>
 
                         {/* Item Service Panel Footer with Confirm/Amend Buttons */}
-                        {selectedOperationRow && (
-                            <div className="flex justify-end mt-4 pt-3">
-                                {selectedOperationRow.BillStatus === "InProgress" && (
-                                    <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                        onClick={handleConfirmItemService}
-                                        // disabled={loading}
-                                    >
-                                        {/* {loading ? "Processing..." : "Confirm Item Service"} */}
-                                        Confirm Item Service
-                                    </button>
-                                )}
-                                {selectedOperationRow.BillStatus === "Approved" && (
-                                    <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                        onClick={handleAmendItemService}
-                                        // disabled={loading}
-                                    >
-                                        {/* {loading ? "Processing..." : "Amend Item Service"} */}
-                                        Amend Item Service
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                        <div className="flex justify-end mt-4 pt-3">
+                            {/* Show Amend ONLY if a row is selected AND status is Approved */}
+                            {selectedOperationRow?.BillStatus === "Approved" ? (
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                    onClick={handleAmendItemService}
+                                // disabled={loading}
+                                >
+                                    {/* {loading ? "Processing..." : "Amend Item Service"} */}
+                                    Amend Item Service
+                                </button>
+                            ) : (
+                                /* Show Confirm by default (no selection) OR if status is NOT Approved */
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                    onClick={handleConfirmItemService}
+                                // disabled={loading}
+                                >
+                                    {/* {loading ? "Processing..." : "Confirm Item Service"} */}
+                                    Confirm Item Service
+                                </button>
+                            )}
+                        </div>
 
                     </CollapsibleBillingPanel>
 
@@ -2337,7 +2391,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     onRowClick={handleRowClick}
                                     hideToolbar={true}
                                     rowClassName={(row: any, index: number) => {
-                                        return selectedRowIds.has(row.ItemName) ? 'selected' : '';
+                                        return selectedRowIds.has(row.ItemName) ? 'selected' : ''; // Row Selection based on ItemName
                                     }}
                                     showDefaultConfigurableButton={false}
                                     gridTitle=""
