@@ -74,85 +74,44 @@ export const useWorkOrderStore = create<WorkOrderState>()(
   }))},
 
 
-
-      // saveWorkOrder: async () => {
-      //   set({ loading: true, error: null, apiMessage: null });
-
-      //   const state = useWorkOrderStore.getState();
-      //   const workOrder = state.workOrder;
-
-      //   if (!workOrder) {
-      //     set({ loading: false, error: "No Work Order found to save" });
-      //     return;
-      //   }
-
-      //   const payload = {
-      //     context: {
-      //       UserID: "ramcouser",
-      //       Role: "ramcorole",
-      //       OUID: 4,
-      //       MessageID: "12345",
-      //       MessageType: "WorkOrder-Save",
-      //     },
-      //     RequestPayload: workOrder,
-      //   };
-
-      //   try {
-      //     const result = await workOrderService.saveWorkOrder(payload);
-
-      //     // save success
-      //     const success = result?.IsSuccess ?? true;
-      //     const message = result?.Message ?? "Save Completed";
-
-      //     set({
-      //       apiMessage: message,
-      //       isSuccess: success,
-      //       loading: false,
-      //     });
-       
-      //     if (success) {
-      //       // 1️⃣ RESET STORE
-      //       set({ workOrder: null });
-
-      //       // 2️⃣ CALL GET / SEARCH AGAIN (REFRESH)
-      //       const refreshPayload = {
-      //         context: {
-      //           MessageID: "12345",
-      //           MessageType: "WorkOrder-Save",
-      //           OUID: 4,
-      //           Role: "ramcorole",
-      //           UserID: "ramcouser",
-      //         },
-      //         SearchCriteria: {
-      //           WorkOrderNo: workOrder.Header.WorkorderNo,
-      //           AdditionalFilter: [],
-      //         },
-      //       };
-
-      //       // await state.searchWorkOrder(refreshPayload);
-      //     }
-      //   } catch (err: any) {
-      //     console.error("WorkOrder save failed:", err);
-      //     set({
-      //       loading: false,
-      //       error: err?.message ?? "Save failed",
-      //       isSuccess: false,
-      //     });
-      //   }
-      // },
-
-
 saveWorkOrder: async () => {
   set({ loading: true, error: null, apiMessage: null });
 
   const workOrder = useWorkOrderStore.getState().workOrder;
   try {
     // Call both APIs sequentially - first saveWorkOrder, then saveWorkOrderBillingDetails
+     const billingPayload = {
+
+    Header: {
+      WorkorderNo: workOrder?.Header?.WorkorderNo,
+      Status: workOrder?.Header?.Status,
+      BillStatus: "Fresh",   // static required
+      EquipmentType: workOrder?.Header?.EquipmentType,
+      EquipmentID: workOrder?.Header?.EquipmentID,
+      EquipmentDescription: workOrder?.Header?.EquipmentDescription,
+      BillingHeaderDetails: {
+        IsAcceptedByForwardis:
+          workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis == "1" ? 1 : 0,
+        IsReinvoiceCost:
+          workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1" ? 1 : 0,
+        InvoiceTo: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
+        FinancialComments: workOrder?.Header?.BillingHeaderDetails?.FinancialComments,
+        TotalNetAmount: 0,
+        FullLeasingContract: 0,
+        DryLeasingContract: 0,
+        ModeFlag: workOrder?.Header?.BillingHeaderDetails?.ModeFlag
+      }
+    
+  }
+};
     const result = await workOrderService.saveWorkOrder(workOrder);
     console.log("result ===========", result);
+   
+
+    console.log("workorder123", billingPayload)
     
     // Call the billing details save API with the same payload
-    const billingResult = await workOrderService.saveWorkOrderBillingDetails(workOrder);
+    const billingResult = await workOrderService.saveWorkOrderBillingDetails(billingPayload);
     console.log("billing result ===========", billingResult);
     
     // 🔥 Correct handling of backend validation

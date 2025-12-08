@@ -97,13 +97,22 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const headerBackend = formatHeaderForBackend(headerUI);
   const locationBackend = formatLocationForBackend(locationUI);
   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
+let billingModeFlag = "NoChange";
+
+if (workOrderNo) {
+  billingModeFlag = "Update";
+}
+if(!workOrderNo){
+   billingModeFlag = "Insert";
+}
+
 
   const billingUI = {
   IsAcceptedByForwardis: headerUI.AcceptedByForwardis ? "1" : "0",
   IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
   InvoiceTo: headerUI.InvoiceTo || null,
   FinancialComments: headerUI.FinacialComments || null,
-  ModeFlag: "NoChange",
+  ModeFlag: billingModeFlag
 };
 
 
