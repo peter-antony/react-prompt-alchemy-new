@@ -2950,8 +2950,50 @@ useEffect(() => {
                   </div>
                 </div>
 
+                {/* Fixed Footer */}
                 <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-                  <div className="flex items-center gap-4"></div>
+                  {/* Left Section */}
+                  <div className="flex items-center gap-4">
+
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-gray-500" style={{ fontSize: '10px' }}>Created By</span>
+                        <span className="text-xs font-small" style={{ fontSize: '10px' }}>{workOrder?.Header?.CreatedBy || "-"}</span>
+                      </div>
+
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-gray-500" style={{ fontSize: '10px' }}>Created Date and Time</span>
+                        <span className="text-xs font-small" style={{ fontSize: '10px' }}>
+                          {workOrder?.Header?.CreationDate && workOrder?.Header?.CreationDateTime
+                            ? `${new Date(workOrder.Header.CreationDate + 'T' + workOrder.Header.CreationDateTime)
+                              .toLocaleDateString('en-GB')
+                              .split('/')
+                              .join('-')} ${new Date(workOrder.Header.CreationDate + 'T' + workOrder.Header.CreationDateTime)
+                                .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                            }`
+                            : '-'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-gray-500" style={{ fontSize: '10px' }}>Last Modified By</span>
+                        <span className="text-xs font-small" style={{ fontSize: '10px' }}>{workOrder?.Header?.ModificationBy || "-"}</span>
+                      </div>
+
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-gray-500" style={{ fontSize: '10px' }}>Last Modified Date and Time</span>
+                        <span className="text-xs font-small" style={{ fontSize: '10px' }}>
+                          {workOrder?.Header?.ModificationDate && workOrder?.Header?.ModificationDateTime
+                            ? `${new Date(workOrder.Header.ModificationDate + 'T' + workOrder.Header.ModificationDateTime)
+                              .toLocaleDateString('en-GB')
+                              .split('/')
+                              .join('-')} ${new Date(workOrder.Header.ModificationDate + 'T' + workOrder.Header.ModificationDateTime)
+                                .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                            }`
+                            : '-'}
+                        </span>
+                      </div>
+
+                    </div>
                   <div className="flex items-center gap-4">
                     {/* {selectedOperation !== null && (
                       <>
