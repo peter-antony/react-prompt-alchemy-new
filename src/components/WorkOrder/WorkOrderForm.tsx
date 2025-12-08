@@ -126,7 +126,6 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
    setUiHeader(headerUI);
   setUiLocation(locationUI);
   setUiSchedule(scheduleUI);
-
   const headerBackend = formatHeaderForBackend(headerUI);
   const locationBackend = formatLocationForBackend(locationUI);
   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
@@ -145,6 +144,9 @@ if(!workOrderNo){
   IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
   InvoiceTo: headerUI.InvoiceTo || null,
   FinancialComments: headerUI.FinacialComments || null,
+  Bill_TotalNetAmount:workOrder?.Header?.BillingHeaderDetails?.Bill_TotalNetAmount,
+  Bill_FullLeasingContract:workOrder?.Header?.BillingHeaderDetails?.Bill_FullLeasingContract,
+  Bill_DryLeasingContract:workOrder?.Header?.BillingHeaderDetails?.Bill_DryLeasingContract,
   ModeFlag: billingModeFlag
 };
 
@@ -473,7 +475,7 @@ if(isSuccess){
       }
     };
   };
-
+  
 
 
   /**
@@ -501,7 +503,7 @@ if(isSuccess){
       order: 1,
      events: {
     onChange: (value) => {
-      setEquipmentType(value);   
+      setEquipmentType(value);
     },
   },
     },
@@ -514,7 +516,7 @@ if(isSuccess){
       mandatory: true,
       visible: true,
       editable: true,
-value: workOrderNo
+value: workOrderNo 
   ? formatIdDesc(workOrder?.Header?.EquipmentID, workOrder?.Header?.EquipmentDescription)
   : uiHeader?.WagonCondainterID || "",
 

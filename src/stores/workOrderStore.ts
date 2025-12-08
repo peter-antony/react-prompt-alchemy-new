@@ -96,9 +96,9 @@ saveWorkOrder: async () => {
           workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1" ? 1 : 0,
         InvoiceTo: workOrder?.Header?.BillingHeaderDetails?.InvoiceTo,
         FinancialComments: workOrder?.Header?.BillingHeaderDetails?.FinancialComments,
-        TotalNetAmount: 0,
-        FullLeasingContract: 0,
-        DryLeasingContract: 0,
+        TotalNetAmount: workOrder?.Header?.BillingHeaderDetails?.Bill_TotalNetAmount,
+        FullLeasingContract: workOrder?.Header?.BillingHeaderDetails?.Bill_FullLeasingContract,
+        DryLeasingContract: workOrder?.Header?.BillingHeaderDetails?.Bill_DryLeasingContract,
         ModeFlag: workOrder?.Header?.BillingHeaderDetails?.ModeFlag
       }
     
