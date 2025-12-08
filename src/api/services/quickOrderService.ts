@@ -116,7 +116,7 @@ export const quickOrderService = {
         // offset: params?.offset,
         // limit: params?.limit,
       },
-      SearchCriteria: {
+      SearchCriteria: params?.SearchCriteria || {
         id: params?.searchTerm || '',
         name: params?.searchTerm || '',
       },

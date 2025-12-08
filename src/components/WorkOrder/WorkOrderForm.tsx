@@ -475,6 +475,49 @@ if(isSuccess){
       }
     };
   };
+
+
+  // Handle Supplier on EquipmentID Change
+  const handleEquipmentChange = async (value: any) => {
+    const selectedEquipmentID = value?.value?.split(" || ")[0]; // Extract ID from the selected EquipmentID value
+
+    if (!selectedEquipmentID) return;
+
+    try {
+      const response: any = await quickOrderService.getMasterCommonData({
+        messageType: "EquipmentID OnSelect",
+        SearchCriteria: {
+          EquipmentCategory: equipmentType, // 'Wagon' or 'Container'
+          EquipmentID: selectedEquipmentID, // The selected EquipmentID
+        },
+      });
+
+      const parsedData = response?.data?.ResponseData ? JSON.parse(response.data.ResponseData) : null;
+      const data = parsedData?.ResponsePayload;
+
+      if (data) {
+        const contractId = data.SupplierContract; //Binding SupplierContractID 
+        const contractDesc = data.SupplierContractDescription; // Binding SupplierContractDescription
+        const formattedContract = formatIdDesc(contractId, contractDesc);
+
+        // Update the form values
+        if (workOrderPanelRef.current) {
+          workOrderPanelRef.current.setFormValues({
+            SuplierContract: formattedContract,
+          });
+        }
+
+        if (workOrderNo) {
+          updateHeader("SupplierContractID", contractId); // Update SupplierContractID
+          updateHeader("SupplierContractDescription", contractDesc); // Update SupplierContractDescription
+        } else {
+          setUiHeader((prev) => ({ ...prev, SuplierContract: formattedContract }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data in handleEquipmentChange - SupplierContract on select EquipmentID:", error);
+    }
+  };
   
 
 
@@ -526,6 +569,11 @@ value: workOrderNo
     equipmentType === "Wagon"
       ? fetchMaster("Wagon id Init")
       : fetchMaster("Container id Init"),
+      events: {
+        onChange: (value) => {
+          handleEquipmentChange(value);
+        },
+      },
     },
 
     SuplierContract: {
