@@ -356,4 +356,29 @@ export const workOrderService = {
     );
     return response.data;
   },
+
+  // Cancel Work Order
+  cancelWorkOrder: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Cancel"
+      },
+      RequestPayload: payload
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.CANCEL, // Using SAVE endpoint as it's the update endpoint
+      requestBody
+    );
+    return response.data;
+  },
 };

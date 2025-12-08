@@ -165,6 +165,7 @@ export const API_ENDPOINTS = {
     SUPPLIER_BILLING_AMEND: '/workorder/supplierbillingamend',
     CUSTOMER_BILLING_CONFIRM: '/workorder/customerbillingconfirm',
     CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
+    CANCEL: '/workorder/cancel',
   },
   // Invoice management
   INVOICES: {

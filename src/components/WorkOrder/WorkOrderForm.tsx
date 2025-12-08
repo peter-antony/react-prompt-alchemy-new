@@ -25,6 +25,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom"; // Import useSearchParams for URL search parameters
 import CodeInformationDrawer from "./CodeInformationDrawer";
 import { useNavigate } from 'react-router-dom';
+import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
+import { Ban } from "lucide-react";
+import { workOrderService } from "@/api/services/workOrderService";
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -61,6 +64,36 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   // const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const [equipmentType, setEquipmentType] = useState(workOrder?.Header?.EquipmentType || "Wagon");
   const [reInvoice, setReInvoice] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelFields, setCancelFields] = useState([
+    {
+      type: "date",
+      label: "Requested Date and Time",
+      name: "date",
+      placeholder: "Select Requested Date and Time",
+      value: "",
+      required: true,
+      mappedName: 'CancellationRequestedDateTime'
+    },
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'CancellationReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'CancellationRemarks'
+    },
+  ]);
 
   const isWorkShopLabel = useMemo(() => {
     if (isWorkShop === 1) return "Workshop";
@@ -2059,6 +2092,115 @@ value: formatIdDesc(
     });
   };
 
+  const handleCancelFieldChange = (name: string, value: string) => {
+    setCancelFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const handleCancelSubmit = async (formFields: any) => {
+    console.log("Cancel Work Order Submit:", formFields);
+    
+    // Get work order number from store or URL params
+    const currentWorkOrderNo = workOrder?.Header?.WorkorderNo || searchParams.get("id");
+    
+    if (!currentWorkOrderNo) {
+      toast({
+        title: "Error",
+        description: "Work Order number is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Map form fields to payload structure
+    let mappedObj: any = {};
+    formFields.forEach((field: any) => {
+      const mappedName = field.mappedName;
+      if (mappedName === 'CancellationReasonCode') {
+        // Extract code and description from "id || name" format
+        if (field.value && field.value.includes(' || ')) {
+          const [code, description] = field.value.split(' || ').map((v: string) => v.trim());
+          mappedObj['CancellationReasonCode'] = code;
+          mappedObj['CancellationReasonCodeDescription'] = description;
+        } else {
+          mappedObj[mappedName] = field.value;
+        }
+      } else {
+        mappedObj[mappedName] = field.value;
+      }
+    });
+
+    // Build payload as per user's specification
+    const payload = {
+      Header: {
+        WorkorderNo: currentWorkOrderNo,
+        Status: workOrder?.Header?.Status || "",
+        CancellationRequestedDateTime: mappedObj.CancellationRequestedDateTime || "",
+        CancellationReasonCode: mappedObj.CancellationReasonCode || "",
+        CancellationReasonCodeDescription: mappedObj.CancellationReasonCodeDescription || "",
+        CancellationRemarks: mappedObj.CancellationRemarks || ""
+      }
+    };
+
+    console.log('Cancel Payload:', payload);
+
+    try {
+      const response: any = await workOrderService.cancelWorkOrder(payload);
+      console.log("Cancel response:", response);
+
+      // Handle response structure similar to saveWorkOrder
+      const isSuccess = response?.IsSuccess || response?.data?.IsSuccess || false;
+      const message = response?.Message || response?.data?.Message || "";
+
+      // Parse ResponseData if it exists and contains updated work order data
+      let updatedWorkOrderData = null;
+      if (response?.data?.ResponseData) {
+        try {
+          updatedWorkOrderData = JSON.parse(response.data.ResponseData);
+          console.log("Parsed cancel response data:", updatedWorkOrderData);
+        } catch (parseError) {
+          console.error("Failed to parse cancel response data:", parseError);
+        }
+      }
+
+      if (isSuccess) {
+        toast({
+          title: "✅ Work Order Cancelled",
+          description: message || "Work Order has been cancelled successfully.",
+          variant: "default",
+        });
+
+        // Close modal
+        setCancelModalOpen(false);
+
+        // Reset cancel fields
+        setCancelFields(fields =>
+          fields.map(f => ({ ...f, value: "" }))
+        );
+
+        // Refresh work order data from API to show fresh data
+        // This will bind the response data from the API
+        if (currentWorkOrderNo) {
+          await searchWorkOrder(currentWorkOrderNo);
+        }
+      } else {
+        toast({
+          title: "⚠️ Cancellation Failed",
+          description: message || "Failed to cancel work order.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error cancelling work order:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to cancel work order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteRow = async (row: any, rowIndex: number) => {
     console.log("Deleting operation detail:", row, "at index:", rowIndex);
     
@@ -2416,6 +2558,23 @@ value: formatIdDesc(
                     {selectedOperation === null && (
                       <> */}
                         <button className={buttonCancel}>Cancel</button>
+                        {/* <button 
+                          className={buttonCancel}
+                          onClick={() => {
+                            if (workOrder?.Header?.WorkorderNo) {
+                              setCancelModalOpen(true);
+                            } else {
+                              toast({
+                                title: "Error",
+                                description: "Please save the work order before cancelling.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          disabled={!workOrder?.Header?.WorkorderNo}
+                        >
+                          Cancel
+                        </button> */}
                         <button
                           className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
                           onClick={handleGetFormValues}
@@ -2556,6 +2715,25 @@ value: formatIdDesc(
                 console.log("Code selected:", code);
                 // Handle code selection if needed
               }}
+            />
+
+            {/* Cancel Work Order Modal */}
+            <TripPlanActionModal
+              open={cancelModalOpen}
+              onClose={() => {
+                setCancelModalOpen(false);
+                // Reset fields when closing
+                setCancelFields(fields =>
+                  fields.map(f => ({ ...f, value: "" }))
+                );
+              }}
+              title="Cancel Work Order"
+              icon={<Ban className="w-4 h-4" />}
+              fields={cancelFields as any}
+              onFieldChange={handleCancelFieldChange}
+              onSubmit={handleCancelSubmit}
+              submitLabel="Cancel"
+              actionType="cancel"
             />
           </AppLayout>
         </>
