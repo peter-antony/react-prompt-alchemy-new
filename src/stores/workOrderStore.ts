@@ -147,8 +147,14 @@ saveWorkOrder: async () => {
 
   const workOrder = useWorkOrderStore.getState().workOrder;
   try {
+    // Call both APIs sequentially - first saveWorkOrder, then saveWorkOrderBillingDetails
     const result = await workOrderService.saveWorkOrder(workOrder);
     console.log("result ===========", result);
+    
+    // Call the billing details save API with the same payload
+    const billingResult = await workOrderService.saveWorkOrderBillingDetails(workOrder);
+    console.log("billing result ===========", billingResult);
+    
     // 🔥 Correct handling of backend validation
     const success = result && result.IsSuccess === true; 
     const message = result?.Message ?? "Unknown response";
@@ -184,6 +190,14 @@ saveWorkOrder: async () => {
 
     if (success) {
       set({ workOrder: null });
+      
+      // Call hubSelection API after successful save if workorderNo exists
+      if (workorderNo) {
+        // Get the searchWorkOrder function from the store
+        const state = useWorkOrderStore.getState();
+        // Call searchWorkOrder to fetch the updated work order data
+        await state.searchWorkOrder(workorderNo);
+      }
     }
 
     return { success, message, workorderNo: workorderNo || undefined };

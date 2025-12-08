@@ -149,6 +149,33 @@ export const workOrderService = {
 
   return response.data;
 },
+
+  // Save Work Order Billing Details
+  saveWorkOrderBillingDetails: async (workOrder: any): Promise<any> => {
+    const userContext = getUserContext();
+
+    const payload = {
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Save Billing Details",
+      },
+      RequestPayload: workOrder,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORK_ORDER.SAVE_BILLING_DETAILS,
+      requestBody
+    );
+
+    return response.data;
+  },
   
 
 
