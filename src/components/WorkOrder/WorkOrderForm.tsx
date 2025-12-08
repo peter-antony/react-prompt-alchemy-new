@@ -101,11 +101,47 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     return "";
   }, [isWorkShop]);
 
-  const [uiHeader, setUiHeader] = useState<any>({});
-  const [uiLocation, setUiLocation] = useState<any>({});
-  const [uiSchedule, setUiSchedule] = useState<any>({});
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
+ const [uiHeader, setUiHeader] = useState<any>({});
+  const [uiLocation, setUiLocation] =useState<any>({});
+ const [uiSchedule, setUiSchedule] = useState<any>({});
+ const [selectedProduct, setSelectedProduct] = useState<string>("");
+ const rightPanelRef = useRef<HTMLDivElement>(null);
 
+// Initial height as per your requirement
+const [leftScrollHeight, setLeftScrollHeight] = useState("calc(92vh - 250px)");
+const updateLeftScrollHeight = () => {
+  const schedulePanel = document.getElementById("schedule-details-panel");
+
+  // If Schedule panel is NOT visible → reset to initial height
+  if (!schedulePanel) {
+    setLeftScrollHeight("calc(100vh - 250px)");
+    return;
+  }
+
+  setTimeout(() => {
+    const rightHeight = rightPanelRef.current?.offsetHeight || 0;
+    setLeftScrollHeight(`${rightHeight}px`);
+  }, 0);
+};
+
+
+// Run after initial render
+useEffect(() => {
+  updateLeftScrollHeight();
+}, []);
+
+// Update when right content changes
+useEffect(() => {
+  updateLeftScrollHeight();
+}, [selectedOperation, isWorkShop, workOrder?.OperationDetails]);
+
+// Update on window resize
+useEffect(() => {
+  window.addEventListener("resize", updateLeftScrollHeight);
+  return () => window.removeEventListener("resize", updateLeftScrollHeight);
+}, []);
+
+ 
 
   const formatIdDesc = (id?: any, desc?: any) =>
     [id, desc].filter(v => v && v.toString().trim()).join(" || ") || null;
@@ -988,18 +1024,18 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     },
 
 
-    InvoiceTo: {
-      id: "InvoiceTo",
-      label: "Stakeholder",
-      fieldType: "lazyselect",
-      width: "full",
-      mandatory: reInvoice,
-      visible: true,
-      editable: true,
-      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
-      order: 17,
-      fetchOptions: fetchMaster("Work Order Invoice to Init"),
-    },
+   InvoiceTo: {
+  id: "InvoiceTo",
+  label: "Stakeholder",
+  fieldType: "lazyselect",
+  width: "full",
+  mandatory: reInvoice ? reInvoice : workOrder?.Header?.BillingHeaderDetails?.InvoiceTo == 1, 
+  visible: true,
+  editable: true,
+  value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
+  order: 17,
+  fetchOptions: fetchMaster("Work Order Invoice to Init"),
+},
 
 
     FinacialComments: {
@@ -1010,7 +1046,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mandatory: false,
       visible: true,
       editable: true,
-      value: "",
+      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.FinancialComments : "",
       order: 18,
     },
 
@@ -2498,9 +2534,9 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="lg:col-span-1 w-2/6">
+                  <div className="lg:col-span-1 w-2/6 ">
                     <div className="bg-white rounded-lg border border-gray-200">
-                      <div className="orderFormScroll p-4">
+<div className="p-4 overflow-y-auto no-scrollbar" style={{ height: leftScrollHeight }}>
                         <DynamicPanel
                           ref={workOrderPanelRef}
                           panelId="WorkOrder"
@@ -2532,7 +2568,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                   </div>
 
                   {/* RIGHT SECTION */}
-                  <div className="lg:col-span-1 w-4/6">
+                  <div className="lg:col-span-1 w-4/6"   ref={rightPanelRef}>
                     <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
                       <SmartGridPlus
                         columns={operationDetailsColumns}
@@ -2663,7 +2699,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
                           </div>
 
                           {isWorkShop === 1 && (
-                            <div className="bg-white mb-6 rounded-lg">
+ <div id="schedule-details-panel" className="bg-white mb-6 rounded-lg">
                               <div className="">
                                 <DynamicPanel
                                   ref={scheduleDetailsRef}

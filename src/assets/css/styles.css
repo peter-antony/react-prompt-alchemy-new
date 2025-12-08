@@ -81,10 +81,21 @@ body::-webkit-scrollbar-thumb {
   min-height: calc(100vh - 110px);
 }
 .orderFormScroll {
-  height: calc(100vh - 250px);
+  max-height: calc(100vh   - 250px);
   overflow: hidden;
   overflow-y: scroll;
+  height: auto
 }
+
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar {
+  scrollbar-width: none; 
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; 
+}
+
 .orderFormScroll::-webkit-scrollbar {
   width: 0px;
 }
