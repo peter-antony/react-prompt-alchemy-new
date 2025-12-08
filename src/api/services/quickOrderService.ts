@@ -164,6 +164,11 @@ export const quickOrderService = {
         //   FilterName: "ScreenName",
         //   FilterValue: params?.ScreenName,
         // },
+      ]: params?.messageType === "UN Code Init" ? [
+        {
+          FilterName: "ProductId",
+          FilterValue: params?.selectedProductId || '',
+        }      
       ]:
         [],
       Pagination: {

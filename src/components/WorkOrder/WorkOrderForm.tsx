@@ -39,7 +39,7 @@ export type WorkOrderFormHandle = {
  * Component
  * ---------------------------------------------------*/
 const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
-    const { toast } = useToast();
+  const { toast } = useToast();
   const formRef = useRef<DynamicPanelRef>(null);
   const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
   const workOrderNo = searchParams.get("id"); // Get the work order number from the URL
@@ -58,7 +58,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const locationDetailsRef = useRef<DynamicPanelRef>(null);
   const scheduleDetailsRef = useRef<DynamicPanelRef>(null);
   const workOrderPanelRef = useRef<DynamicPanelRef>(null);
-  const { workOrder,isSuccess,error,apiMessage, searchWorkOrder, loading,saveWorkOrder,resetWorkOrderForm,resetStatus } = useWorkOrderStore();
+  const { workOrder, isSuccess, error, apiMessage, searchWorkOrder, loading, saveWorkOrder, resetWorkOrderForm, resetStatus } = useWorkOrderStore();
   const [showCodeInformation, setShowCodeInformation] = useState(false); // State for Code Information drawer
   const [selectedCode, setSelectedCode] = useState<any>(null); // Track selected code row
   // const [changeSearchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
@@ -101,14 +101,14 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     return "";
   }, [isWorkShop]);
 
- const [uiHeader, setUiHeader] = useState<any>({});
-  const [uiLocation, setUiLocation] =useState<any>({});
- const [uiSchedule, setUiSchedule] = useState<any>({});
- const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [uiHeader, setUiHeader] = useState<any>({});
+  const [uiLocation, setUiLocation] = useState<any>({});
+  const [uiSchedule, setUiSchedule] = useState<any>({});
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
 
 
-   const formatIdDesc = (id?: any, desc?: any) =>
-  [id, desc].filter(v => v && v.toString().trim()).join(" || ") || null;
+  const formatIdDesc = (id?: any, desc?: any) =>
+    [id, desc].filter(v => v && v.toString().trim()).join(" || ") || null;
 
   const debounce = (fn: (...args: any[]) => void, delay = 300) => {
     let timer: any;
@@ -118,126 +118,126 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     };
   };
 
- const handleGetFormValues = async () => {
-  const headerUI = workOrderPanelRef.current?.getFormValues() || {};
-  const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
-  const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
+  const handleGetFormValues = async () => {
+    const headerUI = workOrderPanelRef.current?.getFormValues() || {};
+    const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
+    const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
 
-   setUiHeader(headerUI);
-  setUiLocation(locationUI);
-  setUiSchedule(scheduleUI);
-  const headerBackend = formatHeaderForBackend(headerUI);
-  const locationBackend = formatLocationForBackend(locationUI);
-  const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
-let billingModeFlag = "NoChange";
+    setUiHeader(headerUI);
+    setUiLocation(locationUI);
+    setUiSchedule(scheduleUI);
+    const headerBackend = formatHeaderForBackend(headerUI);
+    const locationBackend = formatLocationForBackend(locationUI);
+    const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
+    let billingModeFlag = "NoChange";
 
-if (workOrderNo) {
-  billingModeFlag = "Update";
-}
-if(!workOrderNo){
-   billingModeFlag = "Insert";
-}
-
-
-  const billingUI = {
-  IsAcceptedByForwardis: headerUI.AcceptedByForwardis ? "1" : "0",
-  IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
-  InvoiceTo: headerUI.InvoiceTo || null,
-  FinancialComments: headerUI.FinacialComments || null,
-  Bill_TotalNetAmount:workOrder?.Header?.BillingHeaderDetails?.Bill_TotalNetAmount,
-  Bill_FullLeasingContract:workOrder?.Header?.BillingHeaderDetails?.Bill_FullLeasingContract,
-  Bill_DryLeasingContract:workOrder?.Header?.BillingHeaderDetails?.Bill_DryLeasingContract,
-  ModeFlag: billingModeFlag
-};
+    if (workOrderNo) {
+      billingModeFlag = "Update";
+    }
+    if (!workOrderNo) {
+      billingModeFlag = "Insert";
+    }
 
 
- const finalPayload = {
-  Header: {
-    ...headerBackend,
-    BillingHeaderDetails: billingUI,
-  },
-  WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
-  OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails ?? [],
-};
+    const billingUI = {
+      IsAcceptedByForwardis: headerUI.AcceptedByForwardis ? "1" : "0",
+      IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
+      InvoiceTo: headerUI.InvoiceTo || null,
+      FinancialComments: headerUI.FinacialComments || null,
+      Bill_TotalNetAmount: workOrder?.Header?.BillingHeaderDetails?.Bill_TotalNetAmount,
+      Bill_FullLeasingContract: workOrder?.Header?.BillingHeaderDetails?.Bill_FullLeasingContract,
+      Bill_DryLeasingContract: workOrder?.Header?.BillingHeaderDetails?.Bill_DryLeasingContract,
+      ModeFlag: billingModeFlag
+    };
 
 
-  const store = useWorkOrderStore.getState().workOrder;
+    const finalPayload = {
+      Header: {
+        ...headerBackend,
+        BillingHeaderDetails: billingUI,
+      },
+      WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+      OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails ?? [],
+    };
 
-  if (!store) {
-    useWorkOrderStore.setState({ workOrder: finalPayload }); 
-  } else {
-    useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
-  }
 
-  /*setTimeout(() => {
-    console.log("store after update:", useWorkOrderStore.getState().workOrder);
-  }, 50);*/
- 
-  // if(workOrder.Header?.Hazardous){
-  //   workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
-  // }
-  // else{
-  //   workOrder!.Header!.Hazardous = "0";
-  // }
+    const store = useWorkOrderStore.getState().workOrder;
 
-  if (workOrder && workOrder.Header) {
-  workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
-}
+    if (!store) {
+      useWorkOrderStore.setState({ workOrder: finalPayload });
+    } else {
+      useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
+    }
 
-  
-  
-  console.log("Payload",workOrder)
-  
-  // Save work order and handle response
-  const result = await saveWorkOrder()
- 
-  
-  // If save is successful and we have a workorderNo, update URL and refresh
-  console.log("result=======", result);
-  console.log("result=======", result.workorderNo);
-  if (result.workorderNo) {
-    console.log("if=====");
-    setSearchParams({ id: result.workorderNo });
-    searchWorkOrder(result.workorderNo);
-    // The useEffect will automatically trigger when workOrderNo changes
-    // No need for manual refresh as the useEffect handles data fetching
-  }
-  console.log()
-  // saveWorkOrder();
-  setUiHeader({});
+    /*setTimeout(() => {
+      console.log("store after update:", useWorkOrderStore.getState().workOrder);
+    }, 50);*/
+
+    // if(workOrder.Header?.Hazardous){
+    //   workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+    // }
+    // else{
+    //   workOrder!.Header!.Hazardous = "0";
+    // }
+
+    if (workOrder && workOrder.Header) {
+      workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
+    }
+
+
+
+    console.log("Payload", workOrder)
+
+    // Save work order and handle response
+    const result = await saveWorkOrder()
+
+
+    // If save is successful and we have a workorderNo, update URL and refresh
+    console.log("result=======", result);
+    console.log("result=======", result.workorderNo);
+    if (result.workorderNo) {
+      console.log("if=====");
+      setSearchParams({ id: result.workorderNo });
+      searchWorkOrder(result.workorderNo);
+      // The useEffect will automatically trigger when workOrderNo changes
+      // No need for manual refresh as the useEffect handles data fetching
+    }
+    console.log()
+    // saveWorkOrder();
+    setUiHeader({});
     setUiLocation({});
     setUiSchedule({});
-  console.log(locationUI)
+    console.log(locationUI)
 
-};
+  };
 
-useEffect(()=>{
- setUiHeader({});
-},[])
+  useEffect(() => {
+    setUiHeader({});
+  }, [])
 
 
 
-//  const handleGetFormValues = async () => {
-//   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
-//   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
-//   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
+  //  const handleGetFormValues = async () => {
+  //   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
+  //   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
+  //   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
 
-//   const headerBackend = formatHeaderForBackend(headerUI);
-//   const locationBackend = formatLocationForBackend(locationUI);
-//   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
+  //   const headerBackend = formatHeaderForBackend(headerUI);
+  //   const locationBackend = formatLocationForBackend(locationUI);
+  //   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
 
-//   const finalPayload = {
-//     Header: headerBackend,
-//     WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
-//     OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
-//   };
+  //   const finalPayload = {
+  //     Header: headerBackend,
+  //     WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+  //     OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
+  //   };
 
-//   useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
-//   console.clear()
-//   console.log("finalPayload",finalPayload)
-//   console.log("store after update:", useWorkOrderStore.getState().workOrder);
-//   saveWorkOrder();
-// };
+  //   useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
+  //   console.clear()
+  //   console.log("finalPayload",finalPayload)
+  //   console.log("store after update:", useWorkOrderStore.getState().workOrder);
+  //   saveWorkOrder();
+  // };
 
 
   // const handleGetFormValues = () => {
@@ -298,31 +298,31 @@ useEffect(()=>{
     }
 
     if (!workOrderNo) {
-    formatted.ModeFlag = "Insert";  
-  } else {
-    formatted.ModeFlag =
-      values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
-  }
+      formatted.ModeFlag = "Insert";
+    } else {
+      formatted.ModeFlag =
+        values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
+    }
 
     return formatted;
   };
 
   const formatScheduleForBackend = (values, workOrderNo) => {
-  let formatted = { ...values };
+    let formatted = { ...values };
 
-  if (!workOrderNo) {
-    // Create mode
-    formatted.ModeFlag = "NoChange";
-  } else {
-    // Edit mode
-    formatted.ModeFlag =
-      values.ModeFlag === "NoChange"
-        ? "NoChange"
-        : values.ModeFlag || "Update";
-  }
+    if (!workOrderNo) {
+      // Create mode
+      formatted.ModeFlag = "NoChange";
+    } else {
+      // Edit mode
+      formatted.ModeFlag =
+        values.ModeFlag === "NoChange"
+          ? "NoChange"
+          : values.ModeFlag || "Update";
+    }
 
-  return formatted;
-};
+    return formatted;
+  };
 
 
   const formatLocationForBackend = (values) => {
@@ -346,59 +346,59 @@ useEffect(()=>{
       "Provider",
     ].forEach(applySplit);
 
-     if (!workOrderNo) {
-    // Create mode
-    formatted.ModeFlag = "Insert";
-  } else {
-    // Edit mode
-    formatted.ModeFlag =
-      values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
-  }
+    if (!workOrderNo) {
+      // Create mode
+      formatted.ModeFlag = "Insert";
+    } else {
+      // Edit mode
+      formatted.ModeFlag =
+        values.ModeFlag === "NoChange" ? "Update" : values.ModeFlag || "Update";
+    }
 
     return formatted;
   };
 
   //actionSlice from store
   const updateHeader = useWorkOrderStore((state) => state.updateHeader);
-  
-useEffect(() => {
-  // when API data arrives, hydrate dynamic panel
-  if (workOrder && workOrderPanelRef.current) {
-    workOrderPanelRef.current.setFormValues(workOrder.Header);
-  }
-}, [workOrderPanelRef]);
+
+  useEffect(() => {
+    // when API data arrives, hydrate dynamic panel
+    if (workOrder && workOrderPanelRef.current) {
+      workOrderPanelRef.current.setFormValues(workOrder.Header);
+    }
+  }, [workOrderPanelRef]);
 
 
-useEffect(()=>{
-if(isSuccess){
-  searchWorkOrder(workOrderNo)
-}
-},[saveWorkOrder])
+  useEffect(() => {
+    if (isSuccess) {
+      searchWorkOrder(workOrderNo)
+    }
+  }, [saveWorkOrder])
 
   useEffect(() => {
     // Fetch work order data when workOrderNo changes
     if (!workOrderNo) {
-    resetWorkOrderForm();
-    setUiHeader("");
-    return;                
-  } 
-  if(workOrderNo){
-     searchWorkOrder(workOrderNo);  
-  }
-  
+      resetWorkOrderForm();
+      setUiHeader("");
+      return;
+    }
+    if (workOrderNo) {
+      searchWorkOrder(workOrderNo);
+    }
+
   }, [workOrderNo]);
 
-   useEffect(() => {
+  useEffect(() => {
     // Fetch work order data when workOrderNo changes
     if (!workOrderNo) {
-    resetWorkOrderForm();
-    setUiHeader("");
-    return;                
-  } 
-  if(workOrderNo){
-     searchWorkOrder(workOrderNo);  
-  }
-  
+      resetWorkOrderForm();
+      setUiHeader("");
+      return;
+    }
+    if (workOrderNo) {
+      searchWorkOrder(workOrderNo);
+    }
+
   }, [workOrderNo]);
 
   useEffect(() => {
@@ -518,7 +518,7 @@ if(isSuccess){
       console.error("Error fetching data in handleEquipmentChange - SupplierContract on select EquipmentID:", error);
     }
   };
-  
+
 
 
   /**
@@ -527,7 +527,7 @@ if(isSuccess){
   const getQcOptions = (list: any[]) =>
     list?.filter((qc) => qc.id).map((qc) => ({ label: qc.id, value: qc.id })) ||
     [];
-    //123
+  //123
   const workOrderPanelConfig = (currentOrderType: string): PanelConfig => ({
     EquipmentType: {
       id: "EquipmentType",
@@ -537,18 +537,18 @@ if(isSuccess){
       mandatory: false,
       visible: true,
       editable: true,
-      value:workOrderNo ?  workOrder?.Header?.EquipmentType  : "Wagon",
-      
+      value: workOrderNo ? workOrder?.Header?.EquipmentType : "Wagon",
+
       options: [
         { label: "Wagon", value: "Wagon" },
         { label: "Container", value: "Container" },
       ],
       order: 1,
-     events: {
-    onChange: (value) => {
-      setEquipmentType(value);
-    },
-  },
+      events: {
+        onChange: (value) => {
+          setEquipmentType(value);
+        },
+      },
     },
 
     WagonCondainterID: {
@@ -559,16 +559,16 @@ if(isSuccess){
       mandatory: true,
       visible: true,
       editable: true,
-value: workOrderNo 
-  ? formatIdDesc(workOrder?.Header?.EquipmentID, workOrder?.Header?.EquipmentDescription)
-  : uiHeader?.WagonCondainterID || "",
+      value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.EquipmentID, workOrder?.Header?.EquipmentDescription)
+        : uiHeader?.WagonCondainterID || "",
 
 
       order: 2,
       fetchOptions:
-    equipmentType === "Wagon"
-      ? fetchMaster("Wagon id Init")
-      : fetchMaster("Container id Init"),
+        equipmentType === "Wagon"
+          ? fetchMaster("Wagon id Init")
+          : fetchMaster("Container id Init"),
       events: {
         onChange: (value) => {
           handleEquipmentChange(value);
@@ -584,9 +584,9 @@ value: workOrderNo
       mandatory: true,
       visible: true,
       editable: true,
-value: workOrderNo
-  ? formatIdDesc(workOrder?.Header?.SupplierContractID, workOrder?.Header?.SupplierContractDescription)
-  : uiHeader?.SuplierContract || "",
+      value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.SupplierContractID, workOrder?.Header?.SupplierContractDescription)
+        : uiHeader?.SuplierContract || "",
 
 
 
@@ -628,10 +628,10 @@ value: workOrderNo
       mandatory: false,
       visible: true,
       editable: true,
-value: formatIdDesc(
-  workOrder?.Header?.CustomerContractID,
-  workOrder?.Header?.CustomerContractDescription
-) ?? uiHeader?.CustomerContract ?? "",
+      value: formatIdDesc(
+        workOrder?.Header?.CustomerContractID,
+        workOrder?.Header?.CustomerContractDescription
+      ) ?? uiHeader?.CustomerContract ?? "",
 
       order: 4,
       fetchOptions: fetchMaster("Contract Init", { OrderType: "Sell" }),
@@ -669,9 +669,9 @@ value: formatIdDesc(
       mandatory: false,
       visible: true,
       editable: true,
-value: workOrderNo
-  ? formatIdDesc(workOrder?.Header?.Cluster, workOrder?.Header?.ClusterDescription)
-  : uiHeader?.ClusterMarket || "",
+      value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.Cluster, workOrder?.Header?.ClusterDescription)
+        : uiHeader?.ClusterMarket || "",
 
 
       order: 7,
@@ -696,23 +696,134 @@ value: workOrderNo
       mandatory: false,
       visible: true,
       editable: true,
-value: workOrderNo
-  ? formatIdDesc(workOrder?.Header?.ProductID, workOrder?.Header?.ProductDescription)
-  : uiHeader?.product || "",
-
-
+      value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.ProductID, workOrder?.Header?.ProductDescription)
+        : uiHeader?.product || "",
       order: 8,
       fetchOptions: fetchMaster("Product ID Init"),
-       events: {
-    onChange: (value) => {
-      console.log("Product changed:", value);
+      events: {
+        onChange: async (value) => {
+          const [id, description] = (value?.value || value || "").split(" || ");
+          setSelectedProduct(id || "");
+          // Clear UNCODE when product changes
+          setUiHeader(prev => ({ ...prev, UNCODE: "" }));
+          // If product is cleared, clear related fields
+          if (!id || !id.trim()) {
+            // Update store to clear UNCode and Hazardous
+            useWorkOrderStore.getState().updateHeader("UNCodeID", "");
+            useWorkOrderStore.getState().updateHeader("UNCodeDescription", "");
+            useWorkOrderStore.getState().updateHeader("Hazardous", "0");
+            return;
+          }
 
-      const [id] = (value?.value || "").split(" || ");
-      setSelectedProduct(id || "");
+          try {
+            // Call API to get product details
+            const response = await quickOrderService.getDynamicSearchData({
+              messageType: "ProductID On Select",
+              searchCriteria: {
+                ProductID: id.trim(),
+                ProductDescription: "",
+                UNCode: "",
+                UNDescription: "",
+                DGClass: "",
+                DGClassDescription: "",
+                NHMCode: "",
+                NHMDescription: "",
+                ClassOfStores: "",
+                ClassOfStoresDescription: "",
+                Hazardous: "",
+                HazardousDescription: ""
+              },
+            });
 
-      setUiHeader(prev => ({ ...prev, UNCODE: "" }));
-    }
-  },
+            const rr: any = response.data;
+            const payload = JSON.parse(rr.ResponseData || "{}");
+
+            // Handle response - can be array or single object
+            let productData = null;
+            if (payload && payload.ResponsePayload) {
+              if (Array.isArray(payload.ResponsePayload) && payload.ResponsePayload.length > 0) {
+                // If multiple items, use the first one (or you can handle selection logic)
+                productData = payload.ResponsePayload[0];
+              } else if (typeof payload.ResponsePayload === 'object' && payload.ResponsePayload !== null) {
+                productData = payload.ResponsePayload;
+              }
+            }
+            // Update workOrder store with ProductID and ProductDescription (always update these)
+            const updateHeader = useWorkOrderStore.getState().updateHeader;
+            updateHeader("ProductID", id.trim());
+            updateHeader("ProductDescription", description?.trim() || "");
+            if (productData) {
+              // Extract values from response
+              const unCode = productData.UNCode || "";
+              const unCodeDescription = productData.UNDescription || productData.UNCodeDescription || "";
+              const hazardous = productData.Hazardous || "";
+              // Update UNCode fields
+              updateHeader("UNCodeID", unCode);
+              updateHeader("UNCodeDescription", unCodeDescription);
+              // Update Hazardous field (convert to "1" or "0")
+              const hazardousValue = (hazardous === "YES" || hazardous === "Yes" || hazardous === "1") ? "1" : "0";
+              updateHeader("Hazardous", hazardousValue);
+              // Log the updated workOrder store
+              const updatedStore = useWorkOrderStore.getState().workOrder;
+              // Update UI header state for immediate form update
+              setUiHeader(prev => ({
+                ...prev,
+                // product: value?.value || value || "",
+                UNCODE: unCode && unCodeDescription ? `${unCode} || ${unCodeDescription}` : unCode || "",
+              }));
+
+              // If workOrderPanelRef exists, update the form fields directly
+              if (workOrderPanelRef.current) {
+                const currentValues = workOrderPanelRef.current.getFormValues() || {};
+                // Update form values - explicitly set UNCodeID and UNCodeDescription
+                const updatedValues = {
+                  ...currentValues,
+                  product: value?.value || value || "",
+                  UNCODE: unCode && unCodeDescription ? `${unCode} || ${unCodeDescription}` : "",
+                  UNCodeID: unCode || "",
+                  UNCodeDescription: unCodeDescription || "",
+                  Hazardous: hazardousValue === "1"
+                };
+                workOrderPanelRef.current.setFormValues(updatedValues);
+              }
+            } else {
+              // ResponsePayload is null or empty - clear all related fields
+              // Clear UNCode and Hazardous fields in store
+              updateHeader("UNCodeID", "");
+              updateHeader("UNCodeDescription", "");
+              updateHeader("Hazardous", "0");
+              // Log the updated workOrder store after clearing fields
+              const clearedStore = useWorkOrderStore.getState().workOrder;
+              // Clear UI header state
+              setUiHeader(prev => ({
+                ...prev,
+                // product: value?.value || value || "",
+                UNCODE: "",
+              }));
+              // Clear form fields - explicitly clear UNCodeID and UNCodeDescription
+              if (workOrderPanelRef.current) {
+                const currentValues = workOrderPanelRef.current.getFormValues() || {};
+                const updatedValues = {
+                  ...currentValues,
+                  product: value?.value || value || "",
+                  UNCODE: "",
+                  UNCodeID: "",
+                  UNCodeDescription: "",
+                  Hazardous: false
+                };
+                workOrderPanelRef.current.setFormValues(updatedValues);
+              }
+            }
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to fetch product details. Please try again.",
+              variant: "destructive",
+            });
+          }
+        }
+      },
     },
 
     UNCODE: {
@@ -723,14 +834,14 @@ value: workOrderNo
       mandatory: false,
       visible: true,
       editable: true,
-value:
-  workOrder?.Header?.UNCodeID && workOrder?.Header?.UNCodeDescription
-    ? `${workOrder.Header.UNCodeID} || ${workOrder.Header.UNCodeDescription}`
-    : uiHeader?.UNCODE || "",
+      value:
+        workOrder?.Header?.UNCodeID && workOrder?.Header?.UNCodeDescription
+          ? `${workOrder.Header.UNCodeID} || ${workOrder.Header.UNCodeDescription}`
+          : uiHeader?.UNCODE || "",
 
-  order: 9,
-  fetchOptions: fetchMaster("UN Code Init", { productId: selectedProduct }),
-},
+      order: 9,
+      fetchOptions: fetchMaster("UN Code Init", { selectedProductId: selectedProduct || workOrder?.Header?.ProductID }),
+    },
     LoadType: {
       id: "LoadType",
       label: "Load Type",
@@ -779,9 +890,9 @@ value:
       mandatory: false,
       visible: true,
       editable: true,
-value: workOrderNo
-  ? formatIdDesc(workOrder?.Header?.PlaceOfEventID, workOrder?.Header?.PlaceOfEventIDDescription)
-  : uiHeader?.PlaceOfEvent || "",
+      value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.PlaceOfEventID, workOrder?.Header?.PlaceOfEventIDDescription)
+        : uiHeader?.PlaceOfEvent || "",
 
 
       order: 13,
@@ -831,7 +942,7 @@ value: workOrderNo
         onClick: (event, value) => {
           const status = workOrder?.Header?.Status?.toLowerCase() || "";
           const isEnabled = status === "completed" || status === "closed";
-          
+
           if (isEnabled) {
             console.log("Billing Details icon clicked", event, value);
             setShowBillingDetails(true);
@@ -862,33 +973,33 @@ value: workOrderNo
     },
 
     ReInvoiceCost: {
-  id: "ReInvoiceCost",
-  label: "Re-Invoice Cost",
-  fieldType: "switch",
-  width: "half",
-  mandatory: true,
-  visible: true,
-  editable: true,
-  value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1",
-  order: 16,
-  events: {
-    onChange: (v) => setReInvoice(v)   // 👈 switch drives state
-  }
-},
+      id: "ReInvoiceCost",
+      label: "Re-Invoice Cost",
+      fieldType: "switch",
+      width: "half",
+      mandatory: true,
+      visible: true,
+      editable: true,
+      value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1",
+      order: 16,
+      events: {
+        onChange: (v) => setReInvoice(v)   // 👈 switch drives state
+      }
+    },
 
 
-   InvoiceTo: {
-  id: "InvoiceTo",
-  label: "Stakeholder",
-  fieldType: "lazyselect",
-  width: "full",
-  mandatory: reInvoice, 
-  visible: true,
-  editable: true,
-  value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
-  order: 17,
-  fetchOptions: fetchMaster("Work Order Invoice to Init"),
-},
+    InvoiceTo: {
+      id: "InvoiceTo",
+      label: "Stakeholder",
+      fieldType: "lazyselect",
+      width: "full",
+      mandatory: reInvoice,
+      visible: true,
+      editable: true,
+      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
+      order: 17,
+      fetchOptions: fetchMaster("Work Order Invoice to Init"),
+    },
 
 
     FinacialComments: {
@@ -1111,9 +1222,9 @@ value: workOrderNo
         label: "Origin",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.OriginDescription)
-  ? `${workOrder.WorkorderSchedule.OriginID} || ${workOrder.WorkorderSchedule.OriginDescription}`
-  : "",
+        value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.OriginDescription)
+          ? `${workOrder.WorkorderSchedule.OriginID} || ${workOrder.WorkorderSchedule.OriginDescription}`
+          : "",
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         editable: true,
@@ -1125,9 +1236,9 @@ value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.
         label: "Outboard Destination",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
-  ? `${workOrder.WorkorderSchedule.OutBoundDestinationID} || ${workOrder.WorkorderSchedule.OutBoundDestinationDescription}`
-  : "",
+        value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
+          ? `${workOrder.WorkorderSchedule.OutBoundDestinationID} || ${workOrder.WorkorderSchedule.OutBoundDestinationDescription}`
+          : "",
 
         mandatory: false,
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
@@ -1140,9 +1251,9 @@ value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.Workor
         label: "RU Forward",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedule?.RUForwardDescription)
-  ? `${workOrder.WorkorderSchedule.RUForwardID} || ${workOrder.WorkorderSchedule.RUForwardDescription}`
-  : "",
+        value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedule?.RUForwardDescription)
+          ? `${workOrder.WorkorderSchedule.RUForwardID} || ${workOrder.WorkorderSchedule.RUForwardDescription}`
+          : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
@@ -1155,9 +1266,9 @@ value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedul
         label: "Return Destination",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.WorkorderSchedule?.ReturnDestinationDescription)
-  ? `${workOrder.WorkorderSchedule.ReturnDestinationID} || ${workOrder.WorkorderSchedule.ReturnDestinationDescription}`
-  : "",
+        value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.WorkorderSchedule?.ReturnDestinationDescription)
+          ? `${workOrder.WorkorderSchedule.ReturnDestinationID} || ${workOrder.WorkorderSchedule.ReturnDestinationDescription}`
+          : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
@@ -1170,9 +1281,9 @@ value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.Workorde
         label: "RU Return",
         fieldType: "lazyselect",
         width: "six",
-value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule?.RUReturnDescription)
-  ? `${workOrder.WorkorderSchedule.RUReturnID} || ${workOrder.WorkorderSchedule.RUReturnDescription}`
-  : "",
+        value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule?.RUReturnDescription)
+          ? `${workOrder.WorkorderSchedule.RUReturnID} || ${workOrder.WorkorderSchedule.RUReturnDescription}`
+          : "",
 
         visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
         mandatory: false,
@@ -1186,10 +1297,10 @@ value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule
         label: "PlaceOfOperation",
         fieldType: "lazyselect",
         width: "four",
-value: formatIdDesc(
-  workOrder?.WorkorderSchedule?.PlaceOfOperationID,
-  workOrder?.WorkorderSchedule?.PlaceOfOperationDescription
-),
+        value: formatIdDesc(
+          workOrder?.WorkorderSchedule?.PlaceOfOperationID,
+          workOrder?.WorkorderSchedule?.PlaceOfOperationDescription
+        ),
 
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
@@ -1202,10 +1313,10 @@ value: formatIdDesc(
         label: "Provider",
         fieldType: "lazyselect",
         width: "four",
-value: formatIdDesc(
-  workOrder?.WorkorderSchedule?.Provider,
-  workOrder?.WorkorderSchedule?.ProviderDescription
-),
+        value: formatIdDesc(
+          workOrder?.WorkorderSchedule?.Provider,
+          workOrder?.WorkorderSchedule?.ProviderDescription
+        ),
 
         mandatory: false,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
@@ -1382,39 +1493,39 @@ value: formatIdDesc(
       };
     });
   }, []);
-  
+
   // fetch shipment type
   const fetchShipmentType = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
     // Check if Mobile mode is enabled - check both IsMobile and IsWorkShop
     // IsMobile = 1 means Mobile, IsWorkShop = "Mobile" or 0 also means Mobile
     const isMobile = rowData?.IsMobile;
     const isWorkShop = rowData?.IsWorkShop;
-    
+
     // Check if Mobile mode is enabled
-    const isMobileMode = 
+    const isMobileMode =
       isMobile === 1 || isMobile === "1" || // IsMobile explicitly set to 1
       isWorkShop === "Mobile" || isWorkShop === 0 || isWorkShop === "0"; // IsWorkShop indicates Mobile
-    
+
     if (isMobileMode) {
       console.log("Mobile mode is enabled, returning empty Shipment Type options");
       return [];
     }
-    
+
     // Extract typeOfAction and operationType from piped format "id || name"
     const typeOfAction = rowData?.TypeOfAction || rowData.TypeOfActionDescription?.split('||')[0].trim() || "";
     const operationType = rowData?.Operation || rowData.OperationDescription?.split('||')[0].trim() || "";
     console.log("Fetching Shipment Type for:", typeOfAction, "Operation:", operationType, "Row data:", rowData);
     // Use fetchMaster with TypeOfAction and OperationType filter
     const fetchShipment = fetchMasterShipmentType({
-      messageType: "WorkOrder-GetServiceMode", 
+      messageType: "WorkOrder-GetServiceMode",
       TypeOfAction: typeOfAction,
       OperationType: operationType
     });
     return fetchShipment({ searchTerm, offset, limit });
   }, []);
-  
+
   const fetchMasterOperations = (
-    {TypeOfAction, messageType}: {TypeOfAction: string, messageType: string}
+    { TypeOfAction, messageType }: { TypeOfAction: string, messageType: string }
   ) => {
     return async ({ searchTerm, offset, limit }) => {
       try {
@@ -1427,15 +1538,15 @@ value: formatIdDesc(
         const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
         return arr
-        .filter((item: any) => item.id)  // filter out items with no id
-        .map((item: any) => {
-          const id = item.id ?? "";
-          const name = item.name ?? "";
-          return {
-            label: `${id} || ${name}`,
-            value: `${id} || ${name}`,
-          };
-        });
+          .filter((item: any) => item.id)  // filter out items with no id
+          .map((item: any) => {
+            const id = item.id ?? "";
+            const name = item.name ?? "";
+            return {
+              label: `${id} || ${name}`,
+              value: `${id} || ${name}`,
+            };
+          });
       } catch (err) {
         return [];
       }
@@ -1443,7 +1554,7 @@ value: formatIdDesc(
   };
 
   const fetchMasterServiceMode = (
-    {TypeOfAction, messageType, OperationType}: {TypeOfAction: string, messageType: string, OperationType: string}
+    { TypeOfAction, messageType, OperationType }: { TypeOfAction: string, messageType: string, OperationType: string }
   ) => {
     return async ({ searchTerm, offset, limit }) => {
       try {
@@ -1454,7 +1565,7 @@ value: formatIdDesc(
         });
         console.log('Actual response for Service Mode:', response);
         const rr: any = response?.data;
-        
+
         // Check if response is successful
         if (!rr || !rr.IsSuccess || !rr.ResponseData) {
           return [];
@@ -1497,7 +1608,7 @@ value: formatIdDesc(
   };
 
   const fetchMasterShipmentType = (
-    {TypeOfAction, messageType, OperationType}: {TypeOfAction: string, messageType: string, OperationType: string}
+    { TypeOfAction, messageType, OperationType }: { TypeOfAction: string, messageType: string, OperationType: string }
   ) => {
     return async ({ searchTerm, offset, limit }) => {
       try {
@@ -1508,7 +1619,7 @@ value: formatIdDesc(
         });
         console.log('Actual response for Shipment Type:', response);
         const rr: any = response?.data;
-        
+
         // Check if response is successful
         if (!rr || !rr.IsSuccess || !rr.ResponseData) {
           return [];
@@ -1567,15 +1678,15 @@ value: formatIdDesc(
         const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
         return arr
-        .filter((item: any) => item.id)
-        .map((item: any) => {
-          const id = item.id ?? "";
-          const name = item.name ?? "";
-          return {
-            label: `${id} || ${name}`,
-            value: `${id} || ${name}`,
-          };
-        });
+          .filter((item: any) => item.id)
+          .map((item: any) => {
+            const id = item.id ?? "";
+            const name = item.name ?? "";
+            return {
+              label: `${id} || ${name}`,
+              value: `${id} || ${name}`,
+            };
+          });
       } catch (err) {
         return [];
       }
@@ -1600,15 +1711,15 @@ value: formatIdDesc(
         const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
         return arr
-        .filter((item: any) => item.CUUCode)
-        .map((item: any) => {
-          const id = item.CUUCode ?? "";
-          const name = item.name ?? "";
-          return {
-            label: `${id}`,
-            value: `${id}`,
-          };
-        });
+          .filter((item: any) => item.CUUCode)
+          .map((item: any) => {
+            const id = item.CUUCode ?? "";
+            const name = item.name ?? "";
+            return {
+              label: `${id}`,
+              value: `${id}`,
+            };
+          });
       } catch (err) {
         return [];
       }
@@ -1620,14 +1731,14 @@ value: formatIdDesc(
     fetchMasterOperationDetails("WO Type of Action Init"),
     []
   );
-  
+
   // Fetch states based on selected country (second level) - using fetchMaster
   const fetchOperations = useCallback(async ({ searchTerm, offset, limit, rowData }: { searchTerm: string; offset: number; limit: number; rowData?: any }) => {
     // Extract countryId from piped format "id || name"
     const countryId = rowData?.TypeOfAction || rowData.TypeOfActionDescription?.split('||')[0].trim() || "";
     console.log("Fetching states for country:", countryId, "Row data:", rowData);
     // Use fetchMaster with TypeOfAction filter
-    const fetchOperations = fetchMasterOperations({messageType: "WO Type of Action Onselect Init", TypeOfAction: countryId });
+    const fetchOperations = fetchMasterOperations({ messageType: "WO Type of Action Onselect Init", TypeOfAction: countryId });
     return fetchOperations({ searchTerm, offset, limit });
   }, []);
 
@@ -1639,7 +1750,7 @@ value: formatIdDesc(
     console.log("Fetching states for country:", typeOfAction, "Row data:", rowData);
     // Use fetchMaster with TypeOfAction filter
     const fetchOperations = fetchMasterServiceMode({
-      messageType: "WorkOrder-GetServiceMode", 
+      messageType: "WorkOrder-GetServiceMode",
       TypeOfAction: typeOfAction,
       OperationType: operationType
     });
@@ -1771,7 +1882,7 @@ value: formatIdDesc(
         console.log("IsForwardReturn changed:", value, "Row data:", rowData);
         // Automatically set IsOneWay as opposite of IsForwardReturn
         const isForwardReturnValue = transformIsForwardReturnForSave(value);
-        
+
         if (isForwardReturnValue === 1) {
           // Forward/Return selected
           rowData.IsForwardReturn = 1;
@@ -1901,17 +2012,17 @@ value: formatIdDesc(
     if (value === undefined || value === null || value === "" || (typeof value === 'string' && value.trim() === "")) {
       return "";
     }
-    
+
     if (typeof value === 'object' && value !== null && value.IsForwardReturn !== undefined) {
       const forwardReturnValue = value.IsForwardReturn;
       if (forwardReturnValue === 1 || forwardReturnValue === "1") return 1;
       if (forwardReturnValue === 0 || forwardReturnValue === "0") return 0;
       return "";
     }
-    
+
     if (value === "Forward/Return" || value === 1 || value === "1") return 1;
     if (value === "One-Way" || value === 0 || value === "0") return 0;
-    
+
     // If value doesn't match any known pattern, return empty string
     return "";
   };
@@ -1937,7 +2048,7 @@ value: formatIdDesc(
     if (!codeInformation) {
       return [];
     }
-    
+
     // If already in correct format [{CodeNoCUU: value}], return as is
     if (Array.isArray(codeInformation) && codeInformation.length > 0) {
       const firstItem = codeInformation[0];
@@ -1945,7 +2056,7 @@ value: formatIdDesc(
         return codeInformation;
       }
     }
-    
+
     // Convert array of strings to array of objects
     if (Array.isArray(codeInformation)) {
       return codeInformation
@@ -1959,7 +2070,7 @@ value: formatIdDesc(
           return { CodeNoCUU: String(code) };
         });
     }
-    
+
     return [];
   };
 
@@ -2016,20 +2127,20 @@ value: formatIdDesc(
     console.log("Adding new operation detail:", newRow);
     // Split piped data for TypeOfActionDescription and OperationDescription
     const rowWithSplitData = splitPipedData(newRow);
-    
+
     // Convert IsWorkShop & IsForwardReturn values back to store format
     // Extract ID from QC1Code if it's in piped format
     // Transform CodeInformation to {CodeNoCUU: value} format
     const isWorkShopValue = transformIsWorkShopForSave(rowWithSplitData.IsWorkShop);
-    
+
     // Create transformed row, explicitly setting IsMobile to override any existing value
     const { IsMobile: _, IsOneWay: __, ...rowWithoutMobileAndOneWay } = rowWithSplitData; // Remove existing IsMobile and IsOneWay if present
-    
+
     // Handle IsForwardReturn and IsOneWay (mutually exclusive)
     const isForwardReturnValue = transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn);
     let isForwardReturn: number | string = "";
     let isOneWay: number | string = "";
-    
+
     if (isForwardReturnValue === 1) {
       // Forward/Return selected
       isForwardReturn = 1;
@@ -2043,7 +2154,7 @@ value: formatIdDesc(
       isForwardReturn = "";
       isOneWay = "";
     }
-    
+
     const transformedRow = {
       ...rowWithoutMobileAndOneWay,
       IsWorkShop: isWorkShopValue,
@@ -2076,30 +2187,30 @@ value: formatIdDesc(
     console.log("Editing operation detail:", editedRow, "at index:", rowIndex);
     // Split piped data for TypeOfActionDescription and OperationDescription
     const rowWithSplitData = splitPipedData(editedRow);
-    
+
     // Convert IsWorkShop & IsForwardReturn values back to store format
     // Extract ID from QC1Code if it's in piped format
     // Transform CodeInformation to {CodeNoCUU: value} format
-    
+
     // Get the original row to check OrderID
     const currentOperationDetails = workOrder?.OperationDetails || [];
     const originalRow = currentOperationDetails[rowIndex];
-    
+
     // Determine ModeFlag: If OrderID is empty/null/undefined, it's a new row (Insert), otherwise Update
     const orderID = editedRow?.OrderID || originalRow?.OrderID || "";
     const modeFlag = (!orderID || orderID.trim() === "") ? "Insert" : "Update";
-    
+
     // Convert IsWorkShop value and set IsMobile as opposite
     const isWorkShopValue = transformIsWorkShopForSave(rowWithSplitData.IsWorkShop);
-    
+
     // Create transformed row, explicitly setting IsMobile to override any existing value
     const { IsMobile: _, IsOneWay: __, ...rowWithoutMobileAndOneWay } = rowWithSplitData; // Remove existing IsMobile and IsOneWay if present
-    
+
     // Handle IsForwardReturn and IsOneWay (mutually exclusive)
     const isForwardReturnValue = transformIsForwardReturnForSave(rowWithSplitData.IsForwardReturn);
     let isForwardReturn: number | string = "";
     let isOneWay: number | string = "";
-    
+
     if (isForwardReturnValue === 1) {
       // Forward/Return selected
       isForwardReturn = 1;
@@ -2113,7 +2224,7 @@ value: formatIdDesc(
       isForwardReturn = "";
       isOneWay = "";
     }
-    
+
     const transformedRow = {
       ...rowWithoutMobileAndOneWay,
       IsWorkShop: isWorkShopValue,
@@ -2150,10 +2261,10 @@ value: formatIdDesc(
 
   const handleCancelSubmit = async (formFields: any) => {
     console.log("Cancel Work Order Submit:", formFields);
-    
+
     // Get work order number from store or URL params
     const currentWorkOrderNo = workOrder?.Header?.WorkorderNo || searchParams.get("id");
-    
+
     if (!currentWorkOrderNo) {
       toast({
         title: "Error",
@@ -2253,10 +2364,10 @@ value: formatIdDesc(
 
   const handleDeleteRow = async (row: any, rowIndex: number) => {
     console.log("Deleting operation detail:", row, "at index:", rowIndex);
-    
+
     try {
       const currentOperationDetails = workOrder?.OperationDetails || [];
-      
+
       // The rowIndex is from the filtered/displayed data, not the store data
       // We need to map the displayed index back to the store index
       // Build a mapping: store indices that are visible (not deleted)
@@ -2266,28 +2377,28 @@ value: formatIdDesc(
           visibleStoreIndices.push(storeIndex);
         }
       });
-      
+
       // Get the store index corresponding to the displayed row index
       if (rowIndex < 0 || rowIndex >= visibleStoreIndices.length) {
         console.warn("Invalid row index for deletion:", rowIndex);
         return;
       }
-      
+
       const targetStoreIndex = visibleStoreIndices[rowIndex];
       const rowToDelete = currentOperationDetails[targetStoreIndex];
-      
+
       if (!rowToDelete) {
         console.warn("Row not found at store index:", targetStoreIndex);
         return;
       }
-      
+
       // Verify this is the correct row by comparing OrderID if available
       // or by checking it's not already deleted
       if (rowToDelete?.ModeFlag === 'Delete') {
         console.warn("Row is already marked for deletion:", rowToDelete);
         return;
       }
-      
+
       // For additional safety, verify with OrderID if the row has one
       if (row?.OrderID && row.OrderID.trim() !== "" && rowToDelete?.OrderID) {
         if (row.OrderID !== rowToDelete.OrderID) {
@@ -2295,14 +2406,14 @@ value: formatIdDesc(
           // Still proceed, but log warning
         }
       }
-      
+
       // Determine if this is a newly added row (ModeFlag: "Insert" or no OrderID) or existing row
-      const isNewRow = rowToDelete.ModeFlag === 'Insert' || 
-                       !rowToDelete.OrderID || 
-                       rowToDelete.OrderID.trim() === "";
-      
+      const isNewRow = rowToDelete.ModeFlag === 'Insert' ||
+        !rowToDelete.OrderID ||
+        rowToDelete.OrderID.trim() === "";
+
       let updatedOperationDetails;
-      
+
       if (isNewRow) {
         // Newly added row - remove it completely (it doesn't exist in backend yet)
         updatedOperationDetails = currentOperationDetails.filter((_, index) => index !== targetStoreIndex);
@@ -2316,7 +2427,7 @@ value: formatIdDesc(
         };
         console.log("✅ Existing row marked for deletion:", rowToDelete);
       }
-      
+
       // Update store
       useWorkOrderStore.setState((state) => ({
         workOrder: {
@@ -2324,7 +2435,7 @@ value: formatIdDesc(
           OperationDetails: updatedOperationDetails,
         },
       }));
-      
+
     } catch (error) {
       console.error("Error deleting row:", error);
     }
@@ -2379,7 +2490,7 @@ value: formatIdDesc(
         </>
       ) : (
         <>
-         <AppLayout>
+          <AppLayout>
             <div className="main-content-h bg-gray-100">
               <div className="p-4 px-6 ">
                 <div className="hidden md:block">
@@ -2403,7 +2514,7 @@ value: formatIdDesc(
                             // Update workOrderNo in the store
                             console.log("===============", value);
                             useWorkOrderStore.getState().updateHeader('WorkorderNo', value);
-                            
+
                             // Update URL with new ID and trigger page refresh
                             if (value && value.trim() !== '') {
                               setSearchParams({ id: value.trim() });
@@ -2411,7 +2522,7 @@ value: formatIdDesc(
                               // No need for manual refresh as the useEffect handles data fetching
                             }
                           }}
-                          
+
                         />
                       </div>
 
@@ -2424,48 +2535,48 @@ value: formatIdDesc(
                   <div className="lg:col-span-1 w-4/6">
                     <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
                       <SmartGridPlus
-                      columns={operationDetailsColumns}
-                      data={transformDataForDisplay(workOrder?.OperationDetails || [])}
-                      recordCount={transformDataForDisplay(workOrder?.OperationDetails || []).length}
-                      gridTitle="Operation Details"
-                      inlineRowAddition={true}
-                      inlineRowEditing={true}
-                      onAddRow={handleAddRow}
-                      onEditRow={handleEditRow}
-                      onDeleteRow={handleDeleteRow}
-                      defaultRowValues={defaultRowValues}
-                      validationRules={validationRules}
-                      addRowButtonLabel="Add Operation"
-                      addRowButtonPosition="top-right"
-                      paginationMode="pagination"
-                      showDefaultConfigurableButton={false}
-                      onInfoClick={(rowData, rowIndex) => {
-                        console.log("Info clicked:", rowData, "at index:", rowIndex);
-                        setSelectedCode(rowData);
-                        setShowCodeInformation(true);
-                      }}
-                      onLinkClick={(rowData, columnKey, rowIndex) => {
-                        // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
-                        const transformedRowData = {
-                          ...rowData,
-                          IsWorkShop: transformIsWorkShopForSave(rowData.IsWorkShop),
-                          IsForwardReturn: transformIsForwardReturnForSave(rowData.IsForwardReturn),
-                        };
-                        console.log("Link clicked:", transformedRowData);
-                        console.log("Column key:", columnKey);
-                        console.log("Row index:", rowIndex);
-                        
-                        // Extract IsWorkShop value (1 or 0) and set state
-                        const isWorkShopValue = transformedRowData.IsWorkShop;
-                        const numericIsWorkShop = isWorkShopValue === 1 || isWorkShopValue === "1" ? 1 : 
-                                                  isWorkShopValue === 0 || isWorkShopValue === "0" ? 0 : null;
-                        
-                        // Update state to control field visibility
-                        setSelectedOperation(transformedRowData);
-                        setIsWorkShop(numericIsWorkShop);
-                        console.log("Selected operation IsWorkShop value:", numericIsWorkShop);
-                      }}
-                    />
+                        columns={operationDetailsColumns}
+                        data={transformDataForDisplay(workOrder?.OperationDetails || [])}
+                        recordCount={transformDataForDisplay(workOrder?.OperationDetails || []).length}
+                        gridTitle="Operation Details"
+                        inlineRowAddition={true}
+                        inlineRowEditing={true}
+                        onAddRow={handleAddRow}
+                        onEditRow={handleEditRow}
+                        onDeleteRow={handleDeleteRow}
+                        defaultRowValues={defaultRowValues}
+                        validationRules={validationRules}
+                        addRowButtonLabel="Add Operation"
+                        addRowButtonPosition="top-right"
+                        paginationMode="pagination"
+                        showDefaultConfigurableButton={false}
+                        onInfoClick={(rowData, rowIndex) => {
+                          console.log("Info clicked:", rowData, "at index:", rowIndex);
+                          setSelectedCode(rowData);
+                          setShowCodeInformation(true);
+                        }}
+                        onLinkClick={(rowData, columnKey, rowIndex) => {
+                          // Transform rowData with IsWorkShop and IsForwardReturn converted to display strings
+                          const transformedRowData = {
+                            ...rowData,
+                            IsWorkShop: transformIsWorkShopForSave(rowData.IsWorkShop),
+                            IsForwardReturn: transformIsForwardReturnForSave(rowData.IsForwardReturn),
+                          };
+                          console.log("Link clicked:", transformedRowData);
+                          console.log("Column key:", columnKey);
+                          console.log("Row index:", rowIndex);
+
+                          // Extract IsWorkShop value (1 or 0) and set state
+                          const isWorkShopValue = transformedRowData.IsWorkShop;
+                          const numericIsWorkShop = isWorkShopValue === 1 || isWorkShopValue === "1" ? 1 :
+                            isWorkShopValue === 0 || isWorkShopValue === "0" ? 0 : null;
+
+                          // Update state to control field visibility
+                          setSelectedOperation(transformedRowData);
+                          setIsWorkShop(numericIsWorkShop);
+                          console.log("Selected operation IsWorkShop value:", numericIsWorkShop);
+                        }}
+                      />
                     </div>
                     <div className="rounded-lg pb-4 px-1 flex flex-col h-full">
                       {/* Only show Location Details panel when an operation is selected */}
@@ -2565,23 +2676,23 @@ value: formatIdDesc(
                                   collapsible={true}
                                   badgeValue={isWorkShopLabel}
                                   initialData={workOrderData?.Location || {}}
-                                  // onDataChange={(updatedSchedule) => {
-                                  //   useWorkOrderStore.setState((state) => ({
-                                  //     workOrder: {
-                                  //       ...state.workOrder,
-                                  //       WorkorderSchedule: {
-                                  //         ...state.workOrder.WorkorderSchedule,
-                                  //         ...updatedSchedule,
-                                  //         ModeFlag:
-                                  //           state.workOrder.WorkorderSchedule
-                                  //             ?.ModeFlag === "NoChange"
-                                  //             ? "Update"
-                                  //             : state.workOrder
-                                  //                 .WorkorderSchedule?.ModeFlag,
-                                  //       },
-                                  //     },
-                                  //   }));
-                                  // }}
+                                // onDataChange={(updatedSchedule) => {
+                                //   useWorkOrderStore.setState((state) => ({
+                                //     workOrder: {
+                                //       ...state.workOrder,
+                                //       WorkorderSchedule: {
+                                //         ...state.workOrder.WorkorderSchedule,
+                                //         ...updatedSchedule,
+                                //         ModeFlag:
+                                //           state.workOrder.WorkorderSchedule
+                                //             ?.ModeFlag === "NoChange"
+                                //             ? "Update"
+                                //             : state.workOrder
+                                //                 .WorkorderSchedule?.ModeFlag,
+                                //       },
+                                //     },
+                                //   }));
+                                // }}
                                 />
                               </div>
                             </div>
@@ -2607,8 +2718,8 @@ value: formatIdDesc(
                     )}
                     {selectedOperation === null && (
                       <> */}
-                        <button className={buttonCancel}>Cancel</button>
-                        {/* <button 
+                    <button className={buttonCancel}>Cancel</button>
+                    {/* <button 
                           className={buttonCancel}
                           onClick={() => {
                             if (workOrder?.Header?.WorkorderNo) {
@@ -2625,16 +2736,16 @@ value: formatIdDesc(
                         >
                           Cancel
                         </button> */}
-                        <button
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                          onClick={handleGetFormValues}
-                        >
-                          Save
-                        </button>
-                        {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                    <button
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                      onClick={handleGetFormValues}
+                    >
+                      Save
+                    </button>
+                    {/* <button className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                       Amend
                     </button> */}
-                      {/* </>
+                    {/* </>
                     )} */}
                   </div>
                 </div>
