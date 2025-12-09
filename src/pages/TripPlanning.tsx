@@ -18,7 +18,9 @@ import {
   HelpCircle, InfoIcon, EllipsisVertical,
   CreditCard, Zap, FileUp, Route, TramFront,
   ChevronLeft, File,
-  ChevronDown, Trash2
+  ChevronDown, Trash2,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -48,6 +50,8 @@ import { LegEventsDrawer } from '@/components/drawer/LegEventsDrawer';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { AddCOToTripSidedraw } from '@/components/TripPlanning/AddCOToTripSidedraw';
 import Attachments from '@/components/ManageTrip/Attachments';
+import { useTrainParametersAlertStore } from '@/stores/trainParametersAlertStore';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 
 const TripPlanning = () => {
@@ -139,6 +143,35 @@ const TripPlanning = () => {
       setLocation('FWDS_SAS || Forwardis SAS');
     }
   }, []);
+
+  const { hasAlert, setAlert, clearAlert, colorClass } = useTrainParametersAlertStore();
+  const tripId: any = tripData?.Header?.TripNo || urlTripID || tripNo;
+
+  useEffect(() => {
+    // console.log("Checking path constraints for tripId:", tripId);
+    if (!tripId) return;
+
+    // Function to fetch path constraints - for train parameters alert warning
+    const fetchData = async () => {
+      try {
+        const response = await tripService.getPathConstraints(tripId);
+        const constraint = JSON.parse(response?.data?.ResponseData || '{}');
+        const constraints = constraint?.PathConstraints;
+        if (constraints) {
+          // console.log("constraints loaded for alert check:", constraints);
+          if (parseFloat(constraints.BalanceLength) < 0 || parseFloat(constraints.BalanceWeight) < 0 || parseFloat(constraints.BalanceQuantity) < 0) {
+            setAlert(true, 'bg-amber-600');
+          } else {
+            setAlert(false, 'bg-amber-600');
+          }
+        }
+      } catch (error) {
+        console.error("Error loading PathConstraints:", error);
+      }
+    };
+
+    fetchData();
+  }, [tripId, setAlert]);
   const [planDate, setPlanDate] = useState<Date | undefined>();
   const [requestSupplier, setRequestSupplier] = useState(false);
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');
@@ -177,7 +210,7 @@ const TripPlanning = () => {
   const [otherInfo, setOtherInfo] = useState(false);
   const [oldTripData, setOldTripData] = useState('');
   const [tripInformation, setTripInformation] = useState<any>({});
-  const [ isAddCOToTripOpen, setIsAddCOToTripOpen] = useState(false);
+  const [isAddCOToTripOpen, setIsAddCOToTripOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -3056,6 +3089,27 @@ const TripPlanning = () => {
           <div className="hidden md:block">
             <Breadcrumb items={breadcrumbItems} />
           </div>
+          {hasAlert && (
+            <Alert className=" px-4 py-2 bg-amber-50 border-amber-200" style={{ position: 'fixed', top: '65px', right: '25px', width: '50%' }}>
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertDescription className="text-amber-800 flex-1">
+                  Kindly note that the Actual &lt;weight/length/wagon quantity&gt; is higher than the planned.
+                </AlertDescription>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    // setShowAlert(false);
+                    clearAlert();
+                  }}
+                  className="h-5 w-5 p-0 hover:bg-transparent"
+                >
+                  <X className="h-4 w-4 text-amber-600" />
+                </Button>
+              </div>
+            </Alert>
+          )}
           {/* Trip No. Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -3153,7 +3207,14 @@ const TripPlanning = () => {
                         size="icon"
                         aria-label="More options"
                         onClick={() => console.log('listPopoverOpen ==', listPopoverOpen)}
-                        className="listOfOptions inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
+                        className="listOfOptions relative inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
+
+                        {/* Alert dot on trigger */}
+                        {hasAlert && (
+                          <span
+                            className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full ${colorClass} ring-2 ring-white shadow-sm`}
+                          />
+                        )}
                         <EllipsisVertical className="h-4 w-4" />
                       </Button>)
                     }
@@ -3181,7 +3242,13 @@ const TripPlanning = () => {
                         console.log('Supplier Billing');
                         openDrawer('train-parameters');
                         setListPopoverOpen(false);
-                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left relative">
+                        {/* Alert dot inside popover */}
+                        {hasAlert && (
+                          <span
+                            className={`absolute top-2 right-44 h-2 w-2 rounded-full ${colorClass}`}
+                          />
+                        )}
                         <TramFront className="h-4 w-4" />
                         <span>Train Parameters</span>
                       </button>
