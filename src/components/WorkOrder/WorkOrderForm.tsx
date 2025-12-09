@@ -95,8 +95,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
     },
   ]);
 
-  // const forwardTripId = "TP/2021/00025724";
   const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
+  const returnTripId = workOrder?.WorkorderSchedule?.RUReturnTripID || "";
   const handleCreateTugOperation = async () => {
     console.log("handleCreate TugOperation", workOrder);
     console.log("handleCreate TugOperation", workOrder?.WorkorderSchedule);
@@ -117,7 +117,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         PlanEndTime: null,
         RefDocType: "WO",
         RefDocNo: workOrder?.Header?.WorkorderNo,
-        TugTransportMode: "",
+        TugTransportMode: "Rail",
       },
       AddressInfo: {
         "Departure": {
@@ -210,60 +210,63 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
         TripStatus: "",
         TripType: "Tug Operations",
         PlanningProfileID: "General-GMBH",
-        Location: "10-00004",
-        Cluster: "",
-        PlanDate: "2025-10-10",
+        Location: "FWDS_GMBH",
+        Cluster: workOrder?.Header?.Cluster,
+        PlanDate: null,
         LoadType: "Empty",
         PlanStartDate: null,
         PlanStartTime: null,
         PlanEndDate: null,
         PlanEndTime: null,
-        RefDocType: "TL",
+        RefDocType: "WO",
         RefDocNo: workOrder?.Header?.WorkorderNo,
         TugTransportMode: "Rail",
-        "AddressInfo": {
-            "Departure": {
-                "DepartureID": workOrder?.WorkorderSchedule?.OriginID,
-                "DepartureDescription": workOrder?.WorkorderSchedule?.OriginDescription,
-                "AddressLine1": "",
-                "AddressLine2": "",
-                "PostalCode": "",
-                "Suburb": "",
-                "City": "",
-                "State": "",
-                "Country": ""
-            },
-            "Arrival": {
-                "ArrivalID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
-                "ArrivalDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
-                "AddressLine1": "",
-                "AddressLine2": "",
-                "PostalCode": "",
-                "Suburb": "",
-                "City": "",
-                "State": "",
-                "Country": ""
-            }
-        },
-        "ResourceDetails": [
-          {
-            "ResourceID": workOrder?.WorkorderSchedule?.RUForwardID,
-            "ResourceType": "Agent",
-            "Service": "",
-            "ServiceDescription": "",
-            "SubService": "",
-            "SubServiceDescription": "",
-            "EffectiveFromDate": null,
-            "EffectiveToDate": null,
-            "ModeFlag": "Insert"
-          }
-        ]
       },
+      AddressInfo: {
+        "Departure": {
+            "DepartureID": workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+            "DepartureDescription": workOrder?.WorkorderSchedule?.OutBoundDestinationDescription,
+            "AddressLine1": "",
+            "AddressLine2": "",
+            "PostalCode": "",
+            "Suburb": "",
+            "City": "",
+            "State": "",
+            "Country": ""
+        },
+        "Arrival": {
+            "ArrivalID": workOrder?.WorkorderSchedule?.ReturnDestinationID,
+            "ArrivalDescription": workOrder?.WorkorderSchedule?.ReturnDestinationDescription,
+            "AddressLine1": "",
+            "AddressLine2": "",
+            "PostalCode": "",
+            "Suburb": "",
+            "City": "",
+            "State": "",
+            "Country": ""
+        }
+      },
+      ResourceDetails: [
+        {
+          "ResourceID": workOrder?.WorkorderSchedule?.RUReturnID,
+          "ResourceType": "Agent",
+          "Service": "",
+          "ServiceDescription": "",
+          "SubService": "",
+          "SubServiceDescription": "",
+          "EffectiveFromDate": null,
+          "EffectiveToDate": null,
+          "ModeFlag": "Insert"
+        }
+      ]
     };
     try {
       const res = await workOrderService.createTugOperation(payload);
       const isSuccess = res?.IsSuccess ?? res?.data?.IsSuccess;
       const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "Tug operation creation completed";
+      const parsedResponse = JSON.parse(res?.data.ResponseData || "{}");
+      console.log("parsedResponse", parsedResponse);
+      console.log("parsedResponse", parsedResponse?.RequestPayload?.Header?.RefDocNo);
 
       if (isSuccess) {
         toast({
@@ -271,6 +274,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
           description: message,
           variant: "default",
         });
+        searchWorkOrder(parsedResponse?.RequestPayload?.Header?.RefDocNo);
       } else {
         toast({
           title: "⚠️ Tug Operation Failed",
@@ -2905,8 +2909,36 @@ useEffect(() => {
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
-                                  <span>
+                                  <span className="flex items-center gap-2">
                                     Return Trip Execution - {workOrder?.WorkorderSchedule?.RUReturnTripID || ""}
+                                    <button type="button" disabled={!returnTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (returnTripId) {
+                                          navigate(`/manage-trip?id=${(returnTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        returnTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Manage Trip ${returnTripId}`}
+                                    >
+                                      <ExternalLink className="w-4 h-4 text-gray-600" />
+                                    </button>
+                                    <button type="button" disabled={!returnTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (returnTripId) {
+                                          navigate(`/trip-planning?manage=true&tripId=${(returnTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        returnTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Trip Planning ${returnTripId}`}
+                                    >
+                                      <MapPin className="w-4 h-4 text-gray-600" />
+                                    </button>
                                   </span>
                                 </button>
                               </div>
