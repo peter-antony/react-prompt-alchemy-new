@@ -379,7 +379,8 @@ useEffect(() => {
     const billingUI = {
       IsAcceptedByForwardis: headerUI.AcceptedByForwardis ? "1" : "0",
       IsReinvoiceCost: headerUI.ReInvoiceCost ? "1" : "0",
-      InvoiceTo: headerUI.InvoiceTo || null,
+      // InvoiceTo: headerUI.InvoiceTo || null,
+      InvoiceTo: headerUI.InvoiceTo ? headerUI.InvoiceTo.split(" || ")[0].trim() : "",
       FinancialComments: headerUI.FinacialComments || null,
       Bill_TotalNetAmount: workOrder?.Header?.BillingHeaderDetails?.Bill_TotalNetAmount,
       Bill_FullLeasingContract: workOrder?.Header?.BillingHeaderDetails?.Bill_FullLeasingContract,
@@ -1558,7 +1559,7 @@ if (formatted.Provider?.includes(" || ")) {
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         editable: true,
         order: 2,
-        fetchOptions: fetchMaster("Location Init"),
+        fetchOptions: fetchMaster("Supplier Init"),
       },
       MobileExpectedDate: {
         id: "ExpectedDate",

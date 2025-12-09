@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Home, Logs, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import MenuIcon2 from '../assets/images/Menu-2.svg';
 import MenuIcon3 from '../assets/images/Menu-3.svg';
 import MenuIcon4 from '../assets/images/Menu-4.svg';
@@ -35,6 +35,26 @@ const RFQIcon = () => {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M7.49998 8.75L9.16665 10.4167L12.9166 6.66667M16.6666 17.5V6.5C16.6666 5.09987 16.6666 4.3998 16.3942 3.86502C16.1545 3.39462 15.772 3.01217 15.3016 2.77248C14.7668 2.5 14.0668 2.5 12.6666 2.5H7.33331C5.93318 2.5 5.23312 2.5 4.69834 2.77248C4.22793 3.01217 3.84548 3.39462 3.6058 3.86502C3.33331 4.3998 3.33331 5.09987 3.33331 6.5V17.5L5.62498 15.8333L7.70831 17.5L9.99998 15.8333L12.2916 17.5L14.375 15.8333L16.6666 17.5Z" stroke="#475467" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+const NavigatRVWIcon = () => {
+  return (
+    <svg
+        width="16"
+        height="18"
+        viewBox="0 0 16 18"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M1.33333 13.1667H14.6667M14.6667 13.1667L11.3333 9.83333M14.6667 13.1667L11.3333 16.5M14.6667 4.83333H1.33333M1.33333 4.83333L4.66667 1.5M1.33333 4.83333L4.66667 8.16667"
+            stroke="#475467"
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
   )
 }
@@ -83,7 +103,7 @@ interface AppSidebarProps {
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => {
   const [hovered, setHovered] = useState<null | { label: string; tooltip: string; rect: DOMRect }>(null);
-
+  const navigate = useNavigate();
   // const menuItems = [
   //   { icon: Home, label: 'Home', active: true, path: '/quick-order' },
   //   { icon: Package, label: 'Inventory', active: false, path: '/quick-order' },
@@ -92,6 +112,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
   //   { icon: Truck, label: 'Fleet Management', active: false, path: '/dynamic-panel-demo' },
   //   // { icon: Fence, label: 'Panel', active: false, path: '/dynamic-panel' },
   // ];
+
+  const handleRVWClick = () => {
+    console.log("handleRVWClick");
+    // window.location.href = "https://forwardis.ramcoes.com/Forwardis-prod";
+    // window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
+    // window.location.href = "https://forwardis.ramcouat.com/rvw/external.aspx?idp=UAT"; // RVW - UAT
+    //window.location.href = "http://localhost:3000/Forwardis-dev/";  //Not yet Shared
+    // globalDispatch({ type: 'closeSideMenu' });
+  }
 
   const menuItems = [
     { icon: Home, label: 'Home', path: '', tooltip: 'Home' },
@@ -104,6 +133,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     { icon: Logs, label: 'Work Order', path: '/work-order-hub', tooltip: 'Work Order Management' }, // transport Route Update
     // { icon: COHubIcon, label: 'RFQ Hub', path: '/rfq-hub', tooltip: 'RFQ Hub' }, // RFQ Hub - sassy
     // { icon: RFQIcon, label: 'RFQ', path: '/rfq', tooltip: 'RFQ' }, // RFQ - sassy
+    { icon: NavigatRVWIcon, label: 'RVW', tooltip: 'RVW', onClick: () => handleRVWClick() }, // RVW navigation
   ];
 
   return (
@@ -146,6 +176,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
               <NavLink
                 to={item.path}
                 end={item.path === '/'}
+                onClick={(e) => {
+                  if (item.onClick) {
+                    e.preventDefault();
+                    item.onClick();
+                  }
+                }}
                 className={({ isActive }) =>
                   `w-9 h-9 mb-3 rounded-lg flex items-center justify-center transition-colors 
       ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`
