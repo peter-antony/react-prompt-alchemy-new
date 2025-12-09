@@ -133,6 +133,10 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const [tripEndDate, setTripEndDate] = useState(otherInfoData.PlanEndDate);
   const [tripEndTime, setTripEndTime] = useState(otherInfoData.PlanEndTime);
 
+  // Track initial values and changes
+  const [initialValues, setInitialValues] = useState<any>(null); // Store initial values
+  const [hasChanges, setHasChanges] = useState(false); // Flag to track changes
+
   const isEmpty = (v: any) => {
     if (v === null || v === undefined) return true;
     if (typeof v === "string") return v.trim() === "";
@@ -155,9 +159,25 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
     }
   };
 
+  // Store initial values when otherInfoData changes
   useEffect(() => {
-    console.log("<> Useeffect-- OTHER INFO CHANGED",otherInfoData)
-    if(otherInfoData){
+    console.log("<> Useeffect-- OTHER INFO CHANGED", otherInfoData)
+    if (otherInfoData) {
+      const initial = {
+        remark: otherInfoData.Remarks,
+        supplierRefNo: otherInfoData.SupplierRefNo,
+        planType: otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay",
+        loadType: otherInfoData.LoadType,
+        passNo: otherInfoData.PassNoFromSchedule,
+        tripStartDate: otherInfoData.PlanStartDate,
+        tripStartTime: otherInfoData.PlanStartTime,
+        tripEndDate: otherInfoData.PlanEndDate,
+        tripEndTime: otherInfoData.PlanEndTime,
+        QCUserDefined: bindQC()
+      };
+
+      setInitialValues(initial);
+      
       setRemark(otherInfoData.Remarks);
       setSupplierRefNo(otherInfoData.SupplierRefNo);
       setPlanType(otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay");
@@ -168,16 +188,49 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       setTripStartTime(otherInfoData.PlanStartTime);
       setTripEndDate(otherInfoData.PlanEndDate);
       setTripEndTime(otherInfoData.PlanEndTime);
+      setQCUserDefined(bindQC());
       
-      setQCUserDefined(bindQC())
+      // Reset hasChanges when new data loads
+      setHasChanges(false);
     }
     fetchAll();
 
   }, [otherInfoData]);
 
+  // Check for changes whenever any field updates
   useEffect(() => {
-  })
-  //API Call for dropdown data
+    if (!initialValues) return;
+
+    const currentValues = {
+      remark,
+      supplierRefNo,
+      planType,
+      loadType,
+      passNo,
+      tripStartDate,
+      tripStartTime,
+      tripEndDate,
+      tripEndTime,
+      QCUserDefined
+    };
+
+    // Deep comparison to detect changes
+    const changed = 
+      currentValues.remark !== initialValues.remark ||
+      currentValues.supplierRefNo !== initialValues.supplierRefNo ||
+      currentValues.planType !== initialValues.planType ||
+      currentValues.loadType !== initialValues.loadType ||
+      currentValues.passNo !== initialValues.passNo ||
+      currentValues.tripStartDate !== initialValues.tripStartDate ||
+      currentValues.tripStartTime !== initialValues.tripStartTime ||
+      currentValues.tripEndDate !== initialValues.tripEndDate ||
+      currentValues.tripEndTime !== initialValues.tripEndTime ||
+      currentValues.QCUserDefined.dropdown !== initialValues.QCUserDefined.dropdown ||
+      currentValues.QCUserDefined.input !== initialValues.QCUserDefined.input;
+
+    setHasChanges(changed);
+  }, [remark, supplierRefNo, planType, loadType, passNo, tripStartDate, tripStartTime, tripEndDate, tripEndTime, QCUserDefined, initialValues]);
+
   const fetchData = async (messageType) => {
     console.log("fetch data");
     console.log("OTHER INFO IN DRAWER: ", otherInfoData)
@@ -575,8 +628,14 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       </div>
       <div className=" position-fixed bottom-0 right-0 w-full bg-white border-t border-gray-200 flex justify-end px-6 py-3">
         <button
-          onClick={handleAddOthers} // define this function as needed
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md px-6 py-2 shadow-sm"
+          onClick={handleAddOthers}
+          disabled={!hasChanges}
+          className={`text-sm font-medium rounded-md px-6 py-2 shadow-sm transition-colors ${
+            hasChanges 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' 
+              : 'bg-blue-400 text-white cursor-not-allowed'
+          }`}
+          // className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md px-6 py-2 shadow-sm"
         >
           Update
         </button>
