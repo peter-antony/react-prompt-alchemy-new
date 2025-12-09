@@ -351,6 +351,10 @@ useEffect(() => {
     };
   };
 
+  const removeKeys = (obj, keys = []) =>
+  Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
+
+
   const handleGetFormValues = async () => {
     const headerUI = workOrderPanelRef.current?.getFormValues() || {};
     const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
@@ -383,13 +387,50 @@ useEffect(() => {
       ModeFlag: billingModeFlag
     };
 
+    const cleanHeader = removeKeys(headerBackend, [
+    "WagonCondainterID",
+    "SuplierContract",
+    "CustomerContract",
+    "ClusterMarket",
+    "product",
+    "UNCODE",
+    "PlaceOfEvent",
+    "AcceptedByForwardis",
+    "ReInvoiceCost",
+    "FinacialComments",
+    "NextRevision",
+    "PlaceOfRevision",
+    "QCUserDefined1",
+    "QCUserDefined2",
+    "QCUserDefined3",
+    "InvoiceTo"
+  ]);
+
+   const cleanSchedule = removeKeys(scheduleBackend, [
+    "Origin",
+    "OutBoundDestination",
+    "ReturnDestination",
+    "RUForward",
+    "RUReturn",
+    "PlaceOfOperation",
+  ]);
+
+   const cleanlocation = removeKeys(locationBackend, [
+    "Origin",
+    "OutBoundDestination",
+    "ReturnDestination",
+    "RUForward",
+    "RUReturn",
+    "PlaceOfOperation",
+  ]);
+
 
     const finalPayload = {
       Header: {
-        ...headerBackend,
+         ...cleanHeader,
         BillingHeaderDetails: billingUI,
       },
-      WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
+      WorkorderSchedule: { ...cleanlocation,   ...cleanSchedule, },
       OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails ?? [],
     };
 
@@ -402,16 +443,6 @@ useEffect(() => {
       useWorkOrderStore.getState().updateHeaderBulk(finalPayload); // ⭐ Then merge
     }
 
-    /*setTimeout(() => {
-      console.log("store after update:", useWorkOrderStore.getState().workOrder);
-    }, 50);*/
-
-    // if(workOrder.Header?.Hazardous){
-    //   workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
-    // }
-    // else{
-    //   workOrder!.Header!.Hazardous = "0";
-    // }
 
     if (workOrder && workOrder.Header) {
       workOrder.Header.Hazardous = workOrder.Header.Hazardous ? "1" : "0";
@@ -419,24 +450,14 @@ useEffect(() => {
 
 
 
-    console.log("Payload", workOrder)
-
     // Save work order and handle response
     const result = await saveWorkOrder()
 
-
-    // If save is successful and we have a workorderNo, update URL and refresh
-    console.log("result=======", result);
-    console.log("result=======", result.workorderNo);
     if (result.workorderNo) {
-      console.log("if=====");
       setSearchParams({ id: result.workorderNo });
       searchWorkOrder(result.workorderNo);
-      // The useEffect will automatically trigger when workOrderNo changes
-      // No need for manual refresh as the useEffect handles data fetching
     }
     console.log()
-    // saveWorkOrder();
     setUiHeader({});
     setUiLocation({});
     setUiSchedule({});
@@ -448,37 +469,6 @@ useEffect(() => {
     setUiHeader({});
   }, [])
 
-
-
-  //  const handleGetFormValues = async () => {
-  //   const headerUI = workOrderPanelRef.current?.getFormValues() || {};
-  //   const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
-  //   const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
-
-  //   const headerBackend = formatHeaderForBackend(headerUI);
-  //   const locationBackend = formatLocationForBackend(locationUI);
-  //   const scheduleBackend = formatScheduleForBackend(scheduleUI, workOrderNo);
-
-  //   const finalPayload = {
-  //     Header: headerBackend,
-  //     WorkorderSchedule: { ...locationBackend, ...scheduleBackend },
-  //     OperationDetails: useWorkOrderStore.getState().workOrder?.OperationDetails || [],
-  //   };
-
-  //   useWorkOrderStore.getState().updateHeaderBulk(finalPayload);
-  //   console.clear()
-  //   console.log("finalPayload",finalPayload)
-  //   console.log("store after update:", useWorkOrderStore.getState().workOrder);
-  //   saveWorkOrder();
-  // };
-
-
-  // const handleGetFormValues = () => {
-  //   const uiValues = workOrderPanelRef.current?.getFormValues() || {};
-  //   const backendValues = formatForBackend(uiValues);
-  //   useWorkOrderStore.getState().updateHeaderBulk(backendValues);
-  //   saveWorkOrder();
-  // };
 
   const formatHeaderForBackend = (values) => {
     const formatted = { ...values };
@@ -576,8 +566,21 @@ useEffect(() => {
       "ReturnDestination",
       "RUReturn",
       "PlaceOfOperation",
-      "Provider",
     ].forEach(applySplit);
+
+if (formatted.Provider?.includes(" || ")) {
+  const [id, desc] = formatted.Provider.split(" || ").map(v => v.trim());
+
+  delete formatted.Provider;
+
+  formatted.Provider = id;
+  formatted.ProviderDescription = desc;  
+  console.log("ProviderDescription",formatted.Provider,"ProviderDescription",formatted.ProviderDescription)
+  console.log(formatted.Provider)
+  console.log(formatted.ProviderDescription)
+}
+
+
 
     if (!workOrderNo) {
       // Create mode
@@ -1527,7 +1530,7 @@ useEffect(() => {
       // Fields for IsWorkShop === 0 (Mobile mode)
       PlaceOfOperation: {
         id: "PlaceOfOperation",
-        label: "PlaceOfOperation",
+        label: "Place Of Operation",
         fieldType: "lazyselect",
         width: "four",
         value: formatIdDesc(
@@ -1596,7 +1599,7 @@ useEffect(() => {
   const SchedulePanelConfig: PanelConfig = {
     DepartureDate: {
       id: "DepartureDate",
-      label: "DepartureDate",
+      label: "Departure Date",
       fieldType: "date",
       width: "six",
       value: workOrder?.WorkorderSchedule?.DepartureDate,
