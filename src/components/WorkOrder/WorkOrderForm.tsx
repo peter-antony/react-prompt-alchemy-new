@@ -3200,7 +3200,7 @@ if (formatted.Provider?.includes(" || ")) {
               isOpen={showCodeInformation}
               onClose={() => setShowCodeInformation(false)}
               operationCode={selectedCode?.OrderID ? `${selectedCode.OrderID}` : "Operation"}
-              // selectedCode={selectedCode?.CodeNo}
+              selectedOnlyCodes={selectedCode?.CodeInformation}
               onCodeSelect={(code) => {
                 console.log("Code selected:", code);
                 // Handle code selection if needed

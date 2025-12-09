@@ -15,6 +15,7 @@ interface CodeInformationDrawerProps {
   operationCode?: string;
   selectedCode?: string;
   onCodeSelect?: (code: string) => void;
+  selectedOnlyCodes?: any;
 }
 
 interface CodeInfo {
@@ -33,6 +34,7 @@ const CodeInformationDrawer: React.FC<CodeInformationDrawerProps> = ({
   operationCode = "Operation 01",
   selectedCode,
   onCodeSelect,
+  selectedOnlyCodes,
 }) => {
   const [codes, setCodes] = useState<string[]>([]);
   const [activeCode, setActiveCode] = useState<string>(selectedCode || "");
@@ -69,31 +71,68 @@ const CodeInformationDrawer: React.FC<CodeInformationDrawerProps> = ({
           const codesList: string[] = [];
           const codeInfoMap: Record<string, CodeInfo> = {};
 
+          // Build an allowed set from selectedOnlyCodes prop (if provided).
+          const allowedSet = new Set<string>();
+          if (selectedOnlyCodes) {
+            if (Array.isArray(selectedOnlyCodes)) {
+              selectedOnlyCodes.forEach((s: any) => {
+                if (!s) return;
+                if (typeof s === 'string') allowedSet.add(s);
+                else if (typeof s === 'object') {
+                  const v = s.CUUCode || s.code || s.value || s.CUU || s.Id || s.id;
+                  if (v) allowedSet.add(String(v));
+                }
+              });
+            } else if (typeof selectedOnlyCodes === 'string') {
+              allowedSet.add(selectedOnlyCodes);
+            } else if (typeof selectedOnlyCodes === 'object') {
+              const v = selectedOnlyCodes.CUUCode || selectedOnlyCodes.code || selectedOnlyCodes.value || selectedOnlyCodes.id;
+              if (v) allowedSet.add(String(v));
+            }
+          }
+
+          // If the prop `selectedOnlyCodes` was provided but is empty, treat that as "show no codes".
+          // This prevents returning the full list when the caller explicitly requests an empty selection.
+          const hasSelectedOnlyCodesProp = typeof selectedOnlyCodes !== 'undefined';
+          if (hasSelectedOnlyCodesProp && allowedSet.size === 0) {
+            // Explicit empty selection — clear lists and exit early
+            setCodes([]);
+            setCodeInformation({});
+            setActiveCode("");
+            return;
+          }
+
           parsedData.forEach((item: any) => {
             console.log("Code CUU Details Item:", item);
-            const code = item.CUUCode || "";
-            if (code) {
-              codesList.push(code);
-              codeInfoMap[code] = {
-                CUUCode: item.CUUCode || "",
-                Component: item.Component || "",
-                Irregularities: item.Irregularities || "",
-                IrregularityClass: `Class : ${item.IrregularityClass}`,
-                Criteria: item.Criteria || "",
-                Notes: item.Notes || "",
-                ActionToBeTaken: item.ActionToBeTaken || "",
-              };
-            }
+            const code = item.CUUCode || item.CUU || item.code || item.value || "";
+            if (!code) return;
+
+            // If an allowed set exists, only include codes present in it
+            if (allowedSet.size > 0 && !allowedSet.has(String(code))) return;
+
+            codesList.push(code);
+            codeInfoMap[code] = {
+              CUUCode: item.CUUCode || item.CUU || "",
+              Component: item.Component || "",
+              Irregularities: item.Irregularities || "",
+              IrregularityClass: `Class : ${item.IrregularityClass}`,
+              Criteria: item.Criteria || "",
+              Notes: item.Notes || "",
+              ActionToBeTaken: item.ActionToBeTaken || "",
+            };
           });
 
           setCodes(codesList);
           setCodeInformation(codeInfoMap);
-          
-          // Set active code to selectedCode if provided, otherwise first code from API
+
+          // Set active code to selectedCode if provided and present in filtered list, otherwise first code
           if (selectedCode && codesList.includes(selectedCode)) {
             setActiveCode(selectedCode);
           } else if (codesList.length > 0) {
             setActiveCode(codesList[0]);
+          } else {
+            // If nothing matched (due to filtering), clear activeCode
+            setActiveCode("");
           }
         } else if (parsedData && typeof parsedData === 'object') {
           // Handle single object or different structure
