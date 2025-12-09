@@ -65,6 +65,13 @@ export const getUserContext = () => {
 
   return defaultContext;
 };
+// Fetch User Context
+export const fetchUserContext = () => {
+  const UserContext = JSON.parse(localStorage.getItem('ForwardisUserInfo') || '{}');
+  return {
+    UserId: UserContext?.data?.name,
+  };
+};
 
 const createHeaders = () => {
   const userContext = getUserContext();

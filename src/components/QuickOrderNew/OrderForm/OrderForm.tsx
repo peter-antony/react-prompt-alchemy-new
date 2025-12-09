@@ -191,7 +191,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'CreateQuickOrder_OrderDetailsForm',
           ComponentName: 'panel-config-current-user-order-details'
         });
@@ -916,7 +916,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'CreateQuickOrder_OrderDetailsForm',
         ComponentName: 'panel-config-current-user-order-details',
         JsonData: preferencesToSave,

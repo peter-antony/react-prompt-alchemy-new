@@ -1679,7 +1679,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'ResourceGroupDetailsDrawer',
         ComponentName: 'panel-config-current-user-basic-details'
       });
@@ -1711,7 +1711,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'ResourceGroupDetailsDrawer',
         ComponentName: 'panel-config-current-user-operational-details'
       });
@@ -1743,7 +1743,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'ResourceGroupDetailsDrawer',
         ComponentName: 'panel-config-current-user-more-info'
       });
@@ -1775,7 +1775,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'ResourceGroupDetailsDrawer',
         ComponentName: 'panel-config-current-user-billing-details'
       });
@@ -1841,7 +1841,7 @@ const getUserPanelConfig_billingDetails = (userId: string, panelId: string): Pan
     console.log('Saving BasicDetails Panel preferences:', preferencesToSave);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'ResourceGroupDetailsDrawer',
       ComponentName: 'panel-config-current-user-basic-details',
       JsonData: preferencesToSave,
@@ -1879,7 +1879,7 @@ const saveUserPanelConfig_operationalDetails = async (userId: string, panelId: s
     console.log('Saving operationalDetails Panel preferences:', preferencesToSave);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'ResourceGroupDetailsDrawer',
       ComponentName: 'panel-config-current-user-operational-details',
       JsonData: preferencesToSave,
@@ -1917,7 +1917,7 @@ const saveUserPanelConfig_moreInfo = async (userId: string, panelId: string, set
     console.log('Saving MoreInfo Panel preferences:', preferencesToSave);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'ResourceGroupDetailsDrawer',
       ComponentName: 'panel-config-current-user-more-info',
       JsonData: preferencesToSave,
@@ -1955,7 +1955,7 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
     console.log('Saving billingDetails Panel preferences:', preferencesToSave);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'ResourceGroupDetailsDrawer',
       ComponentName: 'panel-config-current-user-billing-details',
       JsonData: preferencesToSave,

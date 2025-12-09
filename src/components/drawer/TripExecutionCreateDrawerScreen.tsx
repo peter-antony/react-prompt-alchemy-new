@@ -418,7 +418,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'Events&ConsignmentsDrawer',
           ComponentName: 'panel-config-current-user-trip-activities'
         });
@@ -466,7 +466,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'Events&ConsignmentsDrawer',
           ComponentName: 'panel-config-current-user-additional-events'
         });
@@ -2214,7 +2214,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'Events&ConsignmentsDrawer',
         ComponentName: 'panel-config-current-user-trip-activities',
         JsonData: preferencesToSave,
@@ -2265,7 +2265,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'Events&ConsignmentsDrawer',
         ComponentName: 'panel-config-current-user-additional-events',
         JsonData: preferencesToSave,

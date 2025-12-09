@@ -304,7 +304,7 @@ export const TripRouteUpdate = () => {
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'TransportRouteUpdate',
           ComponentName: 'smartgrid-preferences'
         });
@@ -354,7 +354,7 @@ export const TripRouteUpdate = () => {
         try {
           const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdate',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences'
           });
@@ -667,7 +667,7 @@ export const TripRouteUpdate = () => {
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'TransportRouteUpdate',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
@@ -714,7 +714,7 @@ export const TripRouteUpdate = () => {
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'TransportRouteUpdate',
         ComponentName: 'smartgrid-serverside-filtersearch-preferences',
         JsonData: preferencesToSave,
@@ -838,7 +838,7 @@ export const TripRouteUpdate = () => {
         console.log(`Fetching filter sets for ${userId} - ${gridId}`);
         const response: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser', // Should ideally come from user context
+          // LevelKey: 'ramcouser', // Should ideally come from user context
           ScreenName: 'TransportRouteUpdate',
           ComponentName: 'filterSets_serverside-filter_preferences'
         });
@@ -894,7 +894,7 @@ export const TripRouteUpdate = () => {
           // 4. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdate',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -929,7 +929,7 @@ export const TripRouteUpdate = () => {
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdate',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -955,7 +955,7 @@ export const TripRouteUpdate = () => {
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdate',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },

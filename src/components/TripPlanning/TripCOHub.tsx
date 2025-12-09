@@ -50,7 +50,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'TripCOHub',
           ComponentName: 'smartgrid-preferences'
         });
@@ -115,7 +115,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
         try {
           const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHub',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences'
           });
@@ -1292,7 +1292,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
         console.log(`Fetching filter sets for ${userId} - ${gridId}`);
         const response: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser', // Should ideally come from user context
+          // LevelKey: 'ramcouser', // Should ideally come from user context
           ScreenName: 'TripCOHub',
           ComponentName: 'filterSets_serverside-filter_preferences'
         });
@@ -1348,7 +1348,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           // 4. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHub',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -1383,7 +1383,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHub',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -1409,7 +1409,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHub',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -1859,7 +1859,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'TripCOHub',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
@@ -1906,7 +1906,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
   
         const response = await quickOrderService.savePersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'TripCOHub',
           ComponentName: 'smartgrid-serverside-filtersearch-preferences',
           JsonData: preferencesToSave,

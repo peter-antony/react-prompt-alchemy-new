@@ -1313,7 +1313,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-wagon-details'
       });
@@ -1345,7 +1345,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-container-details'
       });
@@ -1377,7 +1377,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-product-details'
       });
@@ -1409,7 +1409,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-thu-details'
       });
@@ -1441,7 +1441,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-journey-details'
       });
@@ -1473,7 +1473,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-other-details'
       });
@@ -1505,7 +1505,7 @@ useEffect(() => {
     try {
       const personalizationResponse: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'PlanAndActualDetailsDrawer',
         ComponentName: 'panel-config-current-user-bulk-update'
       });
@@ -3192,7 +3192,7 @@ const saveUserPanelConfig_wagonDetails = async (userId: string, panelId: string,
     console.log(`Saved config for panel wagon-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-wagon-details',
       JsonData: settings,
@@ -3228,7 +3228,7 @@ const saveUserPanelConfig_containerDetails = async (userId: string, panelId: str
     console.log(`Saved config for panel container-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-container-details',
       JsonData: settings,
@@ -3264,7 +3264,7 @@ const saveUserPanelConfig_productDetails = async (userId: string, panelId: strin
     console.log(`Saved config for panel product-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-product-details',
       JsonData: settings,
@@ -3300,7 +3300,7 @@ const saveUserPanelConfig_thuDetails = async (userId: string, panelId: string, s
     console.log(`Saved config for panel thu-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-thu-details',
       JsonData: settings,
@@ -3336,7 +3336,7 @@ const saveUserPanelConfig_journeyDetails = async (userId: string, panelId: strin
     console.log(`Saved config for panel journey-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-journey-details',
       JsonData: settings,
@@ -3372,7 +3372,7 @@ const saveUserPanelConfig_otherDetails = async (userId: string, panelId: string,
     console.log(`Saved config for panel other-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-other-details',
       JsonData: settings,
@@ -3408,7 +3408,7 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
     console.log(`Saved config for panel other-details:`, settings);
     const response: any = await quickOrderService.savePersonalization({
       LevelType: 'User',
-      LevelKey: 'ramcouser',
+      // LevelKey: 'ramcouser',
       ScreenName: 'PlanAndActualDetailsDrawer',
       ComponentName: 'panel-config-current-user-bulk-update',
       JsonData: settings,

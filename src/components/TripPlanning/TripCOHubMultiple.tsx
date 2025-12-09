@@ -56,7 +56,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'TripCOHubMultiple',
           ComponentName: 'smartgrid-preferences'
         });
@@ -106,7 +106,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
         try {
           const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHubMultiple',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences'
           });
@@ -849,7 +849,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
         console.log(`Fetching filter sets for ${userId} - ${gridId}`);
         const response: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser', // Should ideally come from user context
+          // LevelKey: 'ramcouser', // Should ideally come from user context
           ScreenName: 'TripCOHubMultiple',
           ComponentName: 'filterSets_serverside-filter_preferences'
         });
@@ -905,7 +905,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
           // 4. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHubMultiple',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -940,7 +940,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHubMultiple',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -966,7 +966,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
           // 3. Save to API
           await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHubMultiple',
             ComponentName: 'filterSets_serverside-filter_preferences',
             JsonData: { filterSets: updatedSets },
@@ -1408,7 +1408,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'TripCOHubMultiple',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
@@ -1455,7 +1455,7 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
     
           const response = await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripCOHubMultiple',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences',
             JsonData: preferencesToSave,

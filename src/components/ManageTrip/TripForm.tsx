@@ -477,7 +477,7 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
         try {
           const personalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripExecution',
             ComponentName: 'panel-config-current-user-trip-execution-trip-details'
           });
@@ -694,7 +694,7 @@ export const TripForm = React.forwardRef<TripFormRef, TripFormProps>((props, ref
     
           const response = await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TripExecution',
             ComponentName: 'panel-config-current-user-trip-execution-trip-details',
             JsonData: preferencesToSave,

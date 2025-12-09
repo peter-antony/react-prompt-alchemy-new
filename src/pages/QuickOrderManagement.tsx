@@ -329,7 +329,7 @@ const QuickOrderManagement = () => {
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'QuickOrderManagement',
           ComponentName: 'smartgrid-preferences'
         });
@@ -372,7 +372,7 @@ const QuickOrderManagement = () => {
         try {
           const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'QuickOrderManagement',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences'
           });
@@ -471,7 +471,7 @@ const QuickOrderManagement = () => {
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'QuickOrderManagement',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
@@ -513,7 +513,7 @@ const QuickOrderManagement = () => {
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'QuickOrderManagement',
         ComponentName: 'smartgrid-serverside-filtersearch-preferences',
         JsonData: preferencesToSave,
@@ -1358,7 +1358,7 @@ const QuickOrderManagement = () => {
       console.log(`Fetching filter sets for ${userId} - ${gridId}`);
       const response: any = await quickOrderService.getPersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser', // Should ideally come from user context
+        // LevelKey: 'ramcouser', // Should ideally come from user context
         ScreenName: 'QuickOrderManagement',
         ComponentName: 'filterSets_serverside-filter_preferences'
       });
@@ -1414,7 +1414,7 @@ const QuickOrderManagement = () => {
         // 4. Save to API
         await quickOrderService.savePersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'QuickOrderManagement',
           ComponentName: 'filterSets_serverside-filter_preferences',
           JsonData: { filterSets: updatedSets },
@@ -1449,7 +1449,7 @@ const QuickOrderManagement = () => {
         // 3. Save to API
         await quickOrderService.savePersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'QuickOrderManagement',
           ComponentName: 'filterSets_serverside-filter_preferences',
           JsonData: { filterSets: updatedSets },
@@ -1475,7 +1475,7 @@ const QuickOrderManagement = () => {
         // 3. Save to API
         await quickOrderService.savePersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'QuickOrderManagement',
           ComponentName: 'filterSets_serverside-filter_preferences',
           JsonData: { filterSets: updatedSets },

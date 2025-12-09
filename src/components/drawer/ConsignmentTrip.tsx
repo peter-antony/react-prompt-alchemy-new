@@ -37,6 +37,7 @@ import { useDrawerStore } from '@/stores/drawerStore';
 import { SideDrawer } from '../SideDrawer';
 import PODDrawer from './PODDrawer';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
+import { fetchUserContext } from '@/api/config';
 
 // Helper function to safely split values from LazySelect
 const safeSplit = (value: string | undefined, delimiter: string, index: number, fallback: string = ''): string => {
@@ -315,7 +316,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: fetchUserContext().UserId|| 'ramcouser',
           ScreenName: 'ConsignmentTripPlannedGrid',
           ComponentName: 'smartgrid-preferences'
         });
@@ -6927,7 +6928,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'ConsignmentTripPlannedGrid',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,

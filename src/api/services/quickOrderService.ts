@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_ENDPOINTS, getUserContext } from "../config";
+import { API_ENDPOINTS, fetchUserContext, getUserContext } from "../config";
 import { ApiResponse, PaginatedResponse, QueryParams } from "../types";
 
 // Quick Order interface
@@ -225,6 +225,8 @@ export const quickOrderService = {
     params?: any
   ): Promise<PaginatedResponse<QuickOrder>> => {
     const userContext = getUserContext();
+    const levelKey = fetchUserContext();
+    console.log("getPersonalization - QO - ",levelKey)
     const stringifyData = JSON.stringify({
       context: {
         UserID: "ramcouser",
@@ -235,7 +237,7 @@ export const quickOrderService = {
       },
       SearchCriteria: {
         LevelType: params?.LevelType || "User",
-        LevelKey: params?.LevelKey || "ramcouser",
+        LevelKey:levelKey?.UserId || params?.LevelKey || "ramcouser",
         ScreenName: params?.ScreenName || "",
         ComponentName: params?.ComponentName || "",
       },
@@ -268,7 +270,7 @@ export const quickOrderService = {
           {
             PersonalizationID: params?.PersonalizationID || 0,
             LevelType: params?.LevelType || "User",
-            LevelKey: params?.LevelKey || "ramcouser",
+            LevelKey: fetchUserContext().UserId || params?.LevelKey || "ramcouser",
             ScreenName: params?.ScreenName || "",
             ComponentName: params?.ComponentName || "",
             JsonData: params?.JsonData || {},

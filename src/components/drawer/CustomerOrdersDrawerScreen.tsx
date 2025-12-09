@@ -248,7 +248,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'TripExecutionCustomerOrders',
           ComponentName: 'smartgrid-preferences'
         });
@@ -619,7 +619,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'TripExecutionCustomerOrders',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,

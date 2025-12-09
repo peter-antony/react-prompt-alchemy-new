@@ -92,7 +92,7 @@ export const WorkOrderHub = () => {
 
       const response = await quickOrderService.savePersonalization({
         LevelType: 'User',
-        LevelKey: 'ramcouser',
+        // LevelKey: 'ramcouser',
         ScreenName: 'WorkOrderHub',
         ComponentName: 'smartgrid-preferences',
         JsonData: preferencesToSave,
@@ -139,7 +139,7 @@ export const WorkOrderHub = () => {
       
             const response = await quickOrderService.savePersonalization({
               LevelType: 'User',
-              LevelKey: 'ramcouser',
+              // LevelKey: 'ramcouser',
               ScreenName: 'WorkOrderHub',
               ComponentName: 'smartgrid-serverside-filtersearch-preferences',
               JsonData: preferencesToSave,
@@ -566,7 +566,7 @@ export const WorkOrderHub = () => {
       try {
         const personalizationResponse: any = await quickOrderService.getPersonalization({
           LevelType: 'User',
-          LevelKey: 'ramcouser',
+          // LevelKey: 'ramcouser',
           ScreenName: 'WorkOrderHub',
           ComponentName: 'smartgrid-preferences'
         });
@@ -613,7 +613,7 @@ export const WorkOrderHub = () => {
         try {
           const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'WorkOrderHub',
             ComponentName: 'smartgrid-serverside-filtersearch-preferences'
           });

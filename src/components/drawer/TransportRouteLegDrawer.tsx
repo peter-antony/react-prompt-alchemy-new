@@ -182,7 +182,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         try {
           const personalizationResponse: any = await quickOrderService.getPersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdateCO_LegDetails',
             ComponentName: 'panel-config-current-user-route-update-co-leg-details'
           });
@@ -822,7 +822,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     
           const response = await quickOrderService.savePersonalization({
             LevelType: 'User',
-            LevelKey: 'ramcouser',
+            // LevelKey: 'ramcouser',
             ScreenName: 'TransportRouteUpdateCO_LegDetails',
             ComponentName: 'panel-config-current-user-route-update-co-leg-details',
             JsonData: preferencesToSave,
