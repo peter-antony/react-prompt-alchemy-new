@@ -58,6 +58,11 @@ const TripPlanning = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const workOrderFlag = searchParams.get('workOrder'); // Extract workOrder flag
+  const urlCluster = searchParams.get('cluster'); // Extract cluster from URL
+  const urlRefDocType = searchParams.get('refDocType'); // Extract refDocType from URL
+  const urlRefDocNo = searchParams.get('refDocNo'); // Extract refDocNo from URL
+
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
@@ -172,6 +177,30 @@ const TripPlanning = () => {
 
     fetchData();
   }, [tripId, setAlert]);
+  
+  // Log workOrder flag from URL and set data from WorkOrder
+  useEffect(() => {
+    console.log("workOrder flag from URL:", workOrderFlag);
+    console.log("Cluster from URL:", urlCluster);
+    console.log("RefDocType from URL:", urlRefDocType);
+    console.log("RefDocNo from URL:", urlRefDocNo);
+   
+    if(workOrderFlag) {
+      setTripType('Wagon/Container Movement');
+      // Set cluster if provided
+      if (urlCluster) {
+        setCluster(urlCluster);
+      }
+      // Set reference doc type and number if provided
+      if (urlRefDocType) {
+        setReferenceDocType(urlRefDocType);
+      }
+      if (urlRefDocNo) {
+        setReferenceDocNo(urlRefDocNo);
+      }
+    }
+  }, [workOrderFlag, urlCluster, urlRefDocType, urlRefDocNo]);
+
   const [planDate, setPlanDate] = useState<Date | undefined>();
   const [requestSupplier, setRequestSupplier] = useState(false);
   const [customerOrderSearch, setCustomerOrderSearch] = useState('');

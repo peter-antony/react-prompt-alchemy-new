@@ -234,7 +234,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
             "State": "",
             "Country": ""
         },
-        "Arrival": {
+        "Arrival": {  
             "ArrivalID": workOrder?.WorkorderSchedule?.ReturnDestinationID,
             "ArrivalDescription": workOrder?.WorkorderSchedule?.ReturnDestinationDescription,
             "AddressLine1": "",
@@ -257,6 +257,17 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
           "EffectiveFromDate": null,
           "EffectiveToDate": null,
           "ModeFlag": "Insert"
+        },
+        {
+          "ResourceID": workOrder?.Header?.EquipmentID,
+          "ResourceType": "Equipment",
+          "Service": "",
+          "ServiceDescription": "",
+          "SubService": "",
+          "SubServiceDescription": "",
+          "EffectiveFromDate": null,
+          "EffectiveToDate": null,
+          "ModeFlag": "Insert"
         }
       ]
     };
@@ -267,7 +278,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       const parsedResponse = JSON.parse(res?.data.ResponseData || "{}");
       console.log("parsedResponse", parsedResponse);
       console.log("parsedResponse", parsedResponse?.RequestPayload?.Header?.RefDocNo);
-
+ 
       if (isSuccess) {
         toast({
           title: "✅ Tug Operation Created",
@@ -2879,8 +2890,31 @@ if (formatted.Provider?.includes(" || ")) {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (forwardTripId) {
-                                          navigate(`/trip-planning?manage=true&tripId=${(forwardTripId)}`);
-                                          // navigate(`/trip-planning?id=${encodeURIComponent(forwardTripId)}`);
+                                          // navigate(`/trip-planning?manage=true&workOrder=true&tripId=${(forwardTripId)}`);
+                                          // Get data from workOrder
+                                          const cluster = workOrder?.Header?.Cluster || '';
+                                          const refDocType = 'WO'; // Work Order type
+                                          const refDocNo = workOrder?.Header?.WorkorderNo || '';
+                                         
+                                          // Build URL with query parameters
+                                          const params = new URLSearchParams({
+                                            manage: 'true',
+                                            workOrder: 'true',
+                                            tripId: forwardTripId,
+                                          });
+                                         
+                                          // Add optional parameters if they exist
+                                          if (cluster) {
+                                            params.append('cluster', cluster);
+                                          }
+                                          if (refDocType) {
+                                            params.append('refDocType', refDocType);
+                                          }
+                                          if (refDocNo) {
+                                            params.append('refDocNo', refDocNo);
+                                          }
+                                         
+                                          navigate(`/trip-planning?${params.toString()}`);
                                         }
                                       }}
                                       className={`p-1 rounded-md border border-gray-200 ${

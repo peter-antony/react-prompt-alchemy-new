@@ -116,7 +116,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
   const handleRVWClick = () => {
     console.log("handleRVWClick");
     // window.location.href = "https://forwardis.ramcoes.com/Forwardis-prod";
-    // window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
+    window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
     // window.location.href = "https://forwardis.ramcouat.com/rvw/external.aspx?idp=UAT"; // RVW - UAT
     //window.location.href = "http://localhost:3000/Forwardis-dev/";  //Not yet Shared
     // globalDispatch({ type: 'closeSideMenu' });
@@ -133,7 +133,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     { icon: Logs, label: 'Work Order', path: '/work-order-hub', tooltip: 'Work Order Management' }, // transport Route Update
     // { icon: COHubIcon, label: 'RFQ Hub', path: '/rfq-hub', tooltip: 'RFQ Hub' }, // RFQ Hub - sassy
     // { icon: RFQIcon, label: 'RFQ', path: '/rfq', tooltip: 'RFQ' }, // RFQ - sassy
-    { icon: NavigatRVWIcon, label: 'RVW', tooltip: 'RVW', onClick: () => handleRVWClick() }, // RVW navigation
+    // { icon: NavigatRVWIcon, label: 'RVW', tooltip: 'RVW', onClick: () => handleRVWClick() }, // RVW navigation
   ];
 
   return (
@@ -176,12 +176,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
               <NavLink
                 to={item.path}
                 end={item.path === '/'}
-                onClick={(e) => {
-                  if (item.onClick) {
-                    e.preventDefault();
-                    item.onClick();
-                  }
-                }}
+                // onClick={(e) => {
+                //   if (item.onClick) {
+                //     e.preventDefault();
+                //     item.onClick();
+                //   }
+                // }}
                 className={({ isActive }) =>
                   `w-9 h-9 mb-3 rounded-lg flex items-center justify-center transition-colors 
       ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`
@@ -205,6 +205,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
 
       {/* Bottom Icons */}
       <div className="flex flex-col space-y-3 mt-auto">
+        <button className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors" title="RVW" onClick={() => handleRVWClick()}>
+          {/* <Settings size={20} /> */}
+          <NavigatRVWIcon/>
+        </button>
         <button className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
           <Settings size={20} />
         </button>
