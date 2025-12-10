@@ -3008,7 +3008,43 @@ if (formatted.Provider?.includes(" || ")) {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (returnTripId) {
-                                          navigate(`/trip-planning?manage=true&tripId=${(returnTripId)}`);
+                                          // navigate(`/trip-planning?manage=true&tripId=${(returnTripId)}`);
+                                          // Get data from workOrder
+                                          const cluster = workOrder?.Header?.Cluster || '';
+                                          const refDocType = 'WO'; // Work Order type
+                                          const refDocNo = workOrder?.Header?.WorkorderNo || '';
+                                          // const departureID = workOrder?.WorkorderSchedule?.OriginID + '||' + workOrder?.WorkorderSchedule?.OriginDescription || '';
+                                          // const arrivalID = workOrder?.WorkorderSchedule?.OutBoundDestinationID + '||' + workOrder?.WorkorderSchedule?.OutBoundDestinationDescription || '';
+                                          const departureID = workOrder?.WorkorderSchedule?.OutBoundDestinationID || '';
+                                          const arrivalID = workOrder?.WorkorderSchedule?.ReturnDestinationID || '';
+                                         
+                                          // Build URL with query parameters
+                                          const params = new URLSearchParams({
+                                            manage: 'true',
+                                            workOrder: 'true',
+                                            tripId: returnTripId,
+                                            departureID: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
+                                            arrivalID: workOrder?.WorkorderSchedule?.ReturnDestinationID,
+                                          });
+                                         
+                                          // Add optional parameters if they exist
+                                          if (cluster) {
+                                            params.append('cluster', cluster);
+                                          }
+                                          if (refDocType) {
+                                            params.append('refDocType', refDocType);
+                                          }
+                                          if (refDocNo) {
+                                            params.append('refDocNo', refDocNo);
+                                          }
+                                          if (departureID) {
+                                            params.append('departureID', departureID);
+                                          }
+                                          if (arrivalID) {
+                                            params.append('arrivalID', arrivalID);
+                                          }
+                                          console.log("params ====", params.toString());
+                                          navigate(`/trip-planning?${params.toString()}`);
                                         }
                                       }}
                                       className={`p-1 rounded-md border border-gray-200 ${

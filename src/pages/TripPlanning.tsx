@@ -63,6 +63,9 @@ const TripPlanning = () => {
   const urlRefDocType = searchParams.get('refDocType'); // Extract refDocType from URL
   const urlRefDocNo = searchParams.get('refDocNo'); // Extract refDocNo from URL
 
+  const urlDepartureID = searchParams.get('departureID'); // Extract departureID from URL
+  const urlArrivalID = searchParams.get('arrivalID'); // Extract arrivalID from URL
+
   // Extract URL parameters
   const urlTripID = searchParams.get('tripId');
   const manageFlag = searchParams.get('manage');
@@ -177,16 +180,18 @@ const TripPlanning = () => {
 
     fetchData();
   }, [tripId, setAlert]);
-  
+
   // Log workOrder flag from URL and set data from WorkOrder
   useEffect(() => {
     console.log("workOrder flag from URL:", workOrderFlag);
     console.log("Cluster from URL:", urlCluster);
-    console.log("RefDocType from URL:", urlRefDocType);
-    console.log("RefDocNo from URL:", urlRefDocNo);
+    console.log("RefDocType from URL:", urlDepartureID);
+    console.log("RefDocNo from URL:", urlArrivalID);
    
     if(workOrderFlag) {
       setTripType('Wagon/Container Movement');
+      setDepartureLocation(urlDepartureID);
+      setArrivalLocation(urlArrivalID);
       // Set cluster if provided
       if (urlCluster) {
         setCluster(urlCluster);

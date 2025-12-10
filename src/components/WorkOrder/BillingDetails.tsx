@@ -313,13 +313,16 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         if (!billingData) return;
 
         setLoading(true);
+        const userContext = workOrderService.getUserContext();
         try {
             // Construct Payload
             const payload = {
                 context: {
                     UserID: "ramcouser",
-                    OUID: 4,
-                    Role: "RAMCOROLE",
+                    // OUID: 4,
+                    // Role: "RAMCOROLE",
+                    OUID: userContext.ouId,
+                    Role: userContext.roleName,
                     MessageID: "12345",
                     MessageType: "WorkOrder-Save Billing Details"
                 },
@@ -756,10 +759,21 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             setLoading(true);
 
             const userContext = workOrderService.getUserContext();
+            const supplierParts = selectedOperationRow.Supplier?.split('||').map((s: string) => s.trim()) || [];
+            const supplierContractParts = selectedOperationRow.SupplierContractID?.split('||').map((s: string) => s.trim()) || [];
+ 
+            const supplierId = supplierParts[0] || '';
+            const supplierDescription = supplierParts[1] || '';
+            const supplierContractId = supplierContractParts[0] || '';
+            const supplierContractDescription = supplierContractParts[1] || '';
 
             // Construct the selected operation with all its ItemService data
             const selectedOperation = {
                 ...selectedOperationRow,
+                Supplier: supplierId,
+                SupplierDescription: supplierDescription,
+                SupplierContractID: supplierContractId,
+                SupplierContractDescription: supplierContractDescription,
                 ModeFlag: "Update",
                 ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
                     ...item,
@@ -857,10 +871,21 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             setLoading(true);
 
             const userContext = workOrderService.getUserContext();
+            const supplierParts = selectedOperationRow.Supplier?.split('||').map((s: string) => s.trim()) || [];
+            const supplierContractParts = selectedOperationRow.SupplierContractID?.split('||').map((s: string) => s.trim()) || [];
+ 
+            const supplierId = supplierParts[0] || '';
+            const supplierDescription = supplierParts[1] || '';
+            const supplierContractId = supplierContractParts[0] || '';
+            const supplierContractDescription = supplierContractParts[1] || '';
 
             // Construct the selected operation with all its ItemService data
             const selectedOperation = {
                 ...selectedOperationRow,
+                Supplier: supplierId,
+                SupplierDescription: supplierDescription,
+                SupplierContractID: supplierContractId,
+                SupplierContractDescription: supplierContractDescription,
                 ModeFlag: "Update",
                 ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
                     ...item,
