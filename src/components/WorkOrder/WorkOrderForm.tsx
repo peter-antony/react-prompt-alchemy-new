@@ -234,7 +234,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
             "State": "",
             "Country": ""
         },
-        "Arrival": {  
+        "Arrival": {
             "ArrivalID": workOrder?.WorkorderSchedule?.ReturnDestinationID,
             "ArrivalDescription": workOrder?.WorkorderSchedule?.ReturnDestinationDescription,
             "AddressLine1": "",
@@ -278,7 +278,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       const parsedResponse = JSON.parse(res?.data.ResponseData || "{}");
       console.log("parsedResponse", parsedResponse);
       console.log("parsedResponse", parsedResponse?.RequestPayload?.Header?.RefDocNo);
- 
+
       if (isSuccess) {
         toast({
           title: "✅ Tug Operation Created",
@@ -727,9 +727,44 @@ if (formatted.Provider?.includes(" || ")) {
 
   // Handle Supplier on EquipmentID Change
   const handleEquipmentChange = async (value: any) => {
-    const selectedEquipmentID = value?.value?.split(" || ")[0]; // Extract ID from the selected EquipmentID value
+    const isNewEntry = value?.isNewEntry || false; // Check if this is a new entry
+    let selectedEquipmentID: string;
+    
+    // Handle new entry (value is a plain string) vs existing entry (formatted "ID || Description")
+    if (isNewEntry) {
+      // For new entries, the value is just the plain string
+      selectedEquipmentID = typeof value?.value === 'string' ? value.value : value?.value?.split(" || ")[0];
+      console.log('New entry created:', selectedEquipmentID);
 
+      // For new entries, skip the API call since the equipment doesn't exist in the system yet
+      // Update the store with the new equipment ID and clear description
+      // Use the `updateHeader` store action (declared elsewhere in this component)
+      updateHeader("EquipmentID", selectedEquipmentID);
+      updateHeader("EquipmentDescription", "");
+
+      // Update UI header state so the panel config reads the new value
+      setUiHeader((prev) => ({
+        ...prev,
+        EquipmentID: selectedEquipmentID,
+        EquipmentDescription: ""
+      }));
+      if (workOrderPanelRef.current) {
+        const currentValues = workOrderPanelRef.current.getFormValues() || {};
+        // Update form values - explicitly set UNCodeID and UNCodeDescription
+        const updatedValues = {
+          ...currentValues,
+          EquipmentID: selectedEquipmentID,
+          EquipmentDescription: ""
+        };
+        workOrderPanelRef.current.setFormValues(updatedValues);
+      }
+
+      return; // Skip API call for new entries
+    } else {
+      // For existing entries, extract ID from formatted string
+      selectedEquipmentID = value?.value?.split(" || ")[0];
     if (!selectedEquipmentID) return;
+    }
 
     try {
       const response: any = await quickOrderService.getMasterCommonData({
@@ -817,8 +852,14 @@ if (formatted.Provider?.includes(" || ")) {
         equipmentType === "Wagon"
           ? fetchMaster("Wagon id Init")
           : fetchMaster("Container id Init"),
+      addNewEntry: true,
+      minSearchLength: 4,
       events: {
         onChange: (value) => {
+          // value object contains: { label: '', value: string, isNewEntry?: boolean }
+          // or can be accessed via event.target.isNewEntry
+          console.log('WagonCondainterID onChange - value:', value);
+          console.log('WagonCondainterID onChange - isNewEntry:', value?.isNewEntry);
           handleEquipmentChange(value);
         },
       },

@@ -59,6 +59,8 @@ export interface FieldConfig {
   }) => Promise<{ label: string; value: string }[]>;
   hideSearch?: boolean; // Hide search box in lazyselect
   disableLazyLoading?: boolean; // Disable lazy loading on scroll in lazyselect
+  addNewEntry?: boolean; // Allow creating new entries when search term doesn't exist (for lazyselect)
+  minSearchLength?: number; // Minimum characters required for new entry creation (for lazyselect)
   // Event handlers for field interactions
   events?: {
     onClick?: (event: React.MouseEvent, value: any) => void;

@@ -14,7 +14,7 @@ interface LazySelectOption {
 interface DynamicLazySelectProps {
   fetchOptions: (params: { searchTerm: string; offset: number; limit: number, rowData?: any }) => Promise<LazySelectOption[]>;
   value?: string | string[];
-  onChange: (value: string | string[] | undefined) => void;
+  onChange: (value: string | string[] | undefined, isNewEntry?: boolean) => void;
   placeholder?: string;
   multiSelect?: boolean;
   disabled?: boolean;
@@ -27,6 +27,8 @@ interface DynamicLazySelectProps {
   disableLazyLoading?: boolean;
   rowData?: any;
   tooltip?: any;
+  allowNewEntry?: boolean;
+  minSearchLength?: number;
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -47,6 +49,8 @@ export function DynamicLazySelect({
   disableLazyLoading = false,
   rowData,
   tooltip,
+  allowNewEntry = false,
+  minSearchLength = 1,
 }: DynamicLazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<LazySelectOption[]>([]);
@@ -139,15 +143,15 @@ export function DynamicLazySelect({
     }
   }, [loading, hasMore, loadOptions, disableLazyLoading]);
 
-  const handleSelect = (selectedValue: string) => {
+  const handleSelect = (selectedValue: string, isNewEntry: boolean = false) => {
     if (multiSelect) {
       const currentValues = Array.isArray(value) ? value : [];
       const newValues = currentValues.includes(selectedValue)
         ? currentValues.filter(v => v !== selectedValue)
         : [...currentValues, selectedValue];
-      onChange(newValues.length > 0 ? newValues : undefined);
+      onChange(newValues.length > 0 ? newValues : undefined, isNewEntry);
     } else {
-      onChange(selectedValue);
+      onChange(selectedValue, isNewEntry);
       setIsOpen(false);
     }
   };
@@ -157,6 +161,26 @@ export function DynamicLazySelect({
     onChange(undefined);
     setSearchTerm(''); // Clear the search box as well
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (options.length > 0) {
+        // If there are options available, select the first one (existing entry)
+        handleSelect(options[0].value, false);
+      } else if (allowNewEntry && searchTerm.trim().length >= minSearchLength) {
+        // If no options but new entry is allowed and meets minimum length (new entry)
+        handleSelect(searchTerm.trim(), true);
+      }
+    }
+  };
+
+  const canCreateNewEntry = allowNewEntry &&
+    searchTerm.trim().length >= minSearchLength &&
+    options.length === 0 &&
+    !loading &&
+    debouncedSearchTerm === searchTerm;
 
   const handleButtonClick = (e: React.MouseEvent) => {
     // Prevent event from bubbling up to parent onClick handlers
@@ -238,6 +262,7 @@ export function DynamicLazySelect({
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="h-8"
             />
           </div>
@@ -252,25 +277,37 @@ export function DynamicLazySelect({
               {hideSearch ? 'No options available.' : (debouncedSearchTerm ? 'No results found.' : 'Start typing to search...')}
             </div>
           ) : (
-            options.map((option:any, index) => (
-              <div
-                key={(option?.id || option?.value) + '-' + index}
-                className={cn(
-                  "flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                  isSelected(option.value) && "bg-accent"
-                )}
-                onClick={() => handleSelect(option.value)}
-                title={option.value}
-              >
-                {multiSelect && (
-                  <Checkbox
-                    checked={isSelected(option.value)}
-                    onChange={() => {}}
-                  />
-                )}
-                <span className="flex-1 truncate">{option.label}</span>
-              </div>
-            ))
+            <>
+              {options.map((option:any, index) => (
+                <div
+                  key={(option?.id || option?.value) + '-' + index}
+                  className={cn(
+                    "flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                    isSelected(option.value) && "bg-accent"
+                  )}
+                  onClick={() => handleSelect(option.value, false)}
+                  title={option.value}
+                >
+                  {multiSelect && (
+                    <Checkbox
+                      checked={isSelected(option.value)}
+                      onChange={() => {}}
+                    />
+                  )}
+                  <span className="flex-1 truncate">{option.label}</span>
+                </div>
+              ))}
+              {canCreateNewEntry && (
+                <div
+                  className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer border-t"
+                  onClick={() => handleSelect(searchTerm.trim(), true)}
+                >
+                  <span className="flex-1 text-blue-600 font-medium">
+                    Add new: "{searchTerm.trim()}"
+                  </span>
+                </div>
+              )}
+            </>
           )}
           {loading && (
             <div className="flex items-center justify-center py-4">

@@ -399,11 +399,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 <DynamicLazySelect
                   fetchOptions={fetchOptions}
                   value={field.value}
-                  onChange={(value) => {
+                  onChange={(value, isNewEntry) => {
                     field.onChange(value);
                     if (events?.onChange) {
-                      const selectedOption = value ? { label: '', value } : null;
-                      events.onChange(selectedOption, { target: { value } } as any);
+                      const selectedOption = value ? { label: '', value, isNewEntry } : null;
+                      events.onChange(selectedOption, { target: { value, isNewEntry } } as any);
                     }
                   }}
                   placeholder={placeholder || 'Select...'}
@@ -419,6 +419,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   hideSearch={config.hideSearch}
                   disableLazyLoading={config.disableLazyLoading}
                   tooltip={tooltip}
+                  allowNewEntry={config.addNewEntry}
+                  minSearchLength={config.minSearchLength}
                 />
               </div>
             );
