@@ -2936,14 +2936,20 @@ if (formatted.Provider?.includes(" || ")) {
                                           const cluster = workOrder?.Header?.Cluster || '';
                                           const refDocType = 'WO'; // Work Order type
                                           const refDocNo = workOrder?.Header?.WorkorderNo || '';
-                                         
+                                          // const departureID = workOrder?.WorkorderSchedule?.OriginID + '||' + workOrder?.WorkorderSchedule?.OriginDescription || '';
+                                          // const arrivalID = workOrder?.WorkorderSchedule?.OutBoundDestinationID + '||' + workOrder?.WorkorderSchedule?.OutBoundDestinationDescription || '';
+                                          const departureID = workOrder?.WorkorderSchedule?.OriginID || '';
+                                          const arrivalID = workOrder?.WorkorderSchedule?.OutBoundDestinationID || '';
+                                          
                                           // Build URL with query parameters
                                           const params = new URLSearchParams({
                                             manage: 'true',
                                             workOrder: 'true',
                                             tripId: forwardTripId,
+                                            departureID: workOrder?.WorkorderSchedule?.OriginID,
+                                            arrivalID: workOrder?.WorkorderSchedule?.OutBoundDestinationID,
                                           });
-                                         
+                                          
                                           // Add optional parameters if they exist
                                           if (cluster) {
                                             params.append('cluster', cluster);
@@ -2954,7 +2960,13 @@ if (formatted.Provider?.includes(" || ")) {
                                           if (refDocNo) {
                                             params.append('refDocNo', refDocNo);
                                           }
-                                         
+                                          if (departureID) {
+                                            params.append('departureID', departureID);
+                                          }
+                                          if (arrivalID) {
+                                            params.append('arrivalID', arrivalID);
+                                          }
+                                          console.log("params ====", params.toString());
                                           navigate(`/trip-planning?${params.toString()}`);
                                         }
                                       }}
