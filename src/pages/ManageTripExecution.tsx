@@ -58,6 +58,7 @@ const ManageTripExecution = () => {
   const [popupBGColor, setPopupBGColor] = useState('');
   const [popupTextColor, setPopupTextColor] = useState('');
   const [popupTitleBgColor, setPopupTitleBgColor] = useState('');
+  const [activeTab, setActiveTab] = useState("consignment");
   
   // Fields for Cancel modal (with date, reasonCode, remarks)
   const [cancelFields, setCancelFields] = useState([
@@ -629,11 +630,13 @@ const ManageTripExecution = () => {
               onClose={closeDrawer} 
               tripId={tripUniqueID || undefined} 
               selectedLegSequence={drawerData?.selectedLegSequence}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
               onSaveSuccess={async () => {
                 // Refresh trip data in parent component to update events & consignment table
                 if (tripUniqueID) {
-                  await fetchTrip(tripUniqueID);
-                }
+                  await fetchTrip(tripUniqueID);                 
+                }              
               }}
             />
           )}

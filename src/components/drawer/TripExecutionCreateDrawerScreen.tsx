@@ -39,6 +39,8 @@ interface TripExecutionCreateDrawerScreenProps {
   onSaveSuccess?: () => void; // Callback to refresh parent component data after successful save
   // tripExecutionRef?: React.RefObject<DynamicPanelRef>;
   // tripAdditionalRef?: React.RefObject<DynamicPanelRef>;
+  activeTab: string;               
+  onTabChange: (tab: string) => void;
 }
 
 interface AdditionalActivity {
@@ -64,6 +66,9 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   tripId = 'TRIP00000001',
   selectedLegSequence,
   onSaveSuccess,
+  activeTab,
+  onTabChange
+ 
   // tripExecutionRef,
   // tripAdditionalRef
 }) => {
@@ -2105,87 +2110,130 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   };
 
   // Helper: parse combined date and time into a Date object
-  const parseDateTime = (
-    dateString?: string | null,
-    timeString?: string | null
-  ): Date | null => {
-    if (!dateString || !timeString) return null;
-    try {
-      let date: Date;
-      if (dateString.includes('-') && dateString.length === 10) {
-        // YYYY-MM-DD
-        date = new Date(dateString);
-      } else if (dateString.includes('/')) {
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-          // DD/MM/YYYY
-          date = new Date(
-            parseInt(parts[2], 10),
-            parseInt(parts[1], 10) - 1,
-            parseInt(parts[0], 10)
-          );
-        } else {
-          date = new Date(dateString);
-        }
-      } else {
-        date = new Date(dateString);
-      }
+  // const parseDateTime = (
+  //   dateString?: string | null,
+  //   timeString?: string | null
+  // ): Date | null => {
+  //   if (!dateString || !timeString) return null;
+  //   try {
+  //     let date: Date;
+  //     if (dateString.includes('-') && dateString.length === 10) {
+  //       // YYYY-MM-DD
+  //       date = new Date(dateString);
+  //     } else if (dateString.includes('/')) {
+  //       const parts = dateString.split('/');
+  //       if (parts.length === 3) {
+  //         // DD/MM/YYYY
+  //         date = new Date(
+  //           parseInt(parts[2], 10),
+  //           parseInt(parts[1], 10) - 1,
+  //           parseInt(parts[0], 10)
+  //         );
+  //       } else {
+  //         date = new Date(dateString);
+  //       }
+  //     } else {
+  //       date = new Date(dateString);
+  //     }
  
-      if (isNaN(date.getTime())) return null;
+  //     if (isNaN(date.getTime())) return null;
  
-      let hours = 0,
-        minutes = 0,
-        seconds = 0;
-      if (timeString.includes(':')) {
-        const tParts = timeString.split(':');
-        if (tParts.length >= 2) {
-          hours = parseInt(tParts[0], 10);
-          minutes = parseInt(tParts[1], 10);
-          seconds = tParts.length >= 3 ? parseInt(tParts[2], 10) : 0;
-        } else {
-          const dt = new Date(`1970-01-01T${timeString}`);
-          if (!isNaN(dt.getTime())) {
-            hours = dt.getHours();
-            minutes = dt.getMinutes();
-            seconds = dt.getSeconds();
-          }
-        }
-      } else {
-        const dt = new Date(`1970-01-01T${timeString}`);
-        if (!isNaN(dt.getTime())) {
-          hours = dt.getHours();
-          minutes = dt.getMinutes();
-          seconds = dt.getSeconds();
-        }
-      }
-      date.setHours(hours, minutes, seconds, 0);
-      return date;
-    } catch {
-      return null;
+  //     let hours = 0,
+  //       minutes = 0,
+  //       seconds = 0;
+  //     if (timeString.includes(':')) {
+  //       const tParts = timeString.split(':');
+  //       if (tParts.length >= 2) {
+  //         hours = parseInt(tParts[0], 10);
+  //         minutes = parseInt(tParts[1], 10);
+  //         seconds = tParts.length >= 3 ? parseInt(tParts[2], 10) : 0;
+  //       } else {
+  //         const dt = new Date(`1970-01-01T${timeString}`);
+  //         if (!isNaN(dt.getTime())) {
+  //           hours = dt.getHours();
+  //           minutes = dt.getMinutes();
+  //           seconds = dt.getSeconds();
+  //         }
+  //       }
+  //     } else {
+  //       const dt = new Date(`1970-01-01T${timeString}`);
+  //       if (!isNaN(dt.getTime())) {
+  //         hours = dt.getHours();
+  //         minutes = dt.getMinutes();
+  //         seconds = dt.getSeconds();
+  //       }
+  //     }
+  //     date.setHours(hours, minutes, seconds, 0);
+  //     return date;
+  //   } catch {
+  //     return null;
+  //   }
+  // };
+const parseDateTime = (dateStr?: string, timeStr?: string): Date | null => {
+  if (!dateStr || !timeStr) return null;
+
+  // Detect DD/MM/YYYY format (e.g., "11/10/2025")
+  if (dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const [dd, mm, yyyy] = parts.map(Number);
+      const [hh, mins] = timeStr.split(':').map(Number);
+
+      // Correct conversion for DD/MM/YYYY
+      const d = new Date(yyyy, mm - 1, dd, hh, mins);
+      return isNaN(d.getTime()) ? null : d;
     }
-  };
+  }
+
+  // Fallback for formats JS naturally supports (YYYY-MM-DD)
+  const d = new Date(`${dateStr} ${timeStr}`);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+
+
  
   // Helper: format millisecond diff into "DD Days HH Hours MM Mins"
-  const formatDelay = (diffMs: number): string => {
-    const totalMinutes = Math.round(Math.abs(diffMs) / 60000);
-    const days = Math.floor(totalMinutes / (60 * 24));
-    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-    const minutes = totalMinutes % 60;
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${pad(days)} Days ${pad(hours)} Hours ${pad(minutes)} Mins`;
-  };
- 
-  // Helper: calculate delayed time based on planned/revised vs actual
-  const getDelayedTime = (activity: any): string => {
-    const actual = parseDateTime(activity?.ActualDate, activity?.ActualTime);
-    const revised = parseDateTime(activity?.RevisedDate, activity?.RevisedTime);
-    const planned = parseDateTime(activity?.PlannedDate, activity?.PlannedTime);
-    if (!actual) return '';
-    const target = revised ?? planned;
-    if (!target) return '';
-    const diff = target.getTime() - actual.getTime();
-    return formatDelay(diff);
-  };
+// formats ms diff to human string (keeps leading zeros)
+const formatDelay = (diffMs: number): string => {
+  const totalMinutes = Math.round(Math.abs(diffMs) / 60000);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${pad(days)} Days ${pad(hours)} Hours ${pad(minutes)} Mins`;
+};
+
+
+const getDelayedTime = (activity: any): string => {
+  const actual = parseDateTime(activity?.ActualDate, activity?.ActualTime);
+  const planned = parseDateTime(activity?.PlannedDate, activity?.PlannedTime);
+  const revised = parseDateTime(activity?.RevisedDate, activity?.RevisedTime);
+
+  if (!actual) return '';
+
+  const isValid = (d: Date | null) => d instanceof Date && !isNaN(d.getTime());
+
+  const hasPlanned =
+    activity?.PlannedDate && activity?.PlannedTime && isValid(planned);
+
+  const hasRevised =
+    activity?.RevisedDate && activity?.RevisedTime && isValid(revised);
+
+  // 1️⃣ Check Revised Delay FIRST (priority)
+  if (hasRevised && revised!.getTime() > actual.getTime()) {
+    const diff = revised!.getTime() - actual.getTime();
+    return `Delayed by ${formatDelay(diff)}`;
+  }
+
+  // 2️⃣ Check Planned Delay if Revised did NOT show delay
+  if (hasPlanned && actual.getTime() > planned!.getTime()) {
+    const diff = actual.getTime() - planned!.getTime();
+    return `Delayed by ${formatDelay(diff)}`;
+  }
+
+  return '';
+};
 
   const getUserPanelConfig = (userId: string, panelId: string): PanelSettings | null => {
     const stored = localStorage.getItem(`panel-config-current-user-trip-activities`);
@@ -2436,16 +2484,24 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
          ) : (
           <>
         {/* Tabs */}
-        <Tabs defaultValue="consignment" className="flex-1 flex flex-col">
+        {/* <Tabs defaultValue = {activeTab  ? "activities" : "consignment"}  onValueChange={onTabChange} className="flex-1 flex flex-col"> */}
+     <Tabs
+  value={activeTab}
+  onValueChange={(val) => {
+    console.log("Changed tab:", val);
+    onTabChange(val);
+  }}
+  className="flex-1 flex flex-col"
+>
           <div className="border-b px-6 pt-4">
             <TabsList className="h-10">
-              <TabsTrigger value="activities">Events </TabsTrigger>
+              <TabsTrigger  value="activities">Events </TabsTrigger>
               <TabsTrigger value="consignment">Consignment </TabsTrigger>
               {/* <TabsTrigger value="transshipment">Transloading ({selectedLeg.transshipments.length})</TabsTrigger> */}
             </TabsList>
           </div>
 
-          <TabsContent value="activities" className="flex-1 flex flex-col m-0">
+          <TabsContent  value="activities" className="flex-1 flex flex-col m-0">
             {/* Activities Header */}
             {/* <div className="px-6 py-4 border-b">
               <div className="flex items-center justify-between">
@@ -2468,7 +2524,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                   onClick={() => setExpandedActivities(!expandedActivities)}
                 >
                    <h3 className="text-sm font-semibold flex items-center gap-2">
-                     Events
+                     Events 
                      <Badge variant="secondary" className="rounded-full h-5 px-2 text-xs">
                        {selectedLeg.Activities?.length || 0}
                      </Badge>
@@ -2534,11 +2590,21 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                                    <div className="font-medium text-sm">
                                      {activity.ActivityDescription || activity.Activity} - {formatDateToDDMMYYYY(activity.PlannedDate)} {formatTimeTo12Hour(activity.PlannedTime)}
                                    </div>
-                                   {activity?.ActualTime && (     
+                                   {/* {activity?.ActualTime && (     
                                    <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
                                       {`${getDelayedTime(activity)} Delayed`}
                                     </div>
-                                   )}
+                                   )} */}
+                                 {(() => {
+  const delayText = getDelayedTime(activity);
+  if (!delayText) return null;
+
+  return (
+    <div className="flex-shrink-0 inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground whitespace-nowrap badge-red rounded-2xl ml-2">
+      {delayText}
+    </div>
+  );
+})()}
                                  </div>
                                </div>
                                {/* <div className="flex items-center gap-2">
@@ -2754,7 +2820,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
                 Close
               </Button> */}
               <Button onClick={onSaveActivities} className='inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm' >
-                Save
+                Save 
               </Button>
             </div>
           </TabsContent>
