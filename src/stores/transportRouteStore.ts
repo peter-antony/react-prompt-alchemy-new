@@ -40,6 +40,8 @@ interface LegDetail {
   QCCode1: string | null;
   QCCode1Value: string | null;
   Remarks: string | null;
+  LastModifiedBy: string | null;
+  LastModifiedDate: string | null;
 }
 
 interface TransportRoute {
@@ -131,28 +133,30 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
         // Ensure LegDetails is an array and has proper structure
         const legDetails = Array.isArray(responseData?.LegDetails) 
           ? responseData.LegDetails.map((leg: any, index: number) => ({
-              LegSequence: leg.LegSequence || index + 1,
-              LegID: leg.LegID || '',
-              LegIDDescription: leg.LegIDDescription || '',
-              LegUniqueId: leg.LegUniqueId || `${Date.now()}`,
-              Departure: leg.Departure || '',
-              DepartureDescription: leg.DepartureDescription || '',
-              Arrival: leg.Arrival || '',
-              ArrivalDescription: leg.ArrivalDescription || '',
-              LegBehaviour: leg.LegBehaviour || 'Pick',
-              LegBehaviourDescription: leg.LegBehaviourDescription || 'Pick',
-              TransportMode: leg.TransportMode || 'Rail',
-              LegStatus: leg.LegStatus || null,
-              LegStatusDescription: leg.LegStatusDescription || null,
-              TransitTime: leg.TransitTime || null,
-              TransitTimeUOM: leg.TransitTimeUOM || null,
-              TripInfo: leg.TripInfo || null,
-              ModeFlag: leg.ModeFlag || 'Nochange',
-              ReasonForUpdate: leg.ReasonForUpdate || null,
-              QCCode1: leg.QCCode1 || null,
-              QCCode1Value: leg.QCCode1Value || null,
-              Remarks: leg.Remarks || null
-            }))
+            LegSequence: leg.LegSequence || index + 1,
+            LegID: leg.LegID || '',
+            LegIDDescription: leg.LegIDDescription || '',
+            LegUniqueId: leg.LegUniqueId || `${Date.now()}`,
+            Departure: leg.Departure || '',
+            DepartureDescription: leg.DepartureDescription || '',
+            Arrival: leg.Arrival || '',
+            ArrivalDescription: leg.ArrivalDescription || '',
+            LegBehaviour: leg.LegBehaviour || 'Pick',
+            LegBehaviourDescription: leg.LegBehaviourDescription || 'Pick',
+            TransportMode: leg.TransportMode || 'Rail',
+            LegStatus: leg.LegStatus || null,
+            LegStatusDescription: leg.LegStatusDescription || null,
+            TransitTime: leg.TransitTime || null,
+            TransitTimeUOM: leg.TransitTimeUOM || null,
+            TripInfo: leg.TripInfo || null,
+            ModeFlag: leg.ModeFlag || 'Nochange',
+            ReasonForUpdate: leg.ReasonForUpdate || null,
+            QCCode1: leg.QCCode1 || null,
+            QCCode1Value: leg.QCCode1Value || null,
+            Remarks: leg.Remarks || null,
+            LastModifiedBy: leg.LastModifiedBy || null,
+            LastModifiedDate: leg.LastModifiedDate || null
+          }))
           : [];
         
         // Transform API response to match our TransportRoute interface
@@ -239,7 +243,9 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
       // ReasonForUpdate: null,
       QCCode1: null,
       QCCode1Value: null,
-      Remarks: null
+      Remarks: null,
+      LastModifiedBy: null,
+      LastModifiedDate: null
     };
 
     set({

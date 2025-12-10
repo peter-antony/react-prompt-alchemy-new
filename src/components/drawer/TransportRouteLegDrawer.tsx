@@ -6,6 +6,7 @@ import { PanelConfig , PanelSettings } from '@/types/dynamicPanel';
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useTransportRouteStore } from '@/stores/transportRouteStore';
@@ -52,6 +53,8 @@ interface LegDetail {
   QCCode1: string | null;
   QCCode1Value: string | null;
   Remarks: string | null;
+  LastModifiedBy: string | null;
+  LastModifiedDate: string | null;
 }
 
 interface TransportRoute {
@@ -563,6 +566,19 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     try {
       console.log(`🗑️ Deleting leg at index ${index}`);
 
+      // Check if leg is unsaved (ModeFlag === 'Insert')
+      const legToDelete = selectedRoute?.LegDetails?.[index];
+      if (legToDelete?.ModeFlag === 'Insert') {
+        console.log('🗑️ Removing unsaved leg locally (no API call needed)');
+        removeLegPanel(index);
+        toast({
+          title: "Leg Removed",
+          description: "Unsaved leg removed successfully",
+          variant: "default",
+        });
+        return;
+      }
+
       // Get the latest form data before deleting
       const formDataBeforeDelete = getFormData();
       console.log('🗑️ Form data before delete:', formDataBeforeDelete);
@@ -1027,6 +1043,10 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                     if (ref) {
                       dynamicPanelRefs.current[`leg-${index}`] = ref;
                       console.log(`✅ Ref set for leg-${index}, current refs:`, dynamicPanelRefs.current);
+                    } else {
+                      // Cleanup when component unmounts
+                      delete dynamicPanelRefs.current[`leg-${index}`];
+                      console.log(`🧹 Ref removed for leg-${index}`);
                     }
                   }}
                   panelId={`leg-${index}`}
@@ -1192,10 +1212,61 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 bg-white px-6 py-4 flex items-center justify-end">
-        {/* <p className="text-sm text-gray-600">
-          Last Modified: Samuel Wilson 10:10:00 AM
-        </p> */}
+      <div className="border-t border-gray-200 bg-white px-6 py-4 flex items-center justify-between">
+        {(() => {
+          // Logic to find the most recently modified leg
+          const validLegs = (selectedRoute?.LegDetails || []).filter(
+            (leg) => leg.LastModifiedDate
+          );
+
+          if (validLegs.length === 0) {
+            return <div></div>; // Or render nothing/placeholder logic
+          }
+
+          // Sort descending by date string 
+          // Assuming format YYYY-MM-DD HH:mm:ss which sorts correctly as string
+          // If needed, can parse with new Date() to be safe
+          const sortedLegs = validLegs.sort((a, b) => {
+            const dateA = new Date(a.LastModifiedDate!).getTime();
+            const dateB = new Date(b.LastModifiedDate!).getTime();
+            return dateB - dateA;
+          });
+
+          const latestLeg = sortedLegs[0];
+
+          // Format: 10-12-2025 12:27
+          let displayDate = "";
+          try {
+            if (latestLeg.LastModifiedDate) {
+              // Replace space with T to ensure standard parsing if needed, 
+              // but standard SQL strings might work in some envs. 
+              // Safest is to handle "YYYY-MM-DD HH:mm:ss" manually or replace space
+              const safeDateStr = latestLeg.LastModifiedDate.replace(" ", "T");
+              const parsedDate = new Date(safeDateStr);
+              if (!isNaN(parsedDate.getTime())) {
+                displayDate = format(parsedDate, "dd-MM-yyyy HH:mm");
+              } else {
+                displayDate = latestLeg.LastModifiedDate;
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing date:", e);
+            displayDate = latestLeg.LastModifiedDate || "";
+          }
+
+          return (
+            <div className="flex flex-row gap-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500" style={{ fontSize: '13px' }}>Last Modified By</span>
+                <span className="text-xs font-small" style={{ fontSize: '13px' }}>{latestLeg.LastModifiedBy || "-"}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500" style={{ fontSize: '13px' }}>Last Modified Date and Time</span>
+                <span className="text-xs font-small" style={{ fontSize: '13px' }}>{displayDate || "-"}</span>
+              </div>
+            </div>
+          );
+        })()}
         <Button
           onClick={handleSave}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
