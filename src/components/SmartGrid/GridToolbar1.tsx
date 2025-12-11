@@ -372,9 +372,9 @@ export const GridToolbar1 = React.memo(function GridToolbar1({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExportClick('csv')}>
+              {/* <DropdownMenuItem onClick={() => handleExportClick('csv')}>
                 Export CSV
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem onClick={() => handleExportClick('xlsx')}>
                 Export Excel
               </DropdownMenuItem>
