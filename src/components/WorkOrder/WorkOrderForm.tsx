@@ -94,6 +94,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
       mappedName: 'CancellationRemarks'
     },
   ]);
+const [getCUUCodes, setGetCUUCodes] = useState<Record<string, any>>({});
+const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
 
   const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
   const returnTripId = workOrder?.WorkorderSchedule?.RUReturnTripID || "";
@@ -370,7 +372,7 @@ useEffect(() => {
     const headerUI = workOrderPanelRef.current?.getFormValues() || {};
     const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
     const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};
-
+   
     setUiHeader(headerUI);
     setUiLocation(locationUI);
     setUiSchedule(scheduleUI);
@@ -469,7 +471,6 @@ useEffect(() => {
       setSearchParams({ id: result.workorderNo });
       searchWorkOrder(result.workorderNo);
     }
-    console.log()
     setUiHeader({});
     setUiLocation({});
     setUiSchedule({});
@@ -518,6 +519,7 @@ useEffect(() => {
     applySplit("product", "ProductID", "ProductDescription");
     applySplit("UNCODE", "UNCodeID", "UNCodeDescription");
     applySplit("PlaceOfEvent", "PlaceOfEventID", "PlaceOfEventIDDescription");
+    applySplit("PlaceOfRevision", "PlaceOfRevisionID", "PlaceOfRevisionDescription");
 
     if (formatted.QCUserDefined1) {
       formatted.QC1Code = formatted.QCUserDefined1.dropdown || "";
@@ -669,6 +671,7 @@ if (formatted.Provider?.includes(" || ")) {
             messageType: "Work Order QC3 Init",
           }),
         ]);
+        console.log("res1?.data?.ResponseData",JSON.parse(res1?.data?.ResponseData))
         setqcList1(JSON.parse(res1?.data?.ResponseData || "[]"));
         setqcList2(JSON.parse(res2?.data?.ResponseData || "[]"));
         setqcList3(JSON.parse(res3?.data?.ResponseData || "[]"));
@@ -808,8 +811,14 @@ if (formatted.Provider?.includes(" || ")) {
    * PanelConfig factory — depends on currentOrderType
    */
   const getQcOptions = (list: any[]) =>
-    list?.filter((qc) => qc.id).map((qc) => ({ label: qc.id, value: qc.id })) ||
-    [];
+  list
+    ?.filter((qc) => qc.id) 
+    .map((qc) => ({
+      label: `${qc.id} || ${qc.name}`, 
+      value: qc.id,                     
+      name: qc.name                    
+    })) || [];
+
   //123
   const workOrderPanelConfig = (currentOrderType: string): PanelConfig => ({
     EquipmentType: {
@@ -1382,13 +1391,16 @@ if (formatted.Provider?.includes(" || ")) {
     PlaceOfRevision: {
       id: "PlaceOfRevision",
       label: "Place Of Revision",
-      fieldType: "text",
+      fieldType: "lazyselect",
       width: "half",
-      value: workOrder?.Header?.PlaceOfRevisionDescription,
+       value: workOrderNo
+        ? formatIdDesc(workOrder?.Header?.PlaceOfRevisionID, workOrder?.Header?.PlaceOfRevisionDescription)
+        : uiHeader?.PlaceOfRevision || "",
       mandatory: false,
       visible: true,
-      editable: false,
+      editable: true,
       order: 23,
+       fetchOptions: fetchMaster("Location Init"),
     },
 
     QCUserDefined1: {
@@ -2097,6 +2109,14 @@ if (formatted.Provider?.includes(" || ")) {
           // Update rowData fields
           rowData.TypeOfAction = id;
           rowData.TypeOfActionDescription = name;
+        const cm = rowData.TypeOfAction == "CM"  ? false : false ;
+          setShowCUUCode(cm);
+         
+
+          setGetCUUCodes(prev => ({
+    ...prev,
+    TypeOfAction: id
+  }));
 
           console.log("Updated Row:", rowData);
 
@@ -2129,7 +2149,16 @@ if (formatted.Provider?.includes(" || ")) {
           rowData.Operation = id;
           rowData.OperationDescription = name;
 
-          console.log("Updated Row:", rowData);
+          const cm = rowData.TypeOfActionDescription == "CM || Corrective Maintainance" && rowData.Operation == "OP12" ? true : false ;
+          
+          setShowCUUCode(cm);
+
+           setGetCUUCodes(prev => ({
+    ...prev,
+    Operation: id
+  }));
+           
+          console.log("getCUUCodes", getCUUCodes);
 
           // Return combined string or whatever you want
           // return `${id} || ${name}`;
@@ -2196,10 +2225,11 @@ if (formatted.Provider?.includes(" || ")) {
       type: "MultiselectLazySelect",
       sortable: true,
       filterable: true,
-      editable: true,
+      editable: showCUUCode,
       width: 150,
       fetchOptions: fetchMasterCUUCode("Code CUU"),
       onChange: (value, rowData) => {
+        console.log("getCUUCodes", getCUUCodes?.TypeOfAction, getCUUCodes?.Operation);
         // Ensure value is an array (MultiselectLazySelect returns array)
         const codeArray = Array.isArray(value) ? value : (value ? [value] : []);
         // Update rowData with the array of selected codes
