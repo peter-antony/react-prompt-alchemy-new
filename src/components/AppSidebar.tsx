@@ -116,7 +116,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
   const handleRVWClick = () => {
     console.log("handleRVWClick");
     // window.location.href = "https://forwardis.ramcoes.com/Forwardis-prod";
-    window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
+    // window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
     // window.location.href = "https://forwardis.ramcouat.com/rvw/external.aspx?idp=UAT"; // RVW - UAT
     //window.location.href = "http://localhost:3000/Forwardis-dev/";  //Not yet Shared
     // globalDispatch({ type: 'closeSideMenu' });
@@ -131,6 +131,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     // { icon: MenuIcon4, label: 'Fleet Management', path: '/trp' }, 
     { icon: TripRouteIcon, label: 'Trip Route', path: '/trip-route', tooltip: 'Transport Route Update' }, // transport Route Update
     { icon: Logs, label: 'Work Order', path: '/work-order-hub', tooltip: 'Work Order Management' }, // transport Route Update
+    // { icon: MenuIcon3, label: 'Create Template', path: '/create-template', tooltip: 'Create Template' }, // Create Template
     // { icon: COHubIcon, label: 'RFQ Hub', path: '/rfq-hub', tooltip: 'RFQ Hub' }, // RFQ Hub - sassy
     // { icon: RFQIcon, label: 'RFQ', path: '/rfq', tooltip: 'RFQ' }, // RFQ - sassy
     // { icon: NavigatRVWIcon, label: 'RVW', tooltip: 'RVW', onClick: () => handleRVWClick() }, // RVW navigation

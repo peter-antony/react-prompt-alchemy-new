@@ -174,6 +174,9 @@ export const API_ENDPOINTS = {
     CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
     CANCEL: '/workorder/cancel',
   },
+  CIM_CUV: {
+    GET_TEMPLATE: '/cimcuvtemplate/gettemplate',
+  },
   // Invoice management
   INVOICES: {
     LIST: "/invoices",

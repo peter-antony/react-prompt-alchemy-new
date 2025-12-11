@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,8 +19,12 @@ const TemplateCreate = () => {
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
   const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
   const [placeAndDateData, setPlaceAndDateData] = useState<Record<string, any>>({}); // New State
+  const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
+  const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
   const [activeTab, setActiveTab] = useState('general');
 
+  const buttonCancel =
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
   /**
    * fetchMaster helper for lazy select dropdowns
    */
@@ -484,6 +488,254 @@ const TemplateCreate = () => {
     setPlaceAndDateData(updatedData);
   };
 
+  // Simulate API response for demonstration
+  useEffect(() => {
+    const mockApiResponse = {
+      Header: {
+        TemplateID: "tewt24",
+        Description: "descr1",
+        DocType: "CIM",
+        ModeFlag: "NoChange"
+      },
+      General: {
+        Details: {
+          Consignor_1_value1: "Forwardis GmbH bei Rosneft",
+          ConsignorName_value2: "asdf1",
+          CustomerCodeForConsignor_2: "CC",
+          CustomerCodeForConsignor_value2: "asdf2",
+          CustomerCodeForPayerOfPrePaidCharges_3: "TLP",
+          CustomerCodeForPayerOfPrePaidCharges_value3: "asdf3",
+          Consignee_4_value1: "3t4rhnfv",
+          ConsigneeName_4_value2: "asdf4",
+          CustomerCodeForConsignee_5: "CC",
+          CustomerCodeForConsignee_value5: "asdf5",
+          CustomerCodeForPayerOfNonPrePaidCharges_6: "CNPP",
+          CustomerCodeForPayerOfNonPrePaidCharges_value6: "asdf6",
+          ConsignorsReference_8_value1: "ARMY_B_TRA_DE_CTDE",
+          ConsignorsReference_8_value2: "asdf8",
+          DeliveryPoint_10_4_value1: "Ludwigshafen (Rhein) BASF ( 80-19079-3 )",
+          DeliveryPoint_10_4_value2: "asdf10",
+          CodeForDeliveryPoint_11_value1: "10-00002",
+          CodeForDeliveryPoint_11_value2: "asdf11",
+          CodeForStationServingDeliveryPoint_12_value1: "10-00004",
+          CodeForStationServingDeliveryPoint_12_value2: "asdf12",
+          DeliveryStationName: "10-00004",
+          DeliveryCountryName: "IND",
+          NumberOfCustomerAgreementOrTariff_14: "AGREE14",
+          NameForAcceptancePoint_16: "Test",
+          NameForAcceptancePoint_16_1: "asdf16",
+          CodeForAcceptancePoint_17: "10-00028",
+          CodeForAcceptancePoint_17_1: "asdf17",
+          WagonNo_18: null,
+          AcceptanceDate_16_2: "2025-11-28T00:00:00",
+          AcceptanceFrom_16_3: "chennai",
+          ModeFlag: "NoChange"
+        },
+        PaymentInstruction: {
+          PaymentInstructionDescriptionvalue1: "Pay1",
+          PaymentInstructionDescriptionvalue2: "Pay2",
+          CarriageChargePaid: 1,
+          IncoTerms: "1",
+          Incotermsvalue: "Fleet On Board",
+          PlaceAndDateMadeOut_29_value1: "chennai",
+          PlaceAndDateMadeOut_29_value2: "2025-11-28T00:00:00",
+          ModeFlag: "NoChange"
+        }
+      }
+    };
+    setApiResponse(mockApiResponse);
+    setInitialApiResponse(mockApiResponse); // Store the initial response
+  }, []);
+
+  // Deep equality check utility
+  const deepEqual = (obj1: any, obj2: any): boolean => {
+    if (obj1 === obj2) return true;
+    if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) return false;
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    for (const key of keys1) {
+      if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Mapping functions
+  const mapFormToHeaderPayload = (formData: Record<string, any>) => ({
+    TemplateID: formData.templateId,
+    Description: formData.templateDescription,
+    DocType: formData.templateType,
+  });
+
+  const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => ({
+    Consignor_1_value1: formData.consignor || null,
+    ConsignorName_value2: formData.consignorDescription || null,
+    CustomerCodeForConsignor_2: formData.customerCodeConsignor || null,
+    CustomerCodeForConsignor_value2: formData.customerCodeConsignor || null, // Assuming same as above for now
+    CustomerCodeForPayerOfPrePaidCharges_3: formData.customerCodePrePaid || null,
+    CustomerCodeForPayerOfPrePaidCharges_value3: formData.customerCodePrePaid || null, // Assuming same as above for now
+    Consignee_4_value1: formData.consignee || null,
+    ConsigneeName_4_value2: formData.consigneeDescription || null,
+    CustomerCodeForConsignee_5: formData.customerCodeConsignee || null,
+    CustomerCodeForConsignee_value5: formData.customerCodeConsignee || null, // Assuming same as above for now
+    CustomerCodeForPayerOfNonPrePaidCharges_6: formData.customerCodeNonPrePaid || null,
+    CustomerCodeForPayerOfNonPrePaidCharges_value6: formData.customerCodeNonPrePaid || null, // Assuming same as above for now
+    ConsignorsReference_8_value1: formData.consignorReference || null,
+    ConsignorsReference_8_value2: formData.consignorReferenceDescription || null,
+    DeliveryPoint_10_4_value1: formData.deliveryPoint || null,
+    DeliveryPoint_10_4_value2: formData.deliveryPointDescription || null,
+    CodeForDeliveryPoint_11_value1: formData.codeDeliveryPoint || null,
+    CodeForDeliveryPoint_11_value2: formData.codeDeliveryPoint || null, // Assuming same as above for now
+    CodeForStationServingDeliveryPoint_12_value1: formData.codeStationServing || null,
+    CodeForStationServingDeliveryPoint_12_value2: formData.codeStationServing || null, // Assuming same as above for now
+    NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || null,
+    AcceptanceDate_16_2: formData.acceptanceDate || null,
+    AcceptanceFrom_16_3: formData.acceptanceFrom || null,
+    CodeForAcceptancePoint_17: formData.codeAcceptancePoint || null,
+    CodeForAcceptancePoint_17_1: formData.codeAcceptancePoint || null, // Assuming same as above for now
+    WagonNo_18: null, // This field is null in the API response, keep as null
+    DeliveryStationName: formData.codeStationServing || null, // Assuming this maps from codeStationServing
+    DeliveryCountryName: formData.deliveryCountryName || null, // Need to confirm where this comes from or if it's new
+    NameForAcceptancePoint_16: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
+    NameForAcceptancePoint_16_1: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
+  });
+
+  const mapFormToPaymentInstructionPayload = (
+    paymentFormData: Record<string, any>,
+    placeAndDateFormData: Record<string, any>
+  ) => ({
+    PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
+    PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
+    CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
+    IncoTerms: placeAndDateFormData.incoTerms ? "1" : "0", // Assuming IncoTerms is from placeAndDateFormData
+    Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
+    PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
+    PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
+  });
+
+  // Effect to set form values when API response is received
+  useEffect(() => {
+    if (apiResponse) {
+      if (headerTemplateRef.current && apiResponse.Header) {
+        // Map API response to headerTemplate form fields
+        headerTemplateRef.current.setFormValues({
+          templateId: apiResponse.Header.TemplateID,
+          templateDescription: apiResponse.Header.Description,
+          templateType: apiResponse.Header.DocType,
+        });
+      }
+      if (generalDetailsRef.current && apiResponse.General?.Details) {
+        const apiDetails = apiResponse.General.Details;
+        const transformedDetails = {
+          consignor: apiDetails.Consignor_1_value1, // Assuming this is the main consignor value
+          consignorDescription: apiDetails.ConsignorName_value2, // Assuming this is the description
+          customerCodeConsignor: apiDetails.CustomerCodeForConsignor_2,
+          customerCodePrePaid: apiDetails.CustomerCodeForPayerOfPrePaidCharges_3,
+          consignee: apiDetails.Consignee_4_value1,
+          consigneeDescription: apiDetails.ConsigneeName_4_value2,
+          customerCodeConsignee: apiDetails.CustomerCodeForConsignee_5,
+          customerCodeNonPrePaid: apiDetails.CustomerCodeForPayerOfNonPrePaidCharges_6,
+          consignorReference: apiDetails.ConsignorsReference_8_value1,
+          consignorReferenceDescription: apiDetails.ConsignorsReference_8_value2,
+          deliveryPoint: apiDetails.DeliveryPoint_10_4_value1,
+          deliveryPointDescription: apiDetails.DeliveryPoint_10_4_value2,
+          codeDeliveryPoint: apiDetails.CodeForDeliveryPoint_11_value1,
+          codeStationServing: apiDetails.CodeForStationServingDeliveryPoint_12_value1,
+          customerAgreementTariff: apiDetails.NumberOfCustomerAgreementOrTariff_14,
+          acceptanceDate: apiDetails.AcceptanceDate_16_2, // Assuming it's already in YYYY-MM-DD or compatible format
+          acceptanceFrom: apiDetails.AcceptanceFrom_16_3,
+          codeAcceptancePoint: apiDetails.CodeForAcceptancePoint_17,
+        };
+        generalDetailsRef.current.setFormValues(transformedDetails);
+      }
+      if (paymentInstructionRef.current && apiResponse.General?.PaymentInstruction) {
+        // Map API response to paymentInstruction form fields
+        paymentInstructionRef.current.setFormValues({
+          paymentInstruction1: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
+          paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
+          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
+        });
+      }
+      if (placeAndDateRef.current && apiResponse.General?.PaymentInstruction) {
+        // Map API response to placeAndDate form fields
+        placeAndDateRef.current.setFormValues({
+          place: apiResponse.General.PaymentInstruction.PlaceAndDateMadeOut_29_value1,
+          dateMadeOut: apiResponse.General.PaymentInstruction.PlaceAndDateMadeOut_29_value2,
+        });
+      }
+    }
+  }, [apiResponse]);
+
+  // Handle save template
+  const handleSaveTemplate = () => {
+    console.log('Save template clicked');
+    if (!initialApiResponse) {
+      console.error("Initial API response not loaded yet.");
+      return;
+    }
+
+    const currentHeaderValues = headerTemplateRef.current?.getFormValues();
+    const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
+    const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
+    const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
+
+    // Transform current form values to match API payload structure
+    const newHeader = mapFormToHeaderPayload(currentHeaderValues);
+    const newGeneralDetails = mapFormToGeneralDetailsPayload(currentGeneralDetailsValues);
+    const newPaymentInstruction = mapFormToPaymentInstructionPayload(
+      currentPaymentInstructionValues,
+      currentPlaceAndDateValues
+    );
+
+    // Debugging logs
+    console.log("--- Debugging deepEqual ---");
+    console.log("newHeader:", newHeader);
+    console.log("initialApiResponse.Header:", initialApiResponse.Header);
+    console.log("deepEqual(newHeader, initialApiResponse.Header):", deepEqual(newHeader, initialApiResponse.Header));
+
+    console.log("newGeneralDetails:", newGeneralDetails);
+    console.log("initialApiResponse.General.Details:", initialApiResponse.General.Details);
+    console.log("deepEqual(newGeneralDetails, initialApiResponse.General.Details):", deepEqual(newGeneralDetails, initialApiResponse.General.Details));
+
+    console.log("newPaymentInstruction:", newPaymentInstruction);
+    console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
+    console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
+    console.log("---------------------------");
+
+    // Determine ModeFlag for each section
+    const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
+    const generalDetailsModeFlag = deepEqual(newGeneralDetails, initialApiResponse.General.Details) ? "NoChange" : "Update";
+    const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
+
+    const finalPayload = {
+      Header: {
+        ...newHeader,
+        ModeFlag: headerModeFlag,
+      },
+      General: {
+        Details: {
+          ...newGeneralDetails,
+          ModeFlag: generalDetailsModeFlag,
+        },
+        PaymentInstruction: {
+          ...newPaymentInstruction,
+          ModeFlag: paymentInstructionModeFlag,
+        },
+      },
+    };
+
+    console.log("Final Payload to API:", JSON.stringify(finalPayload, null, 2));
+    // Here you would call your API service, e.g.:
+    // quickOrderService.saveTemplate(finalPayload);
+
+  };
+
   return (
     <div className="main-content-h bg-gray-100">
         <div className="mt-6">
@@ -496,13 +748,13 @@ const TemplateCreate = () => {
               panelConfig={headerTemplateConfig} // New Config
               formName="headerTemplateForm"
               initialData={headerTemplateData}
-              onDataChange={handleHeaderTemplateDataChange}
+              // onDataChange={handleHeaderTemplateDataChange}
               panelWidth="full"
               collapsible={true} // Added collapsible prop
               showHeader={false} // Hide header to match screenshot
             />
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
             <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
               <TabsTrigger
                   value="general"
@@ -559,7 +811,7 @@ const TemplateCreate = () => {
                         panelConfig={generalDetailsConfig}
                         formName="generalDetailsForm"
                         initialData={generalDetailsData}
-                        onDataChange={handleGeneralDataChange}
+                        // onDataChange={handleGeneralDataChange}
                         panelWidth="full"
                         collapsible={true} // Added collapsible prop
                       />
@@ -583,7 +835,7 @@ const TemplateCreate = () => {
                       panelConfig={paymentInstructionConfig}
                       formName="paymentInstructionForm"
                       initialData={paymentInstructionData}
-                      onDataChange={handlePaymentInstructionDataChange}
+                      // onDataChange={handlePaymentInstructionDataChange}
                       panelWidth="full"
                       collapsible={true} // Added collapsible prop
                     />
@@ -597,7 +849,7 @@ const TemplateCreate = () => {
                       panelConfig={placeAndDateConfig}
                       formName="placeAndDateForm"
                       initialData={placeAndDateData}
-                      onDataChange={handlePlaceAndDateDataChange}
+                      // onDataChange={handlePlaceAndDateDataChange}
                       panelWidth="full"
                       collapsible={true} // Added collapsible prop
                     />                    
@@ -626,6 +878,20 @@ const TemplateCreate = () => {
               </div>
               </TabsContent>
         </Tabs>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+        <div className="flex items-center gap-4"></div>
+          <div className="flex items-center gap-4">
+            <button className={buttonCancel}>Cancel</button>
+            <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={handleSaveTemplate}
+            >
+              Save
+            </button>
+          </div>
         </div>
     </div>
   );
