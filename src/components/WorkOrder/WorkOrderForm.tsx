@@ -1267,6 +1267,35 @@ if (formatted.Provider?.includes(" || ")) {
       editable: true,
       value:
         workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1",
+      events: {
+        onChange: (v) => {
+          try {
+            // also update panel's form values so getFormValues reflects the new value
+            const current = workOrderPanelRef.current?.getFormValues?.() || {};
+            workOrderPanelRef.current?.setFormValues?.({ ...current, AcceptedByForwardis: !!v });
+          } catch (e) {}
+
+          // persist toggle immediately into the workOrder store so subsequent logic can read it
+          try {
+            useWorkOrderStore.setState((state) => {
+              const header = state.workOrder?.Header || {};
+              const billing = header?.BillingHeaderDetails || {};
+              return {
+                workOrder: {
+                  ...state.workOrder,
+                  Header: {
+                    ...header,
+                    BillingHeaderDetails: {
+                      ...billing,
+                      IsAcceptedByForwardis: v ? "1" : "0",
+                    },
+                  },
+                },
+              };
+            });
+          } catch (e) {}
+        },
+      },
       order: 15,
     },
 
@@ -1276,7 +1305,7 @@ if (formatted.Provider?.includes(" || ")) {
       fieldType: "switch",
       width: "half",
       mandatory: true,
-      visible: true,
+      visible: ((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()),
       editable: true,
       value: workOrder?.Header?.BillingHeaderDetails?.IsReinvoiceCost == "1",
       order: 16,
@@ -1285,20 +1314,18 @@ if (formatted.Provider?.includes(" || ")) {
       }
     },
 
-
-   InvoiceTo: {
-  id: "InvoiceTo",
-  label: "Stakeholder",
-  fieldType: "lazyselect",
-  width: "full",
-  mandatory: reInvoice ? reInvoice : workOrder?.Header?.BillingHeaderDetails?.InvoiceTo == 1, 
-  visible: true,
-  editable: true,
-  value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
-  order: 17,
-  fetchOptions: fetchMaster("Work Order Invoice to Init"),
-},
-
+    InvoiceTo: {
+      id: "InvoiceTo",
+      label: "Stakeholder",
+      fieldType: "lazyselect",
+      width: "full",
+      mandatory: ((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()) ? (reInvoice ? reInvoice : workOrder?.Header?.BillingHeaderDetails?.InvoiceTo == 1) : false,
+      visible: ((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()),
+      editable: true,
+      value: (((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()) && workOrderNo) ? workOrder?.Header?.BillingHeaderDetails?.InvoiceTo : "",
+      order: 17,
+      fetchOptions: fetchMaster("Work Order Invoice to Init"),
+    },
 
     FinacialComments: {
       id: "FinacialComments",
@@ -1306,9 +1333,9 @@ if (formatted.Provider?.includes(" || ")) {
       fieldType: "textarea",
       width: "full",
       mandatory: false,
-      visible: true,
+      visible: ((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()),
       editable: true,
-      value: workOrderNo ? workOrder?.Header?.BillingHeaderDetails?.FinancialComments : "",
+      value: (((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()) && workOrderNo) ? workOrder?.Header?.BillingHeaderDetails?.FinancialComments : "",
       order: 18,
     },
 
