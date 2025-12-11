@@ -1442,8 +1442,8 @@ if (formatted.Provider?.includes(" || ")) {
     Remarks1: {
       id: "Remarks1",
       label: "Remarks 1",
-      fieldType: "text",
-      width: "half",
+      fieldType: "textarea",
+      width: "full",
       mandatory: false,
       visible: showMoreDetails,
       editable: true,
@@ -1453,8 +1453,8 @@ if (formatted.Provider?.includes(" || ")) {
     Remarks2: {
       id: "Remarks2",
       label: "Remarks 2",
-      fieldType: "text",
-      width: "half",
+      fieldType: "textarea",
+      width: "full",
       mandatory: false,
       visible: showMoreDetails,
       editable: true,
@@ -1465,8 +1465,8 @@ if (formatted.Provider?.includes(" || ")) {
     Remarks3: {
       id: "Remarks3",
       label: "Remarks 3",
-      fieldType: "text",
-      width: "half",
+      fieldType: "textarea",
+      width: "full",
       mandatory: false,
       visible: showMoreDetails,
       editable: true,

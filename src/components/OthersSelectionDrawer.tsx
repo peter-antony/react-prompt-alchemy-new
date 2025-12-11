@@ -133,6 +133,29 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const [tripEndDate, setTripEndDate] = useState(otherInfoData.PlanEndDate);
   const [tripEndTime, setTripEndTime] = useState(otherInfoData.PlanEndTime);
 
+  const normalizeTime = (t: any) => {
+    if (!t && t !== 0) return "";
+    try {
+      const s = String(t).trim();
+      // If contains seconds like HH:MM:SS or HH:MM:SS.sss, strip to HH:MM
+      if (s.includes(':')) {
+        const parts = s.split(':');
+        if (parts.length >= 2) return `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}`;
+      }
+      // If it's a datetime like 2025-12-11T14:30:15, extract time part
+      if (s.includes('T')) {
+        const time = s.split('T')[1];
+        if (time && time.includes(':')) {
+          const p = time.split(':');
+          return `${p[0].padStart(2,'0')}:${p[1].padStart(2,'0')}`;
+        }
+      }
+      return s;
+    } catch (err) {
+      return String(t);
+    }
+  };
+
   // Track initial values and changes
   const [initialValues, setInitialValues] = useState<any>(null); // Store initial values
   const [hasChanges, setHasChanges] = useState(false); // Flag to track changes
@@ -185,9 +208,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       setPassNo(otherInfoData.PassNoFromSchedule);
   
       setTripStartDate(otherInfoData.PlanStartDate);
-      setTripStartTime(otherInfoData.PlanStartTime);
+      setTripStartTime(normalizeTime(otherInfoData.PlanStartTime));
       setTripEndDate(otherInfoData.PlanEndDate);
-      setTripEndTime(otherInfoData.PlanEndTime);
+      setTripEndTime(normalizeTime(otherInfoData.PlanEndTime));
       setQCUserDefined(bindQC());
       
       // Reset hasChanges when new data loads
@@ -556,8 +579,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     type="time"
                     id="incidentTime"
                     value={tripStartTime}
-                    onChange={(e) => setTripStartTime(e.target.value)}
+                    onChange={(e) => setTripStartTime(normalizeTime(e.target.value))}
                     placeholder="HH:MM"
+                    step={60}
                   />
                   <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
@@ -587,8 +611,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     type="time"
                     id="endTime"
                     value={tripEndTime}
-                    onChange={(e) => setTripEndTime(e.target.value)}
+                    onChange={(e) => setTripEndTime(normalizeTime(e.target.value))}
                     placeholder="HH:MM"
+                    step={60}
                   />
                   <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
