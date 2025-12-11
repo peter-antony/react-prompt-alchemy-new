@@ -39,7 +39,7 @@ export interface FieldConfig {
   visible: boolean;
   editable: boolean;
   order: number;
-  width?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six'; // Field width configuration
+  width?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12; // Field width configuration
   options?: { label: string; value: string }[]; // For select and radio fields
   placeholder?: string;
   inputType?: any;

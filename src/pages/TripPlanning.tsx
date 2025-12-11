@@ -204,7 +204,7 @@ const TripPlanning = () => {
         setReferenceDocNo(urlRefDocNo);
       }
     }
-  }, [workOrderFlag, urlCluster, urlRefDocType, urlRefDocNo]);
+  }, [workOrderFlag]);
 
   const [planDate, setPlanDate] = useState<Date | undefined>();
   const [requestSupplier, setRequestSupplier] = useState(false);

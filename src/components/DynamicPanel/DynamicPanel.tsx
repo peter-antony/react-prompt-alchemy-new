@@ -377,7 +377,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     }
   };
 
-  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six') => {
+  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 ) => {
+    if (typeof fieldWidth === 'number') {
+      const colSpan = Math.min(Math.max(fieldWidth, 1), 12); // Clamp between 1-12
+      return `w-full`;
+    }
     switch (fieldWidth) {
       case 'third':
         return 'col-span-4'; // 4/12 = 1/3
@@ -400,7 +404,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
 
   const PanelContent = () => (
     <form name={formName}>
-      <div className="grid grid-cols-12 gap-4">
+      <div className={panelTitle === "Transportation Details" ? "grid grid-cols-5 gap-4" : "grid grid-cols-12 gap-4"}>
         {visibleFields.map(({ fieldId, config, tabIndex }) => {
           // Special handling for header field type - render without label wrapper
           if (config.fieldType === 'header') {

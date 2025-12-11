@@ -173,30 +173,30 @@ const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
     try {
       const res = await workOrderService.createTugOperation(payload);
       const isSuccess = res?.IsSuccess ?? res?.data?.IsSuccess;
-      const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "Tug operation creation completed";
+      const message = res?.Message ?? res?.data?.Message ?? res?.data?.ResponseData?.Message ?? "";
       console.log("res", res);
       const parsedResponse = JSON.parse(res?.data.ResponseData || "{}");
       console.log("parsedResponse", parsedResponse);
       console.log("parsedResponse", parsedResponse?.RequestPayload?.Header?.RefDocNo);
       if (isSuccess) {
         toast({
-          title: "✅ Tug Operation Created",
+          title: "✅ Transport Plan created for Forward",
           description: message,
           variant: "default",
         });
         searchWorkOrder(parsedResponse?.RequestPayload?.Header?.RefDocNo);
       } else {
         toast({
-          title: "⚠️ Tug Operation Failed",
+          title: "⚠️ Forward Transport Plan Failed",
           description: message,
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error("Create Tug Operation failed:", error);
+      console.error("Create Forward Transport Plan failed:", error);
       toast({
-        title: "⚠️ Tug Operation Failed",
-        description: error?.message || "Failed to create tug operation",
+        title: "⚠️ Forward Transport Plan Failed",
+        description: error?.message || "Failed to create forward transport plan",
         variant: "destructive",
       });
     }
@@ -283,23 +283,23 @@ const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
 
       if (isSuccess) {
         toast({
-          title: "✅ Tug Operation Created",
+          title: "✅ Transport Plan created for Return",
           description: message,
           variant: "default",
         });
         searchWorkOrder(parsedResponse?.RequestPayload?.Header?.RefDocNo);
       } else {
         toast({
-          title: "⚠️ Tug Operation Failed",
+          title: "⚠️ Return Transport Plan Failed",
           description: message,
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error("Create Tug Operation failed:", error);
+      console.error("Create Return Transport Plan failed:", error);
       toast({
-        title: "⚠️ Tug Operation Failed",
-        description: error?.message || "Failed to create tug operation",
+        title: "⚠️ Return Transport Plan Failed",
+        description: error?.message || "Failed to create return transport plan",
         variant: "destructive",
       });
     }
@@ -1542,14 +1542,15 @@ if (formatted.Provider?.includes(" || ")) {
   // If IsWorkShop === 0: Show (PlaceOfOperation, Provider, ExpectedDate, ActualDate, Comments)
   const locationPanelConfig: PanelConfig = useMemo(() => {
     const isWorkshop = isWorkShop === 1;
+    const isOneWayOperation = selectedOperation?.IsOneWay === "1"; // Get IsOneWay status from selectedOperation
 
     return {
       // Fields for IsWorkShop === 1 (Workshop mode)
       Origin: {
         id: "Origin",
-        label: "Origin",
+        label: "Departure Point",
         fieldType: "lazyselect",
-        width: "six",
+        width: 5,
         value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.OriginDescription)
           ? `${workOrder.WorkorderSchedule.OriginID} || ${workOrder.WorkorderSchedule.OriginDescription}`
           : "",
@@ -1561,9 +1562,9 @@ if (formatted.Provider?.includes(" || ")) {
       },
       OutBoundDestination: {
         id: "OutBoundDestination",
-        label: "Outboard Destination",
+        label: "Arrival Point",
         fieldType: "lazyselect",
-        width: "six",
+        width: 5,
         value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
           ? `${workOrder.WorkorderSchedule.OutBoundDestinationID} || ${workOrder.WorkorderSchedule.OutBoundDestinationDescription}`
           : "",
@@ -1578,7 +1579,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "RUForward",
         label: "RU Forward",
         fieldType: "lazyselect",
-        width: "six",
+        width: 5,
         value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedule?.RUForwardDescription)
           ? `${workOrder.WorkorderSchedule.RUForwardID} || ${workOrder.WorkorderSchedule.RUForwardDescription}`
           : "",
@@ -1593,12 +1594,12 @@ if (formatted.Provider?.includes(" || ")) {
         id: "ReturnDestination",
         label: "Return Destination",
         fieldType: "lazyselect",
-        width: "six",
+        width: 5,
         value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.WorkorderSchedule?.ReturnDestinationDescription)
           ? `${workOrder.WorkorderSchedule.ReturnDestinationID} || ${workOrder.WorkorderSchedule.ReturnDestinationDescription}`
           : "",
 
-        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        visible: isWorkshop && selectedOperation !== null && !isOneWayOperation, // Hide if IsOneWay is true
         mandatory: false,
         editable: true,
         order: 4,
@@ -1608,12 +1609,12 @@ if (formatted.Provider?.includes(" || ")) {
         id: "RUReturn",
         label: "RU Return",
         fieldType: "lazyselect",
-        width: "six",
+        width: 5,
         value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule?.RUReturnDescription)
           ? `${workOrder.WorkorderSchedule.RUReturnID} || ${workOrder.WorkorderSchedule.RUReturnDescription}`
           : "",
 
-        visible: isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 1 and operation is selected
+        visible: isWorkshop && selectedOperation !== null && !isOneWayOperation, // Hide if IsOneWay is true
         mandatory: false,
         editable: true,
         order: 5,
@@ -1624,7 +1625,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "PlaceOfOperation",
         label: "Place Of Operation",
         fieldType: "lazyselect",
-        width: "four",
+        width: 5,
         value: formatIdDesc(
           workOrder?.WorkorderSchedule?.PlaceOfOperationID,
           workOrder?.WorkorderSchedule?.PlaceOfOperationDescription
@@ -1640,7 +1641,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "Provider",
         label: "Provider",
         fieldType: "lazyselect",
-        width: "four",
+        width: 5,
         value: formatIdDesc(
           workOrder?.WorkorderSchedule?.Provider,
           workOrder?.WorkorderSchedule?.ProviderDescription
@@ -1656,7 +1657,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "ExpectedDate",
         label: "Expected Date",
         fieldType: "date",
-        width: "four",
+        width: 5,
         value: workOrder?.WorkorderSchedule?.MobileExpectedDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -1667,7 +1668,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "MobileActualDate",
         label: "Actual Date",
         fieldType: "date",
-        width: "four",
+        width: 5,
         value: workOrder?.WorkorderSchedule?.MobileActualDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -1678,7 +1679,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "MobileComments",
         label: "Comments",
         fieldType: "text",
-        width: "half",
+        width: 5,
         value: workOrder?.WorkorderSchedule?.MobileComments,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -1686,7 +1687,7 @@ if (formatted.Provider?.includes(" || ")) {
         order: 5,
       },
     };
-  }, [isWorkShop, selectedOperation, workOrder?.WorkorderSchedule]);
+  }, [isWorkShop, workOrder, selectedOperation, fetchMaster]);
 
   const SchedulePanelConfig: PanelConfig = {
     DepartureDate: {
@@ -1748,7 +1749,7 @@ if (formatted.Provider?.includes(" || ")) {
       id: "ReturnToOperation",
       label: "Return To Operation Date",
       fieldType: "date",
-      width: "half",
+      width: "six",
       value: workOrder?.WorkorderSchedule?.ReturnToOperation,
       visible: true,
       mandatory: false,
@@ -2932,7 +2933,7 @@ if (formatted.Provider?.includes(" || ")) {
                             <DynamicPanel
                               ref={locationDetailsRef}
                               panelId="LocationPanel"
-                              panelTitle="Location Details"
+                              panelTitle="Transportation Details"
                               panelIcon={
                                 <MapPinned className="w-5 h-5 text-blue-500" />
                               }
@@ -2969,7 +2970,8 @@ if (formatted.Provider?.includes(" || ")) {
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
                                   <span className="flex items-center gap-2">
-                                    Forward Trip Execution - {/*{forwardTripId || "N/A"} */}
+                                    {forwardTripId ? forwardTripId : 'Forward Trip Execution'}
+                                    {/* Forward Trip Execution - {forwardTripId || "N/A"} */}
                                     <button type="button" disabled={!forwardTripId}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -2991,7 +2993,7 @@ if (formatted.Provider?.includes(" || ")) {
                                           // navigate(`/trip-planning?manage=true&workOrder=true&tripId=${(forwardTripId)}`);
                                           // Get data from workOrder
                                           const cluster = workOrder?.Header?.Cluster || '';
-                                          const refDocType = 'WO'; // Work Order type
+                                          const refDocType = 'Work Order'; // Work Order type
                                           const refDocNo = workOrder?.Header?.WorkorderNo || '';
                                           // const departureID = workOrder?.WorkorderSchedule?.OriginID + '||' + workOrder?.WorkorderSchedule?.OriginDescription || '';
                                           // const arrivalID = workOrder?.WorkorderSchedule?.OutBoundDestinationID + '||' + workOrder?.WorkorderSchedule?.OutBoundDestinationDescription || '';
@@ -3058,7 +3060,8 @@ if (formatted.Provider?.includes(" || ")) {
                                 >
                                   <Shuffle className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
                                   <span className="flex items-center gap-2">
-                                    Return Trip Execution - {workOrder?.WorkorderSchedule?.RUReturnTripID || ""}
+                                    {returnTripId ? returnTripId : 'Return Trip Execution'}
+                                    {/* Return Trip Execution - {workOrder?.WorkorderSchedule?.RUReturnTripID || ""} */}
                                     <button type="button" disabled={!returnTripId}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3080,7 +3083,7 @@ if (formatted.Provider?.includes(" || ")) {
                                           // navigate(`/trip-planning?manage=true&tripId=${(returnTripId)}`);
                                           // Get data from workOrder
                                           const cluster = workOrder?.Header?.Cluster || '';
-                                          const refDocType = 'WO'; // Work Order type
+                                          const refDocType = 'Work Order'; // Work Order type
                                           const refDocNo = workOrder?.Header?.WorkorderNo || '';
                                           // const departureID = workOrder?.WorkorderSchedule?.OriginID + '||' + workOrder?.WorkorderSchedule?.OriginDescription || '';
                                           // const arrivalID = workOrder?.WorkorderSchedule?.OutBoundDestinationID + '||' + workOrder?.WorkorderSchedule?.OutBoundDestinationDescription || '';
