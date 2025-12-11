@@ -6259,11 +6259,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                         }
 
                         // Close the drawer after successful save and data refresh
-                        if (onClose) {
-                          setTimeout(() => {
-                            onClose();
-                          }, 500); // Small delay to ensure data is fully updated
-                        }
+                        // if (onClose) {
+                        //   setTimeout(() => {
+                        //     onClose();
+                        //   }, 500); // Small delay to ensure data is fully updated
+                        // }
                       }, 100);                      // toast({
                       //   title: "🔄 Data Refreshed",
                       //   description: "Trip data has been refreshed successfully.",
@@ -6280,11 +6280,11 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                         forceGridRefresh(allDataToSave, 'saved data fallback');
 
                         // Close the drawer after successful save and data refresh
-                        if (onClose) {
-                          setTimeout(() => {
-                            onClose();
-                          }, 500); // Small delay to ensure data is fully updated
-                        }
+                        // if (onClose) {
+                        //   setTimeout(() => {
+                        //     onClose();
+                        //   }, 500); // Small delay to ensure data is fully updated
+                        // }
                       }                      // toast({
                       //   title: "✅ Data Saved & Refreshed",
                       //   description: "Data saved successfully and grid has been refreshed with latest data.",
