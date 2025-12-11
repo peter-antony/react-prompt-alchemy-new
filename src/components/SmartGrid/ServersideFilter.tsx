@@ -431,10 +431,25 @@ export function ServersideFilter({
                   if (value === undefined) {
                     handleFilterChange(filter.key, undefined);
                   } else {
+                    // When the LazySelect only provides the id(s), we still save id in value
                     handleFilterChange(filter.key, {
                       value: value,
                       operator: 'equals',
-                      type: filter.multiSelect ? 'select' : 'text'
+                      type: filter.multiSelect ? 'select' : 'text',
+                      // preserve any existing display if we already fetched it earlier
+                      display: pendingFilters[filter.key]?.display
+                    });
+                  }
+                }}
+                onChangeWithDisplay={(value, display) => {
+                  if (value === undefined) {
+                    handleFilterChange(filter.key, undefined);
+                  } else {
+                    handleFilterChange(filter.key, {
+                      value: value,
+                      operator: 'equals',
+                      type: filter.multiSelect ? 'select' : 'text',
+                      display: display
                     });
                   }
                 }}
@@ -443,6 +458,7 @@ export function ServersideFilter({
                 hideSearch={filter.hideSearch}
                 disableLazyLoading={filter.disableLazyLoading}
                 returnType={filter.returnType} // 👈 Pass from config to LazySelect
+                selectedDisplay={pendingFilters[filter.key]?.display}
               />
               {pendingFilters[filter.key] && (
                 <Button

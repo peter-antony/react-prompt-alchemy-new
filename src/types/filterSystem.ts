@@ -3,6 +3,7 @@ export interface FilterValue {
   value: any;
   operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'in';
   type?: 'text' | 'select' | 'date' | 'dateRange' | 'time' | 'number' | 'boolean' | 'switch';
+  display?: any;
 }
 
 export interface FilterSet {

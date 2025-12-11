@@ -17,6 +17,9 @@ interface LazySelectProps {
   fetchOptions: (params: { searchTerm: string; offset: number; limit: number }) => Promise<LazySelectOption[]>;
   value?: string | string[];
   onChange: (value: string | string[] | undefined) => void;
+  // Optional callback that provides the display(s) for the selected value(s).
+  // Signature: (value, display) where display is string or string[] matching value
+  onChangeWithDisplay?: (value: string | string[] | undefined, display?: string | string[] | undefined) => void;
   placeholder?: string;
   multiSelect?: boolean;
   disabled?: boolean;
@@ -24,6 +27,9 @@ interface LazySelectProps {
   hideSearch?: boolean;
   disableLazyLoading?: boolean;
   returnType?: string; // 👈 NEW PROP
+  // Optional pre-provided display value(s) for currently selected id(s).
+  // If provided, this is used to show the human-readable label without fetching.
+  selectedDisplay?: string | string[];
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -32,6 +38,7 @@ export function LazySelect({
   fetchOptions,
   value,
   onChange,
+  onChangeWithDisplay,
   placeholder = "Select an option...",
   multiSelect = false,
   disabled = false,
@@ -39,6 +46,7 @@ export function LazySelect({
   hideSearch = false,
   disableLazyLoading = false,
   returnType = 'id', // default keeps existing behavior
+  selectedDisplay,
 
 }: LazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -161,8 +169,20 @@ export function LazySelect({
         ? currentValues.filter(v => v !== returnValue)
         : [...currentValues, returnValue];
       onChange(newValues.length > 0 ? newValues : undefined);
+      if (onChangeWithDisplay) {
+        // Map returns to display strings using options (id || name)
+        const displays = newValues.map((v: any) => {
+          const opt = options.find((o: any) => o.id === v || o.name === v);
+          return opt ? (opt.id && opt.name ? `${opt.id} || ${opt.name}` : opt.id || opt.name) : v;
+        });
+        onChangeWithDisplay(newValues.length > 0 ? newValues : undefined, displays.length ? displays : undefined);
+      }
     } else {
       onChange(returnValue);
+      if (onChangeWithDisplay) {
+        const display = selectedOption ? (selectedOption.id && selectedOption.name ? `${selectedOption.id} || ${selectedOption.name}` : selectedOption.id || selectedOption.name) : returnValue;
+        onChangeWithDisplay(returnValue, display);
+      }
       setIsOpen(false);
     }
   };
@@ -179,12 +199,18 @@ export function LazySelect({
       if (value.length === 0) return placeholder;
       if (value.length === 1) {
         const option: any = options.find((opt: any) => opt.id === value[0]);
-        return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value[0];
+        if (option) return (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name);
+        // fallback to selectedDisplay if provided (persisted display string)
+        if (Array.isArray(selectedDisplay) && selectedDisplay[0]) return selectedDisplay[0];
+        return value[0];
       }
       return `${value.length} items selected`;
     } else if (typeof value === 'string') {
       const option: any = options.find((opt: any) => opt.id === value);
-      return option ? (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name) : value;
+      if (option) return (option.id && option.name ? `${option.id} || ${option.name}` : option.id || option.name);
+      // fallback to selectedDisplay when available
+      if (typeof selectedDisplay === 'string' && selectedDisplay) return selectedDisplay;
+      return value;
     }
 
     return placeholder;
@@ -205,6 +231,10 @@ export function LazySelect({
   };
 
   // console.log('LazySelect options:', options);
+
+  // Previously there was an effect here to auto-resolve persisted ids by
+  // fetching missing options; that behavior was removed to avoid extra
+  // server calls. Display fallback is handled via `selectedDisplay` prop.
 
   const hasValue = multiSelect
     ? Array.isArray(value) && value.length > 0
