@@ -39,6 +39,7 @@ interface NewAttachmentGroupProps {
   isEditQuickOrder?: boolean;
   isResourceGroupAttchment?: boolean;
   isResourceID?: any;
+  onAttachmentsUpdate?: () => void;
 }
 
 const Attachments = ({
@@ -47,6 +48,7 @@ const Attachments = ({
   isEditQuickOrder,
   isResourceGroupAttchment,
   isResourceID,
+  onAttachmentsUpdate
 }: NewAttachmentGroupProps) => {
   // export default function Attachments() {
   const [fileCategory, setFileCategory] = useState([]);
@@ -201,7 +203,12 @@ const Attachments = ({
           tripUniqueID?tripUniqueID:tripId
         );
         console.log("Upload Trip attachments response:", response);
+        console.log("Upload Trip attachments response:", response);
         getAttachments();
+        if (onAttachmentsUpdate) {
+          onAttachmentsUpdate();
+        }
+
 
         // setTimeout(async () => {
         //     const dataRes: any = await quickOrderService.updateQuickOrderAttachment(fullJson);
@@ -259,6 +266,11 @@ const Attachments = ({
     if (responseData && responseData.data) {
       console.log("TRIPLOG FILE DELETE RESPONSE : ", response);
       getAttachments();
+      console.log("TRIPLOG FILE DELETE RESPONSE : ", response);
+      getAttachments();
+      if (onAttachmentsUpdate) {
+        onAttachmentsUpdate();
+      }
       // setReloadKey(prev => prev + 1);
       return new Promise<void>((resolve) => {
         setTimeout(() => {

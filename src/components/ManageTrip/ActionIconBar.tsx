@@ -46,6 +46,7 @@ export const ActionIconBar = () => {
   const [trackTraceOpen, setTrackTraceOpen] = useState(false);
   const [isOdometerOpen, setOdometerOpen] = useState(false);
   const [isVendorFeedbackOpen, setVendorFeedbackOpen] = useState(false);
+  const [hasAttachments, setHasAttachments] = useState(false);
   const { tripData } = manageTripStore();
   const { openDrawer } = useDrawerStore();
   const { hasAlert, colorClass } = useTrainParametersAlertStore();
@@ -132,6 +133,26 @@ export const ActionIconBar = () => {
         fetchData();
       }, [tripId]);
 
+  const checkAttachments = async () => {
+    if (!tripId) return;
+    try {
+      const response = await tripService.getAttachments(tripId);
+      const res: any = response.data;
+      const parsedData = JSON.parse(res?.ResponseData) || [];
+      if (parsedData?.AttachItems?.length > 0) {
+        setHasAttachments(true);
+      } else {
+        setHasAttachments(false);
+      }
+    } catch (error) {
+      console.error("Error checking attachments:", error);
+    }
+  };
+
+  useEffect(() => {
+    checkAttachments();
+  }, [tripId]);
+
     // Alert dot is controlled manually from the drawer; default is active
 
   return (
@@ -152,7 +173,12 @@ export const ActionIconBar = () => {
         <AlarmClockPlus size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Calculate</span> */}
       </Button>
-      <Button title='Attachments' onClick={() => setAttachmentsOpen(true)}  variant="ghost" size="sm" className="flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+      <Button title='Attachments' onClick={() => setAttachmentsOpen(true)} variant="ghost" size="sm" className="relative flex-col h-auto rounded-lg p-2.5 border border-[#D0D5DD]">
+        {hasAttachments && (
+          <span
+            className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-green-600 ring-2 ring-white shadow-sm`}
+          />
+        )}
         <Paperclip size={16} strokeWidth={1.5} />
         {/* <span className="text-xs">Vehicle</span> */}
       </Button>
