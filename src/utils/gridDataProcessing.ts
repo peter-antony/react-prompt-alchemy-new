@@ -1,4 +1,5 @@
 import { GridColumnConfig, SortConfig, FilterConfig } from '@/types/smartgrid';
+import { dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 
 export function processGridData(
   gridData: any[],
@@ -26,7 +27,24 @@ export function processGridData(
         if (value && typeof value === 'object' && 'value' in value) {
           value = value.value;
         }
-        
+
+        // Handle Date and DateTime columns for grid search
+        if (value) {
+          try {
+            if (col.type === 'Date') {
+              // console.log('Date column:', col.key, value);
+              value = dateFormatter(value);
+            } else if (col.type === 'DateTimeRange') {
+              // console.log('DateTimeRange column:', col.key, value);
+              value = dateTimeFormatter(value);
+              // console.log('Formatted DateTimeRange:', value);
+            }
+          } catch (e) {
+            // console.warn('Grid search date formatting error:', col.key, value, e);
+            // value remains as is
+          }
+        }
+
         // Handle arrays (for CustomerCountBadge, WorkOrderBadge, etc.)
         if (Array.isArray(value)) {
           return value.some(item => {
