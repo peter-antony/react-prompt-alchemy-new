@@ -29,6 +29,7 @@ import TripPlanning from "./pages/TripPlanning";
 import { TripRouteUpdate } from "./pages/TripRouteUpdate";
 import { WorkOrderHub } from "./pages/WorkOrderHub";
 import CreateWorkerOrder from "./pages/CreateWorkerOrder";
+import CreateTemplateMain from "./pages/CreateTemplateMain";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,11 @@ const App = () => (
           <Route path="trip-hub" element={
             <ProtectedRoute>
               <TripExecutionHub />
+            </ProtectedRoute>
+          } />
+          <Route path="create-template" element={
+            <ProtectedRoute>
+              <CreateTemplateMain />
             </ProtectedRoute>
           } />
           <Route path="trip-route" element={

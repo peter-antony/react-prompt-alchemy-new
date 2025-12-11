@@ -33,13 +33,13 @@ export type PanelFieldConfig =
 export interface FieldConfig {
   id: string;
   label: string;
-  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header';
+  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header' | 'checkbox';
   value: any;
   mandatory: boolean;
   visible: boolean;
   editable: boolean;
   order: number;
-  width?: 'third' | 'half' | 'two-thirds' | 'four' | 'full' | 'six'; // Field width configuration
+  width?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six'; // Field width configuration
   options?: { label: string; value: string }[]; // For select and radio fields
   placeholder?: string;
   inputType?: any;
@@ -118,6 +118,7 @@ export interface DynamicPanelProps {
   panelSubTitle?: string;
   onScrollPanel?: boolean;
   validationErrors?: Record<string, string>;
+  showHeader?: boolean; // Added showHeader prop
 }
 
 export interface FieldVisibilityConfig {

@@ -377,7 +377,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     }
   };
 
-  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'four' | 'full' | 'six') => {
+  const getFieldWidthClass = (fieldWidth?: 'third' | 'half' | 'two-thirds' | 'one-third' | 'four' | 'full' | 'six') => {
     switch (fieldWidth) {
       case 'third':
         return 'col-span-4'; // 4/12 = 1/3
@@ -385,6 +385,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
         return 'col-span-6'; // 6/12 = 1/2 (50%)
       case 'two-thirds':
         return 'col-span-8'; // 8/12 = 2/3
+        case 'one-third':
+        return 'col-span-10'; // 8/12 = 2/3
       case 'four':
         return 'col-span-3'; // 8/12 = 2/3
       case 'six':
@@ -421,27 +423,32 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
           }
           
           // Normal field rendering
+          const hasEmptyLabel = !config.label || config.label.trim() === '' || config.labelFlag === false;
           return (
             <div
               key={fieldId}
               className={`space-y-1 ${getFieldWidthClass(config.width)}`}
             >
-              <label className="text-xs font-medium text-gray-600 block">
-                {config.label}
-                {config.mandatory && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
-              </label>
-              <FieldRenderer
-                config={config}
-                control={control}
-                fieldId={fieldId}
-                tabIndex={tabIndex}
-                validationErrors={validationErrors}
-                // Pass mandatory info
-                mandatory={config.mandatory}
-                tooltip={config.tooltip}
-              />
+              {!hasEmptyLabel && (
+                <label className="text-xs font-medium text-gray-600 block">
+                  {config.label}
+                  {config.mandatory && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
+                </label>
+              )}
+              <div className={hasEmptyLabel ? 'mt-5' : ''}>
+                <FieldRenderer
+                  config={config}
+                  control={control}
+                  fieldId={fieldId}
+                  tabIndex={tabIndex}
+                  validationErrors={validationErrors}
+                  // Pass mandatory info
+                  mandatory={config.mandatory}
+                  tooltip={config.tooltip}
+                />
+              </div>
             </div>
           );
         })}

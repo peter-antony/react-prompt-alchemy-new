@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import jsonStore from '@/stores/jsonStore';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface FieldRendererProps {
   config: FieldConfig;
@@ -703,6 +704,35 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 tabIndex={tabIndex}
               />
               {/* <span className="text-sm font-medium text-foreground">{config.label}</span> */}
+            </div>
+          )}
+        />
+      );
+
+    case 'checkbox':
+      return (
+        <Controller
+          name={fieldId}
+          control={control}
+          render={({ field }) => (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={fieldId}
+                checked={field.value}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  if (events?.onChange) {
+                    events.onChange(checked, { target: { value: checked } } as any);
+                  }
+                }}
+                tabIndex={tabIndex}
+              />
+              <label
+                htmlFor={fieldId}
+                className="text-[13px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {config.label}
+              </label>
             </div>
           )}
         />
