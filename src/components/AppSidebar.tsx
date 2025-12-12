@@ -59,6 +59,40 @@ const NavigatRVWIcon = () => {
   )
 }
 
+const TripPlanningIcon = () => {
+  return (
+    <svg width="20" height="23" viewBox="4 1 16 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M12 2C8.13 2 5 5.13 5 9C5 14 12 24 12 24C12 24 19 14 19 9C19 5.13 15.87 2 12 2Z"
+        stroke="#475467"
+        strokeWidth="1.33"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <circle
+        cx="12"
+        cy="9"
+        r="3"
+        stroke="#475467"
+        strokeWidth="1.33"
+        fill="none"
+      />
+
+      <ellipse
+        cx="12"
+        cy="25.5"
+        rx="7"
+        ry="2.5"
+        stroke="#475467"
+        strokeWidth="1.33"
+        fill="none"
+      />
+    </svg>
+  )
+}
+
 // Portal-based tooltip to guarantee it overlays all UI
 const SidebarTooltipPortal: React.FC<{ content: string; rect: DOMRect }> = ({ content, rect }) => {
   return createPortal(
@@ -126,7 +160,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     { icon: Home, label: 'Home', path: '', tooltip: 'Home' },
     { icon: COHubIcon, label: 'CO Hub', path: '/saasy-app/RailBrHUB', externalURL: true, tooltip: 'Customer Order Management' },  //  CO Management - sassy
     { icon: COIcon, label: 'Create Order', path: '/saasy-app/RailBr', externalURL: true, tooltip: 'Create Order' }, // Create Order - sassy
-    { icon: MenuIcon3, label: 'Route Management', path: '/trip-hub', tooltip: 'Manage Trip Plan' }, // Trip Planning
+    { icon: TripPlanningIcon, label: 'Trip Planning', path: '/trip-planning', tooltip: 'Transport Planning' }, // Trip Planning
+    { icon: MenuIcon3, label: 'Route Management', path: '/trip-hub', tooltip: 'Transport Execution' }, // Trip Execution
     { icon: MenuIcon2, label: 'Inventory', path: '/json-creater', tooltip: 'Quick Order Management' }, // Quick Order
     // { icon: MenuIcon4, label: 'Fleet Management', path: '/trp' }, 
     { icon: TripRouteIcon, label: 'Trip Route', path: '/trip-route', tooltip: 'Transport Route Update' }, // transport Route Update

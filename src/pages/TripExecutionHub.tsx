@@ -2022,7 +2022,7 @@ export const TripExecutionHub = () => {
                     return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
                   }}
                   nestedRowRenderer={renderSubRow}
-                  configurableButtons={gridConfigurableButtons}
+                  // configurableButtons={gridConfigurableButtons}
                   showDefaultConfigurableButton={false}
                   gridTitle="Trip Plans"
                   recordCount={gridState.gridData.length}
