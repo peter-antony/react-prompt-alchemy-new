@@ -8,17 +8,32 @@ import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { FileText } from 'lucide-react';
+import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
 
 const TemplateCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
   const headerTemplateRef = useRef<DynamicPanelRef>(null); // New Ref
   const paymentInstructionRef = useRef<DynamicPanelRef>(null); // New Ref
   const placeAndDateRef = useRef<DynamicPanelRef>(null); // New Ref
+  const consignorDeclarationsRef = useRef<DynamicPanelRef>(null); // New Ref for Consignor's Declarations
+  const valueDeliveryCashRef = useRef<DynamicPanelRef>(null); // New Ref for Value and Delivery Details
+  const codingBoxesRef = useRef<DynamicPanelRef>(null); // New Ref for Coding Boxes
+  const examinationDetailsRef = useRef<DynamicPanelRef>(null); // New Ref for Examination and Other Details
+  const sectionARef = useRef<DynamicPanelRef>(null); // New Ref for Section A
+  const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
+  const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
   const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
   const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
   const [placeAndDateData, setPlaceAndDateData] = useState<Record<string, any>>({}); // New State
+  const [consignorDeclarationsData, setConsignorDeclarationsData] = useState<Record<string, any>>({}); // New State for Consignor's Declarations
+  const [valueDeliveryCashData, setValueDeliveryCashData] = useState<Record<string, any>>({}); // New State for Value and Delivery Details
+  const [codingBoxesData, setCodingBoxesData] = useState<Record<string, any>>({}); // New State for Coding Boxes
+  const [examinationDetailsData, setExaminationDetailsData] = useState<Record<string, any>>({}); // New State for Examination and Other Details
+  const [sectionAData, setSectionAData] = useState<Record<string, any>>({}); // New State for Section A
+  const [sectionBData, setSectionBData] = useState<Record<string, any>>({}); // New State for Section B
+  const [sectionCData, setSectionCData] = useState<Record<string, any>>({}); // New State for Section C
   const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
   const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
   const [activeTab, setActiveTab] = useState('general');
@@ -58,6 +73,29 @@ const TemplateCreate = () => {
         return [];
       }
     };
+  };
+
+  // Simulate API response for demonstration
+  useEffect(() => {
+    // Call the API to fetch template data
+    fetchTemplateData("tewt24"); // Replace with actual template ID or a dynamic value
+  }, []); // Removed activeTab from the dependency array
+
+  // Function to fetch template data from API
+  const fetchTemplateData = async (templateId: string) => {
+    console.log("Fetching template data for template ID:", templateId);
+    try {
+      const response = await CimCuvService.getTemplateDataByID(templateId);
+      console.log("response.data", response);
+      const responseData = JSON.parse(response.data.ResponseData);
+      console.log("response.data", responseData);
+      setApiResponse(responseData);
+      setInitialApiResponse(responseData); // Store the initial response
+    } catch (error) {
+      console.error("Error fetching template data:", error);
+      setApiResponse(null);
+      setInitialApiResponse(null);
+    }
   };
 
   // General Details Panel Config
@@ -467,85 +505,689 @@ const TemplateCreate = () => {
     },
   };
 
+  // Consignor's Declarations Panel Config
+  const consignorDeclarationsConfig: PanelConfig = {
+    consignorDeclarations: {
+      id: 'consignorDeclarations',
+      label: "Consignor's Declarations [7]",
+      fieldType: 'textarea',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: "Enter Consignor's Declarations",
+    },
+    documentsAttached: {
+      id: 'documentsAttached',
+      label: 'Documents Attached [9]',
+      fieldType: 'textarea',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Documents Attached',
+    },
+    commercialSpecifications: {
+      id: 'commercialSpecifications',
+      label: 'Commercial Specifications [13]',
+      fieldType: 'textarea',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Commercial Specifications',
+    },
+    informationForConsignee: {
+      id: 'informationForConsignee',
+      label: 'Information for the Consignee [15]',
+      fieldType: 'textarea',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Information for the Consignee',
+    },
+  };
+
+  // Declaration of Value, Interest in Delivery, Cash on Delivery Panel Config
+  const valueDeliveryCashConfig: PanelConfig = {
+    declarationOfValue: {
+      id: 'declarationOfValue',
+      label: 'Declaration of Value [26]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Declaration of Value',
+      fetchOptions: fetchMaster('Declaration of Value Init'),
+    },
+    interestInDelivery: {
+      id: 'interestInDelivery',
+      label: 'Interest in Delivery [27]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Interest in Delivery',
+      fetchOptions: fetchMaster('Interest in Delivery Init'),
+    },
+    cashOnDelivery: {
+      id: 'cashOnDelivery',
+      label: 'Cash on Delivery [28]',
+      fieldType: 'inputdropdown',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Cash on Delivery',
+    },
+  };
+
+  // Coding Boxes Panel Config
+  const codingBoxesConfig: PanelConfig = {
+    codingBox1: {
+      id: 'codingBox1',
+      label: 'Coding Box 1 [40]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Coding Box 1',
+    },
+    codingBox2: {
+      id: 'codingBox2',
+      label: 'Coding Box 2 [41]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Coding Box 2',
+    },
+    codingBox3: {
+      id: 'codingBox3',
+      label: 'Coding Box 3 [42]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Coding Box 3',
+    },
+    codingBox4: {
+      id: 'codingBox4',
+      label: 'Coding Box 4 [43]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Coding Box 4',
+    },
+    codingBox5: {
+      id: 'codingBox5',
+      label: 'Coding Box 5 [44]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Coding Box 5',
+    },
+    codingBox6: {
+      id: 'codingBox6',
+      label: 'Coding Box 6 [45]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Coding Box 6',
+    },
+    codingBox7: {
+      id: 'codingBox7',
+      label: 'Coding Box 7 [46]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter Coding Box 7',
+    },
+    codingBox8: {
+      id: 'codingBox8',
+      label: 'Coding Box 8 [47]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Coding Box 8',
+    },
+  };
+
+  // Examination and Other Details Panel Config
+  const examinationDetailsConfig: PanelConfig = {
+    examination: {
+      id: 'examination',
+      label: 'Examination [48]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Examination',
+    },
+    prepaymentCoding: {
+      id: 'prepaymentCoding',
+      label: 'Prepayment Coding [49]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Prepayment Coding',
+    },
+    chargesNote: {
+      id: 'chargesNote',
+      label: 'Charges Note [52]',
+      fieldType: 'checkbox',
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+    },
+    cashOnDeliveryReceipt: {
+      id: 'cashOnDeliveryReceipt',
+      label: 'Cash on Delivery Receipt [53]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Cash on Delivery Receipt',
+    },
+    formalReport: {
+      id: 'formalReport',
+      label: 'Formal Report [54]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Formal Report',
+    },
+    extensionOfTransitPeriod: {
+      id: 'extensionOfTransitPeriod',
+      label: 'Extension of Transit Period [55]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Extension of Transit Period',
+    },
+    dateOfArrival: {
+      id: 'dateOfArrival',
+      label: 'Date of Arrival [59]',
+      fieldType: 'date',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter Date of Arrival',
+      dateFormat: 'dd/MM/yyyy',
+    },
+    madeAvailable: {
+      id: 'madeAvailable',
+      label: 'Made Available [60]',
+      fieldType: 'date',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Made Available',
+      dateFormat: 'dd/MM/yyyy',
+    },
+    acknowledgementOfReceipt: {
+      id: 'acknowledgementOfReceipt',
+      label: 'Acknowledgement of Receipt [61]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: 'half',
+      placeholder: 'Enter Acknowledgement of Receipt',
+    },
+  };
+
+  // Section A Panel Config
+  const sectionAConfig: PanelConfig = {
+    codeForChargingSections: {
+      id: 'codeForChargingSections',
+      label: 'Code for the Charging Sections [70]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Code for the Charging Sections',
+    },
+    routeCode: {
+      id: 'routeCode',
+      label: 'Route Code [71]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Route Code',
+    },
+    nhmCode: {
+      id: 'nhmCode',
+      label: 'NHM Code [72]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+    },
+    currency: {
+      id: 'currency',
+      label: 'Currency [73]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Currency',
+    },
+    chargedMassWeight: {
+      id: 'chargedMassWeight',
+      label: 'Charged Mass Weight [74]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Charged Mass Weight',
+    },
+    customerAgreementOrTariffApplied: {
+      id: 'customerAgreementOrTariffApplied',
+      label: 'Customer Agreement or Tariff Applied [75]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Customer Agreement or Tariff Applied',
+    },
+    kmZone: {
+      id: 'kmZone',
+      label: 'KM/Zone [76]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter KM/Zone',
+    },
+    supplementsFeesDeductions: {
+      id: 'supplementsFeesDeductions',
+      label: 'Supplements, Fees, Deductions [77]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Supplements, Fees, Deductions',
+    },
+    unitPrice: {
+      id: 'unitPrice',
+      label: 'Unit Price [78]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: 'four',
+      placeholder: 'Enter Unit Price',
+    },
+    charges: {
+      id: 'charges',
+      label: 'Charges [79]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: 'four',
+      placeholder: 'Enter Charges',
+    },
+  };
+
+  // Section B Panel Config
+  const sectionBConfig: PanelConfig = {
+    codeForChargingSections: {
+      id: 'codeForChargingSectionsB',
+      label: 'Code for the Charging Sections [70]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Code for the Charging Sections',
+    },
+    routeCode: {
+      id: 'routeCodeB',
+      label: 'Route Code [71]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Route Code',
+    },
+    nhmCode: {
+      id: 'nhmCodeB',
+      label: 'NHM Code [72]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+    },
+    currency: {
+      id: 'currencyB',
+      label: 'Currency [73]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Currency',
+    },
+    chargedMassWeight: {
+      id: 'chargedMassWeightB',
+      label: 'Charged Mass Weight [74]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Charged Mass Weight',
+    },
+    customerAgreementOrTariffApplied: {
+      id: 'customerAgreementOrTariffAppliedB',
+      label: 'Customer Agreement or Tariff Applied [75]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Customer Agreement or Tariff Applied',
+    },
+    kmZone: {
+      id: 'kmZoneB',
+      label: 'KM/Zone [76]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter KM/Zone',
+    },
+    supplementsFeesDeductions: {
+      id: 'supplementsFeesDeductionsB',
+      label: 'Supplements, Fees, Deductions [77]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Supplements, Fees, Deductions',
+    },
+    unitPrice: {
+      id: 'unitPriceB',
+      label: 'Unit Price [78]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: 'four',
+      placeholder: 'Enter Unit Price',
+    },
+    charges: {
+      id: 'chargesB',
+      label: 'Charges [79]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: 'four',
+      placeholder: 'Enter Charges',
+    },
+  };
+
+  // Section C Panel Config
+  const sectionCConfig: PanelConfig = {
+    codeForChargingSections: {
+      id: 'codeForChargingSectionsC',
+      label: 'Code for the Charging Sections [70]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter Code for the Charging Sections',
+    },
+    routeCode: {
+      id: 'routeCodeC',
+      label: 'Route Code [71]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter Route Code',
+    },
+    nhmCode: {
+      id: 'nhmCodeC',
+      label: 'NHM Code [72]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+    },
+    currency: {
+      id: 'currencyC',
+      label: 'Currency [73]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Currency',
+    },
+    chargedMassWeight: {
+      id: 'chargedMassWeightC',
+      label: 'Charged Mass Weight [74]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Charged Mass Weight',
+    },
+    customerAgreementOrTariffApplied: {
+      id: 'customerAgreementOrTariffAppliedC',
+      label: 'Customer Agreement or Tariff Applied [75]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Customer Agreement or Tariff Applied',
+    },
+    kmZone: {
+      id: 'kmZoneC',
+      label: 'KM/Zone [76]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter KM/Zone',
+    },
+    supplementsFeesDeductions: {
+      id: 'supplementsFeesDeductionsC',
+      label: 'Supplements, Fees, Deductions [77]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Supplements, Fees, Deductions',
+    },
+    unitPrice: {
+      id: 'unitPriceC',
+      label: 'Unit Price [78]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: 'four',
+      placeholder: 'Enter Unit Price',
+    },
+    charges: {
+      id: 'chargesC',
+      label: 'Charges [79]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: 'four',
+      placeholder: 'Enter Charges',
+    },
+  };
+
   const handleAddConsignorConsignee = () => {
     console.log('Add Consignor/Consignee clicked');
     // Add your logic here
   };
-
-  const handleGeneralDataChange = (updatedData: Record<string, any>) => {
-    setGeneralDetailsData(updatedData);
-  };
-
-  const handleHeaderTemplateDataChange = (updatedData: Record<string, any>) => {
-    setHeaderTemplateData(updatedData);
-  };
-
-  const handlePaymentInstructionDataChange = (updatedData: Record<string, any>) => {
-    setPaymentInstructionData(updatedData);
-  };
-
-  const handlePlaceAndDateDataChange = (updatedData: Record<string, any>) => {
-    setPlaceAndDateData(updatedData);
-  };
-
-  // Simulate API response for demonstration
-  useEffect(() => {
-    const mockApiResponse = {
-      Header: {
-        TemplateID: "tewt24",
-        Description: "descr1",
-        DocType: "CIM",
-        ModeFlag: "NoChange"
-      },
-      General: {
-        Details: {
-          Consignor_1_value1: "Forwardis GmbH bei Rosneft",
-          ConsignorName_value2: "asdf1",
-          CustomerCodeForConsignor_2: "CC",
-          CustomerCodeForConsignor_value2: "asdf2",
-          CustomerCodeForPayerOfPrePaidCharges_3: "TLP",
-          CustomerCodeForPayerOfPrePaidCharges_value3: "asdf3",
-          Consignee_4_value1: "3t4rhnfv",
-          ConsigneeName_4_value2: "asdf4",
-          CustomerCodeForConsignee_5: "CC",
-          CustomerCodeForConsignee_value5: "asdf5",
-          CustomerCodeForPayerOfNonPrePaidCharges_6: "CNPP",
-          CustomerCodeForPayerOfNonPrePaidCharges_value6: "asdf6",
-          ConsignorsReference_8_value1: "ARMY_B_TRA_DE_CTDE",
-          ConsignorsReference_8_value2: "asdf8",
-          DeliveryPoint_10_4_value1: "Ludwigshafen (Rhein) BASF ( 80-19079-3 )",
-          DeliveryPoint_10_4_value2: "asdf10",
-          CodeForDeliveryPoint_11_value1: "10-00002",
-          CodeForDeliveryPoint_11_value2: "asdf11",
-          CodeForStationServingDeliveryPoint_12_value1: "10-00004",
-          CodeForStationServingDeliveryPoint_12_value2: "asdf12",
-          DeliveryStationName: "10-00004",
-          DeliveryCountryName: "IND",
-          NumberOfCustomerAgreementOrTariff_14: "AGREE14",
-          NameForAcceptancePoint_16: "Test",
-          NameForAcceptancePoint_16_1: "asdf16",
-          CodeForAcceptancePoint_17: "10-00028",
-          CodeForAcceptancePoint_17_1: "asdf17",
-          WagonNo_18: null,
-          AcceptanceDate_16_2: "2025-11-28T00:00:00",
-          AcceptanceFrom_16_3: "chennai",
-          ModeFlag: "NoChange"
-        },
-        PaymentInstruction: {
-          PaymentInstructionDescriptionvalue1: "Pay1",
-          PaymentInstructionDescriptionvalue2: "Pay2",
-          CarriageChargePaid: 1,
-          IncoTerms: "1",
-          Incotermsvalue: "Fleet On Board",
-          PlaceAndDateMadeOut_29_value1: "chennai",
-          PlaceAndDateMadeOut_29_value2: "2025-11-28T00:00:00",
-          ModeFlag: "NoChange"
-        }
-      }
-    };
-    setApiResponse(mockApiResponse);
-    setInitialApiResponse(mockApiResponse); // Store the initial response
-  }, []);
 
   // Deep equality check utility
   const deepEqual = (obj1: any, obj2: any): boolean => {
@@ -605,10 +1247,7 @@ const TemplateCreate = () => {
     NameForAcceptancePoint_16_1: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
   });
 
-  const mapFormToPaymentInstructionPayload = (
-    paymentFormData: Record<string, any>,
-    placeAndDateFormData: Record<string, any>
-  ) => ({
+  const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>,placeAndDateFormData: Record<string, any>) => ({
     PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
     PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
@@ -616,6 +1255,81 @@ const TemplateCreate = () => {
     Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
     PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
     PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
+  });
+
+  const mapFormToConsignorDeclarationsPayload = (formData: Record<string, any>) => ({
+    ConsignorsDeclarations_7: formData.consignorDeclarations || null,
+    DocumentsAttached_9: formData.documentsAttached || null,
+    CommercialSpecifications_13: formData.commercialSpecifications || null,
+    InformationForTheConsignee_15: formData.informationForConsignee || null,
+  });
+
+  const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => ({
+    DeclarationOfValue_26: formData.declarationOfValue || null,
+    InterestInDelivery_27: formData.interestInDelivery || null,
+    CashOnDelivery_28: formData.cashOnDelivery || null,
+  });
+
+  const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
+    CodingBox_1_40: formData.codingBox1 || null,
+    CodingBox_2_41: formData.codingBox2 || null,
+    CodingBox_3_42: formData.codingBox3 || null,
+    CodingBox_4_43: formData.codingBox4 || null,
+    CodingBox_5_44: formData.codingBox5 || null,
+    CodingBox_6_45: formData.codingBox6 || null,
+    CodingBox_7_46: formData.codingBox7 || null,
+    CodingBox_8_47: formData.codingBox8 || null,
+  });
+
+  const mapFormToExaminationDetailsPayload = (formData: Record<string, any>) => ({
+    Examination_48: formData.examination || null,
+    PrepaymentCoding_49: formData.prepaymentCoding || null,
+    ChargesNote_52: formData.chargesNote ? 1 : 0,
+    CashOnDeliveryReceipt_53: formData.cashOnDeliveryReceipt || null,
+    FormalReport_54: formData.formalReport || null,
+    ExtensionOfTransitPeriod_55: formData.extensionOfTransitPeriod || null,
+    DateOfArrival_59: formData.dateOfArrival || null,
+    MadeAvailable_60: formData.madeAvailable || null,
+    AcknowledgementOfReceipt_61: formData.acknowledgementOfReceipt || null,
+  });
+
+  const mapFormToSectionAPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSections || null,
+    RouteCode_71: formData.routeCode || null,
+    NHMCode_72: formData.nhmCode || null,
+    Currency_73: formData.currency || null,
+    ChargedMassWeight_74: formData.chargedMassWeight || null,
+    CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffApplied || null,
+    KMZone_76: formData.kmZone || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductions || null,
+    UnitPrice_78: formData.unitPrice || null,
+    Charges_79: formData.charges || null,
+  });
+
+  const mapFormToSectionBPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSectionsB || null,
+    RouteCode_71: formData.routeCodeB || null,
+    NHMCode_72: formData.nhmCodeB || null,
+    Currency_73: formData.currencyB || null,
+    ChargedMassWeight_74: formData.chargedMassWeightB || null,
+    CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffAppliedB || null,
+    KMZone_76: formData.kmZoneB || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsB || null,
+    UnitPrice_78: formData.unitPriceB || null,
+    Charges_79: formData.chargesB || null,
+  });
+
+  const mapFormToSectionCPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSectionsC || null,
+    RouteCode_71: formData.routeCodeC || null,
+    NHMCode_72: formData.nhmCodeC || null,
+    Currency_73: formData.currencyC || null,
+    ChargedMassWeight_74: formData.chargedMassWeightC || null,
+    CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffAppliedC || null,
+    KMZone_76: formData.kmZoneC || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsC || null,
+    UnitPrice_78: formData.unitPriceC || null,
+    Charges_79: formData.chargesC || null,
   });
 
   // Effect to set form values when API response is received
@@ -669,8 +1383,97 @@ const TemplateCreate = () => {
           dateMadeOut: apiResponse.General.PaymentInstruction.PlaceAndDateMadeOut_29_value2,
         });
       }
+
+      if (consignorDeclarationsRef.current && apiResponse.Declarations) {
+        consignorDeclarationsRef.current.setFormValues({
+          consignorDeclarations: apiResponse.Declarations.ConsignorsDeclarations_7,
+          documentsAttached: apiResponse.Declarations.DocumentsAttached_9,
+          commercialSpecifications: apiResponse.Declarations.CommercialSpecifications_13,
+          informationForConsignee: apiResponse.Declarations.InformationForTheConsignee_15,
+        });
+      }
+
+      if (valueDeliveryCashRef.current && apiResponse.Declarations) {
+        valueDeliveryCashRef.current.setFormValues({
+          declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
+          interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
+          cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
+        });
+      }
+
+      if (codingBoxesRef.current && apiResponse.Declarations) {
+        codingBoxesRef.current.setFormValues({
+          codingBox1: apiResponse.Declarations.CodingBox_1_40,
+          codingBox2: apiResponse.Declarations.CodingBox_2_41,
+          codingBox3: apiResponse.Declarations.CodingBox_3_42,
+          codingBox4: apiResponse.Declarations.CodingBox_4_43,
+          codingBox5: apiResponse.Declarations.CodingBox_5_44,
+          codingBox6: apiResponse.Declarations.CodingBox_6_45,
+          codingBox7: apiResponse.Declarations.CodingBox_7_46,
+          codingBox8: apiResponse.Declarations.CodingBox_8_47,
+        });
+      }
+
+      if (examinationDetailsRef.current && apiResponse.Declarations) {
+        examinationDetailsRef.current.setFormValues({
+          examination: apiResponse.Declarations.Examination_48,
+          prepaymentCoding: apiResponse.Declarations.PrepaymentCoding_49,
+          chargesNote: apiResponse.Declarations.ChargesNote_52 === 1,
+          cashOnDeliveryReceipt: apiResponse.Declarations.CashOnDeliveryReceipt_53,
+          formalReport: apiResponse.Declarations.FormalReport_54,
+          extensionOfTransitPeriod: apiResponse.Declarations.ExtensionOfTransitPeriod_55,
+          dateOfArrival: apiResponse.Declarations.DateOfArrival_59,
+          madeAvailable: apiResponse.Declarations.MadeAvailable_60,
+          acknowledgementOfReceipt: apiResponse.Declarations.AcknowledgementOfReceipt_61,
+        });
+      }
+
+      if (sectionARef.current && apiResponse.Declarations?.SectionA) {
+        sectionARef.current.setFormValues({
+          codeForChargingSections: apiResponse.Declarations.SectionA.CodeForChargingSections_70,
+          routeCode: apiResponse.Declarations.SectionA.RouteCode_71,
+          nhmCode: apiResponse.Declarations.SectionA.NHMCode_72,
+          currency: apiResponse.Declarations.SectionA.Currency_73,
+          chargedMassWeight: apiResponse.Declarations.SectionA.ChargedMassWeight_74,
+          customerAgreementOrTariffApplied: apiResponse.Declarations.SectionA.CustomerAgreementOrTariffApplied_75,
+          kmZone: apiResponse.Declarations.SectionA.KMZone_76,
+          supplementsFeesDeductions: apiResponse.Declarations.SectionA.SupplementsFeesDeductions_77,
+          unitPrice: apiResponse.Declarations.SectionA.UnitPrice_78,
+          charges: apiResponse.Declarations.SectionA.Charges_79,
+        });
+      }
+
+      if (sectionBRef.current && apiResponse.Declarations?.SectionB) {
+        sectionBRef.current.setFormValues({
+          codeForChargingSectionsB: apiResponse.Declarations.SectionB.CodeForChargingSections_70,
+          routeCodeB: apiResponse.Declarations.SectionB.RouteCode_71,
+          nhmCodeB: apiResponse.Declarations.SectionB.NHMCode_72,
+          currencyB: apiResponse.Declarations.SectionB.Currency_73,
+          chargedMassWeightB: apiResponse.Declarations.SectionB.ChargedMassWeight_74,
+          customerAgreementOrTariffAppliedB: apiResponse.Declarations.SectionB.CustomerAgreementOrTariffApplied_75,
+          kmZoneB: apiResponse.Declarations.SectionB.KMZone_76,
+          supplementsFeesDeductionsB: apiResponse.Declarations.SectionB.SupplementsFeesDeductions_77,
+          unitPriceB: apiResponse.Declarations.SectionB.UnitPrice_78,
+          chargesB: apiResponse.Declarations.SectionB.Charges_79,
+        });
+      }
+
+      if (sectionCRef.current && apiResponse.Declarations?.SectionC) {
+        sectionCRef.current.setFormValues({
+          codeForChargingSectionsC: apiResponse.Declarations.SectionC.CodeForChargingSections_70,
+          routeCodeC: apiResponse.Declarations.SectionC.RouteCode_71,
+          nhmCodeC: apiResponse.Declarations.SectionC.NHMCode_72,
+          currencyC: apiResponse.Declarations.SectionC.Currency_73,
+          chargedMassWeightC: apiResponse.Declarations.SectionC.ChargedMassWeight_74,
+          customerAgreementOrTariffAppliedC: apiResponse.Declarations.SectionC.CustomerAgreementOrTariffApplied_75,
+          kmZoneC: apiResponse.Declarations.SectionC.KMZone_76,
+          supplementsFeesDeductionsC: apiResponse.Declarations.SectionC.SupplementsFeesDeductions_77,
+          unitPriceC: apiResponse.Declarations.SectionC.UnitPrice_78,
+          chargesC: apiResponse.Declarations.SectionC.Charges_79,
+        });
+      }
     }
-  }, [apiResponse]);
+  }, []);
 
   // Handle save template
   const handleSaveTemplate = () => {
@@ -684,6 +1487,13 @@ const TemplateCreate = () => {
     const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
     const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
     const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
+    const currentConsignorDeclarationsValues = consignorDeclarationsRef.current?.getFormValues();
+    const currentValueDeliveryCashValues = valueDeliveryCashRef.current?.getFormValues();
+    const currentCodingBoxesValues = codingBoxesRef.current?.getFormValues();
+    const currentExaminationDetailsValues = examinationDetailsRef.current?.getFormValues();
+    const currentSectionAValues = sectionARef.current?.getFormValues();
+    const currentSectionBValues = sectionBRef.current?.getFormValues();
+    const currentSectionCValues = sectionCRef.current?.getFormValues();
 
     // Transform current form values to match API payload structure
     const newHeader = mapFormToHeaderPayload(currentHeaderValues);
@@ -692,6 +1502,13 @@ const TemplateCreate = () => {
       currentPaymentInstructionValues,
       currentPlaceAndDateValues
     );
+    const newConsignorDeclarations = mapFormToConsignorDeclarationsPayload(currentConsignorDeclarationsValues);
+    const newValueDeliveryCash = mapFormToValueDeliveryCashPayload(currentValueDeliveryCashValues);
+    const newCodingBoxes = mapFormToCodingBoxesPayload(currentCodingBoxesValues);
+    const newExaminationDetails = mapFormToExaminationDetailsPayload(currentExaminationDetailsValues);
+    const newSectionA = mapFormToSectionAPayload(currentSectionAValues);
+    const newSectionB = mapFormToSectionBPayload(currentSectionBValues);
+    const newSectionC = mapFormToSectionCPayload(currentSectionCValues);
 
     // Debugging logs
     console.log("--- Debugging deepEqual ---");
@@ -706,12 +1523,47 @@ const TemplateCreate = () => {
     console.log("newPaymentInstruction:", newPaymentInstruction);
     console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
     console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
+
+    console.log("newConsignorDeclarations:", newConsignorDeclarations);
+    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+    console.log("deepEqual(newConsignorDeclarations, initialApiResponse.Declarations):", deepEqual(newConsignorDeclarations, initialApiResponse.Declarations));
+
+    console.log("newValueDeliveryCash:", newValueDeliveryCash);
+    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+    console.log("deepEqual(newValueDeliveryCash, initialApiResponse.Declarations):", deepEqual(newValueDeliveryCash, initialApiResponse.Declarations));
+
+    console.log("newCodingBoxes:", newCodingBoxes);
+    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+    console.log("deepEqual(newCodingBoxes, initialApiResponse.Declarations):", deepEqual(newCodingBoxes, initialApiResponse.Declarations));
+
+    console.log("newExaminationDetails:", newExaminationDetails);
+    console.log("initialApiResponse.Declarations?.Examination:", initialApiResponse.Declarations?.Examination);
+    console.log("deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination):", deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination));
+
+    console.log("newSectionA:", newSectionA);
+    console.log("initialApiResponse.Declarations?.SectionA:", initialApiResponse.Declarations?.SectionA);
+    console.log("deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA):", deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA));
+
+    console.log("newSectionB:", newSectionB);
+    console.log("initialApiResponse.Declarations?.SectionB:", initialApiResponse.Declarations?.SectionB);
+    console.log("deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB):", deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB));
+
+    console.log("newSectionC:", newSectionC);
+    console.log("initialApiResponse.Declarations?.SectionC:", initialApiResponse.Declarations?.SectionC);
+    console.log("deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC):", deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC));
     console.log("---------------------------");
 
     // Determine ModeFlag for each section
     const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
     const generalDetailsModeFlag = deepEqual(newGeneralDetails, initialApiResponse.General.Details) ? "NoChange" : "Update";
     const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
+    const consignorDeclarationsModeFlag = deepEqual(newConsignorDeclarations, initialApiResponse.Declarations) ? "NoChange" : "Update";
+    const valueDeliveryCashModeFlag = deepEqual(newValueDeliveryCash, initialApiResponse.Declarations) ? "NoChange" : "Update";
+    const codingBoxesModeFlag = deepEqual(newCodingBoxes, initialApiResponse.Declarations) ? "NoChange" : "Update";
+    const examinationDetailsModeFlag = deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination) ? "NoChange" : "Update";
+    const sectionAModeFlag = deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA) ? "NoChange" : "Update";
+    const sectionBModeFlag = deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB) ? "NoChange" : "Update";
+    const sectionCModeFlag = deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC) ? "NoChange" : "Update";
 
     const finalPayload = {
       Header: {
@@ -726,6 +1578,24 @@ const TemplateCreate = () => {
         PaymentInstruction: {
           ...newPaymentInstruction,
           ModeFlag: paymentInstructionModeFlag,
+        },
+        Declarations: { // Adding Declarations section
+          ...newConsignorDeclarations,
+          ...newValueDeliveryCash,
+          ...newCodingBoxes,
+          ...newExaminationDetails,
+          SectionA: newSectionA,
+          SectionB: newSectionB,
+          SectionC: newSectionC,
+          ModeFlag: (
+            consignorDeclarationsModeFlag === "Update" ||
+            valueDeliveryCashModeFlag === "Update" ||
+            codingBoxesModeFlag === "Update" ||
+            examinationDetailsModeFlag === "Update" ||
+            sectionAModeFlag === "Update" ||
+            sectionBModeFlag === "Update" ||
+            sectionCModeFlag === "Update"
+          ) ? "Update" : "NoChange",
         },
       },
     };
@@ -858,9 +1728,84 @@ const TemplateCreate = () => {
               </TabsContent>
 
               <TabsContent value="declarations" className="mt-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-6">Declarations</h2>
-                  <p className="text-gray-500">Declarations content will be added here.</p>
+                <div className="">
+                  <DynamicPanel
+                    ref={consignorDeclarationsRef}
+                    panelId="consignor-declarations"
+                    panelOrder={1}
+                    panelTitle="Declarations and Information"
+                    panelConfig={consignorDeclarationsConfig}
+                    formName="consignorDeclarationsForm"
+                    initialData={consignorDeclarationsData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={valueDeliveryCashRef}
+                    panelId="value-delivery-cash"
+                    panelOrder={2}
+                    panelTitle="Value and Delivery Details"
+                    panelConfig={valueDeliveryCashConfig}
+                    formName="valueDeliveryCashForm"
+                    initialData={valueDeliveryCashData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={codingBoxesRef}
+                    panelId="coding-boxes"
+                    panelOrder={3}
+                    panelTitle="Coding Boxes"
+                    panelConfig={codingBoxesConfig}
+                    formName="codingBoxesForm"
+                    initialData={codingBoxesData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={examinationDetailsRef}
+                    panelId="examination-details"
+                    panelOrder={4}
+                    panelTitle="Examination and Other Details"
+                    panelConfig={examinationDetailsConfig}
+                    formName="examinationDetailsForm"
+                    initialData={examinationDetailsData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={sectionARef}
+                    panelId="section-a"
+                    panelOrder={5}
+                    panelTitle="Section A"
+                    panelConfig={sectionAConfig}
+                    formName="sectionAForm"
+                    initialData={sectionAData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={sectionBRef}
+                    panelId="section-b"
+                    panelOrder={6}
+                    panelTitle="Section B"
+                    panelConfig={sectionBConfig}
+                    formName="sectionBForm"
+                    initialData={sectionBData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
+                  <DynamicPanel
+                    ref={sectionCRef}
+                    panelId="section-c"
+                    panelOrder={7}
+                    panelTitle="Section C"
+                    panelConfig={sectionCConfig}
+                    formName="sectionCForm"
+                    initialData={sectionCData}
+                    panelWidth="full"
+                    collapsible={true}
+                  />
               </div>
               </TabsContent>
 
