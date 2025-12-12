@@ -90,7 +90,20 @@ export function processGridData(
         if (value && typeof value === 'object' && 'value' in value) {
           value = value.value;
         }
-        
+
+        // Handle Date and DateTime columns for grid search formatting
+        if (value) {
+          try {
+            if (column?.type === 'Date') {
+              value = dateFormatter(value);
+            } else if (column?.type === 'DateTimeRange') {
+              value = dateTimeFormatter(value);
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+
         const filterValue = filter.value;
         const operator = filter.operator || 'contains';
 

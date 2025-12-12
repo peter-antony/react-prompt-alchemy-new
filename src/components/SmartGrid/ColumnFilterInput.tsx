@@ -145,9 +145,10 @@ export function ColumnFilterInput({
   const getFilterType = (): FilterValue['type'] => {
     switch (column.type) {
       case 'Date':
-      case 'DateTimeRange':
+        // case 'DateTimeRange': 
         return 'date';
       case 'DateRange':
+      case 'DateTimeRange':  
         return 'dateRange';
       case 'NumberRange':
         return 'number';

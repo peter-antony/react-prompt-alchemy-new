@@ -679,6 +679,7 @@ export const TripExecutionHub = () => {
             value: row.TripBillingStatus,
             variant: getStatusColorLocal(row.TripBillingStatus),
           },
+          CustomerOrders: row.CustomerOrderDetails, // Enable filtering for Customer Order column
         }
       });
 
