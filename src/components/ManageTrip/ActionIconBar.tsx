@@ -246,10 +246,10 @@ export const ActionIconBar = () => {
           <MoreInfoPanel data={''} />
         </div>
       </SideDrawer>
-      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
-            <div className="">
-              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} /></div>
-            </div>
+      <SideDrawer isOpen={isAttachmentsOpen} onClose={() => { setAttachmentsOpen(false); checkAttachments(); }} width="80%" title="Attachments" isBack={false} badgeContent={tripId} onScrollPanel={true} isBadgeRequired={true}>
+        <div className="">
+          <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} /></div>
+        </div>
       </SideDrawer>
       <SideDrawer isOpen={trackTraceOpen} onClose={() => setTrackTraceOpen(false)} width="100%" title="Trace and Trace" isBack={false} onScrollPanel={true} isBadgeRequired={true}>
             <div className="">
