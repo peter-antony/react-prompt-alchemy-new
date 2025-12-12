@@ -404,7 +404,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
 
   const PanelContent = () => (
     <form name={formName}>
-      <div className={panelTitle === "Transportation Details" ? "grid grid-cols-5 gap-4" : "grid grid-cols-12 gap-4"}>
+      <div className={panelTitle === "Transportation Details" ? "grid grid-cols-12 gap-4" : "grid grid-cols-12 gap-4"}>
         {visibleFields.map(({ fieldId, config, tabIndex }) => {
           // Special handling for header field type - render without label wrapper
           if (config.fieldType === 'header') {

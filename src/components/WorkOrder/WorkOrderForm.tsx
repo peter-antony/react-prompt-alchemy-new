@@ -1211,7 +1211,8 @@ if (formatted.Provider?.includes(" || ")) {
         const status = workOrder?.Header?.Status?.toLowerCase() || "";
         const isEnabled = status === "completed" || status === "closed";
         return (
-          <svg
+          <>
+          {/* <svg
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -1233,7 +1234,32 @@ if (formatted.Provider?.includes(" || ")) {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-          </svg>
+          </svg> */}
+          <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512.000000 512.000000" preserveAspectRatio="xMidYMid meet">
+            <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill={isEnabled ? "#475467" : "#9CA3AF"} stroke="none">
+            <path d="M0 2560 l0 -1590 2560 0 2560 0 0 1590 0 1590 -2560 0 -2560 0 0
+            -1590z m4950 0 l0 -1420 -2390 0 -2390 0 0 1420 0 1420 2390 0 2390 0 0 -1420z"></path>
+            <path d="M2335 3650 c-420 -91 -741 -395 -853 -808 -24 -88 -26 -114 -26 -282
+            0 -170 2 -193 27 -285 105 -387 406 -687 795 -793 88 -24 114 -26 282 -26 170
+            0 193 2 285 27 387 105 687 406 793 795 24 88 26 114 26 282 0 170 -2 193 -27
+            285 -105 387 -409 690 -795 792 -135 36 -374 42 -507 13z m367 -135 c422 -63
+            750 -391 813 -814 19 -120 19 -162 0 -282 -63 -423 -391 -751 -813 -814 -121
+            -19 -163 -19 -283 0 -399 60 -713 353 -806 753 -24 104 -24 300 0 404 92 395
+            406 692 797 753 114 18 176 18 292 0z"></path>
+            <path d="M2483 3326 c-146 -36 -270 -142 -346 -298 -25 -51 -54 -123 -63 -160
+            l-16 -68 -108 0 -107 0 -18 -67 c-10 -38 -20 -74 -23 -80 -3 -10 24 -13 117
+            -13 l121 0 0 -75 0 -75 -98 0 -98 0 -18 -57 c-10 -32 -20 -66 -22 -75 -5 -17
+            6 -18 124 -18 l130 0 6 -45 c20 -130 94 -282 181 -369 99 -100 210 -146 352
+            -146 156 0 255 40 358 144 104 104 162 229 189 404 l6 42 -88 0 -88 0 -18 -76
+            c-24 -100 -77 -203 -127 -249 -65 -58 -120 -78 -215 -77 -108 0 -184 33 -253
+            108 -48 52 -100 157 -116 232 l-7 32 261 0 260 0 21 66 c11 36 20 70 20 75 0
+            5 -126 9 -290 9 l-290 0 0 75 0 75 270 0 269 0 21 66 c11 36 20 72 20 80 0 12
+            -47 14 -276 14 l-276 0 6 33 c13 69 75 174 136 230 59 55 111 80 195 93 50 7
+            157 -11 205 -36 71 -36 143 -141 165 -237 l7 -33 87 0 88 0 -9 55 c-26 166
+            -137 325 -272 389 -95 45 -260 59 -373 32z"></path>
+            </g>
+            </svg>
+          </>
         );
       })(),
       events: {
@@ -1550,7 +1576,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "Origin",
         label: "Departure Point",
         fieldType: "lazyselect",
-        width: 5,
+        // width: 3,
+        width: 'third',
         value: (workOrder?.WorkorderSchedule?.OriginID && workOrder?.WorkorderSchedule?.OriginDescription)
           ? `${workOrder.WorkorderSchedule.OriginID} || ${workOrder.WorkorderSchedule.OriginDescription}`
           : "",
@@ -1564,8 +1591,9 @@ if (formatted.Provider?.includes(" || ")) {
         id: "OutBoundDestination",
         label: "Arrival Point",
         fieldType: "lazyselect",
-        width: 5,
-        value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
+        // width: 5,
+         width: 'third',
+         value: (workOrder?.WorkorderSchedule?.OutBoundDestinationID && workOrder?.WorkorderSchedule?.OutBoundDestinationDescription)
           ? `${workOrder.WorkorderSchedule.OutBoundDestinationID} || ${workOrder.WorkorderSchedule.OutBoundDestinationDescription}`
           : "",
 
@@ -1579,7 +1607,7 @@ if (formatted.Provider?.includes(" || ")) {
         id: "RUForward",
         label: "RU Forward",
         fieldType: "lazyselect",
-        width: 5,
+         width: 'third',
         value: (workOrder?.WorkorderSchedule?.RUForwardID && workOrder?.WorkorderSchedule?.RUForwardDescription)
           ? `${workOrder.WorkorderSchedule.RUForwardID} || ${workOrder.WorkorderSchedule.RUForwardDescription}`
           : "",
@@ -1594,7 +1622,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "ReturnDestination",
         label: "Return Destination",
         fieldType: "lazyselect",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: (workOrder?.WorkorderSchedule?.ReturnDestinationID && workOrder?.WorkorderSchedule?.ReturnDestinationDescription)
           ? `${workOrder.WorkorderSchedule.ReturnDestinationID} || ${workOrder.WorkorderSchedule.ReturnDestinationDescription}`
           : "",
@@ -1609,7 +1638,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "RUReturn",
         label: "RU Return",
         fieldType: "lazyselect",
-        width: 5,
+       /* width: 5,*/
+        width: 'third',
         value: (workOrder?.WorkorderSchedule?.RUReturnID && workOrder?.WorkorderSchedule?.RUReturnDescription)
           ? `${workOrder.WorkorderSchedule.RUReturnID} || ${workOrder.WorkorderSchedule.RUReturnDescription}`
           : "",
@@ -1625,7 +1655,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "PlaceOfOperation",
         label: "Place Of Operation",
         fieldType: "lazyselect",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: formatIdDesc(
           workOrder?.WorkorderSchedule?.PlaceOfOperationID,
           workOrder?.WorkorderSchedule?.PlaceOfOperationDescription
@@ -1641,7 +1672,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "Provider",
         label: "Provider",
         fieldType: "lazyselect",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: formatIdDesc(
           workOrder?.WorkorderSchedule?.Provider,
           workOrder?.WorkorderSchedule?.ProviderDescription
@@ -1657,7 +1689,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "ExpectedDate",
         label: "Expected Date",
         fieldType: "date",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: workOrder?.WorkorderSchedule?.MobileExpectedDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -1668,7 +1701,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "MobileActualDate",
         label: "Actual Date",
         fieldType: "date",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: workOrder?.WorkorderSchedule?.MobileActualDate,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -1679,7 +1713,8 @@ if (formatted.Provider?.includes(" || ")) {
         id: "MobileComments",
         label: "Comments",
         fieldType: "text",
-        width: 5,
+        /*width: 5,*/
+         width: 'third',
         value: workOrder?.WorkorderSchedule?.MobileComments,
         visible: !isWorkshop && selectedOperation !== null, // Only visible when IsWorkShop === 0 and operation is selected
         mandatory: false,
@@ -2880,7 +2915,7 @@ if (formatted.Provider?.includes(" || ")) {
 
                   {/* RIGHT SECTION */}
                   <div className="lg:col-span-1 w-4/6"   ref={rightPanelRef}>
-                    <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6">
+                    <div className="bg-white rounded-lg border border-gray-200 mb-6 px-4 py-6 pb-0">
                       <SmartGridPlus
                         columns={operationDetailsColumns}
                         data={transformDataForDisplay(workOrder?.OperationDetails || [])}
@@ -2982,7 +3017,7 @@ if (formatted.Provider?.includes(" || ")) {
                                       className={`p-1 rounded-md border border-gray-200 ${
                                         forwardTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
                                       }`}
-                                      title={`Manage Trip ${forwardTripId}`}
+                                      title={`Trip Execution ${forwardTripId}`}
                                     >
                                       <ExternalLink className="w-4 h-4 text-gray-600" />
                                     </button>
@@ -3072,7 +3107,7 @@ if (formatted.Provider?.includes(" || ")) {
                                       className={`p-1 rounded-md border border-gray-200 ${
                                         returnTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
                                       }`}
-                                      title={`Manage Trip ${returnTripId}`}
+                                      title={`Trip Execution ${returnTripId}`}
                                     >
                                       <ExternalLink className="w-4 h-4 text-gray-600" />
                                     </button>

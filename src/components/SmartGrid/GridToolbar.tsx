@@ -423,6 +423,7 @@ export function GridToolbar({
         {gridTitle !== "Item Service" && (gridTitle !== 'Plan List' && gridTitle !== 'Actual List') && (
           <ColumnVisibilityManager
             columns={columns}
+            gridTitle={gridTitle}
             preferences={preferences}
             onColumnVisibilityToggle={onColumnVisibilityToggle}
             onColumnHeaderChange={onColumnHeaderChange}

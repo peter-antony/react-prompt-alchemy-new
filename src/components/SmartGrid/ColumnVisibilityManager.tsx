@@ -29,6 +29,7 @@ interface ColumnVisibilityManagerProps {
   onColumnHeaderChange: (columnId: string, header: string) => void;
   onResetToDefaults: () => void;
   onSubRowToggle?: (columnKey: string) => void;
+  gridTitle?: string;
 }
 
 export function ColumnVisibilityManager({
@@ -37,7 +38,8 @@ export function ColumnVisibilityManager({
   onColumnVisibilityToggle,
   onColumnHeaderChange,
   onResetToDefaults,
-  onSubRowToggle
+  onSubRowToggle,
+  gridTitle
 }: ColumnVisibilityManagerProps) {
   const [editingHeader, setEditingHeader] = useState<string | null>(null);
   const [tempHeaderValue, setTempHeaderValue] = useState('');
@@ -207,20 +209,23 @@ export function ColumnVisibilityManager({
                   {/* Sub-row Toggle */}
                   {onSubRowToggle && (
                     <div className="flex items-center ml-2">
-                      <Button
-                        variant={isInSubRow ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => onSubRowToggle(column.key)}
-                        className={cn(
-                          "h-7 w-7 p-0 transition-colors",
-                          isInSubRow
-                            ? "bg-purple-600 hover:bg-purple-700 text-white"
-                            : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
-                        )}
-                        title={isInSubRow ? "Remove from sub-row" : "Show in sub-row"}
-                      >
-                        <Rows3 className="h-3 w-3" />
-                      </Button>
+                      { gridTitle !== "Operation Details"&& 
+                        (<Button
+                          variant={isInSubRow ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => onSubRowToggle(column.key)}
+                          className={cn(
+                            "h-7 w-7 p-0 transition-colors",
+                            isInSubRow
+                              ? "bg-purple-600 hover:bg-purple-700 text-white"
+                              : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                          )}
+                          title={isInSubRow ? "Remove from sub-row" : "Show in sub-row"}
+                        >
+                          <Rows3 className="h-3 w-3" />
+                        </Button>
+                        )
+                      }
                     </div>
                   )}
                 </div>
