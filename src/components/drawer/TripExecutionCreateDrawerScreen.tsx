@@ -80,6 +80,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
   const [pickupComplete, setPickupComplete] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddViaPointsDialog, setShowAddViaPointsDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const tripExecutionRef = useRef<DynamicPanelRef>(null);
   const tripAdditionalRef = useRef<DynamicPanelRef>(null);
@@ -642,6 +643,7 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
     }
     
     try {
+      setIsSaving(true);
       // Find the leg index in tripData
       const legIndex = tripData.LegDetails?.findIndex(
         (leg: any) => leg.LegSequence === selectedLeg.LegSequence
@@ -1107,6 +1109,8 @@ export const TripExecutionCreateDrawerScreen: React.FC<TripExecutionCreateDrawer
         description: "Failed to save activities",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -3174,6 +3178,13 @@ const getDelayedTime = (activity: any): string => {
               )}
             </div>
           </div>
+        </div>
+      )}
+      {isSaving && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
       )}
     </>

@@ -124,6 +124,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const { toast } = useToast();
   const [qc1Options, setQc1Options] = useState<{ label: string; value: string }[]>([]);
   const { fetchTrip } = manageTripStore();
+  const [isSaving, setIsSaving] = useState(false);
  
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
@@ -318,6 +319,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       };
    
     console.log('💾 formatFinalRouteData:', formatFinalRouteData);
+    setIsSaving(true);
     try {
       const response: any = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
       console.log('💾 response:', response);
@@ -352,6 +354,8 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         description: "Failed to save trip details",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
  
@@ -744,6 +748,13 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           <Button onClick={handleSave}>Save</Button>
         </div>
       </div>
+      {isSaving && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
     </div>
   );
 };

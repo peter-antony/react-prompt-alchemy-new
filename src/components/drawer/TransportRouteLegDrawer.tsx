@@ -111,6 +111,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const [reasonForUpdate, setReasonForUpdate] = useState('');
   const [hoveredTooltipIndex, setHoveredTooltipIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true); // Start as true so forms can render
+  const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<string | null>(null);
   const [apiData, setApiData] = useState(null);
   const [QCCode1, setQCCode1] = useState<any[]>([]);
@@ -495,11 +496,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     return; // ❌ Stop execution — don't proceed with save
   }
 
-  // Proceed with save if all required fields are filled
-  const reasonValue =
-    typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
-      ? reasonForUpdate.split("||")[0].trim()
-      : reasonForUpdate;
+    // Proceed with save if all required fields are filled
+    setIsSaving(true);
+    try {
+      const reasonValue =
+        typeof reasonForUpdate === "string" && reasonForUpdate.includes("||")
+          ? reasonForUpdate.split("||")[0].trim()
+          : reasonForUpdate;
 
   const formatFinalRouteData = {
     ...selectedRoute,
@@ -531,35 +534,38 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     });
   }
 
-  // Call get trip details again after save
-  if (responseData?.data?.IsSuccess !== false) {
-    const con = selectedRoute?.CustomerOrderID || '';
-    if (con) {
-      await openRouteDrawer({ CustomerOrderNo: con } as any);
-      const refreshed = useTransportRouteStore.getState().selectedRoute;
-      if (refreshed?.LegDetails) {
-        refreshed.LegDetails.forEach((leg: any, idx: number) => {
-          const ref = dynamicPanelRefs.current[`leg-${idx}`];
-          if (ref && typeof ref.setFormValues === 'function') {
-            const legForForm = {
-              ...leg,
-              Departure: (leg.Departure && leg.DepartureDescription)
-                ? `${leg.Departure} || ${leg.DepartureDescription}`
-                : (leg.Departure || leg.DepartureDescription || ''),
-              Arrival: (leg.Arrival && leg.ArrivalDescription)
-                ? `${leg.Arrival} || ${leg.ArrivalDescription}`
-                : (leg.Arrival || leg.ArrivalDescription || ''),
-              LegBehaviour: (leg.LegBehaviour && leg.LegBehaviourDescription)
-                ? `${leg.LegBehaviour} || ${leg.LegBehaviourDescription}`
-                : (leg.LegBehaviour || leg.LegBehaviourDescription || ''),
-            };
-            ref.setFormValues(legForForm);
+      // Call get trip details again after save
+      if (responseData?.data?.IsSuccess !== false) {
+        const con = selectedRoute?.CustomerOrderID || '';
+        if (con) {
+          await openRouteDrawer({ CustomerOrderNo: con } as any);
+          const refreshed = useTransportRouteStore.getState().selectedRoute;
+          if (refreshed?.LegDetails) {
+            refreshed.LegDetails.forEach((leg: any, idx: number) => {
+              const ref = dynamicPanelRefs.current[`leg-${idx}`];
+              if (ref && typeof ref.setFormValues === 'function') {
+                const legForForm = {
+                  ...leg,
+                  Departure: (leg.Departure && leg.DepartureDescription)
+                    ? `${leg.Departure} || ${leg.DepartureDescription}`
+                    : (leg.Departure || leg.DepartureDescription || ''),
+                  Arrival: (leg.Arrival && leg.ArrivalDescription)
+                    ? `${leg.Arrival} || ${leg.ArrivalDescription}`
+                    : (leg.Arrival || leg.ArrivalDescription || ''),
+                  LegBehaviour: (leg.LegBehaviour && leg.LegBehaviourDescription)
+                    ? `${leg.LegBehaviour} || ${leg.LegBehaviourDescription}`
+                    : (leg.LegBehaviour || leg.LegBehaviourDescription || ''),
+                };
+                ref.setFormValues(legForForm);
+              }
+            });
           }
-        });
+        }
       }
+    } finally {
+      setIsSaving(false);
     }
-  }
-};
+  };
 
 
   const handleDelete = async (index: number) => {
@@ -1274,6 +1280,13 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
           Save
         </Button>
       </div>
+      {isSaving && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
     </div>
   );
 });

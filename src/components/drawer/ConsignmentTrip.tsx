@@ -185,6 +185,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
   // Regional configuration for decimal formatting
   // TODO: This can be moved to a global config or user preferences
   const [region, setRegion] = useState<'german' | 'indian'>('german'); // Default to German format
+  const [isSaving, setIsSaving] = useState(false);
 
   const { activeFilters, setActiveFilters } = useFilterStore();
   // const filtersForThisGrid = activeFilters[gridId] || {};
@@ -5831,6 +5832,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
   // Handle Save Plan Actuals - Process array of actual data from grid
   const handleSavePlanActuals = async () => {
+    setIsSaving(true);
     try {
 
       // Get the full trip data from the store - try prop first, then manageTripStore as fallback
@@ -6344,11 +6346,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
       }
 
     } catch (error) {
+      console.error("Error in handleSavePlanActuals:", error);
       toast({
         title: "⚠️ Save Failed",
         description: "An error occurred while saving. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };  // Step 1: Build Customer Order dropdown list
   const buildCustomerOrderList = (consignments: any[] = []) => {
@@ -6897,7 +6902,13 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             });
           }
         } else {
-          console.warn("TripId not found, cannot refresh data");
+          console.warn("TripId not found, cannot refresh trip data");
+          // Even if refresh fails, the save was successful
+          // toast({
+          //   title: "⚠️ Refresh Warning",
+          //   description: "Trip data refresh skipped (TripId missing). Please refresh manually.",
+          //   variant: "default",
+          // });
         }
         
       } else {
@@ -7723,6 +7734,14 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         submitLabel="Save"
         actionType="amend"
       />
+
+      {isSaving && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+        </div>
+      )}
     </>
   );
 };
