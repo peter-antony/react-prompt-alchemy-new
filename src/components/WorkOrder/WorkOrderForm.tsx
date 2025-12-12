@@ -65,6 +65,8 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   const [equipmentType, setEquipmentType] = useState(workOrder?.Header?.EquipmentType || "Wagon");
   const [reInvoice, setReInvoice] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  // local loader for long-running tug creation
+  const [creatingTug, setCreatingTug] = useState(false);
   const [cancelFields, setCancelFields] = useState([
     {
       type: "date",
@@ -100,6 +102,7 @@ const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
   const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
   const returnTripId = workOrder?.WorkorderSchedule?.RUReturnTripID || "";
   const handleCreateTugOperation = async () => {
+    setCreatingTug(true);
     console.log("handleCreate TugOperation", workOrder);
     console.log("handleCreate TugOperation", workOrder?.WorkorderSchedule);
     const payload = {
@@ -199,10 +202,13 @@ const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
         description: error?.message || "Failed to create forward transport plan",
         variant: "destructive",
       });
+    } finally {
+      setCreatingTug(false);
     }
   };
 
   const handleCreateReturnTugOperation = async () => {
+    setCreatingTug(true);
     console.log("handleCreate TugOperation", workOrder);
     console.log("handleCreate TugOperation", workOrder?.WorkorderSchedule);
     const payload = {
@@ -302,6 +308,8 @@ const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
         description: error?.message || "Failed to create return transport plan",
         variant: "destructive",
       });
+    } finally {
+      setCreatingTug(false);
     }
   };
 
@@ -2863,11 +2871,11 @@ if (formatted.Provider?.includes(" || ")) {
 
   return (
     <>
-      {loading ? (
+      {loading || creatingTug ? (
         <>
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
-            <div className="text-lg font-semibold text-gray-700">Loading data...</div>
+            <div className="text-lg font-semibold text-blue-700">Loading data...</div>
           </div>
         </>
       ) : (
