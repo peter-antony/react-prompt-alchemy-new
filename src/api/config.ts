@@ -174,8 +174,13 @@ export const API_ENDPOINTS = {
     CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
     CANCEL: '/workorder/cancel',
   },
+  Equipment_Calendar: {
+    EQUIPMENTS: "/equipmentcalender/resourceview",
+  },
   CIM_CUV: {
     GET_TEMPLATE: '/cimcuvtemplate/gettemplate',
+    TEMPLATE_HUB: '/cimcuvhub/templatehubsearch',
+    REPORT_HUB: '/cimcuvhub/reporthubsearch',
   },
   // Invoice management
   INVOICES: {

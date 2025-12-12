@@ -30,6 +30,7 @@ import { TripRouteUpdate } from "./pages/TripRouteUpdate";
 import { WorkOrderHub } from "./pages/WorkOrderHub";
 import CreateWorkerOrder from "./pages/CreateWorkerOrder";
 import CreateTemplateMain from "./pages/CreateTemplateMain";
+import CimCuvHub from "./pages/CimCuvHubManagement";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -102,6 +103,7 @@ const App = () => (
           <Route path="manage-trip" element={<ManageTripExecution/>} />
           <Route path="/trip-planning" element={<TripPlanning />} />
           <Route path="/smart-grid-plus-demo" element={<SmartGridPlusDemo />} />
+          <Route path="/cim-cuv" element={<CimCuvHub />} />
           
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
