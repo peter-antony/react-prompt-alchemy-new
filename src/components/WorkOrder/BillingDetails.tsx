@@ -317,91 +317,80 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         try {
             // Construct Payload
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    // OUID: 4,
-                    // Role: "RAMCOROLE",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Save Billing Details"
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                    }
                 },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
+                BillingDetails: {
+                    // TransportCharges: Pass as is
+                    TransportCharges: billingData.BillingDetails.TransportCharges,
+
+                    // Disposal: Pass as is
+                    Disposal: billingData.BillingDetails.Disposal,
+
+                    // OperationBillingDetails: Clean up any remaining || symbols
+                    OperationBillingDetails: (billingData.BillingDetails.OperationBillingDetails || []).map((operation: any) => {
+                        // Clean up main operation fields
+                        const cleanedOperation: any = { ...operation };
+
+                        // Remove || from Supplier if it exists
+                        if (typeof cleanedOperation.Supplier === 'string' && cleanedOperation.Supplier.includes(' || ')) {
+                            const [id] = cleanedOperation.Supplier.split(' || ').map((v: string) => v.trim());
+                            cleanedOperation.Supplier = id;
                         }
-                    },
-                    BillingDetails: {
-                        // TransportCharges: Pass as is
-                        TransportCharges: billingData.BillingDetails.TransportCharges,
 
-                        // Disposal: Pass as is
-                        Disposal: billingData.BillingDetails.Disposal,
+                        // Remove || from SupplierContractID if it exists
+                        if (typeof cleanedOperation.SupplierContractID === 'string' && cleanedOperation.SupplierContractID.includes(' || ')) {
+                            const [id] = cleanedOperation.SupplierContractID.split(' || ').map((v: string) => v.trim());
+                            cleanedOperation.SupplierContractID = id;
+                        }
 
-                        // OperationBillingDetails: Clean up any remaining || symbols
-                        OperationBillingDetails: (billingData.BillingDetails.OperationBillingDetails || []).map((operation: any) => {
-                            // Clean up main operation fields
-                            const cleanedOperation: any = { ...operation };
+                        // Clean up ItemService array
+                        if (cleanedOperation.ItemService && Array.isArray(cleanedOperation.ItemService)) {
+                            cleanedOperation.ItemService = cleanedOperation.ItemService.map((item: any) => {
+                                const cleanedItem = { ...item };
 
-                            // Remove || from Supplier if it exists
-                            if (typeof cleanedOperation.Supplier === 'string' && cleanedOperation.Supplier.includes(' || ')) {
-                                const [id] = cleanedOperation.Supplier.split(' || ').map((v: string) => v.trim());
-                                cleanedOperation.Supplier = id;
-                            }
-
-                            // Remove || from SupplierContractID if it exists
-                            if (typeof cleanedOperation.SupplierContractID === 'string' && cleanedOperation.SupplierContractID.includes(' || ')) {
-                                const [id] = cleanedOperation.SupplierContractID.split(' || ').map((v: string) => v.trim());
-                                cleanedOperation.SupplierContractID = id;
-                            }
-
-                            // Clean up ItemService array
-                            if (cleanedOperation.ItemService && Array.isArray(cleanedOperation.ItemService)) {
-                                cleanedOperation.ItemService = cleanedOperation.ItemService.map((item: any) => {
-                                    const cleanedItem = { ...item };
-
-                                    // Remove || from Service if it exists
-                                    if (typeof cleanedItem.Service === 'string' && cleanedItem.Service.includes(' || ')) {
-                                        const [id] = cleanedItem.Service.split(' || ').map((v: string) => v.trim());
-                                        cleanedItem.Service = id;
-                                    }
-
-                                    return cleanedItem;
-                                });
-                            }
-
-                            return cleanedOperation;
-                        }),
-
-                        // ReinvoiceCostTo
-                        ReinvoiceCostTo: {
-                            ...billingData?.BillingDetails?.ReinvoiceCostTo,
-                            ReinvoiceCostToDetails: (billingData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails || []).map((item: any) => {
-                                // Check if this item (or its group) is selected
-                                // Logic from handleRowClick: if item.ItemName is in selectedRowIds
-                                const isSelected = selectedRowIds.has(item.ItemName);
-                                const newIsBilled = isSelected ? 1 : 0;
-                                // If the row was edited inline, its ModeFlag will already be 'Update'.
-                                // Otherwise, mark 'Update' only if IsBilled changed.
-                                let modeFlag = item.ModeFlag || "NoChange";
-
-                                if (item.IsBilled !== newIsBilled) {
-                                    modeFlag = "Update";
+                                // Remove || from Service if it exists
+                                if (typeof cleanedItem.Service === 'string' && cleanedItem.Service.includes(' || ')) {
+                                    const [id] = cleanedItem.Service.split(' || ').map((v: string) => v.trim());
+                                    cleanedItem.Service = id;
                                 }
 
-                                if (item.ModeFlag === 'Update') {
-                                    modeFlag = 'Update';
-                                }
-
-                                return {
-                                    ...item,
-                                    IsBilled: newIsBilled,
-                                    ModeFlag: modeFlag
-                                };
-                            })
+                                return cleanedItem;
+                            });
                         }
+
+                        return cleanedOperation;
+                    }),
+
+                    // ReinvoiceCostTo
+                    ReinvoiceCostTo: {
+                        ...billingData?.BillingDetails?.ReinvoiceCostTo,
+                        ReinvoiceCostToDetails: (billingData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails || []).map((item: any) => {
+                            // Check if this item (or its group) is selected
+                            // Logic from handleRowClick: if item.ItemName is in selectedRowIds
+                            const isSelected = selectedRowIds.has(item.ItemName);
+                            const newIsBilled = isSelected ? 1 : 0;
+                            // If the row was edited inline, its ModeFlag will already be 'Update'.
+                            // Otherwise, mark 'Update' only if IsBilled changed.
+                            let modeFlag = item.ModeFlag || "NoChange";
+
+                            if (item.IsBilled !== newIsBilled) {
+                                modeFlag = "Update";
+                            }
+
+                            if (item.ModeFlag === 'Update') {
+                                modeFlag = 'Update';
+                            }
+
+                            return {
+                                ...item,
+                                IsBilled: newIsBilled,
+                                ModeFlag: modeFlag
+                            };
+                        })
                     }
                 }
             };
@@ -468,26 +457,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
             const userContext = workOrderService.getUserContext();
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Supplier Billing Confrim"
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
+                    }
                 },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        Disposal: {
-                            ...billingData.BillingDetails.Disposal,
-                            ModeFlag: "Update"
-                        }
+                BillingDetails: {
+                    Disposal: {
+                        ...billingData.BillingDetails.Disposal,
+                        ModeFlag: "Update"
                     }
                 }
             };
@@ -540,26 +520,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
             const userContext = workOrderService.getUserContext();
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Supplier Billing Amend"
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
+                    }
                 },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        Disposal: {
-                            ...billingData.BillingDetails.Disposal,
-                            ModeFlag: "Update"
-                        }
+                BillingDetails: {
+                    Disposal: {
+                        ...billingData.BillingDetails.Disposal,
+                        ModeFlag: "Update"
                     }
                 }
             };
@@ -612,26 +583,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
             const userContext = workOrderService.getUserContext();
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Customer Billing Confirm"
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
+                    }
                 },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        ReinvoiceCostTo: {
-                            ...billingData.BillingDetails.ReinvoiceCostTo,
-                            ModeFlag: "Update"
-                        }
+                BillingDetails: {
+                    ReinvoiceCostTo: {
+                        ...billingData.BillingDetails.ReinvoiceCostTo,
+                        ModeFlag: "Update"
                     }
                 }
             };
@@ -684,26 +646,17 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
 
             const userContext = workOrderService.getUserContext();
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Customer Billing Amend"
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
+                    }
                 },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        ReinvoiceCostTo: {
-                            ...billingData.BillingDetails.ReinvoiceCostTo,
-                            ModeFlag: "Update"
-                        }
+                BillingDetails: {
+                    ReinvoiceCostTo: {
+                        ...billingData.BillingDetails.ReinvoiceCostTo,
+                        ModeFlag: "Update"
                     }
                 }
             };
@@ -805,24 +758,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             };
 
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Supplier Billing Confrim"
-                },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        OperationBillingDetails: [selectedOperation]
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
                     }
+                },
+                BillingDetails: {
+                    OperationBillingDetails: [selectedOperation]
                 }
             };
 
@@ -928,24 +872,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             };
 
             const payload = {
-                context: {
-                    UserID: "ramcouser",
-                    OUID: userContext.ouId,
-                    Role: userContext.roleName,
-                    MessageID: "12345",
-                    MessageType: "WorkOrder-Supplier Billing Amend"
-                },
-                RequestPayload: {
-                    Header: {
-                        ...billingData.Header,
-                        BillingHeaderDetails: {
-                            ...billingData.Header.BillingHeaderDetails,
-                            ModeFlag: "NoChanges"
-                        }
-                    },
-                    BillingDetails: {
-                        OperationBillingDetails: [selectedOperation]
+                Header: {
+                    ...billingData.Header,
+                    BillingHeaderDetails: {
+                        ...billingData.Header.BillingHeaderDetails,
+                        ModeFlag: "NoChanges"
                     }
+                },
+                BillingDetails: {
+                    OperationBillingDetails: [selectedOperation]
                 }
             };
 
@@ -1145,10 +1080,28 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
             editable: false
         },
         {
+            key: 'TypeOfActionDescription',
+            label: 'Type of Action Description',
+            type: 'EditableText',
+            width: 200,
+            sortable: true,
+            filterable: true,
+            editable: false
+        },
+        {
             key: 'Operation',
             label: 'Operation',
             type: 'EditableText',
             width: 130,
+            sortable: true,
+            filterable: true,
+            editable: false
+        },
+        {
+            key: 'OperationDescription',
+            label: 'Operation Description',
+            type: 'EditableText',
+            width: 350,
             sortable: true,
             filterable: true,
             editable: false
@@ -1174,6 +1127,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 }
                 return value;
             }
+        },
+        {
+            key: 'SupplierDescription',
+            label: 'Supplier Description',
+            type: 'EditableText',
+            width: 200,
+            sortable: true,
+            filterable: true,
+            editable: false
         },
         {
             key: 'SupplierContractID',
@@ -1210,7 +1172,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         },
         {
             key: 'BillStatus',
-            label: 'Bill Status',
+            label: 'QO Status',
             type: 'Badge',
             width: 120,
             sortable: true,
@@ -1334,10 +1296,27 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     // Handle parent operation row editing
     const handleEditOrder = async (updatedOrder: any, rowIndex: number) => {
         console.log('Editing operation:', { rowIndex, updatedOrder });
+
+        const processedOrder = { ...updatedOrder };
+
+        // Split Supplier
+        if (typeof processedOrder.Supplier === 'string' && processedOrder.Supplier.includes(' || ')) {
+            const [id, desc] = processedOrder.Supplier.split(' || ').map((v: string) => v.trim());
+            processedOrder.Supplier = id;
+            processedOrder.SupplierDescription = desc;
+        }
+
+        // Split SupplierContractID
+        if (typeof processedOrder.SupplierContractID === 'string' && processedOrder.SupplierContractID.includes(' || ')) {
+            const [id, desc] = processedOrder.SupplierContractID.split(' || ').map((v: string) => v.trim());
+            processedOrder.SupplierContractID = id;
+            processedOrder.SupplierContractDescription = desc;
+        }
+
         const updated = [...operationBillingData];
         updated[rowIndex] = {
             ...updated[rowIndex],
-            ...updatedOrder,
+            ...processedOrder,
             ModeFlag: 'Update'
         };
         setBillingData({
@@ -2664,6 +2643,15 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                     // Handle code selection if needed
                 }}
             />
+
+            {loading && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                    <div className="text-lg font-semibold text-blue-700">Loading...</div>
+                    <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+                </div>
+            )}
+
         </div>
     );
 };

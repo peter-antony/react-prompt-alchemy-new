@@ -262,10 +262,23 @@ export const workOrderService = {
     return response.data;
   },
 
-  // Save billing details
-  saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
+  // Save Work Order Billing Details
+saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Save Billing Details",
+      },
+      RequestPayload: payload,
+    };
+
     const requestBody = {
-      RequestData: JSON.stringify(payload),
+      RequestData: JSON.stringify(requestPayload),
     };
 
     const response = await apiClient.post(
@@ -277,8 +290,20 @@ export const workOrderService = {
 
   // Supplier billing confirm
   supplierBillingConfirm: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Supplier Billing Confrim"
+      },
+      RequestPayload: payload
+    };
+
     const requestBody = {
-      RequestData: JSON.stringify(payload),
+      RequestData: JSON.stringify(requestPayload),
     };
 
     const response = await apiClient.post(
@@ -290,8 +315,20 @@ export const workOrderService = {
 
   // Supplier billing amend
   supplierBillingAmend: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Supplier Billing Amend"
+      },
+      RequestPayload: payload
+    };
+
     const requestBody = {
-      RequestData: JSON.stringify(payload),
+      RequestData: JSON.stringify(requestPayload),
     };
 
     const response = await apiClient.post(
@@ -303,8 +340,20 @@ export const workOrderService = {
 
   // Customer billing confirm
   customerBillingConfirm: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Customer Billing Confirm"
+      },
+      RequestPayload: payload
+    };
+
     const requestBody = {
-      RequestData: JSON.stringify(payload),
+      RequestData: JSON.stringify(requestPayload),
     };
 
     const response = await apiClient.post(
@@ -316,8 +365,20 @@ export const workOrderService = {
 
   // Customer billing amend
   customerBillingAmend: async (payload: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "WorkOrder-Customer Billing Amend"
+      },
+      RequestPayload: payload
+    };
+
     const requestBody = {
-      RequestData: JSON.stringify(payload),
+      RequestData: JSON.stringify(requestPayload),
     };
 
     const response = await apiClient.post(
