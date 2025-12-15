@@ -57,6 +57,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const TripPlanning = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingText, setLoadingText] = useState("");
 
   const workOrderFlag = searchParams.get('workOrder'); // Extract workOrder flag
   const urlCluster = searchParams.get('cluster'); // Extract cluster from URL
@@ -278,6 +280,8 @@ const TripPlanning = () => {
     }
 
     // Debounce the API call - wait 800ms after user stops typing
+    setIsLoading(true)
+    setLoadingText("Loading Trip")
     tripIdChangeTimeoutRef.current = setTimeout(async () => {
       try {
         // Update URL with new trip ID
@@ -297,6 +301,8 @@ const TripPlanning = () => {
             variant: "destructive",
           });
           console.log('⚠️ No trip data found for:', newTripId);
+          setIsLoading(false);
+          setLoadingText("");
         } else if (Object.keys(response?.tripFromAPI).length > 0) {
           toast({
             title: "✅ Trip Data Loaded",
@@ -304,6 +310,8 @@ const TripPlanning = () => {
             variant: "default",
           });
           console.log('✅ Trip ID changed and data fetched:', newTripId);
+          setIsLoading(false);
+          setLoadingText("");
         }
       } catch (error) {
         console.error('❌ Failed to fetch trip data for new ID:', error);
@@ -312,6 +320,8 @@ const TripPlanning = () => {
           description: "Failed to fetch trip data. Please check the trip ID and try again.",
           variant: "destructive",
         });
+        setIsLoading(false);
+        setLoadingText("");
       }
     }, 800);
   };
@@ -3118,6 +3128,13 @@ const TripPlanning = () => {
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">{loadingText}</div>
+          <div className="text-sm text-gray-500 mt-1"></div>
+        </div>
+      )}
         {/* Main Content */}
         <main className="px-6 py-6 main-bg">
           <div className="hidden md:block">

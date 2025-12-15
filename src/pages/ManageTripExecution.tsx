@@ -31,7 +31,8 @@ const ManageTripExecution = () => {
   const [searchParams] = useSearchParams();
   const isEditTrip = !!searchParams.get("id");
   const tripUniqueID = searchParams.get("id");
-  
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingText, setLoadingText] = useState("");
   // Ref to access TripForm data from main component
   const tripFormRef = useRef<TripFormRef>(null);
   
@@ -172,6 +173,8 @@ const ManageTripExecution = () => {
 
   // Handlers
   const tripSaveDraftHandler = useCallback(async () => {
+    setIsLoading(true);
+    setLoadingText("Saving Trip Details")
     try {
       // First, sync TripForm data to store before saving
       if (tripFormRef.current) {
@@ -202,6 +205,8 @@ const ManageTripExecution = () => {
           await fetchTrip(resp?.TripID);
           console.log("🔄 Trip data refreshed after save.");
         }
+        setIsLoading(false);
+        setLoadingText("");
       } else {
         // Backend returned logical failure
         toast({
@@ -213,13 +218,20 @@ const ManageTripExecution = () => {
           variant: "destructive",
         });
         console.warn("⚠️ Save failed:", result);
+        setIsLoading(false);
+        setLoadingText("");
       }
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
+      setIsLoading(false);
+      setLoadingText("");
     }
   }, [saveTrip, toast]);
 
   const tripConfirmHandler = useCallback(async () => {
+    // alert("HIii")
+    setIsLoading(true)
+    setLoadingText("Completing Trip")
     try {
       let result: any = await confirmTrip();
       if (result?.data?.IsSuccess) {
@@ -235,6 +247,9 @@ const ManageTripExecution = () => {
           await fetchTrip(res.TripID);
           console.log("🔄 Trip data refreshed after confirm.");
         }
+        setIsLoading(false)
+        setLoadingText("")
+
       } else {
         // Backend returned logical failure
         toast({
@@ -246,9 +261,17 @@ const ManageTripExecution = () => {
           variant: "destructive",
         });
         console.warn("⚠️ Confirm failed:", result);
+        setIsLoading(false)
+        setLoadingText("")
+
+
       }
     } catch (err) {
       toast({ title: "Error saving draft", description: String(err), variant: "destructive" });
+      setIsLoading(false);
+      setLoadingText("");
+
+
     }
   }, [confirmTrip, toast, fetchTrip]);
 
@@ -262,7 +285,6 @@ const ManageTripExecution = () => {
 
   const handleTripsCancelSubmit = async (formFields: any) => {
     console.log('Cancel form fields received:', formFields);
-    
     // Map form fields to API object
     let mappedObj: any = {}
     formFields.forEach(field => {
@@ -293,11 +315,12 @@ const ManageTripExecution = () => {
     tripDataObj.Header.Cancellation.CancellationRemarks = mappedObj?.Remarks;
     tripDataObj.Header.ModeFlag = "Update";
     console.log('Trip Data Object for Cancel API:', tripDataObj);
-    
+    setIsLoading(true)
+    setLoadingText("Cancelling Trip")
     try {
+      
       setApiStatus('loading');
       console.log('Calling cancelTrip API...');
-      
       // Wait for the API response
       const response: any = await tripService.cancelTripService(tripDataObj);
       
@@ -344,6 +367,8 @@ const ManageTripExecution = () => {
           await fetchTrip(res.TripID);
           console.log("🔄 Trip data refreshed after cancellation.");
         }
+        setIsLoading(false);
+        setLoadingText("");
       } else {
         // Parse ResponseData for error details if available
         let responseData = null;
@@ -361,9 +386,13 @@ const ManageTripExecution = () => {
           description: errorMessage,
           variant: "destructive",
         });
+        setIsLoading(false);
+        setLoadingText("");
       }
     } catch (error) {
       console.error('Cancel Trip API Error:', error);
+      setIsLoading(false);
+      setLoadingText("");
       setApiStatus('error');
       
       // Handle different types of errors
@@ -584,6 +613,13 @@ const ManageTripExecution = () => {
 
   return (
     <AppLayout>
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+          <div className="text-lg font-semibold text-blue-700">{loadingText}</div>
+          <div className="text-sm text-gray-500 mt-1"></div>
+        </div>
+      )}
       <div className="min-h-screen main-bg">
         <div className="container-fluid mx-auto p-4 px-6 space-y-6">
           <div className="hidden md:block">
