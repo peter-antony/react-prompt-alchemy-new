@@ -383,10 +383,16 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                 // Logic from handleRowClick: if item.ItemName is in selectedRowIds
                                 const isSelected = selectedRowIds.has(item.ItemName);
                                 const newIsBilled = isSelected ? 1 : 0;
-                                let modeFlag = item.ModeFlag;
+                                // If the row was edited inline, its ModeFlag will already be 'Update'.
+                                // Otherwise, mark 'Update' only if IsBilled changed.
+                                let modeFlag = item.ModeFlag || "NoChange";
 
                                 if (item.IsBilled !== newIsBilled) {
                                     modeFlag = "Update";
+                                }
+
+                                if (item.ModeFlag === 'Update') {
+                                    modeFlag = 'Update';
                                 }
 
                                 return {
@@ -1477,9 +1483,26 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         CostEXVatUom: ''
     };
 
-    const handleMarginAmountEditable = (rowIndex, row) => {
-        console.log("Margin Amount changed:", rowIndex, row);
-    }
+    const handleMarginAmountEditable = (rowIndex: number, row: any) => {
+        // Update local state only. Mark the edited row's ModeFlag so handleSave will send the update.
+        try {
+            const newData = JSON.parse(JSON.stringify(billingData || {}));
+            const details = newData?.BillingDetails?.ReinvoiceCostTo?.ReinvoiceCostToDetails || [];
+
+            if (typeof rowIndex === 'number' && details[rowIndex]) {
+                details[rowIndex] = {
+                    ...details[rowIndex],
+                    ...row,
+                    ModeFlag: 'Update'
+                };
+
+                newData.BillingDetails.ReinvoiceCostTo.ReinvoiceCostToDetails = details;
+                setBillingData(newData);
+            }
+        } catch (err) {
+            console.error('Error applying local margin update', err);
+        }
+    };
 
     return (
         <div className="flex flex-col h-[calc(100vh-80px)]">

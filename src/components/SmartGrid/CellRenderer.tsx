@@ -723,7 +723,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
               className="w-full min-w-0 focus:ring-2 focus:ring-blue-500"
-              autoFocus
+              // autoFocus
               disabled={loading}
             />
           );
