@@ -3019,20 +3019,6 @@ if (formatted.Provider?.includes(" || ")) {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (forwardTripId) {
-                                          navigate(`/manage-trip?id=${(forwardTripId)}`);
-                                        }
-                                      }}
-                                      className={`p-1 rounded-md border border-gray-200 ${
-                                        forwardTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
-                                      }`}
-                                      title={`Trip Execution ${forwardTripId}`}
-                                    >
-                                      <ExternalLink className="w-4 h-4 text-gray-600" />
-                                    </button>
-                                    <button type="button" disabled={!forwardTripId}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (forwardTripId) {
                                           // navigate(`/trip-planning?manage=true&workOrder=true&tripId=${(forwardTripId)}`);
                                           // Get data from workOrder
                                           const cluster = workOrder?.Header?.Cluster || '';
@@ -3079,6 +3065,20 @@ if (formatted.Provider?.includes(" || ")) {
                                     >
                                       <MapPin className="w-4 h-4 text-gray-600" />
                                     </button>
+                                    <button type="button" disabled={!forwardTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (forwardTripId) {
+                                          navigate(`/manage-trip?id=${(forwardTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        forwardTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Trip Execution ${forwardTripId}`}
+                                    >
+                                      <ExternalLink className="w-4 h-4 text-gray-600" />
+                                    </button>
                                   </span>
                                 </button>
 
@@ -3105,20 +3105,6 @@ if (formatted.Provider?.includes(" || ")) {
                                   <span className="flex items-center gap-2">
                                     {returnTripId ? returnTripId : 'Return Trip Execution'}
                                     {/* Return Trip Execution - {workOrder?.WorkorderSchedule?.RUReturnTripID || ""} */}
-                                    <button type="button" disabled={!returnTripId}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (returnTripId) {
-                                          navigate(`/manage-trip?id=${(returnTripId)}`);
-                                        }
-                                      }}
-                                      className={`p-1 rounded-md border border-gray-200 ${
-                                        returnTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
-                                      }`}
-                                      title={`Trip Execution ${returnTripId}`}
-                                    >
-                                      <ExternalLink className="w-4 h-4 text-gray-600" />
-                                    </button>
                                     <button type="button" disabled={!returnTripId}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3168,6 +3154,20 @@ if (formatted.Provider?.includes(" || ")) {
                                       title={`Trip Planning ${returnTripId}`}
                                     >
                                       <MapPin className="w-4 h-4 text-gray-600" />
+                                    </button>
+                                    <button type="button" disabled={!returnTripId}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (returnTripId) {
+                                          navigate(`/manage-trip?id=${(returnTripId)}`);
+                                        }
+                                      }}
+                                      className={`p-1 rounded-md border border-gray-200 ${
+                                        returnTripId ? "hover:bg-gray-100" : "cursor-not-allowed opacity-50"
+                                      }`}
+                                      title={`Trip Execution ${returnTripId}`}
+                                    >
+                                      <ExternalLink className="w-4 h-4 text-gray-600" />
                                     </button>
                                   </span>
                                 </button>
