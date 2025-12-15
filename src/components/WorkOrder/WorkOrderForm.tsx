@@ -3316,8 +3316,8 @@ if (formatted.Provider?.includes(" || ")) {
                     )}
                     {selectedOperation === null && (
                       <> */}
-                    <button className={buttonCancel}>Cancel</button>
-                    {/* <button 
+                    {/* <button className={buttonCancel}>Cancel</button> */}
+                    <button 
                           className={buttonCancel}
                           onClick={() => {
                             if (workOrder?.Header?.WorkorderNo) {
@@ -3333,7 +3333,7 @@ if (formatted.Provider?.includes(" || ")) {
                           disabled={!workOrder?.Header?.WorkorderNo}
                         >
                           Cancel
-                        </button> */}
+                        </button>
                     <button
                       className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
                       onClick={handleGetFormValues}
