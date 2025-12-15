@@ -775,10 +775,27 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 SupplierContractID: supplierContractId,
                 SupplierContractDescription: supplierContractDescription,
                 ModeFlag: "Update",
-                ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
-                    ...item,
-                    ModeFlag: item.ModeFlag || "NoChange"
-                })) || []
+                // ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
+                //     ...item,
+                //     Service: (typeof item?.Service === 'string')
+                //             ? (item.Service.includes(' || ') 
+                //                 ? item.Service.split(' || ')[0].trim() 
+                //                 : item.Service
+                //             )
+                //             : "",
+                //     ModeFlag: item.ModeFlag || "NoChange"
+                // })) || []
+                ItemService: selectedOperationRow.ItemService?.map((item: any) => {
+                    const serviceParts = item.Service?.split('||').map((s: string) => s.trim()) || [];
+                    const serviceId = serviceParts[0] || '';
+                    const serviceDescription = serviceParts[1] || serviceParts[0] || ''; // Use serviceId as fallback for description
+                    return {
+                        ...item,
+                        Service: serviceId, // Send only the ID part
+                        ServiceDescription: serviceDescription, // Send the description part
+                        ModeFlag: item.ModeFlag || "NoChange"
+                    };
+                }) || []
             };
 
             const payload = {
@@ -887,10 +904,21 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 SupplierContractID: supplierContractId,
                 SupplierContractDescription: supplierContractDescription,
                 ModeFlag: "Update",
-                ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
-                    ...item,
-                    ModeFlag: item.ModeFlag || "NoChange"
-                })) || []
+                // ItemService: selectedOperationRow.ItemService?.map((item: any) => ({
+                //     ...item,
+                //     ModeFlag: item.ModeFlag || "NoChange"
+                // })) || []
+                ItemService: selectedOperationRow.ItemService?.map((item: any) => {
+                    const serviceParts = item.Service?.split('||').map((s: string) => s.trim()) || [];
+                    const serviceId = serviceParts[0] || '';
+                    const serviceDescription = serviceParts[1] || serviceParts[0] || ''; // Use serviceId as fallback for description
+                    return {
+                        ...item,
+                        Service: serviceId, // Send only the ID part
+                        ServiceDescription: serviceDescription, // Send the description part
+                        ModeFlag: item.ModeFlag || "NoChange"
+                    };
+                }) || []
             };
 
             const payload = {
