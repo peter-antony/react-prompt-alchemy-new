@@ -79,14 +79,14 @@ const CodeInformationDrawer: React.FC<CodeInformationDrawerProps> = ({
                 if (!s) return;
                 if (typeof s === 'string') allowedSet.add(s);
                 else if (typeof s === 'object') {
-                  const v = s.CUUCode || s.code || s.value || s.CUU || s.Id || s.id;
+                  const v = s.CUUCode || s.CodeNoCUU || s.value || s.CUU || s.Id || s.id;
                   if (v) allowedSet.add(String(v));
                 }
               });
             } else if (typeof selectedOnlyCodes === 'string') {
               allowedSet.add(selectedOnlyCodes);
             } else if (typeof selectedOnlyCodes === 'object') {
-              const v = selectedOnlyCodes.CUUCode || selectedOnlyCodes.code || selectedOnlyCodes.value || selectedOnlyCodes.id;
+              const v = selectedOnlyCodes.CUUCode || selectedOnlyCodes.CodeNoCUU || selectedOnlyCodes.value || selectedOnlyCodes.id;
               if (v) allowedSet.add(String(v));
             }
           }

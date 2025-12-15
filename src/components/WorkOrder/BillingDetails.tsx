@@ -142,7 +142,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         { key: "OperationID", label: "Operation ID", width: 150, type: "Text" },
         { key: "SubLineItem", label: "Sub Line Item", width: 150, type: "Text" },
         { key: "BillCost", label: "Bill Cost", width: 100, type: "Text" },
-        { key: "MarginAmount", label: "Margin Amount", width: 100, type: "Text" },
+        { key: "MarginAmount", label: "Margin Amount", width: 100, type: "Integer", editable: true },
         { key: "SubTotal", label: "Sub Total", width: 100, type: "Text" },
     ];
 
@@ -1477,6 +1477,10 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         CostEXVatUom: ''
     };
 
+    const handleMarginAmountEditable = (rowIndex, row) => {
+        console.log("Margin Amount changed:", rowIndex, row);
+    }
+
     return (
         <div className="flex flex-col h-[calc(100vh-80px)]">
             {/* Header Section with Total Amount, Radio Buttons, and Action Buttons */}
@@ -2457,6 +2461,8 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     showFilterTypeDropdown={false}
                                     showServersideFilter={false}
                                     userId="current-user"
+                                    onInlineEdit={handleMarginAmountEditable}
+
                                 />
                             </div>
                         </div>
@@ -2628,6 +2634,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                 isOpen={showCodeInformation}
                 onClose={() => setShowCodeInformation(false)}
                 operationCode={selectedCode?.OrderID ? `${selectedCode.OrderID}` : "Operation"}
+                selectedOnlyCodes={selectedCode?.CodeInformation}
                 // selectedCode={selectedCode?.CodeNo}
                 onCodeSelect={(code) => {
                     console.log("Code selected:", code);

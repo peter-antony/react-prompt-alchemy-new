@@ -846,7 +846,42 @@ if (formatted.Provider?.includes(" || ")) {
       order: 1,
       events: {
         onChange: (value) => {
+          // Update EquipmentType selection
           setEquipmentType(value);
+
+          // Clear Wagon/Container selection in the DynamicPanel UI
+          try {
+            const current = workOrderPanelRef.current?.getFormValues?.() || {};
+            const updated = { ...current, WagonCondainterID: "", EquipmentID: '', EquipmentDescription: '' } as any;
+            workOrderPanelRef.current?.setFormValues?.(updated);
+          } catch (e) {
+            // ignore
+          }
+
+          // Clear UI header state so the panel reads the cleared value next render
+          try {
+            setUiHeader((prev: any) => ({ ...prev, WagonCondainterID: "" }));
+          } catch (e) {}
+
+          // Clear store values for Equipment to avoid stale EquipmentID/Description
+          try {
+            // updateHeader is available via the store; use it to update fields
+            useWorkOrderStore.getState().updateHeader("EquipmentID", "");
+            useWorkOrderStore.getState().updateHeader("EquipmentDescription", "");
+            // Also set the workOrder.Header fields directly to ensure immediate re-render
+            useWorkOrderStore.setState((s: any) => ({
+              workOrder: s.workOrder
+                ? {
+                    ...s.workOrder,
+                    Header: {
+                      ...s.workOrder.Header,
+                      EquipmentID: "",
+                      EquipmentDescription: "",
+                    },
+                  }
+                : s.workOrder,
+            }));
+          } catch (e) {}
         },
       },
     },
@@ -1156,7 +1191,8 @@ if (formatted.Provider?.includes(" || ")) {
       mandatory: false,
       visible: true,
       editable: true,
-      value: workOrder?.Header?.LoadType?.IsLoaded == "1" ? "1" : "0",
+      // default to 'Loaded' when no LoadType data is present
+      value: workOrder?.Header?.LoadType == null ? "1" : (workOrder?.Header?.LoadType?.IsLoaded == "1" ? "1" : "0"),
       options: [
         { label: "Loaded", value: "1" },
         { label: "Empty", value: "0" },
@@ -1306,7 +1342,12 @@ if (formatted.Provider?.includes(" || ")) {
           try {
             // also update panel's form values so getFormValues reflects the new value
             const current = workOrderPanelRef.current?.getFormValues?.() || {};
-            workOrderPanelRef.current?.setFormValues?.({ ...current, AcceptedByForwardis: !!v });
+            const updated = { ...current, AcceptedByForwardis: !!v } as any;
+            // if toggled OFF, clear the FinancialComments field in the panel immediately
+            if (!v) {
+              updated.FinacialComments = "";
+            }
+            workOrderPanelRef.current?.setFormValues?.(updated);
           } catch (e) {}
 
           // persist toggle immediately into the workOrder store so subsequent logic can read it
@@ -1322,6 +1363,8 @@ if (formatted.Provider?.includes(" || ")) {
                     BillingHeaderDetails: {
                       ...billing,
                       IsAcceptedByForwardis: v ? "1" : "0",
+                      // if toggled OFF, clear FinancialComments in the store as well
+                      FinancialComments: v ? billing?.FinancialComments ?? null : null,
                     },
                   },
                 },
