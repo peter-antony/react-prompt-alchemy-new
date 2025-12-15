@@ -1604,7 +1604,7 @@ const TripPlanning = () => {
   //BreadCrumb data
   const breadcrumbItems = [
     { label: 'Home', href: '/', active: false },
-    { label: 'Transport Planning and Execution', href: '/trip-hub', active: false }, // Updated breadcrumb
+    // { label: 'Transport Planning and Execution AWE ', href: '/trip-hub', active: false }, // Updated breadcrumb
     { label: 'Transport Planning', active: true } // Updated breadcrumb
   ];
 
