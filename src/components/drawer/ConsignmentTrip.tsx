@@ -5899,7 +5899,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
 
       // Always include rows with ModeFlag 'Delete' (for existing data) in the API payload, even if hidden from the UI
       let currentGridData = [];
-
+      console.log("ACTUALROW = ",actualEditableData)
       if (hasUserEditsRef.current) {
         // Include all rows except those that are new and deleted (i.e., only keep deleted rows for existing data)
         currentGridData = actualEditableData
@@ -5976,14 +5976,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 ContainerQtyUOM: safeString(actualRow['Container Qty UOM'] || actualRow.ContainerQtyUOM || actualRow.containerqtyuom),
                 Product: safeString(actualRow['Product ID'] || actualRow.Product || actualRow.Product || actualRow.product),
                 ProductDescription: safeString(actualRow['Product Description'] || actualRow.ProductDescription || actualRow.productdescription),
-                ProductWeight: safeNumeric(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
+                // ProductWeight: safeNumeric(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
+                ProductWeight: safeStringOrNull(actualRow['Product Weight'] || actualRow.ProductWeight || actualRow.ProductWeight || actualRow.productweight),
                 ProductWeightUOM: safeString(actualRow['Product Weight UOM'] || actualRow.ProductWeightUOM || actualRow.ProductWeightUOM || actualRow.productweightuom),
                 Thu: safeString(actualRow['THU ID'] || actualRow.ThuId || actualRow.Thu || actualRow.thuid),
                 ThuDescription: safeString(actualRow['THU Description'] || actualRow.ThuDescription || actualRow.thudescription),
                 ThuSerialNo: safeString(actualRow['THU Serial No'] || actualRow.ThuSerialNo || actualRow.thuserialno),
                 ThuQty: safeNumeric(actualRow['THU Qty'] || actualRow.ThuQty || actualRow.thuqty),
                 ThuQtyUom: safeString(actualRow['THU Qty UOM'] || actualRow.ThuQtyUOM || actualRow.thuqtyuom),
-                ThuWeight: safeNumeric(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
+                // ThuWeight: safeNumeric(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
+                ThuWeight: safeStringOrNull(actualRow['THU Weight'] || actualRow.ThuWeight || actualRow.thuweight),
                 ThuWeightUOM: safeString(actualRow['THU Weight UOM'] || actualRow.ThuWeightUOM || actualRow.thuweightuom),
                 ShuntingOption: safeString(actualRow['Shunting Option'] || actualRow.ShuntingOption || actualRow.shuntingoption),
                 ReplacedWagon: safeString(actualRow['Replaced Wagon'] || actualRow.ReplacedWagonId || actualRow.ReplacedWagon || actualRow.replacedwagonid),
@@ -6007,7 +6009,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                 ContainsHazardousGoods: safeString(actualRow['Contains Hazardous Goods'] || actualRow.ContainsHazardousGoods || actualRow.containshazardousgoods),
                 WagonSealNo: safeString(actualRow['Wagon Seal No.'] || actualRow.WagonSealNo || actualRow.wagonsealn || actualRow.wagonseal),
                 ContainerSealNo: safeString(actualRow['Container Seal No.'] || actualRow.ContainerSealNo || actualRow.containersealn || actualRow.containerseal),
-                ContainerAvgTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
+                // ContainerAvgTareWeight: safeNumeric(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
+                ContainerAvgTareWeight: safeStringOrNull(actualRow['Container Tare Weight'] || actualRow.ContainerAvgTareWeight || actualRow.containeravgtareweight),
                 ContainerWeightUOM: safeString(actualRow['Container Tare Weight UOM'] || actualRow.ContainerWeightUOM || actualRow.containerweightuom),
                 LastProductTransported1: safeString(actualRow['Last Product Transported1'] || actualRow.LastProductTransported1 || actualRow.lastproducttransported1),
                 LastProductTransportedDate1: safeStringOrNull(actualRow['Last Product Transported Date1'] || actualRow.LastProductTransportedDate1 || actualRow.lastproducttransporteddate1),
@@ -6038,6 +6041,8 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
               throw new Error(`Failed to process row ${index + 1}: ${rowError.message}`);
             }
           });
+        console.log("currentGridData IF= ",currentGridData)
+
 
       } else {
         // If no user edits, only include new/imported data (original logic)
@@ -6121,6 +6126,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
             LineUniqueID: null
           };
         });
+        console.log("currentGridData ELSE= ",currentGridData)
       }
 
       // Include deleted data from import operations (existing data removed during import)
@@ -6205,6 +6211,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
         // Save to API
         try {
           const response = await tripService.saveTrip(updatedTripData);
+          console.log("Trip saved response YYYY:", response);
 
           const resourceStatus = (response as any)?.data?.IsSuccess;
 
