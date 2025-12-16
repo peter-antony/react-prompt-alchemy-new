@@ -9,9 +9,13 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { FileText } from 'lucide-react';
 import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
+import { useSearchParams } from "react-router-dom"; 
 
 const TemplateCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
+  const WagonDetailsRef = useRef<DynamicPanelRef>(null);
+  const RouteDetailsRef = useRef<DynamicPanelRef>(null);
+  const RouteEndorsementDetailsRef = useRef<DynamicPanelRef>(null);
   const headerTemplateRef = useRef<DynamicPanelRef>(null); // New Ref
   const paymentInstructionRef = useRef<DynamicPanelRef>(null); // New Ref
   const placeAndDateRef = useRef<DynamicPanelRef>(null); // New Ref
@@ -37,6 +41,11 @@ const TemplateCreate = () => {
   const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
   const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
   const [activeTab, setActiveTab] = useState('general');
+    const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+   const workOrderNo = searchParams.get("id");
+   const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
+const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+
 
   const buttonCancel =
     "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
@@ -78,17 +87,60 @@ const TemplateCreate = () => {
   // Simulate API response for demonstration
   useEffect(() => {
     // Call the API to fetch template data
-    fetchTemplateData("tewt24"); // Replace with actual template ID or a dynamic value
+    fetchTemplateData(workOrderNo); // Replace with actual template ID or a dynamic value
   }, []); // Removed activeTab from the dependency array
+  
+
+  useEffect(() => {
+  const loadUomMasters = async () => {
+    try {
+      const [thuRes, currencyRes]: any = await Promise.all([
+        quickOrderService.getMasterCommonData({
+          messageType: "THU QTY UOM Init",
+        }),
+        quickOrderService.getMasterCommonData({
+          messageType: "Currency Init",
+        }),
+      ]);
+      console.log(JSON.parse(thuRes?.data?.ResponseData || "[]") , "123")
+      setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
+      setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
+    } catch (err) {
+      console.error("UOM master API failed", err);
+    }
+  };
+
+  loadUomMasters();
+}, []);
+
+const getUomOptions = (list: any[]) =>
+  list
+    .filter(item => item.id && item.name) // remove empty row
+    .map(item => ({
+      label: item.name,
+      value: item.id,
+    }));
+ 
+
+const buildWeightWithUom = (
+  value?: { input?: string; dropdown?: string } | null
+): string | null => {
+  if (!value?.input || !value?.dropdown) return null;
+  return `${value.input} ${value.dropdown}`;
+};
+
+
+
+
 
   // Function to fetch template data from API
   const fetchTemplateData = async (templateId: string) => {
     console.log("Fetching template data for template ID:", templateId);
     try {
       const response = await CimCuvService.getTemplateDataByID(templateId);
-      console.log("response.data", response);
-      const responseData = JSON.parse(response.data.ResponseData);
-      console.log("response.data", responseData);
+      console.log("response.data1", response);
+      const responseData = JSON.parse((response as any).data?.ResponseData);
+      console.log("response.data1", responseData);
       setApiResponse(responseData);
       setInitialApiResponse(responseData); // Store the initial response
     } catch (error) {
@@ -139,7 +191,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter Customer Code',
-      fetchOptions: fetchMaster('Customer Code Init'),
+      fetchOptions: fetchMaster('Consignor CustomerCode2 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -154,7 +206,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Customer Code for the Pay...',
-      fetchOptions: fetchMaster('Customer Code Init'),
+      fetchOptions: fetchMaster('Customercode for payer pre-paid charges_3 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -169,7 +221,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Consignee',
-      fetchOptions: fetchMaster('Consignee Init'),
+      fetchOptions: fetchMaster('Consignee4 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -197,7 +249,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter Customer Code for Consign...',
-      fetchOptions: fetchMaster('Customer Code Init'),
+      fetchOptions: fetchMaster('Consignee CustomerCode5 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -212,7 +264,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Customer Code for the Pay...',
-      fetchOptions: fetchMaster('Customer Code Init'),
+      fetchOptions: fetchMaster('Customercode for payer Nonpre-paid charges_6 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -227,7 +279,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: "Enter Consignor's Reference",
-      fetchOptions: fetchMaster('Consignor Reference Init'),
+      fetchOptions: fetchMaster('Consignors Reference8 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -255,7 +307,7 @@ const TemplateCreate = () => {
       order: 11,
       width: 'four',
       placeholder: 'Enter Delivery Point',
-      fetchOptions: fetchMaster('Delivery Point Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -283,7 +335,7 @@ const TemplateCreate = () => {
       order: 13,
       width: 'four',
       placeholder: 'Enter Code for the Delivery Point',
-      fetchOptions: fetchMaster('Location Code Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -298,7 +350,7 @@ const TemplateCreate = () => {
       order: 14,
       width: 'four',
       placeholder: 'Enter Code for the Station Serving...',
-      fetchOptions: fetchMaster('Station Code Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -313,7 +365,7 @@ const TemplateCreate = () => {
       order: 15,
       width: 'four',
       placeholder: 'Select No. of the Customer Agree...',
-      fetchOptions: fetchMaster('Customer Agreement Init'),
+      fetchOptions: fetchMaster('Contract Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -341,7 +393,7 @@ const TemplateCreate = () => {
       order: 17,
       width: 'four',
       placeholder: 'Select Acceptance From',
-      fetchOptions: fetchMaster('Acceptance From Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -356,7 +408,7 @@ const TemplateCreate = () => {
       order: 18,
       width: 'four',
       placeholder: 'Enter Code for the Acceptance Point',
-      fetchOptions: fetchMaster('Acceptance Point Code Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -419,7 +471,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Payment Instruction',
-      fetchOptions: fetchMaster('Payment Instruction Init'),
+      fetchOptions: fetchMaster('Payment Instruction_20 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -486,7 +538,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'one-third',
       placeholder: 'Enter Place',
-      fetchOptions: fetchMaster('Place Init'),
+      fetchOptions: fetchMaster('Place_29 Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -570,7 +622,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Declaration of Value',
-      fetchOptions: fetchMaster('Declaration of Value Init'),
+      fetchOptions: fetchMaster('Currency Init'),
     },
     interestInDelivery: {
       id: 'interestInDelivery',
@@ -583,7 +635,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Interest in Delivery',
-      fetchOptions: fetchMaster('Interest in Delivery Init'),
+      fetchOptions: fetchMaster('Interest in delivery [27]'),
     },
     cashOnDelivery: {
       id: 'cashOnDelivery',
@@ -596,6 +648,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter Cash on Delivery',
+      fetchOptions: fetchMaster('Currency Init'),
     },
   };
 
@@ -938,7 +991,7 @@ const TemplateCreate = () => {
 
   // Section B Panel Config
   const sectionBConfig: PanelConfig = {
-    codeForChargingSections: {
+    codeForChargingSectionsB: {
       id: 'codeForChargingSectionsB',
       label: 'Code for the Charging Sections [70]',
       fieldType: 'text',
@@ -950,7 +1003,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Code for the Charging Sections',
     },
-    routeCode: {
+    routeCodeB: {
       id: 'routeCodeB',
       label: 'Route Code [71]',
       fieldType: 'text',
@@ -962,7 +1015,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Route Code',
     },
-    nhmCode: {
+    nhmCodeB: {
       id: 'nhmCodeB',
       label: 'NHM Code [72]',
       fieldType: 'text',
@@ -974,7 +1027,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter NHM Code',
     },
-    currency: {
+    currencyB: {
       id: 'currencyB',
       label: 'Currency [73]',
       fieldType: 'text',
@@ -986,7 +1039,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Currency',
     },
-    chargedMassWeight: {
+    chargedMassWeightB: {
       id: 'chargedMassWeightB',
       label: 'Charged Mass Weight [74]',
       fieldType: 'text',
@@ -998,7 +1051,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Charged Mass Weight',
     },
-    customerAgreementOrTariffApplied: {
+    customerAgreementOrTariffAppliedB: {
       id: 'customerAgreementOrTariffAppliedB',
       label: 'Customer Agreement or Tariff Applied [75]',
       fieldType: 'text',
@@ -1010,7 +1063,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Customer Agreement or Tariff Applied',
     },
-    kmZone: {
+    kmZoneB: {
       id: 'kmZoneB',
       label: 'KM/Zone [76]',
       fieldType: 'text',
@@ -1022,7 +1075,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter KM/Zone',
     },
-    supplementsFeesDeductions: {
+    supplementsFeesDeductionsB: {
       id: 'supplementsFeesDeductionsB',
       label: 'Supplements, Fees, Deductions [77]',
       fieldType: 'text',
@@ -1034,7 +1087,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Supplements, Fees, Deductions',
     },
-    unitPrice: {
+    unitPriceB: {
       id: 'unitPriceB',
       label: 'Unit Price [78]',
       fieldType: 'text',
@@ -1046,7 +1099,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Unit Price',
     },
-    charges: {
+    chargesB: {
       id: 'chargesB',
       label: 'Charges [79]',
       fieldType: 'text',
@@ -1062,7 +1115,7 @@ const TemplateCreate = () => {
 
   // Section C Panel Config
   const sectionCConfig: PanelConfig = {
-    codeForChargingSections: {
+    codeForChargingSectionsC: {
       id: 'codeForChargingSectionsC',
       label: 'Code for the Charging Sections [70]',
       fieldType: 'text',
@@ -1074,7 +1127,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Code for the Charging Sections',
     },
-    routeCode: {
+    routeCodeC: {
       id: 'routeCodeC',
       label: 'Route Code [71]',
       fieldType: 'text',
@@ -1086,7 +1139,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Route Code',
     },
-    nhmCode: {
+    nhmCodeC: {
       id: 'nhmCodeC',
       label: 'NHM Code [72]',
       fieldType: 'text',
@@ -1098,7 +1151,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter NHM Code',
     },
-    currency: {
+    currencyC: {
       id: 'currencyC',
       label: 'Currency [73]',
       fieldType: 'text',
@@ -1110,7 +1163,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Currency',
     },
-    chargedMassWeight: {
+    chargedMassWeightC: {
       id: 'chargedMassWeightC',
       label: 'Charged Mass Weight [74]',
       fieldType: 'text',
@@ -1122,7 +1175,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Charged Mass Weight',
     },
-    customerAgreementOrTariffApplied: {
+    customerAgreementOrTariffAppliedC: {
       id: 'customerAgreementOrTariffAppliedC',
       label: 'Customer Agreement or Tariff Applied [75]',
       fieldType: 'text',
@@ -1134,7 +1187,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Customer Agreement or Tariff Applied',
     },
-    kmZone: {
+    kmZoneC: {
       id: 'kmZoneC',
       label: 'KM/Zone [76]',
       fieldType: 'text',
@@ -1146,7 +1199,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter KM/Zone',
     },
-    supplementsFeesDeductions: {
+    supplementsFeesDeductionsC: {
       id: 'supplementsFeesDeductionsC',
       label: 'Supplements, Fees, Deductions [77]',
       fieldType: 'text',
@@ -1158,7 +1211,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Supplements, Fees, Deductions',
     },
-    unitPrice: {
+    unitPriceC: {
       id: 'unitPriceC',
       label: 'Unit Price [78]',
       fieldType: 'text',
@@ -1170,7 +1223,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Unit Price',
     },
-    charges: {
+    chargesC: {
       id: 'chargesC',
       label: 'Charges [79]',
       fieldType: 'text',
@@ -1184,14 +1237,570 @@ const TemplateCreate = () => {
     },
   };
 
+
+  //wagon details panel config
+   const wagonDetailsConfig: PanelConfig = {
+    train: {
+      id: 'train',
+      label: 'train [1]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'four',
+      placeholder: 'Enter train',
+    },
+    itinerary: {
+      id: 'itinerary',
+      label: 'itinerary [5]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'four',
+      placeholder: 'Enter itinerary',
+      labelFlag: true,
+    },
+    dataOfDispatch: {
+      id: 'dataOfDispatch',
+      label: 'Date of Dispatch [7]',
+      fieldType: 'date',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Date of Dispatch',
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    Page: {
+      id: 'Page',
+      label: 'Page [9]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Customer Code for the Pay...',
+      hideSearch: false,
+    },
+    toBeClearedAt: {
+      id: 'toBeClearedAt',
+      label: 'To Be Cleared At',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter To Be Cleared At',
+      hideSearch: false,
+    },
+    fixedNetTrain: {
+      id: 'fixedNetTrain',
+      label: 'Fixed Net Train [13]',
+      fieldType: 'inputdropdown',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+      placeholder: 'Enter Fixed Net Train [13]',
+    },
+    number: {
+      id: 'number',
+      label: 'No./Number [14]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter number',
+    },
+    LoadingConfiguration: {
+      id: 'LoadingConfiguration',
+      label: 'Loading Configuration [16]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: 'four',
+      placeholder: 'Enter Customer Code for the Pay...',
+    },
+    wagonNumber: {
+      id: 'wagonNumber',
+      label: "Wagon No. [18]/[15]",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: 'four',
+      placeholder: 'Enter wagon number',
+
+    },
+     DescriptionoftheGoods: {
+      id: 'DescriptionoftheGoods',
+      label: "Description of the Goods [21]/[17]",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: 'four',
+      placeholder: 'Enter Description of the Goods',
+    },
+     ExceptionalConsignment: {
+      id: 'incoTerms',
+      label: 'Exceptional Consignment [22]',
+      fieldType: 'checkbox',
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
+      width: 'four',
+    },
+     RID: {
+      id: 'RID',
+      label: 'RID [23]/[28]',
+      fieldType: 'checkbox',
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 12,
+      width: 'four',
+    },
+      UTICODE: {
+      id: 'UTICODE',
+      label: 'UTI Code (Intermodal Transport Unit) [23]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 13,
+      width: 'four',
+      placeholder: 'Enter Place',
+      fetchOptions: fetchMaster('UTI Code 23 Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    LengthWidthHeight: {
+      id: 'LengthWidthHeight',
+      label: "Length x Width x Height [24]",
+      fieldType: 'inputdropdown',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+      width: 'four',
+      placeholder: 'Enter Tare Weight',
+    },
+    MarkandNumber: {
+      id: 'MarkandNumber',
+      label: "Mark and Number [25]",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 15,
+      width: 'four',
+      placeholder: 'Enter Mark and Number',
+    },
+     DeliveryNoteNumber: {
+      id: 'DeliveryNoteNumber',
+      label: "Delivery Note Number [26]",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 16,
+      width: 'four',
+      placeholder: 'Enter Delivery Note Number ',
+    },
+     NHMCode: {
+      id: 'NHMCode',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+     GrossWeight: {
+  id: "GrossWeight",
+  label: "Gross Weight [26]/[19]",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 18,
+  width: "four",
+  placeholder: "Enter Gross Weight",
+  options: getUomOptions(thuQtyUomList),
+},
+
+    TareWeight: {
+  id: "TareWeight",
+  label: "Tare Weight [25]/[20]",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 19,
+  width: "four",
+  placeholder: "Enter Tare Weight",
+  options: getUomOptions(thuQtyUomList),
+},
+
+    NetWeight: {
+  id: "NetWeight",
+  label: "Net Weight [25]/[20]",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 20,
+  width: "four",
+  placeholder: "Enter Net Weight",
+  options: getUomOptions(thuQtyUomList),
+},
+
+  TotalBrutto: {
+  id: "TotalBrutto",
+  label: "Total Brutto",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 21,
+  width: "four",
+  placeholder: "Total Brutto",
+  options: getUomOptions(currencyUomList),
+},
+
+    TotalNetto: {
+  id: "TotalNetto",
+  label: "Total Netto",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 22,
+  width: "four",
+  placeholder: "Total Netto",
+  options: getUomOptions(currencyUomList),
+},
+
+     TotalGross: {
+  id: "TotalGross",
+  label: "Total Gross",
+  fieldType: "inputdropdown",
+  value: {
+    dropdown: "",
+    input: "",
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 23,
+  width: "four",
+  placeholder: "Total Gross",
+  options: getUomOptions(currencyUomList),
+},
+
+  };
+
+  //router details panel config
+   const routeDetailsConfig: PanelConfig = {
+    ConsignmentNumber: {
+      id: 'ConsignmentNumber',
+      label: 'Consignment Number',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'third',
+      placeholder: 'Enter Consignment Number',
+     
+    },
+    Country: {
+      id: 'Country',
+      label: 'Country',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'third',
+      placeholder: 'Enter Country',
+      labelFlag: true,
+      fetchOptions: fetchMaster('Country Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    COuntryValue: {
+      id: 'COuntryValue',
+      label: "",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'third',
+      placeholder: 'Enter Country',
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    Station: {
+      id: 'Station',
+      label: 'Station',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'two-thirds',
+      placeholder: 'Enter Station',
+      hideSearch: false,
+         fetchOptions: fetchMaster('Location Init'),
+      disableLazyLoading: false,
+    },
+    StationValue: {
+      id: 'StationValue',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'third',
+      placeholder: 'Enter Station Value',
+      labelFlag: false,
+    },
+    UndertakingEnterprise: {
+      id: 'UndertakingEnterprise',
+      label: 'Undertaking Enterprise',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'two-thirds',
+      placeholder: 'Undertaking Enterprise',
+      hideSearch: false,
+         fetchOptions: fetchMaster(' Contractual carrier_58_a Init'),
+      disableLazyLoading: false,
+    },
+    UndertakingEnterpriseValue: {
+      id: 'UndertakingEnterpriseValue',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'third',
+      placeholder: 'Enter Undertaking Enterprise Value',
+      labelFlag: false,
+    },
+  };
+
+  const routeDetailsCustomsEndorsementConfig: PanelConfig = {
+    CustomsEndorsements_99: {
+      id: 'CustomsEndorsements_99',
+      label: 'Customs Endorsements [99]',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: 'third',
+      placeholder: 'Enter Customs Endorsements',
+     
+    },
+    Route_50: {
+      id: 'Route_50',
+      label: 'Route [50]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: 'third',
+      placeholder: 'Enter Route',
+      labelFlag: true,
+      fetchOptions: fetchMaster('Route ID Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    CustomsProcedures: {
+      id: 'CustomsProcedures',
+      label: "CustomsProcedures [51]/[27]",
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'third',
+      placeholder: 'Enter Customs Procedures',
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    ContractualCarrier: {
+      id: 'ContractualCarrier',
+      label: 'ContractualCarrier [58 a]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: 'four',
+      placeholder: 'Enter Contractual Carrier',
+      hideSearch: false,
+         fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
+      disableLazyLoading: false,
+    },
+    EnterContractual: {
+      id: 'EnterContractual',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: 'four',
+      placeholder: 'Enter Contractual Carrier',
+      labelFlag: false,
+    },
+    TransitProcedure: {
+      id: 'UndertakingEnterprise',
+      label: 'Simplified Transit Procedure For Rail [56 b]',
+      fieldType: 'checkbox',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: 'four',
+     
+    },
+    EnterTransitProcedure: {
+      id: 'TransitProcedure',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: 'four',
+      placeholder: 'Enter Simplified Transit Procedure For Rail',
+      labelFlag: false,
+    },
+  };
+
+
   const handleAddConsignorConsignee = () => {
     console.log('Add Consignor/Consignee clicked');
     // Add your logic here
   };
 
+  const normalizeValue = (v: any) => {
+  if (v === "" || v === undefined) return null;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  return v;
+};
+
+const normalizeObject = (obj: any) =>
+  JSON.parse(
+    JSON.stringify(obj, (_k, v) => {
+      if (typeof v === "string" && v.includes("T00:00:00")) {
+        return v.split("T")[0];
+      }
+      return normalizeValue(v);
+    })
+  );
+
+const resolveModeFlag = (
+  current: any,
+  initial: any,
+  workOrderNo?: string
+): "Insert" | "Update" | "NoChange" => {
+  if (!workOrderNo) return "Insert";
+  return deepEqual(
+    normalizeObject(current),
+    normalizeObject(initial)
+  )
+    ? "NoChange"
+    : "Update";
+};
+  
+
+
   // Deep equality check utility
   const deepEqual = (obj1: any, obj2: any): boolean => {
-    if (obj1 === obj2) return true;
+    if (obj1 == obj2) return true;
     if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) return false;
 
     const keys1 = Object.keys(obj1);
@@ -1214,38 +1823,131 @@ const TemplateCreate = () => {
     DocType: formData.templateType,
   });
 
-  const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => ({
-    Consignor_1_value1: formData.consignor || null,
-    ConsignorName_value2: formData.consignorDescription || null,
-    CustomerCodeForConsignor_2: formData.customerCodeConsignor || null,
-    CustomerCodeForConsignor_value2: formData.customerCodeConsignor || null, // Assuming same as above for now
-    CustomerCodeForPayerOfPrePaidCharges_3: formData.customerCodePrePaid || null,
-    CustomerCodeForPayerOfPrePaidCharges_value3: formData.customerCodePrePaid || null, // Assuming same as above for now
-    Consignee_4_value1: formData.consignee || null,
-    ConsigneeName_4_value2: formData.consigneeDescription || null,
-    CustomerCodeForConsignee_5: formData.customerCodeConsignee || null,
-    CustomerCodeForConsignee_value5: formData.customerCodeConsignee || null, // Assuming same as above for now
-    CustomerCodeForPayerOfNonPrePaidCharges_6: formData.customerCodeNonPrePaid || null,
-    CustomerCodeForPayerOfNonPrePaidCharges_value6: formData.customerCodeNonPrePaid || null, // Assuming same as above for now
-    ConsignorsReference_8_value1: formData.consignorReference || null,
-    ConsignorsReference_8_value2: formData.consignorReferenceDescription || null,
-    DeliveryPoint_10_4_value1: formData.deliveryPoint || null,
-    DeliveryPoint_10_4_value2: formData.deliveryPointDescription || null,
-    CodeForDeliveryPoint_11_value1: formData.codeDeliveryPoint || null,
-    CodeForDeliveryPoint_11_value2: formData.codeDeliveryPoint || null, // Assuming same as above for now
-    CodeForStationServingDeliveryPoint_12_value1: formData.codeStationServing || null,
-    CodeForStationServingDeliveryPoint_12_value2: formData.codeStationServing || null, // Assuming same as above for now
-    NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || null,
-    AcceptanceDate_16_2: formData.acceptanceDate || null,
-    AcceptanceFrom_16_3: formData.acceptanceFrom || null,
-    CodeForAcceptancePoint_17: formData.codeAcceptancePoint || null,
-    CodeForAcceptancePoint_17_1: formData.codeAcceptancePoint || null, // Assuming same as above for now
-    WagonNo_18: null, // This field is null in the API response, keep as null
-    DeliveryStationName: formData.codeStationServing || null, // Assuming this maps from codeStationServing
-    DeliveryCountryName: formData.deliveryCountryName || null, // Need to confirm where this comes from or if it's new
-    NameForAcceptancePoint_16: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
-    NameForAcceptancePoint_16_1: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
-  });
+  // const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => ({
+  //   Consignor_1_value1: formData.consignor || null,
+  //   ConsignorName_value2: formData.consignorDescription || null,
+  //   CustomerCodeForConsignor_2: formData.customerCodeConsignor || null,
+  //   CustomerCodeForConsignor_value2: formData.customerCodeConsignor || null, // Assuming same as above for now
+  //   CustomerCodeForPayerOfPrePaidCharges_3: formData.customerCodePrePaid || null,
+  //   CustomerCodeForPayerOfPrePaidCharges_value3: formData.customerCodePrePaid || null, // Assuming same as above for now
+  //   Consignee_4_value1: formData.consignee || null,
+  //   ConsigneeName_4_value2: formData.consigneeDescription || null,
+  //   CustomerCodeForConsignee_5: formData.customerCodeConsignee || null,
+  //   CustomerCodeForConsignee_value5: formData.customerCodeConsignee || null, // Assuming same as above for now
+  //   CustomerCodeForPayerOfNonPrePaidCharges_6: formData.customerCodeNonPrePaid || null,
+  //   CustomerCodeForPayerOfNonPrePaidCharges_value6: formData.customerCodeNonPrePaid || null, // Assuming same as above for now
+  //   ConsignorsReference_8_value1: formData.consignorReference || null,
+  //   ConsignorsReference_8_value2: formData.consignorReferenceDescription || null,
+  //   DeliveryPoint_10_4_value1: formData.deliveryPoint || null,
+  //   DeliveryPoint_10_4_value2: formData.deliveryPointDescription || null,
+  //   CodeForDeliveryPoint_11_value1: formData.codeDeliveryPoint || null,
+  //   CodeForDeliveryPoint_11_value2: formData.codeDeliveryPoint || null, // Assuming same as above for now
+  //   CodeForStationServingDeliveryPoint_12_value1: formData.codeStationServing || null,
+  //   CodeForStationServingDeliveryPoint_12_value2: formData.codeStationServing || null, // Assuming same as above for now
+  //   NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || null,
+  //   AcceptanceDate_16_2: formData.acceptanceDate || null,
+  //   AcceptanceFrom_16_3: formData.acceptanceFrom || null,
+  //   CodeForAcceptancePoint_17: formData.codeAcceptancePoint || null,
+  //   CodeForAcceptancePoint_17_1: formData.codeAcceptancePoint || null, // Assuming same as above for now
+  //   WagonNo_18: null, // This field is null in the API response, keep as null
+  //   DeliveryStationName: formData.codeStationServing || null, // Assuming this maps from codeStationServing
+  //   DeliveryCountryName: formData.deliveryCountryName || null, // Need to confirm where this comes from or if it's new
+  //   NameForAcceptancePoint_16: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
+  //   NameForAcceptancePoint_16_1: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
+  // });
+  
+  const splitIdName = (value: any) => {
+  if (!value || typeof value !== "string") {
+    return { id: "", name: "" };
+  }
+
+  if (value.includes("||")) {
+    const [id, name] = value.split("||").map(v => v.trim());
+    return { id, name };
+  }
+
+  return { id: value.trim(), name: "" };
+};
+
+   const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
+  const consignor = splitIdName(formData.consignor);
+  const consignee = splitIdName(formData.consignee);
+
+  const custConsignor = splitIdName(formData.customerCodeConsignor);
+  const custPrePaid = splitIdName(formData.customerCodePrePaid);
+
+  const custConsignee = splitIdName(formData.customerCodeConsignee);
+  const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
+  const consignorRef = splitIdName(formData.consignorReference);
+
+  const deliveryPoint = splitIdName(formData.deliveryPoint);
+  const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
+  const stationServing = splitIdName(formData.codeStationServing);
+  const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
+
+  return {
+    // Consignor
+    Consignor_1_value1: consignor.id,
+    ConsignorName_value2: consignor.name,
+
+    // Customer Code for Consignor
+    CustomerCodeForConsignor_2: custConsignor.id,
+    CustomerCodeForConsignor_value2: custConsignor.name,
+
+    // Pre-paid payer
+    CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
+    CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
+
+    // Consignee
+    Consignee_4_value1: consignee.id,
+    ConsigneeName_4_value2: consignee.name,
+
+    // Customer Code for Consignee
+    CustomerCodeForConsignee_5: custConsignee.id,
+    CustomerCodeForConsignee_value5: custConsignee.name,
+
+    // Non-prepaid payer
+    CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
+    CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
+
+    // Consignor Reference
+
+ConsignorsReference_8_value1: consignorRef.id,
+ConsignorsReference_8_value2: consignorRef.name,
+
+
+    // Delivery Point
+    DeliveryPoint_10_4_value1: deliveryPoint.id,
+    DeliveryPoint_10_4_value2: deliveryPoint.name,
+
+    // Code for Delivery Point
+    CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
+    CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
+
+    // Station Serving
+    CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
+    CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
+
+    // Agreement/Tariff
+    NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || "",
+
+    // Acceptance Date / From
+    AcceptanceDate_16_2: formData.acceptanceDate || "",
+    AcceptanceFrom_16_3: formData.acceptanceFrom || "",
+
+    // Acceptance Point
+    CodeForAcceptancePoint_17: acceptancePoint.id,
+    CodeForAcceptancePoint_17_1: acceptancePoint.name,
+
+    // Other fields
+    WagonNo_18: null,
+    DeliveryStationName: stationServing.name || "",
+    DeliveryCountryName: formData.deliveryCountryName || "",
+    NameForAcceptancePoint_16: formData.acceptanceFrom || "",
+    NameForAcceptancePoint_16_1: formData.acceptanceFrom || "",
+  };
+};
+
 
   const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>,placeAndDateFormData: Record<string, any>) => ({
     PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
@@ -1307,7 +2009,7 @@ const TemplateCreate = () => {
   });
 
   const mapFormToSectionBPayload = (formData: Record<string, any>) => ({
-    CodeForChargingSections_70: formData.codeForChargingSectionsB || null,
+    CodeForChargingSections_70: formData.codeForChargingSectionsB ,
     RouteCode_71: formData.routeCodeB || null,
     NHMCode_72: formData.nhmCodeB || null,
     Currency_73: formData.currencyB || null,
@@ -1332,9 +2034,115 @@ const TemplateCreate = () => {
     Charges_79: formData.chargesC || null,
   });
 
+  const mapFormToRoutePayload = (formData: Record<string, any>) => {
+  const country = splitIdName(formData.Country);
+  const station = splitIdName(formData.Station);
+  const enterprise = splitIdName(formData.UndertakingEnterprise);
+
+  return {
+    ConsignmentNumber_1: formData.ConsignmentNumber || "",
+
+    // Country
+    Country_value1: country.id,
+    Country_value2: country.name,
+    CountryValueText: formData.COUNtryValue || "",
+
+    // Station
+    Station_value1: station.id,
+    Station_value2: station.name,
+    StationValueText: formData.StationValue || "",
+
+    // Undertaking Enterprise
+    UndertakingEnterprise_value1: enterprise.id,
+    UndertakingEnterprise_value2: enterprise.name,
+    UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
+  };
+};
+
+const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
+  const contractualCarrier = splitIdName(formData.ContractualCarrier);
+
+  return {
+    CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
+    Route_50: formData.Route_50 || null,
+    CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
+    CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
+    ContractualCarrier_58a_value1: contractualCarrier.id || null,
+    ContractualCarrier_58a_value2: contractualCarrier.name || null,
+    EnterContractualCarrier_58a: formData.EnterContractual || null,
+    SimplifiedTransitProcedureForRail_58b_value1:
+      formData.TransitProcedure ? "1" : "0",
+    SimplifiedTransitProcedureForRail_58b_value2:
+      formData.EnterTransitProcedure || null,
+  };
+};
+
+
+const mapFormToWagonPayload = (formData: Record<string, any>) => {
+  const train = splitIdName(formData.train);
+  const uti = splitIdName(formData.UTICODE);
+  const nhm = splitIdName(formData.NHMCode);
+
+  return {
+    WagonNo: formData.wagonNumber || "",
+    GoodsDescription: formData.DescriptionoftheGoods || "",
+
+    Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
+    RID: formData.RID ? 1 : 0,
+
+    UTIType: uti.id || "",
+    NHMCode: nhm.id || "",
+
+    LengthxWidthxheight_24: formData.LengthWidthHeight?.dropdown || "",
+    Mark_and_Number_25: formData.MarkandNumber || "",
+    Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
+    GrossWt: buildWeightWithUom(formData.GrossWeight),
+    TareWt: buildWeightWithUom(formData.TareWeight),
+    NetWt: buildWeightWithUom(formData.NetWeight),
+
+     TotalMass: buildWeightWithUom(formData.TotalNetto),
+    TotalBrut: buildWeightWithUom(formData.TotalBrutto),
+    TotalTare: buildWeightWithUom(formData.TotalGross),
+
+    Train_1: train.id || "",
+    Itinerary_5: formData.itinerary || "",
+    Page_9: formData.Page || "",
+    Date_of_Dispatch_7: formData.dataOfDispatch || "",
+    To_be_cleared_at_12: formData.toBeClearedAt || "",
+
+    Fixed_Net_Weight_Train_13: formData.fixedNetTrain?.dropdown || "",
+    NoNumber_14: Number(formData.number) || 0,
+    Loading_Configuration_16: formData.LoadingConfiguration || "",
+
+    // OPTIONAL API FIELDS (set to null if not in form)
+    DangerGoods: null,
+    MassWeight: null,
+    BrutWeight: null,
+
+    WagonLength: null,
+    // ModeFlag: "Update"
+  };
+};
+
+const initialSnapshotRef = useRef<any>(null);
+
+/** Normalize values to avoid false Update */
+const normalize = (obj: any) =>
+  JSON.parse(
+    JSON.stringify(obj, (_k, v) =>
+      v === "" || v === undefined ? null : v
+    )
+  );
+
+
+
+
+
+  
+const [isFormInitialized, setIsFormInitialized] = useState(false);
   // Effect to set form values when API response is received
   useEffect(() => {
-    if (apiResponse) {
+    if (apiResponse && !isFormInitialized ) {
       if (headerTemplateRef.current && apiResponse.Header) {
         // Map API response to headerTemplate form fields
         headerTemplateRef.current.setFormValues({
@@ -1472,139 +2280,521 @@ const TemplateCreate = () => {
           chargesC: apiResponse.Declarations.SectionC.Charges_79,
         });
       }
+
+
+      
+if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+  console.log("SETTING ROUTE VALUES NOW");
+  const apiRoute = apiResponse.ConsignmentDetails;
+
+  const country =
+    apiRoute.Countryvalue1 && apiRoute.Countryvalue2
+      ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
+      : apiRoute.Countryvalue1 || "";
+
+  const station =
+    apiRoute.Stationvalue1 && apiRoute.Stationvalue2
+      ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
+      : apiRoute.Stationvalue1 || "";
+
+  const enterprise =
+    apiRoute.UndertakingEnterprisesvalue1 &&
+    apiRoute.UndertakingEnterprisesvalue2
+      ? `${apiRoute.UndertakingEnterprisesvalue1} || ${apiRoute.UndertakingEnterprisesvalue2}`
+      : apiRoute.UndertakingEnterprisesvalue1 || "";
+
+  RouteDetailsRef.current.setFormValues({
+    ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
+    Country: country,
+    COuntryValue: apiRoute.Countryvalue2 || "",
+    Station: station,
+    StationValue: apiRoute.Stationvalue2 || "",
+    UndertakingEnterprise: enterprise,
+    UndertakingEnterpriseValue: apiRoute.UndertakingEnterprisesvalue2 || "",
+  });
+}
+     if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+  console.log("SETTING ROUTE VALUES NOW");
+  const apiRoute = apiResponse.RouteDetails;
+
+ 
+
+  const CustomsProcedure =
+    apiRoute.CustomsProcedure_51_27_value1 && apiRoute.CustomsProcedure_51_27_value2
+      ? `${apiRoute.CustomsProcedure_51_27_value1} || ${apiRoute.CustomsProcedure_51_27_value2}`
+      : apiRoute.CustomsProcedure_51_27_value1 || "";
+
+  const ContractualCarrier =
+    apiRoute.ContractualCarrier_58a_value1 &&
+    apiRoute.ContractualCarrier_58a_value2
+      ? `${apiRoute.ContractualCarrier_58a_value1} || ${apiRoute.ContractualCarrier_58a_value2}`
+      : apiRoute.ContractualCarrier_58a_value1 || "";
+
+  RouteEndorsementDetailsRef.current.setFormValues({
+    CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
+    Route_50: apiRoute.Route_50 || "",
+    CustomsProcedures: CustomsProcedure,
+    ContractualCarrier: ContractualCarrier,
+    EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
+    TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1 ,
+    EnterTransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
+  });
+}
+
+
+if (WagonDetailsRef.current && apiResponse?.WagonDetails) {
+  console.log("SETTING WAGON VALUES NOW");
+
+  const wagon = apiResponse.WagonDetails[0]; // first wagon
+
+  WagonDetailsRef.current.setFormValues({
+    // --- BASIC DETAILS ---
+    train: wagon.Train_1 || "",
+    itinerary: wagon.Itinerary_5 || "",
+    dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
+    Page: wagon.Page_9 || "",
+    toBeClearedAt: wagon.To_be_cleared_at_12 || "",
+
+    // --- DROPDOWN ---
+    fixedNetTrain: {
+      dropdown: wagon.Fixed_Net_Weight_Train_13 || "",
+    },
+
+    number: wagon.NoNumber_14 ?? "",
+    LoadingConfiguration: wagon.Loading_Configuration_16 || "",
+
+    // --- WAGON INFO ---
+    wagonNumber: wagon.WagonNo || "",
+    DescriptionoftheGoods: wagon.GoodsDescription || "",
+
+    // --- CHECKBOXES ---
+    ExceptionalConsignment:
+      wagon.Exceptional_Consignment_22 === 1 ||
+      wagon.Exceptional_Consignment_22 === "Yes",
+
+    RID:
+      wagon.RID === 1 ||
+      wagon.RID === "Yes",
+
+    // --- LAZY SELECTS ---
+    UTICODE: wagon.UTIType || "",
+    NHMCode: wagon.NHMCode
+      ? String(wagon.NHMCode)
+      : "",
+
+    // --- DIMENSIONS ---
+    LengthWidthHeight: {
+      dropdown: wagon.LengthxWidthxheight_24 || "",
+    },
+
+    MarkandNumber: wagon.Mark_and_Number_25 || "",
+    DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
+
+    // --- WEIGHTS ---
+    GrossWeight: wagon.Gross_Weight_25_19 ?? "",
+    TareWeight: wagon.Tare_Weight_25_20 ?? "",
+    NetWeight: wagon.Net_Weight_25_21 ?? "",
+
+    // --- TOTALS ---
+    TotalBrutto: {
+      dropdown: wagon.TotalBrut ?? "",
+    },
+    TotalNetto: {
+      dropdown: wagon.TotalMass ?? "",
+    },
+    TotalGross: {
+      dropdown: wagon.TotalTare ?? "",
+    },
+  });
+}
+
+
+   if (apiResponse && !initialSnapshotRef.current) {
+    initialSnapshotRef.current = {
+      header: headerTemplateRef.current?.getFormValues(),
+      general: generalDetailsRef.current?.getFormValues(),
+      payment: paymentInstructionRef.current?.getFormValues(),
+      placeAndDate: placeAndDateRef.current?.getFormValues(),
+      declarations: consignorDeclarationsRef.current?.getFormValues(),
+      valueDelivery: valueDeliveryCashRef.current?.getFormValues(),
+      codingBoxes: codingBoxesRef.current?.getFormValues(),
+      examination: examinationDetailsRef.current?.getFormValues(),
+      sectionA: sectionARef.current?.getFormValues(),
+      sectionB: sectionBRef.current?.getFormValues(),
+      sectionC: sectionCRef.current?.getFormValues(),
+      route: RouteDetailsRef.current?.getFormValues(),
+      routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
+      wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
+    };
+        console.log("SNAPSHOT CAPTURED", initialSnapshotRef.current);
+  }
+
+      
     }
-  }, []);
+
+  
+  }, [apiResponse ]);
 
   // Handle save template
-  const handleSaveTemplate = () => {
-    console.log('Save template clicked');
-    if (!initialApiResponse) {
-      console.error("Initial API response not loaded yet.");
-      return;
-    }
+//   const handleSaveTemplate = () => {
+//     console.log('Save template clicked');
+//     if (!initialApiResponse) {
+//       console.error("Initial API response not loaded yet.");
+//       return;
+//     }
 
-    const currentHeaderValues = headerTemplateRef.current?.getFormValues();
-    const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
-    const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
-    const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
-    const currentConsignorDeclarationsValues = consignorDeclarationsRef.current?.getFormValues();
-    const currentValueDeliveryCashValues = valueDeliveryCashRef.current?.getFormValues();
-    const currentCodingBoxesValues = codingBoxesRef.current?.getFormValues();
-    const currentExaminationDetailsValues = examinationDetailsRef.current?.getFormValues();
-    const currentSectionAValues = sectionARef.current?.getFormValues();
-    const currentSectionBValues = sectionBRef.current?.getFormValues();
-    const currentSectionCValues = sectionCRef.current?.getFormValues();
+//     const currentHeaderValues = headerTemplateRef.current?.getFormValues();
+//     const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
+//     const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
+//     const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
+//     const currentConsignorDeclarationsValues = consignorDeclarationsRef.current?.getFormValues();
+//     const currentValueDeliveryCashValues = valueDeliveryCashRef.current?.getFormValues();
+//     const currentCodingBoxesValues = codingBoxesRef.current?.getFormValues();
+//     const currentExaminationDetailsValues = examinationDetailsRef.current?.getFormValues();
+//     const currentSectionAValues = sectionARef.current?.getFormValues();
+//     const currentSectionBValues = sectionBRef.current?.getFormValues();
+//     const currentSectionCValues = sectionCRef.current?.getFormValues();
+//     const currectRouteDetailsValues = RouteDetailsRef.current?.getFormValues();
 
-    // Transform current form values to match API payload structure
-    const newHeader = mapFormToHeaderPayload(currentHeaderValues);
-    const newGeneralDetails = mapFormToGeneralDetailsPayload(currentGeneralDetailsValues);
-    const newPaymentInstruction = mapFormToPaymentInstructionPayload(
-      currentPaymentInstructionValues,
-      currentPlaceAndDateValues
-    );
-    const newConsignorDeclarations = mapFormToConsignorDeclarationsPayload(currentConsignorDeclarationsValues);
-    const newValueDeliveryCash = mapFormToValueDeliveryCashPayload(currentValueDeliveryCashValues);
-    const newCodingBoxes = mapFormToCodingBoxesPayload(currentCodingBoxesValues);
-    const newExaminationDetails = mapFormToExaminationDetailsPayload(currentExaminationDetailsValues);
-    const newSectionA = mapFormToSectionAPayload(currentSectionAValues);
-    const newSectionB = mapFormToSectionBPayload(currentSectionBValues);
-    const newSectionC = mapFormToSectionCPayload(currentSectionCValues);
+//     const currentWagonDetailsValues = WagonDetailsRef.current?.getFormValues();
+//     const currectRouteEndorsementDetailsValues = RouteEndorsementDetailsRef.current?.getFormValues();
 
-    // Debugging logs
-    console.log("--- Debugging deepEqual ---");
-    console.log("newHeader:", newHeader);
-    console.log("initialApiResponse.Header:", initialApiResponse.Header);
-    console.log("deepEqual(newHeader, initialApiResponse.Header):", deepEqual(newHeader, initialApiResponse.Header));
 
-    console.log("newGeneralDetails:", newGeneralDetails);
-    console.log("initialApiResponse.General.Details:", initialApiResponse.General.Details);
-    console.log("deepEqual(newGeneralDetails, initialApiResponse.General.Details):", deepEqual(newGeneralDetails, initialApiResponse.General.Details));
+//     // Transform current form values to match API payload structure
+//     const newWagonDetailsValues = mapFormToWagonPayload(currentWagonDetailsValues);
+//     const newRouteEndorsementValues = mapFormToRouteEndorsementPayload(currectRouteEndorsementDetailsValues); 
+//     const NewrouteDetailsValues = mapFormToRoutePayload(currectRouteDetailsValues);
+//     const newHeader = mapFormToHeaderPayload(currentHeaderValues);
+//     const newGeneralDetails = mapFormToGeneralDetailsPayload(currentGeneralDetailsValues);
+//     const newPaymentInstruction = mapFormToPaymentInstructionPayload(
+//       currentPaymentInstructionValues,
+//       currentPlaceAndDateValues
+//     );
+//     const newConsignorDeclarations = mapFormToConsignorDeclarationsPayload(currentConsignorDeclarationsValues);
+//     const newValueDeliveryCash = mapFormToValueDeliveryCashPayload(currentValueDeliveryCashValues);
+//     const newCodingBoxes = mapFormToCodingBoxesPayload(currentCodingBoxesValues);
+//     const newExaminationDetails = mapFormToExaminationDetailsPayload(currentExaminationDetailsValues);
+//     const newSectionA = mapFormToSectionAPayload(currentSectionAValues);
+//     const newSectionB = mapFormToSectionBPayload(currentSectionBValues);
+//     const newSectionC = mapFormToSectionCPayload(currentSectionCValues);
 
-    console.log("newPaymentInstruction:", newPaymentInstruction);
-    console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
-    console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
+//    console.log("currectRouteDetailsValues",newWagonDetailsValues)
 
-    console.log("newConsignorDeclarations:", newConsignorDeclarations);
-    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-    console.log("deepEqual(newConsignorDeclarations, initialApiResponse.Declarations):", deepEqual(newConsignorDeclarations, initialApiResponse.Declarations));
+//     // Determine ModeFlag for each section
+//     // const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
+//     const stripModeFlag = (obj) => {
+//   const newObj = {...obj};
+//   delete newObj.ModeFlag;
+//   return newObj;
+// };
 
-    console.log("newValueDeliveryCash:", newValueDeliveryCash);
-    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-    console.log("deepEqual(newValueDeliveryCash, initialApiResponse.Declarations):", deepEqual(newValueDeliveryCash, initialApiResponse.Declarations));
+//    const headerModeFlag =
+//   deepEqual(
+//     newHeader,
+//     stripModeFlag(initialApiResponse.Header)
+//   )
+//   ? "NoChange"
+//   : "Update";
 
-    console.log("newCodingBoxes:", newCodingBoxes);
-    console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-    console.log("deepEqual(newCodingBoxes, initialApiResponse.Declarations):", deepEqual(newCodingBoxes, initialApiResponse.Declarations));
+//   const normalizeGeneralDetails = (data: any) => ({
+//   Consignor_1_value1: data.Consignor_1_value1 ?? null,
+//   ConsignorName_value2: data.ConsignorName_value2 ?? null,
 
-    console.log("newExaminationDetails:", newExaminationDetails);
-    console.log("initialApiResponse.Declarations?.Examination:", initialApiResponse.Declarations?.Examination);
-    console.log("deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination):", deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination));
+//   CustomerCodeForConsignor_2: data.CustomerCodeForConsignor_2 ?? null,
+//   CustomerCodeForConsignor_value2: data.CustomerCodeForConsignor_value2 ?? null,
 
-    console.log("newSectionA:", newSectionA);
-    console.log("initialApiResponse.Declarations?.SectionA:", initialApiResponse.Declarations?.SectionA);
-    console.log("deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA):", deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA));
+//   CustomerCodeForPayerOfPrePaidCharges_3:
+//     data.CustomerCodeForPayerOfPrePaidCharges_3 ?? null,
+//   CustomerCodeForPayerOfPrePaidCharges_value3:
+//     data.CustomerCodeForPayerOfPrePaidCharges_value3 ?? null,
 
-    console.log("newSectionB:", newSectionB);
-    console.log("initialApiResponse.Declarations?.SectionB:", initialApiResponse.Declarations?.SectionB);
-    console.log("deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB):", deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB));
+//   Consignee_4_value1: data.Consignee_4_value1 ?? null,
+//   ConsigneeName_4_value2: data.ConsigneeName_4_value2 ?? null,
 
-    console.log("newSectionC:", newSectionC);
-    console.log("initialApiResponse.Declarations?.SectionC:", initialApiResponse.Declarations?.SectionC);
-    console.log("deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC):", deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC));
-    console.log("---------------------------");
+//   CustomerCodeForConsignee_5: data.CustomerCodeForConsignee_5 ?? null,
+//   CustomerCodeForConsignee_value5: data.CustomerCodeForConsignee_value5 ?? null,
 
-    // Determine ModeFlag for each section
-    const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
-    const generalDetailsModeFlag = deepEqual(newGeneralDetails, initialApiResponse.General.Details) ? "NoChange" : "Update";
-    const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
-    const consignorDeclarationsModeFlag = deepEqual(newConsignorDeclarations, initialApiResponse.Declarations) ? "NoChange" : "Update";
-    const valueDeliveryCashModeFlag = deepEqual(newValueDeliveryCash, initialApiResponse.Declarations) ? "NoChange" : "Update";
-    const codingBoxesModeFlag = deepEqual(newCodingBoxes, initialApiResponse.Declarations) ? "NoChange" : "Update";
-    const examinationDetailsModeFlag = deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination) ? "NoChange" : "Update";
-    const sectionAModeFlag = deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA) ? "NoChange" : "Update";
-    const sectionBModeFlag = deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB) ? "NoChange" : "Update";
-    const sectionCModeFlag = deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC) ? "NoChange" : "Update";
+//   CustomerCodeForPayerOfNonPrePaidCharges_6:
+//     data.CustomerCodeForPayerOfNonPrePaidCharges_6 ?? null,
+//   CustomerCodeForPayerOfNonPrePaidCharges_value6:
+//     data.CustomerCodeForPayerOfNonPrePaidCharges_value6 ?? null,
 
-    const finalPayload = {
-      Header: {
-        ...newHeader,
-        ModeFlag: headerModeFlag,
+//   ConsignorsReference_8_value1: data.ConsignorsReference_8_value1 ?? null,
+//   ConsignorsReference_8_value2: data.ConsignorsReference_8_value2 ?? null,
+
+//   DeliveryPoint_10_4_value1: data.DeliveryPoint_10_4_value1 ?? null,
+//   DeliveryPoint_10_4_value2: data.DeliveryPoint_10_4_value2 ?? null,
+
+//   CodeForDeliveryPoint_11_value1: data.CodeForDeliveryPoint_11_value1 ?? null,
+//   CodeForDeliveryPoint_11_value2: data.CodeForDeliveryPoint_11_value2 ?? null,
+
+//   CodeForStationServingDeliveryPoint_12_value1:
+//     data.CodeForStationServingDeliveryPoint_12_value1 ?? null,
+//   CodeForStationServingDeliveryPoint_12_value2:
+//     data.CodeForStationServingDeliveryPoint_12_value2 ?? null,
+
+//   DeliveryStationName: data.DeliveryStationName ?? null,
+//   DeliveryCountryName: data.DeliveryCountryName ?? null,
+
+//   NumberOfCustomerAgreementOrTariff_14:
+//     data.NumberOfCustomerAgreementOrTariff_14 ?? null,
+
+//   NameForAcceptancePoint_16: data.NameForAcceptancePoint_16 ?? null,
+//   NameForAcceptancePoint_16_1: data.NameForAcceptancePoint_16_1 ?? null,
+
+//   CodeForAcceptancePoint_17: data.CodeForAcceptancePoint_17 ?? null,
+//   CodeForAcceptancePoint_17_1: data.CodeForAcceptancePoint_17_1 ?? null,
+
+//   WagonNo_18: data.WagonNo_18 ?? null,
+
+//   AcceptanceDate_16_2:
+//     data.AcceptanceDate_16_2
+//       ? data.AcceptanceDate_16_2.split("T")[0]
+//       : null,
+
+//   AcceptanceFrom_16_3: data.AcceptanceFrom_16_3 ?? null,
+// });
+
+
+// const initialNormalized = normalizeGeneralDetails(
+//   initialApiResponse.General.Details
+// );
+
+// const currentNormalized = normalizeGeneralDetails(newGeneralDetails);
+
+// const generalDetailsModeFlag = deepEqual(
+//   initialNormalized,
+//   currentNormalized
+// )
+//   ? "NoChange"
+//   : "Update";
+
+//     // const generalDetailsModeFlag = deepEqual(newGeneralDetails, stripModeFlag(initialApiResponse.General.Details)) ? "NoChange" : "Update";
+//     const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
+//     const consignorDeclarationsModeFlag = deepEqual(newConsignorDeclarations, initialApiResponse.Declarations) ? "NoChange" : "Update";
+//     const valueDeliveryCashModeFlag = deepEqual(newValueDeliveryCash, initialApiResponse.Declarations) ? "NoChange" : "Update";
+//     const codingBoxesModeFlag = deepEqual(newCodingBoxes, initialApiResponse.Declarations) ? "NoChange" : "Update";
+//     const examinationDetailsModeFlag = deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination) ? "NoChange" : "Update";
+//     const sectionAModeFlag = deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA) ? "NoChange" : "Update";
+//     const sectionBModeFlag = deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB) ? "NoChange" : "Update";
+//     const sectionCModeFlag = deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC) ? "NoChange" : "Update";
+    
+
+
+//      // Debugging logs
+//     console.log("--- Debugging deepEqual ---");
+//     console.log("Initial API Response:", initialApiResponse);
+//     console.log("apiResponse.Header" , apiResponse.Header)
+//      console.log("currentHeaderValues:", currentHeaderValues);
+//     console.log("newHeader:", newHeader);
+//     console.log("initialApiResponse.Header:", initialApiResponse.Header);
+//     console.log("deepEqual(newHeader, initialApiResponse.Header):", deepEqual(newHeader, initialApiResponse.Header));
+
+//     // console.log("newGeneralDetails:", newGeneralDetails);
+//     // console.log("initialApiResponse.General.Details:", initialApiResponse.General.Details);
+//     // console.log("deepEqual(newGeneralDetails, initialApiResponse.General.Details):", deepEqual(newGeneralDetails, initialApiResponse.General.Details));
+
+//     // console.log("newPaymentInstruction:", newPaymentInstruction);
+//     // console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
+//     // console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
+
+//     // console.log("newConsignorDeclarations:", newConsignorDeclarations);
+//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+//     // console.log("deepEqual(newConsignorDeclarations, initialApiResponse.Declarations):", deepEqual(newConsignorDeclarations, initialApiResponse.Declarations));
+
+//     // console.log("newValueDeliveryCash:", newValueDeliveryCash);
+//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+//     // console.log("deepEqual(newValueDeliveryCash, initialApiResponse.Declarations):", deepEqual(newValueDeliveryCash, initialApiResponse.Declarations));
+
+//     // console.log("newCodingBoxes:", newCodingBoxes);
+//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+//     // console.log("deepEqual(newCodingBoxes, initialApiResponse.Declarations):", deepEqual(newCodingBoxes, initialApiResponse.Declarations));
+
+//     // console.log("newExaminationDetails:", newExaminationDetails);
+//     // console.log("initialApiResponse.Declarations?.Examination:", initialApiResponse.Declarations?.Examination);
+//     // console.log("deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination):", deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination));
+
+//     // console.log("newSectionA:", newSectionA);
+//     // console.log("initialApiResponse.Declarations?.SectionA:", initialApiResponse.Declarations?.SectionA);
+//     // console.log("deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA):", deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA));
+
+//     // console.log("newSectionB:", newSectionB);
+//     // console.log("initialApiResponse.Declarations?.SectionB:", initialApiResponse.Declarations?.SectionB);
+//     // console.log("deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB):", deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB));
+
+//     // console.log("newSectionC:", newSectionC);
+//     // console.log("initialApiResponse.Declarations?.SectionC:", initialApiResponse.Declarations?.SectionC);
+//     // console.log("deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC):", deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC));
+//     // console.log("---------------------------");
+//     const finalPayload = {
+//       Header: {
+//         ...newHeader,
+//         ModeFlag: headerModeFlag,
+//       },
+//       General: {
+//         Details: {
+//           ...newGeneralDetails,
+//           ModeFlag: generalDetailsModeFlag,
+//         },
+//         PaymentInstruction: {
+//           ...newPaymentInstruction,
+//           ModeFlag: paymentInstructionModeFlag,
+//         },
+//         Declarations: { // Adding Declarations section
+//           ...newConsignorDeclarations,
+//           ...newValueDeliveryCash,
+//           ...newCodingBoxes,
+//           ...newExaminationDetails,
+//           SectionA: newSectionA,
+//           SectionB: newSectionB,
+//           SectionC: newSectionC,
+//           ModeFlag: (
+//             consignorDeclarationsModeFlag === "Update" ||
+//             valueDeliveryCashModeFlag === "Update" ||
+//             codingBoxesModeFlag === "Update" ||
+//             examinationDetailsModeFlag === "Update" ||
+//             sectionAModeFlag === "Update" ||
+//             sectionBModeFlag === "Update" ||
+//             sectionCModeFlag === "Update"
+//           ) ? "Update" : "NoChange",
+//         },
+//         RouteDetails:{
+//          ...newRouteEndorsementValues,
+//           ModeFlag: "Update",
+//         },
+//         ConsignmentDetails:{
+//            ...NewrouteDetailsValues,
+//           ModeFlag: "Update",
+//         },
+//         wagonDetails:{
+//           ...newWagonDetailsValues,
+//           ModeFlag: "Update",
+//         }
+//       },
+//     };
+
+//     console.log("Final Payload to API:", JSON.stringify(finalPayload, null, 2));
+//     // Here you would call your API service, e.g.:
+//     // quickOrderService.saveTemplate(finalPayload);
+
+//   };
+
+const handleSaveTemplate = () => {
+  if (!initialSnapshotRef.current) return;
+
+  const headerFV = headerTemplateRef.current.getFormValues();
+  const generalFV = generalDetailsRef.current.getFormValues();
+  const paymentFV = paymentInstructionRef.current.getFormValues();
+  const placeDateFV = placeAndDateRef.current.getFormValues();
+  const consignorFV = consignorDeclarationsRef.current.getFormValues();
+  const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+  const codingFV = codingBoxesRef.current.getFormValues();
+  const examFV = examinationDetailsRef.current.getFormValues();
+  const secAFV = sectionARef.current.getFormValues();
+  const secBFV = sectionBRef.current.getFormValues();
+  const secCFV = sectionCRef.current.getFormValues();
+  const routeFV = RouteDetailsRef.current.getFormValues();
+  const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+  const wagonFV = WagonDetailsRef.current.getFormValues();
+
+  const payload = {
+    Header: {
+      ...mapFormToHeaderPayload(headerFV),
+      ModeFlag: resolveModeFlag(
+        headerFV,
+        initialSnapshotRef.current.header,
+        workOrderNo
+      ),
+    },
+
+    General: {
+      Details: {
+        ...mapFormToGeneralDetailsPayload(generalFV),
+        ModeFlag: resolveModeFlag(
+          generalFV,
+          initialSnapshotRef.current.general,
+          workOrderNo
+        ),
       },
-      General: {
-        Details: {
-          ...newGeneralDetails,
-          ModeFlag: generalDetailsModeFlag,
-        },
-        PaymentInstruction: {
-          ...newPaymentInstruction,
-          ModeFlag: paymentInstructionModeFlag,
-        },
-        Declarations: { // Adding Declarations section
-          ...newConsignorDeclarations,
-          ...newValueDeliveryCash,
-          ...newCodingBoxes,
-          ...newExaminationDetails,
-          SectionA: newSectionA,
-          SectionB: newSectionB,
-          SectionC: newSectionC,
-          ModeFlag: (
-            consignorDeclarationsModeFlag === "Update" ||
-            valueDeliveryCashModeFlag === "Update" ||
-            codingBoxesModeFlag === "Update" ||
-            examinationDetailsModeFlag === "Update" ||
-            sectionAModeFlag === "Update" ||
-            sectionBModeFlag === "Update" ||
-            sectionCModeFlag === "Update"
-          ) ? "Update" : "NoChange",
-        },
+
+      PaymentInstruction: {
+        ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+        ModeFlag: resolveModeFlag(
+          paymentFV,
+          initialSnapshotRef.current.payment,
+          workOrderNo
+        ),
       },
-    };
+    },
 
-    console.log("Final Payload to API:", JSON.stringify(finalPayload, null, 2));
-    // Here you would call your API service, e.g.:
-    // quickOrderService.saveTemplate(finalPayload);
+    Declarations: {
+      ...mapFormToConsignorDeclarationsPayload(consignorFV),
+      ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+      ...mapFormToCodingBoxesPayload(codingFV),
+      ...mapFormToExaminationDetailsPayload(examFV),
 
+      SectionA: {
+        ...mapFormToSectionAPayload(secAFV),
+        ModeFlag: resolveModeFlag(
+          secAFV,
+          initialSnapshotRef.current.sectionA,
+          workOrderNo
+        ),
+      },
+
+      SectionB: {
+        ...mapFormToSectionBPayload(secBFV),
+        ModeFlag: resolveModeFlag(
+          secBFV,
+          initialSnapshotRef.current.sectionB,
+          workOrderNo
+        ),
+      },
+
+      SectionC: {
+        ...mapFormToSectionCPayload(secCFV),
+        ModeFlag: resolveModeFlag(
+          secCFV,
+          initialSnapshotRef.current.sectionC,
+          workOrderNo
+        ),
+      },
+    },
+
+    RouteDetails: {
+      ...mapFormToRouteEndorsementPayload(routeEndFV),
+      ModeFlag: resolveModeFlag(
+        routeEndFV,
+        initialSnapshotRef.current.routeEndorsement,
+        workOrderNo
+      ),
+    },
+
+    ConsignmentDetails: {
+      ...mapFormToRoutePayload(routeFV),
+      ModeFlag: resolveModeFlag(
+        routeFV,
+        initialSnapshotRef.current.route,
+        workOrderNo
+      ),
+    },
+
+    WagonDetails: [
+      {
+        ...mapFormToWagonPayload(wagonFV),
+        ModeFlag: resolveModeFlag(
+          wagonFV,
+          initialSnapshotRef.current.wagon,
+          workOrderNo
+        ),
+      },
+    ],
   };
+
+  console.log("✅ FINAL PAYLOAD", JSON.stringify(payload , null  , 2));
+};
+
+
 
   return (
     <div className="main-content-h bg-gray-100">
@@ -1668,10 +2858,11 @@ const TemplateCreate = () => {
               </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="general" className="mt-6">
+              <TabsContent value="general" className="mt-6" forceMount>
                 <div className=''>
                   <div className="">
                     <div className=''>
+                      {/* 32 */}
                       <DynamicPanel
                         ref={generalDetailsRef}
                         panelId="general-details"
@@ -1680,7 +2871,8 @@ const TemplateCreate = () => {
                         panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
                         panelConfig={generalDetailsConfig}
                         formName="generalDetailsForm"
-                        initialData={generalDetailsData}
+                        //  initialData={undefined} 
+                         initialData={generalDetailsData}
                         // onDataChange={handleGeneralDataChange}
                         panelWidth="full"
                         collapsible={true} // Added collapsible prop
@@ -1727,7 +2919,7 @@ const TemplateCreate = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="declarations" className="mt-6">
+              <TabsContent value="declarations" className="mt-6" forceMount>
                 <div className="">
                   <DynamicPanel
                     ref={consignorDeclarationsRef}
@@ -1809,17 +3001,69 @@ const TemplateCreate = () => {
               </div>
               </TabsContent>
 
-              <TabsContent value="route" className="mt-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <TabsContent value="route" className="mt-6" forceMount>
+              {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h2 className="text-lg font-semibold text-gray-800 mb-6">Route</h2>
                   <p className="text-gray-500">Route content will be added here.</p>
-              </div>
+              </div> */}
+                <div>
+                    {/* wagon123 */}
+                     <DynamicPanel
+                        ref={RouteEndorsementDetailsRef}
+                        panelId="RouteConsignmentDetails"
+                        panelOrder={1}
+                        panelTitle="Route Details"
+                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                        panelConfig={routeDetailsCustomsEndorsementConfig}
+                        formName="generalDetailsForm"
+                        //  initialData={undefined} 
+                        //  initialData={generalDetailsData}
+                        // onDataChange={handleGeneralDataChange}
+                        panelWidth="full"
+                        collapsible={true} // Added collapsible prop
+                      />                     
+                  </div>
+
+
+                    <div>
+                    {/* RouteConsignmentDetailsRef */}
+                     <DynamicPanel
+                        ref={RouteDetailsRef}
+                        panelId="RouteDetails"
+                        panelOrder={1}
+                        panelTitle="Consignment Number [62]/[6]"
+                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                        panelConfig={routeDetailsConfig}
+                        formName="generalDetailsForm"
+                        //  initialData={undefined} 
+                         initialData={generalDetailsData}
+                        // onDataChange={handleGeneralDataChange}
+                        panelWidth="full"
+                        collapsible={true} // Added collapsible prop
+                      />                  
+                     
+                  </div>
               </TabsContent>
 
-              <TabsContent value="wagon-info" className="mt-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-6">Wagon Info</h2>
-                  <p className="text-gray-500">Wagon Info content will be added here.</p>
+              <TabsContent value="wagon-info" className="mt-6" forceMount>
+              <div>
+                  <div>
+                    {/* wagon123 */}
+                    <DynamicPanel
+                        ref={WagonDetailsRef}
+                        panelId="WagonInfoDetails"
+                        panelOrder={1}
+                        panelTitle="Wagon Info Details"
+                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                        panelConfig={wagonDetailsConfig}
+                        formName="generalDetailsForm"
+                        //  initialData={undefined} 
+                         initialData={generalDetailsData}
+                        // onDataChange={handleGeneralDataChange}
+                        panelWidth="full"
+                        collapsible={true} // Added collapsible prop
+                      />
+                  </div>
               </div>
               </TabsContent>
         </Tabs>
