@@ -122,7 +122,7 @@ const createApiClient = (): AxiosInstance => {
         } catch (refreshError) {
           // Refresh failed, redirect to login
           tokenManager.clearTokens();
-          window.location.href = '/login';
+          window.location.href = '/saasy-app/signin';
         }
       }
 
