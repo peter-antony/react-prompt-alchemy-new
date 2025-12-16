@@ -211,12 +211,21 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
           const userSettings = await getUserPanelConfig(userId, panelId);
           if (userSettings && Object.keys(userSettings.fields).length > 0) {
             // setPanelConfig(userSettings.fields);
-            // Merge user settings with initial config to preserve properties like fetchOptions
+            // Merge user settings with initial config to preserve properties like fetchOptions and events
+            // Function properties (events, fetchOptions) cannot be serialized, so always use initialPanelConfig for these
             const mergedConfig: PanelConfig = {};
             Object.keys(initialPanelConfig).forEach(fieldId => {
+              const initialField = initialPanelConfig[fieldId];
+              const userField = userSettings.fields[fieldId] || {};
+
               mergedConfig[fieldId] = {
-                ...initialPanelConfig[fieldId], // Preserve all initial properties
-                ...(userSettings.fields[fieldId] || {}) // Override with user settings
+                // ...initialPanelConfig[fieldId], // Preserve all initial properties
+                // ...(userSettings.fields[fieldId] || {}) // Override with user settings
+                ...initialField, // Preserve all initial properties including functions
+                ...userField, // Override with user settings (non-function properties)
+                // Explicitly preserve function properties from initial config
+                events: initialField.events,
+                fetchOptions: initialField.fetchOptions,
               };
             });
             setPanelConfig(mergedConfig);
