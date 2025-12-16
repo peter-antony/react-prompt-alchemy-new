@@ -235,6 +235,8 @@ const TripPlanning = () => {
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
+  // State to store the selected row's ResourceDetails (per-CO resources after trip creation)
+  const [selectedRowResourceDetails, setSelectedRowResourceDetails] = useState<any[]>([]);
   // const [tripResourceDetailsData, setTripResourceDetailsData] = useState<any>({});
   const [listPopoverOpen, setListPopoverOpen] = useState(false);
   const [EquipmentCount, setEquipmentCount] = useState(0);
@@ -1746,11 +1748,37 @@ const TripPlanning = () => {
     if (customerOrderList) {
       setTripNo(customerOrderList?.TripID);
       setTripStatus(customerOrderList?.TripStatus);
+
+      // Extract and display ResourceDetails from the clicked row (for rows with existing resources after trip creation)
+      if (customerOrderList.ResourceDetails && Array.isArray(customerOrderList.ResourceDetails)) {
+        console.log("📋 ResourceDetails found in clicked row:", customerOrderList.ResourceDetails);
+        setSelectedRowResourceDetails(customerOrderList.ResourceDetails);
+
+        // Populate Supplier dropdown with Agent type resource
+        const agentResource = customerOrderList.ResourceDetails.find((r: any) => r.ResourceType === "Agent");
+        if (agentResource) {
+          console.log("📋 Setting Supplier from Agent resource:", agentResource.ResourceID);
+          setSupplier(agentResource.ResourceID);
+        }
+
+        // Populate Schedule dropdown with Schedule type resource (if exists)
+        const scheduleResource = customerOrderList.ResourceDetails.find((r: any) => r.ResourceType === "Schedule");
+        if (scheduleResource) {
+          console.log("📋 Setting Schedule from resource:", scheduleResource.ResourceID);
+          setSchedule(scheduleResource.ResourceID);
+        }
+      } else {
+        // Clear selected row resources if no ResourceDetails in clicked row
+        setSelectedRowResourceDetails([]);
+      }
     }
     if (!isSelected) {
       // Handle deselection - remove from selectedArrCOData using both id and legBehaviour
       console.log("customerOrderList ====", customerOrderList);
-      
+
+      // Clear selected row ResourceDetails on deselection
+      setSelectedRowResourceDetails([]);
+
       // Remove TripID from selectedTripIDs if it exists
       if (customerOrderList && customerOrderList.TripID) {
         const tripIDToRemove = customerOrderList.TripID;
@@ -4099,43 +4127,104 @@ const TripPlanning = () => {
                                               id={"count"}
                                               className="inline-flex items-center justify-center rounded-full text-xs badge-blue ml-3 font-medium"
                                             >
-                                              {resource?.count}
+                                              {/* Show per-row resource count if available, otherwise show trip-level count */}
+                                              {selectedRowResourceDetails.length > 0
+                                                ? selectedRowResourceDetails.filter(r =>
+                                                  (resource.title === "Equipment" && r.ResourceType === "Equipment") ||
+                                                  (resource.title === "Handler" && r.ResourceType === "Handler") ||
+                                                  (resource.title === "Vehicle" && r.ResourceType === "Vehicle") ||
+                                                  (resource.title === "Driver" && r.ResourceType === "Driver")
+                                                ).length || ''
+                                                : resource?.count
+                                              }
                                             </span>
                                           </h3>
                                   
                                           {resource.title === "Equipment" && (
-                                            <BadgesList
-                                              items={tripResourceDetailsDataRef.current?.Equipments ?? []}
-                                              onRemove={handleRemoveEquipment}
-                                              badgeVariant="secondary"
-                                              idField="EquipmentID"
-                                            />
+                                            selectedRowResourceDetails.length > 0 ? (
+                                              // Show per-row resources when available
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {selectedRowResourceDetails
+                                                  .filter(r => r.ResourceType === "Equipment")
+                                                  .map((r, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                                      {r.ResourceID}
+                                                    </Badge>
+                                                  ))}
+                                              </div>
+                                            ) : (
+                                              <BadgesList
+                                                items={tripResourceDetailsDataRef.current?.Equipments ?? []}
+                                                onRemove={handleRemoveEquipment}
+                                                badgeVariant="secondary"
+                                                idField="EquipmentID"
+                                              />
+                                            )
                                           )}
                                   
                                           {resource.title === "Handler" && (
-                                            <BadgesList
-                                              items={tripResourceDetailsDataRef.current?.Handlers ?? []}
-                                              onRemove={handleRemoveHandler}
-                                              badgeVariant="secondary"
-                                              idField="HandlerID"
-                                            />
+                                            selectedRowResourceDetails.length > 0 ? (
+                                              // Show per-row Handler resources only (Agent goes to Supplier dropdown)
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {selectedRowResourceDetails
+                                                  .filter(r => r.ResourceType === "Handler")
+                                                  .map((r, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                                      {r.ResourceID}
+                                                    </Badge>
+                                                  ))}
+                                              </div>
+                                            ) : (
+                                              <BadgesList
+                                                items={tripResourceDetailsDataRef.current?.Handlers ?? []}
+                                                onRemove={handleRemoveHandler}
+                                                badgeVariant="secondary"
+                                                idField="HandlerID"
+                                              />
+                                            )
                                           )}
                                           {resource.title === "Vehicle" && (
-                                            <BadgesList
-                                              items={tripResourceDetailsDataRef.current?.Vehicle ?? []}
-                                              onRemove={handleRemoveVehicle}
-                                              badgeVariant="secondary"
-                                              idField="VehicleID"
-                                            />
+                                            selectedRowResourceDetails.length > 0 ? (
+                                              // Show per-row resources when available
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {selectedRowResourceDetails
+                                                  .filter(r => r.ResourceType === "Vehicle")
+                                                  .map((r, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                                      {r.ResourceID}
+                                                    </Badge>
+                                                  ))}
+                                              </div>
+                                            ) : (
+                                              <BadgesList
+                                                items={tripResourceDetailsDataRef.current?.Vehicle ?? []}
+                                                onRemove={handleRemoveVehicle}
+                                                badgeVariant="secondary"
+                                                idField="VehicleID"
+                                              />
+                                            )
                                           )}
                                           {resource.title === "Driver" && (
-                                            <BadgesList
-                                              items={tripResourceDetailsDataRef.current?.Drivers ?? []}
-                                              onRemove={handleRemoveDriver}
-                                              badgeVariant="secondary"
-                                              idField="DriverCode"
-                                              fallbackIdField="DriverID"
-                                            />
+                                            selectedRowResourceDetails.length > 0 ? (
+                                              // Show per-row resources when available
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {selectedRowResourceDetails
+                                                  .filter(r => r.ResourceType === "Driver")
+                                                  .map((r, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                                      {r.ResourceID}
+                                                    </Badge>
+                                                  ))}
+                                              </div>
+                                            ) : (
+                                              <BadgesList
+                                                items={tripResourceDetailsDataRef.current?.Drivers ?? []}
+                                                onRemove={handleRemoveDriver}
+                                                badgeVariant="secondary"
+                                                idField="DriverCode"
+                                                fallbackIdField="DriverID"
+                                              />
+                                            )
                                           )}
                                         </div>
                                       </div>
