@@ -1738,6 +1738,8 @@ export const TripExecutionHub = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        // Refresh the grid data to show the updated trip status
+        await fetchTripsAgain();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -1772,6 +1774,8 @@ export const TripExecutionHub = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        // Refresh the grid data to show the updated trip status
+        await fetchTripsAgain();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -1819,6 +1823,9 @@ export const TripExecutionHub = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        // Refresh the grid data to show the updated trip status and close the modal
+        setCancelModalOpen(false);
+        await fetchTripsAgain();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -1865,6 +1872,9 @@ export const TripExecutionHub = () => {
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
+        // Refresh the grid data to show the updated trip status and Close the modal
+        setAmendModalOpen(false);
+        await fetchTripsAgain();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
