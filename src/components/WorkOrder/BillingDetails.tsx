@@ -137,9 +137,12 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
     const supplierTotalCount = billingSummaryData?.SupplierBilling?.TotalCounts || 0;
     const customerTotalCount = billingSummaryData?.CustomerBilling?.TotalCounts || 0;
 
+    // Reinvoice Grid
     const gridColumns: GridColumnConfig[] = [
         { key: "ItemName", label: "Item Name", width: 150, type: "Text" },
-        { key: "OperationID", label: "Operation ID", width: 150, type: "Text" },
+        // { key: "OperationID", label: "Operation ID", width: 150, type: "Text" },
+        { key: "Operation", label: "Operation", width: 200, type: "Text" },
+        { key: "OperationDescription", label: "Operation Description", width: 200, type: "Text" },
         { key: "SubLineItem", label: "Sub Line Item", width: 150, type: "Text" },
         { key: "BillCost", label: "Bill Cost", width: 100, type: "Text" },
         { key: "MarginAmount", label: "Margin Amount", width: 100, type: "Integer", editable: true },
