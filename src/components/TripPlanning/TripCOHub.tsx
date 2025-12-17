@@ -253,6 +253,22 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       order: 11
     },
     {
+      key: "DepartureLocation",
+      label: "Departure Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "ArrivalLocation",
+      label: "Arrival Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
       key: "DepartureTime",
       label: "Departure Time",
       type: "Date",
@@ -655,6 +671,22 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
       editable: false,
       subRow: false,
       order: 12
+    },
+    {
+      key: "DepartureLocation",
+      label: "Departure Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "ArrivalLocation",
+      label: "Arrival Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
     },
     {
       key: "ShuntedOutEquipmentNo",

@@ -251,6 +251,22 @@ export const TripCOHubMultiple = ({ onCustomerOrderClick, data }: TripCOHubMulti
       order: 9
     },
     {
+      key: "DepartureLocation",
+      label: "Departure Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
+      key: "ArrivalLocation",
+      label: "Arrival Location",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
       key: "DepartureTime",
       label: "Departure Time",
       type: "Date",
