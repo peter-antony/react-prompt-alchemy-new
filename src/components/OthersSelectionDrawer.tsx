@@ -193,9 +193,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
         loadType: otherInfoData.LoadType,
         passNo: otherInfoData.PassNoFromSchedule,
         tripStartDate: otherInfoData.PlanStartDate,
-        tripStartTime: otherInfoData.PlanStartTime,
+        tripStartTime: normalizeTime(otherInfoData.PlanStartTime),
         tripEndDate: otherInfoData.PlanEndDate,
-        tripEndTime: otherInfoData.PlanEndTime,
+        tripEndTime: normalizeTime(otherInfoData.PlanEndTime),
         QCUserDefined: bindQC()
       };
 
