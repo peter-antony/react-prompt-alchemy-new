@@ -10,6 +10,7 @@ import { quickOrderService } from '@/api/services/quickOrderService';
 import { FileText } from 'lucide-react';
 import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
 import ConsignorConsigneeSideDraw from './ConsignorConsigneeSideDraw';
+import CancelConfirmationModal from './CancelConfirmationModal';
 import { useSearchParams } from "react-router-dom"; 
 
 const ReportCreate = () => {
@@ -48,6 +49,7 @@ const ReportCreate = () => {
     const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
     const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
     const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
     const initialSnapshotRef = useRef<any>(null);
 
@@ -2181,8 +2183,8 @@ const ReportCreate = () => {
             console.log("response.data1", response);
             const responseData = JSON.parse((response as any).data?.ResponseData);
             console.log("response.data1", responseData);
-        setApiResponse(responseData);
-        setInitialApiResponse(responseData); // Store the initial response
+            setApiResponse(responseData);
+            setInitialApiResponse(responseData); // Store the initial response
       
         if (headerTemplateRef.current && responseData.Header) {
             const apiHeader = responseData.Header;
@@ -2503,15 +2505,95 @@ const ReportCreate = () => {
 
     const handleConsignorConsigneeSave = async (data: any) => {
         console.log("Consignor/Consignee data saved:", data);
+        console.log("Consignor/Consignee data saved:", apiResponse);
+        console.log("Consignor/Consignee data saved:", initialApiResponse);
         setConsignorConsigneeData(data);
+
+        // Determine ModeFlag for Consignor and Consignee
+        const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
+
+        // Construct Header Payload
+        const headerFV = headerTemplateRef.current?.getFormValues();
+        const headerPayload = {
+            TemplateID: apiResponse?.Header?.TemplateID || headerFV?.templateId || null,
+            Description: apiResponse?.Header?.Description || headerFV?.templateDescription || null,
+            DocType: apiResponse?.Header?.DocType || headerFV?.templateType || null,
+            ModeFlag: "NoChange" // As per requirement, header ModeFlag is NoChange here
+        };
+
+        const consigneePayload = {
+            ConsigneeID: data.consigneeId || null,
+            ConsigneeDescription: data.consigneeName || null,
+            AddressLine1: data.addressLine1 || null,
+            AddressLine2: data.addressLine2 || null,
+            SubHurb: data.suburb || null,
+            Pincode: data.pincode || null,
+            Zone: data.zone || null,
+            SubZone: data.subZone || null,
+            City: data.city || null,
+            State: data.state || null,
+            Country: data.country || null,
+            Region: data.region || null,
+            ContactPerson: data.contactPerson || null,
+            PhoneNo: data.phoneNumber || null,
+            EmailID: data.emailId || null,
+            ModeFlag: entryModeFlag
+        };
+
+        const consignorPayload = {
+            ConsignorID: data.consignorId || null,
+            ConsignorDescription: data.consignorName || null,
+            AddressLine1: data.addressLine1 || null,
+            AddressLine2: data.addressLine2 || null,
+            SubHurb: data.suburb || null,
+            Pincode: data.pincode || null,
+            Zone: data.zone || null,
+            SubZone: data.subZone || null,
+            City: data.city || null,
+            State: data.state || null,
+            Country: data.country || null,
+            Region: data.region || null,
+            ContactPerson: data.contactPerson || null,
+            PhoneNo: data.phoneNumber || null,
+            EmailID: data.emailId || null,
+            ModeFlag: entryModeFlag
+        };
+
+        const finalPayload = {
+            Header: headerPayload,
+            Consignee: consigneePayload,
+            Consignor: consignorPayload
+        };
+
+        console.log("✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD", JSON.stringify(finalPayload, null, 2));
+
         try {
-            const response = await CimCuvService.saveConsignorConsignee(data);
+            const response = await CimCuvService.saveConsignorConsignee(finalPayload);
             console.log("Consignor/Consignee save response:", response);
             // Optionally, handle success or display a message
         } catch (error) {
             console.error("Error saving Consignor/Consignee data:", error);
             // Optionally, handle error or display an error message
         }
+    };
+
+    const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
+        console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+        try {
+            const payload = {
+                CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
+                ReasonCode: reasonCode,
+                ReasonCodeDescription: reasonDescription,
+            };
+            console.log("payload ===", payload);
+            const response = await CimCuvService.cancelCimCuvTemplate(payload);
+            console.log("Cancel API response:", response);
+            // Optionally, handle success or display a message
+        } catch (error) {
+            console.error("Error canceling template/report:", error);
+            // Optionally, handle error or display an error message
+        }
+        setIsCancelModalOpen(false);
     };
 
     const handleSaveReport = () => {
@@ -2847,7 +2929,10 @@ const ReportCreate = () => {
                 <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
                     <div className="flex items-center gap-4"></div>
                     <div className="flex items-center gap-4">
-                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">Cancel</button>
+                        <button 
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                            onClick={() => setIsCancelModalOpen(true)}
+                        >Cancel</button>
                         <button
                             className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
                             onClick={handleSaveReport}
@@ -2859,9 +2944,14 @@ const ReportCreate = () => {
             </div>
             <ConsignorConsigneeSideDraw
                 isOpen={isConsignorConsigneeSideDrawOpen}
-                 width="40%"
+                width="40%"
                 onSave={handleConsignorConsigneeSave}
                 onClose={() => setIsConsignorConsigneeSideDrawOpen(false)}
+            />
+            <CancelConfirmationModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirmCancel={handleConfirmCancel}
             />
         </>
     );

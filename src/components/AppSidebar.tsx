@@ -150,6 +150,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
   const handleRVWClick = () => {
     console.log("handleRVWClick");
     // window.location.href = "https://forwardis.ramcoes.com/Forwardis-prod";
+    // window.location.href = "https://forwardislivesim.ramcouat.com/forwardis-livesim";
     // window.location.href = "https://forwardissim.ramcouat.com/forwardis-sim";
     // window.location.href = "https://forwardis.ramcouat.com/rvw/external.aspx?idp=UAT"; // RVW - UAT
     //window.location.href = "http://localhost:3000/Forwardis-dev/";  //Not yet Shared

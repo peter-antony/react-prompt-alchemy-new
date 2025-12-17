@@ -421,7 +421,7 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
             <div className="ml-3 h-7 flex items-center">
               <Button
                 type="button"
-                className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-white rounded-md text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onClick={onClose}
               >
                 <span className="sr-only">Close panel</span>
@@ -643,7 +643,7 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
             </Tabs>
           </div>
           <div className="flex-shrink-0 px-4 py-4 flex justify-end border-t border-gray-200 bg-gray-50 mt-auto">
-            <Button type="button" variant="outline" onClick={onClose} className="mr-2">Cancel</Button>
+            {/* <Button type="button" variant="outline" onClick={onClose} className="mr-2">Cancel</Button> */}
             <Button type="submit" onClick={handleSave} className='bg-blue-500 text-white hover:bg-blue-600'>Save</Button>
           </div>
         </div>

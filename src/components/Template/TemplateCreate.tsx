@@ -14,6 +14,9 @@ import { SmartGridWithGrouping } from '../SmartGrid';
 import { SmartGridPlus } from '../SmartGrid';
 import { GridColumnConfig } from '../SmartGrid';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import CancelConfirmationModal from './CancelConfirmationModal';
+import ConsignorConsigneeSideDraw from './ConsignorConsigneeSideDraw';
 
 const TemplateCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
@@ -32,6 +35,7 @@ const TemplateCreate = () => {
   const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
    const navigate = useNavigate();
+   const { toast } = useToast();
    
   const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
@@ -54,13 +58,11 @@ const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
 const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
 const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
 const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
+const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
+const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
 
-
-
-
-
-  const buttonCancel =
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+  const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
   /**
    * fetchMaster helper for lazy select dropdowns
    */
@@ -3526,353 +3528,489 @@ WagonLineDetails: sanitizedWagonLineDetails,
 
   };
 
-  
+  console.log("✅ FINAL PAYLOAD", JSON.stringify(payload , null  , 2));
+  console.log("✅ FINAL PAYLOAD", workOrderNo);
   try {
     console.log(" Sending payload to save template...");
     const response = await CimCuvService.saveCimCuvTemplate(payload);
-    console.log("✅ SAVE TEMPLATE RESPONSE", response.message);
-    console.log(response.message == "Success")
-    if(response.message == "Success" ){
-//  navigate(0);
-//  navigate(`/create-template?id=${(workOrderNo)}`);
-// 
+    console.log("✅ SAVE TEMPLATE RESPONSE", response);
+    const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+    // const data = parsedResponse;
+    const resourceStatus = (response as any)?.data?.IsSuccess;
+    console.log("parsedResponse ====", parsedResponse);
+    if (resourceStatus) {
+      console.log("Template saved successfully");
+      toast({
+        title: "✅ Template Saved Successfully",
+        description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+        variant: "default",
+      });
+      
+      if (!workOrderNo) {
+        setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+        fetchTemplateData(parsedResponse?.Header?.TemplateID);
+      } else {
+        fetchTemplateData(workOrderNo);
+      }
+    } else {
+      console.log("error as any ===", (response as any)?.data?.Message);
+      toast({
+        title: "⚠️ Save Failed",
+        description: (response as any)?.data?.Message || "Failed to save changes.",
+        variant: "destructive",
+      });
+
     }
 
   } catch (error) {
     console.error("❌ SAVE TEMPLATE FAILED", error);
+    toast({
+      title: "⚠️ Save Failed",
+      description: "An error occurred while saving the template. Please try again.",
+      variant: "destructive",
+    });
   }
 };
 
+const handleConsignorConsigneeSave = async (data: any) => {
+  console.log("Consignor/Consignee data saved:", data);
+  console.log("Consignor/Consignee data saved:", apiResponse);
+  console.log("Consignor/Consignee data saved:", initialApiResponse);
+  setConsignorConsigneeData(data);
 
+  // Determine ModeFlag for Consignor and Consignee
+  console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
+  const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
+  console.log("entryModeFlag ===", entryModeFlag);
+  // Construct Header Payload
+  const headerFV = headerTemplateRef.current?.getFormValues();
+  const headerPayload = {
+      TemplateID: apiResponse?.Header?.TemplateID || headerFV?.templateId || null,
+      Description: apiResponse?.Header?.Description || headerFV?.templateDescription || null,
+      DocType: apiResponse?.Header?.DocType || headerFV?.templateType || null,
+      ModeFlag: "NoChange" // As per requirement, header ModeFlag is NoChange here
+  };
+
+  const consigneePayload = {
+      ConsigneeID: data.consigneeId || null,
+      ConsigneeDescription: data.consigneeName || null,
+      AddressLine1: data.addressLine1 || null,
+      AddressLine2: data.addressLine2 || null,
+      SubHurb: data.suburb || null,
+      Pincode: data.pincode || null,
+      Zone: data.zone || null,
+      SubZone: data.subZone || null,
+      City: data.city || null,
+      State: data.state || null,
+      Country: data.country || null,
+      Region: data.region || null,
+      ContactPerson: data.contactPerson || null,
+      PhoneNo: data.phoneNumber || null,
+      EmailID: data.emailId || null,
+      ModeFlag: entryModeFlag
+  };
+
+  const consignorPayload = {
+      ConsignorID: data.consignorId || null,
+      ConsignorDescription: data.consignorName || null,
+      AddressLine1: data.addressLine1 || null,
+      AddressLine2: data.addressLine2 || null,
+      SubHurb: data.suburb || null,
+      Pincode: data.pincode || null,
+      Zone: data.zone || null,
+      SubZone: data.subZone || null,
+      City: data.city || null,
+      State: data.state || null,
+      Country: data.country || null,
+      Region: data.region || null,
+      ContactPerson: data.contactPerson || null,
+      PhoneNo: data.phoneNumber || null,
+      EmailID: data.emailId || null,
+      ModeFlag: entryModeFlag
+  };
+
+  const finalPayload = {
+      Header: headerPayload,
+      Consignee: consigneePayload,
+      Consignor: consignorPayload
+  };
+
+  console.log("✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD", JSON.stringify(finalPayload, null, 2));
+
+  try {
+      const response = await CimCuvService.saveConsignorConsignee(finalPayload);
+      console.log("Consignor/Consignee save response:", response);
+      // Optionally, handle success or display a message
+  } catch (error) {
+      console.error("Error saving Consignor/Consignee data:", error);
+      // Optionally, handle error or display an error message
+  }
+};
+
+const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
+  console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+  try {
+      const payload = {
+          CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
+          ReasonCode: reasonCode,
+          ReasonCodeDescription: reasonDescription,
+      };
+      console.log("payload ===", payload);
+      const response = await CimCuvService.cancelCimCuvTemplate(payload);
+      console.log("Cancel API response:", response);
+      // Optionally, handle success or display a message
+  } catch (error) {
+      console.error("Error canceling template/report:", error);
+      // Optionally, handle error or display an error message
+  }
+  setIsCancelModalOpen(false);
+};
 
   return (
-    <div className="main-content-h bg-gray-100">
-        <div className="mt-6">
-          <div className=''>
-            <DynamicPanel
-              ref={headerTemplateRef} // New Panel
-              panelId="header-template"
-              panelOrder={0} // Render before general details
-              panelTitle="Template"
-              panelConfig={headerTemplateConfig} // New Config
-              formName="headerTemplateForm"
-              initialData={headerTemplateData}
-              // onDataChange={handleHeaderTemplateDataChange}
-              panelWidth="full"
-              collapsible={true} // Added collapsible prop
-              showHeader={false} // Hide header to match screenshot
-            />
-          </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
-            <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
-              <TabsTrigger
-                  value="general"
-                  className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                  activeTab === 'general'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-              >
-                  General
-              </TabsTrigger>
-              <TabsTrigger
-                  value="declarations"
-                  className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                  activeTab === 'declarations'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-              >
-                  Declarations
-              </TabsTrigger>
-              <TabsTrigger
-                  value="route"
-                  className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                  activeTab === 'route'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-              >
-                  Route
-              </TabsTrigger>
-              <TabsTrigger
-                  value="wagon-info"
-                  className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                  activeTab === 'wagon-info'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-              >
-                  Wagon Info
-              </TabsTrigger>
-              </TabsList>
+    <>
+      <div className="main-content-h bg-gray-100">
+          <div className="mt-6">
+            <div className=''>
+              <DynamicPanel
+                ref={headerTemplateRef} // New Panel
+                panelId="header-template"
+                panelOrder={0} // Render before general details
+                panelTitle="Template"
+                panelConfig={headerTemplateConfig} // New Config
+                formName="headerTemplateForm"
+                initialData={headerTemplateData}
+                // onDataChange={handleHeaderTemplateDataChange}
+                panelWidth="full"
+                collapsible={true} // Added collapsible prop
+                showHeader={false} // Hide header to match screenshot
+              />
+            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
+              <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
+                <TabsTrigger
+                    value="general"
+                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                    activeTab === 'general'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    General
+                </TabsTrigger>
+                <TabsTrigger
+                    value="declarations"
+                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                    activeTab === 'declarations'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Declarations
+                </TabsTrigger>
+                <TabsTrigger
+                    value="route"
+                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                    activeTab === 'route'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Route
+                </TabsTrigger>
+                <TabsTrigger
+                    value="wagon-info"
+                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                    activeTab === 'wagon-info'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Wagon Info
+                </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="general" className="mt-6" forceMount>
-                <div className=''>
-                  <div className="">
-                    <div className=''>
-                      {/* 32 */}
-                      <DynamicPanel
-                        ref={generalDetailsRef}
-                        panelId="general-details"
-                        panelOrder={1}
-                        panelTitle="General Details"
-                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                        panelConfig={generalDetailsConfig}
-                        formName="generalDetailsForm"
-                        //  initialData={undefined} 
-                         initialData={generalDetailsData}
-                        // onDataChange={handleGeneralDataChange}
-                        panelWidth="full"
-                        collapsible={true} // Added collapsible prop
-                      />
-                      <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{marginTop: '-25px'}}>
-                        <Button
-                            onClick={handleAddConsignorConsignee}
+                <TabsContent value="general" className="mt-6" forceMount>
+                  <div className=''>
+                    <div className="">
+                      <div className=''>
+                        {/* 32 */}
+                        <DynamicPanel
+                          ref={generalDetailsRef}
+                          panelId="general-details"
+                          panelOrder={1}
+                          panelTitle="General Details"
+                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                          panelConfig={generalDetailsConfig}
+                          formName="generalDetailsForm"
+                          //  initialData={undefined} 
+                          initialData={generalDetailsData}
+                          // onDataChange={handleGeneralDataChange}
+                          panelWidth="full"
+                          collapsible={true} // Added collapsible prop
+                        />
+                        <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{marginTop: '-25px'}}>
+                          <Button
+                            onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
                             className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
-                        >
+                          >
                             <UserPlus className="w-4 h-4 mr-2" />
                             Add Consignor/Consignee
-                        </Button>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* New Payment Instruction Panel */}
-                    <DynamicPanel
-                      ref={paymentInstructionRef}
-                      panelId="payment-instruction"
-                      panelOrder={2}
-                      panelTitle="Payment Instruction [20]"
-                      panelConfig={paymentInstructionConfig}
-                      formName="paymentInstructionForm"
-                      initialData={paymentInstructionData}
-                      // onDataChange={handlePaymentInstructionDataChange}
-                      panelWidth="full"
-                      collapsible={true} // Added collapsible prop
-                    />
-
-                    {/* New Place and Date Made Out Panel */}
-                    <DynamicPanel
-                      ref={placeAndDateRef}
-                      panelId="place-and-date"
-                      panelOrder={3}
-                      panelTitle="Place and Date Made Out [29]"
-                      panelConfig={placeAndDateConfig}
-                      formName="placeAndDateForm"
-                      initialData={placeAndDateData}
-                      // onDataChange={handlePlaceAndDateDataChange}
-                      panelWidth="full"
-                      collapsible={true} // Added collapsible prop
-                    />                    
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="declarations" className="mt-6" forceMount>
-                <div className="">
-                  <DynamicPanel
-                    ref={consignorDeclarationsRef}
-                    panelId="consignor-declarations"
-                    panelOrder={1}
-                    panelTitle="Declarations and Information"
-                    panelConfig={consignorDeclarationsConfig}
-                    formName="consignorDeclarationsForm"
-                    initialData={consignorDeclarationsData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={valueDeliveryCashRef}
-                    panelId="value-delivery-cash"
-                    panelOrder={2}
-                    panelTitle="Value and Delivery Details"
-                    panelConfig={valueDeliveryCashConfig}
-                    formName="valueDeliveryCashForm"
-                    initialData={valueDeliveryCashData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={codingBoxesRef}
-                    panelId="coding-boxes"
-                    panelOrder={3}
-                    panelTitle="Coding Boxes"
-                    panelConfig={codingBoxesConfig}
-                    formName="codingBoxesForm"
-                    initialData={codingBoxesData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={examinationDetailsRef}
-                    panelId="examination-details"
-                    panelOrder={4}
-                    panelTitle="Examination and Other Details"
-                    panelConfig={examinationDetailsConfig}
-                    formName="examinationDetailsForm"
-                    initialData={examinationDetailsData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={sectionARef}
-                    panelId="section-a"
-                    panelOrder={5}
-                    panelTitle="Section A"
-                    panelConfig={sectionAConfig}
-                    formName="sectionAForm"
-                    initialData={sectionAData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={sectionBRef}
-                    panelId="section-b"
-                    panelOrder={6}
-                    panelTitle="Section B"
-                    panelConfig={sectionBConfig}
-                    formName="sectionBForm"
-                    initialData={sectionBData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-                  <DynamicPanel
-                    ref={sectionCRef}
-                    panelId="section-c"
-                    panelOrder={7}
-                    panelTitle="Section C"
-                    panelConfig={sectionCConfig}
-                    formName="sectionCForm"
-                    initialData={sectionCData}
-                    panelWidth="full"
-                    collapsible={true}
-                  />
-              </div>
-              </TabsContent>
-
-              <TabsContent value="route" className="mt-6" forceMount>
-              {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-6">Route</h2>
-                  <p className="text-gray-500">Route content will be added here.</p>
-              </div> */}
-                <div>
-                    {/* wagon123 */}
-                     <DynamicPanel
-                        ref={RouteEndorsementDetailsRef}
-                        panelId="RouteConsignmentDetails"
-                        panelOrder={1}
-                        panelTitle="Route Details"
-                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                        panelConfig={routeDetailsCustomsEndorsementConfig}
-                        formName="generalDetailsForm"
-                        //  initialData={undefined} 
-                        //  initialData={generalDetailsData}
-                        // onDataChange={handleGeneralDataChange}
-                        panelWidth="full"
-                        collapsible={true} // Added collapsible prop
-                      />                     
-                  </div>
-                  {/* //table */}
-                  <div>
-                     <SmartGridPlus
-                                            columns={otherCarriersColumns}
-                                            data={otherCarriers}
-                                            hideToolbar={true}
-                                             hideCheckboxToggle={true}
-                                             onAddRow={handleAddOtherCarrierRow}
-  onEditRow={handleEditOtherCarrierRow}
-                                            />
-                  </div>
-
-
-                    <div>
-                    {/* RouteConsignmentDetailsRef */}
-                     <DynamicPanel
-                        ref={RouteDetailsRef}
-                        panelId="RouteDetails"
-                        panelOrder={1}
-                        panelTitle="Consignment Number [62]/[6]"
-                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                        panelConfig={routeDetailsConfig}
-                        formName="generalDetailsForm"
-                        //  initialData={undefined} 
-                         initialData={generalDetailsData}
-                        // onDataChange={handleGeneralDataChange}
-                        panelWidth="full"
-                        collapsible={true} // Added collapsible prop
-                      />                  
-                     
-                  </div>
-
-                  <div>
-                   <SmartGridPlus
-  data={routeCodeCDetails}
-  columns={routeCodeCDetailsColumns}
-
-  onAddRow={handleAddRouteRow}
-  onEditRow={handleEditRouteRow}
-
-  hideRightToolbar={true}
-  hideAdvancedFilter={true}
-  hideCheckboxToggle={false}
-/>
-
-                  </div>
-              </TabsContent>
-
-              <TabsContent value="wagon-info" className="mt-6" forceMount>
-              <div>
-                  <div>
-                    {/* wagon123 */}
-                    <DynamicPanel
-                        ref={WagonDetailsRef}
-                        panelId="WagonInfoDetails"
-                        panelOrder={1}
-                        panelTitle="Wagon Info Details"
-                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                        panelConfig={wagonDetailsConfig}
-                        formName="generalDetailsForm"
-                        //  initialData={undefined} 
-                         initialData={generalDetailsData}
-                        // onDataChange={handleGeneralDataChange}
+                      {/* New Payment Instruction Panel */}
+                      <DynamicPanel
+                        ref={paymentInstructionRef}
+                        panelId="payment-instruction"
+                        panelOrder={2}
+                        panelTitle="Payment Instruction [20]"
+                        panelConfig={paymentInstructionConfig}
+                        formName="paymentInstructionForm"
+                        initialData={paymentInstructionData}
+                        // onDataChange={handlePaymentInstructionDataChange}
                         panelWidth="full"
                         collapsible={true} // Added collapsible prop
                       />
+
+                      {/* New Place and Date Made Out Panel */}
+                      <DynamicPanel
+                        ref={placeAndDateRef}
+                        panelId="place-and-date"
+                        panelOrder={3}
+                        panelTitle="Place and Date Made Out [29]"
+                        panelConfig={placeAndDateConfig}
+                        formName="placeAndDateForm"
+                        initialData={placeAndDateData}
+                        // onDataChange={handlePlaceAndDateDataChange}
+                        panelWidth="full"
+                        collapsible={true} // Added collapsible prop
+                      />                    
+                    </div>
                   </div>
+                </TabsContent>
 
-                   <div>
-                   <SmartGridPlus
-  data={wagonGritDetails}
-  columns={wagonGritDetailsColumns}
+                <TabsContent value="declarations" className="mt-6" forceMount>
+                  <div className="">
+                    <DynamicPanel
+                      ref={consignorDeclarationsRef}
+                      panelId="consignor-declarations"
+                      panelOrder={1}
+                      panelTitle="Declarations and Information"
+                      panelConfig={consignorDeclarationsConfig}
+                      formName="consignorDeclarationsForm"
+                      initialData={consignorDeclarationsData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={valueDeliveryCashRef}
+                      panelId="value-delivery-cash"
+                      panelOrder={2}
+                      panelTitle="Value and Delivery Details"
+                      panelConfig={valueDeliveryCashConfig}
+                      formName="valueDeliveryCashForm"
+                      initialData={valueDeliveryCashData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={codingBoxesRef}
+                      panelId="coding-boxes"
+                      panelOrder={3}
+                      panelTitle="Coding Boxes"
+                      panelConfig={codingBoxesConfig}
+                      formName="codingBoxesForm"
+                      initialData={codingBoxesData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={examinationDetailsRef}
+                      panelId="examination-details"
+                      panelOrder={4}
+                      panelTitle="Examination and Other Details"
+                      panelConfig={examinationDetailsConfig}
+                      formName="examinationDetailsForm"
+                      initialData={examinationDetailsData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={sectionARef}
+                      panelId="section-a"
+                      panelOrder={5}
+                      panelTitle="Section A"
+                      panelConfig={sectionAConfig}
+                      formName="sectionAForm"
+                      initialData={sectionAData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={sectionBRef}
+                      panelId="section-b"
+                      panelOrder={6}
+                      panelTitle="Section B"
+                      panelConfig={sectionBConfig}
+                      formName="sectionBForm"
+                      initialData={sectionBData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                    <DynamicPanel
+                      ref={sectionCRef}
+                      panelId="section-c"
+                      panelOrder={7}
+                      panelTitle="Section C"
+                      panelConfig={sectionCConfig}
+                      formName="sectionCForm"
+                      initialData={sectionCData}
+                      panelWidth="full"
+                      collapsible={true}
+                    />
+                </div>
+                </TabsContent>
 
- onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
-  onEditRow={handleEditWagonRow}
+                <TabsContent value="route" className="mt-6" forceMount>
+                {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-6">Route</h2>
+                    <p className="text-gray-500">Route content will be added here.</p>
+                </div> */}
+                  <div>
+                      {/* wagon123 */}
+                      <DynamicPanel
+                          ref={RouteEndorsementDetailsRef}
+                          panelId="RouteConsignmentDetails"
+                          panelOrder={1}
+                          panelTitle="Route Details"
+                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                          panelConfig={routeDetailsCustomsEndorsementConfig}
+                          formName="generalDetailsForm"
+                          //  initialData={undefined} 
+                          //  initialData={generalDetailsData}
+                          // onDataChange={handleGeneralDataChange}
+                          panelWidth="full"
+                          collapsible={true} // Added collapsible prop
+                        />                     
+                    </div>
+                    {/* //table */}
+                    <div>
+                      <SmartGridPlus
+                                              columns={otherCarriersColumns}
+                                              data={otherCarriers}
+                                              hideToolbar={true}
+                                              hideCheckboxToggle={true}
+                                              onAddRow={handleAddOtherCarrierRow}
+    onEditRow={handleEditOtherCarrierRow}
+                                              />
+                    </div>
 
-  hideRightToolbar={true}
-  hideAdvancedFilter={true}
-  hideCheckboxToggle={false}
-/>
 
-                  </div>
-              </div>
-              </TabsContent>
-        </Tabs>
-        </div>
+                      <div>
+                      {/* RouteConsignmentDetailsRef */}
+                      <DynamicPanel
+                          ref={RouteDetailsRef}
+                          panelId="RouteDetails"
+                          panelOrder={1}
+                          panelTitle="Consignment Number [62]/[6]"
+                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                          panelConfig={routeDetailsConfig}
+                          formName="generalDetailsForm"
+                          //  initialData={undefined} 
+                          initialData={generalDetailsData}
+                          // onDataChange={handleGeneralDataChange}
+                          panelWidth="full"
+                          collapsible={true} // Added collapsible prop
+                        />                  
+                      
+                    </div>
 
-        {/* Fixed Footer */}
-        <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-        <div className="flex items-center gap-4"></div>
-          <div className="flex items-center gap-4">
-            <button className={buttonCancel}>Cancel</button>
-            <button
-              className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-              onClick={handleSaveTemplate}
-            >
-              Save
-            </button>
+                    <div>
+                    <SmartGridPlus
+    data={routeCodeCDetails}
+    columns={routeCodeCDetailsColumns}
+
+    onAddRow={handleAddRouteRow}
+    onEditRow={handleEditRouteRow}
+
+    hideRightToolbar={true}
+    hideAdvancedFilter={true}
+    hideCheckboxToggle={false}
+  />
+
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="wagon-info" className="mt-6" forceMount>
+                <div>
+                    <div>
+                      {/* wagon123 */}
+                      <DynamicPanel
+                          ref={WagonDetailsRef}
+                          panelId="WagonInfoDetails"
+                          panelOrder={1}
+                          panelTitle="Wagon Info Details"
+                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                          panelConfig={wagonDetailsConfig}
+                          formName="generalDetailsForm"
+                          //  initialData={undefined} 
+                          initialData={generalDetailsData}
+                          // onDataChange={handleGeneralDataChange}
+                          panelWidth="full"
+                          collapsible={true} // Added collapsible prop
+                        />
+                    </div>
+
+                    <div>
+                    <SmartGridPlus
+    data={wagonGritDetails}
+    columns={wagonGritDetailsColumns}
+
+  onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
+    onEditRow={handleEditWagonRow}
+
+    hideRightToolbar={true}
+    hideAdvancedFilter={true}
+    hideCheckboxToggle={false}
+  />
+
+                    </div>
+                </div>
+                </TabsContent>
+          </Tabs>
           </div>
-        </div>
-    </div>
+
+          {/* Fixed Footer */}
+          <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+          <div className="flex items-center gap-4"></div>
+            <div className="flex items-center gap-4">
+              <button 
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                onClick={() => setIsCancelModalOpen(true)}
+              >Cancel</button>
+              <button
+                className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+                onClick={handleSaveTemplate}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+      </div>
+
+      <ConsignorConsigneeSideDraw
+        isOpen={isConsignorConsigneeSideDrawOpen}
+        width="40%"
+        onSave={handleConsignorConsigneeSave}
+        onClose={() => setIsConsignorConsigneeSideDrawOpen(false)}
+      />
+      <CancelConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirmCancel={handleConfirmCancel}
+      />
+    </>
   );
 };
 

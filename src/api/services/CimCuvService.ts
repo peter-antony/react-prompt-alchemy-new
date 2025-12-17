@@ -212,4 +212,26 @@ export const CimCuvService = {
     );
     return response.data;
   },
+
+  cancelCimCuvTemplate: async (params?: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Template-Cancel",
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.CIM_CUV.CANCEL_CIMCUV}`,
+      requestBody
+    );
+    return response.data;
+  },
 };
