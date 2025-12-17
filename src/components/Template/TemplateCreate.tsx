@@ -10,6 +10,10 @@ import { quickOrderService } from '@/api/services/quickOrderService';
 import { FileText } from 'lucide-react';
 import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
 import { useSearchParams } from "react-router-dom"; 
+import { SmartGridWithGrouping } from '../SmartGrid';
+import { SmartGridPlus } from '../SmartGrid';
+import { GridColumnConfig } from '../SmartGrid';
+import { useNavigate } from 'react-router-dom';
 
 const TemplateCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
@@ -27,6 +31,8 @@ const TemplateCreate = () => {
   const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
   const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
+   const navigate = useNavigate();
+   
   const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
   const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
@@ -45,6 +51,12 @@ const TemplateCreate = () => {
    const workOrderNo = searchParams.get("id");
    const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
 const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
+const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
+const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
+
+
+
 
 
   const buttonCancel =
@@ -84,11 +96,101 @@ const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
     };
   };
 
+  // ✅ Add row – Other Carriers
+const handleAddOtherCarrierRow = (newRow: any) => {
+  setOtherCarriers(prev => [
+    ...prev,
+    {
+      ...newRow,
+      ModeFlag: "Insert",
+    },
+  ]);
+};
+
+// ✅ Edit row – Other Carriers
+const handleEditOtherCarrierRow = (updatedRow: any, rowIndex: number) => {
+  setOtherCarriers(prev => {
+    const copy = [...prev];
+
+    copy[rowIndex] = {
+      ...copy[rowIndex],
+      ...updatedRow,
+      ModeFlag:
+        copy[rowIndex]?.ModeFlag === "Insert"
+          ? "Insert"
+          : "Update",
+    };
+
+    return copy;
+  });
+};
+// ✅ Add Wagon row
+const handleAddWagonRow = (newRow: any) => {
+  setWagonGritDetails(prev => [
+    ...prev,
+    {
+      ...newRow,
+      ModeFlag: "Insert",
+    },
+  ]);
+};
+
+// ✅ Edit Wagon row
+const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
+  setWagonGritDetails(prev => {
+    const copy = [...prev];
+
+    copy[rowIndex] = {
+      ...copy[rowIndex],
+      ...updatedRow,
+      ModeFlag:
+        copy[rowIndex]?.ModeFlag === "Insert"
+          ? "Insert"
+          : "Update",
+    };
+
+    return copy;
+  });
+};
+
+
+  // ✅ STEP 2: Handle Add Row from SmartGrid
+const handleAddRouteRow = (newRow: any) => {
+  const rowWithDefaults = {
+    ...newRow,
+    ModeFlag: "Insert",   // 🔴 IMPORTANT
+  };
+
+  setRouteCodeCDetails(prev => [...prev, rowWithDefaults]);
+};
+// ✅ STEP 3: Handle Edit Row from SmartGrid
+const handleEditRouteRow = (updatedRow: any, rowIndex: number) => {
+  setRouteCodeCDetails(prev => {
+    const updated = [...prev];
+
+    updated[rowIndex] = {
+      ...updated[rowIndex],
+      ...updatedRow,
+      ModeFlag:
+        updated[rowIndex]?.ModeFlag === "Insert"
+          ? "Insert"   // keep Insert if new
+          : "Update",  // existing row edited
+    };
+
+    return updated;
+  });
+};
+
+
+  useEffect(()=>{
+   console.log("SETTING OTHER CARRIERS" , routeCodeCDetails) ;
+  },[routeCodeCDetails])
+
   // Simulate API response for demonstration
   useEffect(() => {
     // Call the API to fetch template data
     fetchTemplateData(workOrderNo); // Replace with actual template ID or a dynamic value
-  }, []); // Removed activeTab from the dependency array
+  }, [workOrderNo]); // Removed activeTab from the dependency array
   
 
   useEffect(() => {
@@ -149,6 +251,182 @@ const buildWeightWithUom = (
       setInitialApiResponse(null);
     }
   };
+
+  // ✅ STEP 1: Columns for Other Carriers grid
+// ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
+const otherCarriersColumns: GridColumnConfig[] = [
+  {
+    key: "Section1",
+    label: "Section 1",
+    type: "Text",
+    editable: true,
+  },
+  {
+    key: "Section2",
+    label: "Section 2",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "Status",
+    label: "Status",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "Action",
+    label: "Action",
+    type: "Text",
+    editable: true,
+  }
+];
+
+const routeCodeCDetailsColumns: GridColumnConfig[] = [
+  {
+    key: "RouteID",
+    label: "RouteID",
+    type: "Text",
+    editable: true,
+  },
+  {
+    key: "LegSequence",
+    label: "Leg Sequence",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "LegID",
+    label: "LegID",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "FromLocationID",
+    label: "From Location ID",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "FromLocationDesc",
+    label: "From Location Desc",
+    type: "Text",
+    editable: true,
+  },
+  {
+    key: "ToLocationID",
+    label: "To Location ID",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "ToLocationDesc",
+    label: "To Location Desc",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "AdhocLeg",
+    label: "Adhoc Leg",
+    type: "Text",
+    editable: true,
+  },
+   {
+    key: "ViaPoint",
+    label: "Via Point",
+    type: "Text",
+    editable: true,
+  }
+];
+
+const wagonGritDetailsColumns: GridColumnConfig[] = [
+  { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
+
+  { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
+
+  { key: "NHM", label: "NHM", type: "Text", editable: true },
+
+  { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
+  { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
+
+  { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
+  { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
+
+  { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
+  { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
+
+  { key: "Specificity", label: "Specificity", type: "Text", editable: true },
+  { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
+
+  { key: "Long_x_larg_x_haut", label: "Length x Width x Height", type: "Text", editable: true },
+  { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
+
+  { key: "Brand_and_No", label: "Brand and No", type: "Text", editable: true },
+  { key: "Remittance_Slip_Number", label: "Remittance Slip No", type: "Text", editable: true },
+  { key: "Customs_Document", label: "Customs Document", type: "Text", editable: true },
+
+  { key: "RID", label: "RID", type: "Text", editable: true },
+
+  { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+
+  { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
+  { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
+  { key: "Packing_Group", label: "Packing Group", type: "Text", editable: true },
+  { key: "Label", label: "Label", type: "Text", editable: true },
+
+  { key: "Special_Provision", label: "Special Provision", type: "Text", editable: true },
+  { key: "Hazard_ID_Number", label: "Hazard ID", type: "Text", editable: true },
+  { key: "Environmentally_Hazardous", label: "Environmentally Hazardous", type: "Text", editable: true },
+
+  { key: "Last_Loaded_Commodity", label: "Last Loaded Commodity", type: "Text", editable: true },
+
+  { key: "Container_No", label: "Container No", type: "Text", editable: true },
+  { key: "Container_Type", label: "Container Type", type: "Text", editable: true },
+
+  { key: "Container_Tare_Weight", label: "Container Tare Weight", type: "Text", editable: true },
+  { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
+
+  { key: "From_Country", label: "From Country", type: "Text", editable: true },
+  { key: "To_Country", label: "To Country", type: "Text", editable: true },
+
+  { key: "Commodity_Description", label: "Commodity Description", type: "Text", editable: true },
+
+  { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
+  { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
+
+  { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
+  { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
+
+  { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
+  { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
+
+  { key: "Container_load_weight", label: "Container Load Weight", type: "Text", editable: true },
+  { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
+  { key: "Container_load_type", label: "Container Load Type", type: "Text", editable: true },
+
+  { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
+  { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
+
+  { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
+  { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
+  { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
+  { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
+
+  { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
+  { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
+  { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
+  { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
+
+  { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
+  { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
+
+  { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
+  { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
+
+  { key: "Wagon_Length", label: "Wagon Length", type: "Text", editable: true },
+  { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
+
+  { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
+];
 
   // General Details Panel Config
   const generalDetailsConfig: PanelConfig = {
@@ -635,7 +913,7 @@ const buildWeightWithUom = (
       order: 2,
       width: 'four',
       placeholder: 'Enter Interest in Delivery',
-      fetchOptions: fetchMaster('Interest in delivery [27]'),
+      fetchOptions: fetchMaster('Currency Init'),
     },
     cashOnDelivery: {
       id: 'cashOnDelivery',
@@ -1367,7 +1645,7 @@ const buildWeightWithUom = (
       placeholder: 'Enter Description of the Goods',
     },
      ExceptionalConsignment: {
-      id: 'incoTerms',
+      id: 'ExceptionalConsignment',
       label: 'Exceptional Consignment [22]',
       fieldType: 'checkbox',
       value: false,
@@ -1643,7 +1921,7 @@ const buildWeightWithUom = (
       width: 'two-thirds',
       placeholder: 'Undertaking Enterprise',
       hideSearch: false,
-         fetchOptions: fetchMaster(' Contractual carrier_58_a Init'),
+         fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
       disableLazyLoading: false,
     },
     UndertakingEnterpriseValue: {
@@ -1884,6 +2162,7 @@ const resolveModeFlag = (
   const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
   const stationServing = splitIdName(formData.codeStationServing);
   const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
+  const NumberOfCustomerAgreementOrTariff = splitIdName(formData.customerAgreementTariff);
 
   return {
     // Consignor
@@ -1929,7 +2208,7 @@ ConsignorsReference_8_value2: consignorRef.name,
     CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
 
     // Agreement/Tariff
-    NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || "",
+    NumberOfCustomerAgreementOrTariff_14: NumberOfCustomerAgreementOrTariff.id || "",
 
     // Acceptance Date / From
     AcceptanceDate_16_2: formData.acceptanceDate || "",
@@ -1953,7 +2232,7 @@ ConsignorsReference_8_value2: consignorRef.name,
     PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
     PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
-    IncoTerms: placeAndDateFormData.incoTerms ? "1" : "0", // Assuming IncoTerms is from placeAndDateFormData
+    IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
     Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
     PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
     PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
@@ -1973,14 +2252,15 @@ ConsignorsReference_8_value2: consignorRef.name,
   });
 
   const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
-    CodingBox_1_40: formData.codingBox1 || null,
-    CodingBox_2_41: formData.codingBox2 || null,
-    CodingBox_3_42: formData.codingBox3 || null,
-    CodingBox_4_43: formData.codingBox4 || null,
-    CodingBox_5_44: formData.codingBox5 || null,
-    CodingBox_6_45: formData.codingBox6 || null,
-    CodingBox_7_46: formData.codingBox7 || null,
-    CodingBox_8_47: formData.codingBox8 || null,
+    CodingBox1_40: formData.codingBox1 || null,
+    CodingBox2_41: formData.codingBox2 || null,
+    CodingBox3_42: formData.codingBox3 || null,
+    CodingBox4_43: formData.codingBox4 || null,
+    CodingBox5_44: formData.codingBox5 || null,
+    CodingBox6_45: formData.codingBox6 || null,
+    CodingBox7_46: formData.codingBox7 || null,
+    CodingBox8_47: formData.codingBox8 || null,
+    //123
   });
 
   const mapFormToExaminationDetailsPayload = (formData: Record<string, any>) => ({
@@ -2040,21 +2320,21 @@ ConsignorsReference_8_value2: consignorRef.name,
   const enterprise = splitIdName(formData.UndertakingEnterprise);
 
   return {
-    ConsignmentNumber_1: formData.ConsignmentNumber || "",
+    ConsignmentNo_62_6: formData.ConsignmentNumber || "",
 
     // Country
-    Country_value1: country.id,
-    Country_value2: country.name,
+    Countryvalue1: country.id,
+    Countryvalue2: country.name,
     CountryValueText: formData.COUNtryValue || "",
 
     // Station
-    Station_value1: station.id,
-    Station_value2: station.name,
+    Stationvalue1: station.id,
+    Stationvalue2: station.name,
     StationValueText: formData.StationValue || "",
 
     // Undertaking Enterprise
-    UndertakingEnterprise_value1: enterprise.id,
-    UndertakingEnterprise_value2: enterprise.name,
+    UndertakingEnterprisesvalue1: enterprise.id,
+    UndertakingEnterprisesvalue2: enterprise.name,
     UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
   };
 };
@@ -2076,53 +2356,190 @@ const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
       formData.EnterTransitProcedure || null,
   };
 };
+//for grid 
+const mapRouteCodeCDetailsPayload = (rows: any[]) => {
+  return rows
+    .filter(row => row.RouteID || row.LegID) 
+    .map(row => ({
+      RouteID: row.RouteID ?? "",
+      LegSequence: row.LegSequence ?? "",
+      LegID: row.LegID ?? "",
+      FromLocationID: row.FromLocationID ?? "",
+      FromLocationDesc: row.FromLocationDesc ?? "",
+      ToLocationID: row.ToLocationID ?? "",
+      ToLocationDesc: row.ToLocationDesc ?? "",
+      AdhocLeg: row.AdhocLeg ?? "",
+      ViaPoint: row.ViaPoint ?? "",
+      ModeFlag: row.ModeFlag, 
+    }));
+};
+
+const mapOtherCarriersPayload = (rows: any[]) =>
+  rows.map(row => ({
+    Name: row.Name ?? "",
+    Section1: row.Section1 ?? "",
+    Section2: row.Section2 ?? "",
+    Status: row.Status ?? "",
+    ModeFlag: row.ModeFlag,
+  }));
+
+// const mapWagonGridPayload = (rows: any[]) =>
+//   rows.map(row => ({
+//     WagonNo: row.WagonNo ?? "",
+//     Short_Description_of_Goods: row.Short_Description_of_Goods ?? "",
+//     Exceptional_Consignment_22: row.Exceptional_Consignment_22 ?? 0,
+//     RID: row.RID ?? 0,
+//     UTIType: row.UTIType ?? "",
+//     NHMCode: row.NHMCode ?? "",
+//     GrossWt: row.GrossWt ?? null,
+//     TareWt: row.TareWt ?? null,
+//     NetWt: row.NetWt ?? null,
+//     TotalMass: row.TotalMass ?? null,
+//     TotalBrut: row.TotalBrut ?? null,
+//     TotalTare: row.TotalTare ?? null,
+//     ModeFlag: row.ModeFlag,
+//   }));
+
+// const mapFormToWagonPayload = (formData: Record<string, any>) => {
+//   const train = splitIdName(formData.train);
+//   const uti = splitIdName(formData.UTICODE);
+//   const nhm = splitIdName(formData.NHMCode);
+
+//   return {
+//     WagonNo: formData.wagonNumber || "",
+//     Short_Description_of_Goods: formData.DescriptionoftheGoods || "",
+
+//     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
+//     RID: formData.RID ? 1 : 0,
+
+//     UTIType: uti.id || "",
+//     NHMCode: nhm.id || "",
+
+//     LengthxWidthxheight_24: formData.LengthWidthHeight?.dropdown || "",
+//     Mark_and_Number_25: formData.MarkandNumber || "",
+//     Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
+//     GrossWt: buildWeightWithUom(formData.GrossWeight),
+//     TareWt: buildWeightWithUom(formData.TareWeight),
+//     NetWt: buildWeightWithUom(formData.NetWeight),
+
+//      TotalMass: buildWeightWithUom(formData.TotalNetto),
+//     TotalBrut: buildWeightWithUom(formData.TotalBrutto),
+//     TotalTare: buildWeightWithUom(formData.TotalGross),
+
+//     Train_1: train.id || "",
+//     Itinerary_5: formData.itinerary || "",
+//     Page_9: formData.Page || "",
+//     Date_of_Dispatch_7: formData.dataOfDispatch || "",
+//     To_be_cleared_at_12: formData.toBeClearedAt || "",
+
+//     Fixed_Net_Weight_Train_13: formData.fixedNetTrain?.dropdown || "",
+//     NoNumber_14: Number(formData.number) || 0,
+//     Loading_Configuration_16: formData.LoadingConfiguration || "",
+
+//     // OPTIONAL API FIELDS (set to null if not in form)
+//     DangerGoods: null,
+//     MassWeight: null,
+//     BrutWeight: null,
+
+//     WagonLength: null,
+//     // ModeFlag: "Update"
+//   };
+// };
 
 
-const mapFormToWagonPayload = (formData: Record<string, any>) => {
-  const train = splitIdName(formData.train);
-  const uti = splitIdName(formData.UTICODE);
-  const nhm = splitIdName(formData.NHMCode);
+const mapFormToWagonInfoDetails = (
+  formData: any,
+  modeFlag: "Insert" | "Update" | "NoChange"
+) => {
+  const gross = splitValueUom(
+    formData.GrossWeight
+      ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
+      : null
+  );
+
+  const tare = splitValueUom(
+    formData.TareWeight
+      ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
+      : null
+  );
+
+  const net = splitValueUom(
+    formData.NetWeight
+      ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
+      : null
+  );
 
   return {
-    WagonNo: formData.wagonNumber || "",
-    GoodsDescription: formData.DescriptionoftheGoods || "",
+    Train_1: formData.train || null,
+    Itinerary_5: formData.itinerary || null,
+    Date_of_Dispatch_7: formData.dataOfDispatch || null,
+    Page_9: formData.Page || null,
+    To_be_cleared_at_12: formData.toBeClearedAt || null,
+    Fixed_Net_Weight_Train_13: formData.fixedNetTrain || null,
+
+    No_Number_14: formData.number ? Number(formData.number) : 1,
+    Loading_Configuration_16: formData.LoadingConfiguration || null,
+
+    WagonNo_18_15: formData.wagonNumber || "",
+    Description_of_the_goods_21_17:
+      formData.DescriptionoftheGoods || null,
 
     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
-    RID: formData.RID ? 1 : 0,
+    RID_23_28: formData.RID ? "1" : "0",
 
-    UTIType: uti.id || "",
-    NHMCode: nhm.id || "",
+    NHM_Code_24_18: formData.NHMCode || null,
 
-    LengthxWidthxheight_24: formData.LengthWidthHeight?.dropdown || "",
-    Mark_and_Number_25: formData.MarkandNumber || "",
-    Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
-    GrossWt: buildWeightWithUom(formData.GrossWeight),
-    TareWt: buildWeightWithUom(formData.TareWeight),
-    NetWt: buildWeightWithUom(formData.NetWeight),
+    GrossWeight_25_19: gross.val,
+    GrossWeight_25_19_UOM: gross.uom,
 
-     TotalMass: buildWeightWithUom(formData.TotalNetto),
-    TotalBrut: buildWeightWithUom(formData.TotalBrutto),
-    TotalTare: buildWeightWithUom(formData.TotalGross),
+    TareWeight_25_20: tare.val,
+    TareWeight_25_20_UOM: tare.uom,
 
-    Train_1: train.id || "",
-    Itinerary_5: formData.itinerary || "",
-    Page_9: formData.Page || "",
-    Date_of_Dispatch_7: formData.dataOfDispatch || "",
-    To_be_cleared_at_12: formData.toBeClearedAt || "",
+    NetWeight_25_21: net.val,
+    NetWeight_25_21_UOM: net.uom,
 
-    Fixed_Net_Weight_Train_13: formData.fixedNetTrain?.dropdown || "",
-    NoNumber_14: Number(formData.number) || 0,
-    Loading_Configuration_16: formData.LoadingConfiguration || "",
+    Total_Brutto: 0,
+    Total_Brutto_UOM: null,
+    Total_Netto: 0,
+    Total_Netto_UOM: null,
+    Total_Gross: 0,
+    Total_Gross_UOM: null,
 
-    // OPTIONAL API FIELDS (set to null if not in form)
-    DangerGoods: null,
-    MassWeight: null,
-    BrutWeight: null,
-
-    WagonLength: null,
-    // ModeFlag: "Update"
+    ModeFlag: modeFlag,
   };
 };
+
+
+const mapWagonGridPayload = (rows: any[]) =>
+  rows.map(row => {
+    const mass = splitValueUom(row.TotalMass);
+    const brut = splitValueUom(row.TotalBrut);
+    const tare = splitValueUom(row.TotalTare);
+
+    return {
+      WagonNo: row.WagonNo || "",
+      RID: row.RID ? "1" : "0",
+
+      Mass_Weight: row.MassWeight || null,
+      Mass_Weight_UOM: null,
+
+      Total_Mass: Number(mass.val) || 0,
+      Total_Mass_UOM: mass.uom,
+
+      Total_Brutt: Number(brut.val) || 0,
+      Total_Brutt_UOM: brut.uom,
+
+      Total_Tare: Number(tare.val) || 0,
+      Total_Tare_UOM: tare.uom,
+
+      Wagon_Length: row.WagonLength || null,
+      Wagon_Length_UOM: null,
+
+      Short_Description_of_Goods: row.Short_Description_of_Goods || null,
+
+      ModeFlag: row.ModeFlag || "NoChange",
+    };
+  });
 
 const initialSnapshotRef = useRef<any>(null);
 
@@ -2181,7 +2598,7 @@ const [isFormInitialized, setIsFormInitialized] = useState(false);
           paymentInstruction1: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
           paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
           carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
-          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
+          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === 1, // Convert to boolean
         });
       }
       if (placeAndDateRef.current && apiResponse.General?.PaymentInstruction) {
@@ -2211,14 +2628,14 @@ const [isFormInitialized, setIsFormInitialized] = useState(false);
 
       if (codingBoxesRef.current && apiResponse.Declarations) {
         codingBoxesRef.current.setFormValues({
-          codingBox1: apiResponse.Declarations.CodingBox_1_40,
-          codingBox2: apiResponse.Declarations.CodingBox_2_41,
-          codingBox3: apiResponse.Declarations.CodingBox_3_42,
-          codingBox4: apiResponse.Declarations.CodingBox_4_43,
-          codingBox5: apiResponse.Declarations.CodingBox_5_44,
-          codingBox6: apiResponse.Declarations.CodingBox_6_45,
-          codingBox7: apiResponse.Declarations.CodingBox_7_46,
-          codingBox8: apiResponse.Declarations.CodingBox_8_47,
+          codingBox1: apiResponse.Declarations.CodingBox1_40,
+          codingBox2: apiResponse.Declarations.CodingBox2_41,
+          codingBox3: apiResponse.Declarations.CodingBox3_42,
+          codingBox4: apiResponse.Declarations.CodingBox4_43,
+          codingBox5: apiResponse.Declarations.CodingBox5_44,
+          codingBox6: apiResponse.Declarations.CodingBox6_45,
+          codingBox7: apiResponse.Declarations.CodingBox7_46,
+          codingBox8: apiResponse.Declarations.CodingBox8_47,
         });
       }
 
@@ -2342,6 +2759,74 @@ if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
 }
 
 
+
+if (apiResponse?.RouteDetails?.OtherCarriers_57) {
+
+  setOtherCarriers(
+    apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
+      Section1: c.Section1 || "",
+      Section2: c.Section2 || "",
+      Status: c.Status || "",  
+    }))
+  );
+}
+if (apiResponse?.RouteDetails?.Route) {
+
+  
+   setRouteCodeCDetails(
+    apiResponse.RouteDetails.Route.map((c: any) => ({
+      RouteID: c.RouteID || "",
+      LegSequence: c.LegSequence || "",
+      LegID: c.LegID || "",  
+      FromLocationID: c.FromLocationID || "",
+      FromLocationDesc: c.FromLocationDesc || "",
+      ToLocationID: c.ToLocationID || "", 
+       ToLocationDesc: c.ToLocationDesc || "",
+      AdhocLeg: c.AdhocLeg || "",  
+      ViaPoint: c.ViaPoint || "",
+
+    }))
+  );
+}
+
+if (apiResponse?.RouteDetails?.WagonDetails) {
+
+  
+   setWagonGritDetails(
+    apiResponse.RouteDetails.WagonDetails.map((c: any) => ({
+      WagonNo: c.WagonNo || "",
+      Short_Description_of_Goods: c.Short_Description_of_Goods || "",
+      CN: c.CN || "",  
+      RID: c.RID || "",
+      DangerGoods: c.DangerGoods || "",
+      NHMCode: c.NHMCode || "", 
+       GrossWt: c.GrossWt || "",
+      TareWt: c.TareWt || "",  
+      NetWt: c.NetWt || "",
+
+    }))
+  );
+}
+
+// if (apiResponse?.RouteDetails?.OtherCarriers_57) {
+
+//   console.log("SETTING OTHER CARRIERS NOW", apiResponse.RouteDetails.Route);
+//   // setRouteCodeCDetails(
+//   //   apiResponse.RouteDetails.Route.map((c: any) => ({
+//   //     RouteID: c.Section1 || "",
+//   //     LegSequence: c.Section2 || "",
+//   //     LegID: c.Status || "",  
+//   //     FromLocationID: c.Section1 || "",
+//   //     FromLocationDesc: c.Section2 || "",
+//   //     ToLocationID: c.Status || "", 
+//   //      ToLocationDesc: c.Section2 || "",
+//   //     AdhocLeg: c.Status || "",  
+//   //     ViaPoint: c.Section1 || "",
+  
+//   //   }))
+//   // );
+// }
+
 if (WagonDetailsRef.current && apiResponse?.WagonDetails) {
   console.log("SETTING WAGON VALUES NOW");
 
@@ -2365,7 +2850,7 @@ if (WagonDetailsRef.current && apiResponse?.WagonDetails) {
 
     // --- WAGON INFO ---
     wagonNumber: wagon.WagonNo || "",
-    DescriptionoftheGoods: wagon.GoodsDescription || "",
+    DescriptionoftheGoods: wagon.Short_Description_of_Goods || "",
 
     // --- CHECKBOXES ---
     ExceptionalConsignment:
@@ -2679,7 +3164,18 @@ if (WagonDetailsRef.current && apiResponse?.WagonDetails) {
 
 //   };
 
-const handleSaveTemplate = () => {
+const splitValueUom = (value?: string | null) => {
+  if (!value) return { val: null, uom: null };
+
+  const parts = value.split(" ");
+  return {
+    val: parts[0] ?? null,
+    uom: parts[1] ?? null,
+  };
+};
+
+
+const handleSaveTemplate = async () => {
   if (!initialSnapshotRef.current) return;
 
   const headerFV = headerTemplateRef.current.getFormValues();
@@ -2695,7 +3191,13 @@ const handleSaveTemplate = () => {
   const secCFV = sectionCRef.current.getFormValues();
   const routeFV = RouteDetailsRef.current.getFormValues();
   const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
-  const wagonFV = WagonDetailsRef.current.getFormValues();
+  const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+const wagonInfoModeFlag = resolveModeFlag(
+  wagonFormData,
+  initialSnapshotRef.current?.WagonInfodetails,
+  workOrderNo
+);
 
   const payload = {
     Header: {
@@ -2732,6 +3234,16 @@ const handleSaveTemplate = () => {
       ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
       ...mapFormToCodingBoxesPayload(codingFV),
       ...mapFormToExaminationDetailsPayload(examFV),
+       ModeFlag: resolveModeFlag(
+    {
+      ...consignorFV,
+      ...valueDeliveryFV,
+      ...codingFV,
+      ...examFV,
+    },
+    initialSnapshotRef.current.declarations,
+    workOrderNo
+  ),
 
       SectionA: {
         ...mapFormToSectionAPayload(secAFV),
@@ -2768,6 +3280,9 @@ const handleSaveTemplate = () => {
         initialSnapshotRef.current.routeEndorsement,
         workOrderNo
       ),
+      //loading grid data
+    Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+     OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
     },
 
     ConsignmentDetails: {
@@ -2779,19 +3294,54 @@ const handleSaveTemplate = () => {
       ),
     },
 
-    WagonDetails: [
-      {
-        ...mapFormToWagonPayload(wagonFV),
-        ModeFlag: resolveModeFlag(
-          wagonFV,
-          initialSnapshotRef.current.wagon,
-          workOrderNo
-        ),
-      },
-    ],
+  //   WagonDetails: [
+  //     {
+  //       ...mapFormToWagonPayload(wagonFV),
+  //       ModeFlag: resolveModeFlag(
+  //         wagonFV,
+  //         initialSnapshotRef.current.wagon,
+  //         workOrderNo
+  //       ),
+  //     },
+
+  //   ],
+  // };
+
+//   WagonInfodetails: [
+//   {
+//     ...mapFormToWagonPayload(wagonFV),
+//     ModeFlag: resolveModeFlag(
+//       wagonFV,
+//       initialSnapshotRef.current.wagon,
+//       workOrderNo
+//     ),
+//   },
+//   ...mapWagonGridPayload(wagonGritDetails),
+// ],
+
+WagonInfodetails: mapFormToWagonInfoDetails(
+    wagonFormData,
+    wagonInfoModeFlag
+  ),
+
+ WagonLineDetails: wagonGritDetails,
   };
 
   console.log("✅ FINAL PAYLOAD", JSON.stringify(payload , null  , 2));
+  try {
+    console.log(" Sending payload to save template...");
+    const response = await CimCuvService.saveCimCuvTemplate(payload);
+    console.log("✅ SAVE TEMPLATE RESPONSE", response.message);
+    console.log(response.message == "Success")
+    if(response.message == "Success" ){
+ navigate(0);
+ navigate(`/create-template?id=${(workOrderNo)}`);
+
+    }
+
+  } catch (error) {
+    console.error("❌ SAVE TEMPLATE FAILED", error);
+  }
 };
 
 
@@ -3023,6 +3573,17 @@ const handleSaveTemplate = () => {
                         collapsible={true} // Added collapsible prop
                       />                     
                   </div>
+                  {/* //table */}
+                  <div>
+                     <SmartGridPlus
+                                            columns={otherCarriersColumns}
+                                            data={otherCarriers}
+                                            hideToolbar={true}
+                                             hideCheckboxToggle={true}
+                                             onAddRow={handleAddOtherCarrierRow}
+  onEditRow={handleEditOtherCarrierRow}
+                                            />
+                  </div>
 
 
                     <div>
@@ -3042,6 +3603,21 @@ const handleSaveTemplate = () => {
                         collapsible={true} // Added collapsible prop
                       />                  
                      
+                  </div>
+
+                  <div>
+                   <SmartGridPlus
+  data={routeCodeCDetails}
+  columns={routeCodeCDetailsColumns}
+
+  onAddRow={handleAddRouteRow}
+  onEditRow={handleEditRouteRow}
+
+  hideRightToolbar={true}
+  hideAdvancedFilter={true}
+  hideCheckboxToggle={false}
+/>
+
                   </div>
               </TabsContent>
 
@@ -3063,6 +3639,21 @@ const handleSaveTemplate = () => {
                         panelWidth="full"
                         collapsible={true} // Added collapsible prop
                       />
+                  </div>
+
+                   <div>
+                   <SmartGridPlus
+  data={wagonGritDetails}
+  columns={wagonGritDetailsColumns}
+
+ onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
+  onEditRow={handleEditWagonRow}
+
+  hideRightToolbar={true}
+  hideAdvancedFilter={true}
+  hideCheckboxToggle={false}
+/>
+
                   </div>
               </div>
               </TabsContent>

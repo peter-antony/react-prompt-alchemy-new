@@ -181,6 +181,7 @@ export const API_ENDPOINTS = {
     GET_TEMPLATE: '/cimcuvtemplate/gettemplate',
     TEMPLATE_HUB: '/cimcuvhub/templatehubsearch',
     REPORT_HUB: '/cimcuvhub/reporthubsearch',
+    SAVE_TEMPLATE: "/cimcuvtemplate/savetemplate/",
   },
   // Invoice management
   INVOICES: {
