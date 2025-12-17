@@ -137,4 +137,52 @@ export const CimCuvService = {
     );
     return response.data;
   },
+
+  getReportDataByID: async (params?: any): Promise<ApiResponse<Trip>> => {
+    console.log("params ", params);
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-Get Report No",
+      },
+      SearchCriteria: {
+        CIMCUVReportNo: params,
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.CIM_CUV.GET_REPORT}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  saveConsignorConsignee: async (params?: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "Save Consignor Consignee", // Placeholder message type
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    // Assuming a generic API endpoint for now, user might need to define a specific one
+    const response = await apiClient.post(
+      `/api/CimCuv/SaveConsignorConsignee`,
+      requestBody
+    );
+    return response.data;
+  },
 };

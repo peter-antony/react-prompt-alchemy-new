@@ -30,6 +30,7 @@ import { TripRouteUpdate } from "./pages/TripRouteUpdate";
 import { WorkOrderHub } from "./pages/WorkOrderHub";
 import CreateWorkerOrder from "./pages/CreateWorkerOrder";
 import CreateTemplateMain from "./pages/CreateTemplateMain";
+import CreateReportMain from "./pages/CreateReportMain";
 import CimCuvHub from "./pages/CimCuvHubManagement";
 // import MockPage from "./pages/MockPage";
 
@@ -63,6 +64,11 @@ const App = () => (
           <Route path="create-template" element={
             <ProtectedRoute>
               <CreateTemplateMain />
+            </ProtectedRoute>
+          } />
+          <Route path="create-report" element={
+            <ProtectedRoute>
+              <CreateReportMain />
             </ProtectedRoute>
           } />
           <Route path="trip-route" element={
