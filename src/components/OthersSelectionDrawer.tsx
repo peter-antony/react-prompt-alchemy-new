@@ -127,6 +127,8 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
   const [planType, setPlanType] = useState(otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay");
   const [loadType, setLoadType] = useState(otherInfoData.LoadType);
   const [passNo, setPassNo] = useState(otherInfoData.PassNoFromSchedule);
+  const [forwardTripID, setForwardTripID] = useState(otherInfoData.ForwardTripID);
+  const [returnTripID, setReturnTripID] = useState(otherInfoData.ReturnTripID);
 
   const [tripStartDate, setTripStartDate] = useState(otherInfoData.PlanStartDate);
   const [tripStartTime, setTripStartTime] = useState(otherInfoData.PlanStartTime);
@@ -192,6 +194,8 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
         planType: otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay",
         loadType: otherInfoData.LoadType,
         passNo: otherInfoData.PassNoFromSchedule,
+        forwardTripID: otherInfoData.ForwardTripID,
+        returnTripID: otherInfoData.ReturnTripID,
         tripStartDate: otherInfoData.PlanStartDate,
         tripStartTime: normalizeTime(otherInfoData.PlanStartTime),
         tripEndDate: otherInfoData.PlanEndDate,
@@ -206,7 +210,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       setPlanType(otherInfoData?.IsRoundTrip === "1" ? "roundTrip" : "oneWay");
       setLoadType(otherInfoData.LoadType);
       setPassNo(otherInfoData.PassNoFromSchedule);
-  
+      setForwardTripID(otherInfoData.ForwardTripID);
+      setReturnTripID(otherInfoData.ReturnTripID);
+
       setTripStartDate(otherInfoData.PlanStartDate);
       setTripStartTime(normalizeTime(otherInfoData.PlanStartTime));
       setTripEndDate(otherInfoData.PlanEndDate);
@@ -230,6 +236,8 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       planType,
       loadType,
       passNo,
+      forwardTripID,
+      returnTripID,
       tripStartDate,
       tripStartTime,
       tripEndDate,
@@ -244,6 +252,8 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       currentValues.planType !== initialValues.planType ||
       currentValues.loadType !== initialValues.loadType ||
       currentValues.passNo !== initialValues.passNo ||
+      currentValues.forwardTripID !== initialValues.forwardTripID ||
+      currentValues.returnTripID !== initialValues.returnTripID ||
       currentValues.tripStartDate !== initialValues.tripStartDate ||
       currentValues.tripStartTime !== initialValues.tripStartTime ||
       currentValues.tripEndDate !== initialValues.tripEndDate ||
@@ -252,7 +262,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       currentValues.QCUserDefined.input !== initialValues.QCUserDefined.input;
 
     setHasChanges(changed);
-  }, [remark, supplierRefNo, planType, loadType, passNo, tripStartDate, tripStartTime, tripEndDate, tripEndTime, QCUserDefined, initialValues]);
+  }, [remark, supplierRefNo, planType, loadType, passNo, forwardTripID, returnTripID, tripStartDate, tripStartTime, tripEndDate, tripEndTime, QCUserDefined, initialValues]);
 
   const fetchData = async (messageType) => {
     console.log("fetch data");
@@ -440,6 +450,8 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
       planType,
       loadType,
       passNo,
+      forwardTripID,
+      returnTripID,
       tripStartDate,
       tripStartTime,
       tripEndDate,
@@ -539,6 +551,34 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 placeholder="Select"
               />
             </div>
+
+            {/* Forward Trip Plan ID and Return Trip Plan ID Row - Only visible for Round Trip */}
+            {planType === "roundTrip" && (
+              <div className="grid grid-cols-2 gap-4">
+                {/* Forward Trip Plan ID */}
+                <div className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Forward Trip Plan ID</label>
+                  <Input
+                    type="text"
+                    value={forwardTripID || ''}
+                    onChange={(e) => setForwardTripID(e.target.value)}
+                    placeholder="Enter Forward Trip Plan ID"
+                  />
+                </div>
+
+                {/* Return Trip Plan ID */}
+                <div className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Return Trip Plan ID</label>
+                  <Input
+                    type="text"
+                    value={returnTripID || ''}
+                    onChange={(e) => setReturnTripID(e.target.value)}
+                    placeholder="Enter Return Trip Plan ID"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Pass No.</label>
 

@@ -401,6 +401,16 @@ const TripPlanning = () => {
       otherInfoData.QuickCodeValue1 ='';
 
     }
+    if (data.Header?.ForwardTripID != undefined && data.Header?.ForwardTripID != null) {
+      otherInfoData.ForwardTripID = data.Header?.ForwardTripID;
+    } else {
+      otherInfoData.ForwardTripID = null;
+    }
+    if (data.Header?.ReturnTripID != undefined && data.Header?.ReturnTripID != null) {
+      otherInfoData.ReturnTripID = data.Header?.ReturnTripID;
+    } else {
+      otherInfoData.ReturnTripID = null;
+    }
     setOtherInfo(otherInfoData);
     console.log("otherInfoData == ON OPENING", otherInfoData)
 
@@ -689,7 +699,9 @@ const TripPlanning = () => {
     if (data?.tripEndTime !== undefined) headerUpdates.PlanEndTime = safeString(data.tripEndTime);
     if (data?.remark !== undefined) headerUpdates.Remarks = safeString(data.remark);
     if (data?.passNo !== undefined) headerUpdates.PassNoFromSchedule = safeString(data.passNo);
-    
+    if (data?.forwardTripID !== undefined) headerUpdates.ForwardTripID = safeString(data.forwardTripID);
+    if (data?.returnTripID !== undefined) headerUpdates.ReturnTripID = safeString(data.returnTripID);
+
     if(data?.planType=="roundTrip" ){
       headerUpdates.IsRoundTrip = safeString('1');
       headerUpdates.IsOneWay = safeString('0');
