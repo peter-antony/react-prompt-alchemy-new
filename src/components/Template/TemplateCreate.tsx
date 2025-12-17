@@ -2163,6 +2163,7 @@ const resolveModeFlag = (
   const stationServing = splitIdName(formData.codeStationServing);
   const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
   const NumberOfCustomerAgreementOrTariff = splitIdName(formData.customerAgreementTariff);
+  const acceptance = splitIdName(formData.acceptanceFrom);
 
   return {
     // Consignor
@@ -2212,7 +2213,7 @@ ConsignorsReference_8_value2: consignorRef.name,
 
     // Acceptance Date / From
     AcceptanceDate_16_2: formData.acceptanceDate || "",
-    AcceptanceFrom_16_3: formData.acceptanceFrom || "",
+    AcceptanceFrom_16_3: acceptance.id|| "",
 
     // Acceptance Point
     CodeForAcceptancePoint_17: acceptancePoint.id,
@@ -2222,8 +2223,8 @@ ConsignorsReference_8_value2: consignorRef.name,
     WagonNo_18: null,
     DeliveryStationName: stationServing.name || "",
     DeliveryCountryName: formData.deliveryCountryName || "",
-    NameForAcceptancePoint_16: formData.acceptanceFrom || "",
-    NameForAcceptancePoint_16_1: formData.acceptanceFrom || "",
+    NameForAcceptancePoint_16: acceptance.id || "",
+    NameForAcceptancePoint_16_1: acceptance.name || "",
   };
 };
 
@@ -2245,11 +2246,41 @@ ConsignorsReference_8_value2: consignorRef.name,
     InformationForTheConsignee_15: formData.informationForConsignee || null,
   });
 
-  const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => ({
-    DeclarationOfValue_26: formData.declarationOfValue || null,
-    InterestInDelivery_27: formData.interestInDelivery || null,
-    CashOnDelivery_28: formData.cashOnDelivery || null,
-  });
+  const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
+  const declarationOfValue = splitIdName(formData.declarationOfValue);
+  const interestInDelivery = splitIdName(formData.interestInDelivery);
+
+  // cash on delivery may be inputdropdown → handle carefully
+  const cashOnDelivery =
+    typeof formData.cashOnDelivery === "string"
+      ? splitIdName(formData.cashOnDelivery)
+      : { id: formData.cashOnDelivery, name: "" };
+
+  return {
+    // Declaration of Value [26]
+    
+  //   DeclarationOfValue_26: declarationOfValue.id || null,
+  //  Currency_26: declarationOfValue.name || null,
+
+  //   // Interest in Delivery [27]
+  //   InterestInDelivery_27: interestInDelivery.id || null,
+  //   Currency_27: interestInDelivery.name || null,
+
+  //   // Cash on Delivery [28]
+  //   CashOnDelivery_28: cashOnDelivery.id || null,
+  //   Currency_28: cashOnDelivery.name || null,
+
+  DeclarationOfValue_26: "CAD",
+Currency_26: "454.00000000",
+
+InterestInDelivery_27: "454.00000000",
+Currency_27: "454.00000000",
+
+CashOnDelivery_28: "CHF",
+Currency_28: "6333.00000000"
+  };
+};
+
 
   const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
     CodingBox1_40: formData.codingBox1 || null,
@@ -2341,10 +2372,12 @@ ConsignorsReference_8_value2: consignorRef.name,
 
 const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
   const contractualCarrier = splitIdName(formData.ContractualCarrier);
+    const RouteValue = splitIdName(formData.Route_50);
+
 
   return {
     CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
-    Route_50: formData.Route_50 || null,
+    Route_50: RouteValue?.id || "",
     CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
     CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
     ContractualCarrier_58a_value1: contractualCarrier.id || null,
@@ -2446,6 +2479,78 @@ const mapOtherCarriersPayload = (rows: any[]) =>
 //   };
 // };
 
+const toNumberOrNull = (v: any) => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+};
+
+const toBit = (v: any) => (v ? 1 : 0);
+
+
+// const mapFormToWagonInfoDetails = (
+//   formData: any,
+//   modeFlag: "Insert" | "Update" | "NoChange"
+// ) => {
+//   const gross = splitValueUom(
+//     formData.GrossWeight
+//       ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
+//       : null
+//   );
+
+//   const tare = splitValueUom(
+//     formData.TareWeight
+//       ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
+//       : null
+//   );
+
+//   const net = splitValueUom(
+//     formData.NetWeight
+//       ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
+//       : null
+//   );
+
+//   return {
+//     Train_1: formData.train || null,
+//     Itinerary_5: formData.itinerary || null,
+//     Date_of_Dispatch_7: formData.dataOfDispatch || null,
+//     Page_9: formData.Page || null,
+//     To_be_cleared_at_12: formData.toBeClearedAt || null,
+//     Fixed_Net_Weight_Train_13: formData.fixedNetTrain || null,
+
+//     No_Number_14: formData.number ? Number(formData.number) : 1,
+//     Loading_Configuration_16: formData.LoadingConfiguration || null,
+
+//     WagonNo_18_15: formData.wagonNumber || "",
+//     Description_of_the_goods_21_17:
+//       formData.DescriptionoftheGoods || null,
+
+//     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
+//     RID_23_28: formData.RID ? "1" : "0",
+
+//     NHM_Code_24_18: formData.NHMCode || null,
+
+//     GrossWeight_25_19: toNumberOrNull(gross.val),
+// GrossWeight_25_19_UOM: gross.uom || null,
+
+// TareWeight_25_20: toNumberOrNull(tare.val),
+// TareWeight_25_20_UOM: tare.uom || null,
+
+// NetWeight_25_21: toNumberOrNull(net.val),
+// NetWeight_25_21_UOM: net.uom || null,
+
+
+//     Total_Brutto: 0,
+//     Total_Brutto_UOM: null,
+//     Total_Netto: 0,
+//     Total_Netto_UOM: null,
+//     Total_Gross: 0,
+//     Total_Gross_UOM: null,
+
+//     ModeFlag: modeFlag,
+//   };
+// };
+
 
 const mapFormToWagonInfoDetails = (
   formData: any,
@@ -2475,35 +2580,42 @@ const mapFormToWagonInfoDetails = (
     Date_of_Dispatch_7: formData.dataOfDispatch || null,
     Page_9: formData.Page || null,
     To_be_cleared_at_12: formData.toBeClearedAt || null,
-    Fixed_Net_Weight_Train_13: formData.fixedNetTrain || null,
 
-    No_Number_14: formData.number ? Number(formData.number) : 1,
+    Fixed_Net_Weight_Train_13: toNumberOrNull(
+      formData.fixedNetTrain?.input
+    ),
+
+    No_Number_14: toNumberOrNull(formData.number),
+
     Loading_Configuration_16: formData.LoadingConfiguration || null,
-
-    WagonNo_18_15: formData.wagonNumber || "",
+    WagonNo_18_15: formData.wagonNumber || null,
     Description_of_the_goods_21_17:
       formData.DescriptionoftheGoods || null,
 
-    Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
-    RID_23_28: formData.RID ? "1" : "0",
+    Exceptional_Consignment_22: toBit(
+      formData.ExceptionalConsignment
+    ),
+    RID_23_28: toBit(formData.RID),
 
-    NHM_Code_24_18: formData.NHMCode || null,
+    NHM_Code_24_18: toNumberOrNull(
+      splitIdName(formData.NHMCode).id
+    ),
 
-    GrossWeight_25_19: gross.val,
-    GrossWeight_25_19_UOM: gross.uom,
+    Mark_and_Number_25: formData.MarkandNumber || null,
+    Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-    TareWeight_25_20: tare.val,
-    TareWeight_25_20_UOM: tare.uom,
+    GrossWeight_25_19: toNumberOrNull(gross?.val),
+    GrossWeight_25_19_UOM: gross?.uom || null,
 
-    NetWeight_25_21: net.val,
-    NetWeight_25_21_UOM: net.uom,
+    TareWeight_25_20: toNumberOrNull(tare?.val),
+    TareWeight_25_20_UOM: tare?.uom || null,
+
+    NetWeight_25_21: toNumberOrNull(net?.val),
+    NetWeight_25_21_UOM: net?.uom || null,
 
     Total_Brutto: 0,
-    Total_Brutto_UOM: null,
     Total_Netto: 0,
-    Total_Netto_UOM: null,
     Total_Gross: 0,
-    Total_Gross_UOM: null,
 
     ModeFlag: modeFlag,
   };
@@ -2598,7 +2710,7 @@ const [isFormInitialized, setIsFormInitialized] = useState(false);
           paymentInstruction1: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
           paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
           carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
-          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === 1, // Convert to boolean
+          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
         });
       }
       if (placeAndDateRef.current && apiResponse.General?.PaymentInstruction) {
@@ -2620,9 +2732,12 @@ const [isFormInitialized, setIsFormInitialized] = useState(false);
 
       if (valueDeliveryCashRef.current && apiResponse.Declarations) {
         valueDeliveryCashRef.current.setFormValues({
-          declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
-          interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
-          cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
+          // declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
+          // interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
+          // cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
+          // Currency_26: apiResponse.Declarations.Currency_26,
+          // Currency_27: apiResponse.Declarations.Currency_27,
+          // Currency_28: apiResponse.Declarations.Currency_28,
         });
       }
 
@@ -2750,7 +2865,7 @@ if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
   RouteEndorsementDetailsRef.current.setFormValues({
     CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
     Route_50: apiRoute.Route_50 || "",
-    CustomsProcedures: CustomsProcedure,
+    CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
     ContractualCarrier: ContractualCarrier,
     EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
     TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1 ,
@@ -2789,109 +2904,139 @@ if (apiResponse?.RouteDetails?.Route) {
   );
 }
 
-if (apiResponse?.RouteDetails?.WagonDetails) {
 
-  
-   setWagonGritDetails(
-    apiResponse.RouteDetails.WagonDetails.map((c: any) => ({
-      WagonNo: c.WagonNo || "",
-      Short_Description_of_Goods: c.Short_Description_of_Goods || "",
-      CN: c.CN || "",  
-      RID: c.RID || "",
-      DangerGoods: c.DangerGoods || "",
-      NHMCode: c.NHMCode || "", 
-       GrossWt: c.GrossWt || "",
-      TareWt: c.TareWt || "",  
-      NetWt: c.NetWt || "",
 
+
+// if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+//   console.log("SETTING WAGON VALUES NOW" , apiResponse?.WagonInfodetails);
+
+//   const wagon = apiResponse.WagonInfodetails; // first wagon
+
+//   WagonDetailsRef.current.setFormValues({
+//     // --- BASIC DETAILS ---
+//     train: wagon.Train_1 || "",
+//     itinerary: wagon.Itinerary_5 || "",
+//     dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
+//     Page: wagon.Page_9 || "",
+//     toBeClearedAt: wagon.To_be_cleared_at_12 || "",
+
+//     // --- DROPDOWN ---
+//     fixedNetTrain: {
+//       dropdown: wagon.Fixed_Net_Weight_Train_13 || "",
+//     },
+
+//     number: wagon.NoNumber_14 ?? "",
+//     LoadingConfiguration: wagon.Loading_Configuration_16 || "",
+
+//     // --- WAGON INFO ---
+//     wagonNumber: wagon.WagonNo || "",
+//     DescriptionoftheGoods: wagon.Short_Description_of_Goods || "",
+
+//     // --- CHECKBOXES ---
+//     ExceptionalConsignment:
+//       wagon.Exceptional_Consignment_22 === 1 ||
+//       wagon.Exceptional_Consignment_22 === "Yes",
+
+//     RID:
+//       wagon.RID === 1 ||
+//       wagon.RID === "Yes",
+
+//     // --- LAZY SELECTS ---
+//     UTICODE: wagon.UTIType || "",
+//     NHMCode: wagon.NHMCode
+//       ? String(wagon.NHMCode)
+//       : "",
+
+//     // --- DIMENSIONS ---
+//     LengthWidthHeight: {
+//       dropdown: wagon.LengthxWidthxheight_24 || "",
+//     },
+
+//     MarkandNumber: wagon.Mark_and_Number_25 || "",
+//     DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
+
+//     // --- WEIGHTS ---
+//     GrossWeight: wagon.Gross_Weight_25_19 ?? "",
+//     TareWeight: wagon.Tare_Weight_25_20 ?? "",
+//     NetWeight: wagon.Net_Weight_25_21 ?? "",
+
+//     // --- TOTALS ---
+//     TotalBrutto: {
+//       dropdown: wagon.TotalBrut ?? "",
+//     },
+//     TotalNetto: {
+//       dropdown: wagon.TotalMass ?? "",
+//     },
+//     TotalGross: {
+//       dropdown: wagon.TotalTare ?? "",
+//     },
+//   });
+// }
+
+if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+  const wagon = apiResponse.WagonInfodetails;
+
+  WagonDetailsRef.current.setFormValues({
+    train: wagon.Train_1 ?? "",
+    itinerary: wagon.Itinerary_5 ?? "",
+    dataOfDispatch: wagon.Date_of_Dispatch_7 ?? "",
+    Page: wagon.Page_9 ?? "",
+    toBeClearedAt: wagon.To_be_cleared_at_12 ?? "",
+
+    fixedNetTrain: {
+      input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+    },
+
+    number: wagon.No_Number_14 ?? 1,
+    LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
+
+    wagonNumber: wagon.WagonNo_18_15 ?? "",
+    DescriptionoftheGoods: wagon.Description_of_the_goods_21_17 ?? "",
+
+    ExceptionalConsignment: wagon.Exceptional_Consignment_22 === "1",
+    RID: wagon.RID_23_28 === "1",
+    MarkandNumber: wagon.Mark_and_Number_25 ?? "",
+    DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
+    UTICODE: wagon.UTI_Code_23 ?? "",
+
+    NHMCode: wagon.NHM_Code_24_18
+      ? String(wagon.NHM_Code_24_18)
+      : "",
+
+    GrossWeight: wagon.GrossWeight_25_19
+      ? {
+          input: String(wagon.GrossWeight_25_19),
+          dropdown: wagon.GrossWeight_25_19_UOM,
+        }
+      : null,
+
+    TareWeight: wagon.TareWeight_25_20
+      ? {
+          input: String(wagon.TareWeight_25_20),
+          dropdown: wagon.TareWeight_25_20_UOM,
+        }
+      : null,
+
+    NetWeight: wagon.NetWeight_25_21
+      ? {
+          input: String(wagon.NetWeight_25_21),
+          dropdown: wagon.NetWeight_25_21_UOM,
+        }
+      : null,
+  });
+}
+
+if (apiResponse?.WagonLineDetails) {
+  setWagonGritDetails(
+    apiResponse.WagonLineDetails.map((row: any) => ({
+      ...row,
+      // ensure ModeFlag exists for grid editing
+      ModeFlag: row.ModeFlag || "NoChange",
     }))
   );
 }
 
-// if (apiResponse?.RouteDetails?.OtherCarriers_57) {
 
-//   console.log("SETTING OTHER CARRIERS NOW", apiResponse.RouteDetails.Route);
-//   // setRouteCodeCDetails(
-//   //   apiResponse.RouteDetails.Route.map((c: any) => ({
-//   //     RouteID: c.Section1 || "",
-//   //     LegSequence: c.Section2 || "",
-//   //     LegID: c.Status || "",  
-//   //     FromLocationID: c.Section1 || "",
-//   //     FromLocationDesc: c.Section2 || "",
-//   //     ToLocationID: c.Status || "", 
-//   //      ToLocationDesc: c.Section2 || "",
-//   //     AdhocLeg: c.Status || "",  
-//   //     ViaPoint: c.Section1 || "",
-  
-//   //   }))
-//   // );
-// }
-
-if (WagonDetailsRef.current && apiResponse?.WagonDetails) {
-  console.log("SETTING WAGON VALUES NOW");
-
-  const wagon = apiResponse.WagonDetails[0]; // first wagon
-
-  WagonDetailsRef.current.setFormValues({
-    // --- BASIC DETAILS ---
-    train: wagon.Train_1 || "",
-    itinerary: wagon.Itinerary_5 || "",
-    dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
-    Page: wagon.Page_9 || "",
-    toBeClearedAt: wagon.To_be_cleared_at_12 || "",
-
-    // --- DROPDOWN ---
-    fixedNetTrain: {
-      dropdown: wagon.Fixed_Net_Weight_Train_13 || "",
-    },
-
-    number: wagon.NoNumber_14 ?? "",
-    LoadingConfiguration: wagon.Loading_Configuration_16 || "",
-
-    // --- WAGON INFO ---
-    wagonNumber: wagon.WagonNo || "",
-    DescriptionoftheGoods: wagon.Short_Description_of_Goods || "",
-
-    // --- CHECKBOXES ---
-    ExceptionalConsignment:
-      wagon.Exceptional_Consignment_22 === 1 ||
-      wagon.Exceptional_Consignment_22 === "Yes",
-
-    RID:
-      wagon.RID === 1 ||
-      wagon.RID === "Yes",
-
-    // --- LAZY SELECTS ---
-    UTICODE: wagon.UTIType || "",
-    NHMCode: wagon.NHMCode
-      ? String(wagon.NHMCode)
-      : "",
-
-    // --- DIMENSIONS ---
-    LengthWidthHeight: {
-      dropdown: wagon.LengthxWidthxheight_24 || "",
-    },
-
-    MarkandNumber: wagon.Mark_and_Number_25 || "",
-    DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
-
-    // --- WEIGHTS ---
-    GrossWeight: wagon.Gross_Weight_25_19 ?? "",
-    TareWeight: wagon.Tare_Weight_25_20 ?? "",
-    NetWeight: wagon.Net_Weight_25_21 ?? "",
-
-    // --- TOTALS ---
-    TotalBrutto: {
-      dropdown: wagon.TotalBrut ?? "",
-    },
-    TotalNetto: {
-      dropdown: wagon.TotalMass ?? "",
-    },
-    TotalGross: {
-      dropdown: wagon.TotalTare ?? "",
-    },
-  });
-}
 
 
    if (apiResponse && !initialSnapshotRef.current) {
@@ -3173,6 +3318,39 @@ const splitValueUom = (value?: string | null) => {
     uom: parts[1] ?? null,
   };
 };
+const sanitizedWagonLineDetails = wagonGritDetails.map(row => ({
+  ...row,
+
+  // --- NUMERIC FIELDS ---
+  No_of_Axle: toNumberOrNull(row.No_of_Axle),
+  NHM: toNumberOrNull(row.NHM),
+  Mass_Weight: toNumberOrNull(row.Mass_Weight),
+  Tare_Weight: toNumberOrNull(row.Tare_Weight),
+  Brut_Weight: toNumberOrNull(row.Brut_Weight),
+
+  Total_Mass: toNumberOrNull(row.Total_Mass),
+  Total_Brutt: toNumberOrNull(row.Total_Brutt),
+  Total_Tare: toNumberOrNull(row.Total_Tare),
+
+  Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+  Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+  Container_load_weight: toNumberOrNull(row.Container_load_weight),
+
+  Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+  Gross_Weight: toNumberOrNull(row.Gross_Weight),
+  Wagon_Length: toNumberOrNull(row.Wagon_Length),
+
+  // --- BIT / BOOLEAN FIELDS ---
+  Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
+  UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+  UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+  UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+  UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+
+  RID: toBit(row.RID),
+
+  ModeFlag: row.ModeFlag || "Update",
+}));
 
 
 const handleSaveTemplate = async () => {
@@ -3198,6 +3376,19 @@ const wagonInfoModeFlag = resolveModeFlag(
   initialSnapshotRef.current?.WagonInfodetails,
   workOrderNo
 );
+
+const sanitizedWagonLines = wagonGritDetails.map(row => ({
+  ...row,
+  No_of_Axle: toNumberOrNull(row.No_of_Axle),
+  NHM: toNumberOrNull(row.NHM),
+  Mass_Weight: toNumberOrNull(row.Mass_Weight),
+  Tare_Weight: toNumberOrNull(row.Tare_Weight),
+  Brut_Weight: toNumberOrNull(row.Brut_Weight),
+  Total_Mass: toNumberOrNull(row.Total_Mass),
+  Total_Brutt: toNumberOrNull(row.Total_Brutt),
+  Total_Tare: toNumberOrNull(row.Total_Tare),
+  RID: toBit(row.RID),
+}));
 
   const payload = {
     Header: {
@@ -3319,24 +3510,32 @@ const wagonInfoModeFlag = resolveModeFlag(
 //   ...mapWagonGridPayload(wagonGritDetails),
 // ],
 
+// WagonInfodetails: mapFormToWagonInfoDetails(
+//     wagonFormData,
+//     wagonInfoModeFlag
+//   ),
+
+//  WagonLineDetails: wagonGritDetails,
+
 WagonInfodetails: mapFormToWagonInfoDetails(
     wagonFormData,
     wagonInfoModeFlag
   ),
 
- WagonLineDetails: wagonGritDetails,
+WagonLineDetails: sanitizedWagonLineDetails,
+
   };
 
-  console.log("✅ FINAL PAYLOAD", JSON.stringify(payload , null  , 2));
+  
   try {
     console.log(" Sending payload to save template...");
     const response = await CimCuvService.saveCimCuvTemplate(payload);
     console.log("✅ SAVE TEMPLATE RESPONSE", response.message);
     console.log(response.message == "Success")
     if(response.message == "Success" ){
- navigate(0);
- navigate(`/create-template?id=${(workOrderNo)}`);
-
+//  navigate(0);
+//  navigate(`/create-template?id=${(workOrderNo)}`);
+// 
     }
 
   } catch (error) {
