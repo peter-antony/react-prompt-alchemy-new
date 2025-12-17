@@ -1223,10 +1223,17 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           });
         } else {
           // Item exists only in existing array - set ModeFlag to "Deleted"
-          updatedItems.push({
+          const deletedItem = {
             ...existingItem,
             ModeFlag: "Delete"
-          });
+          };
+
+          // Fix for Drivers: ensure DriverID is present (mapped from resourceId if missing)
+          if (currentResourceDetailsKey === 'Drivers' && !deletedItem.DriverID) {
+            deletedItem.DriverID = resourceId;
+          }
+
+          updatedItems.push(deletedItem);
         }
       });
 
@@ -1242,6 +1249,23 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           });
         }
       });
+
+      // Special cleanup for Drivers to match API expectations
+      if (currentResourceDetailsKey === 'Drivers') {
+        updatedItems.forEach((item: any) => {
+          // Ensure DriverID is present (take from DriverCode if needed)
+          if (item.DriverCode && !item.DriverID) {
+            item.DriverID = item.DriverCode;
+          }
+          // Remove DriverCode as it should be DriverID
+          if (item.DriverCode) {
+            delete item.DriverCode;
+          }
+          // Remove internal fields that are not part of the schema
+          delete item.ResourceID;
+          delete item.ResourceType;
+        });
+      }
 
       // Update ONLY the current resource type array, preserve all other resource types unchanged
       const updatedResourceDetails: Record<string, any[]> = { ...existingResourceDetails };
