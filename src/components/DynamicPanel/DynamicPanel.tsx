@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, Copy, EllipsisVertical } from 'lucide-react';
 import { FieldRenderer } from './FieldRenderer';
 import { EnhancedFieldVisibilityModal } from './EnhancedFieldVisibilityModal';
 import { PanelStatusIndicator } from './PanelStatusIndicator';
@@ -31,6 +31,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   workOrderNo?: string;
   workOrderStatus?: string;
   workOrderNoCallback?: (value: string) => void;
+  workOrderCopy?: (value: any) => void;
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
 }
 
@@ -62,6 +63,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   workOrderNo = '',
   workOrderStatus = '',
   workOrderNoCallback,
+  workOrderCopy
   // onBadgeChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
@@ -78,6 +80,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [currentBadgeValue, setCurrentBadgeValue] = useState(badgeValue);
   const [quickOrderNoValue, setQuickOrderNoValue] = useState(jsonStore.getQuickOrderNo() || '');
   const [workOrderNoValue, setWorkOrderNoValue] = useState(workOrderNo || '');
+  const [isWorkOrderMenuOpen, setWorkOrderMenuOpen] = useState(false);
+  const workOrderMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Keep badge in sync with prop
   useEffect(() => {
@@ -491,6 +495,19 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     );
   }
 
+  // Close work order menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (isWorkOrderMenuOpen && workOrderMenuRef.current && !workOrderMenuRef.current.contains(event.target as Node)) {
+        setWorkOrderMenuOpen(false);
+      }
+    }
+    if (isWorkOrderMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isWorkOrderMenuOpen]);
+
   const SettingsButton = () => (
     !showPreview && isHovered && (
       <Button
@@ -713,7 +730,33 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   </span>
                 );
               })()}
-
+              {panelSubTitle == "Work Order Details" && workOrderNo && (
+                <div className="relative">
+                  <button
+                    className="text-xs text-gray-500 h-8 px-0 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
+                    onClick={(e) => { e.stopPropagation(); setWorkOrderMenuOpen(!isWorkOrderMenuOpen); }}
+                  >
+                    <EllipsisVertical size={20} />
+                  </button>
+                  {isWorkOrderMenuOpen && (
+                    <div ref={workOrderMenuRef} className="absolute right-0 top-9 z-20 w-40 bg-white border border-gray-200 rounded-md shadow-lg p-1">
+                      <button
+                        className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2"
+                        onClick={() => {
+                          setWorkOrderMenuOpen(false);
+                          try {
+                            workOrderCopy?.(workOrderNoValue || {});
+                          } catch (err) {
+                            console.warn('workOrderCopy callback error', err);
+                          }
+                        }}
+                      >
+                        <Copy className="w-4 h-4 text-gray-600" /> Copy
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               {/* {panelSubTitle == "Billing Details" && (
                 <span
                   onClick={() => setSwitchModalOpen(true)}

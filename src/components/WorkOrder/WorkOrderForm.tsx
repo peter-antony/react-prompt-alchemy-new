@@ -2912,6 +2912,52 @@ if (formatted.Provider?.includes(" || ")) {
     },
   };
 
+  const handleWorkOrderCopy = async (copyStatus: any) => {
+    try {
+      const stateWorkOrder = useWorkOrderStore.getState().workOrder || workOrder;
+      if (!stateWorkOrder) {
+        toast({ title: 'No work order to copy', description: 'Load a work order first.', variant: 'destructive' });
+        return;
+      }
+
+      // Deep clone to avoid mutating existing store object
+      const payload: any = JSON.parse(JSON.stringify(stateWorkOrder));
+
+      // Apply required modifications for copy
+      payload.Header = payload.Header || {};
+      payload.Header.WorkorderNo = '';
+      payload.Header.Status = 'Fresh';
+      payload.Header.ModeFlag = 'Insert';
+      payload.Header.BillingHeaderDetails = null;
+      payload.WorkorderSchedule = null;
+
+      // Ensure OperationDetails exist and mark each with ModeFlag: 'Insert'
+      if (Array.isArray(payload.OperationDetails)) {
+        payload.OperationDetails = payload.OperationDetails.map((op: any) => ({ ...op, ModeFlag: 'Insert' }));
+      } else {
+        payload.OperationDetails = [];
+      }
+
+      // Put the modified payload into the store so saveWorkOrder reads it
+      useWorkOrderStore.setState({ workOrder: payload });
+
+      // Call save API via store helper
+      const result = await saveWorkOrder();
+
+      if (result?.workorderNo) {
+        // Update URL and refetch the newly created work order
+        setSearchParams({ id: result.workorderNo });
+        // await searchWorkOrder(result.workorderNo);
+        toast({ title: 'Work order copied', description: 'A new work order has been created.', variant: 'default' });
+      } else {
+        toast({ title: 'Copy failed', description: result?.message || 'Failed to create work order copy.', variant: 'destructive' });
+      }
+    } catch (err: any) {
+      console.error('handleWorkOrderCopy failed', err);
+      toast({ title: 'Error', description: err?.message || 'Failed to copy work order', variant: 'destructive' });
+    }
+  };
+
   return (
     <>
       {loading || creatingTug ? (
@@ -2943,6 +2989,7 @@ if (formatted.Provider?.includes(" || ")) {
                           panelSubTitle="Work Order Details"
                           workOrderNo={workOrder?.Header?.WorkorderNo || workOrderNo || ''}
                           workOrderStatus={workOrder?.Header?.Status || ''}
+                          workOrderCopy={handleWorkOrderCopy}
                           workOrderNoCallback={(value) => {
                             // Update workOrderNo in the store
                             console.log("===============", value);
