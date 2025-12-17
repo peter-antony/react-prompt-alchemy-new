@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { DynamicLazySelect } from "../DynamicPanel/DynamicLazySelect";
 import { Button } from "@/components/ui/button";
 import { quickOrderService, tripService } from "@/api/services";
-import { API_CONFIG, API_ENDPOINTS } from "@/api/config";
+import { useToast } from '@/hooks/use-toast';
+import { manageTripStore } from "@/stores/mangeTripStore";
 import {
   UploadCloud,
   FileText,
@@ -21,11 +22,8 @@ import {
   DownloadCloud,
   Trash2,
 } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
-import { manageTripStore } from "@/stores/mangeTripStore";
-// import { console } from "inspector";
- 
-// File icon 
+
+// File icon helper
 const getFileIcon = (mime: string) => {
   const m = (mime || "").toLowerCase();
   if (!m) return <FileText className="text-gray-500 w-6 h-6" />;
@@ -78,7 +76,12 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     ReasonCodeDescription: "",
     Remarks: "",
   });
- 
+  const [attachmentData, setAttachmentData] = useState<{ AttachItems: any[]; TotalAttachment: number }>({
+    AttachItems: [],
+    TotalAttachment: 0,
+  });
+  const [reloadKey, setReloadKey] = useState(0);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
@@ -292,6 +295,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         formData.append("Attachname", fileName);
         formData.append("Filecategory", "POD");
 
+        // Only upload the file to get the unique name and path
         const uploadRes: any = await quickOrderService.updateAttachmentQuickOrderResource(formData);
 
         const item = {
@@ -318,6 +322,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         return;
       }
 
+      // Save attachments to database
       const saveRes = await tripService.savePODLegAttachments({
         TripNo: tripNo,
         LegNumber: legNumber,
@@ -354,10 +359,14 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
       AttachmentType: (it?.AttachmentType || "").toString().toLowerCase(),
       AttachUniqueName: it?.AttachUniqueName || it?.Attachuniquename,
       AttachRelPath: it?.AttachRelPath || it?.Attachrelpath,
-      downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
       rawItem: it,
     }));
     setAttachItems(mapped);
+    setAttachmentData({
+      AttachItems: attachItemsServer,
+      TotalAttachment: attachItemsServer.length
+    });
+    setReloadKey((prev) => prev + 1);
   };
 
   const downloadBlob = (blob: Blob, fileName: string) => {
@@ -396,31 +405,22 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     );
   };
 
-  const handleDownload = async (file: any): Promise<{ blob: Blob; filename: string }> => {
-    const uniqueName = resolveAttachUniqueName(file);
-    const bodyData = {
-      filecategory: file.category,
-      filename: uniqueName,
-    };
-    const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData);
-    const b64 = resp1.data.FileData;
-    const mime = getMimeType(resp1.data.FileName);
-    const byteChars = atob(b64);
-    const byteNumbers = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: mime });
-    const filename = file.fileName || resp1.data.FileName || "downloaded_file";
-    return { blob, filename };
-  };
-
   const onDownloadSaved = async (file: any) => {
     try {
-      const { blob, filename } = await handleDownload({
-        category: file?.rawItem?.FileCategory || "POD",
-        AttachUniqueName: resolveAttachUniqueName(file),
-        fileName: file.AttachName,
-      });
+      const uniqueName = resolveAttachUniqueName(file);
+      const bodyData = {
+        filecategory: file?.rawItem?.FileCategory || "POD",
+        filename: uniqueName,
+      };
+      const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData);
+      const b64 = resp1.data.FileData;
+      const mime = getMimeType(resp1.data.FileName);
+      const byteChars = atob(b64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mime });
+      const filename = file.AttachName || resp1.data.FileName || "downloaded_file";
       downloadBlob(blob, filename);
     } catch (e) {
       toast({ title: "Download Failed", description: "Could not download attachment.", variant: "destructive" });
@@ -577,17 +577,28 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         });
         const attParsed = attRes?.data?.ResponseData ? JSON.parse(attRes.data.ResponseData) : attRes?.data || {};
         const attachItemsServer: any[] = Array.isArray(attParsed?.AttachItems) ? attParsed.AttachItems : [];
+
+        // Map server attachments to display format
         const mapped = attachItemsServer.map((it) => ({
           AttachName: it?.AttachName || "",
           AttachmentType: (it?.AttachmentType || "").toString().toLowerCase(),
           AttachUniqueName: it?.AttachUniqueName || it?.Attachuniquename,
           AttachRelPath: it?.AttachRelPath || it?.Attachrelpath,
-          downloadUrl: `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TRIPS.FILE_UPDATEDOWN}`,
           rawItem: it,
         }));
         setAttachItems(mapped);
+
+        setAttachmentData({
+          AttachItems: attachItemsServer,
+          TotalAttachment: attachItemsServer.length
+        });
       } catch (e) {
         // silently ignore attachment load errors
+        setAttachItems([]);
+        setAttachmentData({
+          AttachItems: [],
+          TotalAttachment: 0
+        });
       }
       if (mapped.length > 0) {
         setSelectedWagonIndex(0);
