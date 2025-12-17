@@ -2032,7 +2032,8 @@ export const TripExecutionHub = () => {
                     return selectedRowIds.has(row.TripPlanID) ? 'selected' : '';
                   }}
                   nestedRowRenderer={renderSubRow}
-                  // configurableButtons={gridConfigurableButtons}
+                  // only show create trip button on Manage Trip Plan screen
+                  configurableButtons={createTripPlan === 'true' ? gridConfigurableButtons : []}
                   showDefaultConfigurableButton={false}
                   gridTitle="Trip Plans"
                   recordCount={gridState.gridData.length}
