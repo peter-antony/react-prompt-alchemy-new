@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -254,45 +254,79 @@ const TemplateCreate = () => {
     }
   };
 
+  // Fetch countries (first level) - using fetchMaster
+  const fetchSectionsList = useCallback(
+    fetchMaster("Location Init"),
+    []
+  );
+
+  // Fetch countries (first level) - using fetchMaster
+  const fetchNameRoute = useCallback(
+    fetchMaster("Supplier Init"),
+    []
+  );
+  
   // ✅ STEP 1: Columns for Other Carriers grid
   // ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
   const otherCarriersColumns: GridColumnConfig[] = [
     {
+      key: "Name",
+      label: "Name",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
+      editable: true,
+      fetchOptions: fetchNameRoute,
+    },
+    {
       key: "Section1",
       label: "Section 1",
-      type: "Text",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "Section2",
       label: "Section 2",
-      type: "Text",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "Status",
       label: "Status",
       type: "Text",
       editable: true,
+      // statusMap: {
+      //   Active: "badge-green rounded-2xl",
+      //   Pending: "badge-yellow rounded-2xl",
+      //   Completed: "badge-green rounded-2xl",
+      //   Cancelled: "badge-red rounded-2xl",
+      //   "In-progress": "badge-orange rounded-2xl",
+      // },
     },
-    {
-      key: "Action",
-      label: "Action",
-      type: "Text",
-      editable: true,
-    }
+    // {
+    //   key: "Action",
+    //   label: "Action",
+    //   type: "Text",
+    //   editable: true,
+    // }
   ];
 
   const routeCodeCDetailsColumns: GridColumnConfig[] = [
     {
-      key: "RouteID",
-      label: "RouteID",
+      key: "LegSequence",
+      label: "Leg Sequence",
       type: "Text",
       editable: true,
     },
     {
-      key: "LegSequence",
-      label: "Leg Sequence",
+      key: "RouteID",
+      label: "RouteID",
       type: "Text",
       editable: true,
     },
@@ -305,8 +339,9 @@ const TemplateCreate = () => {
     {
       key: "FromLocationID",
       label: "From Location ID",
-      type: "Text",
+      type: "LazySelect",
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "FromLocationDesc",
@@ -317,8 +352,9 @@ const TemplateCreate = () => {
     {
       key: "ToLocationID",
       label: "To Location ID",
-      type: "Text",
+      type: "LazySelect",
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "ToLocationDesc",
@@ -2399,10 +2435,10 @@ const TemplateCreate = () => {
         RouteID: row.RouteID ?? "",
         LegSequence: row.LegSequence ?? "",
         LegID: row.LegID ?? "",
-        FromLocationID: row.FromLocationID ?? "",
-        FromLocationDesc: row.FromLocationDesc ?? "",
-        ToLocationID: row.ToLocationID ?? "",
-        ToLocationDesc: row.ToLocationDesc ?? "",
+        FromLocationID: splitIdName(row.FromLocationID).id ?? "",
+        FromLocationDesc: splitIdName(row.FromLocationDesc).name ?? "",
+        ToLocationID: splitIdName(row.ToLocationID).id ?? "",
+        ToLocationDesc: splitIdName(row.ToLocationDesc).name ?? "",
         AdhocLeg: row.AdhocLeg ?? "",
         ViaPoint: row.ViaPoint ?? "",
         ModeFlag: row.ModeFlag,
@@ -2411,9 +2447,9 @@ const TemplateCreate = () => {
 
   const mapOtherCarriersPayload = (rows: any[]) =>
     rows.map(row => ({
-      Name: row.Name ?? "",
-      Section1: row.Section1 ?? "",
-      Section2: row.Section2 ?? "",
+      Name: splitIdName(row.Name).id ?? "",
+      Section1: splitIdName(row.Section1).id ?? "",
+      Section2: splitIdName(row.Section2).id ?? "",
       Status: row.Status ?? "",
       ModeFlag: row.ModeFlag,
     }));
@@ -2881,6 +2917,7 @@ const TemplateCreate = () => {
 
         setOtherCarriers(
           apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
+            Name: c.Name || "",
             Section1: c.Section1 || "",
             Section2: c.Section2 || "",
             Status: c.Status || "",
@@ -3891,7 +3928,7 @@ const TemplateCreate = () => {
                 />
               </div>
               {/* //table */}
-              <div>
+              <div className='mb-6'>
                 <SmartGridPlus
                   columns={otherCarriersColumns}
                   data={otherCarriers}
@@ -3922,14 +3959,14 @@ const TemplateCreate = () => {
 
               </div>
 
-              <div>
+              <div className='mb-6'>
                 <SmartGridPlus
                   data={routeCodeCDetails}
                   columns={routeCodeCDetailsColumns}
 
                   onAddRow={handleAddRouteRow}
                   onEditRow={handleEditRouteRow}
-
+                  hideToolbar={true}
                   hideRightToolbar={true}
                   hideAdvancedFilter={true}
                   hideCheckboxToggle={false}
