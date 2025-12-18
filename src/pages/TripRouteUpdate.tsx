@@ -228,8 +228,8 @@ export const TripRouteUpdate = () => {
         const defaultFilters = {
           ...tripRouteSearchCriteria,
           OrderDate: {
-            from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-            to: format(new Date(), 'yyyy-MM-dd')
+            from: format(subMonths(new Date(), 2), 'yyyy-MM-dd'),
+            to: format(addMonths(new Date(), 1), 'yyyy-MM-dd')
           }
         };
         searchCriteria = buildSearchCriteria(defaultFilters);
@@ -1188,8 +1188,8 @@ export const TripRouteUpdate = () => {
       label: 'Customer Order Date',
       type: 'dateRange',
       defaultValue: {
-        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-        to: format(new Date(), 'yyyy-MM-dd')
+        from: format(subMonths(new Date(), 2), 'yyyy-MM-dd'),
+        to: format(addMonths(new Date(), 1), 'yyyy-MM-dd')
       }
     }
     // {
