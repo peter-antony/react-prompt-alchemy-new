@@ -139,6 +139,32 @@ export const CimCuvService = {
     return response.data;
   },
 
+  saveCimCuvReport: async (payload: any): Promise<any> => {
+    const userContext = getUserContext();
+
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-Save",
+      },
+      RequestPayload: payload,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CIM_CUV.SAVE_REPORT,
+      requestBody
+    );
+
+    return response.data;
+  },
+
 
   getTemplateDataByID: async (params?: any): Promise<ApiResponse<Trip>> => {
     console.log("params ", params);

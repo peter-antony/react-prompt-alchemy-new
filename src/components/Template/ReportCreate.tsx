@@ -1,2960 +1,3926 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
-import { PanelConfig } from '@/types/dynamicPanel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
-import { AppLayout } from '@/components/AppLayout';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { quickOrderService } from '@/api/services/quickOrderService';
-import { FileText } from 'lucide-react';
-import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
-import ConsignorConsigneeSideDraw from './ConsignorConsigneeSideDraw';
-import CancelConfirmationModal from './CancelConfirmationModal';
+import React, { useState, useRef, useEffect } from "react";
+import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
+import { PanelConfig } from "@/types/dynamicPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { quickOrderService } from "@/api/services/quickOrderService";
+import { FileText } from "lucide-react";
+import { CimCuvService } from "@/api/services/CimCuvService"; // Import CimCuvService
 import { useSearchParams } from "react-router-dom";
+import { SmartGridWithGrouping } from "../SmartGrid";
+import { SmartGridPlus } from "../SmartGrid";
+import { GridColumnConfig } from "../SmartGrid";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import CancelConfirmationModal from "./CancelConfirmationModal";
+import ConsignorConsigneeSideDraw from "./ConsignorConsigneeSideDraw";
 
 const ReportCreate = () => {
-    const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
-    const workOrderNo = searchParams.get("id");
-    const generalDetailsRef = useRef<DynamicPanelRef>(null);
-    const WagonDetailsRef = useRef<DynamicPanelRef>(null);
-    const RouteDetailsRef = useRef<DynamicPanelRef>(null);
-    const RouteEndorsementDetailsRef = useRef<DynamicPanelRef>(null);
-    const headerTemplateRef = useRef<DynamicPanelRef>(null); // New Ref
-    const paymentInstructionRef = useRef<DynamicPanelRef>(null); // New Ref
-    const placeAndDateRef = useRef<DynamicPanelRef>(null); // New Ref
-    const consignorDeclarationsRef = useRef<DynamicPanelRef>(null); // New Ref for Consignor's Declarations
-    const valueDeliveryCashRef = useRef<DynamicPanelRef>(null); // New Ref for Value and Delivery Details
-    const codingBoxesRef = useRef<DynamicPanelRef>(null); // New Ref for Coding Boxes
-    const examinationDetailsRef = useRef<DynamicPanelRef>(null); // New Ref for Examination and Other Details
-    const sectionARef = useRef<DynamicPanelRef>(null); // New Ref for Section A
-    const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
-    const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
+  const generalDetailsRef = useRef<DynamicPanelRef>(null);
+  const WagonDetailsRef = useRef<DynamicPanelRef>(null);
+  const RouteDetailsRef = useRef<DynamicPanelRef>(null);
+  const RouteEndorsementDetailsRef = useRef<DynamicPanelRef>(null);
+  const headerTemplateRef = useRef<DynamicPanelRef>(null); // New Ref
+  const paymentInstructionRef = useRef<DynamicPanelRef>(null); // New Ref
+  const placeAndDateRef = useRef<DynamicPanelRef>(null); // New Ref
+  const consignorDeclarationsRef = useRef<DynamicPanelRef>(null); // New Ref for Consignor's Declarations
+  const valueDeliveryCashRef = useRef<DynamicPanelRef>(null); // New Ref for Value and Delivery Details
+  const codingBoxesRef = useRef<DynamicPanelRef>(null); // New Ref for Coding Boxes
+  const examinationDetailsRef = useRef<DynamicPanelRef>(null); // New Ref for Examination and Other Details
+  const sectionARef = useRef<DynamicPanelRef>(null); // New Ref for Section A
+  const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
+  const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
-    const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
-    const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
-    const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
-    const [placeAndDateData, setPlaceAndDateData] = useState<Record<string, any>>({}); // New State
-    const [consignorDeclarationsData, setConsignorDeclarationsData] = useState<Record<string, any>>({}); // New State for Consignor's Declarations
-    const [valueDeliveryCashData, setValueDeliveryCashData] = useState<Record<string, any>>({}); // New State for Value and Delivery Details
-    const [codingBoxesData, setCodingBoxesData] = useState<Record<string, any>>({}); // New State for Coding Boxes
-    const [examinationDetailsData, setExaminationDetailsData] = useState<Record<string, any>>({}); // New State for Examination and Other Details
-    const [sectionAData, setSectionAData] = useState<Record<string, any>>({}); // New State for Section A
-    const [sectionBData, setSectionBData] = useState<Record<string, any>>({}); // New State for Section B
-    const [sectionCData, setSectionCData] = useState<Record<string, any>>({}); // New State for Section C
-    const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
-    const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
-    const [activeTab, setActiveTab] = useState('general');
-    const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
-    const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
-    const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
-    const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-    const initialSnapshotRef = useRef<any>(null);
+  const [generalDetailsData, setGeneralDetailsData] = useState<
+    Record<string, any>
+  >({});
+  const [headerTemplateData, setHeaderTemplateData] = useState<
+    Record<string, any>
+  >({}); // New State
+  const [paymentInstructionData, setPaymentInstructionData] = useState<
+    Record<string, any>
+  >({}); // New State
+  const [placeAndDateData, setPlaceAndDateData] = useState<Record<string, any>>(
+    {}
+  ); // New State
+  const [consignorDeclarationsData, setConsignorDeclarationsData] = useState<
+    Record<string, any>
+  >({}); // New State for Consignor's Declarations
+  const [valueDeliveryCashData, setValueDeliveryCashData] = useState<
+    Record<string, any>
+  >({}); // New State for Value and Delivery Details
+  const [codingBoxesData, setCodingBoxesData] = useState<Record<string, any>>(
+    {}
+  ); // New State for Coding Boxes
+  const [examinationDetailsData, setExaminationDetailsData] = useState<
+    Record<string, any>
+  >({}); // New State for Examination and Other Details
+  const [sectionAData, setSectionAData] = useState<Record<string, any>>({}); // New State for Section A
+  const [sectionBData, setSectionBData] = useState<Record<string, any>>({}); // New State for Section B
+  const [sectionCData, setSectionCData] = useState<Record<string, any>>({}); // New State for Section C
+  const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
+  const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
+  const [activeTab, setActiveTab] = useState("general");
+  const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+  const workOrderNo = searchParams.get("id");
+  const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
+  const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+  const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
+  const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
+  const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [
+    isConsignorConsigneeSideDrawOpen,
+    setIsConsignorConsigneeSideDrawOpen,
+  ] = useState(false);
+  const [consignorConsigneeData, setConsignorConsigneeData] =
+    useState<any>(null);
 
-    /** Normalize values to avoid false Update */
-    const normalize = (obj: any) =>
-        JSON.parse(
-            JSON.stringify(obj, (_k, v) =>
-                v === "" || v === undefined ? null : v
-            )
-        );
+  const buttonCancel =
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+  /**
+   * fetchMaster helper for lazy select dropdowns
+   */
+  const fetchMaster = (
+    messageType: string,
+    extraParams?: Record<string, any>
+  ) => {
+    return async ({
+      searchTerm,
+      offset,
+      limit,
+    }: {
+      searchTerm: string;
+      offset: number;
+      limit: number;
+    }) => {
+      try {
+        const response = await quickOrderService.getMasterCommonData({
+          messageType,
+          searchTerm: searchTerm || "",
+          offset,
+          limit,
+          ...(extraParams || {}),
+        });
 
-    const deepEqual = (obj1: any, obj2: any): boolean => {
-        if (obj1 == obj2) return true;
-        if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) return false;
+        const rr: any = response?.data;
+        const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
 
-        const keys1 = Object.keys(obj1);
-        const keys2 = Object.keys(obj2);
+        return arr.map((item: any) => {
+          const id = item.id ?? item.ID ?? item.value ?? "";
+          const name = item.name ?? item.Name ?? item.label ?? "";
+          return {
+            label: `${id} || ${name}`,
+            value: `${id} || ${name}`,
+          };
+        });
+      } catch (err) {
+        console.error(`Error fetching ${messageType}:`, err);
+        return [];
+      }
+    };
+  };
 
-        if (keys1.length !== keys2.length) return false;
+  // ✅ Add row – Other Carriers
+  const handleAddOtherCarrierRow = (newRow: any) => {
+    setOtherCarriers((prev) => [
+      ...prev,
+      {
+        ...newRow,
+        ModeFlag: "Insert",
+      },
+    ]);
+  };
 
-        for (const key of keys1) {
-            if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
-                return false;
-            }
+  // ✅ Edit row – Other Carriers
+  const handleEditOtherCarrierRow = (updatedRow: any, rowIndex: number) => {
+    setOtherCarriers((prev) => {
+      const copy = [...prev];
+
+      copy[rowIndex] = {
+        ...copy[rowIndex],
+        ...updatedRow,
+        ModeFlag: copy[rowIndex]?.ModeFlag === "Insert" ? "Insert" : "Update",
+      };
+
+      return copy;
+    });
+  };
+  // ✅ Add Wagon row
+  const handleAddWagonRow = (newRow: any) => {
+    setWagonGritDetails((prev) => [
+      ...prev,
+      {
+        ...newRow,
+        ModeFlag: "Insert",
+      },
+    ]);
+  };
+
+  // ✅ Edit Wagon row
+  const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
+    setWagonGritDetails((prev) => {
+      const copy = [...prev];
+
+      copy[rowIndex] = {
+        ...copy[rowIndex],
+        ...updatedRow,
+        ModeFlag: copy[rowIndex]?.ModeFlag === "Insert" ? "Insert" : "Update",
+      };
+
+      return copy;
+    });
+  };
+
+  // ✅ STEP 2: Handle Add Row from SmartGrid
+  const handleAddRouteRow = (newRow: any) => {
+    const rowWithDefaults = {
+      ...newRow,
+      ModeFlag: "Insert", // 🔴 IMPORTANT
+    };
+
+    setRouteCodeCDetails((prev) => [...prev, rowWithDefaults]);
+  };
+  // ✅ STEP 3: Handle Edit Row from SmartGrid
+  const handleEditRouteRow = (updatedRow: any, rowIndex: number) => {
+    setRouteCodeCDetails((prev) => {
+      const updated = [...prev];
+
+      updated[rowIndex] = {
+        ...updated[rowIndex],
+        ...updatedRow,
+        ModeFlag:
+          updated[rowIndex]?.ModeFlag === "Insert"
+            ? "Insert" // keep Insert if new
+            : "Update", // existing row edited
+      };
+
+      return updated;
+    });
+  };
+
+  useEffect(() => {
+    console.log("SETTING OTHER CARRIERS", routeCodeCDetails);
+  }, [routeCodeCDetails]);
+
+  // Simulate API response for demonstration
+  useEffect(() => {
+    // Call the API to fetch template data
+    fetchTemplateData(workOrderNo); // Replace with actual template ID or a dynamic value
+  }, [workOrderNo]); // Removed activeTab from the dependency array
+
+  useEffect(() => {
+    const loadUomMasters = async () => {
+      try {
+        const [thuRes, currencyRes]: any = await Promise.all([
+          quickOrderService.getMasterCommonData({
+            messageType: "THU QTY UOM Init",
+          }),
+          quickOrderService.getMasterCommonData({
+            messageType: "Currency Init",
+          }),
+        ]);
+        console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"), "123");
+        setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
+        setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
+      } catch (err) {
+        console.error("UOM master API failed", err);
+      }
+    };
+
+    loadUomMasters();
+  }, []);
+
+  const getUomOptions = (list: any[]) =>
+    list
+      .filter((item) => item.id && item.name) // remove empty row
+      .map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+
+  const buildWeightWithUom = (
+    value?: { input?: string; dropdown?: string } | null
+  ): string | null => {
+    if (!value?.input || !value?.dropdown) return null;
+    return `${value.input} ${value.dropdown}`;
+  };
+
+  // Function to fetch template data from API
+  const fetchTemplateData = async (templateId: string) => {
+    console.log("Fetching template data for template ID:", templateId);
+    try {
+      const response = await CimCuvService.getReportDataByID(templateId);
+      console.log("response.data1", response);
+      const responseData = JSON.parse((response as any).data?.ResponseData);
+      console.log("response.data1", responseData);
+      setApiResponse(responseData);
+      setInitialApiResponse(responseData); // Store the initial response
+    } catch (error) {
+      console.error("Error fetching template data:", error);
+      setApiResponse(null);
+      setInitialApiResponse(null);
+    }
+  };
+
+  // ✅ STEP 1: Columns for Other Carriers grid
+  // ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
+  const otherCarriersColumns: GridColumnConfig[] = [
+    {
+      key: "Section1",
+      label: "Section 1",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Section2",
+      label: "Section 2",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Status",
+      label: "Status",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Action",
+      label: "Action",
+      type: "Text",
+      editable: true,
+    },
+  ];
+
+  const routeCodeCDetailsColumns: GridColumnConfig[] = [
+    {
+      key: "RouteID",
+      label: "RouteID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "LegSequence",
+      label: "Leg Sequence",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "LegID",
+      label: "LegID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "FromLocationID",
+      label: "From Location ID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "FromLocationDesc",
+      label: "From Location Desc",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ToLocationID",
+      label: "To Location ID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ToLocationDesc",
+      label: "To Location Desc",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "AdhocLeg",
+      label: "Adhoc Leg",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ViaPoint",
+      label: "Via Point",
+      type: "Text",
+      editable: true,
+    },
+  ];
+
+  const wagonGritDetailsColumns: GridColumnConfig[] = [
+    { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
+
+    { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
+
+    { key: "NHM", label: "NHM", type: "Text", editable: true },
+
+    { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
+    {
+      key: "Mass_Weight_UOM",
+      label: "Mass Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
+    {
+      key: "Tare_Weight_UOM",
+      label: "Tare Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
+    {
+      key: "Brut_Weight_UOM",
+      label: "Brut Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Specificity", label: "Specificity", type: "Text", editable: true },
+    { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
+
+    {
+      key: "Long_x_larg_x_haut",
+      label: "Length x Width x Height",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Long_x_larg_x_haut_UOM",
+      label: "LWH UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Brand_and_No",
+      label: "Brand and No",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Remittance_Slip_Number",
+      label: "Remittance Slip No",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Customs_Document",
+      label: "Customs Document",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "RID", label: "RID", type: "Text", editable: true },
+
+    {
+      key: "Short_Description_of_Goods",
+      label: "Goods Description",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
+    { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
+    {
+      key: "Packing_Group",
+      label: "Packing Group",
+      type: "Text",
+      editable: true,
+    },
+    { key: "Label", label: "Label", type: "Text", editable: true },
+
+    {
+      key: "Special_Provision",
+      label: "Special Provision",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Hazard_ID_Number",
+      label: "Hazard ID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Environmentally_Hazardous",
+      label: "Environmentally Hazardous",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Last_Loaded_Commodity",
+      label: "Last Loaded Commodity",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Container_No",
+      label: "Container No",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Container_Type",
+      label: "Container Type",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Container_Tare_Weight",
+      label: "Container Tare Weight",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Container_Tare_Weight_UOM",
+      label: "Container Tare Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "From_Country",
+      label: "From Country",
+      type: "Text",
+      editable: true,
+    },
+    { key: "To_Country", label: "To Country", type: "Text", editable: true },
+
+    {
+      key: "Commodity_Description",
+      label: "Commodity Description",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
+    {
+      key: "Total_Mass_UOM",
+      label: "Total Mass UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
+    {
+      key: "Total_Brutt_UOM",
+      label: "Total Brutt UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
+    {
+      key: "Total_Tare_UOM",
+      label: "Total Tare UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Container_load_weight",
+      label: "Container Load Weight",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Container_Load_Weight_UOM",
+      label: "Container Load Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Container_load_type",
+      label: "Container Load Type",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Container_Tare_Weight_2",
+      label: "Container Tare Weight 2",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Container_tare_weight_2_UOM",
+      label: "Container Tare Weight 2 UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "UN_Desc_English",
+      label: "UN Desc English",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_French",
+      label: "UN Desc French",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_German",
+      label: "UN Desc German",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_Other_Language",
+      label: "UN Desc Other Language",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "UN_Desc_English_Check",
+      label: "UN English Check",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_French_Check",
+      label: "UN French Check",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_German_Check",
+      label: "UN German Check",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "UN_Desc_Other_Language_Check",
+      label: "UN Other Language Check",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Net_Weight_Commodity_Qty",
+      label: "Net Weight Commodity Qty",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Net_Weight_Commodity_Qty_UOM",
+      label: "Net Weight Commodity Qty UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Gross_Weight",
+      label: "Gross Weight",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Gross_weight_UOM",
+      label: "Gross Weight UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    {
+      key: "Wagon_Length",
+      label: "Wagon Length",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Wagon_Length_UOM",
+      label: "Wagon Length UOM",
+      type: "Text",
+      editable: true,
+    },
+
+    { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
+  ];
+
+  // General Details Panel Config
+  const generalDetailsConfig: PanelConfig = {
+    consignor: {
+      id: "consignor",
+      label: "Consignor [1]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Consignor",
+      fetchOptions: fetchMaster("Consignor Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    consignorDescription: {
+      id: "consignorDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Consignor",
+      labelFlag: false,
+    },
+    customerCodeConsignor: {
+      id: "customerCodeConsignor",
+      label: "Customer Code for the Consignor [2]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Customer Code",
+      fetchOptions: fetchMaster("Consignor CustomerCode2 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    customerCodePrePaid: {
+      id: "customerCodePrePaid",
+      label: "Customer Code for Payer of Pre-Paid Charges [3]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Customer Code for the Pay...",
+      fetchOptions: fetchMaster(
+        "Customercode for payer pre-paid charges_3 Init"
+      ),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    consignee: {
+      id: "consignee",
+      label: "Consignee [4]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Consignee",
+      fetchOptions: fetchMaster("Consignee4 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    consigneeDescription: {
+      id: "consigneeDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Consignee",
+      labelFlag: false,
+    },
+    customerCodeConsignee: {
+      id: "customerCodeConsignee",
+      label: "Customer Code for Consignee [5]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter Customer Code for Consign...",
+      fetchOptions: fetchMaster("Consignee CustomerCode5 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    customerCodeNonPrePaid: {
+      id: "customerCodeNonPrePaid",
+      label: "Customer Code for Payer of Non Pre-Paid Charges [6]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Customer Code for the Pay...",
+      fetchOptions: fetchMaster(
+        "Customercode for payer Nonpre-paid charges_6 Init"
+      ),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    consignorReference: {
+      id: "consignorReference",
+      label: "Consignor's Reference [8]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "Enter Consignor's Reference",
+      fetchOptions: fetchMaster("Consignors Reference8 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    consignorReferenceDescription: {
+      id: "consignorReferenceDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "Enter Consignor's Reference",
+      labelFlag: false,
+    },
+    deliveryPoint: {
+      id: "deliveryPoint",
+      label: "Delivery Point [10]/[4]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
+      width: "four",
+      placeholder: "Enter Delivery Point",
+      fetchOptions: fetchMaster("Location Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    deliveryPointDescription: {
+      id: "deliveryPointDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 12,
+      width: "four",
+      placeholder: "Enter Delivery Point",
+      labelFlag: false,
+    },
+    codeDeliveryPoint: {
+      id: "codeDeliveryPoint",
+      label: "Code for the Delivery Point [11]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 13,
+      width: "four",
+      placeholder: "Enter Code for the Delivery Point",
+      fetchOptions: fetchMaster("Location Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    codeStationServing: {
+      id: "codeStationServing",
+      label: "Code for the Station Serving the Delivery Point [12]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+      width: "four",
+      placeholder: "Enter Code for the Station Serving...",
+      fetchOptions: fetchMaster("Location Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    customerAgreementTariff: {
+      id: "customerAgreementTariff",
+      label: "No. of the Customer Agreement/Tariff [14]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 15,
+      width: "four",
+      placeholder: "Select No. of the Customer Agree...",
+      fetchOptions: fetchMaster("Contract Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    acceptanceDate: {
+      id: "acceptanceDate",
+      label: "Acceptance Date [16]/[2]",
+      fieldType: "date",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 16,
+      width: "four",
+      placeholder: "Select Acceptance Date",
+      dateFormat: "dd/MM/yyyy",
+    },
+    acceptanceFrom: {
+      id: "acceptanceFrom",
+      label: "Acceptance From [16]/[3]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: "four",
+      placeholder: "Select Acceptance From",
+      fetchOptions: fetchMaster("Location Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    codeAcceptancePoint: {
+      id: "codeAcceptancePoint",
+      label: "Code for the Acceptance Point [17]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 18,
+      width: "four",
+      placeholder: "Enter Code for the Acceptance Point",
+      fetchOptions: fetchMaster("Location Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+  };
+
+  // New Header Template Panel Config
+  const headerTemplateConfig: PanelConfig = {
+    templateId: {
+      id: "templateId",
+      label: "Template ID/Description",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("TemplateID Description Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    templateType: {
+      id: "templateType",
+      label: "",
+      fieldType: "radio",
+      value: "CIM",
+      mandatory: true,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      options: [
+        { label: "CIM", value: "CIM" },
+        { label: "CUV", value: "CUV" },
+      ],
+      labelFlag: false, // Hide the label as per screenshot
+    },
+    dispatchDocNo: {
+      id: "dispatchDocNo",
+      label: "Dispatch Doc. No./CO No.",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("Dispatch Document No Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    dispatchDocNoDescription: {
+      id: "dispatchDocNoDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four", // Assuming it takes half width next to dispatchDocNo
+      placeholder: "",
+      labelFlag: false,
+    },
+    unCode: {
+      id: "unCode",
+      label: "UN Code",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("UN Code Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    tripPlanId: {
+      id: "tripPlanId",
+      label: "Trip Plan ID",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("TripPlanID Description Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    wagon: {
+      id: "wagon",
+      label: "Wagon",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("Wagon id Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    lveNo: {
+      id: "lveNo",
+      label: "LVE No.",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "",
+    },
+    customerID: {
+      id: "customerID",
+      label: "Customer ID/Description",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("Customer Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    customerIDDescription: {
+      id: "customerIDDescription",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "",
+      labelFlag: false,
+    },
+    contractID: {
+      id: "contractID",
+      label: "Contract ID/Description",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
+      width: "four",
+      placeholder: "",
+      fetchOptions: fetchMaster("Contract Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+  };
+
+  // New Payment Instruction Panel Config
+  const paymentInstructionConfig: PanelConfig = {
+    paymentInstruction1: {
+      id: "paymentInstruction1",
+      label: "Payment Instruction",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Payment Instruction",
+      fetchOptions: fetchMaster("Payment Instruction_20 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    paymentInstruction2: {
+      id: "paymentInstruction2",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Payment Instruction",
+      labelFlag: false,
+    },
+    paymentInstruction3: {
+      id: "paymentInstruction3",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Payment Instruction",
+      labelFlag: false,
+    },
+    carriageChargePaid: {
+      id: "carriageChargePaid",
+      label: "Carriage Charge Paid",
+      fieldType: "checkbox",
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "six",
+    },
+    incoTerms: {
+      id: "incoTerms",
+      label: "Inco Terms",
+      fieldType: "checkbox",
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "six",
+    },
+  };
+
+  // New Place and Date Made Out Panel Config
+  const placeAndDateConfig: PanelConfig = {
+    place: {
+      id: "place",
+      label: "Place",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "one-third",
+      placeholder: "Enter Place",
+      fetchOptions: fetchMaster("Place_29 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    dateMadeOut: {
+      id: "dateMadeOut",
+      label: "Select Date",
+      fieldType: "date",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "six",
+      placeholder: "Select Date",
+      dateFormat: "dd/MM/yyyy",
+    },
+  };
+
+  // Consignor's Declarations Panel Config
+  const consignorDeclarationsConfig: PanelConfig = {
+    consignorDeclarations: {
+      id: "consignorDeclarations",
+      label: "Consignor's Declarations [7]",
+      fieldType: "textarea",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Consignor's Declarations",
+    },
+    documentsAttached: {
+      id: "documentsAttached",
+      label: "Documents Attached [9]",
+      fieldType: "textarea",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Documents Attached",
+    },
+    commercialSpecifications: {
+      id: "commercialSpecifications",
+      label: "Commercial Specifications [13]",
+      fieldType: "textarea",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Commercial Specifications",
+    },
+    informationForConsignee: {
+      id: "informationForConsignee",
+      label: "Information for the Consignee [15]",
+      fieldType: "textarea",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Information for the Consignee",
+    },
+  };
+
+  // Declaration of Value, Interest in Delivery, Cash on Delivery Panel Config
+  const valueDeliveryCashConfig: PanelConfig = {
+    declarationOfValue: {
+      id: "declarationOfValue",
+      label: "Declaration of Value [26]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Declaration of Value",
+      fetchOptions: fetchMaster("Currency Init"),
+    },
+    interestInDelivery: {
+      id: "interestInDelivery",
+      label: "Interest in Delivery [27]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Interest in Delivery",
+      fetchOptions: fetchMaster("Currency Init"),
+    },
+    cashOnDelivery: {
+      id: "cashOnDelivery",
+      label: "Cash on Delivery [28]",
+      fieldType: "inputdropdown",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Cash on Delivery",
+      fetchOptions: fetchMaster("Currency Init"),
+    },
+  };
+
+  // Coding Boxes Panel Config
+  const codingBoxesConfig: PanelConfig = {
+    codingBox1: {
+      id: "codingBox1",
+      label: "Coding Box 1 [40]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Coding Box 1",
+    },
+    codingBox2: {
+      id: "codingBox2",
+      label: "Coding Box 2 [41]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Coding Box 2",
+    },
+    codingBox3: {
+      id: "codingBox3",
+      label: "Coding Box 3 [42]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Coding Box 3",
+    },
+    codingBox4: {
+      id: "codingBox4",
+      label: "Coding Box 4 [43]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Coding Box 4",
+    },
+    codingBox5: {
+      id: "codingBox5",
+      label: "Coding Box 5 [44]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Coding Box 5",
+    },
+    codingBox6: {
+      id: "codingBox6",
+      label: "Coding Box 6 [45]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Coding Box 6",
+    },
+    codingBox7: {
+      id: "codingBox7",
+      label: "Coding Box 7 [46]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter Coding Box 7",
+    },
+    codingBox8: {
+      id: "codingBox8",
+      label: "Coding Box 8 [47]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Coding Box 8",
+    },
+  };
+
+  // Examination and Other Details Panel Config
+  const examinationDetailsConfig: PanelConfig = {
+    examination: {
+      id: "examination",
+      label: "Examination [48]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Examination",
+    },
+    prepaymentCoding: {
+      id: "prepaymentCoding",
+      label: "Prepayment Coding [49]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Prepayment Coding",
+    },
+    chargesNote: {
+      id: "chargesNote",
+      label: "Charges Note [52]",
+      fieldType: "checkbox",
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+    },
+    cashOnDeliveryReceipt: {
+      id: "cashOnDeliveryReceipt",
+      label: "Cash on Delivery Receipt [53]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Cash on Delivery Receipt",
+    },
+    formalReport: {
+      id: "formalReport",
+      label: "Formal Report [54]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Formal Report",
+    },
+    extensionOfTransitPeriod: {
+      id: "extensionOfTransitPeriod",
+      label: "Extension of Transit Period [55]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Extension of Transit Period",
+    },
+    dateOfArrival: {
+      id: "dateOfArrival",
+      label: "Date of Arrival [59]",
+      fieldType: "date",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter Date of Arrival",
+      dateFormat: "dd/MM/yyyy",
+    },
+    madeAvailable: {
+      id: "madeAvailable",
+      label: "Made Available [60]",
+      fieldType: "date",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Made Available",
+      dateFormat: "dd/MM/yyyy",
+    },
+    acknowledgementOfReceipt: {
+      id: "acknowledgementOfReceipt",
+      label: "Acknowledgement of Receipt [61]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "half",
+      placeholder: "Enter Acknowledgement of Receipt",
+    },
+  };
+
+  // Section A Panel Config
+  const sectionAConfig: PanelConfig = {
+    codeForChargingSections: {
+      id: "codeForChargingSections",
+      label: "Code for the Charging Sections [70]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Code for the Charging Sections",
+    },
+    routeCode: {
+      id: "routeCode",
+      label: "Route Code [71]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Route Code",
+    },
+    nhmCode: {
+      id: "nhmCode",
+      label: "NHM Code [72]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter NHM Code",
+    },
+    currency: {
+      id: "currency",
+      label: "Currency [73]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Currency",
+    },
+    chargedMassWeight: {
+      id: "chargedMassWeight",
+      label: "Charged Mass Weight [74]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Charged Mass Weight",
+    },
+    customerAgreementOrTariffApplied: {
+      id: "customerAgreementOrTariffApplied",
+      label: "Customer Agreement or Tariff Applied [75]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Customer Agreement or Tariff Applied",
+    },
+    kmZone: {
+      id: "kmZone",
+      label: "KM/Zone [76]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter KM/Zone",
+    },
+    supplementsFeesDeductions: {
+      id: "supplementsFeesDeductions",
+      label: "Supplements, Fees, Deductions [77]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Supplements, Fees, Deductions",
+    },
+    unitPrice: {
+      id: "unitPrice",
+      label: "Unit Price [78]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "Enter Unit Price",
+    },
+    charges: {
+      id: "charges",
+      label: "Charges [79]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "Enter Charges",
+    },
+  };
+
+  // Section B Panel Config
+  const sectionBConfig: PanelConfig = {
+    codeForChargingSectionsB: {
+      id: "codeForChargingSectionsB",
+      label: "Code for the Charging Sections [70]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Code for the Charging Sections",
+    },
+    routeCodeB: {
+      id: "routeCodeB",
+      label: "Route Code [71]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Route Code",
+    },
+    nhmCodeB: {
+      id: "nhmCodeB",
+      label: "NHM Code [72]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter NHM Code",
+    },
+    currencyB: {
+      id: "currencyB",
+      label: "Currency [73]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Currency",
+    },
+    chargedMassWeightB: {
+      id: "chargedMassWeightB",
+      label: "Charged Mass Weight [74]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Charged Mass Weight",
+    },
+    customerAgreementOrTariffAppliedB: {
+      id: "customerAgreementOrTariffAppliedB",
+      label: "Customer Agreement or Tariff Applied [75]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Customer Agreement or Tariff Applied",
+    },
+    kmZoneB: {
+      id: "kmZoneB",
+      label: "KM/Zone [76]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter KM/Zone",
+    },
+    supplementsFeesDeductionsB: {
+      id: "supplementsFeesDeductionsB",
+      label: "Supplements, Fees, Deductions [77]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Supplements, Fees, Deductions",
+    },
+    unitPriceB: {
+      id: "unitPriceB",
+      label: "Unit Price [78]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "Enter Unit Price",
+    },
+    chargesB: {
+      id: "chargesB",
+      label: "Charges [79]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "Enter Charges",
+    },
+  };
+
+  // Section C Panel Config
+  const sectionCConfig: PanelConfig = {
+    codeForChargingSectionsC: {
+      id: "codeForChargingSectionsC",
+      label: "Code for the Charging Sections [70]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter Code for the Charging Sections",
+    },
+    routeCodeC: {
+      id: "routeCodeC",
+      label: "Route Code [71]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter Route Code",
+    },
+    nhmCodeC: {
+      id: "nhmCodeC",
+      label: "NHM Code [72]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter NHM Code",
+    },
+    currencyC: {
+      id: "currencyC",
+      label: "Currency [73]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Currency",
+    },
+    chargedMassWeightC: {
+      id: "chargedMassWeightC",
+      label: "Charged Mass Weight [74]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Charged Mass Weight",
+    },
+    customerAgreementOrTariffAppliedC: {
+      id: "customerAgreementOrTariffAppliedC",
+      label: "Customer Agreement or Tariff Applied [75]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Customer Agreement or Tariff Applied",
+    },
+    kmZoneC: {
+      id: "kmZoneC",
+      label: "KM/Zone [76]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter KM/Zone",
+    },
+    supplementsFeesDeductionsC: {
+      id: "supplementsFeesDeductionsC",
+      label: "Supplements, Fees, Deductions [77]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Supplements, Fees, Deductions",
+    },
+    unitPriceC: {
+      id: "unitPriceC",
+      label: "Unit Price [78]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "Enter Unit Price",
+    },
+    chargesC: {
+      id: "chargesC",
+      label: "Charges [79]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "Enter Charges",
+    },
+  };
+
+  //wagon details panel config
+  const wagonDetailsConfig: PanelConfig = {
+    train: {
+      id: "train",
+      label: "train [1]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "four",
+      placeholder: "Enter train",
+    },
+    itinerary: {
+      id: "itinerary",
+      label: "itinerary [5]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "four",
+      placeholder: "Enter itinerary",
+      labelFlag: true,
+    },
+    dataOfDispatch: {
+      id: "dataOfDispatch",
+      label: "Date of Dispatch [7]",
+      fieldType: "date",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "four",
+      placeholder: "Enter Date of Dispatch",
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    Page: {
+      id: "Page",
+      label: "Page [9]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Customer Code for the Pay...",
+      hideSearch: false,
+    },
+    toBeClearedAt: {
+      id: "toBeClearedAt",
+      label: "To Be Cleared At",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter To Be Cleared At",
+      hideSearch: false,
+    },
+    fixedNetTrain: {
+      id: "fixedNetTrain",
+      label: "Fixed Net Train [13]",
+      fieldType: "inputdropdown",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Fixed Net Train [13]",
+    },
+    number: {
+      id: "number",
+      label: "No./Number [14]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter number",
+    },
+    LoadingConfiguration: {
+      id: "LoadingConfiguration",
+      label: "Loading Configuration [16]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 8,
+      width: "four",
+      placeholder: "Enter Customer Code for the Pay...",
+    },
+    wagonNumber: {
+      id: "wagonNumber",
+      label: "Wagon No. [18]/[15]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 9,
+      width: "four",
+      placeholder: "Enter wagon number",
+    },
+    DescriptionoftheGoods: {
+      id: "DescriptionoftheGoods",
+      label: "Description of the Goods [21]/[17]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 10,
+      width: "four",
+      placeholder: "Enter Description of the Goods",
+    },
+    ExceptionalConsignment: {
+      id: "ExceptionalConsignment",
+      label: "Exceptional Consignment [22]",
+      fieldType: "checkbox",
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 11,
+      width: "four",
+    },
+    RID: {
+      id: "RID",
+      label: "RID [23]/[28]",
+      fieldType: "checkbox",
+      value: false,
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 12,
+      width: "four",
+    },
+    UTICODE: {
+      id: "UTICODE",
+      label: "UTI Code (Intermodal Transport Unit) [23]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 13,
+      width: "four",
+      placeholder: "Enter Place",
+      fetchOptions: fetchMaster("UTI Code 23 Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    LengthWidthHeight: {
+      id: "LengthWidthHeight",
+      label: "Length x Width x Height [24]",
+      fieldType: "inputdropdown",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 14,
+      width: "four",
+      placeholder: "Enter Tare Weight",
+    },
+    MarkandNumber: {
+      id: "MarkandNumber",
+      label: "Mark and Number [25]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 15,
+      width: "four",
+      placeholder: "Enter Mark and Number",
+    },
+    DeliveryNoteNumber: {
+      id: "DeliveryNoteNumber",
+      label: "Delivery Note Number [26]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 16,
+      width: "four",
+      placeholder: "Enter Delivery Note Number ",
+    },
+    NHMCode: {
+      id: "NHMCode",
+      label: "NHM Code [24]/[18]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: "four",
+      placeholder: "Enter NHM Code",
+      fetchOptions: fetchMaster("NHM Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    GrossWeight: {
+      id: "GrossWeight",
+      label: "Gross Weight [26]/[19]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 18,
+      width: "four",
+      placeholder: "Enter Gross Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
+
+    TareWeight: {
+      id: "TareWeight",
+      label: "Tare Weight [25]/[20]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 19,
+      width: "four",
+      placeholder: "Enter Tare Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
+
+    NetWeight: {
+      id: "NetWeight",
+      label: "Net Weight [25]/[20]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 20,
+      width: "four",
+      placeholder: "Enter Net Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
+
+    TotalBrutto: {
+      id: "TotalBrutto",
+      label: "Total Brutto",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 21,
+      width: "four",
+      placeholder: "Total Brutto",
+      options: getUomOptions(currencyUomList),
+    },
+
+    TotalNetto: {
+      id: "TotalNetto",
+      label: "Total Netto",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 22,
+      width: "four",
+      placeholder: "Total Netto",
+      options: getUomOptions(currencyUomList),
+    },
+
+    TotalGross: {
+      id: "TotalGross",
+      label: "Total Gross",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 23,
+      width: "four",
+      placeholder: "Total Gross",
+      options: getUomOptions(currencyUomList),
+    },
+  };
+
+  //router details panel config
+  const routeDetailsConfig: PanelConfig = {
+    ConsignmentNumber: {
+      id: "ConsignmentNumber",
+      label: "Consignment Number",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "third",
+      placeholder: "Enter Consignment Number",
+    },
+    Country: {
+      id: "Country",
+      label: "Country",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "third",
+      placeholder: "Enter Country",
+      labelFlag: true,
+      fetchOptions: fetchMaster("Country Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    COuntryValue: {
+      id: "COuntryValue",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "third",
+      placeholder: "Enter Country",
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    Station: {
+      id: "Station",
+      label: "Station",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "two-thirds",
+      placeholder: "Enter Station",
+      hideSearch: false,
+      fetchOptions: fetchMaster("Location Init"),
+      disableLazyLoading: false,
+    },
+    StationValue: {
+      id: "StationValue",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "third",
+      placeholder: "Enter Station Value",
+      labelFlag: false,
+    },
+    UndertakingEnterprise: {
+      id: "UndertakingEnterprise",
+      label: "Undertaking Enterprise",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "two-thirds",
+      placeholder: "Undertaking Enterprise",
+      hideSearch: false,
+      fetchOptions: fetchMaster("Contractual carrier_58_a Init"),
+      disableLazyLoading: false,
+    },
+    UndertakingEnterpriseValue: {
+      id: "UndertakingEnterpriseValue",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "third",
+      placeholder: "Enter Undertaking Enterprise Value",
+      labelFlag: false,
+    },
+  };
+
+  const routeDetailsCustomsEndorsementConfig: PanelConfig = {
+    CustomsEndorsements_99: {
+      id: "CustomsEndorsements_99",
+      label: "Customs Endorsements [99]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 1,
+      width: "third",
+      placeholder: "Enter Customs Endorsements",
+    },
+    Route_50: {
+      id: "Route_50",
+      label: "Route [50]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 2,
+      width: "third",
+      placeholder: "Enter Route",
+      labelFlag: true,
+      fetchOptions: fetchMaster("Route ID Init"),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    CustomsProcedures: {
+      id: "CustomsProcedures",
+      label: "CustomsProcedures [51]/[27]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: "third",
+      placeholder: "Enter Customs Procedures",
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    ContractualCarrier: {
+      id: "ContractualCarrier",
+      label: "ContractualCarrier [58 a]",
+      fieldType: "lazyselect",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 4,
+      width: "four",
+      placeholder: "Enter Contractual Carrier",
+      hideSearch: false,
+      fetchOptions: fetchMaster("Contractual carrier_58_a Init"),
+      disableLazyLoading: false,
+    },
+    EnterContractual: {
+      id: "EnterContractual",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Contractual Carrier",
+      labelFlag: false,
+    },
+    TransitProcedure: {
+      id: "UndertakingEnterprise",
+      label: "Simplified Transit Procedure For Rail [56 b]",
+      fieldType: "checkbox",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+    },
+    EnterTransitProcedure: {
+      id: "TransitProcedure",
+      label: "",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 7,
+      width: "four",
+      placeholder: "Enter Simplified Transit Procedure For Rail",
+      labelFlag: false,
+    },
+  };
+
+  const handleAddConsignorConsignee = () => {
+    console.log("Add Consignor/Consignee clicked");
+    // Add your logic here
+  };
+
+  const normalizeValue = (v: any) => {
+    if (v === "" || v === undefined) return null;
+    if (typeof v === "boolean") return v ? 1 : 0;
+    return v;
+  };
+
+  const normalizeObject = (obj: any) =>
+    JSON.parse(
+      JSON.stringify(obj, (_k, v) => {
+        if (typeof v === "string" && v.includes("T00:00:00")) {
+          return v.split("T")[0];
         }
-        return true;
-    };
-
-    const resolveModeFlag = (
-        current: any,
-        initial: any,
-        workOrderNo?: string
-    ): "Insert" | "Update" | "NoChange" => {
-        if (!workOrderNo) return "Insert";
-        return deepEqual(
-            normalize(current),
-            normalize(initial)
-        )
-            ? "NoChange"
-            : "Update";
-    };
-
-    const mapFormToHeaderPayload = (formData: Record<string, any>) => ({
-        TemplateID: formData.templateId,
-        Description: formData.templateDescription,
-        DocType: formData.templateType,
-        DispatchDocumentNo_value1: formData.dispatchDocNo,
-        DispatchDocumentNo_value2: formData.dispatchDocNoDescription,
-        UNDGCode: formData.unCode,
-        TripPlanID: formData.tripPlanId,
-        Wagon: formData.wagon,
-        LVENo: formData.lveNo,
-        CustomerCodeID_value1: formData.customerID,
-        CustomerCodeID_value2: formData.customerIDDescription,
-        ContractID: formData.contractID,
-    });
-
-    /**
-     * fetchMaster helper for lazy select dropdowns
-     */
-    const fetchMaster = (
-        messageType: string,
-        extraParams?: Record<string, any>
-    ) => {
-        return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
-            try {
-                const response = await quickOrderService.getMasterCommonData({
-                    messageType,
-                    searchTerm: searchTerm || "",
-                    offset,
-                    limit,
-                    ...(extraParams || {}),
-                });
-
-                const rr: any = response?.data;
-                const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
-
-                return arr.map((item: any) => {
-                    const id = item.id ?? item.ID ?? item.value ?? "";
-                    const name = item.name ?? item.Name ?? item.label ?? "";
-                    return {
-                        label: `${id} || ${name}`,
-                        value: `${id} || ${name}`,
-                    };
-                });
-            } catch (err) {
-                console.error(`Error fetching ${messageType}:`, err);
-                return [];
-            }
-        };
-    };
-
-    const getUomOptions = (list: any[]) =>
-        list
-            .filter(item => item.id && item.name) // remove empty row
-            .map(item => ({
-                label: item.name,
-                value: item.id,
-            }));
-
-
-    const buildWeightWithUom = (
-        value?: { input?: string; dropdown?: string } | null
-    ): string | null => {
-        if (!value?.input || !value?.dropdown) return null;
-        return `${value.input} ${value.dropdown}`;
-    };
-
-    const splitIdName = (value: any) => {
-        if (!value || typeof value !== "string") {
-            return { id: "", name: "" };
-        }
-
-        if (value.includes("||")) {
-            const [id, name] = value.split("||").map(v => v.trim());
-            return { id, name };
-        }
-
-        return { id: value.trim(), name: "" };
-    };
-
-    const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
-        const consignor = splitIdName(formData.consignor);
-        const consignee = splitIdName(formData.consignee);
-
-        const custConsignor = splitIdName(formData.customerCodeConsignor);
-        const custPrePaid = splitIdName(formData.customerCodePrePaid);
-
-        const custConsignee = splitIdName(formData.customerCodeConsignee);
-        const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
-        const consignorRef = splitIdName(formData.consignorReference);
-
-        const deliveryPoint = splitIdName(formData.deliveryPoint);
-        const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
-        const stationServing = splitIdName(formData.codeStationServing);
-        const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
-
-        return {
-            // Consignor
-            Consignor_1_value1: consignor.id,
-            ConsignorName_value2: consignor.name,
-
-            // Customer Code for Consignor
-            CustomerCodeForConsignor_2: custConsignor.id,
-            CustomerCodeForConsignor_value2: custConsignor.name,
-
-            // Pre-paid payer
-            CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
-            CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
-
-            // Consignee
-            Consignee_4_value1: consignee.id,
-            ConsigneeName_4_value2: consignee.name,
-
-            // Customer Code for Consignee
-            CustomerCodeForConsignee_5: custConsignee.id,
-            CustomerCodeForConsignee_value5: custConsignee.name,
-
-            // Non-prepaid payer
-            CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
-            CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
-
-            // Consignor Reference
-
-            ConsignorsReference_8_value1: consignorRef.id,
-            ConsignorsReference_8_value2: consignorRef.name,
-            // Delivery Point
-            DeliveryPoint_10_4_value1: deliveryPoint.id,
-            DeliveryPoint_10_4_value2: deliveryPoint.name,
-
-            // Code for Delivery Point
-            CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
-            CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
-
-            // Code for Station Serving Delivery Point
-            CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
-            CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
-
-            // Customer Agreement/Tariff No.
-            NumberOfCustomerAgreementOrTariff_14: formData.customerAgreementTariff || null,
-
-            // Acceptance Date
-            AcceptanceDate_16_2: formData.acceptanceDate || null,
-
-            // Acceptance From
-            AcceptanceFrom_16_3: formData.acceptanceFrom || null,
-
-            // Code for Acceptance Point
-            CodeForAcceptancePoint_17: acceptancePoint.id || null,
-            CodeForAcceptancePoint_17_1: acceptancePoint.name || null,
-
-        };
-    };
-
-    const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
-        PaymentInstructionDescription_20_value1: paymentFormData.paymentInstruction1 || null,
-        PaymentInstructionDescription_20_value2: paymentFormData.paymentInstruction2 || null,
-        PaymentInstructionDescription_20_value3: paymentFormData.paymentInstruction3 || null,
-        CarriageChargePaid_20: paymentFormData.carriageChargePaid ? 1 : 0,
-        IncoTerms_20: paymentFormData.incoTerms ? "1" : "0",
-        PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
-        PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
-    });
-
-    const mapFormToConsignorDeclarationsPayload = (formData: Record<string, any>) => ({
-        ConsignorsDeclarations_7: formData.consignorDeclarations || null,
-        DocumentsAttached_9: formData.documentsAttached || null,
-        CommercialSpecifications_13: formData.commercialSpecifications || null,
-        InformationForTheConsignee_15: formData.informationForConsignee || null,
-    });
-
-    const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => ({
-        DeclarationOfValue_26_value1: formData.declarationOfValue || null,
-        InterestInDelivery_27_value1: formData.interestInDelivery || null,
-        CashOnDelivery_28_value1: formData.cashOnDelivery?.input || null,
-        CashOnDelivery_28_value2: formData.cashOnDelivery?.dropdown || null,
-    });
-
-    const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
-        CodingBox_1_40: formData.codingBox1 || null,
-        CodingBox_2_41: formData.codingBox2 || null,
-        CodingBox_3_42: formData.codingBox3 || null,
-        CodingBox_4_43: formData.codingBox4 || null,
-        CodingBox_5_44: formData.codingBox5 || null,
-        CodingBox_6_45: formData.codingBox6 || null,
-        CodingBox_7_46: formData.codingBox7 || null,
-        CodingBox_8_47: formData.codingBox8 || null,
-    });
-
-    const mapFormToExaminationDetailsPayload = (formData: Record<string, any>) => ({
-        Examination_48: formData.examination || null,
-        PrepaymentCoding_49: formData.prepaymentCoding || null,
-        ChargesNote_52: formData.chargesNote ? 1 : 0,
-        CashOnDeliveryReceipt_53: formData.cashOnDeliveryReceipt || null,
-        FormalReport_54: formData.formalReport || null,
-        ExtensionOfTransitPeriod_55: formData.extensionOfTransitPeriod || null,
-        DateOfArrival_59: formData.dateOfArrival || null,
-        MadeAvailable_60: formData.madeAvailable || null,
-        AcknowledgementOfReceipt_61: formData.acknowledgementOfReceipt || null,
-    });
-
-    const mapFormToSectionAPayload = (formData: Record<string, any>) => ({
-        CodeForChargingSections_70: formData.codeForChargingSections || null,
-        RouteCode_71: formData.routeCode || null,
-        NHMCode_72: formData.nhmCode || null,
-        Currency_73: formData.currency || null,
-        ChargedMassWeight_74: formData.chargedMassWeight || null,
-        CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffApplied || null,
-        KMZone_76: formData.kmZone || null,
-        SupplementsFeesDeductions_77: formData.supplementsFeesDeductions || null,
-        UnitPrice_78: formData.unitPrice || null,
-        Charges_79: formData.charges || null,
-    });
-
-    const mapFormToSectionBPayload = (formData: Record<string, any>) => ({
-        CodeForChargingSections_70: formData.codeForChargingSectionsB || null,
-        RouteCode_71: formData.routeCodeB || null,
-        NHMCode_72: formData.nhmCodeB || null,
-        Currency_73: formData.currencyB || null,
-        ChargedMassWeight_74: formData.chargedMassWeightB || null,
-        CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffAppliedB || null,
-        KMZone_76: formData.kmZoneB || null,
-        SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsB || null,
-        UnitPrice_78: formData.unitPriceB || null,
-        Charges_79: formData.chargesB || null,
-    });
-
-    const mapFormToSectionCPayload = (formData: Record<string, any>) => ({
-        CodeForChargingSections_70: formData.codeForChargingSectionsC || null,
-        RouteCode_71: formData.routeCodeC || null,
-        NHMCode_72: formData.nhmCodeC || null,
-        Currency_73: formData.currencyC || null,
-        ChargedMassWeight_74: formData.chargedMassWeightC || null,
-        CustomerAgreementOrTariffApplied_75: formData.customerAgreementOrTariffAppliedC || null,
-        KMZone_76: formData.kmZoneC || null,
-        SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsC || null,
-        UnitPrice_78: formData.unitPriceC || null,
-        Charges_79: formData.chargesC || null,
-    });
-
-    const mapFormToRoutePayload = (formData: Record<string, any>) => {
-        const country = splitIdName(formData.Country);
-        const station = splitIdName(formData.Station);
-        const enterprise = splitIdName(formData.UndertakingEnterprise);
-
-        return {
-            ConsignmentNo_62_6: formData.ConsignmentNumber || "",
-
-            // Country
-            Country_62_1_value1: country.id,
-            Country_62_1_value2: country.name,
-            CountryValueText: formData.COuntryValue || "",
-
-            // Station
-            Station_62_3_value1: station.id,
-            Station_62_3_value2: station.name,
-            StationValueText: formData.StationValue || "",
-
-            // Undertaking Enterprise
-            UndertakingEnterprises_62_5_value1: enterprise.id,
-            UndertakingEnterprises_62_5_value2: enterprise.name,
-            UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
-        };
-    };
-
-    const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
-        const contractualCarrier = splitIdName(formData.ContractualCarrier);
-
-        return {
-            CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
-            Route_50: formData.Route_50 || null,
-            CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
-            CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
-            ContractualCarrier_58a_value1: contractualCarrier.id || null,
-            ContractualCarrier_58a_value2: contractualCarrier.name || null,
-            EnterContractualCarrier_58a: formData.EnterContractual || null,
-            SimplifiedTransitProcedureForRail_58b_value1:
-                formData.TransitProcedure ? "1" : "0",
-            SimplifiedTransitProcedureForRail_58b_value2:
-                formData.EnterTransitProcedure || null,
-        };
-    };
-
-    const mapFormToWagonPayload = (formData: Record<string, any>) => {
-        const train = splitIdName(formData.train);
-        const uti = splitIdName(formData.UTICODE);
-        const nhm = splitIdName(formData.NHMCode);
-
-        return {
-            WagonNo: formData.wagonNumber || "",
-            GoodsDescription: formData.DescriptionoftheGoods || "",
-
-            Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
-            RID: formData.RID ? 1 : 0,
-
-            UTIType: uti.id || "",
-            NHMCode: nhm.id || "",
-
-            LengthxWidthxheight_24: buildWeightWithUom(formData.LengthWidthHeight),
-            Mark_and_Number_25: formData.MarkandNumber || "",
-            Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
-            Gross_Weight_25_19: buildWeightWithUom(formData.GrossWeight),
-            Tare_Weight_25_20: buildWeightWithUom(formData.TareWeight),
-            Net_Weight_25_21: buildWeightWithUom(formData.NetWeight),
-
-            TotalMass: buildWeightWithUom(formData.TotalNetto),
-            TotalBrut: buildWeightWithUom(formData.TotalBrutto),
-            TotalTare: buildWeightWithUom(formData.TotalGross),
-
-            Train_1: train.id || "",
-            Itinerary_5: formData.itinerary || "",
-            Page_9: formData.Page || "",
-            Date_of_Dispatch_7: formData.dataOfDispatch || "",
-            To_be_cleared_at_12: formData.toBeClearedAt || "",
-
-            Fixed_Net_Weight_Train_13: buildWeightWithUom(formData.fixedNetTrain),
-            NoNumber_14: Number(formData.number) || 0,
-            Loading_Configuration_16: formData.LoadingConfiguration || "",
-
-            // OPTIONAL API FIELDS (set to null if not in form)
-            DangerGoods: null,
-            MassWeight: null,
-            BrutWeight: null,
-
-            WagonLength: null,
-            // ModeFlag: "Update"
-        };
-    };
-
-    // New Header Template Panel Config
-    const headerTemplateConfig: PanelConfig = {
-        templateId: {
-            id: 'templateId',
-            label: 'Template ID/Description',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('TemplateID Description Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        templateType: {
-            id: 'templateType',
-            label: '',
-            fieldType: 'radio',
-            value: 'CIM',
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            options: [
-                { label: 'CIM', value: 'CIM' },
-                { label: 'CUV', value: 'CUV' },
-            ],
-            labelFlag: false, // Hide the label as per screenshot
-        },
-        dispatchDocNo: {
-            id: 'dispatchDocNo',
-            label: 'Dispatch Doc. No./CO No.',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Dispatch Document No Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        dispatchDocNoDescription: {
-            id: 'dispatchDocNoDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four', // Assuming it takes half width next to dispatchDocNo
-            placeholder: '',
-            labelFlag: false,
-        },
-        unCode: {
-            id: 'unCode',
-            label: 'UN Code',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('UN Code Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        tripPlanId: {
-            id: 'tripPlanId',
-            label: 'Trip Plan ID',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('TripPlanID Description Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        wagon: {
-            id: 'wagon',
-            label: 'Wagon',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Wagon id Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        lveNo: {
-            id: 'lveNo',
-            label: 'LVE No.',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-        customerID: {
-            id: 'customerID',
-            label: 'Customer ID/Description',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Customer Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        customerIDDescription: {
-            id: 'customerIDDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        contractID: {
-            id: 'contractID',
-            label: 'Contract ID/Description',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 11,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Contract Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-    };
-
-    // General Details Panel Config
-    const generalDetailsConfig: PanelConfig = {
-        consignor: {
-            id: 'consignor',
-            label: 'Consignor [1]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Consignor Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        consignorDescription: {
-            id: 'consignorDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        customerCodeConsignor: {
-            id: 'customerCodeConsignor',
-            label: 'Customer Code for the Consignor [2]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Consignor CustomerCode2 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        customerCodePrePaid: {
-            id: 'customerCodePrePaid',
-            label: 'Customer Code for Payer of Pre-Paid Charges [3]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Customercode for payer pre-paid charges_3 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        consignee: {
-            id: 'consignee',
-            label: 'Consignee [4]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Consignee4 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        consigneeDescription: {
-            id: 'consigneeDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        customerCodeConsignee: {
-            id: 'customerCodeConsignee',
-            label: 'Customer Code for Consignee [5]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Consignee CustomerCode5 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        customerCodeNonPrePaid: {
-            id: 'customerCodeNonPrePaid',
-            label: 'Customer Code for Payer of Non Pre-Paid Charges [6]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Customercode for payer Nonpre-paid charges_6 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        consignorReference: {
-            id: 'consignorReference',
-            label: "Consignor's Reference [8]",
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: "",
-            fetchOptions: fetchMaster('Consignors Reference8 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        consignorReferenceDescription: {
-            id: 'consignorReferenceDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: "",
-            labelFlag: false,
-        },
-        deliveryPoint: {
-            id: 'deliveryPoint',
-            label: 'Delivery Point [10]/[4]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 11,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Location Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        deliveryPointDescription: {
-            id: 'deliveryPointDescription',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 12,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        codeDeliveryPoint: {
-            id: 'codeDeliveryPoint',
-            label: 'Code for the Delivery Point [11]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 13,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Location Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        codeStationServing: {
-            id: 'codeStationServing',
-            label: 'Code for the Station Serving the Delivery Point [12]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 14,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Location Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        customerAgreementTariff: {
-            id: 'customerAgreementTariff',
-            label: 'No. of the Customer Agreement/Tariff [14]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 15,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Contract Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        acceptanceDate: {
-            id: 'acceptanceDate',
-            label: 'Acceptance Date [16]/[2]',
-            fieldType: 'date',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 16,
-            width: 'four',
-            placeholder: '',
-            dateFormat: 'dd/MM/yyyy',
-        },
-        acceptanceFrom: {
-            id: 'acceptanceFrom',
-            label: 'Acceptance From [16]/[3]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 17,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Location Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        codeAcceptancePoint: {
-            id: 'codeAcceptancePoint',
-            label: 'Code for the Acceptance Point [17]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 18,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Location Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-    };
-
-    // New Payment Instruction Panel Config
-    const paymentInstructionConfig: PanelConfig = {
-        paymentInstruction1: {
-            id: 'paymentInstruction1',
-            label: 'Payment Instruction',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Payment Instruction_20 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        paymentInstruction2: {
-            id: 'paymentInstruction2',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        paymentInstruction3: {
-            id: 'paymentInstruction3',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        carriageChargePaid: {
-            id: 'carriageChargePaid',
-            label: 'Carriage Charge Paid',
-            fieldType: 'checkbox',
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'six',
-        },
-        incoTerms: {
-            id: 'incoTerms',
-            label: 'Inco Terms',
-            fieldType: 'checkbox',
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'six',
-        },
-    };
-
-    // New Place and Date Made Out Panel Config
-    const placeAndDateConfig: PanelConfig = {
-        place: {
-            id: 'place',
-            label: 'Place',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'one-third',
-            placeholder: '',
-            fetchOptions: fetchMaster('Place_29 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        dateMadeOut: {
-            id: 'dateMadeOut',
-            label: 'Select Date',
-            fieldType: 'date',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'six',
-            placeholder: '',
-            dateFormat: 'dd/MM/yyyy',
-        },
-    };
-
-    // Consignor's Declarations Panel Config
-    const consignorDeclarationsConfig: PanelConfig = {
-        consignorDeclarations: {
-            id: 'consignorDeclarations',
-            label: "Consignor's Declarations [7]",
-            fieldType: 'textarea',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: "",
-        },
-        documentsAttached: {
-            id: 'documentsAttached',
-            label: 'Documents Attached [9]',
-            fieldType: 'textarea',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        commercialSpecifications: {
-            id: 'commercialSpecifications',
-            label: 'Commercial Specifications [13]',
-            fieldType: 'textarea',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-        },
-        informationForConsignee: {
-            id: 'informationForConsignee',
-            label: 'Information for the Consignee [15]',
-            fieldType: 'textarea',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-    };
-
-    // Declaration of Value, Interest in Delivery, Cash on Delivery Panel Config
-    const valueDeliveryCashConfig: PanelConfig = {
-        declarationOfValue: {
-            id: 'declarationOfValue',
-            label: 'Declaration of Value [26]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Currency Init'),
-        },
-        interestInDelivery: {
-            id: 'interestInDelivery',
-            label: 'Interest in Delivery [27]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Interest in delivery [27]'),
-        },
-        cashOnDelivery: {
-            id: 'cashOnDelivery',
-            label: 'Cash on Delivery [28]',
-            fieldType: 'inputdropdown',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('Currency Init'),
-        },
-    };
-
-    // Coding Boxes Panel Config
-    const codingBoxesConfig: PanelConfig = {
-        codingBox1: {
-            id: 'codingBox1',
-            label: 'Coding Box 1 [40]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox2: {
-            id: 'codingBox2',
-            label: 'Coding Box 2 [41]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox3: {
-            id: 'codingBox3',
-            label: 'Coding Box 3 [42]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox4: {
-            id: 'codingBox4',
-            label: 'Coding Box 4 [43]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox5: {
-            id: 'codingBox5',
-            label: 'Coding Box 5 [44]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox6: {
-            id: 'codingBox6',
-            label: 'Coding Box 6 [45]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox7: {
-            id: 'codingBox7',
-            label: 'Coding Box 7 [46]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-        },
-        codingBox8: {
-            id: 'codingBox8',
-            label: 'Coding Box 8 [47]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-    };
-
-    // Examination and Other Details Panel Config
-    const examinationDetailsConfig: PanelConfig = {
-        examination: {
-            id: 'examination',
-            label: 'Examination [48]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        prepaymentCoding: {
-            id: 'prepaymentCoding',
-            label: 'Prepayment Coding [49]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        chargesNote: {
-            id: 'chargesNote',
-            label: 'Charges Note [52]',
-            fieldType: 'checkbox',
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-        },
-        cashOnDeliveryReceipt: {
-            id: 'cashOnDeliveryReceipt',
-            label: 'Cash on Delivery Receipt [53]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-        formalReport: {
-            id: 'formalReport',
-            label: 'Formal Report [54]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-        },
-        extensionOfTransitPeriod: {
-            id: 'extensionOfTransitPeriod',
-            label: 'Extension of Transit Period [55]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        dateOfArrival: {
-            id: 'dateOfArrival',
-            label: 'Date of Arrival [59]',
-            fieldType: 'date',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-            dateFormat: 'dd/MM/yyyy',
-        },
-        madeAvailable: {
-            id: 'madeAvailable',
-            label: 'Made Available [60]',
-            fieldType: 'date',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-            dateFormat: 'dd/MM/yyyy',
-        },
-        acknowledgementOfReceipt: {
-            id: 'acknowledgementOfReceipt',
-            label: 'Acknowledgement of Receipt [61]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'half',
-            placeholder: '',
-        },
-    };
-
-    // Section A Panel Config
-    const sectionAConfig: PanelConfig = {
-        codeForChargingSections: {
-            id: 'codeForChargingSections',
-            label: 'Code for the Charging Sections [70]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        routeCode: {
-            id: 'routeCode',
-            label: 'Route Code [71]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        nhmCode: {
-            id: 'nhmCode',
-            label: 'NHM Code [72]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-        },
-        currency: {
-            id: 'currency',
-            label: 'Currency [73]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-        chargedMassWeight: {
-            id: 'chargedMassWeight',
-            label: 'Charged Mass Weight [74]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-        },
-        customerAgreementOrTariffApplied: {
-            id: 'customerAgreementOrTariffApplied',
-            label: 'Customer Agreement or Tariff Applied [75]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        kmZone: {
-            id: 'kmZone',
-            label: 'KM/Zone [76]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-        },
-        supplementsFeesDeductions: {
-            id: 'supplementsFeesDeductions',
-            label: 'Supplements, Fees, Deductions [77]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-        unitPrice: {
-            id: 'unitPrice',
-            label: 'Unit Price [78]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: '',
-        },
-        charges: {
-            id: 'charges',
-            label: 'Charges [79]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: '',
-        },
-    };
-
-    // Section B Panel Config
-    const sectionBConfig: PanelConfig = {
-        codeForChargingSectionsB: {
-            id: 'codeForChargingSectionsB',
-            label: 'Code for the Charging Sections [70]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        routeCodeB: {
-            id: 'routeCodeB',
-            label: 'Route Code [71]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        nhmCodeB: {
-            id: 'nhmCodeB',
-            label: 'NHM Code [72]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-        },
-        currencyB: {
-            id: 'currencyB',
-            label: 'Currency [73]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-        chargedMassWeightB: {
-            id: 'chargedMassWeightB',
-            label: 'Charged Mass Weight [74]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-        },
-        customerAgreementOrTariffAppliedB: {
-            id: 'customerAgreementOrTariffAppliedB',
-            label: 'Customer Agreement or Tariff Applied [75]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        kmZoneB: {
-            id: 'kmZoneB',
-            label: 'KM/Zone [76]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-        },
-        supplementsFeesDeductionsB: {
-            id: 'supplementsFeesDeductionsB',
-            label: 'Supplements, Fees, Deductions [77]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-        unitPriceB: {
-            id: 'unitPriceB',
-            label: 'Unit Price [78]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: '',
-        },
-        chargesB: {
-            id: 'chargesB',
-            label: 'Charges [79]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: '',
-        },
-    };
-
-    // Section C Panel Config
-    const sectionCConfig: PanelConfig = {
-        codeForChargingSectionsC: {
-            id: 'codeForChargingSectionsC',
-            label: 'Code for the Charging Sections [70]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        routeCodeC: {
-            id: 'routeCodeC',
-            label: 'Route Code [71]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-        },
-        nhmCodeC: {
-            id: 'nhmCodeC',
-            label: 'NHM Code [72]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-        },
-        currencyC: {
-            id: 'currencyC',
-            label: 'Currency [73]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-        },
-        chargedMassWeightC: {
-            id: 'chargedMassWeightC',
-            label: 'Charged Mass Weight [74]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-        },
-        customerAgreementOrTariffAppliedC: {
-            id: 'customerAgreementOrTariffAppliedC',
-            label: 'Customer Agreement or Tariff Applied [75]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        kmZoneC: {
-            id: 'kmZoneC',
-            label: 'KM/Zone [76]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-        },
-        supplementsFeesDeductionsC: {
-            id: 'supplementsFeesDeductionsC',
-            label: 'Supplements, Fees, Deductions [77]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-        unitPriceC: {
-            id: 'unitPriceC',
-            label: 'Unit Price [78]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: '',
-        },
-        chargesC: {
-            id: 'chargesC',
-            label: 'Charges [79]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: '',
-        },
-    };
-
-
-    //wagon details panel config
-    const wagonDetailsConfig: PanelConfig = {
-        train: {
-            id: 'train',
-            label: 'train [1]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'four',
-            placeholder: '',
-        },
-        itinerary: {
-            id: 'itinerary',
-            label: 'itinerary [5]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'four',
-            placeholder: '',
-            labelFlag: true,
-        },
-        dataOfDispatch: {
-            id: 'dataOfDispatch',
-            label: 'Date of Dispatch [7]',
-            fieldType: 'date',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'four',
-            placeholder: '',
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        Page: {
-            id: 'Page',
-            label: 'Page [9]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-            hideSearch: false,
-        },
-        toBeClearedAt: {
-            id: 'toBeClearedAt',
-            label: 'To Be Cleared At',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-            hideSearch: false,
-        },
-        fixedNetTrain: {
-            id: 'fixedNetTrain',
-            label: 'Fixed Net Train [13]',
-            fieldType: 'inputdropdown',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-            placeholder: '',
-        },
-        number: {
-            id: 'number',
-            label: 'No./Number [14]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-        },
-        LoadingConfiguration: {
-            id: 'LoadingConfiguration',
-            label: 'Loading Configuration [16]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8,
-            width: 'four',
-            placeholder: '',
-        },
-        wagonNumber: {
-            id: 'wagonNumber',
-            label: "Wagon No. [18]/[15]",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 9,
-            width: 'four',
-            placeholder: '',
-
-        },
-        DescriptionoftheGoods: {
-            id: 'DescriptionoftheGoods',
-            label: "Description of the Goods [21]/[17]",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10,
-            width: 'four',
-            placeholder: '',
-        },
-        ExceptionalConsignment: {
-            id: 'incoTerms',
-            label: 'Exceptional Consignment [22]',
-            fieldType: 'checkbox',
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 11,
-            width: 'four',
-        },
-        RID: {
-            id: 'RID',
-            label: 'RID [23]/[28]',
-            fieldType: 'checkbox',
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 12,
-            width: 'four',
-        },
-        UTICODE: {
-            id: 'UTICODE',
-            label: 'UTI Code (Intermodal Transport Unit) [23]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 13,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('UTI Code 23 Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        LengthWidthHeight: {
-            id: 'LengthWidthHeight',
-            label: "Length x Width x Height [24]",
-            fieldType: 'inputdropdown',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 14,
-            width: 'four',
-            placeholder: '',
-        },
-        MarkandNumber: {
-            id: 'MarkandNumber',
-            label: "Mark and Number [25]",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 15,
-            width: 'four',
-            placeholder: '',
-        },
-        DeliveryNoteNumber: {
-            id: 'DeliveryNoteNumber',
-            label: "Delivery Note Number [26]",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 16,
-            width: 'four',
-            placeholder: '',
-        },
-        NHMCode: {
-            id: 'NHMCode',
-            label: 'NHM Code [24]/[18]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 17,
-            width: 'four',
-            placeholder: '',
-            fetchOptions: fetchMaster('NHM Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        GrossWeight: {
-            id: "GrossWeight",
-            label: "Gross Weight [26]/[19]",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 18,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(thuQtyUomList),
-        },
-
-        TareWeight: {
-            id: "TareWeight",
-            label: "Tare Weight [25]/[20]",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 19,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(thuQtyUomList),
-        },
-
-        NetWeight: {
-            id: "NetWeight",
-            label: "Net Weight [25]/[20]",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 20,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(thuQtyUomList),
-        },
-
-        TotalBrutto: {
-            id: "TotalBrutto",
-            label: "Total Brutto",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 21,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(currencyUomList),
-        },
-
-        TotalNetto: {
-            id: "TotalNetto",
-            label: "Total Netto",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 22,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(currencyUomList),
-        },
-
-        TotalGross: {
-            id: "TotalGross",
-            label: "Total Gross",
-            fieldType: "inputdropdown",
-            value: {
-                dropdown: "",
-                input: "",
-            },
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 23,
-            width: "four",
-            placeholder: "",
-            options: getUomOptions(currencyUomList),
-        },
-
-    };
-
-    //router details panel config
-    const routeDetailsConfig: PanelConfig = {
-        ConsignmentNumber: {
-            id: 'ConsignmentNumber',
-            label: 'Consignment Number',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'third',
-            placeholder: '',
-
-        },
-        Country: {
-            id: 'Country',
-            label: 'Country',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'third',
-            placeholder: '',
-            labelFlag: true,
-            fetchOptions: fetchMaster('Country Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        COuntryValue: {
-            id: 'COuntryValue',
-            label: "",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'third',
-            placeholder: '',
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        Station: {
-            id: 'Station',
-            label: 'Station',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'two-thirds',
-            placeholder: '',
-            hideSearch: false,
-            fetchOptions: fetchMaster('Location Init'),
-            disableLazyLoading: false,
-        },
-        StationValue: {
-            id: 'StationValue',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'third',
-            placeholder: '',
-            labelFlag: false,
-        },
-        UndertakingEnterprise: {
-            id: 'UndertakingEnterprise',
-            label: 'Undertaking Enterprise',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'two-thirds',
-            placeholder: '',
-            hideSearch: false,
-            fetchOptions: fetchMaster(' Contractual carrier_58_a Init'),
-            disableLazyLoading: false,
-        },
-        UndertakingEnterpriseValue: {
-            id: 'UndertakingEnterpriseValue',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'third',
-            placeholder: '',
-            labelFlag: false,
-        },
-    };
-
-    const routeDetailsCustomsEndorsementConfig: PanelConfig = {
-        CustomsEndorsements_99: {
-            id: 'CustomsEndorsements_99',
-            label: 'Customs Endorsements [99]',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1,
-            width: 'third',
-            placeholder: '',
-
-        },
-        Route_50: {
-            id: 'Route_50',
-            label: 'Route [50]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 2,
-            width: 'third',
-            placeholder: '',
-            labelFlag: true,
-            fetchOptions: fetchMaster('Route ID Init'),
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        CustomsProcedures: {
-            id: 'CustomsProcedures',
-            label: "CustomsProcedures [51]/[27]",
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 3,
-            width: 'third',
-            placeholder: '',
-            hideSearch: false,
-            disableLazyLoading: false,
-        },
-        ContractualCarrier: {
-            id: 'ContractualCarrier',
-            label: 'ContractualCarrier [58 a]',
-            fieldType: 'lazyselect',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 4,
-            width: 'four',
-            placeholder: '',
-            hideSearch: false,
-            fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
-            disableLazyLoading: false,
-        },
-        EnterContractual: {
-            id: 'EnterContractual',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 5,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-        TransitProcedure: {
-            id: 'UndertakingEnterprise',
-            label: 'Simplified Transit Procedure For Rail [56 b]',
-            fieldType: 'checkbox',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 6,
-            width: 'four',
-
-        },
-        EnterTransitProcedure: {
-            id: 'TransitProcedure',
-            label: '',
-            fieldType: 'text',
-            value: '',
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 7,
-            width: 'four',
-            placeholder: '',
-            labelFlag: false,
-        },
-    };
-
-    useEffect(() => {
-        console.log("Report Create Page");
-        fetchReportData(workOrderNo);
-    }, []);
-
-    useEffect(() => {
-        const loadUomMasters = async () => {
-            try {
-                const [thuRes, currencyRes]: any = await Promise.all([
-                    quickOrderService.getMasterCommonData({
-                        messageType: "THU QTY UOM Init",
-                    }),
-                    quickOrderService.getMasterCommonData({
-                        messageType: "Currency Init",
-                    }),
-                ]);
-                console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"), "123")
-                setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
-                setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
-            } catch (err) {
-                console.error("UOM master API failed", err);
-            }
-        };
-
-        loadUomMasters();
-    }, []);
-
-    // Function to fetch template data from API
-    const fetchReportData = async (reportNo: string) => {
-        console.log("Fetching report data for report No:", reportNo);
-        try {
-            const response = await CimCuvService.getReportDataByID(reportNo);
-            console.log("response.data1", response);
-            const responseData = JSON.parse((response as any).data?.ResponseData);
-            console.log("response.data1", responseData);
-            setApiResponse(responseData);
-            setInitialApiResponse(responseData); // Store the initial response
-
-            if (headerTemplateRef.current && responseData.Header) {
-                const apiHeader = responseData.Header;
-                headerTemplateRef.current.setFormValues({
-                    templateId: apiHeader.TemplateID,
-                    templateDescription: apiHeader.Description, // Assuming this is the description for template ID
-                    templateType: apiHeader.DocType,
-                    dispatchDocNo: apiHeader.DispatchDocumentNo_value1,
-                    dispatchDocNoDescription: apiHeader.DispatchDocumentNo_value2,
-                    unCode: apiHeader.UNDGCode,
-                    tripPlanId: apiHeader.TripPlanID,
-                    wagon: apiHeader.Wagon,
-                    lveNo: apiHeader.LVENo,
-                    customerID: apiHeader.CustomerCodeID_value1,
-                    customerIDDescription: apiHeader.CustomerCodeID_value2,
-                    contractID: apiHeader.ContractID,
-                });
-            }
-
-            if (generalDetailsRef.current && responseData.General?.Details) {
-                const apiDetails = responseData.General.Details;
-                const transformedDetails = {
-                    consignor: apiDetails.Consignor_1_value1,
-                    consignorDescription: apiDetails.ConsignorName_1_value2,
-                    customerCodeConsignor: apiDetails.CustomerCodeForConsignor_2,
-                    customerCodePrePaid: apiDetails.CustomerCodeForPayerOfPrePaidCharges_3,
-                    consignee: apiDetails.Consignee_4_value1,
-                    consigneeDescription: apiDetails.ConsigneeName_4_value2,
-                    customerCodeConsignee: apiDetails.CustomerCodeForConsignee_5,
-                    customerCodeNonPrePaid: apiDetails.CustomerCodeForPayerOfNonPrePaidCharges_6,
-                    consignorReference: apiDetails.ConsignorsReference_8_value1,
-                    consignorReferenceDescription: apiDetails.ConsignorsReference_8_value2,
-                    deliveryPoint: apiDetails.DeliveryPoint_10_4_value1,
-                    deliveryPointDescription: apiDetails.DeliveryPoint_10_4_value2,
-                    codeDeliveryPoint: apiDetails.CodeForDeliveryPoint_11_value1,
-                    codeStationServing: apiDetails.CodeForStationServingDeliveryPoint_12_value1,
-                    customerAgreementTariff: apiDetails.NumberOfCustomerAgreementOrTariff_14,
-                    acceptanceDate: apiDetails.AcceptanceDate_16_2,
-                    acceptanceFrom: apiDetails.AcceptanceFrom_16_3,
-                    codeAcceptancePoint: apiDetails.CodeForAcceptancePoint_17,
-                };
-                generalDetailsRef.current.setFormValues(transformedDetails);
-            }
-            if (paymentInstructionRef.current && responseData.General?.PaymentInstruction) {
-                paymentInstructionRef.current.setFormValues({
-                    paymentInstruction1: responseData.General.PaymentInstruction.PaymentInstructionDescription_20_value1,
-                    paymentInstruction2: responseData.General.PaymentInstruction.PaymentInstructionDescription_20_value2,
-                    paymentInstruction3: responseData.General.PaymentInstruction.PaymentInstructionDescription_20_value3,
-                    carriageChargePaid: responseData.General.PaymentInstruction.CarriageChargePaid_20 === 1,
-                    incoTerms: responseData.General.PaymentInstruction.IncoTerms_20 === "1",
-                });
-            }
-            if (placeAndDateRef.current && responseData.General?.PaymentInstruction) {
-                placeAndDateRef.current.setFormValues({
-                    place: responseData.General.PaymentInstruction.PlaceAndDateMadeOut_29_value1,
-                    dateMadeOut: responseData.General.PaymentInstruction.PlaceAndDateMadeOut_29_value2,
-                });
-            }
-
-            if (consignorDeclarationsRef.current && responseData.Declarations) {
-                consignorDeclarationsRef.current.setFormValues({
-                    consignorDeclarations: responseData.Declarations.ConsignorsDeclarations_7,
-                    documentsAttached: responseData.Declarations.DocumentsAttached_9,
-                    commercialSpecifications: responseData.Declarations.CommercialSpecifications_13,
-                    informationForConsignee: responseData.Declarations.InformationForTheConsignee_15,
-                });
-            }
-
-            if (valueDeliveryCashRef.current && responseData.Declarations) {
-                valueDeliveryCashRef.current.setFormValues({
-                    declarationOfValue: responseData.Declarations.DeclarationOfValue_26_value1,
-                    interestInDelivery: responseData.Declarations.InterestInDelivery_27_value1,
-                    cashOnDelivery: {
-                        input: responseData.Declarations.CashOnDelivery_28_value1,
-                        dropdown: responseData.Declarations.CashOnDelivery_28_value2,
-                    },
-                });
-            }
-
-            if (codingBoxesRef.current && responseData.Declarations) {
-                codingBoxesRef.current.setFormValues({
-                    codingBox1: responseData.Declarations.CodingBox_1_40,
-                    codingBox2: responseData.Declarations.CodingBox_2_41,
-                    codingBox3: responseData.Declarations.CodingBox_3_42,
-                    codingBox4: responseData.Declarations.CodingBox_4_43,
-                    codingBox5: responseData.Declarations.CodingBox_5_44,
-                    codingBox6: responseData.Declarations.CodingBox_6_45,
-                    codingBox7: responseData.Declarations.CodingBox_7_46,
-                    codingBox8: responseData.Declarations.CodingBox_8_47,
-                });
-            }
-
-            if (examinationDetailsRef.current && responseData.Declarations) {
-                examinationDetailsRef.current.setFormValues({
-                    examination: responseData.Declarations.Examination_48,
-                    prepaymentCoding: responseData.Declarations.PrepaymentCoding_49,
-                    chargesNote: responseData.Declarations.ChargesNote_52 === 1,
-                    cashOnDeliveryReceipt: responseData.Declarations.CashOnDeliveryReceipt_53,
-                    formalReport: responseData.Declarations.FormalReport_54,
-                    extensionOfTransitPeriod: responseData.Declarations.ExtensionOfTransitPeriod_55,
-                    dateOfArrival: responseData.Declarations.DateOfArrival_59,
-                    madeAvailable: responseData.Declarations.MadeAvailable_60,
-                    acknowledgementOfReceipt: responseData.Declarations.AcknowledgementOfReceipt_61,
-                });
-            }
-
-            if (sectionARef.current && responseData.Declarations?.SectionA) {
-                sectionARef.current.setFormValues({
-                    codeForChargingSections: responseData.Declarations.SectionA.CodeForChargingSections_70,
-                    routeCode: responseData.Declarations.SectionA.RouteCode_71,
-                    nhmCode: responseData.Declarations.SectionA.NHMCode_72,
-                    currency: responseData.Declarations.SectionA.Currency_73,
-                    chargedMassWeight: responseData.Declarations.SectionA.ChargedMassWeight_74,
-                    customerAgreementOrTariffApplied: responseData.Declarations.SectionA.CustomerAgreementOrTariffApplied_75,
-                    kmZone: responseData.Declarations.SectionA.KMZone_76,
-                    supplementsFeesDeductions: responseData.Declarations.SectionA.SupplementsFeesDeductions_77,
-                    unitPrice: responseData.Declarations.SectionA.UnitPrice_78,
-                    charges: responseData.Declarations.SectionA.Charges_79,
-                });
-            }
-
-            if (sectionBRef.current && responseData.Declarations?.SectionB) {
-                sectionBRef.current.setFormValues({
-                    codeForChargingSectionsB: responseData.Declarations.SectionB.CodeForChargingSections_70,
-                    routeCodeB: responseData.Declarations.SectionB.RouteCode_71,
-                    nhmCodeB: responseData.Declarations.SectionB.NHMCode_72,
-                    currencyB: responseData.Declarations.SectionB.Currency_73,
-                    chargedMassWeightB: responseData.Declarations.SectionB.ChargedMassWeight_74,
-                    customerAgreementOrTariffAppliedB: responseData.Declarations.SectionB.CustomerAgreementOrTariffApplied_75,
-                    kmZoneB: responseData.Declarations.SectionB.KMZone_76,
-                    supplementsFeesDeductionsB: responseData.Declarations.SectionB.SupplementsFeesDeductions_77,
-                    unitPriceB: responseData.Declarations.SectionB.UnitPrice_78,
-                    chargesB: responseData.Declarations.SectionB.Charges_79,
-                });
-            }
-
-            if (sectionCRef.current && responseData.Declarations?.SectionC) {
-                sectionCRef.current.setFormValues({
-                    codeForChargingSectionsC: responseData.Declarations.SectionC.CodeForChargingSections_70,
-                    routeCodeC: responseData.Declarations.SectionC.RouteCode_71,
-                    nhmCodeC: responseData.Declarations.SectionC.NHMCode_72,
-                    currencyC: responseData.Declarations.SectionC.Currency_73,
-                    chargedMassWeightC: responseData.Declarations.SectionC.ChargedMassWeight_74,
-                    customerAgreementOrTariffAppliedC: responseData.Declarations.SectionC.CustomerAgreementOrTariffApplied_75,
-                    kmZoneC: responseData.Declarations.SectionC.KMZone_76,
-                    supplementsFeesDeductionsC: responseData.Declarations.SectionC.SupplementsFeesDeductions_77,
-                    unitPriceC: responseData.Declarations.SectionC.UnitPrice_78,
-                    chargesC: responseData.Declarations.SectionC.Charges_79,
-                });
-            }
-
-
-            if (RouteDetailsRef.current && responseData?.ConsignmentDetails) {
-                console.log("SETTING ROUTE VALUES NOW");
-                const apiRoute = responseData.ConsignmentDetails;
-
-                const country =
-                    apiRoute.Country_62_1_value1 && apiRoute.Country_62_1_value2
-                        ? `${apiRoute.Country_62_1_value1} || ${apiRoute.Country_62_1_value2}`
-                        : apiRoute.Country_62_1_value1 || "";
-
-                const station =
-                    apiRoute.Station_62_3_value1 && apiRoute.Station_62_3_value2
-                        ? `${apiRoute.Station_62_3_value1} || ${apiRoute.Station_62_3_value2}`
-                        : apiRoute.Station_62_3_value1 || "";
-
-                const enterprise =
-                    apiRoute.UndertakingEnterprises_62_5_value1 &&
-                        apiRoute.UndertakingEnterprises_62_5_value2
-                        ? `${apiRoute.UndertakingEnterprises_62_5_value1} || ${apiRoute.UndertakingEnterprises_62_5_value2}`
-                        : apiRoute.UndertakingEnterprises_62_5_value1 || "";
-
-                RouteDetailsRef.current.setFormValues({
-                    ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
-                    Country: country,
-                    COuntryValue: apiRoute.Country_62_1_value2 || "",
-                    Station: station,
-                    StationValue: apiRoute.Station_62_3_value2 || "",
-                    UndertakingEnterprise: enterprise,
-                    UndertakingEnterpriseValue: apiRoute.UndertakingEnterprises_62_5_value2 || "",
-                });
-            }
-            if (RouteEndorsementDetailsRef.current && responseData?.RouteDetails) {
-                console.log("SETTING ROUTE ENDORSEMENT VALUES NOW");
-                const apiRoute = responseData.RouteDetails;
-
-
-
-                const CustomsProcedure =
-                    apiRoute.CustomsProcedure_51_27_value1 && apiRoute.CustomsProcedure_51_27_value2
-                        ? `${apiRoute.CustomsProcedure_51_27_value1} || ${apiRoute.CustomsProcedure_51_27_value2}`
-                        : apiRoute.CustomsProcedure_51_27_value1 || "";
-
-                const ContractualCarrier =
-                    apiRoute.ContractualCarrier_58a_value1 &&
-                        apiRoute.ContractualCarrier_58a_value2
-                        ? `${apiRoute.ContractualCarrier_58a_value1} || ${apiRoute.ContractualCarrier_58a_value2}`
-                        : apiRoute.ContractualCarrier_58a_value1 || "";
-
-                RouteEndorsementDetailsRef.current.setFormValues({
-                    CustomsEndorsements_99: apiRoute.CustomsEndorsements_99 || "",
-                    Route_50: apiRoute.Route_50 || "",
-                    CustomsProcedures: CustomsProcedure,
-                    ContractualCarrier: ContractualCarrier,
-                    EnterContractual: apiRoute.ContractualCarrier_58a_value2 || "",
-                    TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1,
-                    EnterTransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
-                });
-            }
-
-
-            if (WagonDetailsRef.current && responseData?.WagonDetails) {
-                console.log("SETTING WAGON VALUES NOW");
-
-                const wagon = responseData.WagonDetails[0]; // first wagon
-
-                WagonDetailsRef.current.setFormValues({
-                    // --- BASIC DETAILS ---
-                    train: wagon.Train_1 || "",
-                    itinerary: wagon.Itinerary_5 || "",
-                    dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
-                    Page: wagon.Page_9 || "",
-                    toBeClearedAt: wagon.To_be_cleared_at_12 || "",
-
-                    // --- DROPDOWN ---
-                    fixedNetTrain: {
-                        input: String(wagon.Fixed_Net_Weight_Train_13).split(" ")[0] || "",
-                        dropdown: String(wagon.Fixed_Net_Weight_Train_13).split(" ")[1] || "",
-                    },
-
-                    number: wagon.NoNumber_14 ?? "",
-                    LoadingConfiguration: wagon.Loading_Configuration_16 || "",
-
-                    // --- WAGON INFO ---
-                    wagonNumber: wagon.WagonNo || "",
-                    DescriptionoftheGoods: wagon.GoodsDescription || "",
-
-                    // --- CHECKBOXES ---
-                    ExceptionalConsignment:
-                        wagon.Exceptional_Consignment_22 === 1 ||
-                        wagon.Exceptional_Consignment_22 === "Yes",
-
-                    RID:
-                        wagon.RID === 1 ||
-                        wagon.RID === "Yes",
-
-                    // --- LAZY SELECTS ---
-                    UTICODE: wagon.UTIType || "",
-                    NHMCode: wagon.NHMCode
-                        ? String(wagon.NHMCode)
-                        : "",
-
-                    // --- DIMENSIONS ---
-                    LengthWidthHeight: {
-                        input: String(wagon.LengthxWidthxheight_24).split(" ")[0] || "",
-                        dropdown: String(wagon.LengthxWidthxheight_24).split(" ")[1] || "",
-                    },
-
-                    MarkandNumber: wagon.Mark_and_Number_25 || "",
-                    DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
-
-                    // --- WEIGHTS ---
-                    GrossWeight: {
-                        input: String(wagon.Gross_Weight_25_19).split(" ")[0] || "",
-                        dropdown: String(wagon.Gross_Weight_25_19).split(" ")[1] || "",
-                    },
-                    TareWeight: {
-                        input: String(wagon.Tare_Weight_25_20).split(" ")[0] || "",
-                        dropdown: String(wagon.Tare_Weight_25_20).split(" ")[1] || "",
-                    },
-                    NetWeight: {
-                        input: String(wagon.Net_Weight_25_21).split(" ")[0] || "",
-                        dropdown: String(wagon.Net_Weight_25_21).split(" ")[1] || "",
-                    },
-
-                    // --- TOTALS ---
-                    TotalBrutto: {
-                        input: String(wagon.TotalBrut).split(" ")[0] || "",
-                        dropdown: String(wagon.TotalBrut).split(" ")[1] || "",
-                    },
-                    TotalNetto: {
-                        input: String(wagon.TotalMass).split(" ")[0] || "",
-                        dropdown: String(wagon.TotalMass).split(" ")[1] || "",
-                    },
-                    TotalGross: {
-                        input: String(wagon.TotalTare).split(" ")[0] || "",
-                        dropdown: String(wagon.TotalTare).split(" ")[1] || "",
-                    },
-                });
-            }
-
-
-            if (responseData && !initialSnapshotRef.current) {
-                initialSnapshotRef.current = {
-                    header: headerTemplateRef.current?.getFormValues(),
-                    general: generalDetailsRef.current?.getFormValues(),
-                    payment: paymentInstructionRef.current?.getFormValues(),
-                    placeAndDate: placeAndDateRef.current?.getFormValues(),
-                    declarations: consignorDeclarationsRef.current?.getFormValues(),
-                    valueDelivery: valueDeliveryCashRef.current?.getFormValues(),
-                    codingBoxes: codingBoxesRef.current?.getFormValues(),
-                    examination: examinationDetailsRef.current?.getFormValues(),
-                    sectionA: sectionARef.current?.getFormValues(),
-                    sectionB: sectionBRef.current?.getFormValues(),
-                    sectionC: sectionCRef.current?.getFormValues(),
-                    route: RouteDetailsRef.current?.getFormValues(),
-                    routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
-                    wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
-                };
-                console.log("SNAPSHOT CAPTURED", initialSnapshotRef.current);
-            }
-        } catch (error) {
-            console.error("Error fetching template data:", error);
-            setApiResponse(null);
-            setInitialApiResponse(null);
-        }
-    };
-
-    const handleConsignorConsigneeSave = async (data: any) => {
-        console.log("Consignor/Consignee data saved:", data);
-        console.log("Consignor/Consignee data saved:", apiResponse);
-        console.log("Consignor/Consignee data saved:", initialApiResponse);
-        setConsignorConsigneeData(data);
-
-        // Determine ModeFlag for Consignor and Consignee
-        const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
-
-        // Construct Header Payload
-        const headerFV = headerTemplateRef.current?.getFormValues();
-        const headerPayload = {
-            TemplateID: apiResponse?.Header?.TemplateID || headerFV?.templateId || null,
-            Description: apiResponse?.Header?.Description || headerFV?.templateDescription || null,
-            DocType: apiResponse?.Header?.DocType || headerFV?.templateType || null,
-            ModeFlag: "NoChange" // As per requirement, header ModeFlag is NoChange here
-        };
-
-        const consigneePayload = {
-            ConsigneeID: data.consigneeId || null,
-            ConsigneeDescription: data.consigneeName || null,
-            AddressLine1: data.addressLine1 || null,
-            AddressLine2: data.addressLine2 || null,
-            SubHurb: data.suburb || null,
-            Pincode: data.pincode || null,
-            Zone: data.zone || null,
-            SubZone: data.subZone || null,
-            City: data.city || null,
-            State: data.state || null,
-            Country: data.country || null,
-            Region: data.region || null,
-            ContactPerson: data.contactPerson || null,
-            PhoneNo: data.phoneNumber || null,
-            EmailID: data.emailId || null,
-            ModeFlag: entryModeFlag
-        };
-
-        const consignorPayload = {
-            ConsignorID: data.consignorId || null,
-            ConsignorDescription: data.consignorName || null,
-            AddressLine1: data.addressLine1 || null,
-            AddressLine2: data.addressLine2 || null,
-            SubHurb: data.suburb || null,
-            Pincode: data.pincode || null,
-            Zone: data.zone || null,
-            SubZone: data.subZone || null,
-            City: data.city || null,
-            State: data.state || null,
-            Country: data.country || null,
-            Region: data.region || null,
-            ContactPerson: data.contactPerson || null,
-            PhoneNo: data.phoneNumber || null,
-            EmailID: data.emailId || null,
-            ModeFlag: entryModeFlag
-        };
-
-        const finalPayload = {
-            Header: headerPayload,
-            Consignee: consigneePayload,
-            Consignor: consignorPayload
-        };
-
-        console.log("✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD", JSON.stringify(finalPayload, null, 2));
-
-        try {
-            const response = await CimCuvService.saveConsignorConsignee(finalPayload);
-            console.log("Consignor/Consignee save response:", response);
-            // Optionally, handle success or display a message
-        } catch (error) {
-            console.error("Error saving Consignor/Consignee data:", error);
-            // Optionally, handle error or display an error message
-        }
-    };
-
-    const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
-        console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
-        try {
-            const payload = {
-                CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
-                ReasonCode: reasonCode,
-                ReasonCodeDescription: reasonDescription,
-            };
-            console.log("payload ===", payload);
-            const response = await CimCuvService.cancelCimCuvTemplate(payload);
-            console.log("Cancel API response:", response);
-            // Optionally, handle success or display a message
-        } catch (error) {
-            console.error("Error canceling template/report:", error);
-            // Optionally, handle error or display an error message
-        }
-        setIsCancelModalOpen(false);
-    };
-
-    const handleSaveReport = () => {
-        if (!initialSnapshotRef.current) return;
-
-        const headerFV = headerTemplateRef.current?.getFormValues();
-        const generalFV = generalDetailsRef.current?.getFormValues();
-        const paymentFV = paymentInstructionRef.current?.getFormValues();
-        const placeDateFV = placeAndDateRef.current?.getFormValues();
-        const consignorFV = consignorDeclarationsRef.current?.getFormValues();
-        const valueDeliveryFV = valueDeliveryCashRef.current?.getFormValues();
-        const codingFV = codingBoxesRef.current?.getFormValues();
-        const examFV = examinationDetailsRef.current?.getFormValues();
-        const secAFV = sectionARef.current?.getFormValues();
-        const secBFV = sectionBRef.current?.getFormValues();
-        const secCFV = sectionCRef.current?.getFormValues();
-        const routeFV = RouteDetailsRef.current?.getFormValues();
-        const routeEndFV = RouteEndorsementDetailsRef.current?.getFormValues();
-        const wagonFV = WagonDetailsRef.current?.getFormValues();
-
-        const payload = {
-            Header: {
-                ...mapFormToHeaderPayload(headerFV),
-                ModeFlag: resolveModeFlag(
-                    headerFV,
-                    initialSnapshotRef.current.header,
-                    workOrderNo
-                ),
-            },
-            General: {
-                Details: {
-                    ...mapFormToGeneralDetailsPayload(generalFV),
-                    ModeFlag: resolveModeFlag(
-                        generalFV,
-                        initialSnapshotRef.current.general,
-                        workOrderNo
-                    ),
-                },
-
-                PaymentInstruction: {
-                    ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
-                    ModeFlag: resolveModeFlag(
-                        paymentFV,
-                        initialSnapshotRef.current.payment,
-                        workOrderNo
-                    ),
-                },
-                PlaceAndDateMadeOut: {
-                    PlaceAndDateMadeOut_29_value1: placeDateFV?.place || null,
-                    PlaceAndDateMadeOut_29_value2: placeDateFV?.dateMadeOut || null,
-                    ModeFlag: resolveModeFlag(
-                        placeDateFV,
-                        initialSnapshotRef.current.placeAndDate,
-                        workOrderNo
-                    ),
-                },
-            },
-
-            Declarations: {
-                ...mapFormToConsignorDeclarationsPayload(consignorFV),
-                ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
-                ...mapFormToCodingBoxesPayload(codingFV),
-                ...mapFormToExaminationDetailsPayload(examFV),
-
-                SectionA: {
-                    ...mapFormToSectionAPayload(secAFV),
-                    ModeFlag: resolveModeFlag(
-                        secAFV,
-                        initialSnapshotRef.current.sectionA,
-                        workOrderNo
-                    ),
-                },
-
-                SectionB: {
-                    ...mapFormToSectionBPayload(secBFV),
-                    ModeFlag: resolveModeFlag(
-                        secBFV,
-                        initialSnapshotRef.current.sectionB,
-                        workOrderNo
-                    ),
-                },
-
-                SectionC: {
-                    ...mapFormToSectionCPayload(secCFV),
-                    ModeFlag: resolveModeFlag(
-                        secCFV,
-                        initialSnapshotRef.current.sectionC,
-                        workOrderNo
-                    ),
-                },
-            },
-
-            RouteDetails: {
-                ...mapFormToRouteEndorsementPayload(routeEndFV),
-                ModeFlag: resolveModeFlag(
-                    routeEndFV,
-                    initialSnapshotRef.current.routeEndorsement,
-                    workOrderNo
-                ),
-            },
-
-            ConsignmentDetails: {
-                ...mapFormToRoutePayload(routeFV),
-                ModeFlag: resolveModeFlag(
-                    routeFV,
-                    initialSnapshotRef.current.route,
-                    workOrderNo
-                ),
-            },
-
-            WagonDetails: [
-                {
-                    ...mapFormToWagonPayload(wagonFV),
-                    ModeFlag: resolveModeFlag(
-                        wagonFV,
-                        initialSnapshotRef.current.wagon,
-                        workOrderNo
-                    ),
-                },
-            ],
-        };
-
-        console.log("✅ FINAL PAYLOAD", JSON.stringify(payload, null, 2));
-        // Here you would call your API service to save the report
-        // CimCuvService.saveReport(payload);
-    };
-
-    return (
-        <>
-            <div className="main-content-h bg-gray-100">
-                <div className="mt-6">
-                    <div className=''>
-                        <DynamicPanel
-                            ref={headerTemplateRef} // New Panel
-                            panelId="header-template"
-                            panelOrder={0} // Render before general details
-                            panelTitle="Template"
-                            panelConfig={headerTemplateConfig} // New Config
-                            formName="headerTemplateForm"
-                            initialData={headerTemplateData}
-                            panelWidth="full"
-                            collapsible={true} // Added collapsible prop
-                            showHeader={false} // Hide header to match screenshot
-                        />
-                    </div>
-                </div>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
-                    <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
-                        <TabsTrigger value="general">General</TabsTrigger>
-                        <TabsTrigger value="declarations">Declarations</TabsTrigger>
-                        <TabsTrigger value="route">Route</TabsTrigger>
-                        <TabsTrigger value="wagon-info">Wagon Info</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="general" className="mt-6" forceMount>
-                        <div className=''>
-                            <div className="">
-                                <div className=''>
-                                    <DynamicPanel
-                                        ref={generalDetailsRef}
-                                        panelId="general-details"
-                                        panelOrder={1}
-                                        panelTitle="General Details"
-                                        panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                                        panelConfig={generalDetailsConfig}
-                                        formName="generalDetailsForm"
-                                        initialData={generalDetailsData}
-                                        panelWidth="full"
-                                        collapsible={true}
-                                    />
-                                    <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{ marginTop: '-25px' }}>
-                                        <Button
-                                            onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
-                                            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
-                                        >
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Add Consignor/Consignee
-                                        </Button>
-                                    </div>
-                                </div>
-                                <DynamicPanel
-                                    ref={paymentInstructionRef}
-                                    panelId="payment-instruction"
-                                    panelOrder={2}
-                                    panelTitle="Payment Instruction [20]"
-                                    panelConfig={paymentInstructionConfig}
-                                    formName="paymentInstructionForm"
-                                    initialData={paymentInstructionData}
-                                    panelWidth="full"
-                                    collapsible={true}
-                                />
-                                <DynamicPanel
-                                    ref={placeAndDateRef}
-                                    panelId="place-and-date"
-                                    panelOrder={3}
-                                    panelTitle="Place and Date Made Out [29]"
-                                    panelConfig={placeAndDateConfig}
-                                    formName="placeAndDateForm"
-                                    initialData={placeAndDateData}
-                                    panelWidth="full"
-                                    collapsible={true}
-                                />
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="declarations" className="mt-6" forceMount>
-                        <div className="">
-                            <DynamicPanel
-                                ref={consignorDeclarationsRef}
-                                panelId="consignor-declarations"
-                                panelOrder={1}
-                                panelTitle="Declarations and Information"
-                                panelConfig={consignorDeclarationsConfig}
-                                formName="consignorDeclarationsForm"
-                                initialData={consignorDeclarationsData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={valueDeliveryCashRef}
-                                panelId="value-delivery-cash"
-                                panelOrder={2}
-                                panelTitle="Value and Delivery Details"
-                                panelConfig={valueDeliveryCashConfig}
-                                formName="valueDeliveryCashForm"
-                                initialData={valueDeliveryCashData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={codingBoxesRef}
-                                panelId="coding-boxes"
-                                panelOrder={3}
-                                panelTitle="Coding Boxes"
-                                panelConfig={codingBoxesConfig}
-                                formName="codingBoxesForm"
-                                initialData={codingBoxesData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={examinationDetailsRef}
-                                panelId="examination-details"
-                                panelOrder={4}
-                                panelTitle="Examination and Other Details"
-                                panelConfig={examinationDetailsConfig}
-                                formName="examinationDetailsForm"
-                                initialData={examinationDetailsData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={sectionARef}
-                                panelId="section-a"
-                                panelOrder={5}
-                                panelTitle="Section A"
-                                panelConfig={sectionAConfig}
-                                formName="sectionAForm"
-                                initialData={sectionAData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={sectionBRef}
-                                panelId="section-b"
-                                panelOrder={6}
-                                panelTitle="Section B"
-                                panelConfig={sectionBConfig}
-                                formName="sectionBForm"
-                                initialData={sectionBData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={sectionCRef}
-                                panelId="section-c"
-                                panelOrder={7}
-                                panelTitle="Section C"
-                                panelConfig={sectionCConfig}
-                                formName="sectionCForm"
-                                initialData={sectionCData}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="route" className="mt-6" forceMount>
-                        <div className="">
-                            <DynamicPanel
-                                ref={RouteDetailsRef}
-                                panelId="route-details"
-                                panelOrder={1}
-                                panelTitle="Route Details"
-                                panelConfig={routeDetailsConfig}
-                                formName="routeDetailsForm"
-                                initialData={undefined}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                            <DynamicPanel
-                                ref={RouteEndorsementDetailsRef}
-                                panelId="route-endorsement-details"
-                                panelOrder={2}
-                                panelTitle="Customs Endorsements and Route Details"
-                                panelConfig={routeDetailsCustomsEndorsementConfig}
-                                formName="routeEndorsementDetailsForm"
-                                initialData={undefined}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="wagon-info" className="mt-6" forceMount>
-                        <div className="">
-                            <DynamicPanel
-                                ref={WagonDetailsRef}
-                                panelId="wagon-details"
-                                panelOrder={1}
-                                panelTitle="Wagon Details"
-                                panelConfig={wagonDetailsConfig}
-                                formName="wagonDetailsForm"
-                                initialData={undefined}
-                                panelWidth="full"
-                                collapsible={true}
-                            />
-                        </div>
-                    </TabsContent>
-                </Tabs>
-                {/* Fixed Footer */}
-                <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
-                    <div className="flex items-center gap-4"></div>
-                    <div className="flex items-center gap-4">
-                        <button
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                            onClick={() => setIsCancelModalOpen(true)}
-                        >Cancel</button>
-                        <button
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                            onClick={handleSaveReport}
-                        >
-                            Save
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <ConsignorConsigneeSideDraw
-                isOpen={isConsignorConsigneeSideDrawOpen}
-                width="40%"
-                onSave={handleConsignorConsigneeSave}
-                onClose={() => setIsConsignorConsigneeSideDrawOpen(false)}
-            />
-            <CancelConfirmationModal
-                isOpen={isCancelModalOpen}
-                onClose={() => setIsCancelModalOpen(false)}
-                onConfirmCancel={handleConfirmCancel}
-            />
-        </>
+        return normalizeValue(v);
+      })
     );
+
+  const resolveModeFlag = (
+    current: any,
+    initial: any,
+    workOrderNo?: string
+  ): "Insert" | "Update" | "NoChange" => {
+    if (!workOrderNo) return "Insert";
+    return deepEqual(normalizeObject(current), normalizeObject(initial))
+      ? "NoChange"
+      : "Update";
+  };
+
+  // Deep equality check utility
+  const deepEqual = (obj1: any, obj2: any): boolean => {
+    if (obj1 == obj2) return true;
+    if (
+      typeof obj1 !== "object" ||
+      obj1 === null ||
+      typeof obj2 !== "object" ||
+      obj2 === null
+    )
+      return false;
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    for (const key of keys1) {
+      if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Mapping functions
+  const mapFormToHeaderPayload = (formData: Record<string, any>) => ({
+    DocType: formData.templateType,
+    CIMCUVNo: workOrderNo || null,
+    CustomerOrderNo: formData.customerOrderNo || null,
+    DispatchDocNo:
+      formData.dispatchDocNo || apiResponse?.Header?.DispatchDocNo || null,
+    UNCode: splitIdName(formData.unCode).id || null,
+    TripPlanID: splitIdName(formData.tripPlanId).id || null,
+    Status: formData.status || "Confirmed",
+    Template:
+      splitIdName(formData.templateId).id ||
+      apiResponse?.Header?.Template ||
+      null,
+    Wagon: formData.wagon || null,
+    LVENo: formData.lveNo || null,
+    CustomerID: formData.customerIDDescription || null,
+    ContractID: splitIdName(formData.contractID).id || null,
+    CustomerDescription: null,
+
+    ContractIDDescription: null,
+  });
+
+  const splitIdName = (value: any) => {
+    if (!value || typeof value !== "string") {
+      return { id: "", name: "" };
+    }
+
+    if (value.includes("||")) {
+      const [id, name] = value.split("||").map((v) => v.trim());
+      return { id, name };
+    }
+
+    return { id: value.trim(), name: "" };
+  };
+
+  const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
+    const consignor = splitIdName(formData.consignor);
+    const consignee = splitIdName(formData.consignee);
+
+    const custConsignor = splitIdName(formData.customerCodeConsignor);
+    const custPrePaid = splitIdName(formData.customerCodePrePaid);
+
+    const custConsignee = splitIdName(formData.customerCodeConsignee);
+    const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
+    const consignorRef = splitIdName(formData.consignorReference);
+
+    const deliveryPoint = splitIdName(formData.deliveryPoint);
+    const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
+    const stationServing = splitIdName(formData.codeStationServing);
+    const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
+    const NumberOfCustomerAgreementOrTariff = splitIdName(
+      formData.customerAgreementTariff
+    );
+    const acceptance = splitIdName(formData.acceptanceFrom);
+
+    return {
+      // Consignor
+      Consignor_1_value1: consignor.id,
+      ConsignorName_value2: consignor.name,
+
+      // Customer Code for Consignor
+      CustomerCodeForConsignor_2: custConsignor.id,
+      CustomerCodeForConsignor_value2: custConsignor.name,
+
+      // Pre-paid payer
+      CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
+      CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
+
+      // Consignee
+      Consignee_4_value1: consignee.id,
+      ConsigneeName_4_value2: consignee.name,
+
+      // Customer Code for Consignee
+      CustomerCodeForConsignee_5: custConsignee.id,
+      CustomerCodeForConsignee_value5: custConsignee.name,
+
+      // Non-prepaid payer
+      CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
+      CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
+
+      // Consignor Reference
+
+      ConsignorsReference_8_value1: consignorRef.id,
+      ConsignorsReference_8_value2: consignorRef.name,
+
+      // Delivery Point
+      DeliveryPoint_10_4_value1: deliveryPoint.id,
+      DeliveryPoint_10_4_value2: deliveryPoint.name,
+
+      // Code for Delivery Point
+      CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
+      CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
+
+      // Station Serving
+      CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
+      CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
+
+      // Agreement/Tariff
+      NumberOfCustomerAgreementOrTariff_14:
+        NumberOfCustomerAgreementOrTariff.id || "",
+
+      // Acceptance Date / From
+      AcceptanceDate_16_2: formData.acceptanceDate || "",
+      AcceptanceFrom_16_3: acceptance.id || "",
+
+      // Acceptance Point
+      CodeForAcceptancePoint_17: acceptancePoint.id,
+      CodeForAcceptancePoint_17_1: acceptancePoint.name,
+
+      // Other fields
+      WagonNo_18: null,
+      DeliveryStationName: stationServing.name || "",
+      DeliveryCountryName: formData.deliveryCountryName || "",
+      NameForAcceptancePoint_16: acceptance.id || "",
+      NameForAcceptancePoint_16_1: acceptance.name || "",
+    };
+  };
+
+  const mapFormToPaymentInstructionPayload = (
+    paymentFormData: Record<string, any>,
+    placeAndDateFormData: Record<string, any>
+  ) => ({
+    PaymentInstructionDescriptionvalue1:
+      paymentFormData.paymentInstruction1 || null,
+    PaymentInstructionDescriptionvalue2:
+      paymentFormData.paymentInstruction2 || null,
+    CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
+    IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
+    Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
+    PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
+    PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
+  });
+
+  const mapFormToConsignorDeclarationsPayload = (
+    formData: Record<string, any>
+  ) => ({
+    ConsignorsDeclarations_7: formData.consignorDeclarations || null,
+    DocumentsAttached_9: formData.documentsAttached || null,
+    CommercialSpecifications_13: formData.commercialSpecifications || null,
+    InformationForTheConsignee_15: formData.informationForConsignee || null,
+  });
+
+  const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
+    const declarationOfValue = splitIdName(formData.declarationOfValue);
+    const interestInDelivery = splitIdName(formData.interestInDelivery);
+
+    // cash on delivery may be inputdropdown → handle carefully
+    const cashOnDelivery =
+      typeof formData.cashOnDelivery === "string"
+        ? splitIdName(formData.cashOnDelivery)
+        : { id: formData.cashOnDelivery, name: "" };
+
+    return {
+      // Declaration of Value [26]
+
+      //   DeclarationOfValue_26: declarationOfValue.id || null,
+      //  Currency_26: declarationOfValue.name || null,
+
+      //   // Interest in Delivery [27]
+      //   InterestInDelivery_27: interestInDelivery.id || null,
+      //   Currency_27: interestInDelivery.name || null,
+
+      //   // Cash on Delivery [28]
+      //   CashOnDelivery_28: cashOnDelivery.id || null,
+      //   Currency_28: cashOnDelivery.name || null,
+
+      DeclarationOfValue_26: 111,
+      Currency_26: "CAD",
+
+      InterestInDelivery_27: 222,
+      Currency_27: "GBP",
+
+      CashOnDelivery_28: 333,
+      Currency_28: "HKD",
+    };
+  };
+
+  const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
+    CodingBox1_40: formData.codingBox1 || null,
+    CodingBox2_41: formData.codingBox2 || null,
+    CodingBox3_42: formData.codingBox3 || null,
+    CodingBox4_43: formData.codingBox4 || null,
+    CodingBox5_44: formData.codingBox5 || null,
+    CodingBox6_45: formData.codingBox6 || null,
+    CodingBox7_46: formData.codingBox7 || null,
+    CodingBox8_47: formData.codingBox8 || null,
+    //123
+  });
+
+  const mapFormToExaminationDetailsPayload = (
+    formData: Record<string, any>
+  ) => ({
+    Examination_48: formData.examination || null,
+    PrepaymentCoding_49: formData.prepaymentCoding || null,
+    ChargesNote_52: formData.chargesNote ? 1 : 0,
+    CashOnDeliveryReceipt_53: formData.cashOnDeliveryReceipt || null,
+    FormalReport_54: formData.formalReport || null,
+    ExtensionOfTransitPeriod_55: formData.extensionOfTransitPeriod || null,
+    DateOfArrival_59: formData.dateOfArrival || null,
+    MadeAvailable_60: formData.madeAvailable || null,
+    AcknowledgementOfReceipt_61: formData.acknowledgementOfReceipt || null,
+  });
+
+  const mapFormToSectionAPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSections || null,
+    RouteCode_71: formData.routeCode || null,
+    NHMCode_72: formData.nhmCode || null,
+    Currency_73: formData.currency || null,
+    ChargedMassWeight_74: formData.chargedMassWeight || null,
+    CustomerAgreementOrTariffApplied_75:
+      formData.customerAgreementOrTariffApplied || null,
+    KMZone_76: formData.kmZone || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductions || null,
+    UnitPrice_78: formData.unitPrice || null,
+    Charges_79: formData.charges || null,
+  });
+
+  const mapFormToSectionBPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSectionsB,
+    RouteCode_71: formData.routeCodeB || null,
+    NHMCode_72: formData.nhmCodeB || null,
+    Currency_73: formData.currencyB || null,
+    ChargedMassWeight_74: formData.chargedMassWeightB || null,
+    CustomerAgreementOrTariffApplied_75:
+      formData.customerAgreementOrTariffAppliedB || null,
+    KMZone_76: formData.kmZoneB || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsB || null,
+    UnitPrice_78: formData.unitPriceB || null,
+    Charges_79: formData.chargesB || null,
+  });
+
+  const mapFormToSectionCPayload = (formData: Record<string, any>) => ({
+    CodeForChargingSections_70: formData.codeForChargingSectionsC || null,
+    RouteCode_71: formData.routeCodeC || null,
+    NHMCode_72: formData.nhmCodeC || null,
+    Currency_73: formData.currencyC || null,
+    ChargedMassWeight_74: formData.chargedMassWeightC || null,
+    CustomerAgreementOrTariffApplied_75:
+      formData.customerAgreementOrTariffAppliedC || null,
+    KMZone_76: formData.kmZoneC || null,
+    SupplementsFeesDeductions_77: formData.supplementsFeesDeductionsC || null,
+    UnitPrice_78: formData.unitPriceC || null,
+    Charges_79: formData.chargesC || null,
+  });
+
+  const mapFormToRoutePayload = (formData: Record<string, any>) => {
+    const country = splitIdName(formData.Country);
+    const station = splitIdName(formData.Station);
+    const enterprise = splitIdName(formData.UndertakingEnterprise);
+
+    return {
+      ConsignmentNo_62_6: formData.ConsignmentNumber || "",
+
+      // Country
+      Countryvalue1: country.id,
+      Countryvalue2: country.name,
+      CountryValueText: formData.COUNtryValue || "",
+
+      // Station
+      Stationvalue1: station.id,
+      Stationvalue2: station.name,
+      StationValueText: formData.StationValue || "",
+
+      // Undertaking Enterprise
+      UndertakingEnterprisesvalue1: enterprise.id,
+      UndertakingEnterprisesvalue2: enterprise.name,
+      UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
+    };
+  };
+
+  const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
+    const contractualCarrier = splitIdName(formData.ContractualCarrier);
+    const RouteValue = splitIdName(formData.Route_50);
+
+    return {
+      CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
+      Route_50: RouteValue?.id || "",
+      CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
+      CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
+      ContractualCarrier_58a_value1: contractualCarrier.id || null,
+      ContractualCarrier_58a_value2: contractualCarrier.name || null,
+      EnterContractualCarrier_58a: formData.EnterContractual || null,
+      SimplifiedTransitProcedureForRail_58b_value1: formData.TransitProcedure
+        ? "1"
+        : "0",
+      SimplifiedTransitProcedureForRail_58b_value2:
+        formData.EnterTransitProcedure || null,
+    };
+  };
+  //for grid
+  const mapRouteCodeCDetailsPayload = (rows: any[]) => {
+    return rows
+      .filter((row) => row.RouteID || row.LegID)
+      .map((row) => ({
+        RouteID: row.RouteID ?? "",
+        LegSequence: row.LegSequence ?? "",
+        LegID: row.LegID ?? "",
+        FromLocationID: row.FromLocationID ?? "",
+        FromLocationDesc: row.FromLocationDesc ?? "",
+        ToLocationID: row.ToLocationID ?? "",
+        ToLocationDesc: row.ToLocationDesc ?? "",
+        AdhocLeg: row.AdhocLeg ?? "",
+        ViaPoint: row.ViaPoint ?? "",
+        ModeFlag: row.ModeFlag,
+      }));
+  };
+
+  const mapOtherCarriersPayload = (rows: any[]) =>
+    rows.map((row) => ({
+      Name: row.Name ?? "",
+      Section1: row.Section1 ?? "",
+      Section2: row.Section2 ?? "",
+      Status: row.Status ?? "",
+      ModeFlag: row.ModeFlag,
+    }));
+
+  const toNumberOrNull = (v: any) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  };
+
+  const toBit = (v: any) => (v ? 1 : 0);
+
+  const mapFormToWagonInfoDetails = (
+    formData: any,
+    modeFlag: "Insert" | "Update" | "NoChange"
+  ) => {
+    const gross = splitValueUom(
+      formData.GrossWeight
+        ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
+        : null
+    );
+
+    const tare = splitValueUom(
+      formData.TareWeight
+        ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
+        : null
+    );
+
+    const net = splitValueUom(
+      formData.NetWeight
+        ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
+        : null
+    );
+
+    return {
+      Train_1: formData.train || null,
+      Itinerary_5: formData.itinerary || null,
+      Date_of_Dispatch_7: formData.dataOfDispatch || null,
+      Page_9: formData.Page || null,
+      To_be_cleared_at_12: formData.toBeClearedAt || null,
+
+      Fixed_Net_Weight_Train_13: toNumberOrNull(formData.fixedNetTrain?.input),
+
+      No_Number_14: toNumberOrNull(formData.number),
+
+      Loading_Configuration_16: formData.LoadingConfiguration || null,
+      WagonNo_18_15: formData.wagonNumber || null,
+      Description_of_the_goods_21_17: formData.DescriptionoftheGoods || null,
+
+      Exceptional_Consignment_22: toBit(formData.ExceptionalConsignment),
+      RID_23_28: toBit(formData.RID),
+
+      NHM_Code_24_18: toNumberOrNull(splitIdName(formData.NHMCode).id),
+
+      Mark_and_Number_25: formData.MarkandNumber || null,
+      Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
+
+      GrossWeight_25_19: toNumberOrNull(gross?.val),
+      GrossWeight_25_19_UOM: gross?.uom || null,
+
+      TareWeight_25_20: toNumberOrNull(tare?.val),
+      TareWeight_25_20_UOM: tare?.uom || null,
+
+      NetWeight_25_21: toNumberOrNull(net?.val),
+      NetWeight_25_21_UOM: net?.uom || null,
+
+      Total_Brutto: 0,
+      Total_Netto: 0,
+      Total_Gross: 0,
+
+      ModeFlag: modeFlag,
+    };
+  };
+
+  const mapWagonGridPayload = (rows: any[]) =>
+    rows.map((row) => {
+      const mass = splitValueUom(row.TotalMass);
+      const brut = splitValueUom(row.TotalBrut);
+      const tare = splitValueUom(row.TotalTare);
+
+      return {
+        WagonNo: row.WagonNo || "",
+        RID: row.RID ? "1" : "0",
+
+        Mass_Weight: row.MassWeight || null,
+        Mass_Weight_UOM: null,
+
+        Total_Mass: Number(mass.val) || 0,
+        Total_Mass_UOM: mass.uom,
+
+        Total_Brutt: Number(brut.val) || 0,
+        Total_Brutt_UOM: brut.uom,
+
+        Total_Tare: Number(tare.val) || 0,
+        Total_Tare_UOM: tare.uom,
+
+        Wagon_Length: row.WagonLength || null,
+        Wagon_Length_UOM: null,
+
+        Short_Description_of_Goods: row.Short_Description_of_Goods || null,
+
+        ModeFlag: row.ModeFlag || "NoChange",
+      };
+    });
+
+  const initialSnapshotRef = useRef<any>(null);
+
+  /** Normalize values to avoid false Update */
+  const normalize = (obj: any) =>
+    JSON.parse(
+      JSON.stringify(obj, (_k, v) => (v === "" || v === undefined ? null : v))
+    );
+
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
+  // Effect to set form values when API response is received
+  useEffect(() => {
+    if (apiResponse && !isFormInitialized) {
+      if (headerTemplateRef.current && apiResponse.Header) {
+        // Map API response to headerTemplate form fields
+        headerTemplateRef.current.setFormValues({
+          templateId: apiResponse.Header.Template,
+          templateType: apiResponse.Header.DocType,
+          dispatchDocNo: apiResponse.Header.DispatchDocNo,
+          dispatchDocNoDescription: apiResponse.Header.DispatchDocNoDescription,
+          unCode: apiResponse.Header.UNCode,
+
+          tripPlanId:
+            apiResponse?.Header?.TripPlanID &&
+            apiResponse?.Header?.TripPlanDescription
+              ? `${apiResponse.Header.TripPlanID} || ${apiResponse.Header.TripPlanDescription}`
+              : "",
+
+          wagon: apiResponse.Header.Wagon,
+          lveNo: apiResponse.Header.LVENo,
+          customerID: apiResponse.Header.CustomerID,
+          customerIDDescription: apiResponse.Header.CustomerDescription,
+          contractID:
+            apiResponse?.Header?.ContractID &&
+            apiResponse?.Header?.ContractIDDescription
+              ? `${apiResponse.Header.ContractID} || ${apiResponse.Header.ContractIDDescription}`
+              : "",
+        });
+      }
+      if (generalDetailsRef.current && apiResponse.General?.Details) {
+        const apiDetails = apiResponse.General.Details;
+        const transformedDetails = {
+          consignor: apiDetails.Consignor_1_value1, // Assuming this is the main consignor value
+          consignorDescription: apiDetails.ConsignorName_value2, // Assuming this is the description
+          customerCodeConsignor: apiDetails.CustomerCodeForConsignor_2,
+          customerCodePrePaid:
+            apiDetails.CustomerCodeForPayerOfPrePaidCharges_3,
+          consignee: apiDetails.Consignee_4_value1,
+          consigneeDescription: apiDetails.ConsigneeName_4_value2,
+          customerCodeConsignee: apiDetails.CustomerCodeForConsignee_5,
+          customerCodeNonPrePaid:
+            apiDetails.CustomerCodeForPayerOfNonPrePaidCharges_6,
+          consignorReference: apiDetails.ConsignorsReference_8_value1,
+          consignorReferenceDescription:
+            apiDetails.ConsignorsReference_8_value2,
+          deliveryPoint: apiDetails.DeliveryPoint_10_4_value1,
+          deliveryPointDescription: apiDetails.DeliveryPoint_10_4_value2,
+          codeDeliveryPoint: apiDetails.CodeForDeliveryPoint_11_value1,
+          codeStationServing:
+            apiDetails.CodeForStationServingDeliveryPoint_12_value1,
+          customerAgreementTariff:
+            apiDetails.NumberOfCustomerAgreementOrTariff_14,
+          acceptanceDate: apiDetails.AcceptanceDate_16_2, // Assuming it's already in YYYY-MM-DD or compatible format
+          acceptanceFrom: apiDetails.AcceptanceFrom_16_3,
+          codeAcceptancePoint: apiDetails.CodeForAcceptancePoint_17,
+        };
+        generalDetailsRef.current.setFormValues(transformedDetails);
+      }
+      if (
+        paymentInstructionRef.current &&
+        apiResponse.General?.PaymentInstruction
+      ) {
+        // Map API response to paymentInstruction form fields
+        paymentInstructionRef.current.setFormValues({
+          paymentInstruction1:
+            apiResponse.General.PaymentInstruction
+              .PaymentInstructionDescriptionvalue1,
+          paymentInstruction2:
+            apiResponse.General.PaymentInstruction
+              .PaymentInstructionDescriptionvalue2,
+          carriageChargePaid:
+            apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+          incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
+        });
+      }
+      if (placeAndDateRef.current && apiResponse.General?.PaymentInstruction) {
+        // Map API response to placeAndDate form fields
+        placeAndDateRef.current.setFormValues({
+          place:
+            apiResponse.General.PaymentInstruction
+              .PlaceAndDateMadeOut_29_value1,
+          dateMadeOut:
+            apiResponse.General.PaymentInstruction
+              .PlaceAndDateMadeOut_29_value2,
+        });
+      }
+
+      if (consignorDeclarationsRef.current && apiResponse.Declarations) {
+        consignorDeclarationsRef.current.setFormValues({
+          consignorDeclarations:
+            apiResponse.Declarations.ConsignorsDeclarations_7,
+          documentsAttached: apiResponse.Declarations.DocumentsAttached_9,
+          commercialSpecifications:
+            apiResponse.Declarations.CommercialSpecifications_13,
+          informationForConsignee:
+            apiResponse.Declarations.InformationForTheConsignee_15,
+        });
+      }
+
+      if (valueDeliveryCashRef.current && apiResponse.Declarations) {
+        valueDeliveryCashRef.current.setFormValues({
+          // declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
+          // interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
+          // cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
+          // Currency_26: apiResponse.Declarations.Currency_26,
+          // Currency_27: apiResponse.Declarations.Currency_27,
+          // Currency_28: apiResponse.Declarations.Currency_28,
+        });
+      }
+
+      if (codingBoxesRef.current && apiResponse.Declarations) {
+        codingBoxesRef.current.setFormValues({
+          codingBox1: apiResponse.Declarations.CodingBox1_40,
+          codingBox2: apiResponse.Declarations.CodingBox2_41,
+          codingBox3: apiResponse.Declarations.CodingBox3_42,
+          codingBox4: apiResponse.Declarations.CodingBox4_43,
+          codingBox5: apiResponse.Declarations.CodingBox5_44,
+          codingBox6: apiResponse.Declarations.CodingBox6_45,
+          codingBox7: apiResponse.Declarations.CodingBox7_46,
+          codingBox8: apiResponse.Declarations.CodingBox8_47,
+        });
+      }
+
+      if (examinationDetailsRef.current && apiResponse.Declarations) {
+        examinationDetailsRef.current.setFormValues({
+          examination: apiResponse.Declarations.Examination_48,
+          prepaymentCoding: apiResponse.Declarations.PrepaymentCoding_49,
+          chargesNote: apiResponse.Declarations.ChargesNote_52 === 1,
+          cashOnDeliveryReceipt:
+            apiResponse.Declarations.CashOnDeliveryReceipt_53,
+          formalReport: apiResponse.Declarations.FormalReport_54,
+          extensionOfTransitPeriod:
+            apiResponse.Declarations.ExtensionOfTransitPeriod_55,
+          dateOfArrival: apiResponse.Declarations.DateOfArrival_59,
+          madeAvailable: apiResponse.Declarations.MadeAvailable_60,
+          acknowledgementOfReceipt:
+            apiResponse.Declarations.AcknowledgementOfReceipt_61,
+        });
+      }
+
+      if (sectionARef.current && apiResponse.Declarations?.SectionA) {
+        sectionARef.current.setFormValues({
+          codeForChargingSections:
+            apiResponse.Declarations.SectionA.CodeForChargingSections_70,
+          routeCode: apiResponse.Declarations.SectionA.RouteCode_71,
+          nhmCode: apiResponse.Declarations.SectionA.NHMCode_72,
+          currency: apiResponse.Declarations.SectionA.Currency_73,
+          chargedMassWeight:
+            apiResponse.Declarations.SectionA.ChargedMassWeight_74,
+          customerAgreementOrTariffApplied:
+            apiResponse.Declarations.SectionA
+              .CustomerAgreementOrTariffApplied_75,
+          kmZone: apiResponse.Declarations.SectionA.KMZone_76,
+          supplementsFeesDeductions:
+            apiResponse.Declarations.SectionA.SupplementsFeesDeductions_77,
+          unitPrice: apiResponse.Declarations.SectionA.UnitPrice_78,
+          charges: apiResponse.Declarations.SectionA.Charges_79,
+        });
+      }
+
+      if (sectionBRef.current && apiResponse.Declarations?.SectionB) {
+        sectionBRef.current.setFormValues({
+          codeForChargingSectionsB:
+            apiResponse.Declarations.SectionB.CodeForChargingSections_70,
+          routeCodeB: apiResponse.Declarations.SectionB.RouteCode_71,
+          nhmCodeB: apiResponse.Declarations.SectionB.NHMCode_72,
+          currencyB: apiResponse.Declarations.SectionB.Currency_73,
+          chargedMassWeightB:
+            apiResponse.Declarations.SectionB.ChargedMassWeight_74,
+          customerAgreementOrTariffAppliedB:
+            apiResponse.Declarations.SectionB
+              .CustomerAgreementOrTariffApplied_75,
+          kmZoneB: apiResponse.Declarations.SectionB.KMZone_76,
+          supplementsFeesDeductionsB:
+            apiResponse.Declarations.SectionB.SupplementsFeesDeductions_77,
+          unitPriceB: apiResponse.Declarations.SectionB.UnitPrice_78,
+          chargesB: apiResponse.Declarations.SectionB.Charges_79,
+        });
+      }
+
+      if (sectionCRef.current && apiResponse.Declarations?.SectionC) {
+        sectionCRef.current.setFormValues({
+          codeForChargingSectionsC:
+            apiResponse.Declarations.SectionC.CodeForChargingSections_70,
+          routeCodeC: apiResponse.Declarations.SectionC.RouteCode_71,
+          nhmCodeC: apiResponse.Declarations.SectionC.NHMCode_72,
+          currencyC: apiResponse.Declarations.SectionC.Currency_73,
+          chargedMassWeightC:
+            apiResponse.Declarations.SectionC.ChargedMassWeight_74,
+          customerAgreementOrTariffAppliedC:
+            apiResponse.Declarations.SectionC
+              .CustomerAgreementOrTariffApplied_75,
+          kmZoneC: apiResponse.Declarations.SectionC.KMZone_76,
+          supplementsFeesDeductionsC:
+            apiResponse.Declarations.SectionC.SupplementsFeesDeductions_77,
+          unitPriceC: apiResponse.Declarations.SectionC.UnitPrice_78,
+          chargesC: apiResponse.Declarations.SectionC.Charges_79,
+        });
+      }
+
+      if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+        console.log("SETTING ROUTE VALUES NOW");
+        const apiRoute = apiResponse.ConsignmentDetails;
+
+        const country =
+          apiRoute.Countryvalue1 && apiRoute.Countryvalue2
+            ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
+            : apiRoute.Countryvalue1 || "";
+
+        const station =
+          apiRoute.Stationvalue1 && apiRoute.Stationvalue2
+            ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
+            : apiRoute.Stationvalue1 || "";
+
+        const enterprise =
+          apiRoute.UndertakingEnterprisesvalue1 &&
+          apiRoute.UndertakingEnterprisesvalue2
+            ? `${apiRoute.UndertakingEnterprisesvalue1} || ${apiRoute.UndertakingEnterprisesvalue2}`
+            : apiRoute.UndertakingEnterprisesvalue1 || "";
+
+        RouteDetailsRef.current.setFormValues({
+          ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
+          Country: country,
+          COuntryValue: apiRoute.Countryvalue2 || "",
+          Station: station,
+          StationValue: apiRoute.Stationvalue2 || "",
+          UndertakingEnterprise: enterprise,
+          UndertakingEnterpriseValue:
+            apiRoute.UndertakingEnterprisesvalue2 || "",
+        });
+      }
+      if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+        console.log("SETTING ROUTE VALUES NOW");
+        const apiRoute = apiResponse.RouteDetails;
+
+        const CustomsProcedure =
+          apiRoute.CustomsProcedure_51_27_value1 &&
+          apiRoute.CustomsProcedure_51_27_value2
+            ? `${apiRoute.CustomsProcedure_51_27_value1} || ${apiRoute.CustomsProcedure_51_27_value2}`
+            : apiRoute.CustomsProcedure_51_27_value1 || "";
+
+        const ContractualCarrier =
+          apiRoute.ContractualCarrier_58a_value1 &&
+          apiRoute.ContractualCarrier_58a_value2
+            ? `${apiRoute.ContractualCarrier_58a_value1} || ${apiRoute.ContractualCarrier_58a_value2}`
+            : apiRoute.ContractualCarrier_58a_value1 || "";
+
+        RouteEndorsementDetailsRef.current.setFormValues({
+          CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
+          Route_50: apiRoute.Route_50 || "",
+          CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
+          ContractualCarrier: ContractualCarrier,
+          EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
+          TransitProcedure:
+            apiRoute.SimplifiedTransitProcedureForRail_58b_value1,
+          EnterTransitProcedure:
+            apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
+        });
+      }
+
+      if (apiResponse?.RouteDetails?.OtherCarriers_57) {
+        setOtherCarriers(
+          apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
+            Section1: c.Section1 || "",
+            Section2: c.Section2 || "",
+            Status: c.Status || "",
+          }))
+        );
+      }
+      if (apiResponse?.RouteDetails?.Route) {
+        setRouteCodeCDetails(
+          apiResponse.RouteDetails.Route.map((c: any) => ({
+            RouteID: c.RouteID || "",
+            LegSequence: c.LegSequence || "",
+            LegID: c.LegID || "",
+            FromLocationID: c.FromLocationID || "",
+            FromLocationDesc: c.FromLocationDesc || "",
+            ToLocationID: c.ToLocationID || "",
+            ToLocationDesc: c.ToLocationDesc || "",
+            AdhocLeg: c.AdhocLeg || "",
+            ViaPoint: c.ViaPoint || "",
+          }))
+        );
+      }
+
+      if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+        const wagon = apiResponse.WagonInfodetails;
+
+        WagonDetailsRef.current.setFormValues({
+          train: wagon.Train_1 ?? "",
+          itinerary: wagon.Itinerary_5 ?? "",
+          dataOfDispatch: wagon.Date_of_Dispatch_7 ?? "",
+          Page: wagon.Page_9 ?? "",
+          toBeClearedAt: wagon.To_be_cleared_at_12 ?? "",
+
+          fixedNetTrain: {
+            input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+          },
+
+          number: wagon.No_Number_14 ?? 1,
+          LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
+
+          wagonNumber: wagon.WagonNo_18_15 ?? "",
+          DescriptionoftheGoods: wagon.Description_of_the_goods_21_17 ?? "",
+
+          ExceptionalConsignment: wagon.Exceptional_Consignment_22 === "1",
+          RID: wagon.RID_23_28 === "1",
+          MarkandNumber: wagon.Mark_and_Number_25 ?? "",
+          DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
+          UTICODE: wagon.UTI_Code_23 ?? "",
+
+          NHMCode: wagon.NHM_Code_24_18 ? String(wagon.NHM_Code_24_18) : "",
+
+          GrossWeight: wagon.GrossWeight_25_19
+            ? {
+                input: String(wagon.GrossWeight_25_19),
+                dropdown: wagon.GrossWeight_25_19_UOM,
+              }
+            : null,
+
+          TareWeight: wagon.TareWeight_25_20
+            ? {
+                input: String(wagon.TareWeight_25_20),
+                dropdown: wagon.TareWeight_25_20_UOM,
+              }
+            : null,
+
+          NetWeight: wagon.NetWeight_25_21
+            ? {
+                input: String(wagon.NetWeight_25_21),
+                dropdown: wagon.NetWeight_25_21_UOM,
+              }
+            : null,
+        });
+      }
+
+      if (apiResponse?.WagonLineDetails) {
+        setWagonGritDetails(
+          apiResponse.WagonLineDetails.map((row: any) => ({
+            ...row,
+            // ensure ModeFlag exists for grid editing
+            ModeFlag: row.ModeFlag || "NoChange",
+          }))
+        );
+      }
+
+      if (apiResponse && !initialSnapshotRef.current) {
+        initialSnapshotRef.current = {
+          header: headerTemplateRef.current?.getFormValues(),
+          general: generalDetailsRef.current?.getFormValues(),
+          payment: paymentInstructionRef.current?.getFormValues(),
+          placeAndDate: placeAndDateRef.current?.getFormValues(),
+          declarations: consignorDeclarationsRef.current?.getFormValues(),
+          valueDelivery: valueDeliveryCashRef.current?.getFormValues(),
+          codingBoxes: codingBoxesRef.current?.getFormValues(),
+          examination: examinationDetailsRef.current?.getFormValues(),
+          sectionA: sectionARef.current?.getFormValues(),
+          sectionB: sectionBRef.current?.getFormValues(),
+          sectionC: sectionCRef.current?.getFormValues(),
+          route: RouteDetailsRef.current?.getFormValues(),
+          routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
+          wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
+        };
+        console.log("SNAPSHOT CAPTURED", initialSnapshotRef.current);
+      }
+    }
+
+    console.log("API RESPONSE SETTING FORM VALUES", apiResponse);
+  }, [apiResponse]);
+
+  const splitValueUom = (value?: string | null) => {
+    if (!value) return { val: null, uom: null };
+
+    const parts = value.split(" ");
+    return {
+      val: parts[0] ?? null,
+      uom: parts[1] ?? null,
+    };
+  };
+  const sanitizedWagonLineDetails = wagonGritDetails.map((row) => ({
+    ...row,
+
+    // --- NUMERIC FIELDS ---
+    No_of_Axle: toNumberOrNull(row.No_of_Axle),
+    NHM: toNumberOrNull(row.NHM),
+    Mass_Weight: toNumberOrNull(row.Mass_Weight),
+    Tare_Weight: toNumberOrNull(row.Tare_Weight),
+    Brut_Weight: toNumberOrNull(row.Brut_Weight),
+
+    Total_Mass: toNumberOrNull(row.Total_Mass),
+    Total_Brutt: toNumberOrNull(row.Total_Brutt),
+    Total_Tare: toNumberOrNull(row.Total_Tare),
+
+    Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+    Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+    Container_load_weight: toNumberOrNull(row.Container_load_weight),
+
+    Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+    Gross_Weight: toNumberOrNull(row.Gross_Weight),
+    Wagon_Length: toNumberOrNull(row.Wagon_Length),
+
+    // --- BIT / BOOLEAN FIELDS ---
+    Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
+    UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+    UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+    UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+    UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+
+    RID: toBit(row.RID),
+
+    ModeFlag: row.ModeFlag || "Update",
+  }));
+
+  const handleSaveTemplate = async () => {
+    if (workOrderNo && !initialSnapshotRef.current) return;
+
+    const headerFV = headerTemplateRef.current.getFormValues();
+    const generalFV = generalDetailsRef.current.getFormValues();
+    const paymentFV = paymentInstructionRef.current.getFormValues();
+    const placeDateFV = placeAndDateRef.current.getFormValues();
+    const consignorFV = consignorDeclarationsRef.current.getFormValues();
+    const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+    const codingFV = codingBoxesRef.current.getFormValues();
+    const examFV = examinationDetailsRef.current.getFormValues();
+    const secAFV = sectionARef.current.getFormValues();
+    const secBFV = sectionBRef.current.getFormValues();
+    const secCFV = sectionCRef.current.getFormValues();
+    const routeFV = RouteDetailsRef.current.getFormValues();
+    const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+    const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+    const wagonInfoModeFlag = resolveModeFlag(
+      wagonFormData,
+      initialSnapshotRef.current?.WagonInfodetails,
+      workOrderNo
+    );
+
+    const sanitizedWagonLines = wagonGritDetails.map((row) => ({
+      ...row,
+      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      NHM: toNumberOrNull(row.NHM),
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      RID: toBit(row.RID),
+    }));
+
+    const payload = {
+      Header: {
+        ...mapFormToHeaderPayload(headerFV),
+        ModeFlag: resolveModeFlag(
+          headerFV,
+          initialSnapshotRef.current?.header,
+          workOrderNo
+        ),
+      },
+
+      General: {
+        Details: {
+          ...mapFormToGeneralDetailsPayload(generalFV),
+          ModeFlag: resolveModeFlag(
+            generalFV,
+            initialSnapshotRef.current?.general,
+            workOrderNo
+          ),
+        },
+
+        PaymentInstruction: {
+          ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+          ModeFlag: resolveModeFlag(
+            paymentFV,
+            initialSnapshotRef.current?.payment,
+            workOrderNo
+          ),
+        },
+      },
+
+      Declarations: {
+        ...mapFormToConsignorDeclarationsPayload(consignorFV),
+        ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+        ...mapFormToCodingBoxesPayload(codingFV),
+        ...mapFormToExaminationDetailsPayload(examFV),
+        ModeFlag: resolveModeFlag(
+          {
+            ...consignorFV,
+            ...valueDeliveryFV,
+            ...codingFV,
+            ...examFV,
+          },
+          initialSnapshotRef.current?.declarations,
+          workOrderNo
+        ),
+
+        SectionA: {
+          ...mapFormToSectionAPayload(secAFV),
+          ModeFlag: resolveModeFlag(
+            secAFV,
+            initialSnapshotRef.current?.sectionA,
+            workOrderNo
+          ),
+        },
+
+        SectionB: {
+          ...mapFormToSectionBPayload(secBFV),
+          ModeFlag: resolveModeFlag(
+            secBFV,
+            initialSnapshotRef.current?.sectionB,
+            workOrderNo
+          ),
+        },
+
+        SectionC: {
+          ...mapFormToSectionCPayload(secCFV),
+          ModeFlag: resolveModeFlag(
+            secCFV,
+            initialSnapshotRef.current?.sectionC,
+            workOrderNo
+          ),
+        },
+      },
+
+      RouteDetails: {
+        ...mapFormToRouteEndorsementPayload(routeEndFV),
+        ModeFlag: resolveModeFlag(
+          routeEndFV,
+          initialSnapshotRef.current?.routeEndorsement,
+          workOrderNo
+        ),
+        //loading grid data
+        // Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+        // OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+      },
+
+      ConsignmentDetails: {
+        ...mapFormToRoutePayload(routeFV),
+        ModeFlag: resolveModeFlag(
+          routeFV,
+          initialSnapshotRef.current?.route,
+          workOrderNo
+        ),
+      },
+
+      WagonInfodetails: mapFormToWagonInfoDetails(
+        wagonFormData,
+        wagonInfoModeFlag
+      ),
+
+      WagonLineDetails: sanitizedWagonLineDetails,
+    };
+
+    console.log("✅ FINAL PAYLOAD", JSON.stringify(payload, null, 2));
+    console.log("✅ FINAL PAYLOAD", workOrderNo);
+    try {
+      console.log(" Sending payload to save template...");
+      const response = await CimCuvService.saveCimCuvReport(payload);
+      console.log("✅ SAVE TEMPLATE RESPONSE", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Template saved successfully");
+        toast({
+          title: "✅ Template Saved Successfully",
+          description:
+            (response as any)?.data?.ResponseData?.Message ||
+            "Your changes have been saved.",
+          variant: "default",
+        });
+
+        if (!workOrderNo) {
+          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          fetchTemplateData(parsedResponse?.Header?.TemplateID);
+        } else {
+          fetchTemplateData(workOrderNo);
+        }
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Save Failed",
+          description:
+            (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("❌ SAVE TEMPLATE FAILED", error);
+      toast({
+        title: "⚠️ Save Failed",
+        description:
+          "An error occurred while saving the template. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleConsignorConsigneeSave = async (data: any) => {
+    console.log("Consignor/Consignee data saved:", data);
+    console.log("Consignor/Consignee data saved:", apiResponse);
+    console.log("Consignor/Consignee data saved:", initialApiResponse);
+    setConsignorConsigneeData(data);
+
+    // Determine ModeFlag for Consignor and Consignee
+    console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
+    const entryModeFlag =
+      apiResponse?.Header?.TemplateID === null ||
+      apiResponse?.Header?.TemplateID === undefined
+        ? "Insert"
+        : "Update";
+    console.log("entryModeFlag ===", entryModeFlag);
+    // Construct Header Payload
+    const headerFV = headerTemplateRef.current?.getFormValues();
+    const headerPayload = {
+      TemplateID:
+        apiResponse?.Header?.TemplateID || headerFV?.templateId || null,
+      Description:
+        apiResponse?.Header?.Description ||
+        headerFV?.templateDescription ||
+        null,
+      DocType: apiResponse?.Header?.DocType || headerFV?.templateType || null,
+      ModeFlag: "NoChange", // As per requirement, header ModeFlag is NoChange here
+    };
+
+    const consigneePayload = {
+      ConsigneeID: data.consigneeId || null,
+      ConsigneeDescription: data.consigneeName || null,
+      AddressLine1: data.addressLine1 || null,
+      AddressLine2: data.addressLine2 || null,
+      SubHurb: data.suburb || null,
+      Pincode: data.pincode || null,
+      Zone: data.zone || null,
+      SubZone: data.subZone || null,
+      City: data.city || null,
+      State: data.state || null,
+      Country: data.country || null,
+      Region: data.region || null,
+      ContactPerson: data.contactPerson || null,
+      PhoneNo: data.phoneNumber || null,
+      EmailID: data.emailId || null,
+      ModeFlag: entryModeFlag,
+    };
+
+    const consignorPayload = {
+      ConsignorID: data.consignorId || null,
+      ConsignorDescription: data.consignorName || null,
+      AddressLine1: data.addressLine1 || null,
+      AddressLine2: data.addressLine2 || null,
+      SubHurb: data.suburb || null,
+      Pincode: data.pincode || null,
+      Zone: data.zone || null,
+      SubZone: data.subZone || null,
+      City: data.city || null,
+      State: data.state || null,
+      Country: data.country || null,
+      Region: data.region || null,
+      ContactPerson: data.contactPerson || null,
+      PhoneNo: data.phoneNumber || null,
+      EmailID: data.emailId || null,
+      ModeFlag: entryModeFlag,
+    };
+
+    const finalPayload = {
+      Header: headerPayload,
+      Consignee: consigneePayload,
+      Consignor: consignorPayload,
+    };
+
+    console.log(
+      "✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD",
+      JSON.stringify(finalPayload, null, 2)
+    );
+
+    try {
+      const response = await CimCuvService.saveConsignorConsignee(finalPayload);
+      console.log("Consignor/Consignee save response:", response);
+      // Optionally, handle success or display a message
+    } catch (error) {
+      console.error("Error saving Consignor/Consignee data:", error);
+      // Optionally, handle error or display an error message
+    }
+  };
+
+  const handleConfirmCancel = async (
+    reasonCode: string,
+    reasonDescription: string
+  ) => {
+    console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+    try {
+      const payload = {
+        CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
+        ReasonCode: reasonCode,
+        ReasonCodeDescription: reasonDescription,
+      };
+      console.log("payload ===", payload);
+      const response = await CimCuvService.cancelCimCuvTemplate(payload);
+      console.log("Cancel API response:", response);
+      // Optionally, handle success or display a message
+    } catch (error) {
+      console.error("Error canceling template/report:", error);
+      // Optionally, handle error or display an error message
+    }
+    setIsCancelModalOpen(false);
+  };
+
+  return (
+    <>
+      <div className="main-content-h bg-gray-100">
+        <div className="mt-6">
+          <div className="">
+            <DynamicPanel
+              ref={headerTemplateRef} // New Panel
+              panelId="header-template"
+              panelOrder={0} // Render before general details
+              panelTitle="Template"
+              panelConfig={headerTemplateConfig} // New Config
+              formName="headerTemplateForm"
+              initialData={headerTemplateData}
+              // onDataChange={handleHeaderTemplateDataChange}
+              panelWidth="full"
+              collapsible={true} // Added collapsible prop
+              showHeader={false} // Hide header to match screenshot
+            />
+          </div>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full mb-12"
+          >
+            <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
+              <TabsTrigger
+                value="general"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                  activeTab === "general"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                General
+              </TabsTrigger>
+              <TabsTrigger
+                value="declarations"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                  activeTab === "declarations"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Declarations
+              </TabsTrigger>
+              <TabsTrigger
+                value="route"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                  activeTab === "route"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Route
+              </TabsTrigger>
+              <TabsTrigger
+                value="wagon-info"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
+                  activeTab === "wagon-info"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Wagon Info
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="general" className="mt-6" forceMount>
+              <div className="">
+                <div className="">
+                  <div className="">
+                    {/* 32 */}
+                    <DynamicPanel
+                      ref={generalDetailsRef}
+                      panelId="general-details"
+                      panelOrder={1}
+                      panelTitle="General Details"
+                      panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                      panelConfig={generalDetailsConfig}
+                      formName="generalDetailsForm"
+                      //  initialData={undefined}
+                      initialData={generalDetailsData}
+                      // onDataChange={handleGeneralDataChange}
+                      panelWidth="full"
+                      collapsible={true} // Added collapsible prop
+                    />
+                    <div
+                      className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200"
+                      style={{ marginTop: "-25px" }}
+                    >
+                      <Button
+                        onClick={() =>
+                          setIsConsignorConsigneeSideDrawOpen(true)
+                        }
+                        className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add Consignor/Consignee
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* New Payment Instruction Panel */}
+                  <DynamicPanel
+                    ref={paymentInstructionRef}
+                    panelId="payment-instruction"
+                    panelOrder={2}
+                    panelTitle="Payment Instruction [20]"
+                    panelConfig={paymentInstructionConfig}
+                    formName="paymentInstructionForm"
+                    initialData={paymentInstructionData}
+                    // onDataChange={handlePaymentInstructionDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
+
+                  {/* New Place and Date Made Out Panel */}
+                  <DynamicPanel
+                    ref={placeAndDateRef}
+                    panelId="place-and-date"
+                    panelOrder={3}
+                    panelTitle="Place and Date Made Out [29]"
+                    panelConfig={placeAndDateConfig}
+                    formName="placeAndDateForm"
+                    initialData={placeAndDateData}
+                    // onDataChange={handlePlaceAndDateDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="declarations" className="mt-6" forceMount>
+              <div className="">
+                <DynamicPanel
+                  ref={consignorDeclarationsRef}
+                  panelId="consignor-declarations"
+                  panelOrder={1}
+                  panelTitle="Declarations and Information"
+                  panelConfig={consignorDeclarationsConfig}
+                  formName="consignorDeclarationsForm"
+                  initialData={consignorDeclarationsData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={valueDeliveryCashRef}
+                  panelId="value-delivery-cash"
+                  panelOrder={2}
+                  panelTitle="Value and Delivery Details"
+                  panelConfig={valueDeliveryCashConfig}
+                  formName="valueDeliveryCashForm"
+                  initialData={valueDeliveryCashData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={codingBoxesRef}
+                  panelId="coding-boxes"
+                  panelOrder={3}
+                  panelTitle="Coding Boxes"
+                  panelConfig={codingBoxesConfig}
+                  formName="codingBoxesForm"
+                  initialData={codingBoxesData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={examinationDetailsRef}
+                  panelId="examination-details"
+                  panelOrder={4}
+                  panelTitle="Examination and Other Details"
+                  panelConfig={examinationDetailsConfig}
+                  formName="examinationDetailsForm"
+                  initialData={examinationDetailsData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionARef}
+                  panelId="section-a"
+                  panelOrder={5}
+                  panelTitle="Section A"
+                  panelConfig={sectionAConfig}
+                  formName="sectionAForm"
+                  initialData={sectionAData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionBRef}
+                  panelId="section-b"
+                  panelOrder={6}
+                  panelTitle="Section B"
+                  panelConfig={sectionBConfig}
+                  formName="sectionBForm"
+                  initialData={sectionBData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionCRef}
+                  panelId="section-c"
+                  panelOrder={7}
+                  panelTitle="Section C"
+                  panelConfig={sectionCConfig}
+                  formName="sectionCForm"
+                  initialData={sectionCData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="route" className="mt-6" forceMount>
+              {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-6">Route</h2>
+                    <p className="text-gray-500">Route content will be added here.</p>
+                </div> */}
+              <div>
+                {/* wagon123 */}
+                <DynamicPanel
+                  ref={RouteEndorsementDetailsRef}
+                  panelId="RouteConsignmentDetails"
+                  panelOrder={1}
+                  panelTitle="Route Details"
+                  panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                  panelConfig={routeDetailsCustomsEndorsementConfig}
+                  formName="generalDetailsForm"
+                  //  initialData={undefined}
+                  //  initialData={generalDetailsData}
+                  // onDataChange={handleGeneralDataChange}
+                  panelWidth="full"
+                  collapsible={true} // Added collapsible prop
+                />
+              </div>
+              {/* //table */}
+              <div>
+                <SmartGridPlus
+                  columns={otherCarriersColumns}
+                  data={otherCarriers}
+                  hideToolbar={true}
+                  hideCheckboxToggle={true}
+                  onAddRow={handleAddOtherCarrierRow}
+                  onEditRow={handleEditOtherCarrierRow}
+                />
+              </div>
+
+              <div>
+                {/* RouteConsignmentDetailsRef */}
+                <DynamicPanel
+                  ref={RouteDetailsRef}
+                  panelId="RouteDetails"
+                  panelOrder={1}
+                  panelTitle="Consignment Number [62]/[6]"
+                  panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                  panelConfig={routeDetailsConfig}
+                  formName="generalDetailsForm"
+                  //  initialData={undefined}
+                  initialData={generalDetailsData}
+                  // onDataChange={handleGeneralDataChange}
+                  panelWidth="full"
+                  collapsible={true} // Added collapsible prop
+                />
+              </div>
+
+              <div>
+                <SmartGridPlus
+                  data={routeCodeCDetails}
+                  columns={routeCodeCDetailsColumns}
+                  onAddRow={handleAddRouteRow}
+                  onEditRow={handleEditRouteRow}
+                  hideRightToolbar={true}
+                  hideAdvancedFilter={true}
+                  hideCheckboxToggle={false}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="wagon-info" className="mt-6" forceMount>
+              <div>
+                <div>
+                  {/* wagon123 */}
+                  <DynamicPanel
+                    ref={WagonDetailsRef}
+                    panelId="WagonInfoDetails"
+                    panelOrder={1}
+                    panelTitle="Wagon Info Details"
+                    panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                    panelConfig={wagonDetailsConfig}
+                    formName="generalDetailsForm"
+                    //  initialData={undefined}
+                    initialData={generalDetailsData}
+                    // onDataChange={handleGeneralDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
+                </div>
+
+                <div>
+                  <SmartGridPlus
+                    data={wagonGritDetails}
+                    columns={wagonGritDetailsColumns}
+                    onAddRow={handleAddWagonRow} // ✅ VERY IMPORTANT
+                    onEditRow={handleEditWagonRow}
+                    hideRightToolbar={true}
+                    hideAdvancedFilter={true}
+                    hideCheckboxToggle={false}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+          <div className="flex items-center gap-4"></div>
+          <div className="flex items-center gap-4">
+            <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={() => setIsCancelModalOpen(true)}
+            >
+              Cancel
+            </button>
+            <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={handleSaveTemplate}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ConsignorConsigneeSideDraw
+        isOpen={isConsignorConsigneeSideDrawOpen}
+        width="40%"
+        onSave={handleConsignorConsigneeSave}
+        onClose={() => setIsConsignorConsigneeSideDrawOpen(false)}
+      />
+      <CancelConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirmCancel={handleConfirmCancel}
+      />
+    </>
+  );
 };
 
 export default ReportCreate;
