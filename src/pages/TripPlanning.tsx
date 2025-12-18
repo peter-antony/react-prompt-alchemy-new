@@ -4413,6 +4413,11 @@ const TripPlanning = () => {
         })()}
         resourceType={currentResourceType}
         resourceData={resourceData}
+        onRefresh={() => {
+          if (urlTripID || tripNo) {
+            fetchTripData(urlTripID || tripNo);
+          }
+        }}
         isLoading={isLoadingResource}
 		    saveButtonEnableFlag={saveButtonEnableFlag}
       />

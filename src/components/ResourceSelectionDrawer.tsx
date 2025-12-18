@@ -24,6 +24,7 @@ interface ResourceSelectionDrawerProps {
   saveButtonEnableFlag?: boolean;
   tripInformation?: any;
   onUpdateTripInformation?: (updatedTripInformation: any) => void;
+  onRefresh?: () => void;
 }
 
 // Resource type configurations
@@ -402,7 +403,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   isLoading = false,
   saveButtonEnableFlag = false,
   tripInformation,
-  onUpdateTripInformation
+  onUpdateTripInformation,
+  onRefresh
 }) => {
   const [serviceType, setServiceType] = useState<string>();
   const [subServiceType, setSubServiceType] = useState<string>();
@@ -1315,6 +1317,9 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           onAddResource(formattedDataArray);
           setViewMode('list');
           onClose();
+          if (onRefresh) {
+            onRefresh();
+          }
           console.log("🔄 TripCOHub component reloaded with CustomerOrders data");
         } else {
           console.log("error as any ===", (response as any)?.data?.Message);
