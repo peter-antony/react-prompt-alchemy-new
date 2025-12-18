@@ -78,7 +78,7 @@ export const CimTemplateSearchCriteria: ITemplateCriteria = {
 
 export const CimReportSearchCriteria: IReportCriteria = {
   Type: null,
-  CIMCUVID: "CIM/CUV/000219",
+  CIMCUVID: null,
   CIMCUVIDDescription: null,
   ConsignorID: null,
   ConsignorDescription: null,

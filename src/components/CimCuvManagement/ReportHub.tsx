@@ -245,6 +245,22 @@ export const ReportSearchHub = () => {
       sortable: true,
       editable: false,
       subRow: true
+    },
+    {
+      key: "UNCode",
+      label: "UN Code",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: "Supplier",
+      label: "Supplier",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true
     }
   ];
 
@@ -762,8 +778,8 @@ export const ReportSearchHub = () => {
       label: 'Consignor ID/ Description',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Consignor Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'ConsigneeID', label: 'Consignee ID/ Description',
@@ -774,8 +790,8 @@ export const ReportSearchHub = () => {
       key: 'CustomerID', label: 'Customer ID',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Customer Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'ContractID', label: 'Contract ID',

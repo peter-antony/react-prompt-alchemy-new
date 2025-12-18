@@ -197,12 +197,21 @@ export const TemplateSearchHub = () => {
       subRow: false
     },
     {
+      key: "UNCode",
+      label: "UN Code",
+      type: "Text",
+      width: 100,
+      sortable: true,
+      editable: false,
+      subRow: false
+    },
+    {
       key: "RouteID",
       label: "Route ID",
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: false
+      subRow: true
     },
     // {
     //   key: "RouteDescription",
@@ -224,6 +233,14 @@ export const TemplateSearchHub = () => {
     {
       key: "Arrival",
       label: "Arrival",
+      type: "Text",
+      sortable: true,
+      editable: false,
+      subRow: true
+    },
+    {
+      key: "Supplier",
+      label: "Supplier",
       type: "Text",
       sortable: true,
       editable: false,
@@ -723,7 +740,9 @@ export const TemplateSearchHub = () => {
       key: 'TemplateID',
       label: 'Template ID/Description',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("TemplateID Description Init")
+      fetchOptions: makeLazyFetcher("TemplateID Description Init"),
+      hideSearch: false,
+      disableLazyLoading: true
     },
     {
       key: 'ConsignorID', label: 'Consignor ID/description', 
@@ -739,8 +758,8 @@ export const TemplateSearchHub = () => {
       key: 'CustomerID', label: 'Customer ID/description', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Customer Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'ContractID', label: 'Contract ID/description', 
