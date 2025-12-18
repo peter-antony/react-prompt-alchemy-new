@@ -403,7 +403,8 @@ const saveCurrentFormData = () => {
 
   const handleSave = async () => {
   // Check if CustomerOrderNo is empty when creating new VAS
-  if (!selectedVAS && !formData.CustomerOrderNo) {
+  // Show error when there is no Customer Order No selected && Customer is checked
+  if (!selectedVAS && formData.IsApplicableToCustomer && !formData.CustomerOrderNo) {
     toast({
       title: "❌ Validation Error",
       description: "Please select a Customer Order No before saving",
@@ -413,6 +414,7 @@ const saveCurrentFormData = () => {
   }
 
   // Check if VASID is empty when creating new VAS
+  // Show error when there is no VAS selected
   if (!selectedVAS && !formData.VASID) {
     toast({
       title: "❌ Validation Error",
@@ -577,11 +579,11 @@ const saveCurrentFormData = () => {
     console.log("ITEM- ",item)
     if(item.formData.IsApplicableToCustomer && !item.formData.IsApplicableToSupplier)
     {
-      return 'C'
+      return 'C' // Only for Customer
     }else if(item.formData.IsApplicableToCustomer && item.formData.IsApplicableToSupplier){
-      return 'C/S'
+      return 'C/S' // For both Customer and Supplier
     }else{
-      return 'C'
+      return 'S' // Only for Supplier
     }
  
 
@@ -589,7 +591,7 @@ const saveCurrentFormData = () => {
   return (
     <div className="flex h-full">
       {/* Left Sidebar - VAS Items List */}
-      <div className="w-64 border-r border-border bg-muted/30 p-4 flex flex-col">
+      <div className="w-72 border-r border-border bg-muted/30 p-4 flex flex-col">
         {/* Customer Order No */}
         {/* <div className="space-y-2 mb-4">
           <Label>Customer Order No.</Label>
@@ -672,16 +674,22 @@ const saveCurrentFormData = () => {
           />
 
           <div className='w-full' >
-            <div className="font-medium  text-sm flex justify-between">
+            <div className="font-medium px-1 text-sm flex justify-between">
               <span>{item.name}</span> 
               <span>{" "}{checkCustomerSupplier(item)}</span>
               </div>
             {/* <div>{checkCustomerSupplier(item)}</div> */}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 ml-1">
+              <span className="text-xs">{formData.CustomerDescription}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1 ml-1">
+              <span className="text-xs">{item.quantity}</span>
+            </div>
+            {/* <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-xs">
                 {item.quantity}
               </Badge>
-            </div>
+            </div> */}
           </div>
         </div>
 
