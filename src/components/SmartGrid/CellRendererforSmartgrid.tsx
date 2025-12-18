@@ -225,6 +225,14 @@ export const CellRendererforSmartgrid: React.FC<CellRendererProps> = ({
             {getPipedValue(row, 'LegToDescription', 'LegTo')}
           </div>
         )}
+        {column.key === "SupplierID" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {/* {getPipedValue(row, 'SupplierName', 'SupplierID')} */}
+            {row?.SupplierName && row?.SupplierID
+              ? `${row.SupplierName} || ${row.SupplierID}`
+              : row?.SupplierName || row?.SupplierID}
+          </div>
+        )}
       </div>
     );
   }

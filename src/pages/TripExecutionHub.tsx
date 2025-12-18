@@ -442,6 +442,14 @@ export const TripExecutionHub = () => {
       subRow: true,
     },
     {
+      key: "SupplierID",
+      label: "Supplier",
+      type: "TextPipedData",
+      sortable: true,
+      editable: false,
+      subRow: false,
+    },
+    {
       key: "CustomerService",
       label: "Service",
       type: "TextCustom",
