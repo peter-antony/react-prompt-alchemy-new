@@ -378,92 +378,78 @@ const TemplateCreate = () => {
 
   const wagonGritDetailsColumns: GridColumnConfig[] = [
     { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
-
-    { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
-
-    { key: "NHM", label: "NHM", type: "Text", editable: true },
-
-    { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
-    { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
-
+    { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+    { key: "RID", label: "RID", type: "Text", editable: true },
+    { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
     { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-    { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
-
+    { key: "Net_Weight_", label: "Net Weight", type: "Text", editable: true },
+    { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
+    { key: "NHM", label: "NHM", type: "Text", editable: true },
+    { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
     { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
-    { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
-
     { key: "Specificity", label: "Specificity", type: "Text", editable: true },
     { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
-
     { key: "Long_x_larg_x_haut", label: "Length x Width x Height", type: "Text", editable: true },
-    { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
-
     { key: "Brand_and_No", label: "Brand and No", type: "Text", editable: true },
     { key: "Remittance_Slip_Number", label: "Remittance Slip No", type: "Text", editable: true },
     { key: "Customs_Document", label: "Customs Document", type: "Text", editable: true },
-
-    { key: "RID", label: "RID", type: "Text", editable: true },
-
-    { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
-
     { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
     { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
     { key: "Packing_Group", label: "Packing Group", type: "Text", editable: true },
     { key: "Label", label: "Label", type: "Text", editable: true },
+    
+    
+    // { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
+    // { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
+    // { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
+    // { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
+    // { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
+    // { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
+    // { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
+    // { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
+
 
     { key: "Special_Provision", label: "Special Provision", type: "Text", editable: true },
     { key: "Hazard_ID_Number", label: "Hazard ID", type: "Text", editable: true },
     { key: "Environmentally_Hazardous", label: "Environmentally Hazardous", type: "Text", editable: true },
-
     { key: "Last_Loaded_Commodity", label: "Last Loaded Commodity", type: "Text", editable: true },
-
     { key: "Container_No", label: "Container No", type: "Text", editable: true },
     { key: "Container_Type", label: "Container Type", type: "Text", editable: true },
-
     { key: "Container_Tare_Weight", label: "Container Tare Weight", type: "Text", editable: true },
-    { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
-
     { key: "From_Country", label: "From Country", type: "Text", editable: true },
     { key: "To_Country", label: "To Country", type: "Text", editable: true },
-
     { key: "Commodity_Description", label: "Commodity Description", type: "Text", editable: true },
-
     { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
-    { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
-
     { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
-    { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
-
     { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
-    { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
 
     { key: "Container_load_weight", label: "Container Load Weight", type: "Text", editable: true },
-    { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
+    // { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
     { key: "Container_load_type", label: "Container Load Type", type: "Text", editable: true },
 
     { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
-    { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
+    // { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
 
-    { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
-    { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
-    { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
-    { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
+    { key: "UN_Desc_English", label: "UN Desc English", type: "Checkbox", editable: true },
+    { key: "UN_Desc_French", label: "UN Desc French", type: "Checkbox", editable: true },
+    { key: "UN_Desc_German", label: "UN Desc German", type: "Checkbox", editable: true },
+    { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Checkbox", editable: true },
 
     { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
     { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
     { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
     { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
-
     { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
-    { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
 
-    { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
-    { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
+    // { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
+
+    // { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
 
     { key: "Wagon_Length", label: "Wagon Length", type: "Text", editable: true },
-    { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
+    { key: "Total_Length", label: "Total Length", type: "Text", editable: true },
+    // { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
 
-    { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
+    // { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
   ];
 
   // General Details Panel Config
@@ -3999,7 +3985,7 @@ const TemplateCreate = () => {
                   <SmartGridPlus
                     data={wagonGritDetails}
                     columns={wagonGritDetailsColumns}
-
+                    hideToolbar={true}
                     onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
                     onEditRow={handleEditWagonRow}
 
