@@ -114,30 +114,30 @@ export const CimCuvService = {
   },
 
   saveCimCuvTemplate: async (payload: any): Promise<any> => {
-  const userContext = getUserContext();
+    const userContext = getUserContext();
 
-  const requestPayload = {
-    context: {
-      UserID: "ramcouser",
-      OUID: userContext.ouId,
-      Role: userContext.roleName,
-      MessageID: "12345",
-      MessageType: "CIM CUV Template-Save",
-    },
-    RequestPayload: payload, 
-  };
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Template-Save",
+      },
+      RequestPayload: payload,
+    };
 
-  const requestBody = {
-    RequestData: JSON.stringify(requestPayload),
-  };
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
 
-  const response = await apiClient.post(
-    API_ENDPOINTS.CIM_CUV.SAVE_TEMPLATE, 
-    requestBody
-  );
+    const response = await apiClient.post(
+      API_ENDPOINTS.CIM_CUV.SAVE_TEMPLATE,
+      requestBody
+    );
 
-  return response.data;
-},
+    return response.data;
+  },
 
 
   getTemplateDataByID: async (params?: any): Promise<ApiResponse<Trip>> => {

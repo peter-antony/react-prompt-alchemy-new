@@ -9,7 +9,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { FileText } from 'lucide-react';
 import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
-import { useSearchParams } from "react-router-dom"; 
+import { useSearchParams } from "react-router-dom";
 import { SmartGridWithGrouping } from '../SmartGrid';
 import { SmartGridPlus } from '../SmartGrid';
 import { GridColumnConfig } from '../SmartGrid';
@@ -34,9 +34,9 @@ const TemplateCreate = () => {
   const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
   const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
-   const navigate = useNavigate();
-   const { toast } = useToast();
-   
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
   const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
@@ -51,16 +51,16 @@ const TemplateCreate = () => {
   const [apiResponse, setApiResponse] = useState<any>(null); // New state for API response
   const [initialApiResponse, setInitialApiResponse] = useState<any>(null); // To store original API response
   const [activeTab, setActiveTab] = useState('general');
-    const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
-   const workOrderNo = searchParams.get("id");
-   const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
-const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
-const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
-const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
-const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
-const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
-const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
+  const [searchParams, setSearchParams] = useSearchParams(); // Import useSearchParams
+  const workOrderNo = searchParams.get("id");
+  const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
+  const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+  const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
+  const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
+  const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
+  const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
 
   const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
   /**
@@ -99,139 +99,139 @@ const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
   };
 
   // ✅ Add row – Other Carriers
-const handleAddOtherCarrierRow = (newRow: any) => {
-  setOtherCarriers(prev => [
-    ...prev,
-    {
-      ...newRow,
-      ModeFlag: "Insert",
-    },
-  ]);
-};
+  const handleAddOtherCarrierRow = (newRow: any) => {
+    setOtherCarriers(prev => [
+      ...prev,
+      {
+        ...newRow,
+        ModeFlag: "Insert",
+      },
+    ]);
+  };
 
-// ✅ Edit row – Other Carriers
-const handleEditOtherCarrierRow = (updatedRow: any, rowIndex: number) => {
-  setOtherCarriers(prev => {
-    const copy = [...prev];
+  // ✅ Edit row – Other Carriers
+  const handleEditOtherCarrierRow = (updatedRow: any, rowIndex: number) => {
+    setOtherCarriers(prev => {
+      const copy = [...prev];
 
-    copy[rowIndex] = {
-      ...copy[rowIndex],
-      ...updatedRow,
-      ModeFlag:
-        copy[rowIndex]?.ModeFlag === "Insert"
-          ? "Insert"
-          : "Update",
-    };
+      copy[rowIndex] = {
+        ...copy[rowIndex],
+        ...updatedRow,
+        ModeFlag:
+          copy[rowIndex]?.ModeFlag === "Insert"
+            ? "Insert"
+            : "Update",
+      };
 
-    return copy;
-  });
-};
-// ✅ Add Wagon row
-const handleAddWagonRow = (newRow: any) => {
-  setWagonGritDetails(prev => [
-    ...prev,
-    {
-      ...newRow,
-      ModeFlag: "Insert",
-    },
-  ]);
-};
+      return copy;
+    });
+  };
+  // ✅ Add Wagon row
+  const handleAddWagonRow = (newRow: any) => {
+    setWagonGritDetails(prev => [
+      ...prev,
+      {
+        ...newRow,
+        ModeFlag: "Insert",
+      },
+    ]);
+  };
 
-// ✅ Edit Wagon row
-const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
-  setWagonGritDetails(prev => {
-    const copy = [...prev];
+  // ✅ Edit Wagon row
+  const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
+    setWagonGritDetails(prev => {
+      const copy = [...prev];
 
-    copy[rowIndex] = {
-      ...copy[rowIndex],
-      ...updatedRow,
-      ModeFlag:
-        copy[rowIndex]?.ModeFlag === "Insert"
-          ? "Insert"
-          : "Update",
-    };
+      copy[rowIndex] = {
+        ...copy[rowIndex],
+        ...updatedRow,
+        ModeFlag:
+          copy[rowIndex]?.ModeFlag === "Insert"
+            ? "Insert"
+            : "Update",
+      };
 
-    return copy;
-  });
-};
+      return copy;
+    });
+  };
 
 
   // ✅ STEP 2: Handle Add Row from SmartGrid
-const handleAddRouteRow = (newRow: any) => {
-  const rowWithDefaults = {
-    ...newRow,
-    ModeFlag: "Insert",   // 🔴 IMPORTANT
-  };
-
-  setRouteCodeCDetails(prev => [...prev, rowWithDefaults]);
-};
-// ✅ STEP 3: Handle Edit Row from SmartGrid
-const handleEditRouteRow = (updatedRow: any, rowIndex: number) => {
-  setRouteCodeCDetails(prev => {
-    const updated = [...prev];
-
-    updated[rowIndex] = {
-      ...updated[rowIndex],
-      ...updatedRow,
-      ModeFlag:
-        updated[rowIndex]?.ModeFlag === "Insert"
-          ? "Insert"   // keep Insert if new
-          : "Update",  // existing row edited
+  const handleAddRouteRow = (newRow: any) => {
+    const rowWithDefaults = {
+      ...newRow,
+      ModeFlag: "Insert",   // 🔴 IMPORTANT
     };
 
-    return updated;
-  });
-};
+    setRouteCodeCDetails(prev => [...prev, rowWithDefaults]);
+  };
+  // ✅ STEP 3: Handle Edit Row from SmartGrid
+  const handleEditRouteRow = (updatedRow: any, rowIndex: number) => {
+    setRouteCodeCDetails(prev => {
+      const updated = [...prev];
+
+      updated[rowIndex] = {
+        ...updated[rowIndex],
+        ...updatedRow,
+        ModeFlag:
+          updated[rowIndex]?.ModeFlag === "Insert"
+            ? "Insert"   // keep Insert if new
+            : "Update",  // existing row edited
+      };
+
+      return updated;
+    });
+  };
 
 
-  useEffect(()=>{
-   console.log("SETTING OTHER CARRIERS" , routeCodeCDetails) ;
-  },[routeCodeCDetails])
+  useEffect(() => {
+    console.log("SETTING OTHER CARRIERS", routeCodeCDetails);
+  }, [routeCodeCDetails])
 
   // Simulate API response for demonstration
   useEffect(() => {
     // Call the API to fetch template data
     fetchTemplateData(workOrderNo); // Replace with actual template ID or a dynamic value
   }, [workOrderNo]); // Removed activeTab from the dependency array
-  
+
 
   useEffect(() => {
-  const loadUomMasters = async () => {
-    try {
-      const [thuRes, currencyRes]: any = await Promise.all([
-        quickOrderService.getMasterCommonData({
-          messageType: "THU QTY UOM Init",
-        }),
-        quickOrderService.getMasterCommonData({
-          messageType: "Currency Init",
-        }),
-      ]);
-      console.log(JSON.parse(thuRes?.data?.ResponseData || "[]") , "123")
-      setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
-      setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
-    } catch (err) {
-      console.error("UOM master API failed", err);
-    }
+    const loadUomMasters = async () => {
+      try {
+        const [thuRes, currencyRes]: any = await Promise.all([
+          quickOrderService.getMasterCommonData({
+            messageType: "THU QTY UOM Init",
+          }),
+          quickOrderService.getMasterCommonData({
+            messageType: "Currency Init",
+          }),
+        ]);
+        console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"), "123")
+        setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
+        setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
+      } catch (err) {
+        console.error("UOM master API failed", err);
+      }
+    };
+
+    loadUomMasters();
+  }, []);
+
+  const getUomOptions = (list: any[]) =>
+    list
+      .filter(item => item.id && item.name) // remove empty row
+      .map(item => ({
+        label: item.name,
+        value: item.id,
+      }));
+
+
+  const buildWeightWithUom = (
+    value?: { input?: string; dropdown?: string } | null
+  ): string | null => {
+    if (!value?.input || !value?.dropdown) return null;
+    return `${value.input} ${value.dropdown}`;
   };
-
-  loadUomMasters();
-}, []);
-
-const getUomOptions = (list: any[]) =>
-  list
-    .filter(item => item.id && item.name) // remove empty row
-    .map(item => ({
-      label: item.name,
-      value: item.id,
-    }));
- 
-
-const buildWeightWithUom = (
-  value?: { input?: string; dropdown?: string } | null
-): string | null => {
-  if (!value?.input || !value?.dropdown) return null;
-  return `${value.input} ${value.dropdown}`;
-};
 
 
 
@@ -255,180 +255,180 @@ const buildWeightWithUom = (
   };
 
   // ✅ STEP 1: Columns for Other Carriers grid
-// ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
-const otherCarriersColumns: GridColumnConfig[] = [
-  {
-    key: "Section1",
-    label: "Section 1",
-    type: "Text",
-    editable: true,
-  },
-  {
-    key: "Section2",
-    label: "Section 2",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "Status",
-    label: "Status",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "Action",
-    label: "Action",
-    type: "Text",
-    editable: true,
-  }
-];
+  // ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
+  const otherCarriersColumns: GridColumnConfig[] = [
+    {
+      key: "Section1",
+      label: "Section 1",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Section2",
+      label: "Section 2",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Status",
+      label: "Status",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "Action",
+      label: "Action",
+      type: "Text",
+      editable: true,
+    }
+  ];
 
-const routeCodeCDetailsColumns: GridColumnConfig[] = [
-  {
-    key: "RouteID",
-    label: "RouteID",
-    type: "Text",
-    editable: true,
-  },
-  {
-    key: "LegSequence",
-    label: "Leg Sequence",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "LegID",
-    label: "LegID",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "FromLocationID",
-    label: "From Location ID",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "FromLocationDesc",
-    label: "From Location Desc",
-    type: "Text",
-    editable: true,
-  },
-  {
-    key: "ToLocationID",
-    label: "To Location ID",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "ToLocationDesc",
-    label: "To Location Desc",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "AdhocLeg",
-    label: "Adhoc Leg",
-    type: "Text",
-    editable: true,
-  },
-   {
-    key: "ViaPoint",
-    label: "Via Point",
-    type: "Text",
-    editable: true,
-  }
-];
+  const routeCodeCDetailsColumns: GridColumnConfig[] = [
+    {
+      key: "RouteID",
+      label: "RouteID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "LegSequence",
+      label: "Leg Sequence",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "LegID",
+      label: "LegID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "FromLocationID",
+      label: "From Location ID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "FromLocationDesc",
+      label: "From Location Desc",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ToLocationID",
+      label: "To Location ID",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ToLocationDesc",
+      label: "To Location Desc",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "AdhocLeg",
+      label: "Adhoc Leg",
+      type: "Text",
+      editable: true,
+    },
+    {
+      key: "ViaPoint",
+      label: "Via Point",
+      type: "Text",
+      editable: true,
+    }
+  ];
 
-const wagonGritDetailsColumns: GridColumnConfig[] = [
-  { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
+  const wagonGritDetailsColumns: GridColumnConfig[] = [
+    { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
 
-  { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
+    { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
 
-  { key: "NHM", label: "NHM", type: "Text", editable: true },
+    { key: "NHM", label: "NHM", type: "Text", editable: true },
 
-  { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
-  { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
+    { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
+    { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
 
-  { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-  { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
+    { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
+    { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
 
-  { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
-  { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
+    { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
+    { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
 
-  { key: "Specificity", label: "Specificity", type: "Text", editable: true },
-  { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
+    { key: "Specificity", label: "Specificity", type: "Text", editable: true },
+    { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
 
-  { key: "Long_x_larg_x_haut", label: "Length x Width x Height", type: "Text", editable: true },
-  { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
+    { key: "Long_x_larg_x_haut", label: "Length x Width x Height", type: "Text", editable: true },
+    { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
 
-  { key: "Brand_and_No", label: "Brand and No", type: "Text", editable: true },
-  { key: "Remittance_Slip_Number", label: "Remittance Slip No", type: "Text", editable: true },
-  { key: "Customs_Document", label: "Customs Document", type: "Text", editable: true },
+    { key: "Brand_and_No", label: "Brand and No", type: "Text", editable: true },
+    { key: "Remittance_Slip_Number", label: "Remittance Slip No", type: "Text", editable: true },
+    { key: "Customs_Document", label: "Customs Document", type: "Text", editable: true },
 
-  { key: "RID", label: "RID", type: "Text", editable: true },
+    { key: "RID", label: "RID", type: "Text", editable: true },
 
-  { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+    { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
 
-  { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
-  { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
-  { key: "Packing_Group", label: "Packing Group", type: "Text", editable: true },
-  { key: "Label", label: "Label", type: "Text", editable: true },
+    { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
+    { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
+    { key: "Packing_Group", label: "Packing Group", type: "Text", editable: true },
+    { key: "Label", label: "Label", type: "Text", editable: true },
 
-  { key: "Special_Provision", label: "Special Provision", type: "Text", editable: true },
-  { key: "Hazard_ID_Number", label: "Hazard ID", type: "Text", editable: true },
-  { key: "Environmentally_Hazardous", label: "Environmentally Hazardous", type: "Text", editable: true },
+    { key: "Special_Provision", label: "Special Provision", type: "Text", editable: true },
+    { key: "Hazard_ID_Number", label: "Hazard ID", type: "Text", editable: true },
+    { key: "Environmentally_Hazardous", label: "Environmentally Hazardous", type: "Text", editable: true },
 
-  { key: "Last_Loaded_Commodity", label: "Last Loaded Commodity", type: "Text", editable: true },
+    { key: "Last_Loaded_Commodity", label: "Last Loaded Commodity", type: "Text", editable: true },
 
-  { key: "Container_No", label: "Container No", type: "Text", editable: true },
-  { key: "Container_Type", label: "Container Type", type: "Text", editable: true },
+    { key: "Container_No", label: "Container No", type: "Text", editable: true },
+    { key: "Container_Type", label: "Container Type", type: "Text", editable: true },
 
-  { key: "Container_Tare_Weight", label: "Container Tare Weight", type: "Text", editable: true },
-  { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
+    { key: "Container_Tare_Weight", label: "Container Tare Weight", type: "Text", editable: true },
+    { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
 
-  { key: "From_Country", label: "From Country", type: "Text", editable: true },
-  { key: "To_Country", label: "To Country", type: "Text", editable: true },
+    { key: "From_Country", label: "From Country", type: "Text", editable: true },
+    { key: "To_Country", label: "To Country", type: "Text", editable: true },
 
-  { key: "Commodity_Description", label: "Commodity Description", type: "Text", editable: true },
+    { key: "Commodity_Description", label: "Commodity Description", type: "Text", editable: true },
 
-  { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
-  { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
+    { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
+    { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
 
-  { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
-  { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
+    { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
+    { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
 
-  { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
-  { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
+    { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
+    { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
 
-  { key: "Container_load_weight", label: "Container Load Weight", type: "Text", editable: true },
-  { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
-  { key: "Container_load_type", label: "Container Load Type", type: "Text", editable: true },
+    { key: "Container_load_weight", label: "Container Load Weight", type: "Text", editable: true },
+    { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
+    { key: "Container_load_type", label: "Container Load Type", type: "Text", editable: true },
 
-  { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
-  { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
+    { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
+    { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
 
-  { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
-  { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
-  { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
-  { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
+    { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
+    { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
+    { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
+    { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
 
-  { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
-  { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
-  { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
-  { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
+    { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
+    { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
+    { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
+    { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
 
-  { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
-  { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
+    { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
+    { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
 
-  { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
-  { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
+    { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
+    { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
 
-  { key: "Wagon_Length", label: "Wagon Length", type: "Text", editable: true },
-  { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
+    { key: "Wagon_Length", label: "Wagon Length", type: "Text", editable: true },
+    { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
 
-  { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
-];
+    { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
+  ];
 
   // General Details Panel Config
   const generalDetailsConfig: PanelConfig = {
@@ -1519,7 +1519,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
 
 
   //wagon details panel config
-   const wagonDetailsConfig: PanelConfig = {
+  const wagonDetailsConfig: PanelConfig = {
     train: {
       id: 'train',
       label: 'train [1]',
@@ -1634,7 +1634,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       placeholder: 'Enter wagon number',
 
     },
-     DescriptionoftheGoods: {
+    DescriptionoftheGoods: {
       id: 'DescriptionoftheGoods',
       label: "Description of the Goods [21]/[17]",
       fieldType: 'text',
@@ -1646,7 +1646,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'four',
       placeholder: 'Enter Description of the Goods',
     },
-     ExceptionalConsignment: {
+    ExceptionalConsignment: {
       id: 'ExceptionalConsignment',
       label: 'Exceptional Consignment [22]',
       fieldType: 'checkbox',
@@ -1657,7 +1657,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       order: 11,
       width: 'four',
     },
-     RID: {
+    RID: {
       id: 'RID',
       label: 'RID [23]/[28]',
       fieldType: 'checkbox',
@@ -1668,7 +1668,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       order: 12,
       width: 'four',
     },
-      UTICODE: {
+    UTICODE: {
       id: 'UTICODE',
       label: 'UTI Code (Intermodal Transport Unit) [23]',
       fieldType: 'lazyselect',
@@ -1707,7 +1707,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'four',
       placeholder: 'Enter Mark and Number',
     },
-     DeliveryNoteNumber: {
+    DeliveryNoteNumber: {
       id: 'DeliveryNoteNumber',
       label: "Delivery Note Number [26]",
       fieldType: 'text',
@@ -1719,7 +1719,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'four',
       placeholder: 'Enter Delivery Note Number ',
     },
-     NHMCode: {
+    NHMCode: {
       id: 'NHMCode',
       label: 'NHM Code [24]/[18]',
       fieldType: 'lazyselect',
@@ -1734,112 +1734,112 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       hideSearch: false,
       disableLazyLoading: false,
     },
-     GrossWeight: {
-  id: "GrossWeight",
-  label: "Gross Weight [26]/[19]",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 18,
-  width: "four",
-  placeholder: "Enter Gross Weight",
-  options: getUomOptions(thuQtyUomList),
-},
+    GrossWeight: {
+      id: "GrossWeight",
+      label: "Gross Weight [26]/[19]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 18,
+      width: "four",
+      placeholder: "Enter Gross Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
 
     TareWeight: {
-  id: "TareWeight",
-  label: "Tare Weight [25]/[20]",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 19,
-  width: "four",
-  placeholder: "Enter Tare Weight",
-  options: getUomOptions(thuQtyUomList),
-},
+      id: "TareWeight",
+      label: "Tare Weight [25]/[20]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 19,
+      width: "four",
+      placeholder: "Enter Tare Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
 
     NetWeight: {
-  id: "NetWeight",
-  label: "Net Weight [25]/[20]",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 20,
-  width: "four",
-  placeholder: "Enter Net Weight",
-  options: getUomOptions(thuQtyUomList),
-},
+      id: "NetWeight",
+      label: "Net Weight [25]/[20]",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 20,
+      width: "four",
+      placeholder: "Enter Net Weight",
+      options: getUomOptions(thuQtyUomList),
+    },
 
-  TotalBrutto: {
-  id: "TotalBrutto",
-  label: "Total Brutto",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 21,
-  width: "four",
-  placeholder: "Total Brutto",
-  options: getUomOptions(currencyUomList),
-},
+    TotalBrutto: {
+      id: "TotalBrutto",
+      label: "Total Brutto",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 21,
+      width: "four",
+      placeholder: "Total Brutto",
+      options: getUomOptions(currencyUomList),
+    },
 
     TotalNetto: {
-  id: "TotalNetto",
-  label: "Total Netto",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 22,
-  width: "four",
-  placeholder: "Total Netto",
-  options: getUomOptions(currencyUomList),
-},
+      id: "TotalNetto",
+      label: "Total Netto",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 22,
+      width: "four",
+      placeholder: "Total Netto",
+      options: getUomOptions(currencyUomList),
+    },
 
-     TotalGross: {
-  id: "TotalGross",
-  label: "Total Gross",
-  fieldType: "inputdropdown",
-  value: {
-    dropdown: "",
-    input: "",
-  },
-  mandatory: false,
-  visible: true,
-  editable: true,
-  order: 23,
-  width: "four",
-  placeholder: "Total Gross",
-  options: getUomOptions(currencyUomList),
-},
+    TotalGross: {
+      id: "TotalGross",
+      label: "Total Gross",
+      fieldType: "inputdropdown",
+      value: {
+        dropdown: "",
+        input: "",
+      },
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 23,
+      width: "four",
+      placeholder: "Total Gross",
+      options: getUomOptions(currencyUomList),
+    },
 
   };
 
   //router details panel config
-   const routeDetailsConfig: PanelConfig = {
+  const routeDetailsConfig: PanelConfig = {
     ConsignmentNumber: {
       id: 'ConsignmentNumber',
       label: 'Consignment Number',
@@ -1851,7 +1851,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       order: 1,
       width: 'third',
       placeholder: 'Enter Consignment Number',
-     
+
     },
     Country: {
       id: 'Country',
@@ -1895,7 +1895,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'two-thirds',
       placeholder: 'Enter Station',
       hideSearch: false,
-         fetchOptions: fetchMaster('Location Init'),
+      fetchOptions: fetchMaster('Location Init'),
       disableLazyLoading: false,
     },
     StationValue: {
@@ -1923,7 +1923,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'two-thirds',
       placeholder: 'Undertaking Enterprise',
       hideSearch: false,
-         fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
+      fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
       disableLazyLoading: false,
     },
     UndertakingEnterpriseValue: {
@@ -1953,7 +1953,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       order: 1,
       width: 'third',
       placeholder: 'Enter Customs Endorsements',
-     
+
     },
     Route_50: {
       id: 'Route_50',
@@ -1997,7 +1997,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       width: 'four',
       placeholder: 'Enter Contractual Carrier',
       hideSearch: false,
-         fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
+      fetchOptions: fetchMaster('Contractual carrier_58_a Init'),
       disableLazyLoading: false,
     },
     EnterContractual: {
@@ -2023,7 +2023,7 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
       editable: true,
       order: 6,
       width: 'four',
-     
+
     },
     EnterTransitProcedure: {
       id: 'TransitProcedure',
@@ -2047,35 +2047,35 @@ const wagonGritDetailsColumns: GridColumnConfig[] = [
   };
 
   const normalizeValue = (v: any) => {
-  if (v === "" || v === undefined) return null;
-  if (typeof v === "boolean") return v ? 1 : 0;
-  return v;
-};
+    if (v === "" || v === undefined) return null;
+    if (typeof v === "boolean") return v ? 1 : 0;
+    return v;
+  };
 
-const normalizeObject = (obj: any) =>
-  JSON.parse(
-    JSON.stringify(obj, (_k, v) => {
-      if (typeof v === "string" && v.includes("T00:00:00")) {
-        return v.split("T")[0];
-      }
-      return normalizeValue(v);
-    })
-  );
+  const normalizeObject = (obj: any) =>
+    JSON.parse(
+      JSON.stringify(obj, (_k, v) => {
+        if (typeof v === "string" && v.includes("T00:00:00")) {
+          return v.split("T")[0];
+        }
+        return normalizeValue(v);
+      })
+    );
 
-const resolveModeFlag = (
-  current: any,
-  initial: any,
-  workOrderNo?: string
-): "Insert" | "Update" | "NoChange" => {
-  if (!workOrderNo) return "Insert";
-  return deepEqual(
-    normalizeObject(current),
-    normalizeObject(initial)
-  )
-    ? "NoChange"
-    : "Update";
-};
-  
+  const resolveModeFlag = (
+    current: any,
+    initial: any,
+    workOrderNo?: string
+  ): "Insert" | "Update" | "NoChange" => {
+    if (!workOrderNo) return "Insert";
+    return deepEqual(
+      normalizeObject(current),
+      normalizeObject(initial)
+    )
+      ? "NoChange"
+      : "Update";
+  };
+
 
 
   // Deep equality check utility
@@ -2135,103 +2135,103 @@ const resolveModeFlag = (
   //   NameForAcceptancePoint_16: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
   //   NameForAcceptancePoint_16_1: formData.acceptanceFrom || null, // This mapping is a bit ambiguous, re-check if needed
   // });
-  
+
   const splitIdName = (value: any) => {
-  if (!value || typeof value !== "string") {
-    return { id: "", name: "" };
-  }
+    if (!value || typeof value !== "string") {
+      return { id: "", name: "" };
+    }
 
-  if (value.includes("||")) {
-    const [id, name] = value.split("||").map(v => v.trim());
-    return { id, name };
-  }
+    if (value.includes("||")) {
+      const [id, name] = value.split("||").map(v => v.trim());
+      return { id, name };
+    }
 
-  return { id: value.trim(), name: "" };
-};
-
-   const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
-  const consignor = splitIdName(formData.consignor);
-  const consignee = splitIdName(formData.consignee);
-
-  const custConsignor = splitIdName(formData.customerCodeConsignor);
-  const custPrePaid = splitIdName(formData.customerCodePrePaid);
-
-  const custConsignee = splitIdName(formData.customerCodeConsignee);
-  const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
-  const consignorRef = splitIdName(formData.consignorReference);
-
-  const deliveryPoint = splitIdName(formData.deliveryPoint);
-  const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
-  const stationServing = splitIdName(formData.codeStationServing);
-  const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
-  const NumberOfCustomerAgreementOrTariff = splitIdName(formData.customerAgreementTariff);
-  const acceptance = splitIdName(formData.acceptanceFrom);
-
-  return {
-    // Consignor
-    Consignor_1_value1: consignor.id,
-    ConsignorName_value2: consignor.name,
-
-    // Customer Code for Consignor
-    CustomerCodeForConsignor_2: custConsignor.id,
-    CustomerCodeForConsignor_value2: custConsignor.name,
-
-    // Pre-paid payer
-    CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
-    CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
-
-    // Consignee
-    Consignee_4_value1: consignee.id,
-    ConsigneeName_4_value2: consignee.name,
-
-    // Customer Code for Consignee
-    CustomerCodeForConsignee_5: custConsignee.id,
-    CustomerCodeForConsignee_value5: custConsignee.name,
-
-    // Non-prepaid payer
-    CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
-    CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
-
-    // Consignor Reference
-
-ConsignorsReference_8_value1: consignorRef.id,
-ConsignorsReference_8_value2: consignorRef.name,
-
-
-    // Delivery Point
-    DeliveryPoint_10_4_value1: deliveryPoint.id,
-    DeliveryPoint_10_4_value2: deliveryPoint.name,
-
-    // Code for Delivery Point
-    CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
-    CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
-
-    // Station Serving
-    CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
-    CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
-
-    // Agreement/Tariff
-    NumberOfCustomerAgreementOrTariff_14: NumberOfCustomerAgreementOrTariff.id || "",
-
-    // Acceptance Date / From
-    AcceptanceDate_16_2: formData.acceptanceDate || "",
-    AcceptanceFrom_16_3: acceptance.id|| "",
-
-    // Acceptance Point
-    CodeForAcceptancePoint_17: acceptancePoint.id,
-    CodeForAcceptancePoint_17_1: acceptancePoint.name,
-
-    // Other fields
-    WagonNo_18: null,
-    DeliveryStationName: stationServing.name || "",
-    DeliveryCountryName: formData.deliveryCountryName || "",
-    NameForAcceptancePoint_16: acceptance.id || "",
-    NameForAcceptancePoint_16_1: acceptance.name || "",
+    return { id: value.trim(), name: "" };
   };
-};
+
+  const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
+    const consignor = splitIdName(formData.consignor);
+    const consignee = splitIdName(formData.consignee);
+
+    const custConsignor = splitIdName(formData.customerCodeConsignor);
+    const custPrePaid = splitIdName(formData.customerCodePrePaid);
+
+    const custConsignee = splitIdName(formData.customerCodeConsignee);
+    const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
+    const consignorRef = splitIdName(formData.consignorReference);
+
+    const deliveryPoint = splitIdName(formData.deliveryPoint);
+    const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
+    const stationServing = splitIdName(formData.codeStationServing);
+    const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
+    const NumberOfCustomerAgreementOrTariff = splitIdName(formData.customerAgreementTariff);
+    const acceptance = splitIdName(formData.acceptanceFrom);
+
+    return {
+      // Consignor
+      Consignor_1_value1: consignor.id,
+      ConsignorName_value2: consignor.name,
+
+      // Customer Code for Consignor
+      CustomerCodeForConsignor_2: custConsignor.id,
+      CustomerCodeForConsignor_value2: custConsignor.name,
+
+      // Pre-paid payer
+      CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
+      CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
+
+      // Consignee
+      Consignee_4_value1: consignee.id,
+      ConsigneeName_4_value2: consignee.name,
+
+      // Customer Code for Consignee
+      CustomerCodeForConsignee_5: custConsignee.id,
+      CustomerCodeForConsignee_value5: custConsignee.name,
+
+      // Non-prepaid payer
+      CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
+      CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
+
+      // Consignor Reference
+
+      ConsignorsReference_8_value1: consignorRef.id,
+      ConsignorsReference_8_value2: consignorRef.name,
 
 
-  const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>,placeAndDateFormData: Record<string, any>) => ({
+      // Delivery Point
+      DeliveryPoint_10_4_value1: deliveryPoint.id,
+      DeliveryPoint_10_4_value2: deliveryPoint.name,
+
+      // Code for Delivery Point
+      CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
+      CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
+
+      // Station Serving
+      CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
+      CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
+
+      // Agreement/Tariff
+      NumberOfCustomerAgreementOrTariff_14: NumberOfCustomerAgreementOrTariff.id || "",
+
+      // Acceptance Date / From
+      AcceptanceDate_16_2: formData.acceptanceDate || "",
+      AcceptanceFrom_16_3: acceptance.id || "",
+
+      // Acceptance Point
+      CodeForAcceptancePoint_17: acceptancePoint.id,
+      CodeForAcceptancePoint_17_1: acceptancePoint.name,
+
+      // Other fields
+      WagonNo_18: null,
+      DeliveryStationName: stationServing.name || "",
+      DeliveryCountryName: formData.deliveryCountryName || "",
+      NameForAcceptancePoint_16: acceptance.id || "",
+      NameForAcceptancePoint_16_1: acceptance.name || "",
+    };
+  };
+
+
+  const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
     PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
     PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
@@ -2249,39 +2249,39 @@ ConsignorsReference_8_value2: consignorRef.name,
   });
 
   const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
-  const declarationOfValue = splitIdName(formData.declarationOfValue);
-  const interestInDelivery = splitIdName(formData.interestInDelivery);
+    const declarationOfValue = splitIdName(formData.declarationOfValue);
+    const interestInDelivery = splitIdName(formData.interestInDelivery);
 
-  // cash on delivery may be inputdropdown → handle carefully
-  const cashOnDelivery =
-    typeof formData.cashOnDelivery === "string"
-      ? splitIdName(formData.cashOnDelivery)
-      : { id: formData.cashOnDelivery, name: "" };
+    // cash on delivery may be inputdropdown → handle carefully
+    const cashOnDelivery =
+      typeof formData.cashOnDelivery === "string"
+        ? splitIdName(formData.cashOnDelivery)
+        : { id: formData.cashOnDelivery, name: "" };
 
-  return {
-    // Declaration of Value [26]
-    
-  //   DeclarationOfValue_26: declarationOfValue.id || null,
-  //  Currency_26: declarationOfValue.name || null,
+    return {
+      // Declaration of Value [26]
 
-  //   // Interest in Delivery [27]
-  //   InterestInDelivery_27: interestInDelivery.id || null,
-  //   Currency_27: interestInDelivery.name || null,
+      //   DeclarationOfValue_26: declarationOfValue.id || null,
+      //  Currency_26: declarationOfValue.name || null,
 
-  //   // Cash on Delivery [28]
-  //   CashOnDelivery_28: cashOnDelivery.id || null,
-  //   Currency_28: cashOnDelivery.name || null,
+      //   // Interest in Delivery [27]
+      //   InterestInDelivery_27: interestInDelivery.id || null,
+      //   Currency_27: interestInDelivery.name || null,
 
-  DeclarationOfValue_26: "CAD",
-Currency_26: "454.00000000",
+      //   // Cash on Delivery [28]
+      //   CashOnDelivery_28: cashOnDelivery.id || null,
+      //   Currency_28: cashOnDelivery.name || null,
 
-InterestInDelivery_27: "454.00000000",
-Currency_27: "454.00000000",
+      DeclarationOfValue_26: "CAD",
+      Currency_26: "454.00000000",
 
-CashOnDelivery_28: "CHF",
-Currency_28: "6333.00000000"
+      InterestInDelivery_27: "454.00000000",
+      Currency_27: "454.00000000",
+
+      CashOnDelivery_28: "CHF",
+      Currency_28: "6333.00000000"
+    };
   };
-};
 
 
   const mapFormToCodingBoxesPayload = (formData: Record<string, any>) => ({
@@ -2322,7 +2322,7 @@ Currency_28: "6333.00000000"
   });
 
   const mapFormToSectionBPayload = (formData: Record<string, any>) => ({
-    CodeForChargingSections_70: formData.codeForChargingSectionsB ,
+    CodeForChargingSections_70: formData.codeForChargingSectionsB,
     RouteCode_71: formData.routeCodeB || null,
     NHMCode_72: formData.nhmCodeB || null,
     Currency_73: formData.currencyB || null,
@@ -2348,332 +2348,332 @@ Currency_28: "6333.00000000"
   });
 
   const mapFormToRoutePayload = (formData: Record<string, any>) => {
-  const country = splitIdName(formData.Country);
-  const station = splitIdName(formData.Station);
-  const enterprise = splitIdName(formData.UndertakingEnterprise);
+    const country = splitIdName(formData.Country);
+    const station = splitIdName(formData.Station);
+    const enterprise = splitIdName(formData.UndertakingEnterprise);
 
-  return {
-    ConsignmentNo_62_6: formData.ConsignmentNumber || "",
+    return {
+      ConsignmentNo_62_6: formData.ConsignmentNumber || "",
 
-    // Country
-    Countryvalue1: country.id,
-    Countryvalue2: country.name,
-    CountryValueText: formData.COUNtryValue || "",
+      // Country
+      Countryvalue1: country.id,
+      Countryvalue2: country.name,
+      CountryValueText: formData.COUNtryValue || "",
 
-    // Station
-    Stationvalue1: station.id,
-    Stationvalue2: station.name,
-    StationValueText: formData.StationValue || "",
+      // Station
+      Stationvalue1: station.id,
+      Stationvalue2: station.name,
+      StationValueText: formData.StationValue || "",
 
-    // Undertaking Enterprise
-    UndertakingEnterprisesvalue1: enterprise.id,
-    UndertakingEnterprisesvalue2: enterprise.name,
-    UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
+      // Undertaking Enterprise
+      UndertakingEnterprisesvalue1: enterprise.id,
+      UndertakingEnterprisesvalue2: enterprise.name,
+      UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
+    };
   };
-};
 
-const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
-  const contractualCarrier = splitIdName(formData.ContractualCarrier);
+  const mapFormToRouteEndorsementPayload = (formData: Record<string, any>) => {
+    const contractualCarrier = splitIdName(formData.ContractualCarrier);
     const RouteValue = splitIdName(formData.Route_50);
 
 
-  return {
-    CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
-    Route_50: RouteValue?.id || "",
-    CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
-    CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
-    ContractualCarrier_58a_value1: contractualCarrier.id || null,
-    ContractualCarrier_58a_value2: contractualCarrier.name || null,
-    EnterContractualCarrier_58a: formData.EnterContractual || null,
-    SimplifiedTransitProcedureForRail_58b_value1:
-      formData.TransitProcedure ? "1" : "0",
-    SimplifiedTransitProcedureForRail_58b_value2:
-      formData.EnterTransitProcedure || null,
+    return {
+      CustomsEndorsements_99: formData.CustomsEndorsements_99 || null,
+      Route_50: RouteValue?.id || "",
+      CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
+      CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
+      ContractualCarrier_58a_value1: contractualCarrier.id || null,
+      ContractualCarrier_58a_value2: contractualCarrier.name || null,
+      EnterContractualCarrier_58a: formData.EnterContractual || null,
+      SimplifiedTransitProcedureForRail_58b_value1:
+        formData.TransitProcedure ? "1" : "0",
+      SimplifiedTransitProcedureForRail_58b_value2:
+        formData.EnterTransitProcedure || null,
+    };
   };
-};
-//for grid 
-const mapRouteCodeCDetailsPayload = (rows: any[]) => {
-  return rows
-    .filter(row => row.RouteID || row.LegID) 
-    .map(row => ({
-      RouteID: row.RouteID ?? "",
-      LegSequence: row.LegSequence ?? "",
-      LegID: row.LegID ?? "",
-      FromLocationID: row.FromLocationID ?? "",
-      FromLocationDesc: row.FromLocationDesc ?? "",
-      ToLocationID: row.ToLocationID ?? "",
-      ToLocationDesc: row.ToLocationDesc ?? "",
-      AdhocLeg: row.AdhocLeg ?? "",
-      ViaPoint: row.ViaPoint ?? "",
-      ModeFlag: row.ModeFlag, 
+  //for grid 
+  const mapRouteCodeCDetailsPayload = (rows: any[]) => {
+    return rows
+      .filter(row => row.RouteID || row.LegID)
+      .map(row => ({
+        RouteID: row.RouteID ?? "",
+        LegSequence: row.LegSequence ?? "",
+        LegID: row.LegID ?? "",
+        FromLocationID: row.FromLocationID ?? "",
+        FromLocationDesc: row.FromLocationDesc ?? "",
+        ToLocationID: row.ToLocationID ?? "",
+        ToLocationDesc: row.ToLocationDesc ?? "",
+        AdhocLeg: row.AdhocLeg ?? "",
+        ViaPoint: row.ViaPoint ?? "",
+        ModeFlag: row.ModeFlag,
+      }));
+  };
+
+  const mapOtherCarriersPayload = (rows: any[]) =>
+    rows.map(row => ({
+      Name: row.Name ?? "",
+      Section1: row.Section1 ?? "",
+      Section2: row.Section2 ?? "",
+      Status: row.Status ?? "",
+      ModeFlag: row.ModeFlag,
     }));
-};
 
-const mapOtherCarriersPayload = (rows: any[]) =>
-  rows.map(row => ({
-    Name: row.Name ?? "",
-    Section1: row.Section1 ?? "",
-    Section2: row.Section2 ?? "",
-    Status: row.Status ?? "",
-    ModeFlag: row.ModeFlag,
-  }));
+  // const mapWagonGridPayload = (rows: any[]) =>
+  //   rows.map(row => ({
+  //     WagonNo: row.WagonNo ?? "",
+  //     Short_Description_of_Goods: row.Short_Description_of_Goods ?? "",
+  //     Exceptional_Consignment_22: row.Exceptional_Consignment_22 ?? 0,
+  //     RID: row.RID ?? 0,
+  //     UTIType: row.UTIType ?? "",
+  //     NHMCode: row.NHMCode ?? "",
+  //     GrossWt: row.GrossWt ?? null,
+  //     TareWt: row.TareWt ?? null,
+  //     NetWt: row.NetWt ?? null,
+  //     TotalMass: row.TotalMass ?? null,
+  //     TotalBrut: row.TotalBrut ?? null,
+  //     TotalTare: row.TotalTare ?? null,
+  //     ModeFlag: row.ModeFlag,
+  //   }));
 
-// const mapWagonGridPayload = (rows: any[]) =>
-//   rows.map(row => ({
-//     WagonNo: row.WagonNo ?? "",
-//     Short_Description_of_Goods: row.Short_Description_of_Goods ?? "",
-//     Exceptional_Consignment_22: row.Exceptional_Consignment_22 ?? 0,
-//     RID: row.RID ?? 0,
-//     UTIType: row.UTIType ?? "",
-//     NHMCode: row.NHMCode ?? "",
-//     GrossWt: row.GrossWt ?? null,
-//     TareWt: row.TareWt ?? null,
-//     NetWt: row.NetWt ?? null,
-//     TotalMass: row.TotalMass ?? null,
-//     TotalBrut: row.TotalBrut ?? null,
-//     TotalTare: row.TotalTare ?? null,
-//     ModeFlag: row.ModeFlag,
-//   }));
+  // const mapFormToWagonPayload = (formData: Record<string, any>) => {
+  //   const train = splitIdName(formData.train);
+  //   const uti = splitIdName(formData.UTICODE);
+  //   const nhm = splitIdName(formData.NHMCode);
 
-// const mapFormToWagonPayload = (formData: Record<string, any>) => {
-//   const train = splitIdName(formData.train);
-//   const uti = splitIdName(formData.UTICODE);
-//   const nhm = splitIdName(formData.NHMCode);
+  //   return {
+  //     WagonNo: formData.wagonNumber || "",
+  //     Short_Description_of_Goods: formData.DescriptionoftheGoods || "",
 
-//   return {
-//     WagonNo: formData.wagonNumber || "",
-//     Short_Description_of_Goods: formData.DescriptionoftheGoods || "",
+  //     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
+  //     RID: formData.RID ? 1 : 0,
 
-//     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
-//     RID: formData.RID ? 1 : 0,
+  //     UTIType: uti.id || "",
+  //     NHMCode: nhm.id || "",
 
-//     UTIType: uti.id || "",
-//     NHMCode: nhm.id || "",
+  //     LengthxWidthxheight_24: formData.LengthWidthHeight?.dropdown || "",
+  //     Mark_and_Number_25: formData.MarkandNumber || "",
+  //     Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
+  //     GrossWt: buildWeightWithUom(formData.GrossWeight),
+  //     TareWt: buildWeightWithUom(formData.TareWeight),
+  //     NetWt: buildWeightWithUom(formData.NetWeight),
 
-//     LengthxWidthxheight_24: formData.LengthWidthHeight?.dropdown || "",
-//     Mark_and_Number_25: formData.MarkandNumber || "",
-//     Delivery_Note_Number_26: formData.DeliveryNoteNumber || "",
-//     GrossWt: buildWeightWithUom(formData.GrossWeight),
-//     TareWt: buildWeightWithUom(formData.TareWeight),
-//     NetWt: buildWeightWithUom(formData.NetWeight),
+  //      TotalMass: buildWeightWithUom(formData.TotalNetto),
+  //     TotalBrut: buildWeightWithUom(formData.TotalBrutto),
+  //     TotalTare: buildWeightWithUom(formData.TotalGross),
 
-//      TotalMass: buildWeightWithUom(formData.TotalNetto),
-//     TotalBrut: buildWeightWithUom(formData.TotalBrutto),
-//     TotalTare: buildWeightWithUom(formData.TotalGross),
+  //     Train_1: train.id || "",
+  //     Itinerary_5: formData.itinerary || "",
+  //     Page_9: formData.Page || "",
+  //     Date_of_Dispatch_7: formData.dataOfDispatch || "",
+  //     To_be_cleared_at_12: formData.toBeClearedAt || "",
 
-//     Train_1: train.id || "",
-//     Itinerary_5: formData.itinerary || "",
-//     Page_9: formData.Page || "",
-//     Date_of_Dispatch_7: formData.dataOfDispatch || "",
-//     To_be_cleared_at_12: formData.toBeClearedAt || "",
+  //     Fixed_Net_Weight_Train_13: formData.fixedNetTrain?.dropdown || "",
+  //     NoNumber_14: Number(formData.number) || 0,
+  //     Loading_Configuration_16: formData.LoadingConfiguration || "",
 
-//     Fixed_Net_Weight_Train_13: formData.fixedNetTrain?.dropdown || "",
-//     NoNumber_14: Number(formData.number) || 0,
-//     Loading_Configuration_16: formData.LoadingConfiguration || "",
+  //     // OPTIONAL API FIELDS (set to null if not in form)
+  //     DangerGoods: null,
+  //     MassWeight: null,
+  //     BrutWeight: null,
 
-//     // OPTIONAL API FIELDS (set to null if not in form)
-//     DangerGoods: null,
-//     MassWeight: null,
-//     BrutWeight: null,
+  //     WagonLength: null,
+  //     // ModeFlag: "Update"
+  //   };
+  // };
 
-//     WagonLength: null,
-//     // ModeFlag: "Update"
-//   };
-// };
-
-const toNumberOrNull = (v: any) => {
-  if (v === "" || v === null || v === undefined) return null;
-  const n = Number(v);
-  return isNaN(n) ? null : n;
-};
-
-const toBit = (v: any) => (v ? 1 : 0);
-
-
-// const mapFormToWagonInfoDetails = (
-//   formData: any,
-//   modeFlag: "Insert" | "Update" | "NoChange"
-// ) => {
-//   const gross = splitValueUom(
-//     formData.GrossWeight
-//       ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
-//       : null
-//   );
-
-//   const tare = splitValueUom(
-//     formData.TareWeight
-//       ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
-//       : null
-//   );
-
-//   const net = splitValueUom(
-//     formData.NetWeight
-//       ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
-//       : null
-//   );
-
-//   return {
-//     Train_1: formData.train || null,
-//     Itinerary_5: formData.itinerary || null,
-//     Date_of_Dispatch_7: formData.dataOfDispatch || null,
-//     Page_9: formData.Page || null,
-//     To_be_cleared_at_12: formData.toBeClearedAt || null,
-//     Fixed_Net_Weight_Train_13: formData.fixedNetTrain || null,
-
-//     No_Number_14: formData.number ? Number(formData.number) : 1,
-//     Loading_Configuration_16: formData.LoadingConfiguration || null,
-
-//     WagonNo_18_15: formData.wagonNumber || "",
-//     Description_of_the_goods_21_17:
-//       formData.DescriptionoftheGoods || null,
-
-//     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
-//     RID_23_28: formData.RID ? "1" : "0",
-
-//     NHM_Code_24_18: formData.NHMCode || null,
-
-//     GrossWeight_25_19: toNumberOrNull(gross.val),
-// GrossWeight_25_19_UOM: gross.uom || null,
-
-// TareWeight_25_20: toNumberOrNull(tare.val),
-// TareWeight_25_20_UOM: tare.uom || null,
-
-// NetWeight_25_21: toNumberOrNull(net.val),
-// NetWeight_25_21_UOM: net.uom || null,
-
-
-//     Total_Brutto: 0,
-//     Total_Brutto_UOM: null,
-//     Total_Netto: 0,
-//     Total_Netto_UOM: null,
-//     Total_Gross: 0,
-//     Total_Gross_UOM: null,
-
-//     ModeFlag: modeFlag,
-//   };
-// };
-
-
-const mapFormToWagonInfoDetails = (
-  formData: any,
-  modeFlag: "Insert" | "Update" | "NoChange"
-) => {
-  const gross = splitValueUom(
-    formData.GrossWeight
-      ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
-      : null
-  );
-
-  const tare = splitValueUom(
-    formData.TareWeight
-      ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
-      : null
-  );
-
-  const net = splitValueUom(
-    formData.NetWeight
-      ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
-      : null
-  );
-
-  return {
-    Train_1: formData.train || null,
-    Itinerary_5: formData.itinerary || null,
-    Date_of_Dispatch_7: formData.dataOfDispatch || null,
-    Page_9: formData.Page || null,
-    To_be_cleared_at_12: formData.toBeClearedAt || null,
-
-    Fixed_Net_Weight_Train_13: toNumberOrNull(
-      formData.fixedNetTrain?.input
-    ),
-
-    No_Number_14: toNumberOrNull(formData.number),
-
-    Loading_Configuration_16: formData.LoadingConfiguration || null,
-    WagonNo_18_15: formData.wagonNumber || null,
-    Description_of_the_goods_21_17:
-      formData.DescriptionoftheGoods || null,
-
-    Exceptional_Consignment_22: toBit(
-      formData.ExceptionalConsignment
-    ),
-    RID_23_28: toBit(formData.RID),
-
-    NHM_Code_24_18: toNumberOrNull(
-      splitIdName(formData.NHMCode).id
-    ),
-
-    Mark_and_Number_25: formData.MarkandNumber || null,
-    Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
-
-    GrossWeight_25_19: toNumberOrNull(gross?.val),
-    GrossWeight_25_19_UOM: gross?.uom || null,
-
-    TareWeight_25_20: toNumberOrNull(tare?.val),
-    TareWeight_25_20_UOM: tare?.uom || null,
-
-    NetWeight_25_21: toNumberOrNull(net?.val),
-    NetWeight_25_21_UOM: net?.uom || null,
-
-    Total_Brutto: 0,
-    Total_Netto: 0,
-    Total_Gross: 0,
-
-    ModeFlag: modeFlag,
+  const toNumberOrNull = (v: any) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return isNaN(n) ? null : n;
   };
-};
+
+  const toBit = (v: any) => (v ? 1 : 0);
 
 
-const mapWagonGridPayload = (rows: any[]) =>
-  rows.map(row => {
-    const mass = splitValueUom(row.TotalMass);
-    const brut = splitValueUom(row.TotalBrut);
-    const tare = splitValueUom(row.TotalTare);
+  // const mapFormToWagonInfoDetails = (
+  //   formData: any,
+  //   modeFlag: "Insert" | "Update" | "NoChange"
+  // ) => {
+  //   const gross = splitValueUom(
+  //     formData.GrossWeight
+  //       ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
+  //       : null
+  //   );
+
+  //   const tare = splitValueUom(
+  //     formData.TareWeight
+  //       ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
+  //       : null
+  //   );
+
+  //   const net = splitValueUom(
+  //     formData.NetWeight
+  //       ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
+  //       : null
+  //   );
+
+  //   return {
+  //     Train_1: formData.train || null,
+  //     Itinerary_5: formData.itinerary || null,
+  //     Date_of_Dispatch_7: formData.dataOfDispatch || null,
+  //     Page_9: formData.Page || null,
+  //     To_be_cleared_at_12: formData.toBeClearedAt || null,
+  //     Fixed_Net_Weight_Train_13: formData.fixedNetTrain || null,
+
+  //     No_Number_14: formData.number ? Number(formData.number) : 1,
+  //     Loading_Configuration_16: formData.LoadingConfiguration || null,
+
+  //     WagonNo_18_15: formData.wagonNumber || "",
+  //     Description_of_the_goods_21_17:
+  //       formData.DescriptionoftheGoods || null,
+
+  //     Exceptional_Consignment_22: formData.ExceptionalConsignment ? 1 : 0,
+  //     RID_23_28: formData.RID ? "1" : "0",
+
+  //     NHM_Code_24_18: formData.NHMCode || null,
+
+  //     GrossWeight_25_19: toNumberOrNull(gross.val),
+  // GrossWeight_25_19_UOM: gross.uom || null,
+
+  // TareWeight_25_20: toNumberOrNull(tare.val),
+  // TareWeight_25_20_UOM: tare.uom || null,
+
+  // NetWeight_25_21: toNumberOrNull(net.val),
+  // NetWeight_25_21_UOM: net.uom || null,
+
+
+  //     Total_Brutto: 0,
+  //     Total_Brutto_UOM: null,
+  //     Total_Netto: 0,
+  //     Total_Netto_UOM: null,
+  //     Total_Gross: 0,
+  //     Total_Gross_UOM: null,
+
+  //     ModeFlag: modeFlag,
+  //   };
+  // };
+
+
+  const mapFormToWagonInfoDetails = (
+    formData: any,
+    modeFlag: "Insert" | "Update" | "NoChange"
+  ) => {
+    const gross = splitValueUom(
+      formData.GrossWeight
+        ? `${formData.GrossWeight.input} ${formData.GrossWeight.dropdown}`
+        : null
+    );
+
+    const tare = splitValueUom(
+      formData.TareWeight
+        ? `${formData.TareWeight.input} ${formData.TareWeight.dropdown}`
+        : null
+    );
+
+    const net = splitValueUom(
+      formData.NetWeight
+        ? `${formData.NetWeight.input} ${formData.NetWeight.dropdown}`
+        : null
+    );
 
     return {
-      WagonNo: row.WagonNo || "",
-      RID: row.RID ? "1" : "0",
+      Train_1: formData.train || null,
+      Itinerary_5: formData.itinerary || null,
+      Date_of_Dispatch_7: formData.dataOfDispatch || null,
+      Page_9: formData.Page || null,
+      To_be_cleared_at_12: formData.toBeClearedAt || null,
 
-      Mass_Weight: row.MassWeight || null,
-      Mass_Weight_UOM: null,
+      Fixed_Net_Weight_Train_13: toNumberOrNull(
+        formData.fixedNetTrain?.input
+      ),
 
-      Total_Mass: Number(mass.val) || 0,
-      Total_Mass_UOM: mass.uom,
+      No_Number_14: toNumberOrNull(formData.number),
 
-      Total_Brutt: Number(brut.val) || 0,
-      Total_Brutt_UOM: brut.uom,
+      Loading_Configuration_16: formData.LoadingConfiguration || null,
+      WagonNo_18_15: formData.wagonNumber || null,
+      Description_of_the_goods_21_17:
+        formData.DescriptionoftheGoods || null,
 
-      Total_Tare: Number(tare.val) || 0,
-      Total_Tare_UOM: tare.uom,
+      Exceptional_Consignment_22: toBit(
+        formData.ExceptionalConsignment
+      ),
+      RID_23_28: toBit(formData.RID),
 
-      Wagon_Length: row.WagonLength || null,
-      Wagon_Length_UOM: null,
+      NHM_Code_24_18: toNumberOrNull(
+        splitIdName(formData.NHMCode).id
+      ),
 
-      Short_Description_of_Goods: row.Short_Description_of_Goods || null,
+      Mark_and_Number_25: formData.MarkandNumber || null,
+      Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-      ModeFlag: row.ModeFlag || "NoChange",
+      GrossWeight_25_19: toNumberOrNull(gross?.val),
+      GrossWeight_25_19_UOM: gross?.uom || null,
+
+      TareWeight_25_20: toNumberOrNull(tare?.val),
+      TareWeight_25_20_UOM: tare?.uom || null,
+
+      NetWeight_25_21: toNumberOrNull(net?.val),
+      NetWeight_25_21_UOM: net?.uom || null,
+
+      Total_Brutto: 0,
+      Total_Netto: 0,
+      Total_Gross: 0,
+
+      ModeFlag: modeFlag,
     };
-  });
-
-const initialSnapshotRef = useRef<any>(null);
-
-/** Normalize values to avoid false Update */
-const normalize = (obj: any) =>
-  JSON.parse(
-    JSON.stringify(obj, (_k, v) =>
-      v === "" || v === undefined ? null : v
-    )
-  );
+  };
 
 
+  const mapWagonGridPayload = (rows: any[]) =>
+    rows.map(row => {
+      const mass = splitValueUom(row.TotalMass);
+      const brut = splitValueUom(row.TotalBrut);
+      const tare = splitValueUom(row.TotalTare);
+
+      return {
+        WagonNo: row.WagonNo || "",
+        RID: row.RID ? "1" : "0",
+
+        Mass_Weight: row.MassWeight || null,
+        Mass_Weight_UOM: null,
+
+        Total_Mass: Number(mass.val) || 0,
+        Total_Mass_UOM: mass.uom,
+
+        Total_Brutt: Number(brut.val) || 0,
+        Total_Brutt_UOM: brut.uom,
+
+        Total_Tare: Number(tare.val) || 0,
+        Total_Tare_UOM: tare.uom,
+
+        Wagon_Length: row.WagonLength || null,
+        Wagon_Length_UOM: null,
+
+        Short_Description_of_Goods: row.Short_Description_of_Goods || null,
+
+        ModeFlag: row.ModeFlag || "NoChange",
+      };
+    });
+
+  const initialSnapshotRef = useRef<any>(null);
+
+  /** Normalize values to avoid false Update */
+  const normalize = (obj: any) =>
+    JSON.parse(
+      JSON.stringify(obj, (_k, v) =>
+        v === "" || v === undefined ? null : v
+      )
+    );
 
 
 
-  
-const [isFormInitialized, setIsFormInitialized] = useState(false);
+
+
+
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
   // Effect to set form values when API response is received
   useEffect(() => {
-    if (apiResponse && !isFormInitialized ) {
+    if (apiResponse && !isFormInitialized) {
       if (headerTemplateRef.current && apiResponse.Header) {
         // Map API response to headerTemplate form fields
         headerTemplateRef.current.setFormValues({
@@ -2816,782 +2816,782 @@ const [isFormInitialized, setIsFormInitialized] = useState(false);
       }
 
 
-      
-if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
-  console.log("SETTING ROUTE VALUES NOW");
-  const apiRoute = apiResponse.ConsignmentDetails;
 
-  const country =
-    apiRoute.Countryvalue1 && apiRoute.Countryvalue2
-      ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
-      : apiRoute.Countryvalue1 || "";
+      if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+        console.log("SETTING ROUTE VALUES NOW");
+        const apiRoute = apiResponse.ConsignmentDetails;
 
-  const station =
-    apiRoute.Stationvalue1 && apiRoute.Stationvalue2
-      ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
-      : apiRoute.Stationvalue1 || "";
+        const country =
+          apiRoute.Countryvalue1 && apiRoute.Countryvalue2
+            ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
+            : apiRoute.Countryvalue1 || "";
 
-  const enterprise =
-    apiRoute.UndertakingEnterprisesvalue1 &&
-    apiRoute.UndertakingEnterprisesvalue2
-      ? `${apiRoute.UndertakingEnterprisesvalue1} || ${apiRoute.UndertakingEnterprisesvalue2}`
-      : apiRoute.UndertakingEnterprisesvalue1 || "";
+        const station =
+          apiRoute.Stationvalue1 && apiRoute.Stationvalue2
+            ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
+            : apiRoute.Stationvalue1 || "";
 
-  RouteDetailsRef.current.setFormValues({
-    ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
-    Country: country,
-    COuntryValue: apiRoute.Countryvalue2 || "",
-    Station: station,
-    StationValue: apiRoute.Stationvalue2 || "",
-    UndertakingEnterprise: enterprise,
-    UndertakingEnterpriseValue: apiRoute.UndertakingEnterprisesvalue2 || "",
-  });
-}
-     if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
-  console.log("SETTING ROUTE VALUES NOW");
-  const apiRoute = apiResponse.RouteDetails;
+        const enterprise =
+          apiRoute.UndertakingEnterprisesvalue1 &&
+            apiRoute.UndertakingEnterprisesvalue2
+            ? `${apiRoute.UndertakingEnterprisesvalue1} || ${apiRoute.UndertakingEnterprisesvalue2}`
+            : apiRoute.UndertakingEnterprisesvalue1 || "";
 
- 
-
-  const CustomsProcedure =
-    apiRoute.CustomsProcedure_51_27_value1 && apiRoute.CustomsProcedure_51_27_value2
-      ? `${apiRoute.CustomsProcedure_51_27_value1} || ${apiRoute.CustomsProcedure_51_27_value2}`
-      : apiRoute.CustomsProcedure_51_27_value1 || "";
-
-  const ContractualCarrier =
-    apiRoute.ContractualCarrier_58a_value1 &&
-    apiRoute.ContractualCarrier_58a_value2
-      ? `${apiRoute.ContractualCarrier_58a_value1} || ${apiRoute.ContractualCarrier_58a_value2}`
-      : apiRoute.ContractualCarrier_58a_value1 || "";
-
-  RouteEndorsementDetailsRef.current.setFormValues({
-    CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
-    Route_50: apiRoute.Route_50 || "",
-    CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
-    ContractualCarrier: ContractualCarrier,
-    EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
-    TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1 ,
-    EnterTransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
-  });
-}
+        RouteDetailsRef.current.setFormValues({
+          ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
+          Country: country,
+          COuntryValue: apiRoute.Countryvalue2 || "",
+          Station: station,
+          StationValue: apiRoute.Stationvalue2 || "",
+          UndertakingEnterprise: enterprise,
+          UndertakingEnterpriseValue: apiRoute.UndertakingEnterprisesvalue2 || "",
+        });
+      }
+      if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
+        console.log("SETTING ROUTE VALUES NOW");
+        const apiRoute = apiResponse.RouteDetails;
 
 
 
-if (apiResponse?.RouteDetails?.OtherCarriers_57) {
+        const CustomsProcedure =
+          apiRoute.CustomsProcedure_51_27_value1 && apiRoute.CustomsProcedure_51_27_value2
+            ? `${apiRoute.CustomsProcedure_51_27_value1} || ${apiRoute.CustomsProcedure_51_27_value2}`
+            : apiRoute.CustomsProcedure_51_27_value1 || "";
 
-  setOtherCarriers(
-    apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
-      Section1: c.Section1 || "",
-      Section2: c.Section2 || "",
-      Status: c.Status || "",  
-    }))
-  );
-}
-if (apiResponse?.RouteDetails?.Route) {
+        const ContractualCarrier =
+          apiRoute.ContractualCarrier_58a_value1 &&
+            apiRoute.ContractualCarrier_58a_value2
+            ? `${apiRoute.ContractualCarrier_58a_value1} || ${apiRoute.ContractualCarrier_58a_value2}`
+            : apiRoute.ContractualCarrier_58a_value1 || "";
 
-  
-   setRouteCodeCDetails(
-    apiResponse.RouteDetails.Route.map((c: any) => ({
-      RouteID: c.RouteID || "",
-      LegSequence: c.LegSequence || "",
-      LegID: c.LegID || "",  
-      FromLocationID: c.FromLocationID || "",
-      FromLocationDesc: c.FromLocationDesc || "",
-      ToLocationID: c.ToLocationID || "", 
-       ToLocationDesc: c.ToLocationDesc || "",
-      AdhocLeg: c.AdhocLeg || "",  
-      ViaPoint: c.ViaPoint || "",
-
-    }))
-  );
-}
+        RouteEndorsementDetailsRef.current.setFormValues({
+          CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
+          Route_50: apiRoute.Route_50 || "",
+          CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
+          ContractualCarrier: ContractualCarrier,
+          EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
+          TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1,
+          EnterTransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
+        });
+      }
 
 
 
+      if (apiResponse?.RouteDetails?.OtherCarriers_57) {
 
-// if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
-//   console.log("SETTING WAGON VALUES NOW" , apiResponse?.WagonInfodetails);
+        setOtherCarriers(
+          apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
+            Section1: c.Section1 || "",
+            Section2: c.Section2 || "",
+            Status: c.Status || "",
+          }))
+        );
+      }
+      if (apiResponse?.RouteDetails?.Route) {
 
-//   const wagon = apiResponse.WagonInfodetails; // first wagon
 
-//   WagonDetailsRef.current.setFormValues({
-//     // --- BASIC DETAILS ---
-//     train: wagon.Train_1 || "",
-//     itinerary: wagon.Itinerary_5 || "",
-//     dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
-//     Page: wagon.Page_9 || "",
-//     toBeClearedAt: wagon.To_be_cleared_at_12 || "",
+        setRouteCodeCDetails(
+          apiResponse.RouteDetails.Route.map((c: any) => ({
+            RouteID: c.RouteID || "",
+            LegSequence: c.LegSequence || "",
+            LegID: c.LegID || "",
+            FromLocationID: c.FromLocationID || "",
+            FromLocationDesc: c.FromLocationDesc || "",
+            ToLocationID: c.ToLocationID || "",
+            ToLocationDesc: c.ToLocationDesc || "",
+            AdhocLeg: c.AdhocLeg || "",
+            ViaPoint: c.ViaPoint || "",
 
-//     // --- DROPDOWN ---
-//     fixedNetTrain: {
-//       dropdown: wagon.Fixed_Net_Weight_Train_13 || "",
-//     },
-
-//     number: wagon.NoNumber_14 ?? "",
-//     LoadingConfiguration: wagon.Loading_Configuration_16 || "",
-
-//     // --- WAGON INFO ---
-//     wagonNumber: wagon.WagonNo || "",
-//     DescriptionoftheGoods: wagon.Short_Description_of_Goods || "",
-
-//     // --- CHECKBOXES ---
-//     ExceptionalConsignment:
-//       wagon.Exceptional_Consignment_22 === 1 ||
-//       wagon.Exceptional_Consignment_22 === "Yes",
-
-//     RID:
-//       wagon.RID === 1 ||
-//       wagon.RID === "Yes",
-
-//     // --- LAZY SELECTS ---
-//     UTICODE: wagon.UTIType || "",
-//     NHMCode: wagon.NHMCode
-//       ? String(wagon.NHMCode)
-//       : "",
-
-//     // --- DIMENSIONS ---
-//     LengthWidthHeight: {
-//       dropdown: wagon.LengthxWidthxheight_24 || "",
-//     },
-
-//     MarkandNumber: wagon.Mark_and_Number_25 || "",
-//     DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
-
-//     // --- WEIGHTS ---
-//     GrossWeight: wagon.Gross_Weight_25_19 ?? "",
-//     TareWeight: wagon.Tare_Weight_25_20 ?? "",
-//     NetWeight: wagon.Net_Weight_25_21 ?? "",
-
-//     // --- TOTALS ---
-//     TotalBrutto: {
-//       dropdown: wagon.TotalBrut ?? "",
-//     },
-//     TotalNetto: {
-//       dropdown: wagon.TotalMass ?? "",
-//     },
-//     TotalGross: {
-//       dropdown: wagon.TotalTare ?? "",
-//     },
-//   });
-// }
-
-if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
-  const wagon = apiResponse.WagonInfodetails;
-
-  WagonDetailsRef.current.setFormValues({
-    train: wagon.Train_1 ?? "",
-    itinerary: wagon.Itinerary_5 ?? "",
-    dataOfDispatch: wagon.Date_of_Dispatch_7 ?? "",
-    Page: wagon.Page_9 ?? "",
-    toBeClearedAt: wagon.To_be_cleared_at_12 ?? "",
-
-    fixedNetTrain: {
-      input: wagon.Fixed_Net_Weight_Train_13 ?? "",
-    },
-
-    number: wagon.No_Number_14 ?? 1,
-    LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
-
-    wagonNumber: wagon.WagonNo_18_15 ?? "",
-    DescriptionoftheGoods: wagon.Description_of_the_goods_21_17 ?? "",
-
-    ExceptionalConsignment: wagon.Exceptional_Consignment_22 === "1",
-    RID: wagon.RID_23_28 === "1",
-    MarkandNumber: wagon.Mark_and_Number_25 ?? "",
-    DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
-    UTICODE: wagon.UTI_Code_23 ?? "",
-
-    NHMCode: wagon.NHM_Code_24_18
-      ? String(wagon.NHM_Code_24_18)
-      : "",
-
-    GrossWeight: wagon.GrossWeight_25_19
-      ? {
-          input: String(wagon.GrossWeight_25_19),
-          dropdown: wagon.GrossWeight_25_19_UOM,
-        }
-      : null,
-
-    TareWeight: wagon.TareWeight_25_20
-      ? {
-          input: String(wagon.TareWeight_25_20),
-          dropdown: wagon.TareWeight_25_20_UOM,
-        }
-      : null,
-
-    NetWeight: wagon.NetWeight_25_21
-      ? {
-          input: String(wagon.NetWeight_25_21),
-          dropdown: wagon.NetWeight_25_21_UOM,
-        }
-      : null,
-  });
-}
-
-if (apiResponse?.WagonLineDetails) {
-  setWagonGritDetails(
-    apiResponse.WagonLineDetails.map((row: any) => ({
-      ...row,
-      // ensure ModeFlag exists for grid editing
-      ModeFlag: row.ModeFlag || "NoChange",
-    }))
-  );
-}
+          }))
+        );
+      }
 
 
 
 
-   if (apiResponse && !initialSnapshotRef.current) {
-    initialSnapshotRef.current = {
-      header: headerTemplateRef.current?.getFormValues(),
-      general: generalDetailsRef.current?.getFormValues(),
-      payment: paymentInstructionRef.current?.getFormValues(),
-      placeAndDate: placeAndDateRef.current?.getFormValues(),
-      declarations: consignorDeclarationsRef.current?.getFormValues(),
-      valueDelivery: valueDeliveryCashRef.current?.getFormValues(),
-      codingBoxes: codingBoxesRef.current?.getFormValues(),
-      examination: examinationDetailsRef.current?.getFormValues(),
-      sectionA: sectionARef.current?.getFormValues(),
-      sectionB: sectionBRef.current?.getFormValues(),
-      sectionC: sectionCRef.current?.getFormValues(),
-      route: RouteDetailsRef.current?.getFormValues(),
-      routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
-      wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
-    };
+      // if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+      //   console.log("SETTING WAGON VALUES NOW" , apiResponse?.WagonInfodetails);
+
+      //   const wagon = apiResponse.WagonInfodetails; // first wagon
+
+      //   WagonDetailsRef.current.setFormValues({
+      //     // --- BASIC DETAILS ---
+      //     train: wagon.Train_1 || "",
+      //     itinerary: wagon.Itinerary_5 || "",
+      //     dataOfDispatch: wagon.Date_of_Dispatch_7 || "",
+      //     Page: wagon.Page_9 || "",
+      //     toBeClearedAt: wagon.To_be_cleared_at_12 || "",
+
+      //     // --- DROPDOWN ---
+      //     fixedNetTrain: {
+      //       dropdown: wagon.Fixed_Net_Weight_Train_13 || "",
+      //     },
+
+      //     number: wagon.NoNumber_14 ?? "",
+      //     LoadingConfiguration: wagon.Loading_Configuration_16 || "",
+
+      //     // --- WAGON INFO ---
+      //     wagonNumber: wagon.WagonNo || "",
+      //     DescriptionoftheGoods: wagon.Short_Description_of_Goods || "",
+
+      //     // --- CHECKBOXES ---
+      //     ExceptionalConsignment:
+      //       wagon.Exceptional_Consignment_22 === 1 ||
+      //       wagon.Exceptional_Consignment_22 === "Yes",
+
+      //     RID:
+      //       wagon.RID === 1 ||
+      //       wagon.RID === "Yes",
+
+      //     // --- LAZY SELECTS ---
+      //     UTICODE: wagon.UTIType || "",
+      //     NHMCode: wagon.NHMCode
+      //       ? String(wagon.NHMCode)
+      //       : "",
+
+      //     // --- DIMENSIONS ---
+      //     LengthWidthHeight: {
+      //       dropdown: wagon.LengthxWidthxheight_24 || "",
+      //     },
+
+      //     MarkandNumber: wagon.Mark_and_Number_25 || "",
+      //     DeliveryNoteNumber: wagon.Delivery_Note_Number_26 || "",
+
+      //     // --- WEIGHTS ---
+      //     GrossWeight: wagon.Gross_Weight_25_19 ?? "",
+      //     TareWeight: wagon.Tare_Weight_25_20 ?? "",
+      //     NetWeight: wagon.Net_Weight_25_21 ?? "",
+
+      //     // --- TOTALS ---
+      //     TotalBrutto: {
+      //       dropdown: wagon.TotalBrut ?? "",
+      //     },
+      //     TotalNetto: {
+      //       dropdown: wagon.TotalMass ?? "",
+      //     },
+      //     TotalGross: {
+      //       dropdown: wagon.TotalTare ?? "",
+      //     },
+      //   });
+      // }
+
+      if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+        const wagon = apiResponse.WagonInfodetails;
+
+        WagonDetailsRef.current.setFormValues({
+          train: wagon.Train_1 ?? "",
+          itinerary: wagon.Itinerary_5 ?? "",
+          dataOfDispatch: wagon.Date_of_Dispatch_7 ?? "",
+          Page: wagon.Page_9 ?? "",
+          toBeClearedAt: wagon.To_be_cleared_at_12 ?? "",
+
+          fixedNetTrain: {
+            input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+          },
+
+          number: wagon.No_Number_14 ?? 1,
+          LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
+
+          wagonNumber: wagon.WagonNo_18_15 ?? "",
+          DescriptionoftheGoods: wagon.Description_of_the_goods_21_17 ?? "",
+
+          ExceptionalConsignment: wagon.Exceptional_Consignment_22 === "1",
+          RID: wagon.RID_23_28 === "1",
+          MarkandNumber: wagon.Mark_and_Number_25 ?? "",
+          DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
+          UTICODE: wagon.UTI_Code_23 ?? "",
+
+          NHMCode: wagon.NHM_Code_24_18
+            ? String(wagon.NHM_Code_24_18)
+            : "",
+
+          GrossWeight: wagon.GrossWeight_25_19
+            ? {
+              input: String(wagon.GrossWeight_25_19),
+              dropdown: wagon.GrossWeight_25_19_UOM,
+            }
+            : null,
+
+          TareWeight: wagon.TareWeight_25_20
+            ? {
+              input: String(wagon.TareWeight_25_20),
+              dropdown: wagon.TareWeight_25_20_UOM,
+            }
+            : null,
+
+          NetWeight: wagon.NetWeight_25_21
+            ? {
+              input: String(wagon.NetWeight_25_21),
+              dropdown: wagon.NetWeight_25_21_UOM,
+            }
+            : null,
+        });
+      }
+
+      if (apiResponse?.WagonLineDetails) {
+        setWagonGritDetails(
+          apiResponse.WagonLineDetails.map((row: any) => ({
+            ...row,
+            // ensure ModeFlag exists for grid editing
+            ModeFlag: row.ModeFlag || "NoChange",
+          }))
+        );
+      }
+
+
+
+
+      if (apiResponse && !initialSnapshotRef.current) {
+        initialSnapshotRef.current = {
+          header: headerTemplateRef.current?.getFormValues(),
+          general: generalDetailsRef.current?.getFormValues(),
+          payment: paymentInstructionRef.current?.getFormValues(),
+          placeAndDate: placeAndDateRef.current?.getFormValues(),
+          declarations: consignorDeclarationsRef.current?.getFormValues(),
+          valueDelivery: valueDeliveryCashRef.current?.getFormValues(),
+          codingBoxes: codingBoxesRef.current?.getFormValues(),
+          examination: examinationDetailsRef.current?.getFormValues(),
+          sectionA: sectionARef.current?.getFormValues(),
+          sectionB: sectionBRef.current?.getFormValues(),
+          sectionC: sectionCRef.current?.getFormValues(),
+          route: RouteDetailsRef.current?.getFormValues(),
+          routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
+          wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
+        };
         console.log("SNAPSHOT CAPTURED", initialSnapshotRef.current);
-  }
+      }
 
-      
+
     }
 
-  
-  }, [apiResponse ]);
+
+  }, [apiResponse]);
 
   // Handle save template
-//   const handleSaveTemplate = () => {
-//     console.log('Save template clicked');
-//     if (!initialApiResponse) {
-//       console.error("Initial API response not loaded yet.");
-//       return;
-//     }
-
-//     const currentHeaderValues = headerTemplateRef.current?.getFormValues();
-//     const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
-//     const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
-//     const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
-//     const currentConsignorDeclarationsValues = consignorDeclarationsRef.current?.getFormValues();
-//     const currentValueDeliveryCashValues = valueDeliveryCashRef.current?.getFormValues();
-//     const currentCodingBoxesValues = codingBoxesRef.current?.getFormValues();
-//     const currentExaminationDetailsValues = examinationDetailsRef.current?.getFormValues();
-//     const currentSectionAValues = sectionARef.current?.getFormValues();
-//     const currentSectionBValues = sectionBRef.current?.getFormValues();
-//     const currentSectionCValues = sectionCRef.current?.getFormValues();
-//     const currectRouteDetailsValues = RouteDetailsRef.current?.getFormValues();
-
-//     const currentWagonDetailsValues = WagonDetailsRef.current?.getFormValues();
-//     const currectRouteEndorsementDetailsValues = RouteEndorsementDetailsRef.current?.getFormValues();
-
-
-//     // Transform current form values to match API payload structure
-//     const newWagonDetailsValues = mapFormToWagonPayload(currentWagonDetailsValues);
-//     const newRouteEndorsementValues = mapFormToRouteEndorsementPayload(currectRouteEndorsementDetailsValues); 
-//     const NewrouteDetailsValues = mapFormToRoutePayload(currectRouteDetailsValues);
-//     const newHeader = mapFormToHeaderPayload(currentHeaderValues);
-//     const newGeneralDetails = mapFormToGeneralDetailsPayload(currentGeneralDetailsValues);
-//     const newPaymentInstruction = mapFormToPaymentInstructionPayload(
-//       currentPaymentInstructionValues,
-//       currentPlaceAndDateValues
-//     );
-//     const newConsignorDeclarations = mapFormToConsignorDeclarationsPayload(currentConsignorDeclarationsValues);
-//     const newValueDeliveryCash = mapFormToValueDeliveryCashPayload(currentValueDeliveryCashValues);
-//     const newCodingBoxes = mapFormToCodingBoxesPayload(currentCodingBoxesValues);
-//     const newExaminationDetails = mapFormToExaminationDetailsPayload(currentExaminationDetailsValues);
-//     const newSectionA = mapFormToSectionAPayload(currentSectionAValues);
-//     const newSectionB = mapFormToSectionBPayload(currentSectionBValues);
-//     const newSectionC = mapFormToSectionCPayload(currentSectionCValues);
-
-//    console.log("currectRouteDetailsValues",newWagonDetailsValues)
-
-//     // Determine ModeFlag for each section
-//     // const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
-//     const stripModeFlag = (obj) => {
-//   const newObj = {...obj};
-//   delete newObj.ModeFlag;
-//   return newObj;
-// };
-
-//    const headerModeFlag =
-//   deepEqual(
-//     newHeader,
-//     stripModeFlag(initialApiResponse.Header)
-//   )
-//   ? "NoChange"
-//   : "Update";
-
-//   const normalizeGeneralDetails = (data: any) => ({
-//   Consignor_1_value1: data.Consignor_1_value1 ?? null,
-//   ConsignorName_value2: data.ConsignorName_value2 ?? null,
-
-//   CustomerCodeForConsignor_2: data.CustomerCodeForConsignor_2 ?? null,
-//   CustomerCodeForConsignor_value2: data.CustomerCodeForConsignor_value2 ?? null,
-
-//   CustomerCodeForPayerOfPrePaidCharges_3:
-//     data.CustomerCodeForPayerOfPrePaidCharges_3 ?? null,
-//   CustomerCodeForPayerOfPrePaidCharges_value3:
-//     data.CustomerCodeForPayerOfPrePaidCharges_value3 ?? null,
-
-//   Consignee_4_value1: data.Consignee_4_value1 ?? null,
-//   ConsigneeName_4_value2: data.ConsigneeName_4_value2 ?? null,
-
-//   CustomerCodeForConsignee_5: data.CustomerCodeForConsignee_5 ?? null,
-//   CustomerCodeForConsignee_value5: data.CustomerCodeForConsignee_value5 ?? null,
-
-//   CustomerCodeForPayerOfNonPrePaidCharges_6:
-//     data.CustomerCodeForPayerOfNonPrePaidCharges_6 ?? null,
-//   CustomerCodeForPayerOfNonPrePaidCharges_value6:
-//     data.CustomerCodeForPayerOfNonPrePaidCharges_value6 ?? null,
-
-//   ConsignorsReference_8_value1: data.ConsignorsReference_8_value1 ?? null,
-//   ConsignorsReference_8_value2: data.ConsignorsReference_8_value2 ?? null,
-
-//   DeliveryPoint_10_4_value1: data.DeliveryPoint_10_4_value1 ?? null,
-//   DeliveryPoint_10_4_value2: data.DeliveryPoint_10_4_value2 ?? null,
-
-//   CodeForDeliveryPoint_11_value1: data.CodeForDeliveryPoint_11_value1 ?? null,
-//   CodeForDeliveryPoint_11_value2: data.CodeForDeliveryPoint_11_value2 ?? null,
-
-//   CodeForStationServingDeliveryPoint_12_value1:
-//     data.CodeForStationServingDeliveryPoint_12_value1 ?? null,
-//   CodeForStationServingDeliveryPoint_12_value2:
-//     data.CodeForStationServingDeliveryPoint_12_value2 ?? null,
-
-//   DeliveryStationName: data.DeliveryStationName ?? null,
-//   DeliveryCountryName: data.DeliveryCountryName ?? null,
-
-//   NumberOfCustomerAgreementOrTariff_14:
-//     data.NumberOfCustomerAgreementOrTariff_14 ?? null,
-
-//   NameForAcceptancePoint_16: data.NameForAcceptancePoint_16 ?? null,
-//   NameForAcceptancePoint_16_1: data.NameForAcceptancePoint_16_1 ?? null,
-
-//   CodeForAcceptancePoint_17: data.CodeForAcceptancePoint_17 ?? null,
-//   CodeForAcceptancePoint_17_1: data.CodeForAcceptancePoint_17_1 ?? null,
-
-//   WagonNo_18: data.WagonNo_18 ?? null,
-
-//   AcceptanceDate_16_2:
-//     data.AcceptanceDate_16_2
-//       ? data.AcceptanceDate_16_2.split("T")[0]
-//       : null,
-
-//   AcceptanceFrom_16_3: data.AcceptanceFrom_16_3 ?? null,
-// });
-
-
-// const initialNormalized = normalizeGeneralDetails(
-//   initialApiResponse.General.Details
-// );
-
-// const currentNormalized = normalizeGeneralDetails(newGeneralDetails);
-
-// const generalDetailsModeFlag = deepEqual(
-//   initialNormalized,
-//   currentNormalized
-// )
-//   ? "NoChange"
-//   : "Update";
-
-//     // const generalDetailsModeFlag = deepEqual(newGeneralDetails, stripModeFlag(initialApiResponse.General.Details)) ? "NoChange" : "Update";
-//     const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
-//     const consignorDeclarationsModeFlag = deepEqual(newConsignorDeclarations, initialApiResponse.Declarations) ? "NoChange" : "Update";
-//     const valueDeliveryCashModeFlag = deepEqual(newValueDeliveryCash, initialApiResponse.Declarations) ? "NoChange" : "Update";
-//     const codingBoxesModeFlag = deepEqual(newCodingBoxes, initialApiResponse.Declarations) ? "NoChange" : "Update";
-//     const examinationDetailsModeFlag = deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination) ? "NoChange" : "Update";
-//     const sectionAModeFlag = deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA) ? "NoChange" : "Update";
-//     const sectionBModeFlag = deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB) ? "NoChange" : "Update";
-//     const sectionCModeFlag = deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC) ? "NoChange" : "Update";
-    
-
-
-//      // Debugging logs
-//     console.log("--- Debugging deepEqual ---");
-//     console.log("Initial API Response:", initialApiResponse);
-//     console.log("apiResponse.Header" , apiResponse.Header)
-//      console.log("currentHeaderValues:", currentHeaderValues);
-//     console.log("newHeader:", newHeader);
-//     console.log("initialApiResponse.Header:", initialApiResponse.Header);
-//     console.log("deepEqual(newHeader, initialApiResponse.Header):", deepEqual(newHeader, initialApiResponse.Header));
-
-//     // console.log("newGeneralDetails:", newGeneralDetails);
-//     // console.log("initialApiResponse.General.Details:", initialApiResponse.General.Details);
-//     // console.log("deepEqual(newGeneralDetails, initialApiResponse.General.Details):", deepEqual(newGeneralDetails, initialApiResponse.General.Details));
-
-//     // console.log("newPaymentInstruction:", newPaymentInstruction);
-//     // console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
-//     // console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
-
-//     // console.log("newConsignorDeclarations:", newConsignorDeclarations);
-//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-//     // console.log("deepEqual(newConsignorDeclarations, initialApiResponse.Declarations):", deepEqual(newConsignorDeclarations, initialApiResponse.Declarations));
-
-//     // console.log("newValueDeliveryCash:", newValueDeliveryCash);
-//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-//     // console.log("deepEqual(newValueDeliveryCash, initialApiResponse.Declarations):", deepEqual(newValueDeliveryCash, initialApiResponse.Declarations));
-
-//     // console.log("newCodingBoxes:", newCodingBoxes);
-//     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
-//     // console.log("deepEqual(newCodingBoxes, initialApiResponse.Declarations):", deepEqual(newCodingBoxes, initialApiResponse.Declarations));
-
-//     // console.log("newExaminationDetails:", newExaminationDetails);
-//     // console.log("initialApiResponse.Declarations?.Examination:", initialApiResponse.Declarations?.Examination);
-//     // console.log("deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination):", deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination));
-
-//     // console.log("newSectionA:", newSectionA);
-//     // console.log("initialApiResponse.Declarations?.SectionA:", initialApiResponse.Declarations?.SectionA);
-//     // console.log("deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA):", deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA));
-
-//     // console.log("newSectionB:", newSectionB);
-//     // console.log("initialApiResponse.Declarations?.SectionB:", initialApiResponse.Declarations?.SectionB);
-//     // console.log("deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB):", deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB));
-
-//     // console.log("newSectionC:", newSectionC);
-//     // console.log("initialApiResponse.Declarations?.SectionC:", initialApiResponse.Declarations?.SectionC);
-//     // console.log("deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC):", deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC));
-//     // console.log("---------------------------");
-//     const finalPayload = {
-//       Header: {
-//         ...newHeader,
-//         ModeFlag: headerModeFlag,
-//       },
-//       General: {
-//         Details: {
-//           ...newGeneralDetails,
-//           ModeFlag: generalDetailsModeFlag,
-//         },
-//         PaymentInstruction: {
-//           ...newPaymentInstruction,
-//           ModeFlag: paymentInstructionModeFlag,
-//         },
-//         Declarations: { // Adding Declarations section
-//           ...newConsignorDeclarations,
-//           ...newValueDeliveryCash,
-//           ...newCodingBoxes,
-//           ...newExaminationDetails,
-//           SectionA: newSectionA,
-//           SectionB: newSectionB,
-//           SectionC: newSectionC,
-//           ModeFlag: (
-//             consignorDeclarationsModeFlag === "Update" ||
-//             valueDeliveryCashModeFlag === "Update" ||
-//             codingBoxesModeFlag === "Update" ||
-//             examinationDetailsModeFlag === "Update" ||
-//             sectionAModeFlag === "Update" ||
-//             sectionBModeFlag === "Update" ||
-//             sectionCModeFlag === "Update"
-//           ) ? "Update" : "NoChange",
-//         },
-//         RouteDetails:{
-//          ...newRouteEndorsementValues,
-//           ModeFlag: "Update",
-//         },
-//         ConsignmentDetails:{
-//            ...NewrouteDetailsValues,
-//           ModeFlag: "Update",
-//         },
-//         wagonDetails:{
-//           ...newWagonDetailsValues,
-//           ModeFlag: "Update",
-//         }
-//       },
-//     };
-
-//     console.log("Final Payload to API:", JSON.stringify(finalPayload, null, 2));
-//     // Here you would call your API service, e.g.:
-//     // quickOrderService.saveTemplate(finalPayload);
-
-//   };
-
-const splitValueUom = (value?: string | null) => {
-  if (!value) return { val: null, uom: null };
-
-  const parts = value.split(" ");
-  return {
-    val: parts[0] ?? null,
-    uom: parts[1] ?? null,
-  };
-};
-const sanitizedWagonLineDetails = wagonGritDetails.map(row => ({
-  ...row,
-
-  // --- NUMERIC FIELDS ---
-  No_of_Axle: toNumberOrNull(row.No_of_Axle),
-  NHM: toNumberOrNull(row.NHM),
-  Mass_Weight: toNumberOrNull(row.Mass_Weight),
-  Tare_Weight: toNumberOrNull(row.Tare_Weight),
-  Brut_Weight: toNumberOrNull(row.Brut_Weight),
-
-  Total_Mass: toNumberOrNull(row.Total_Mass),
-  Total_Brutt: toNumberOrNull(row.Total_Brutt),
-  Total_Tare: toNumberOrNull(row.Total_Tare),
-
-  Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
-  Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
-  Container_load_weight: toNumberOrNull(row.Container_load_weight),
-
-  Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
-  Gross_Weight: toNumberOrNull(row.Gross_Weight),
-  Wagon_Length: toNumberOrNull(row.Wagon_Length),
-
-  // --- BIT / BOOLEAN FIELDS ---
-  Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
-  UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
-  UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
-  UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
-  UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
-
-  RID: toBit(row.RID),
-
-  ModeFlag: row.ModeFlag || "Update",
-}));
-
-
-const handleSaveTemplate = async () => {
-  if (!initialSnapshotRef.current) return;
-
-  const headerFV = headerTemplateRef.current.getFormValues();
-  const generalFV = generalDetailsRef.current.getFormValues();
-  const paymentFV = paymentInstructionRef.current.getFormValues();
-  const placeDateFV = placeAndDateRef.current.getFormValues();
-  const consignorFV = consignorDeclarationsRef.current.getFormValues();
-  const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
-  const codingFV = codingBoxesRef.current.getFormValues();
-  const examFV = examinationDetailsRef.current.getFormValues();
-  const secAFV = sectionARef.current.getFormValues();
-  const secBFV = sectionBRef.current.getFormValues();
-  const secCFV = sectionCRef.current.getFormValues();
-  const routeFV = RouteDetailsRef.current.getFormValues();
-  const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
-  const wagonFormData = WagonDetailsRef.current.getFormValues();
-
-const wagonInfoModeFlag = resolveModeFlag(
-  wagonFormData,
-  initialSnapshotRef.current?.WagonInfodetails,
-  workOrderNo
-);
-
-const sanitizedWagonLines = wagonGritDetails.map(row => ({
-  ...row,
-  No_of_Axle: toNumberOrNull(row.No_of_Axle),
-  NHM: toNumberOrNull(row.NHM),
-  Mass_Weight: toNumberOrNull(row.Mass_Weight),
-  Tare_Weight: toNumberOrNull(row.Tare_Weight),
-  Brut_Weight: toNumberOrNull(row.Brut_Weight),
-  Total_Mass: toNumberOrNull(row.Total_Mass),
-  Total_Brutt: toNumberOrNull(row.Total_Brutt),
-  Total_Tare: toNumberOrNull(row.Total_Tare),
-  RID: toBit(row.RID),
-}));
-
-  const payload = {
-    Header: {
-      ...mapFormToHeaderPayload(headerFV),
-      ModeFlag: resolveModeFlag(
-        headerFV,
-        initialSnapshotRef.current.header,
-        workOrderNo
-      ),
-    },
-
-    General: {
-      Details: {
-        ...mapFormToGeneralDetailsPayload(generalFV),
-        ModeFlag: resolveModeFlag(
-          generalFV,
-          initialSnapshotRef.current.general,
-          workOrderNo
-        ),
-      },
-
-      PaymentInstruction: {
-        ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
-        ModeFlag: resolveModeFlag(
-          paymentFV,
-          initialSnapshotRef.current.payment,
-          workOrderNo
-        ),
-      },
-    },
-
-    Declarations: {
-      ...mapFormToConsignorDeclarationsPayload(consignorFV),
-      ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
-      ...mapFormToCodingBoxesPayload(codingFV),
-      ...mapFormToExaminationDetailsPayload(examFV),
-       ModeFlag: resolveModeFlag(
-    {
-      ...consignorFV,
-      ...valueDeliveryFV,
-      ...codingFV,
-      ...examFV,
-    },
-    initialSnapshotRef.current.declarations,
-    workOrderNo
-  ),
-
-      SectionA: {
-        ...mapFormToSectionAPayload(secAFV),
-        ModeFlag: resolveModeFlag(
-          secAFV,
-          initialSnapshotRef.current.sectionA,
-          workOrderNo
-        ),
-      },
-
-      SectionB: {
-        ...mapFormToSectionBPayload(secBFV),
-        ModeFlag: resolveModeFlag(
-          secBFV,
-          initialSnapshotRef.current.sectionB,
-          workOrderNo
-        ),
-      },
-
-      SectionC: {
-        ...mapFormToSectionCPayload(secCFV),
-        ModeFlag: resolveModeFlag(
-          secCFV,
-          initialSnapshotRef.current.sectionC,
-          workOrderNo
-        ),
-      },
-    },
-
-    RouteDetails: {
-      ...mapFormToRouteEndorsementPayload(routeEndFV),
-      ModeFlag: resolveModeFlag(
-        routeEndFV,
-        initialSnapshotRef.current.routeEndorsement,
-        workOrderNo
-      ),
-      //loading grid data
-    Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
-     OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
-    },
-
-    ConsignmentDetails: {
-      ...mapFormToRoutePayload(routeFV),
-      ModeFlag: resolveModeFlag(
-        routeFV,
-        initialSnapshotRef.current.route,
-        workOrderNo
-      ),
-    },
-
-  //   WagonDetails: [
-  //     {
-  //       ...mapFormToWagonPayload(wagonFV),
-  //       ModeFlag: resolveModeFlag(
-  //         wagonFV,
-  //         initialSnapshotRef.current.wagon,
-  //         workOrderNo
-  //       ),
-  //     },
-
-  //   ],
+  //   const handleSaveTemplate = () => {
+  //     console.log('Save template clicked');
+  //     if (!initialApiResponse) {
+  //       console.error("Initial API response not loaded yet.");
+  //       return;
+  //     }
+
+  //     const currentHeaderValues = headerTemplateRef.current?.getFormValues();
+  //     const currentGeneralDetailsValues = generalDetailsRef.current?.getFormValues();
+  //     const currentPaymentInstructionValues = paymentInstructionRef.current?.getFormValues();
+  //     const currentPlaceAndDateValues = placeAndDateRef.current?.getFormValues();
+  //     const currentConsignorDeclarationsValues = consignorDeclarationsRef.current?.getFormValues();
+  //     const currentValueDeliveryCashValues = valueDeliveryCashRef.current?.getFormValues();
+  //     const currentCodingBoxesValues = codingBoxesRef.current?.getFormValues();
+  //     const currentExaminationDetailsValues = examinationDetailsRef.current?.getFormValues();
+  //     const currentSectionAValues = sectionARef.current?.getFormValues();
+  //     const currentSectionBValues = sectionBRef.current?.getFormValues();
+  //     const currentSectionCValues = sectionCRef.current?.getFormValues();
+  //     const currectRouteDetailsValues = RouteDetailsRef.current?.getFormValues();
+
+  //     const currentWagonDetailsValues = WagonDetailsRef.current?.getFormValues();
+  //     const currectRouteEndorsementDetailsValues = RouteEndorsementDetailsRef.current?.getFormValues();
+
+
+  //     // Transform current form values to match API payload structure
+  //     const newWagonDetailsValues = mapFormToWagonPayload(currentWagonDetailsValues);
+  //     const newRouteEndorsementValues = mapFormToRouteEndorsementPayload(currectRouteEndorsementDetailsValues); 
+  //     const NewrouteDetailsValues = mapFormToRoutePayload(currectRouteDetailsValues);
+  //     const newHeader = mapFormToHeaderPayload(currentHeaderValues);
+  //     const newGeneralDetails = mapFormToGeneralDetailsPayload(currentGeneralDetailsValues);
+  //     const newPaymentInstruction = mapFormToPaymentInstructionPayload(
+  //       currentPaymentInstructionValues,
+  //       currentPlaceAndDateValues
+  //     );
+  //     const newConsignorDeclarations = mapFormToConsignorDeclarationsPayload(currentConsignorDeclarationsValues);
+  //     const newValueDeliveryCash = mapFormToValueDeliveryCashPayload(currentValueDeliveryCashValues);
+  //     const newCodingBoxes = mapFormToCodingBoxesPayload(currentCodingBoxesValues);
+  //     const newExaminationDetails = mapFormToExaminationDetailsPayload(currentExaminationDetailsValues);
+  //     const newSectionA = mapFormToSectionAPayload(currentSectionAValues);
+  //     const newSectionB = mapFormToSectionBPayload(currentSectionBValues);
+  //     const newSectionC = mapFormToSectionCPayload(currentSectionCValues);
+
+  //    console.log("currectRouteDetailsValues",newWagonDetailsValues)
+
+  //     // Determine ModeFlag for each section
+  //     // const headerModeFlag = deepEqual(newHeader, initialApiResponse.Header) ? "NoChange" : "Update";
+  //     const stripModeFlag = (obj) => {
+  //   const newObj = {...obj};
+  //   delete newObj.ModeFlag;
+  //   return newObj;
   // };
 
-//   WagonInfodetails: [
-//   {
-//     ...mapFormToWagonPayload(wagonFV),
-//     ModeFlag: resolveModeFlag(
-//       wagonFV,
-//       initialSnapshotRef.current.wagon,
-//       workOrderNo
-//     ),
-//   },
-//   ...mapWagonGridPayload(wagonGritDetails),
-// ],
+  //    const headerModeFlag =
+  //   deepEqual(
+  //     newHeader,
+  //     stripModeFlag(initialApiResponse.Header)
+  //   )
+  //   ? "NoChange"
+  //   : "Update";
 
-// WagonInfodetails: mapFormToWagonInfoDetails(
-//     wagonFormData,
-//     wagonInfoModeFlag
-//   ),
+  //   const normalizeGeneralDetails = (data: any) => ({
+  //   Consignor_1_value1: data.Consignor_1_value1 ?? null,
+  //   ConsignorName_value2: data.ConsignorName_value2 ?? null,
 
-//  WagonLineDetails: wagonGritDetails,
+  //   CustomerCodeForConsignor_2: data.CustomerCodeForConsignor_2 ?? null,
+  //   CustomerCodeForConsignor_value2: data.CustomerCodeForConsignor_value2 ?? null,
 
-WagonInfodetails: mapFormToWagonInfoDetails(
-    wagonFormData,
-    wagonInfoModeFlag
-  ),
+  //   CustomerCodeForPayerOfPrePaidCharges_3:
+  //     data.CustomerCodeForPayerOfPrePaidCharges_3 ?? null,
+  //   CustomerCodeForPayerOfPrePaidCharges_value3:
+  //     data.CustomerCodeForPayerOfPrePaidCharges_value3 ?? null,
 
-WagonLineDetails: sanitizedWagonLineDetails,
+  //   Consignee_4_value1: data.Consignee_4_value1 ?? null,
+  //   ConsigneeName_4_value2: data.ConsigneeName_4_value2 ?? null,
 
+  //   CustomerCodeForConsignee_5: data.CustomerCodeForConsignee_5 ?? null,
+  //   CustomerCodeForConsignee_value5: data.CustomerCodeForConsignee_value5 ?? null,
+
+  //   CustomerCodeForPayerOfNonPrePaidCharges_6:
+  //     data.CustomerCodeForPayerOfNonPrePaidCharges_6 ?? null,
+  //   CustomerCodeForPayerOfNonPrePaidCharges_value6:
+  //     data.CustomerCodeForPayerOfNonPrePaidCharges_value6 ?? null,
+
+  //   ConsignorsReference_8_value1: data.ConsignorsReference_8_value1 ?? null,
+  //   ConsignorsReference_8_value2: data.ConsignorsReference_8_value2 ?? null,
+
+  //   DeliveryPoint_10_4_value1: data.DeliveryPoint_10_4_value1 ?? null,
+  //   DeliveryPoint_10_4_value2: data.DeliveryPoint_10_4_value2 ?? null,
+
+  //   CodeForDeliveryPoint_11_value1: data.CodeForDeliveryPoint_11_value1 ?? null,
+  //   CodeForDeliveryPoint_11_value2: data.CodeForDeliveryPoint_11_value2 ?? null,
+
+  //   CodeForStationServingDeliveryPoint_12_value1:
+  //     data.CodeForStationServingDeliveryPoint_12_value1 ?? null,
+  //   CodeForStationServingDeliveryPoint_12_value2:
+  //     data.CodeForStationServingDeliveryPoint_12_value2 ?? null,
+
+  //   DeliveryStationName: data.DeliveryStationName ?? null,
+  //   DeliveryCountryName: data.DeliveryCountryName ?? null,
+
+  //   NumberOfCustomerAgreementOrTariff_14:
+  //     data.NumberOfCustomerAgreementOrTariff_14 ?? null,
+
+  //   NameForAcceptancePoint_16: data.NameForAcceptancePoint_16 ?? null,
+  //   NameForAcceptancePoint_16_1: data.NameForAcceptancePoint_16_1 ?? null,
+
+  //   CodeForAcceptancePoint_17: data.CodeForAcceptancePoint_17 ?? null,
+  //   CodeForAcceptancePoint_17_1: data.CodeForAcceptancePoint_17_1 ?? null,
+
+  //   WagonNo_18: data.WagonNo_18 ?? null,
+
+  //   AcceptanceDate_16_2:
+  //     data.AcceptanceDate_16_2
+  //       ? data.AcceptanceDate_16_2.split("T")[0]
+  //       : null,
+
+  //   AcceptanceFrom_16_3: data.AcceptanceFrom_16_3 ?? null,
+  // });
+
+
+  // const initialNormalized = normalizeGeneralDetails(
+  //   initialApiResponse.General.Details
+  // );
+
+  // const currentNormalized = normalizeGeneralDetails(newGeneralDetails);
+
+  // const generalDetailsModeFlag = deepEqual(
+  //   initialNormalized,
+  //   currentNormalized
+  // )
+  //   ? "NoChange"
+  //   : "Update";
+
+  //     // const generalDetailsModeFlag = deepEqual(newGeneralDetails, stripModeFlag(initialApiResponse.General.Details)) ? "NoChange" : "Update";
+  //     const paymentInstructionModeFlag = deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction) ? "NoChange" : "Update";
+  //     const consignorDeclarationsModeFlag = deepEqual(newConsignorDeclarations, initialApiResponse.Declarations) ? "NoChange" : "Update";
+  //     const valueDeliveryCashModeFlag = deepEqual(newValueDeliveryCash, initialApiResponse.Declarations) ? "NoChange" : "Update";
+  //     const codingBoxesModeFlag = deepEqual(newCodingBoxes, initialApiResponse.Declarations) ? "NoChange" : "Update";
+  //     const examinationDetailsModeFlag = deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination) ? "NoChange" : "Update";
+  //     const sectionAModeFlag = deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA) ? "NoChange" : "Update";
+  //     const sectionBModeFlag = deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB) ? "NoChange" : "Update";
+  //     const sectionCModeFlag = deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC) ? "NoChange" : "Update";
+
+
+
+  //      // Debugging logs
+  //     console.log("--- Debugging deepEqual ---");
+  //     console.log("Initial API Response:", initialApiResponse);
+  //     console.log("apiResponse.Header" , apiResponse.Header)
+  //      console.log("currentHeaderValues:", currentHeaderValues);
+  //     console.log("newHeader:", newHeader);
+  //     console.log("initialApiResponse.Header:", initialApiResponse.Header);
+  //     console.log("deepEqual(newHeader, initialApiResponse.Header):", deepEqual(newHeader, initialApiResponse.Header));
+
+  //     // console.log("newGeneralDetails:", newGeneralDetails);
+  //     // console.log("initialApiResponse.General.Details:", initialApiResponse.General.Details);
+  //     // console.log("deepEqual(newGeneralDetails, initialApiResponse.General.Details):", deepEqual(newGeneralDetails, initialApiResponse.General.Details));
+
+  //     // console.log("newPaymentInstruction:", newPaymentInstruction);
+  //     // console.log("initialApiResponse.General.PaymentInstruction:", initialApiResponse.General.PaymentInstruction);
+  //     // console.log("deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction):", deepEqual(newPaymentInstruction, initialApiResponse.General.PaymentInstruction));
+
+  //     // console.log("newConsignorDeclarations:", newConsignorDeclarations);
+  //     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+  //     // console.log("deepEqual(newConsignorDeclarations, initialApiResponse.Declarations):", deepEqual(newConsignorDeclarations, initialApiResponse.Declarations));
+
+  //     // console.log("newValueDeliveryCash:", newValueDeliveryCash);
+  //     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+  //     // console.log("deepEqual(newValueDeliveryCash, initialApiResponse.Declarations):", deepEqual(newValueDeliveryCash, initialApiResponse.Declarations));
+
+  //     // console.log("newCodingBoxes:", newCodingBoxes);
+  //     // console.log("initialApiResponse.Declarations:", initialApiResponse.Declarations);
+  //     // console.log("deepEqual(newCodingBoxes, initialApiResponse.Declarations):", deepEqual(newCodingBoxes, initialApiResponse.Declarations));
+
+  //     // console.log("newExaminationDetails:", newExaminationDetails);
+  //     // console.log("initialApiResponse.Declarations?.Examination:", initialApiResponse.Declarations?.Examination);
+  //     // console.log("deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination):", deepEqual(newExaminationDetails, initialApiResponse.Declarations?.Examination));
+
+  //     // console.log("newSectionA:", newSectionA);
+  //     // console.log("initialApiResponse.Declarations?.SectionA:", initialApiResponse.Declarations?.SectionA);
+  //     // console.log("deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA):", deepEqual(newSectionA, initialApiResponse.Declarations?.SectionA));
+
+  //     // console.log("newSectionB:", newSectionB);
+  //     // console.log("initialApiResponse.Declarations?.SectionB:", initialApiResponse.Declarations?.SectionB);
+  //     // console.log("deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB):", deepEqual(newSectionB, initialApiResponse.Declarations?.SectionB));
+
+  //     // console.log("newSectionC:", newSectionC);
+  //     // console.log("initialApiResponse.Declarations?.SectionC:", initialApiResponse.Declarations?.SectionC);
+  //     // console.log("deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC):", deepEqual(newSectionC, initialApiResponse.Declarations?.SectionC));
+  //     // console.log("---------------------------");
+  //     const finalPayload = {
+  //       Header: {
+  //         ...newHeader,
+  //         ModeFlag: headerModeFlag,
+  //       },
+  //       General: {
+  //         Details: {
+  //           ...newGeneralDetails,
+  //           ModeFlag: generalDetailsModeFlag,
+  //         },
+  //         PaymentInstruction: {
+  //           ...newPaymentInstruction,
+  //           ModeFlag: paymentInstructionModeFlag,
+  //         },
+  //         Declarations: { // Adding Declarations section
+  //           ...newConsignorDeclarations,
+  //           ...newValueDeliveryCash,
+  //           ...newCodingBoxes,
+  //           ...newExaminationDetails,
+  //           SectionA: newSectionA,
+  //           SectionB: newSectionB,
+  //           SectionC: newSectionC,
+  //           ModeFlag: (
+  //             consignorDeclarationsModeFlag === "Update" ||
+  //             valueDeliveryCashModeFlag === "Update" ||
+  //             codingBoxesModeFlag === "Update" ||
+  //             examinationDetailsModeFlag === "Update" ||
+  //             sectionAModeFlag === "Update" ||
+  //             sectionBModeFlag === "Update" ||
+  //             sectionCModeFlag === "Update"
+  //           ) ? "Update" : "NoChange",
+  //         },
+  //         RouteDetails:{
+  //          ...newRouteEndorsementValues,
+  //           ModeFlag: "Update",
+  //         },
+  //         ConsignmentDetails:{
+  //            ...NewrouteDetailsValues,
+  //           ModeFlag: "Update",
+  //         },
+  //         wagonDetails:{
+  //           ...newWagonDetailsValues,
+  //           ModeFlag: "Update",
+  //         }
+  //       },
+  //     };
+
+  //     console.log("Final Payload to API:", JSON.stringify(finalPayload, null, 2));
+  //     // Here you would call your API service, e.g.:
+  //     // quickOrderService.saveTemplate(finalPayload);
+
+  //   };
+
+  const splitValueUom = (value?: string | null) => {
+    if (!value) return { val: null, uom: null };
+
+    const parts = value.split(" ");
+    return {
+      val: parts[0] ?? null,
+      uom: parts[1] ?? null,
+    };
   };
+  const sanitizedWagonLineDetails = wagonGritDetails.map(row => ({
+    ...row,
 
-  console.log("✅ FINAL PAYLOAD", JSON.stringify(payload , null  , 2));
-  console.log("✅ FINAL PAYLOAD", workOrderNo);
-  try {
-    console.log(" Sending payload to save template...");
-    const response = await CimCuvService.saveCimCuvTemplate(payload);
-    console.log("✅ SAVE TEMPLATE RESPONSE", response);
-    const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-    // const data = parsedResponse;
-    const resourceStatus = (response as any)?.data?.IsSuccess;
-    console.log("parsedResponse ====", parsedResponse);
-    if (resourceStatus) {
-      console.log("Template saved successfully");
-      toast({
-        title: "✅ Template Saved Successfully",
-        description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
-        variant: "default",
-      });
-      
-      if (!workOrderNo) {
-        setSearchParams({ id: parsedResponse?.Header?.TemplateID });
-        fetchTemplateData(parsedResponse?.Header?.TemplateID);
+    // --- NUMERIC FIELDS ---
+    No_of_Axle: toNumberOrNull(row.No_of_Axle),
+    NHM: toNumberOrNull(row.NHM),
+    Mass_Weight: toNumberOrNull(row.Mass_Weight),
+    Tare_Weight: toNumberOrNull(row.Tare_Weight),
+    Brut_Weight: toNumberOrNull(row.Brut_Weight),
+
+    Total_Mass: toNumberOrNull(row.Total_Mass),
+    Total_Brutt: toNumberOrNull(row.Total_Brutt),
+    Total_Tare: toNumberOrNull(row.Total_Tare),
+
+    Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+    Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+    Container_load_weight: toNumberOrNull(row.Container_load_weight),
+
+    Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+    Gross_Weight: toNumberOrNull(row.Gross_Weight),
+    Wagon_Length: toNumberOrNull(row.Wagon_Length),
+
+    // --- BIT / BOOLEAN FIELDS ---
+    Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
+    UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+    UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+    UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+    UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+
+    RID: toBit(row.RID),
+
+    ModeFlag: row.ModeFlag || "Update",
+  }));
+
+
+  const handleSaveTemplate = async () => {
+    if (!initialSnapshotRef.current) return;
+
+    const headerFV = headerTemplateRef.current.getFormValues();
+    const generalFV = generalDetailsRef.current.getFormValues();
+    const paymentFV = paymentInstructionRef.current.getFormValues();
+    const placeDateFV = placeAndDateRef.current.getFormValues();
+    const consignorFV = consignorDeclarationsRef.current.getFormValues();
+    const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+    const codingFV = codingBoxesRef.current.getFormValues();
+    const examFV = examinationDetailsRef.current.getFormValues();
+    const secAFV = sectionARef.current.getFormValues();
+    const secBFV = sectionBRef.current.getFormValues();
+    const secCFV = sectionCRef.current.getFormValues();
+    const routeFV = RouteDetailsRef.current.getFormValues();
+    const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+    const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+    const wagonInfoModeFlag = resolveModeFlag(
+      wagonFormData,
+      initialSnapshotRef.current?.WagonInfodetails,
+      workOrderNo
+    );
+
+    const sanitizedWagonLines = wagonGritDetails.map(row => ({
+      ...row,
+      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      NHM: toNumberOrNull(row.NHM),
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      RID: toBit(row.RID),
+    }));
+
+    const payload = {
+      Header: {
+        ...mapFormToHeaderPayload(headerFV),
+        ModeFlag: resolveModeFlag(
+          headerFV,
+          initialSnapshotRef.current.header,
+          workOrderNo
+        ),
+      },
+
+      General: {
+        Details: {
+          ...mapFormToGeneralDetailsPayload(generalFV),
+          ModeFlag: resolveModeFlag(
+            generalFV,
+            initialSnapshotRef.current.general,
+            workOrderNo
+          ),
+        },
+
+        PaymentInstruction: {
+          ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+          ModeFlag: resolveModeFlag(
+            paymentFV,
+            initialSnapshotRef.current.payment,
+            workOrderNo
+          ),
+        },
+      },
+
+      Declarations: {
+        ...mapFormToConsignorDeclarationsPayload(consignorFV),
+        ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+        ...mapFormToCodingBoxesPayload(codingFV),
+        ...mapFormToExaminationDetailsPayload(examFV),
+        ModeFlag: resolveModeFlag(
+          {
+            ...consignorFV,
+            ...valueDeliveryFV,
+            ...codingFV,
+            ...examFV,
+          },
+          initialSnapshotRef.current.declarations,
+          workOrderNo
+        ),
+
+        SectionA: {
+          ...mapFormToSectionAPayload(secAFV),
+          ModeFlag: resolveModeFlag(
+            secAFV,
+            initialSnapshotRef.current.sectionA,
+            workOrderNo
+          ),
+        },
+
+        SectionB: {
+          ...mapFormToSectionBPayload(secBFV),
+          ModeFlag: resolveModeFlag(
+            secBFV,
+            initialSnapshotRef.current.sectionB,
+            workOrderNo
+          ),
+        },
+
+        SectionC: {
+          ...mapFormToSectionCPayload(secCFV),
+          ModeFlag: resolveModeFlag(
+            secCFV,
+            initialSnapshotRef.current.sectionC,
+            workOrderNo
+          ),
+        },
+      },
+
+      RouteDetails: {
+        ...mapFormToRouteEndorsementPayload(routeEndFV),
+        ModeFlag: resolveModeFlag(
+          routeEndFV,
+          initialSnapshotRef.current.routeEndorsement,
+          workOrderNo
+        ),
+        //loading grid data
+        Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+        OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+      },
+
+      ConsignmentDetails: {
+        ...mapFormToRoutePayload(routeFV),
+        ModeFlag: resolveModeFlag(
+          routeFV,
+          initialSnapshotRef.current.route,
+          workOrderNo
+        ),
+      },
+
+      //   WagonDetails: [
+      //     {
+      //       ...mapFormToWagonPayload(wagonFV),
+      //       ModeFlag: resolveModeFlag(
+      //         wagonFV,
+      //         initialSnapshotRef.current.wagon,
+      //         workOrderNo
+      //       ),
+      //     },
+
+      //   ],
+      // };
+
+      //   WagonInfodetails: [
+      //   {
+      //     ...mapFormToWagonPayload(wagonFV),
+      //     ModeFlag: resolveModeFlag(
+      //       wagonFV,
+      //       initialSnapshotRef.current.wagon,
+      //       workOrderNo
+      //     ),
+      //   },
+      //   ...mapWagonGridPayload(wagonGritDetails),
+      // ],
+
+      // WagonInfodetails: mapFormToWagonInfoDetails(
+      //     wagonFormData,
+      //     wagonInfoModeFlag
+      //   ),
+
+      //  WagonLineDetails: wagonGritDetails,
+
+      WagonInfodetails: mapFormToWagonInfoDetails(
+        wagonFormData,
+        wagonInfoModeFlag
+      ),
+
+      WagonLineDetails: sanitizedWagonLineDetails,
+
+    };
+
+    console.log("✅ FINAL PAYLOAD", JSON.stringify(payload, null, 2));
+    console.log("✅ FINAL PAYLOAD", workOrderNo);
+    try {
+      console.log(" Sending payload to save template...");
+      const response = await CimCuvService.saveCimCuvTemplate(payload);
+      console.log("✅ SAVE TEMPLATE RESPONSE", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Template saved successfully");
+        toast({
+          title: "✅ Template Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+
+        if (!workOrderNo) {
+          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          fetchTemplateData(parsedResponse?.Header?.TemplateID);
+        } else {
+          fetchTemplateData(workOrderNo);
+        }
       } else {
-        fetchTemplateData(workOrderNo);
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Save Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+
       }
-    } else {
-      console.log("error as any ===", (response as any)?.data?.Message);
+
+    } catch (error) {
+      console.error("❌ SAVE TEMPLATE FAILED", error);
       toast({
         title: "⚠️ Save Failed",
-        description: (response as any)?.data?.Message || "Failed to save changes.",
+        description: "An error occurred while saving the template. Please try again.",
         variant: "destructive",
       });
-
     }
+  };
 
-  } catch (error) {
-    console.error("❌ SAVE TEMPLATE FAILED", error);
-    toast({
-      title: "⚠️ Save Failed",
-      description: "An error occurred while saving the template. Please try again.",
-      variant: "destructive",
-    });
-  }
-};
+  const handleConsignorConsigneeSave = async (data: any) => {
+    console.log("Consignor/Consignee data saved:", data);
+    console.log("Consignor/Consignee data saved:", apiResponse);
+    console.log("Consignor/Consignee data saved:", initialApiResponse);
+    setConsignorConsigneeData(data);
 
-const handleConsignorConsigneeSave = async (data: any) => {
-  console.log("Consignor/Consignee data saved:", data);
-  console.log("Consignor/Consignee data saved:", apiResponse);
-  console.log("Consignor/Consignee data saved:", initialApiResponse);
-  setConsignorConsigneeData(data);
-
-  // Determine ModeFlag for Consignor and Consignee
-  console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
-  const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
-  console.log("entryModeFlag ===", entryModeFlag);
-  // Construct Header Payload
-  const headerFV = headerTemplateRef.current?.getFormValues();
-  const headerPayload = {
+    // Determine ModeFlag for Consignor and Consignee
+    console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
+    const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
+    console.log("entryModeFlag ===", entryModeFlag);
+    // Construct Header Payload
+    const headerFV = headerTemplateRef.current?.getFormValues();
+    const headerPayload = {
       TemplateID: apiResponse?.Header?.TemplateID || headerFV?.templateId || null,
       Description: apiResponse?.Header?.Description || headerFV?.templateDescription || null,
       DocType: apiResponse?.Header?.DocType || headerFV?.templateType || null,
       ModeFlag: "NoChange" // As per requirement, header ModeFlag is NoChange here
-  };
+    };
 
-  const consigneePayload = {
+    const consigneePayload = {
       ConsigneeID: data.consigneeId || null,
       ConsigneeDescription: data.consigneeName || null,
       AddressLine1: data.addressLine1 || null,
@@ -3608,9 +3608,9 @@ const handleConsignorConsigneeSave = async (data: any) => {
       PhoneNo: data.phoneNumber || null,
       EmailID: data.emailId || null,
       ModeFlag: entryModeFlag
-  };
+    };
 
-  const consignorPayload = {
+    const consignorPayload = {
       ConsignorID: data.consignorId || null,
       ConsignorDescription: data.consignorName || null,
       AddressLine1: data.addressLine1 || null,
@@ -3627,376 +3627,372 @@ const handleConsignorConsigneeSave = async (data: any) => {
       PhoneNo: data.phoneNumber || null,
       EmailID: data.emailId || null,
       ModeFlag: entryModeFlag
-  };
+    };
 
-  const finalPayload = {
+    const finalPayload = {
       Header: headerPayload,
       Consignee: consigneePayload,
       Consignor: consignorPayload
-  };
+    };
 
-  console.log("✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD", JSON.stringify(finalPayload, null, 2));
+    console.log("✅ FINAL CONSIGNOR/CONSIGNEE PAYLOAD", JSON.stringify(finalPayload, null, 2));
 
-  try {
+    try {
       const response = await CimCuvService.saveConsignorConsignee(finalPayload);
       console.log("Consignor/Consignee save response:", response);
       // Optionally, handle success or display a message
-  } catch (error) {
+    } catch (error) {
       console.error("Error saving Consignor/Consignee data:", error);
       // Optionally, handle error or display an error message
-  }
-};
+    }
+  };
 
-const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
-  console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
-  try {
+  const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
+    console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+    try {
       const payload = {
-          CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
-          ReasonCode: reasonCode,
-          ReasonCodeDescription: reasonDescription,
+        CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
+        ReasonCode: reasonCode,
+        ReasonCodeDescription: reasonDescription,
       };
       console.log("payload ===", payload);
       const response = await CimCuvService.cancelCimCuvTemplate(payload);
       console.log("Cancel API response:", response);
       // Optionally, handle success or display a message
-  } catch (error) {
+    } catch (error) {
       console.error("Error canceling template/report:", error);
       // Optionally, handle error or display an error message
-  }
-  setIsCancelModalOpen(false);
-};
+    }
+    setIsCancelModalOpen(false);
+  };
 
   return (
     <>
       <div className="main-content-h bg-gray-100">
-          <div className="mt-6">
-            <div className=''>
-              <DynamicPanel
-                ref={headerTemplateRef} // New Panel
-                panelId="header-template"
-                panelOrder={0} // Render before general details
-                panelTitle="Template"
-                panelConfig={headerTemplateConfig} // New Config
-                formName="headerTemplateForm"
-                initialData={headerTemplateData}
-                // onDataChange={handleHeaderTemplateDataChange}
-                panelWidth="full"
-                collapsible={true} // Added collapsible prop
-                showHeader={false} // Hide header to match screenshot
-              />
-            </div>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
-              <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
-                <TabsTrigger
-                    value="general"
-                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                    activeTab === 'general'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                    General
-                </TabsTrigger>
-                <TabsTrigger
-                    value="declarations"
-                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                    activeTab === 'declarations'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                    Declarations
-                </TabsTrigger>
-                <TabsTrigger
-                    value="route"
-                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                    activeTab === 'route'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                    Route
-                </TabsTrigger>
-                <TabsTrigger
-                    value="wagon-info"
-                    className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${
-                    activeTab === 'wagon-info'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                    Wagon Info
-                </TabsTrigger>
-                </TabsList>
+        <div className="mt-6">
+          <div className=''>
+            <DynamicPanel
+              ref={headerTemplateRef} // New Panel
+              panelId="header-template"
+              panelOrder={0} // Render before general details
+              panelTitle="Template"
+              panelConfig={headerTemplateConfig} // New Config
+              formName="headerTemplateForm"
+              initialData={headerTemplateData}
+              // onDataChange={handleHeaderTemplateDataChange}
+              panelWidth="full"
+              collapsible={true} // Added collapsible prop
+              showHeader={false} // Hide header to match screenshot
+            />
+          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
+            <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
+              <TabsTrigger
+                value="general"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${activeTab === 'general'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'bg-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                General
+              </TabsTrigger>
+              <TabsTrigger
+                value="declarations"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${activeTab === 'declarations'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'bg-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Declarations
+              </TabsTrigger>
+              <TabsTrigger
+                value="route"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${activeTab === 'route'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'bg-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Route
+              </TabsTrigger>
+              <TabsTrigger
+                value="wagon-info"
+                className={`px-4 py-2 text-sm font-medium transition-all rounded-sm ${activeTab === 'wagon-info'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'bg-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Wagon Info
+              </TabsTrigger>
+            </TabsList>
 
-                <TabsContent value="general" className="mt-6" forceMount>
+            <TabsContent value="general" className="mt-6" forceMount>
+              <div className=''>
+                <div className="">
                   <div className=''>
-                    <div className="">
-                      <div className=''>
-                        {/* 32 */}
-                        <DynamicPanel
-                          ref={generalDetailsRef}
-                          panelId="general-details"
-                          panelOrder={1}
-                          panelTitle="General Details"
-                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                          panelConfig={generalDetailsConfig}
-                          formName="generalDetailsForm"
-                          //  initialData={undefined} 
-                          initialData={generalDetailsData}
-                          // onDataChange={handleGeneralDataChange}
-                          panelWidth="full"
-                          collapsible={true} // Added collapsible prop
-                        />
-                        <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{marginTop: '-25px'}}>
-                          <Button
-                            onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
-                            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
-                          >
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Add Consignor/Consignee
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* New Payment Instruction Panel */}
-                      <DynamicPanel
-                        ref={paymentInstructionRef}
-                        panelId="payment-instruction"
-                        panelOrder={2}
-                        panelTitle="Payment Instruction [20]"
-                        panelConfig={paymentInstructionConfig}
-                        formName="paymentInstructionForm"
-                        initialData={paymentInstructionData}
-                        // onDataChange={handlePaymentInstructionDataChange}
-                        panelWidth="full"
-                        collapsible={true} // Added collapsible prop
-                      />
-
-                      {/* New Place and Date Made Out Panel */}
-                      <DynamicPanel
-                        ref={placeAndDateRef}
-                        panelId="place-and-date"
-                        panelOrder={3}
-                        panelTitle="Place and Date Made Out [29]"
-                        panelConfig={placeAndDateConfig}
-                        formName="placeAndDateForm"
-                        initialData={placeAndDateData}
-                        // onDataChange={handlePlaceAndDateDataChange}
-                        panelWidth="full"
-                        collapsible={true} // Added collapsible prop
-                      />                    
+                    {/* 32 */}
+                    <DynamicPanel
+                      ref={generalDetailsRef}
+                      panelId="general-details"
+                      panelOrder={1}
+                      panelTitle="General Details"
+                      panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                      panelConfig={generalDetailsConfig}
+                      formName="generalDetailsForm"
+                      //  initialData={undefined} 
+                      initialData={generalDetailsData}
+                      // onDataChange={handleGeneralDataChange}
+                      panelWidth="full"
+                      collapsible={true} // Added collapsible prop
+                    />
+                    <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{ marginTop: '-25px' }}>
+                      <Button
+                        onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
+                        className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add Consignor/Consignee
+                      </Button>
                     </div>
                   </div>
-                </TabsContent>
 
-                <TabsContent value="declarations" className="mt-6" forceMount>
-                  <div className="">
-                    <DynamicPanel
-                      ref={consignorDeclarationsRef}
-                      panelId="consignor-declarations"
-                      panelOrder={1}
-                      panelTitle="Declarations and Information"
-                      panelConfig={consignorDeclarationsConfig}
-                      formName="consignorDeclarationsForm"
-                      initialData={consignorDeclarationsData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={valueDeliveryCashRef}
-                      panelId="value-delivery-cash"
-                      panelOrder={2}
-                      panelTitle="Value and Delivery Details"
-                      panelConfig={valueDeliveryCashConfig}
-                      formName="valueDeliveryCashForm"
-                      initialData={valueDeliveryCashData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={codingBoxesRef}
-                      panelId="coding-boxes"
-                      panelOrder={3}
-                      panelTitle="Coding Boxes"
-                      panelConfig={codingBoxesConfig}
-                      formName="codingBoxesForm"
-                      initialData={codingBoxesData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={examinationDetailsRef}
-                      panelId="examination-details"
-                      panelOrder={4}
-                      panelTitle="Examination and Other Details"
-                      panelConfig={examinationDetailsConfig}
-                      formName="examinationDetailsForm"
-                      initialData={examinationDetailsData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={sectionARef}
-                      panelId="section-a"
-                      panelOrder={5}
-                      panelTitle="Section A"
-                      panelConfig={sectionAConfig}
-                      formName="sectionAForm"
-                      initialData={sectionAData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={sectionBRef}
-                      panelId="section-b"
-                      panelOrder={6}
-                      panelTitle="Section B"
-                      panelConfig={sectionBConfig}
-                      formName="sectionBForm"
-                      initialData={sectionBData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
-                    <DynamicPanel
-                      ref={sectionCRef}
-                      panelId="section-c"
-                      panelOrder={7}
-                      panelTitle="Section C"
-                      panelConfig={sectionCConfig}
-                      formName="sectionCForm"
-                      initialData={sectionCData}
-                      panelWidth="full"
-                      collapsible={true}
-                    />
+                  {/* New Payment Instruction Panel */}
+                  <DynamicPanel
+                    ref={paymentInstructionRef}
+                    panelId="payment-instruction"
+                    panelOrder={2}
+                    panelTitle="Payment Instruction [20]"
+                    panelConfig={paymentInstructionConfig}
+                    formName="paymentInstructionForm"
+                    initialData={paymentInstructionData}
+                    // onDataChange={handlePaymentInstructionDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
+
+                  {/* New Place and Date Made Out Panel */}
+                  <DynamicPanel
+                    ref={placeAndDateRef}
+                    panelId="place-and-date"
+                    panelOrder={3}
+                    panelTitle="Place and Date Made Out [29]"
+                    panelConfig={placeAndDateConfig}
+                    formName="placeAndDateForm"
+                    initialData={placeAndDateData}
+                    // onDataChange={handlePlaceAndDateDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
                 </div>
-                </TabsContent>
+              </div>
+            </TabsContent>
 
-                <TabsContent value="route" className="mt-6" forceMount>
-                {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <TabsContent value="declarations" className="mt-6" forceMount>
+              <div className="">
+                <DynamicPanel
+                  ref={consignorDeclarationsRef}
+                  panelId="consignor-declarations"
+                  panelOrder={1}
+                  panelTitle="Declarations and Information"
+                  panelConfig={consignorDeclarationsConfig}
+                  formName="consignorDeclarationsForm"
+                  initialData={consignorDeclarationsData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={valueDeliveryCashRef}
+                  panelId="value-delivery-cash"
+                  panelOrder={2}
+                  panelTitle="Value and Delivery Details"
+                  panelConfig={valueDeliveryCashConfig}
+                  formName="valueDeliveryCashForm"
+                  initialData={valueDeliveryCashData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={codingBoxesRef}
+                  panelId="coding-boxes"
+                  panelOrder={3}
+                  panelTitle="Coding Boxes"
+                  panelConfig={codingBoxesConfig}
+                  formName="codingBoxesForm"
+                  initialData={codingBoxesData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={examinationDetailsRef}
+                  panelId="examination-details"
+                  panelOrder={4}
+                  panelTitle="Examination and Other Details"
+                  panelConfig={examinationDetailsConfig}
+                  formName="examinationDetailsForm"
+                  initialData={examinationDetailsData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionARef}
+                  panelId="section-a"
+                  panelOrder={5}
+                  panelTitle="Section A"
+                  panelConfig={sectionAConfig}
+                  formName="sectionAForm"
+                  initialData={sectionAData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionBRef}
+                  panelId="section-b"
+                  panelOrder={6}
+                  panelTitle="Section B"
+                  panelConfig={sectionBConfig}
+                  formName="sectionBForm"
+                  initialData={sectionBData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+                <DynamicPanel
+                  ref={sectionCRef}
+                  panelId="section-c"
+                  panelOrder={7}
+                  panelTitle="Section C"
+                  panelConfig={sectionCConfig}
+                  formName="sectionCForm"
+                  initialData={sectionCData}
+                  panelWidth="full"
+                  collapsible={true}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="route" className="mt-6" forceMount>
+              {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold text-gray-800 mb-6">Route</h2>
                     <p className="text-gray-500">Route content will be added here.</p>
                 </div> */}
-                  <div>
-                      {/* wagon123 */}
-                      <DynamicPanel
-                          ref={RouteEndorsementDetailsRef}
-                          panelId="RouteConsignmentDetails"
-                          panelOrder={1}
-                          panelTitle="Route Details"
-                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                          panelConfig={routeDetailsCustomsEndorsementConfig}
-                          formName="generalDetailsForm"
-                          //  initialData={undefined} 
-                          //  initialData={generalDetailsData}
-                          // onDataChange={handleGeneralDataChange}
-                          panelWidth="full"
-                          collapsible={true} // Added collapsible prop
-                        />                     
-                    </div>
-                    {/* //table */}
-                    <div>
-                      <SmartGridPlus
-                                              columns={otherCarriersColumns}
-                                              data={otherCarriers}
-                                              hideToolbar={true}
-                                              hideCheckboxToggle={true}
-                                              onAddRow={handleAddOtherCarrierRow}
-    onEditRow={handleEditOtherCarrierRow}
-                                              />
-                    </div>
+              <div>
+                {/* wagon123 */}
+                <DynamicPanel
+                  ref={RouteEndorsementDetailsRef}
+                  panelId="RouteConsignmentDetails"
+                  panelOrder={1}
+                  panelTitle="Route Details"
+                  panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                  panelConfig={routeDetailsCustomsEndorsementConfig}
+                  formName="generalDetailsForm"
+                  //  initialData={undefined} 
+                  //  initialData={generalDetailsData}
+                  // onDataChange={handleGeneralDataChange}
+                  panelWidth="full"
+                  collapsible={true} // Added collapsible prop
+                />
+              </div>
+              {/* //table */}
+              <div>
+                <SmartGridPlus
+                  columns={otherCarriersColumns}
+                  data={otherCarriers}
+                  hideToolbar={true}
+                  hideCheckboxToggle={true}
+                  onAddRow={handleAddOtherCarrierRow}
+                  onEditRow={handleEditOtherCarrierRow}
+                />
+              </div>
 
 
-                      <div>
-                      {/* RouteConsignmentDetailsRef */}
-                      <DynamicPanel
-                          ref={RouteDetailsRef}
-                          panelId="RouteDetails"
-                          panelOrder={1}
-                          panelTitle="Consignment Number [62]/[6]"
-                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                          panelConfig={routeDetailsConfig}
-                          formName="generalDetailsForm"
-                          //  initialData={undefined} 
-                          initialData={generalDetailsData}
-                          // onDataChange={handleGeneralDataChange}
-                          panelWidth="full"
-                          collapsible={true} // Added collapsible prop
-                        />                  
-                      
-                    </div>
+              <div>
+                {/* RouteConsignmentDetailsRef */}
+                <DynamicPanel
+                  ref={RouteDetailsRef}
+                  panelId="RouteDetails"
+                  panelOrder={1}
+                  panelTitle="Consignment Number [62]/[6]"
+                  panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                  panelConfig={routeDetailsConfig}
+                  formName="generalDetailsForm"
+                  //  initialData={undefined} 
+                  initialData={generalDetailsData}
+                  // onDataChange={handleGeneralDataChange}
+                  panelWidth="full"
+                  collapsible={true} // Added collapsible prop
+                />
 
-                    <div>
-                    <SmartGridPlus
-    data={routeCodeCDetails}
-    columns={routeCodeCDetailsColumns}
+              </div>
 
-    onAddRow={handleAddRouteRow}
-    onEditRow={handleEditRouteRow}
+              <div>
+                <SmartGridPlus
+                  data={routeCodeCDetails}
+                  columns={routeCodeCDetailsColumns}
 
-    hideRightToolbar={true}
-    hideAdvancedFilter={true}
-    hideCheckboxToggle={false}
-  />
+                  onAddRow={handleAddRouteRow}
+                  onEditRow={handleEditRouteRow}
 
-                    </div>
-                </TabsContent>
+                  hideRightToolbar={true}
+                  hideAdvancedFilter={true}
+                  hideCheckboxToggle={false}
+                />
 
-                <TabsContent value="wagon-info" className="mt-6" forceMount>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="wagon-info" className="mt-6" forceMount>
+              <div>
                 <div>
-                    <div>
-                      {/* wagon123 */}
-                      <DynamicPanel
-                          ref={WagonDetailsRef}
-                          panelId="WagonInfoDetails"
-                          panelOrder={1}
-                          panelTitle="Wagon Info Details"
-                          panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
-                          panelConfig={wagonDetailsConfig}
-                          formName="generalDetailsForm"
-                          //  initialData={undefined} 
-                          initialData={generalDetailsData}
-                          // onDataChange={handleGeneralDataChange}
-                          panelWidth="full"
-                          collapsible={true} // Added collapsible prop
-                        />
-                    </div>
-
-                    <div>
-                    <SmartGridPlus
-    data={wagonGritDetails}
-    columns={wagonGritDetailsColumns}
-
-  onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
-    onEditRow={handleEditWagonRow}
-
-    hideRightToolbar={true}
-    hideAdvancedFilter={true}
-    hideCheckboxToggle={false}
-  />
-
-                    </div>
+                  {/* wagon123 */}
+                  <DynamicPanel
+                    ref={WagonDetailsRef}
+                    panelId="WagonInfoDetails"
+                    panelOrder={1}
+                    panelTitle="Wagon Info Details"
+                    panelIcon={<FileText className="w-5 h-5 text-blue-500" />}
+                    panelConfig={wagonDetailsConfig}
+                    formName="generalDetailsForm"
+                    //  initialData={undefined} 
+                    initialData={generalDetailsData}
+                    // onDataChange={handleGeneralDataChange}
+                    panelWidth="full"
+                    collapsible={true} // Added collapsible prop
+                  />
                 </div>
-                </TabsContent>
-          </Tabs>
-          </div>
 
-          {/* Fixed Footer */}
-          <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
+                <div>
+                  <SmartGridPlus
+                    data={wagonGritDetails}
+                    columns={wagonGritDetailsColumns}
+
+                    onAddRow={handleAddWagonRow}          // ✅ VERY IMPORTANT
+                    onEditRow={handleEditWagonRow}
+
+                    hideRightToolbar={true}
+                    hideAdvancedFilter={true}
+                    hideCheckboxToggle={false}
+                  />
+
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
           <div className="flex items-center gap-4"></div>
-            <div className="flex items-center gap-4">
-              <button 
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                onClick={() => setIsCancelModalOpen(true)}
-              >Cancel</button>
-              <button
-                className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-                onClick={handleSaveTemplate}
-              >
-                Save
-              </button>
-            </div>
+          <div className="flex items-center gap-4">
+            <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={() => setIsCancelModalOpen(true)}
+            >Cancel</button>
+            <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={handleSaveTemplate}
+            >
+              Save
+            </button>
           </div>
+        </div>
       </div>
 
       <ConsignorConsigneeSideDraw

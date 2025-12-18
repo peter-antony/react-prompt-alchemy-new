@@ -15,7 +15,7 @@ const CreateTemplateMain = () => {
     { label: 'CIM/CUV Management', href: '/cim-cuv?tab=template', active: false },
     { label: 'Create Template', active: true }
   ];
- 
+
   return (
     <AppLayout>
       <div className="main-content-h bg-gray-100">
