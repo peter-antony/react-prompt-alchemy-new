@@ -233,10 +233,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         )}
         {column.key === "SupplierID" && (
           <div className="text-Gray-800 font-normal truncate text-[13px]">
-            {/* {getPipedValue(row, 'SupplierName', 'SupplierID')} */}
-            {row?.SupplierName && row?.SupplierID
+            {getPipedValue(row, 'SupplierName', 'SupplierID')}
+            {/* {row?.SupplierName && row?.SupplierID
               ? `${row.SupplierName} || ${row.SupplierID}`
-              : row?.SupplierName || row?.SupplierID}
+              : row?.SupplierName || row?.SupplierID} */}
           </div>
         )}
       </div>
