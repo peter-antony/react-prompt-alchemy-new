@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,11 @@ interface ConsignorConsigneeSideDrawProps {
     onClose: () => void;
     width?: string;
     onSave: (data: any) => void;
+    initialConsignorData?: any;
+    initialConsigneeData?: any;
 }
 
-const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({ isOpen, onClose, onSave }) => {
+const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({ isOpen, onClose, onSave, initialConsignorData, initialConsigneeData }) => {
     const [activeTab, setActiveTab] = useState('consignor');
     const [consignorId, setConsignorId] = useState('');
     const [consignorName, setConsignorName] = useState('');
@@ -33,6 +35,32 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
     const [contactPerson, setContactPerson] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [emailId, setEmailId] = useState('');
+
+    useEffect(() => {
+        if (isOpen && initialConsignorData) {
+            setConsignorId(initialConsignorData.ConsignorID || '');
+            setConsignorName(initialConsignorData.ConsignorDescription || '');
+            setAddressLine1(initialConsignorData.AddressLine1 || '');
+            setAddressLine2(initialConsignorData.AddressLine2 || '');
+            setSuburb(initialConsignorData.SubHurb || '');
+            setPincode(initialConsignorData.Pincode || '');
+            setZone(initialConsignorData.Zone || '');
+            setSubZone(initialConsignorData.SubZone || '');
+            setCity(initialConsignorData.City || '');
+            setState(initialConsignorData.State || '');
+            setCountry(initialConsignorData.Country || '');
+            setRegion(initialConsignorData.Region || '');
+            setContactPerson(initialConsignorData.ContactPerson || '');
+            setPhoneNumber(initialConsignorData.PhoneNo || '');
+            setEmailId(initialConsignorData.EmailID || '');
+        }
+        if (isOpen && initialConsigneeData) {
+            setConsigneeId(initialConsigneeData.ConsigneeID || '');
+            setConsigneeName(initialConsigneeData.ConsigneeDescription || '');
+            // Note: Address and contact details are assumed to be common, so they are set by consignor or by the first one that exists.
+            // If distinct address/contact for consignee is needed, add separate state for them and bind here.
+        }
+    }, [isOpen, initialConsignorData, initialConsigneeData]);
 
     if (!isOpen) return null;
 
@@ -58,7 +86,7 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
             activeTab, // To know which tab was active when saving
         };
         onSave(data);
-        onClose(); // Close the side draw after saving
+        // onClose(); // Close the side draw after saving
     };
 
     //   const consignorConfig: PanelConfig = {

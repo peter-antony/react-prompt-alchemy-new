@@ -224,7 +224,7 @@ export const CimCuvService = {
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
-        MessageType: "Save Consignor Consignee", // Placeholder message type
+        MessageType: "CIM CUV Template-ConsSave", // Placeholder message type
       },
       RequestPayload: params,
     });
@@ -233,7 +233,7 @@ export const CimCuvService = {
     };
     // Assuming a generic API endpoint for now, user might need to define a specific one
     const response = await apiClient.post(
-      `/api/CimCuv/SaveConsignorConsignee`,
+      `${API_ENDPOINTS.CIM_CUV.ADD_CONSIGNOR_CONSIGNEE}`,
       requestBody
     );
     return response.data;

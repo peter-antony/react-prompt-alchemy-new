@@ -430,10 +430,10 @@ const TemplateCreate = () => {
     { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
     // { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
 
-    { key: "UN_Desc_English", label: "UN Desc English", type: "Checkbox", editable: true },
-    { key: "UN_Desc_French", label: "UN Desc French", type: "Checkbox", editable: true },
-    { key: "UN_Desc_German", label: "UN Desc German", type: "Checkbox", editable: true },
-    { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Checkbox", editable: true },
+    { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
+    { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
+    { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
+    { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
 
     { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
     { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
@@ -3602,9 +3602,9 @@ const TemplateCreate = () => {
     setConsignorConsigneeData(data);
 
     // Determine ModeFlag for Consignor and Consignee
-    console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
-    const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
-    console.log("entryModeFlag ===", entryModeFlag);
+    // console.log("entryModeFlag ===", apiResponse?.Header?.TemplateID);
+    // const entryModeFlag = apiResponse?.Header?.TemplateID === null || apiResponse?.Header?.TemplateID === undefined ? "Insert" : "Update";
+    // console.log("entryModeFlag ===", entryModeFlag);
     // Construct Header Payload
     const headerFV = headerTemplateRef.current?.getFormValues();
     const headerPayload = {
@@ -3630,7 +3630,7 @@ const TemplateCreate = () => {
       ContactPerson: data.contactPerson || null,
       PhoneNo: data.phoneNumber || null,
       EmailID: data.emailId || null,
-      ModeFlag: entryModeFlag
+      ModeFlag: "Insert"
     };
 
     const consignorPayload = {
@@ -3649,7 +3649,7 @@ const TemplateCreate = () => {
       ContactPerson: data.contactPerson || null,
       PhoneNo: data.phoneNumber || null,
       EmailID: data.emailId || null,
-      ModeFlag: entryModeFlag
+      ModeFlag: "Insert"
     };
 
     const finalPayload = {
@@ -3663,6 +3663,39 @@ const TemplateCreate = () => {
     try {
       const response = await CimCuvService.saveConsignorConsignee(finalPayload);
       console.log("Consignor/Consignee save response:", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        if (parsedResponse?.Consignor?.ConsignorID && parsedResponse?.Consignor?.ConsignorDescription) {
+          generalDetailsRef.current?.setFormValues({
+              consignor: parsedResponse.Consignor.ConsignorID,
+              consignorDescription: parsedResponse.Consignor.ConsignorDescription,
+          });
+        }
+        if (parsedResponse?.Consignee?.ConsigneeID && parsedResponse?.Consignee?.ConsigneeDescription) {
+            generalDetailsRef.current?.setFormValues({
+                consignee: parsedResponse.Consignee.ConsigneeID,
+                consigneeDescription: parsedResponse.Consignee.ConsigneeDescription,
+            });
+        }
+        console.log("Consignor/Consignee saved successfully");
+        toast({
+          title: "✅ Consignor/Consignee Saved Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+        setIsConsignorConsigneeSideDrawOpen(false);
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Consignor/Consignee Save Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+
+      }
       // Optionally, handle success or display a message
     } catch (error) {
       console.error("Error saving Consignor/Consignee data:", error);
@@ -3670,23 +3703,48 @@ const TemplateCreate = () => {
     }
   };
 
-  const handleConfirmCancel = async (reasonCode: string, reasonDescription: string) => {
+  const handleCancel = async (reasonCode: string, reasonDescription: string) => {
     console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+    console.log("Cancel confirmed with:", apiResponse);
     try {
       const payload = {
-        CIMCUVTemplateID: workOrderNo, // Assuming workOrderNo is the ID to cancel
-        ReasonCode: reasonCode,
-        ReasonCodeDescription: reasonDescription,
+        Header: {
+          "TemplateID": apiResponse?.Header?.TemplateID,
+          "Description": apiResponse?.Header?.Description,
+          "DocType": apiResponse?.Header?.DocType,
+          "ReasonCode": reasonCode,
+          "ReasonDescription": reasonDescription,
+          "ModeFlag": "NoChange"
+        }
       };
       console.log("payload ===", payload);
       const response = await CimCuvService.cancelCimCuvTemplate(payload);
       console.log("Cancel API response:", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Template cancelled successfully");
+        toast({
+          title: "✅ Template Cancelled Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
+          variant: "default",
+        });
+        setIsCancelModalOpen(false);
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Cancel Failed",
+          description: (response as any)?.data?.Message || "Failed to cancel changes.",
+          variant: "destructive",
+        });
+      }
       // Optionally, handle success or display a message
     } catch (error) {
       console.error("Error canceling template/report:", error);
       // Optionally, handle error or display an error message
     }
-    setIsCancelModalOpen(false);
+    // setIsCancelModalOpen(false);
   };
 
   return (
@@ -4023,11 +4081,13 @@ const TemplateCreate = () => {
         width="40%"
         onSave={handleConsignorConsigneeSave}
         onClose={() => setIsConsignorConsigneeSideDrawOpen(false)}
+        initialConsignorData={apiResponse?.General?.Details?.Consignor}
+        initialConsigneeData={apiResponse?.General?.Details?.Consignee}
       />
       <CancelConfirmationModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
-        onConfirmCancel={handleConfirmCancel}
+        onConfirmCancel={handleCancel}
       />
     </>
   );
