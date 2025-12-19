@@ -523,7 +523,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Consignee',
-      fetchOptions: fetchMaster('Consignee4 Init'),
+      fetchOptions: fetchMaster('Consignee Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -551,7 +551,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter Customer Code for Consign...',
-      fetchOptions: fetchMaster('Consignee CustomerCode5 Init'),
+      fetchOptions: fetchMaster('Customer code for consignee [5] Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -840,7 +840,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'one-third',
       placeholder: 'Enter Place',
-      fetchOptions: fetchMaster('Place_29 Init'),
+      fetchOptions: fetchMaster('Location Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -2092,6 +2092,29 @@ const TemplateCreate = () => {
       : "Update";
   };
 
+// 🔒 Grid → Backend sanitizers (DO NOT change GridColumnConfig)
+const toIntOrNull = (v: any) => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isInteger(n) ? n : null;
+};
+
+const toBitSafe = (v: any) => (v === true || v === 1 || v === "1" ? 1 : 0);
+
+const sanitizeRouteRows = (rows: any[]) =>
+  rows.map(r => ({
+    RouteID: toIntOrNull(r.RouteID),
+    LegSequence: toIntOrNull(r.LegSequence),
+    LegID: toIntOrNull(r.LegID),
+    FromLocationID: r.FromLocationID || null,
+    FromLocationDesc: r.FromLocationDesc || "",
+    ToLocationID: r.ToLocationID || null,
+    ToLocationDesc: r.ToLocationDesc || "",
+    AdhocLeg: toBit(r.AdhocLeg),
+    ViaPoint: r.ViaPoint || "",
+    ModeFlag: r.ModeFlag || "Insert",
+  }));
+
 
 
   // Deep equality check utility
@@ -2408,22 +2431,53 @@ const TemplateCreate = () => {
     };
   };
   //for grid 
-  const mapRouteCodeCDetailsPayload = (rows: any[]) => {
-    return rows
-      .filter(row => row.RouteID || row.LegID)
-      .map(row => ({
-        RouteID: row.RouteID ?? "",
-        LegSequence: row.LegSequence ?? "",
-        LegID: row.LegID ?? "",
-        FromLocationID: splitIdName(row.FromLocationID).id ?? "",
-        FromLocationDesc: splitIdName(row.FromLocationDesc).name ?? "",
-        ToLocationID: splitIdName(row.ToLocationID).id ?? "",
-        ToLocationDesc: splitIdName(row.ToLocationDesc).name ?? "",
-        AdhocLeg: row.AdhocLeg ?? "",
-        ViaPoint: row.ViaPoint ?? "",
-        ModeFlag: row.ModeFlag,
-      }));
-  };
+  // const mapRouteCodeCDetailsPayload = (rows: any[]) => {
+  //   return rows
+  //     .filter(row => row.RouteID || row.LegID)
+  //     .map(row => ({
+  //       RouteID: row.RouteID ?? "",
+  //       LegSequence: row.LegSequence ?? "",
+  //       LegID: row.LegID ?? "",
+  //       FromLocationID: splitIdName(row.FromLocationID).id ?? "",
+  //       FromLocationDesc: splitIdName(row.FromLocationDesc).name ?? "",
+  //       ToLocationID: splitIdName(row.ToLocationID).id ?? "",
+  //       ToLocationDesc: splitIdName(row.ToLocationDesc).name ?? "",
+  //       AdhocLeg: row.AdhocLeg ?? "",
+  //       ViaPoint: row.ViaPoint ?? "",
+  //       ModeFlag: row.ModeFlag,
+  //     }));
+  // };
+
+  const mapRouteCodeCDetailsPayload = (rows: any[]) =>
+  rows.map(r => ({
+    RouteID:
+      r.RouteID === "" || r.RouteID === undefined
+        ? null
+        : Number(r.RouteID),
+
+    LegSequence:
+      r.LegSequence === "" || r.LegSequence === undefined
+        ? null
+        : Number(r.LegSequence),
+
+    LegID:
+      r.LegID === "" || r.LegID === undefined
+        ? null
+        : Number(r.LegID),
+
+    FromLocationID: r.FromLocationID || null,
+    FromLocationDesc: r.FromLocationDesc || "",
+
+    ToLocationID: r.ToLocationID || null,
+    ToLocationDesc: r.ToLocationDesc || "",
+
+    AdhocLeg: r.AdhocLeg ? 1 : 0,
+
+    ViaPoint: r.ViaPoint || "",
+
+    ModeFlag: r.ModeFlag || "Insert",
+  }));
+
 
   const mapOtherCarriersPayload = (rows: any[]) =>
     rows.map(row => ({
@@ -2622,19 +2676,22 @@ const TemplateCreate = () => {
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-      GrossWeight_25_19: toNumberOrNull(gross?.val),
-      GrossWeight_25_19_UOM: gross?.uom || null,
+      GrossWeight_25_19: formData.GrossWeight?.input || 0,
+      GrossWeight_25_19_UOM: formData.GrossWeight?.dropdown || null,
 
-      TareWeight_25_20: toNumberOrNull(tare?.val),
-      TareWeight_25_20_UOM: tare?.uom || null,
+      TareWeight_25_20: formData.TareWeight?.input || 0,
+      TareWeight_25_20_UOM: formData.TareWeight?.dropdown || null,
 
-      NetWeight_25_21: toNumberOrNull(net?.val),
-      NetWeight_25_21_UOM: net?.uom || null,
+      NetWeight_25_21: formData.NetWeight?.input || 0,
+      NetWeight_25_21_UOM: formData.NetWeight?.dropdown || null,
 
-      Total_Brutto: 0,
-      Total_Netto: 0,
-      Total_Gross: 0,
-
+      Total_Brutto: formData.TotalBrutto?.input || 0,
+      Total_Netto: formData.TotalNetto?.input || 0,
+      Total_Gross: formData.TotalGross?.input || 0,
+      
+      Total_Brutto_UOM: formData.TotalBrutto?.dropdown || null,
+      Total_Netto_UOM: formData.TotalNetto?.dropdown || null,
+      Total_Gross_UOM: formData.TotalGross?.dropdown || null, 
       ModeFlag: modeFlag,
     };
   };
@@ -2776,7 +2833,7 @@ const TemplateCreate = () => {
         examinationDetailsRef.current.setFormValues({
           examination: apiResponse.Declarations.Examination_48,
           prepaymentCoding: apiResponse.Declarations.PrepaymentCoding_49,
-          chargesNote: apiResponse.Declarations.ChargesNote_52 === 1,
+          chargesNote: apiResponse.Declarations.ChargesNote_52 === "1",
           cashOnDeliveryReceipt: apiResponse.Declarations.CashOnDeliveryReceipt_53,
           formalReport: apiResponse.Declarations.FormalReport_54,
           extensionOfTransitPeriod: apiResponse.Declarations.ExtensionOfTransitPeriod_55,
@@ -3337,39 +3394,62 @@ const TemplateCreate = () => {
       uom: parts[1] ?? null,
     };
   };
-  const sanitizedWagonLineDetails = wagonGritDetails.map(row => ({
-    ...row,
+ // --- Wagon Line sanitization ---
+const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
+  wagonGritDetails
+    .map(row => ({
+      WagonNo: row.WagonNo || "",
 
-    // --- NUMERIC FIELDS ---
-    No_of_Axle: toNumberOrNull(row.No_of_Axle),
-    NHM: toNumberOrNull(row.NHM),
-    Mass_Weight: toNumberOrNull(row.Mass_Weight),
-    Tare_Weight: toNumberOrNull(row.Tare_Weight),
-    Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      NHM: toNumberOrNull(row.NHM),
 
-    Total_Mass: toNumberOrNull(row.Total_Mass),
-    Total_Brutt: toNumberOrNull(row.Total_Brutt),
-    Total_Tare: toNumberOrNull(row.Total_Tare),
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Mass_Weight_UOM: row.Mass_Weight_UOM || null,
 
-    Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
-    Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
-    Container_load_weight: toNumberOrNull(row.Container_load_weight),
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Tare_Weight_UOM: row.Tare_Weight_UOM || null,
 
-    Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
-    Gross_Weight: toNumberOrNull(row.Gross_Weight),
-    Wagon_Length: toNumberOrNull(row.Wagon_Length),
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Brut_Weight_UOM: row.Brut_Weight_UOM || null,
 
-    // --- BIT / BOOLEAN FIELDS ---
-    Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
-    UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
-    UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
-    UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
-    UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+      Gross_Weight: toNumberOrNull(row.Gross_Weight),
+      Gross_weight_UOM: row.Gross_weight_UOM || null,
 
-    RID: toBit(row.RID),
+      Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+      Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
 
-    ModeFlag: row.ModeFlag || "Update",
-  }));
+      Wagon_Length: toNumberOrNull(row.Wagon_Length),
+      Wagon_Length_UOM: row.Wagon_Length_UOM || null,
+
+      Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+      Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+      Container_load_weight: toNumberOrNull(row.Container_load_weight),
+
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+
+      Environmentally_Hazardous:
+        row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
+
+      UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+      UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+      UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+      UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+
+      RID: toBit(row.RID),
+
+      ModeFlag: row.ModeFlag || "NoChange",
+    }))
+    // ❗ remove empty rows so API does not fail
+    .filter(row =>
+      row.WagonNo ||
+      row.NHM ||
+      row.No_of_Axle ||
+      row.Gross_Weight ||
+      row.Net_Weight_Commodity_Qty
+    );
+
 
 
   const handleSaveTemplate = async () => {
@@ -3541,7 +3621,7 @@ const TemplateCreate = () => {
         wagonInfoModeFlag
       ),
 
-      WagonLineDetails: sanitizedWagonLineDetails,
+      WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
 
     };
 
