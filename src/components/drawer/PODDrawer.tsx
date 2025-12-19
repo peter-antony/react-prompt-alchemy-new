@@ -378,7 +378,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     URL.revokeObjectURL(url);
   };
 
-  const getMimeType = (fileName: string): string => {
+  function getMimeType(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase();
     switch (ext) {
       case "pdf": return "application/pdf";
@@ -391,21 +391,23 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
       case "txt": return "text/plain";
       case "doc": return "application/msword";
       case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      default: return "application/octet-stream";
+      default: return "application/octet-stream"; // fallback
     }
-  };
+  }
 
   const resolveAttachUniqueName = (f: any): string => {
     return (
+      f?.AttachName ||
       f?.AttachUniqueName ||
-      f?.Attachuniquename ||
+      f?.rawItem?.AttachName ||
       f?.rawItem?.AttachUniqueName ||
-      f?.rawItem?.Attachuniquename ||
       ""
     );
   };
 
-  const onDownloadSaved = async (file: any) => {
+  // const onDownloadSaved = async (file: any) => {
+  async function onDownloadSaved(file): Promise<{ blob: Blob; filename: string }> {
+    console.log("file info=", file);
     try {
       const uniqueName = resolveAttachUniqueName(file);
       const bodyData = {
@@ -413,6 +415,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         filename: uniqueName,
       };
       const resp1: any = await quickOrderService.downloadAttachmentQuickOrder(bodyData);
+      console.log("resp1=", resp1);
       const b64 = resp1.data.FileData;
       const mime = getMimeType(resp1.data.FileName);
       const byteChars = atob(b64);
@@ -422,6 +425,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
       const blob = new Blob([byteArray], { type: mime });
       const filename = file.AttachName || resp1.data.FileName || "downloaded_file";
       downloadBlob(blob, filename);
+      return { blob, filename };
     } catch (e) {
       toast({ title: "Download Failed", description: "Could not download attachment.", variant: "destructive" });
     }
