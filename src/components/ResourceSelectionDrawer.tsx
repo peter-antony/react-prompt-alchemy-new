@@ -1350,7 +1350,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       label: 'Save',
       variant: 'default' as const,
       action: handleSaveResource,
-      disabled: selectedRowIds.size === 0
+      // disabled: selectedRowIds.size === 0
     }
   ]
 : [
