@@ -233,7 +233,7 @@ export const CimCuvService = {
     };
     // Assuming a generic API endpoint for now, user might need to define a specific one
     const response = await apiClient.post(
-      `${API_ENDPOINTS.CIM_CUV.ADD_CONSIGNOR_CONSIGNEE}`,
+      `${API_ENDPOINTS.CIM_CUV.ADD_TEMP_CONSIGNOR_CONSIGNEE}`,
       requestBody
     );
     return response.data;
@@ -256,6 +256,51 @@ export const CimCuvService = {
     };
     const response = await apiClient.post(
       `${API_ENDPOINTS.CIM_CUV.CANCEL_CIMCUV}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  saveReportConsignorConsignee: async (params?: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-ConsSave", // Placeholder message type
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    // Assuming a generic API endpoint for now, user might need to define a specific one
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.CIM_CUV.ADD_REP_CONSIGNOR_CONSIGNEE}`,
+      requestBody
+    );
+    return response.data;
+  },
+
+  cancelCimCuvReport: async (params?: any): Promise<ApiResponse<any>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-Cancel",
+      },
+      RequestPayload: params,
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.CIM_CUV.CANCEL_CIMCUV_REPORT}`,
       requestBody
     );
     return response.data;

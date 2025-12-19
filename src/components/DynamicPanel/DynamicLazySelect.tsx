@@ -14,7 +14,7 @@ interface LazySelectOption {
 interface DynamicLazySelectProps {
   fetchOptions: (params: { searchTerm: string; offset: number; limit: number, rowData?: any }) => Promise<LazySelectOption[]>;
   value?: string | string[];
-  onChange: (value: string | string[] | undefined, isNewEntry?: boolean) => void;
+  onChange: (value: string | string[] | undefined, isNewEntry?: boolean, option?: LazySelectOption | LazySelectOption[]) => void;
   placeholder?: string;
   multiSelect?: boolean;
   disabled?: boolean;
@@ -143,22 +143,25 @@ export function DynamicLazySelect({
     }
   }, [loading, hasMore, loadOptions, disableLazyLoading]);
 
-  const handleSelect = (selectedValue: string, isNewEntry: boolean = false) => {
+  const handleSelect = (selectedValue: string, isNewEntry: boolean = false, selectedOption?: LazySelectOption) => {
     if (multiSelect) {
       const currentValues = Array.isArray(value) ? value : [];
       const newValues = currentValues.includes(selectedValue)
         ? currentValues.filter(v => v !== selectedValue)
         : [...currentValues, selectedValue];
-      onChange(newValues.length > 0 ? newValues : undefined, isNewEntry);
+      
+      const newOptions = newValues.map(val => options.find(opt => opt.value === val) || { value: val, label: val });
+
+      onChange(newValues.length > 0 ? newValues : undefined, isNewEntry, newOptions);
     } else {
-      onChange(selectedValue, isNewEntry);
+      onChange(selectedValue, isNewEntry, selectedOption);
       setIsOpen(false);
     }
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(undefined);
+    onChange(undefined, false, undefined);
     setSearchTerm(''); // Clear the search box as well
   };
 
@@ -168,10 +171,10 @@ export function DynamicLazySelect({
 
       if (options.length > 0) {
         // If there are options available, select the first one (existing entry)
-        handleSelect(options[0].value, false);
+        handleSelect(options[0].value, false, options[0]);
       } else if (allowNewEntry && searchTerm.trim().length >= minSearchLength) {
         // If no options but new entry is allowed and meets minimum length (new entry)
-        handleSelect(searchTerm.trim(), true);
+        handleSelect(searchTerm.trim(), true, { value: searchTerm.trim(), label: searchTerm.trim() });
       }
     }
   };
@@ -204,6 +207,9 @@ export function DynamicLazySelect({
     } else if (typeof value === 'string') {
       const option = options.find(opt => opt.value === value);
       return option?.label || value;
+    } else if (typeof value === 'object' && value !== null && 'label' in value) {
+      // Handle case where value is an object { value, label }
+      return (value as LazySelectOption).label;
     }
     
     return placeholder;
@@ -285,7 +291,7 @@ export function DynamicLazySelect({
                     "flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                     isSelected(option.value) && "bg-accent"
                   )}
-                  onClick={() => handleSelect(option.value, false)}
+                  onClick={() => handleSelect(option.value, false, option)}
                   title={option.value}
                 >
                   {multiSelect && (
@@ -300,7 +306,7 @@ export function DynamicLazySelect({
               {canCreateNewEntry && (
                 <div
                   className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer border-t"
-                  onClick={() => handleSelect(searchTerm.trim(), true)}
+                  onClick={() => handleSelect(searchTerm.trim(), true, { value: searchTerm.trim(), label: searchTerm.trim() })}
                 >
                   <span className="flex-1 text-blue-600 font-medium">
                     Add new: "{searchTerm.trim()}"

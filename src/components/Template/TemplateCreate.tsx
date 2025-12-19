@@ -2062,12 +2062,6 @@ const TemplateCreate = () => {
     },
   };
 
-
-  const handleAddConsignorConsignee = () => {
-    console.log('Add Consignor/Consignee clicked');
-    // Add your logic here
-  };
-
   const normalizeValue = (v: any) => {
     if (v === "" || v === undefined) return null;
     if (typeof v === "boolean") return v ? 1 : 0;
@@ -3712,9 +3706,9 @@ const TemplateCreate = () => {
           "TemplateID": apiResponse?.Header?.TemplateID,
           "Description": apiResponse?.Header?.Description,
           "DocType": apiResponse?.Header?.DocType,
-          "ReasonCode": reasonCode,
+          "ReasonCode": splitIdName(reasonCode).id,
           "ReasonDescription": reasonDescription,
-          "ModeFlag": "NoChange"
+          "ModeFlag": "Update"
         }
       };
       console.log("payload ===", payload);
