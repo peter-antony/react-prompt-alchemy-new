@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Select,
   SelectContent,
@@ -81,6 +81,10 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     TotalAttachment: 0,
   });
   const [reloadKey, setReloadKey] = useState(0);
+
+
+ 
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -297,13 +301,13 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
         // Only upload the file to get the unique name and path
         const uploadRes: any = await quickOrderService.updateAttachmentQuickOrderResource(formData);
-
+        console.log("uploadRes=", uploadRes);
         const item = {
           AttachItemID: null,
           AttachmentType: uploadRes.Attachmenttype || fileExt,
           FileCategory: uploadRes.Filecategory || "POD",
           AttachName: uploadRes.Attachname || fileName,
-          AttachUniqueName: uploadRes.Attachuniquename,
+          AttachUniqueName: uploadRes.data?.AttachUniqueName,
           AttachRelPath: uploadRes.Attachrelpath,
           Remarks: null,
           ModeFlag: "Insert",
@@ -321,7 +325,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         // nothing valid to save
         return;
       }
-
+      console.log("attachItems=", attachItems);
       // Save attachments to database
       const saveRes = await tripService.savePODLegAttachments({
         TripNo: tripNo,
@@ -397,10 +401,10 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
   const resolveAttachUniqueName = (f: any): string => {
     return (
-      f?.AttachName ||
       f?.AttachUniqueName ||
-      f?.rawItem?.AttachName ||
+      f?.AttachName ||
       f?.rawItem?.AttachUniqueName ||
+      f?.rawItem?.AttachName ||
       ""
     );
   };
@@ -780,13 +784,15 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
             className="border-2 border-dashed border-blue-200 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-blue-50 cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
           >
+            
             <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center mb-2">
               <UploadCloud className="w-7 h-7 p-1 text-gray-500 bg-gray-200 rounded-full" />
             </div>
-
+            
             <span className="text-blue-600 font-medium text-sm">
               Click to Upload
             </span>
+            
             <span className="text-gray-500 text-sm"> or drag & drop</span>
 
             <p className="text-xs text-gray-400 mt-2">
@@ -801,6 +807,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
               onChange={handleFileUpload}
               className="hidden"
             />
+          
           </div>
 
           {((stagedAttachItems || []).length > 0) && (
