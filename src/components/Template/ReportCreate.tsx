@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect ,useCallback} from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -269,33 +269,65 @@ const ReportCreate = () => {
     }
   };
 
+   const fetchSectionsList = useCallback(
+      fetchMaster("Location Init"),
+      []
+    );
+  
+    // Fetch countries (first level) - using fetchMaster
+    const fetchNameRoute = useCallback(
+      fetchMaster("Supplier Init"),
+      []
+    );
   // ✅ STEP 1: Columns for Other Carriers grid
   // ✅ STEP 1: Columns for Other Carriers grid (SmartGrid format)
-  const otherCarriersColumns: GridColumnConfig[] = [
+   const otherCarriersColumns: GridColumnConfig[] = [
+    {
+      key: "Name",
+      label: "Name",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
+      editable: true,
+      fetchOptions: fetchNameRoute,
+    },
     {
       key: "Section1",
       label: "Section 1",
-      type: "Text",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "Section2",
       label: "Section 2",
-      type: "Text",
+      type: "LazySelect",
+      sortable: true,
+      filterable: true,
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "Status",
       label: "Status",
       type: "Text",
       editable: true,
+      statusMap: {
+        Active: "badge-green rounded-2xl",
+        Pending: "badge-yellow rounded-2xl",
+        Completed: "badge-green rounded-2xl",
+        Cancelled: "badge-red rounded-2xl",
+        "In-progress": "badge-orange rounded-2xl",
+      },
     },
     {
       key: "Action",
       label: "Action",
       type: "Text",
       editable: true,
-    },
+    }
   ];
 
   const routeCodeCDetailsColumns: GridColumnConfig[] = [
@@ -355,305 +387,81 @@ const ReportCreate = () => {
     },
   ];
 
-  const wagonGritDetailsColumns: GridColumnConfig[] = [
-    { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
-
-    { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
-
-    { key: "NHM", label: "NHM", type: "Text", editable: true },
-
-    { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
-    {
-      key: "Mass_Weight_UOM",
-      label: "Mass Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-    {
-      key: "Tare_Weight_UOM",
-      label: "Tare Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
-    {
-      key: "Brut_Weight_UOM",
-      label: "Brut Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Specificity", label: "Specificity", type: "Text", editable: true },
-    { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
-
-    {
-      key: "Long_x_larg_x_haut",
-      label: "Length x Width x Height",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Long_x_larg_x_haut_UOM",
-      label: "LWH UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Brand_and_No",
-      label: "Brand and No",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Remittance_Slip_Number",
-      label: "Remittance Slip No",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Customs_Document",
-      label: "Customs Document",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "RID", label: "RID", type: "Text", editable: true },
-
-    {
-      key: "Short_Description_of_Goods",
-      label: "Goods Description",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
-    { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
-    {
-      key: "Packing_Group",
-      label: "Packing Group",
-      type: "Text",
-      editable: true,
-    },
-    { key: "Label", label: "Label", type: "Text", editable: true },
-
-    {
-      key: "Special_Provision",
-      label: "Special Provision",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Hazard_ID_Number",
-      label: "Hazard ID",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Environmentally_Hazardous",
-      label: "Environmentally Hazardous",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Last_Loaded_Commodity",
-      label: "Last Loaded Commodity",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Container_No",
-      label: "Container No",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Container_Type",
-      label: "Container Type",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Container_Tare_Weight",
-      label: "Container Tare Weight",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Container_Tare_Weight_UOM",
-      label: "Container Tare Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "From_Country",
-      label: "From Country",
-      type: "Text",
-      editable: true,
-    },
-    { key: "To_Country", label: "To Country", type: "Text", editable: true },
-
-    {
-      key: "Commodity_Description",
-      label: "Commodity Description",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
-    {
-      key: "Total_Mass_UOM",
-      label: "Total Mass UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
-    {
-      key: "Total_Brutt_UOM",
-      label: "Total Brutt UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
-    {
-      key: "Total_Tare_UOM",
-      label: "Total Tare UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Container_load_weight",
-      label: "Container Load Weight",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Container_Load_Weight_UOM",
-      label: "Container Load Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Container_load_type",
-      label: "Container Load Type",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Container_Tare_Weight_2",
-      label: "Container Tare Weight 2",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Container_tare_weight_2_UOM",
-      label: "Container Tare Weight 2 UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "UN_Desc_English",
-      label: "UN Desc English",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_French",
-      label: "UN Desc French",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_German",
-      label: "UN Desc German",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_Other_Language",
-      label: "UN Desc Other Language",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "UN_Desc_English_Check",
-      label: "UN English Check",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_French_Check",
-      label: "UN French Check",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_German_Check",
-      label: "UN German Check",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "UN_Desc_Other_Language_Check",
-      label: "UN Other Language Check",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Net_Weight_Commodity_Qty",
-      label: "Net Weight Commodity Qty",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Net_Weight_Commodity_Qty_UOM",
-      label: "Net Weight Commodity Qty UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Gross_Weight",
-      label: "Gross Weight",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Gross_weight_UOM",
-      label: "Gross Weight UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    {
-      key: "Wagon_Length",
-      label: "Wagon Length",
-      type: "Text",
-      editable: true,
-    },
-    {
-      key: "Wagon_Length_UOM",
-      label: "Wagon Length UOM",
-      type: "Text",
-      editable: true,
-    },
-
-    { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
-  ];
+   const wagonGritDetailsColumns: GridColumnConfig[] = [
+      { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
+      { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+      { key: "RID", label: "RID", type: "Text", editable: true },
+      { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
+      { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
+      { key: "Net_Weight_", label: "Net Weight", type: "Text", editable: true },
+      { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
+      { key: "NHM", label: "NHM", type: "Text", editable: true },
+      { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
+      { key: "Brut_Weight", label: "Brut Weight", type: "Text", editable: true },
+      { key: "Specificity", label: "Specificity", type: "Text", editable: true },
+      { key: "UTI_Type", label: "UTI Type", type: "Text", editable: true },
+      { key: "Long_x_larg_x_haut", label: "Length x Width x Height", type: "Text", editable: true },
+      { key: "Brand_and_No", label: "Brand and No", type: "Text", editable: true },
+      { key: "Remittance_Slip_Number", label: "Remittance Slip No", type: "Text", editable: true },
+      { key: "Customs_Document", label: "Customs Document", type: "Text", editable: true },
+      { key: "UN_Code", label: "UN Code", type: "Text", editable: true },
+      { key: "Load_Type", label: "Load Type", type: "Text", editable: true },
+      { key: "Packing_Group", label: "Packing Group", type: "Text", editable: true },
+      { key: "Label", label: "Label", type: "Text", editable: true },
+      
+      
+      // { key: "Mass_Weight_UOM", label: "Mass Weight UOM", type: "Text", editable: true },
+      // { key: "Tare_Weight_UOM", label: "Tare Weight UOM", type: "Text", editable: true },
+      // { key: "Brut_Weight_UOM", label: "Brut Weight UOM", type: "Text", editable: true },
+      // { key: "Long_x_larg_x_haut_UOM", label: "LWH UOM", type: "Text", editable: true },
+      // { key: "Container_Tare_Weight_UOM", label: "Container Tare Weight UOM", type: "Text", editable: true },
+      // { key: "Total_Mass_UOM", label: "Total Mass UOM", type: "Text", editable: true },
+      // { key: "Total_Brutt_UOM", label: "Total Brutt UOM", type: "Text", editable: true },
+      // { key: "Total_Tare_UOM", label: "Total Tare UOM", type: "Text", editable: true },
+  
+  
+      { key: "Special_Provision", label: "Special Provision", type: "Text", editable: true },
+      { key: "Hazard_ID_Number", label: "Hazard ID", type: "Text", editable: true },
+      { key: "Environmentally_Hazardous", label: "Environmentally Hazardous", type: "Text", editable: true },
+      { key: "Last_Loaded_Commodity", label: "Last Loaded Commodity", type: "Text", editable: true },
+      { key: "Container_No", label: "Container No", type: "Text", editable: true },
+      { key: "Container_Type", label: "Container Type", type: "Text", editable: true },
+      { key: "Container_Tare_Weight", label: "Container Tare Weight", type: "Text", editable: true },
+      { key: "From_Country", label: "From Country", type: "Text", editable: true },
+      { key: "To_Country", label: "To Country", type: "Text", editable: true },
+      { key: "Commodity_Description", label: "Commodity Description", type: "Text", editable: true },
+      { key: "Total_Mass", label: "Total Mass", type: "Text", editable: true },
+      { key: "Total_Brutt", label: "Total Brutt", type: "Text", editable: true },
+      { key: "Total_Tare", label: "Total Tare", type: "Text", editable: true },
+  
+      { key: "Container_load_weight", label: "Container Load Weight", type: "Text", editable: true },
+      // { key: "Container_Load_Weight_UOM", label: "Container Load Weight UOM", type: "Text", editable: true },
+      { key: "Container_load_type", label: "Container Load Type", type: "Text", editable: true },
+  
+      { key: "Container_Tare_Weight_2", label: "Container Tare Weight 2", type: "Text", editable: true },
+      // { key: "Container_tare_weight_2_UOM", label: "Container Tare Weight 2 UOM", type: "Text", editable: true },
+  
+      { key: "UN_Desc_English", label: "UN Desc English", type: "Text", editable: true },
+      { key: "UN_Desc_French", label: "UN Desc French", type: "Text", editable: true },
+      { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
+      { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
+  
+      { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
+      { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
+      { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
+      { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
+      { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
+  
+      // { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },
+  
+      // { key: "Gross_weight_UOM", label: "Gross Weight UOM", type: "Text", editable: true },
+  
+      { key: "Wagon_Length", label: "Wagon Length", type: "Text", editable: true },
+      { key: "Total_Length", label: "Total Length", type: "Text", editable: true },
+      // { key: "Wagon_Length_UOM", label: "Wagon Length UOM", type: "Text", editable: true },
+  
+      // { key: "ModeFlag", label: "Mode Flag", type: "Text", editable: false },
+    ];
 
   // General Details Panel Config
   const generalDetailsConfig: PanelConfig = {
@@ -2452,9 +2260,9 @@ const ReportCreate = () => {
       splitIdName(formData.templateId).id ||
       apiResponse?.Header?.Template ||
       null,
-    Wagon: formData.wagon || null,
+    Wagon: splitIdName(formData.wagon).id || null,
     LVENo: formData.lveNo || null,
-    CustomerID: formData.customerIDDescription || null,
+    CustomerID:splitIdName(formData.customerID).id|| null,
     ContractID: splitIdName(formData.contractID).id || null,
     CustomerDescription: null,
 
@@ -2734,7 +2542,10 @@ const ReportCreate = () => {
       .filter((row) => row.RouteID || row.LegID)
       .map((row) => ({
         RouteID: row.RouteID ?? "",
-        LegSequence: row.LegSequence ?? "",
+       LegSequence: row.LegSequence !== null && row.LegSequence !== undefined
+  ? Number(row.LegSequence)
+  : null,
+
         LegID: row.LegID ?? "",
         FromLocationID: row.FromLocationID ?? "",
         FromLocationDesc: row.FromLocationDesc ?? "",
@@ -2817,9 +2628,12 @@ const ReportCreate = () => {
       NetWeight_25_21: toNumberOrNull(net?.val),
       NetWeight_25_21_UOM: net?.uom || null,
 
-      Total_Brutto: 0,
-      Total_Netto: 0,
-      Total_Gross: 0,
+      Total_Brutto_UOM: formData.TotalBrutto?.dropdown,
+      Total_Brutto: formData.TotalBrutto?.input,
+      Total_Netto_UOM: formData.TotalNetto?.dropdown,
+      Total_Netto: formData.TotalNetto?.input,
+      Total_Gross_UOM: formData.TotalGross?.dropdown,
+      Total_Gross: toNumberOrNull(formData.TotalGross?.input),
 
       ModeFlag: modeFlag,
     };
@@ -3235,6 +3049,7 @@ const ReportCreate = () => {
     console.log("API RESPONSE SETTING FORM VALUES", apiResponse);
   }, [apiResponse]);
 
+
   const splitValueUom = (value?: string | null) => {
     if (!value) return { val: null, uom: null };
 
@@ -3397,8 +3212,8 @@ const ReportCreate = () => {
           workOrderNo
         ),
         //loading grid data
-        // Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
-        // OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+          Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+          OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
       },
 
       ConsignmentDetails: {
@@ -3418,8 +3233,7 @@ const ReportCreate = () => {
       WagonLineDetails: sanitizedWagonLineDetails,
     };
 
-    console.log("✅ FINAL PAYLOAD", JSON.stringify(payload, null, 2));
-    console.log("✅ FINAL PAYLOAD", workOrderNo);
+    console.log("pYLOAD", JSON.stringify(payload, null, 2));
     try {
       console.log(" Sending payload to save template...");
       const response = await CimCuvService.saveCimCuvReport(payload);
