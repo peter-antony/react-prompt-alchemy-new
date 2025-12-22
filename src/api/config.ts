@@ -190,6 +190,8 @@ export const API_ENDPOINTS = {
     ADD_REP_CONSIGNOR_CONSIGNEE: '/cimcuv/report/consignorsave',
     CANCEL_CIMCUV_REPORT: '/cimcuv/report/cancel',
     UPDATE_TEMPLATE: '/cimcuvtemplate/updatetemplate',
+    CONFIRM_REPORT: '/cimcuv/report/confirm',
+    AMEND_REPORT: '/cimcuv/report/amend',
   },
   // Invoice management
   INVOICES: {

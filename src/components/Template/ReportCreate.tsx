@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import CancelConfirmationModal from "./CancelConfirmationModal";
 import ConsignorConsigneeSideDraw from "./ConsignorConsigneeSideDraw";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import AmendReportModal from "./AmendReportModal";
 
 const ReportCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
@@ -76,6 +77,7 @@ const ReportCreate = () => {
   const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
   const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
   const [
     isConsignorConsigneeSideDrawOpen,
     setIsConsignorConsigneeSideDrawOpen,
@@ -3633,6 +3635,376 @@ const ReportCreate = () => {
     }
   };
 
+  const handleConfirmReport = async () => {
+    if (workOrderNo && !initialSnapshotRef.current) return;
+
+    const headerFV = headerTemplateRef.current.getFormValues();
+    const generalFV = generalDetailsRef.current.getFormValues();
+    const paymentFV = paymentInstructionRef.current.getFormValues();
+    const placeDateFV = placeAndDateRef.current.getFormValues();
+    const consignorFV = consignorDeclarationsRef.current.getFormValues();
+    const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+    const codingFV = codingBoxesRef.current.getFormValues();
+    const examFV = examinationDetailsRef.current.getFormValues();
+    const secAFV = sectionARef.current.getFormValues();
+    const secBFV = sectionBRef.current.getFormValues();
+    const secCFV = sectionCRef.current.getFormValues();
+    const routeFV = RouteDetailsRef.current.getFormValues();
+    const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+    const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+    const wagonInfoModeFlag = resolveModeFlag(
+      wagonFormData,
+      initialSnapshotRef.current?.WagonInfodetails,
+      workOrderNo
+    );
+
+    const sanitizedWagonLines = wagonGritDetails.map((row) => ({
+      ...row,
+      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      NHM: toNumberOrNull(row.NHM),
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      RID: toBit(row.RID),
+    }));
+
+    const payload = {
+      Header: {
+        ...mapFormToHeaderPayload(headerFV),
+        ModeFlag: resolveModeFlag(
+          headerFV,
+          initialSnapshotRef.current?.header,
+          workOrderNo
+        ),
+      },
+
+      General: {
+        Details: {
+          ...mapFormToGeneralDetailsPayload(generalFV),
+          ModeFlag: resolveModeFlag(
+            generalFV,
+            initialSnapshotRef.current?.general,
+            workOrderNo
+          ),
+        },
+
+        PaymentInstruction: {
+          ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+          ModeFlag: resolveModeFlag(
+            paymentFV,
+            initialSnapshotRef.current?.payment,
+            workOrderNo
+          ),
+        },
+      },
+
+      Declarations: {
+        ...mapFormToConsignorDeclarationsPayload(consignorFV),
+        ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+        ...mapFormToCodingBoxesPayload(codingFV),
+        ...mapFormToExaminationDetailsPayload(examFV),
+        ModeFlag: resolveModeFlag(
+          {
+            ...consignorFV,
+            ...valueDeliveryFV,
+            ...codingFV,
+            ...examFV,
+          },
+          initialSnapshotRef.current?.declarations,
+          workOrderNo
+        ),
+
+        SectionA: {
+          ...mapFormToSectionAPayload(secAFV),
+          ModeFlag: resolveModeFlag(
+            secAFV,
+            initialSnapshotRef.current?.sectionA,
+            workOrderNo
+          ),
+        },
+
+        SectionB: {
+          ...mapFormToSectionBPayload(secBFV),
+          ModeFlag: resolveModeFlag(
+            secBFV,
+            initialSnapshotRef.current?.sectionB,
+            workOrderNo
+          ),
+        },
+
+        SectionC: {
+          ...mapFormToSectionCPayload(secCFV),
+          ModeFlag: resolveModeFlag(
+            secCFV,
+            initialSnapshotRef.current?.sectionC,
+            workOrderNo
+          ),
+        },
+      },
+
+      RouteDetails: {
+        ...mapFormToRouteEndorsementPayload(routeEndFV),
+        ModeFlag: resolveModeFlag(
+          routeEndFV,
+          initialSnapshotRef.current?.routeEndorsement,
+          workOrderNo
+        ),
+        //loading grid data
+          Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+          OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+      },
+
+      ConsignmentDetails: {
+        ...mapFormToRoutePayload(routeFV),
+        ModeFlag: resolveModeFlag(
+          routeFV,
+          initialSnapshotRef.current?.route,
+          workOrderNo
+        ),
+      },
+
+      WagonInfodetails: mapFormToWagonInfoDetails(
+        wagonFormData,
+        wagonInfoModeFlag
+      ),
+
+      WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
+    };
+
+    console.log("pYLOAD", JSON.stringify(payload, null, 2));
+    try {
+      console.log(" Sending payload to confirm report...");
+      const response = await CimCuvService.confirmCimCuvReport(payload);
+      console.log("✅ CONFIRM TEMPLATE RESPONSE", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Report confirmed successfully");
+        toast({
+          title: "✅ Report Confirmed Successfully",
+          description:
+            (response as any)?.data?.ResponseData?.Message ||
+            "Your changes have been saved.",
+          variant: "default",
+        });
+
+        if (!workOrderNo) {
+          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          fetchTemplateData(parsedResponse?.Header?.TemplateID);
+        } else {
+          fetchTemplateData(workOrderNo);
+        }
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Confirm Failed",
+          description:
+            (response as any)?.data?.Message || "Failed to confirm changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("❌ CONFIRM TEMPLATE FAILED", error);
+      toast({
+        title: "⚠️ Confirm Failed",
+        description:
+          "An error occurred while confirming the template. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+//   const handleAmendReport = async () => {
+//     if (workOrderNo && !initialSnapshotRef.current) return;
+
+//     const headerFV = headerTemplateRef.current.getFormValues();
+//     const generalFV = generalDetailsRef.current.getFormValues();
+//     const paymentFV = paymentInstructionRef.current.getFormValues();
+//     const placeDateFV = placeAndDateRef.current.getFormValues();
+//     const consignorFV = consignorDeclarationsRef.current.getFormValues();
+//     const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+//     const codingFV = codingBoxesRef.current.getFormValues();
+//     const examFV = examinationDetailsRef.current.getFormValues();
+//     const secAFV = sectionARef.current.getFormValues();
+//     const secBFV = sectionBRef.current.getFormValues();
+//     const secCFV = sectionCRef.current.getFormValues();
+//     const routeFV = RouteDetailsRef.current.getFormValues();
+//     const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+//     const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+//     const wagonInfoModeFlag = resolveModeFlag(
+//       wagonFormData,
+//       initialSnapshotRef.current?.WagonInfodetails,
+//       workOrderNo
+//     );
+
+//     const sanitizedWagonLines = wagonGritDetails.map((row) => ({
+//       ...row,
+//       No_of_Axle: toNumberOrNull(row.No_of_Axle),
+//       NHM: toNumberOrNull(row.NHM),
+//       Mass_Weight: toNumberOrNull(row.Mass_Weight),
+//       Tare_Weight: toNumberOrNull(row.Tare_Weight),
+//       Brut_Weight: toNumberOrNull(row.Brut_Weight),
+//       Total_Mass: toNumberOrNull(row.Total_Mass),
+//       Total_Brutt: toNumberOrNull(row.Total_Brutt),
+//       Total_Tare: toNumberOrNull(row.Total_Tare),
+//       RID: toBit(row.RID),
+//     }));
+
+//     const payload = {
+//       Header: {
+//         ...mapFormToHeaderPayload(headerFV),
+//         ModeFlag: resolveModeFlag(
+//           headerFV,
+//           initialSnapshotRef.current?.header,
+//           workOrderNo
+//         ),
+//       },
+
+//       General: {
+//         Details: {
+//           ...mapFormToGeneralDetailsPayload(generalFV),
+//           ModeFlag: resolveModeFlag(
+//             generalFV,
+//             initialSnapshotRef.current?.general,
+//             workOrderNo
+//           ),
+//         },
+
+//         PaymentInstruction: {
+//           ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+//           ModeFlag: resolveModeFlag(
+//             paymentFV,
+//             initialSnapshotRef.current?.payment,
+//             workOrderNo
+//           ),
+//         },
+//       },
+
+//       Declarations: {
+//         ...mapFormToConsignorDeclarationsPayload(consignorFV),
+//         ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+//         ...mapFormToCodingBoxesPayload(codingFV),
+//         ...mapFormToExaminationDetailsPayload(examFV),
+//         ModeFlag: resolveModeFlag(
+//           {
+//             ...consignorFV,
+//             ...valueDeliveryFV,
+//             ...codingFV,
+//             ...examFV,
+//           },
+//           initialSnapshotRef.current?.declarations,
+//           workOrderNo
+//         ),
+
+//         SectionA: {
+//           ...mapFormToSectionAPayload(secAFV),
+//           ModeFlag: resolveModeFlag(
+//             secAFV,
+//             initialSnapshotRef.current?.sectionA,
+//             workOrderNo
+//           ),
+//         },
+
+//         SectionB: {
+//           ...mapFormToSectionBPayload(secBFV),
+//           ModeFlag: resolveModeFlag(
+//             secBFV,
+//             initialSnapshotRef.current?.sectionB,
+//             workOrderNo
+//           ),
+//         },
+
+//         SectionC: {
+//           ...mapFormToSectionCPayload(secCFV),
+//           ModeFlag: resolveModeFlag(
+//             secCFV,
+//             initialSnapshotRef.current?.sectionC,
+//             workOrderNo
+//           ),
+//         },
+//       },
+
+//       RouteDetails: {
+//         ...mapFormToRouteEndorsementPayload(routeEndFV),
+//         ModeFlag: resolveModeFlag(
+//           routeEndFV,
+//           initialSnapshotRef.current?.routeEndorsement,
+//           workOrderNo
+//         ),
+//         //loading grid data
+//           Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+//           OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+//       },
+
+//       ConsignmentDetails: {
+//         ...mapFormToRoutePayload(routeFV),
+//         ModeFlag: resolveModeFlag(
+//           routeFV,
+//           initialSnapshotRef.current?.route,
+//           workOrderNo
+//         ),
+//       },
+
+//       WagonInfodetails: mapFormToWagonInfoDetails(
+//         wagonFormData,
+//         wagonInfoModeFlag
+//       ),
+
+//       WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
+//     };
+
+//     console.log("pYLOAD", JSON.stringify(payload, null, 2));
+//     try {
+//       console.log(" Sending payload to save template...");
+//       const response = await CimCuvService.amendCimCuvReport(payload);
+//       console.log("✅ SAVE TEMPLATE RESPONSE", response);
+//       const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+//       // const data = parsedResponse;
+//       const resourceStatus = (response as any)?.data?.IsSuccess;
+//       console.log("parsedResponse ====", parsedResponse);
+//       if (resourceStatus) {
+//         console.log("Template saved successfully");
+//         toast({
+//           title: "✅ Template Saved Successfully",
+//           description:
+//             (response as any)?.data?.ResponseData?.Message ||
+//             "Your changes have been saved.",
+//           variant: "default",
+//         });
+
+//         if (!workOrderNo) {
+//           setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+//           fetchTemplateData(parsedResponse?.Header?.TemplateID);
+//         } else {
+//           fetchTemplateData(workOrderNo);
+//         }
+//       } else {
+//         console.log("error as any ===", (response as any)?.data?.Message);
+//         toast({
+//           title: "⚠️ Save Failed",
+//           description:
+//             (response as any)?.data?.Message || "Failed to save changes.",
+//           variant: "destructive",
+//         });
+//       }
+//     } catch (error) {
+//       console.error("❌ SAVE TEMPLATE FAILED", error);
+//       toast({
+//         title: "⚠️ Save Failed",
+//         description:
+//           "An error occurred while saving the template. Please try again.",
+//         variant: "destructive",
+//       });
+//     }
+//   };
+
   const handleConsignorConsigneeSave = async (data: any) => {
     console.log("Consignor/Consignee data saved:", data);
     console.log("Consignor/Consignee data saved:", apiResponse);
@@ -3792,6 +4164,57 @@ const ReportCreate = () => {
         toast({
           title: "⚠️ Cancel Failed",
           description: (response as any)?.data?.Message || "Failed to cancel changes.",
+          variant: "destructive",
+        });
+      }
+      // Optionally, handle success or display a message
+    } catch (error) {
+      console.error("Error canceling template/report:", error);
+      // Optionally, handle error or display an error message
+    }
+    // setIsCancelModalOpen(false);
+  };
+
+  const handleConfirmAmend = async (
+    reasonCode: string,
+    reasonDescription: string
+  ) => {
+    console.log("Cancel confirmed with:", { reasonCode, reasonDescription });
+    console.log("Cancel confirmed with:", apiResponse);
+    try {
+      const payload = {
+        Header: {
+            ...apiResponse?.Header,
+            ReasonCode: splitIdName(reasonCode).id,
+            ReasonDescription: reasonDescription,
+            ModeFlag: "Update",
+        //   "TemplateID": apiResponse?.Header?.TemplateID,
+        //   "Description": apiResponse?.Header?.Description,
+        //   "DocType": apiResponse?.Header?.DocType,
+        //   "ReasonCode": reasonCode,
+        //   "ReasonDescription": reasonDescription,
+        //   "ModeFlag": "NoChange"
+        }
+      };
+      console.log("payload ===", payload);
+      const response = await CimCuvService.amendCimCuvReport(payload);
+      console.log("Cancel API response:", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Report amended successfully");
+        toast({
+          title: "✅ Report Amended Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been amended.",
+          variant: "default",
+        });
+        setIsAmendModalOpen(false);
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Amend Failed",
+          description: (response as any)?.data?.Message || "Failed to amend changes.",
           variant: "destructive",
         });
       }
@@ -4150,6 +4573,17 @@ const ReportCreate = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {apiResponse?.Header?.Status === "Fresh" && (
+                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleConfirmReport} > 
+                    Confirm 
+                </button>
+            )}
+            {apiResponse?.Header?.Status === "Confirmed" && (
+                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={() => setIsAmendModalOpen(true)} >
+                    Amend
+                </button>
+            )}
           </div>
         </div>
       </div>
@@ -4166,6 +4600,11 @@ const ReportCreate = () => {
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirmCancel={handleConfirmCancel}
+      />
+      <AmendReportModal
+        isOpen={isAmendModalOpen}
+        onClose={() => setIsAmendModalOpen(false)}
+        onConfirmAmend={handleConfirmAmend}
       />
     </>
   );

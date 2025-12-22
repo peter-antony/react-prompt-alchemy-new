@@ -165,6 +165,58 @@ export const CimCuvService = {
     return response.data;
   },
 
+  confirmCimCuvReport: async (payload: any): Promise<any> => {
+    const userContext = getUserContext();
+
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-Confirm",
+      },
+      RequestPayload: payload,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CIM_CUV.CONFIRM_REPORT,
+      requestBody
+    );
+
+    return response.data;
+  },
+
+  amendCimCuvReport: async (payload: any): Promise<any> => {
+    const userContext = getUserContext();
+
+    const requestPayload = {
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Report-Amend",
+      },
+      RequestPayload: payload,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(requestPayload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CIM_CUV.AMEND_REPORT,
+      requestBody
+    );
+
+    return response.data;
+  },
+
   updateCimCuvReport: async (payload: any): Promise<any> => {
     const userContext = getUserContext();
 
