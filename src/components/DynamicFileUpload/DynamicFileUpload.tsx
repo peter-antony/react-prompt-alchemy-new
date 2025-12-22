@@ -31,7 +31,7 @@ import { API_ENDPOINTS, API_CONFIG } from '@/api/config';
 const defaultConfig: FileUploadConfig = {
   categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
   maxFiles: 10,
-  maxFileSizeMB: 2,
+  maxFileSizeMB: 50,
   allowedTypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'xls', 'xlsx', 'doc', 'docx'],
   uploadEndpoint: '/api/upload',
   filesEndpoint: '/api/files'
@@ -121,7 +121,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     if (!extension || !finalConfig.allowedTypes?.includes(extension)) {
       return `File type .${extension} is not allowed`;
     }
-    if (file.size > (finalConfig.maxFileSizeMB || 5) * 1024 * 1024) {
+    if (file.size > (finalConfig.maxFileSizeMB || 50) * 1024 * 1024) {
       return `File size exceeds ${finalConfig.maxFileSizeMB}MB limit`;
     }
     return null;
@@ -447,7 +447,7 @@ const handleDownloadFile = useCallback(async (file: any) => {
                 <span className="text-gray-500 text-sm"> or drag and drop</span>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                SVG, PNG, JPG, GIF or PDF (Maximum File Size 5 MB)
+                SVG, PNG, JPG, GIF or PDF (Maximum File Size 50 MB)
               </p>
               <input
                 ref={fileInputRef}

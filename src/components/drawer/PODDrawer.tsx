@@ -91,7 +91,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
 
     const newFiles = files.reduce((acc: any[], file: any) => {
       // 2MB size check with same toast pattern as OrderForm
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "File Upload Error",
           description: "File size exceeds 2MB limit",
@@ -285,8 +285,8 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
       for (const f of staged) {
         const rawFile: File = f.rawFile as File;
         // revalidate size safety
-        if (rawFile.size > 5 * 1024 * 1024) {
-          toast({ title: "File Upload Error", description: `"${rawFile.name}" exceeds 2MB limit`, variant: "destructive" });
+        if (rawFile.size > 50 * 1024 * 1024) {
+          toast({ title: "File Upload Error", description: `"${rawFile.name}" exceeds 50MB limit`, variant: "destructive" });
           continue;
         }
 
@@ -796,7 +796,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
             <span className="text-gray-500 text-sm"> or drag & drop</span>
 
             <p className="text-xs text-gray-400 mt-2">
-              Supports all file types (Max 5 MB)
+              Supports all file types (Max 50 MB)
             </p>
 
             <input

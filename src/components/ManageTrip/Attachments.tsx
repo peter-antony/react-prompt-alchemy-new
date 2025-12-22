@@ -386,7 +386,7 @@ const Attachments = ({
             // categories: ["BR Amendment", "Invoice", "Contract", "Other"],
             categories: fileCategory,
             maxFiles: 10,
-            maxFileSizeMB: 5,
+            maxFileSizeMB: 50,
             allowedTypes: [
               "pdf",
               "jpg",
