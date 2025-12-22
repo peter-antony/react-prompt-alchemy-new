@@ -36,6 +36,7 @@ const ReportCreate = () => {
   const sectionBRef = useRef<DynamicPanelRef>(null); // New Ref for Section B
   const sectionCRef = useRef<DynamicPanelRef>(null); // New Ref for Section C
 
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -76,6 +77,7 @@ const ReportCreate = () => {
   const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
   const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
   const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
+  const [cimCuvNo , setCimCuvNo] =   useState<string | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
   const [
@@ -156,30 +158,147 @@ const ReportCreate = () => {
     });
   };
   // ✅ Add Wagon row
+  // const handleAddWagonRow = (newRow: any) => {
+  //   setWagonGritDetails((prev) => [
+  //     ...prev,
+  //     {
+  //       ...newRow,
+  //       ModeFlag: "Insert",
+  //     },
+  //   ]);
+  // };
+
+  const EMPTY_WAGON_ROW = {
+  WagonNo: "",
+
+  No_of_Axle: null,
+  NHM: null,
+
+  Mass_Weight: null,
+  Mass_Weight_UOM: null,
+
+  Tare_Weight: null,
+  Tare_Weight_UOM: null,
+
+  Brut_Weight: null,
+  Brut_Weight_UOM: null,
+
+  Gross_Weight: null,
+  Gross_weight_UOM: null,
+
+  Net_Weight_Commodity_Qty: null,
+  Net_Weight_Commodity_Qty_UOM: null,
+
+  Wagon_Length: null,
+  Wagon_Length_UOM: null,
+
+  Container_Tare_Weight: null,
+  Container_Tare_Weight_UOM: null,
+
+  Container_Tare_Weight_2: null,
+  Container_tare_weight_2_UOM: null,
+
+  Container_load_weight: null,
+  Container_Load_Weight_UOM: null,
+  Container_load_type: null,
+
+  Total_Mass: null,
+  Total_Mass_UOM: null,
+
+  Total_Brutt: null,
+  Total_Brutt_UOM: null,
+
+  Total_Tare: null,
+  Total_Tare_UOM: null,
+
+  Short_Description_of_Goods: null,
+  Specificity: null,
+  UTI_Type: null,
+
+  Long_x_larg_x_haut: null,
+  Long_x_larg_x_haut_UOM: null,
+
+  Brand_and_No: null,
+  Remittance_Slip_Number: null,
+  Customs_Document: null,
+
+  UN_Code: null,
+  Load_Type: null,
+  Packing_Group: null,
+  Label: null,
+  Special_Provision: null,
+  Hazard_ID_Number: null,
+
+  Environmentally_Hazardous: "No",
+
+  Last_Loaded_Commodity: null,
+  Container_No: null,
+  Container_Type: null,
+
+  From_Country: null,
+  To_Country: null,
+  Commodity_Description: null,
+
+  UN_Desc_English: null,
+  UN_Desc_French: null,
+  UN_Desc_German: null,
+  UN_Desc_Other_Language: null,
+
+  UN_Desc_English_Check: 0,
+  UN_Desc_French_Check: 0,
+  UN_Desc_German_Check: 0,
+  UN_Desc_Other_Language_Check: 0,
+
+  RID: 0,
+  ModeFlag: "Insert",
+};
+
+
   const handleAddWagonRow = (newRow: any) => {
-    setWagonGritDetails((prev) => [
-      ...prev,
-      {
-        ...newRow,
-        ModeFlag: "Insert",
-      },
-    ]);
-  };
+  setWagonGritDetails(prev => [
+    ...prev,
+    {
+      ...EMPTY_WAGON_ROW,  // 👈 ALL fields present
+      ...newRow,           // 👈 override edited fields
+      ModeFlag: "Insert",
+    },
+  ]);
+};
+
 
   // ✅ Edit Wagon row
+  // const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
+  //   setWagonGritDetails((prev) => {
+  //     const copy = [...prev];
+
+  //     copy[rowIndex] = {
+  //       ...copy[rowIndex],
+  //       ...updatedRow,
+  //       ModeFlag: copy[rowIndex]?.ModeFlag === "Insert" ? "Insert" : "Update",
+  //     };
+
+  //     return copy;
+  //   });
+  // };
+
   const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
-    setWagonGritDetails((prev) => {
-      const copy = [...prev];
+  setWagonGritDetails(prev => {
+    const copy = [...prev];
 
-      copy[rowIndex] = {
-        ...copy[rowIndex],
-        ...updatedRow,
-        ModeFlag: copy[rowIndex]?.ModeFlag === "Insert" ? "Insert" : "Update",
-      };
+    copy[rowIndex] = {
+      ...EMPTY_WAGON_ROW,
+      ...copy[rowIndex],   // existing values
+      ...updatedRow,       // changed values
+      ModeFlag:
+        copy[rowIndex]?.ModeFlag === "Insert"
+          ? "Insert"
+          : "Update",
+    };
 
-      return copy;
-    });
-  };
+    return copy;
+  });
+};
+
 
   // ✅ STEP 2: Handle Add Row from SmartGrid
   const handleAddRouteRow = (newRow: any) => {
@@ -304,7 +423,8 @@ const ReportCreate = () => {
       if (resourceStatus) {
           console.log("Report data changed successfully");
           const fullResponseData = JSON.parse((response as any)?.data?.ResponseData);
-          console.log("response.data1", fullResponseData);
+          console.log("res", fullResponseData?.Header?.CIMCUVNo);
+          setCimCuvNo( fullResponseData?.Header?.CIMCUVNo)
         // toast({
         //   title: "✅ Template Saved Successfully",
         //   description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -378,13 +498,16 @@ const ReportCreate = () => {
       label: "Status",
       type: "Text",
       editable: true,
+      
       statusMap: {
         Active: "badge-green rounded-2xl",
         Pending: "badge-yellow rounded-2xl",
         Completed: "badge-green rounded-2xl",
         Cancelled: "badge-red rounded-2xl",
         "In-progress": "badge-orange rounded-2xl",
+        
       },
+      
     },
     {
       key: "Action",
@@ -453,7 +576,7 @@ const ReportCreate = () => {
 
    const wagonGritDetailsColumns: GridColumnConfig[] = [
       { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
-      { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+      { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true},
       { key: "RID", label: "RID", type: "Text", editable: true },
       { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
       { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
@@ -556,6 +679,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Consignor",
       labelFlag: false,
+      maxLength: 255,
     },
     customerCodeConsignor: {
       id: "customerCodeConsignor",
@@ -616,6 +740,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Consignee",
       labelFlag: false,
+      maxLength: 255,
     },
     customerCodeConsignee: {
       id: "customerCodeConsignee",
@@ -676,6 +801,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Consignor's Reference",
       labelFlag: false,
+      maxLength: 40,
     },
     deliveryPoint: {
       id: "deliveryPoint",
@@ -704,6 +830,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Delivery Point",
       labelFlag: false,
+      maxLength: 255,
     },
     codeDeliveryPoint: {
       id: "codeDeliveryPoint",
@@ -856,6 +983,7 @@ const ReportCreate = () => {
           const tempID = splitIdName(value.value).id;
           console.log("change the ID ===", tempID);
           getReportDataChangeByID(tempID);
+          console.log("para" , workOrderNo)
         },
       },
     },
@@ -1003,6 +1131,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Payment Instruction",
       labelFlag: false,
+      maxLength: 40,
     },
     paymentInstruction3: {
       id: "paymentInstruction3",
@@ -1016,6 +1145,8 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Payment Instruction",
       labelFlag: false,
+            maxLength: 40,
+
     },
     carriageChargePaid: {
       id: "carriageChargePaid",
@@ -1086,6 +1217,7 @@ const ReportCreate = () => {
       order: 1,
       width: "four",
       placeholder: "Enter Consignor's Declarations",
+      maxLength: 500,
     },
     documentsAttached: {
       id: "documentsAttached",
@@ -1098,6 +1230,7 @@ const ReportCreate = () => {
       order: 2,
       width: "four",
       placeholder: "Enter Documents Attached",
+      maxLength: 500,
     },
     commercialSpecifications: {
       id: "commercialSpecifications",
@@ -1110,6 +1243,7 @@ const ReportCreate = () => {
       order: 3,
       width: "four",
       placeholder: "Enter Commercial Specifications",
+      maxLength: 500,
     },
     informationForConsignee: {
       id: "informationForConsignee",
@@ -1122,6 +1256,7 @@ const ReportCreate = () => {
       order: 4,
       width: "four",
       placeholder: "Enter Information for the Consignee",
+      maxLength: 255,
     },
   };
 
@@ -1181,6 +1316,7 @@ const ReportCreate = () => {
       order: 1,
       width: "four",
       placeholder: "Enter Coding Box 1",
+      maxLength: 500,
     },
     codingBox2: {
       id: "codingBox2",
@@ -1193,6 +1329,8 @@ const ReportCreate = () => {
       order: 2,
       width: "four",
       placeholder: "Enter Coding Box 2",
+            maxLength: 500,
+
     },
     codingBox3: {
       id: "codingBox3",
@@ -1205,6 +1343,8 @@ const ReportCreate = () => {
       order: 3,
       width: "four",
       placeholder: "Enter Coding Box 3",
+            maxLength: 500,
+
     },
     codingBox4: {
       id: "codingBox4",
@@ -1217,6 +1357,8 @@ const ReportCreate = () => {
       order: 4,
       width: "four",
       placeholder: "Enter Coding Box 4",
+            maxLength: 500,
+
     },
     codingBox5: {
       id: "codingBox5",
@@ -1229,6 +1371,8 @@ const ReportCreate = () => {
       order: 5,
       width: "four",
       placeholder: "Enter Coding Box 5",
+            maxLength: 500,
+
     },
     codingBox6: {
       id: "codingBox6",
@@ -1241,6 +1385,8 @@ const ReportCreate = () => {
       order: 6,
       width: "four",
       placeholder: "Enter Coding Box 6",
+            maxLength: 500,
+
     },
     codingBox7: {
       id: "codingBox7",
@@ -1253,6 +1399,8 @@ const ReportCreate = () => {
       order: 7,
       width: "four",
       placeholder: "Enter Coding Box 7",
+            maxLength: 500,
+
     },
     codingBox8: {
       id: "codingBox8",
@@ -1265,6 +1413,8 @@ const ReportCreate = () => {
       order: 8,
       width: "four",
       placeholder: "Enter Coding Box 8",
+            maxLength: 500,
+
     },
   };
 
@@ -1281,6 +1431,7 @@ const ReportCreate = () => {
       order: 1,
       width: "four",
       placeholder: "Enter Examination",
+      maxLength: 500,
     },
     prepaymentCoding: {
       id: "prepaymentCoding",
@@ -1293,6 +1444,7 @@ const ReportCreate = () => {
       order: 2,
       width: "four",
       placeholder: "Enter Prepayment Coding",
+      maxLength: 500,
     },
     chargesNote: {
       id: "chargesNote",
@@ -1316,6 +1468,7 @@ const ReportCreate = () => {
       order: 4,
       width: "four",
       placeholder: "Enter Cash on Delivery Receipt",
+      maxLength: 500,
     },
     formalReport: {
       id: "formalReport",
@@ -1328,6 +1481,7 @@ const ReportCreate = () => {
       order: 5,
       width: "four",
       placeholder: "Enter Formal Report",
+      maxLength: 500,
     },
     extensionOfTransitPeriod: {
       id: "extensionOfTransitPeriod",
@@ -1340,6 +1494,7 @@ const ReportCreate = () => {
       order: 6,
       width: "four",
       placeholder: "Enter Extension of Transit Period",
+      maxLength: 500,
     },
     dateOfArrival: {
       id: "dateOfArrival",
@@ -1394,6 +1549,7 @@ const ReportCreate = () => {
       order: 1,
       width: "four",
       placeholder: "Enter Code for the Charging Sections",
+      maxLength: 500,
     },
     routeCode: {
       id: "routeCode",
@@ -1406,6 +1562,7 @@ const ReportCreate = () => {
       order: 2,
       width: "four",
       placeholder: "Enter Route Code",
+      maxLength: 500,
     },
     nhmCode: {
       id: "nhmCode",
@@ -1478,6 +1635,7 @@ const ReportCreate = () => {
       order: 8,
       width: "four",
       placeholder: "Enter Supplements, Fees, Deductions",
+      maxLength: 500,
     },
     unitPrice: {
       id: "unitPrice",
@@ -1779,6 +1937,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter itinerary",
       labelFlag: true,
+      maxLength: 500,
     },
     dataOfDispatch: {
       id: "dataOfDispatch",
@@ -1806,6 +1965,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Customer Code for the Pay...",
       hideSearch: false,
+      maxLength: 255,
     },
     toBeClearedAt: {
       id: "toBeClearedAt",
@@ -1819,6 +1979,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter To Be Cleared At",
       hideSearch: false,
+      maxLength: 255,
     },
     fixedNetTrain: {
       id: "fixedNetTrain",
@@ -1855,6 +2016,7 @@ const ReportCreate = () => {
       order: 8,
       width: "four",
       placeholder: "Enter Customer Code for the Pay...",
+      maxLength: 255,
     },
     wagonNumber: {
       id: "wagonNumber",
@@ -1867,6 +2029,7 @@ const ReportCreate = () => {
       order: 9,
       width: "four",
       placeholder: "Enter wagon number",
+      maxLength: 1000,
     },
     DescriptionoftheGoods: {
       id: "DescriptionoftheGoods",
@@ -1879,6 +2042,7 @@ const ReportCreate = () => {
       order: 10,
       width: "four",
       placeholder: "Enter Description of the Goods",
+      maxLength: 4000,
     },
     ExceptionalConsignment: {
       id: "ExceptionalConsignment",
@@ -1940,6 +2104,7 @@ const ReportCreate = () => {
       order: 15,
       width: "four",
       placeholder: "Enter Mark and Number",
+      maxLength: 500,
     },
     DeliveryNoteNumber: {
       id: "DeliveryNoteNumber",
@@ -1952,6 +2117,7 @@ const ReportCreate = () => {
       order: 16,
       width: "four",
       placeholder: "Enter Delivery Note Number ",
+      maxLength: 500,
     },
     NHMCode: {
       id: "NHMCode",
@@ -2084,6 +2250,7 @@ const ReportCreate = () => {
       order: 1,
       width: "third",
       placeholder: "Enter Consignment Number",
+      maxLength: 255,
     },
     Country: {
       id: "Country",
@@ -2100,6 +2267,7 @@ const ReportCreate = () => {
       fetchOptions: fetchMaster("Country Init"),
       hideSearch: false,
       disableLazyLoading: false,
+      
     },
     COuntryValue: {
       id: "COuntryValue",
@@ -2114,6 +2282,7 @@ const ReportCreate = () => {
       placeholder: "Enter Country",
       hideSearch: false,
       disableLazyLoading: false,
+      maxLength: 255,
     },
     Station: {
       id: "Station",
@@ -2142,6 +2311,7 @@ const ReportCreate = () => {
       width: "third",
       placeholder: "Enter Station Value",
       labelFlag: false,
+      maxLength: 255,
     },
     UndertakingEnterprise: {
       id: "UndertakingEnterprise",
@@ -2170,6 +2340,7 @@ const ReportCreate = () => {
       width: "third",
       placeholder: "Enter Undertaking Enterprise Value",
       labelFlag: false,
+      maxLength: 255,
     },
   };
 
@@ -2185,6 +2356,7 @@ const ReportCreate = () => {
       order: 1,
       width: "third",
       placeholder: "Enter Customs Endorsements",
+      maxLength: 500,
     },
     Route_50: {
       id: "Route_50",
@@ -2215,6 +2387,7 @@ const ReportCreate = () => {
       placeholder: "Enter Customs Procedures",
       hideSearch: false,
       disableLazyLoading: false,
+      maxLength: 500,
     },
     ContractualCarrier: {
       id: "ContractualCarrier",
@@ -2243,6 +2416,7 @@ const ReportCreate = () => {
       width: "four",
       placeholder: "Enter Contractual Carrier",
       labelFlag: false,
+      maxLength: 255,
     },
     TransitProcedure: {
       id: "UndertakingEnterprise",
@@ -2254,6 +2428,7 @@ const ReportCreate = () => {
       editable: true,
       order: 6,
       width: "four",
+      maxLength: 500,
     },
     EnterTransitProcedure: {
       id: "TransitProcedure",
@@ -2331,11 +2506,12 @@ const ReportCreate = () => {
     }
     return true;
   };
-
+const effectiveCimCuvNo: string | null =
+  cimCuvNo ?? (workOrderNo || null);
   // Mapping functions
   const mapFormToHeaderPayload = (formData: Record<string, any>) => ({
     DocType: formData.templateType,
-    CIMCUVNo: workOrderNo || null,
+    CIMCUVNo: effectiveCimCuvNo,
     CustomerOrderNo: formData.customerOrderNo || null,
     DispatchDocNo: splitIdName(formData.dispatchDocNo).id || apiResponse?.Header?.DispatchDocNo || null,
     UNCode: splitIdName(formData.unCode).id || null,
@@ -3210,60 +3386,208 @@ const ReportCreate = () => {
 //     ModeFlag: row.ModeFlag || "Update",
 //   }));
 
-    const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
-    wagonGritDetails
-      .map(row => ({
-        WagonNo: row.WagonNo || "",
-   
-        No_of_Axle: toNumberOrNull(row.No_of_Axle),
-        NHM: toNumberOrNull(row.NHM),
-   
-        Mass_Weight: toNumberOrNull(row.Mass_Weight),
-        Mass_Weight_UOM: row.Mass_Weight_UOM || null,
-   
-        Tare_Weight: toNumberOrNull(row.Tare_Weight),
-        Tare_Weight_UOM: row.Tare_Weight_UOM || null,
-   
-        Brut_Weight: toNumberOrNull(row.Brut_Weight),
-        Brut_Weight_UOM: row.Brut_Weight_UOM || null,
-   
-        Gross_Weight: toNumberOrNull(row.Gross_Weight),
-        Gross_weight_UOM: row.Gross_weight_UOM || null,
-   
-        Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
-        Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
-   
-        Wagon_Length: toNumberOrNull(row.Wagon_Length),
-        Wagon_Length_UOM: row.Wagon_Length_UOM || null,
-   
-        Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
-        Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
-        Container_load_weight: toNumberOrNull(row.Container_load_weight),
-   
-        Total_Mass: toNumberOrNull(row.Total_Mass),
-        Total_Brutt: toNumberOrNull(row.Total_Brutt),
-        Total_Tare: toNumberOrNull(row.Total_Tare),
-   
-        Environmentally_Hazardous:
-          row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
-   
-        UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
-        UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
-        UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
-        UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
-   
-        RID: toBit(row.RID),
-   
-        ModeFlag: row.ModeFlag || "NoChange",
-      }))
-      // ❗ remove empty rows so API does not fail
-      .filter(row =>
-        row.WagonNo ||
-        row.NHM ||
-        row.No_of_Axle ||
-        row.Gross_Weight ||
-        row.Net_Weight_Commodity_Qty
-      );
+const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
+  wagonGritDetails
+    .map(row => ({
+      // =========================
+      // Identity
+      // =========================
+      WagonNo: row.WagonNo?.trim() || "",
+
+      // =========================
+      // Axle / Codes
+      // =========================
+      No_of_Axle:toNumberOrNull(row.No_of_Axle) ,
+      NHM: toNumberOrNull(row.NHM),
+
+      // =========================
+      // Weights + UOM
+      // =========================
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Mass_Weight_UOM: row.Mass_Weight_UOM || null,
+
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Tare_Weight_UOM: row.Tare_Weight_UOM || null,
+
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Brut_Weight_UOM: row.Brut_Weight_UOM || null,
+
+      Gross_Weight: toNumberOrNull(row.Gross_Weight),
+      Gross_weight_UOM: row.Gross_weight_UOM || null,
+
+      Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+      Net_Weight_Commodity_Qty_UOM:
+        row.Net_Weight_Commodity_Qty_UOM || null,
+
+      Wagon_Length: toNumberOrNull(row.Wagon_Length),
+      Wagon_Length_UOM: row.Wagon_Length_UOM || null,
+
+      // =========================
+      // Container weights
+      // =========================
+      Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+      Container_Tare_Weight_UOM:
+        row.Container_Tare_Weight_UOM || null,
+
+      Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+      Container_tare_weight_2_UOM:
+        row.Container_tare_weight_2_UOM || null,
+
+      Container_load_weight: toNumberOrNull(row.Container_load_weight),
+      Container_Load_Weight_UOM:
+        row.Container_Load_Weight_UOM || null,
+
+      // =========================
+      // Totals
+      // =========================
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Mass_UOM: row.Total_Mass_UOM || null,
+
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Brutt_UOM: row.Total_Brutt_UOM || null,
+
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      Total_Tare_UOM: row.Total_Tare_UOM || null,
+
+      // =========================
+      // Text / Descriptive fields
+      // =========================
+      Short_Description_of_Goods:
+        row.Short_Description_of_Goods || null,
+
+      Specificity: row.Specificity || null,
+      UTI_Type: row.UTI_Type || null,
+
+      Long_x_larg_x_haut: row.Long_x_larg_x_haut || null,
+      Long_x_larg_x_haut_UOM:
+        row.Long_x_larg_x_haut_UOM || null,
+
+      Brand_and_No: row.Brand_and_No || null,
+      Remittance_Slip_Number:
+        row.Remittance_Slip_Number || null,
+
+      Customs_Document: row.Customs_Document || null,
+      UN_Code: row.UN_Code || null,
+      Load_Type: row.Load_Type || null,
+      Packing_Group: row.Packing_Group || null,
+      Label: row.Label || null,
+      Special_Provision: row.Special_Provision || null,
+      Hazard_ID_Number: row.Hazard_ID_Number || null,
+
+      // =========================
+      // Environment / Hazard
+      // =========================
+      Environmentally_Hazardous:
+        row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
+
+      Last_Loaded_Commodity:
+        row.Last_Loaded_Commodity || null,
+
+      // =========================
+      // Container / Country
+      // =========================
+      Container_No: row.Container_No || null,
+      Container_Type: row.Container_Type || null,
+
+      From_Country: row.From_Country || null,
+      To_Country: row.To_Country || null,
+
+      Commodity_Description:
+        row.Commodity_Description || null,
+
+      Container_load_type:
+        row.Container_load_type || null,
+
+      // =========================
+      // UN Descriptions
+      // =========================
+      UN_Desc_English: row.UN_Desc_English || null,
+      UN_Desc_French: row.UN_Desc_French || null,
+      UN_Desc_German: row.UN_Desc_German || null,
+      UN_Desc_Other_Language:
+        row.UN_Desc_Other_Language || null,
+
+      UN_Desc_English_Check:
+        toBit(row.UN_Desc_English_Check),
+      UN_Desc_French_Check:
+        toBit(row.UN_Desc_French_Check),
+      UN_Desc_German_Check:
+        toBit(row.UN_Desc_German_Check),
+      UN_Desc_Other_Language_Check:
+        toBit(row.UN_Desc_Other_Language_Check),
+
+      // =========================
+      // Flags
+      // =========================
+      RID: toBit(row.RID),
+
+      ModeFlag: row.ModeFlag || "NoChange",
+    }))
+    // ❗ remove empty rows
+    .filter(row =>
+      row.WagonNo &&
+      (
+        row.Gross_Weight !== null ||
+        row.Net_Weight_Commodity_Qty !== null ||
+        row.Mass_Weight !== null
+      )
+    );
+
+
+      // const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
+      // wagonGritDetails
+      //   .map(row => ({
+      //     WagonNo: row.WagonNo || "",
+    
+      //     No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      //     NHM: toNumberOrNull(row.NHM),
+    
+      //     Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      //     Mass_Weight_UOM: row.Mass_Weight_UOM || null,
+    
+      //     Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      //     Tare_Weight_UOM: row.Tare_Weight_UOM || null,
+    
+      //     Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      //     Brut_Weight_UOM: row.Brut_Weight_UOM || null,
+    
+      //     Gross_Weight: toNumberOrNull(row.Gross_Weight),
+      //     Gross_weight_UOM: row.Gross_weight_UOM || null,
+    
+      //     Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+      //     Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
+    
+      //     Wagon_Length: toNumberOrNull(row.Wagon_Length),
+      //     Wagon_Length_UOM: row.Wagon_Length_UOM || null,
+    
+      //     Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+      //     Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+      //     Container_load_weight: toNumberOrNull(row.Container_load_weight),
+    
+      //     Total_Mass: toNumberOrNull(row.Total_Mass),
+      //     Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      //     Total_Tare: toNumberOrNull(row.Total_Tare),
+    
+      //     Environmentally_Hazardous:
+      //       row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
+    
+      //     UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+      //     UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+      //     UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+      //     UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+    
+      //     RID: toBit(row.RID),
+    
+      //     ModeFlag: row.ModeFlag || "NoChange",
+      //   }))
+      //   // ❗ remove empty rows so API does not fail
+      //   .filter(row =>
+      //     row.WagonNo ||
+      //     row.NHM ||
+      //     row.No_of_Axle ||
+      //     row.Gross_Weight ||
+      //     row.Net_Weight_Commodity_Qty
+      //   );
 
   const handleSaveReport = async () => {
     if (workOrderNo && !initialSnapshotRef.current) return;

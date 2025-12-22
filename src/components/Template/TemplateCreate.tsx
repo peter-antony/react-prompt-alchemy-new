@@ -55,6 +55,8 @@ const TemplateCreate = () => {
   const workOrderNo = searchParams.get("id");
   const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
   const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+  const [weightUomList, setWeightUomList] = useState<any[]>([]);
+  const [lengthWeightUomList, setlengthWeightUomList] = useState<any[]>([]);
   const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
   const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
   const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
@@ -127,33 +129,150 @@ const TemplateCreate = () => {
     });
   };
   // ✅ Add Wagon row
-  const handleAddWagonRow = (newRow: any) => {
-    setWagonGritDetails(prev => [
-      ...prev,
-      {
-        ...newRow,
-        ModeFlag: "Insert",
-      },
-    ]);
+  // const handleAddWagonRow = (newRow: any) => {
+  //   setWagonGritDetails(prev => [
+  //     ...prev,
+  //     {
+  //       ...newRow,
+  //       ModeFlag: "Insert",
+  //     },
+  //   ]);
+  // };
+
+  const EMPTY_WAGON_ROW = {
+  WagonNo: "",
+
+  No_of_Axle: null,
+  NHM: null,
+
+  Mass_Weight: null,
+  Mass_Weight_UOM: null,
+
+  Tare_Weight: null,
+  Tare_Weight_UOM: null,
+
+  Brut_Weight: null,
+  Brut_Weight_UOM: null,
+
+  Gross_Weight: null,
+  Gross_weight_UOM: null,
+
+  Net_Weight_Commodity_Qty: null,
+  Net_Weight_Commodity_Qty_UOM: null,
+
+  Wagon_Length: null,
+  Wagon_Length_UOM: null,
+
+  Container_Tare_Weight: null,
+  Container_Tare_Weight_UOM: null,
+
+  Container_Tare_Weight_2: null,
+  Container_tare_weight_2_UOM: null,
+
+  Container_load_weight: null,
+  Container_Load_Weight_UOM: null,
+  Container_load_type: null,
+
+  Total_Mass: null,
+  Total_Mass_UOM: null,
+
+  Total_Brutt: null,
+  Total_Brutt_UOM: null,
+
+  Total_Tare: null,
+  Total_Tare_UOM: null,
+
+  Short_Description_of_Goods: null,
+  Specificity: null,
+  UTI_Type: null,
+
+  Long_x_larg_x_haut: null,
+  Long_x_larg_x_haut_UOM: null,
+
+  Brand_and_No: null,
+  Remittance_Slip_Number: null,
+  Customs_Document: null,
+
+  UN_Code: null,
+  Load_Type: null,
+  Packing_Group: null,
+  Label: null,
+  Special_Provision: null,
+  Hazard_ID_Number: null,
+
+  Environmentally_Hazardous: "No",
+
+  Last_Loaded_Commodity: null,
+  Container_No: null,
+  Container_Type: null,
+
+  From_Country: null,
+  To_Country: null,
+  Commodity_Description: null,
+
+  UN_Desc_English: null,
+  UN_Desc_French: null,
+  UN_Desc_German: null,
+  UN_Desc_Other_Language: null,
+
+  UN_Desc_English_Check: 0,
+  UN_Desc_French_Check: 0,
+  UN_Desc_German_Check: 0,
+  UN_Desc_Other_Language_Check: 0,
+
+  RID: 0,
+  ModeFlag: "Insert",
+};
+
+
+ const handleAddWagonRow = (newRow: any) => {
+  const fullRow = {
+    ...EMPTY_WAGON_ROW, // 👈 ALL 58 fields injected
+    ...newRow,          // 👈 grid values overwrite defaults
+    ModeFlag: "Insert",
   };
+
+  setWagonGritDetails(prev => [...prev, fullRow]);
+};
+
+
 
   // ✅ Edit Wagon row
+  // const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
+  //   setWagonGritDetails(prev => {
+  //     const copy = [...prev];
+
+  //     copy[rowIndex] = {
+  //       ...copy[rowIndex],
+  //       ...updatedRow,
+  //       ModeFlag:
+  //         copy[rowIndex]?.ModeFlag === "Insert"
+  //           ? "Insert"
+  //           : "Update",
+  //     };
+
+  //     return copy;
+  //   });
+  // };
+
   const handleEditWagonRow = (updatedRow: any, rowIndex: number) => {
-    setWagonGritDetails(prev => {
-      const copy = [...prev];
+  setWagonGritDetails(prev => {
+    const copy = [...prev];
 
-      copy[rowIndex] = {
-        ...copy[rowIndex],
-        ...updatedRow,
-        ModeFlag:
-          copy[rowIndex]?.ModeFlag === "Insert"
-            ? "Insert"
-            : "Update",
-      };
+    copy[rowIndex] = {
+      ...EMPTY_WAGON_ROW,
+      ...copy[rowIndex],   // existing values
+      ...updatedRow,       // changed values
+      ModeFlag:
+        copy[rowIndex]?.ModeFlag === "Insert"
+          ? "Insert"
+          : "Update",
+    };
 
-      return copy;
-    });
-  };
+    return copy;
+  });
+};
+
 
 
   // ✅ STEP 2: Handle Add Row from SmartGrid
@@ -185,8 +304,14 @@ const TemplateCreate = () => {
 
 
   useEffect(() => {
-    console.log("SETTING OTHER CARRIERS", routeCodeCDetails);
-  }, [routeCodeCDetails])
+  setWagonGritDetails(prev =>
+    prev.map(row => ({
+      ...EMPTY_WAGON_ROW,
+      ...row,
+    }))
+  );
+}, []);
+
 
   // Simulate API response for demonstration
   useEffect(() => {
@@ -195,35 +320,58 @@ const TemplateCreate = () => {
   }, [workOrderNo]); // Removed activeTab from the dependency array
 
 
-  useEffect(() => {
-    const loadUomMasters = async () => {
-      try {
-        const [thuRes, currencyRes]: any = await Promise.all([
-          quickOrderService.getMasterCommonData({
-            messageType: "THU QTY UOM Init",
-          }),
-          quickOrderService.getMasterCommonData({
-            messageType: "Currency Init",
-          }),
-        ]);
-        console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"), "123")
-        setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
-        setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
-      } catch (err) {
-        console.error("UOM master API failed", err);
-      }
-    };
+ useEffect(() => {
+  const loadUomMasters = async () => {
+    const [thuRes, currencyRes, weightRes , length]: any = await Promise.all([
+      quickOrderService.getMasterCommonData({
+        messageType: "THU QTY UOM Init",
+      }),
+      quickOrderService.getMasterCommonData({
+        messageType: "Currency Init",
+      }),
+      quickOrderService.getMasterCommonData({
+        messageType: "Weight UOM Init", 
+      }),
 
-    loadUomMasters();
-  }, []);
+       quickOrderService.getMasterCommonData({
+        messageType: "THU Init", 
+      }),
+    ]);
+    console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"));
+
+    setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
+    setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
+    setWeightUomList(JSON.parse(weightRes?.data?.ResponseData || "[]")); // ✅
+    setlengthWeightUomList(JSON.parse(length?.data?.ResponseData || "[]")); // ✅
+  };
+
+  loadUomMasters();
+}, []);
+
+
+  // const getUomOptions = (list: any[]) =>
+  //   list
+  //     .filter(item => item.id && item.name) // remove empty row
+  //     .map(item => ({
+  //         label: `${item.id} || ${item.name}`,
+  //       value: item.id,
+  //     }));
 
   const getUomOptions = (list: any[]) =>
-    list
-      .filter(item => item.id && item.name) // remove empty row
-      .map(item => ({
-        label: item.name,
-        value: item.id,
-      }));
+  list
+    .map(item => {
+      const id = item.id ?? item.ID ?? item.value ?? "";
+      const name = item.name ?? item.Name ?? item.label ?? "";
+
+      if (!id) return null;
+
+      return {
+        label: name ? `${id} || ${name}` : id,
+        value: id,
+      };
+    })
+    .filter(Boolean);
+
 
 
   const buildWeightWithUom = (
@@ -382,7 +530,7 @@ const TemplateCreate = () => {
     { key: "RID", label: "RID", type: "Text", editable: true },
     { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
     { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-    { key: "Net_Weight_", label: "Net Weight", type: "Text", editable: true },
+    { key: "Net_Weight_Commodity_Qty", label: "Net Weight", type: "Text", editable: true },
     { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
     { key: "NHM", label: "NHM", type: "Text", editable: true },
     { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
@@ -459,7 +607,7 @@ const TemplateCreate = () => {
       label: 'Consignor [1]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 1,
@@ -468,6 +616,7 @@ const TemplateCreate = () => {
       fetchOptions: fetchMaster('Consignor Init'),
       hideSearch: false,
       disableLazyLoading: false,
+      
     },
     consignorDescription: {
       id: 'consignorDescription',
@@ -481,6 +630,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Consignor',
       labelFlag: false,
+       maxLength: 255,
     },
     customerCodeConsignor: {
       id: 'customerCodeConsignor',
@@ -517,7 +667,7 @@ const TemplateCreate = () => {
       label: 'Consignee [4]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 5,
@@ -539,6 +689,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Consignee',
       labelFlag: false,
+       maxLength: 255,
     },
     customerCodeConsignee: {
       id: 'customerCodeConsignee',
@@ -554,6 +705,7 @@ const TemplateCreate = () => {
       fetchOptions: fetchMaster('Customer code for consignee [5] Init'),
       hideSearch: false,
       disableLazyLoading: false,
+
     },
     customerCodeNonPrePaid: {
       id: 'customerCodeNonPrePaid',
@@ -597,13 +749,14 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: "Enter Consignor's Reference",
       labelFlag: false,
+       maxLength: 40,
     },
     deliveryPoint: {
       id: 'deliveryPoint',
       label: 'Delivery Point [10]/[4]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 11,
@@ -625,13 +778,14 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Delivery Point',
       labelFlag: false,
+        maxLength: 40,
     },
     codeDeliveryPoint: {
       id: 'codeDeliveryPoint',
       label: 'Code for the Delivery Point [11]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 13,
@@ -646,7 +800,7 @@ const TemplateCreate = () => {
       label: 'Code for the Station Serving the Delivery Point [12]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 14,
@@ -661,7 +815,7 @@ const TemplateCreate = () => {
       label: 'No. of the Customer Agreement/Tariff [14]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 15,
@@ -676,7 +830,7 @@ const TemplateCreate = () => {
       label: 'Acceptance Date [16]/[2]',
       fieldType: 'date',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 16,
@@ -689,7 +843,7 @@ const TemplateCreate = () => {
       label: 'Acceptance From [16]/[3]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 17,
@@ -704,7 +858,7 @@ const TemplateCreate = () => {
       label: 'Code for the Acceptance Point [17]',
       fieldType: 'lazyselect',
       value: '',
-      mandatory: false,
+      mandatory: true,
       visible: true,
       editable: true,
       order: 18,
@@ -776,6 +930,7 @@ const TemplateCreate = () => {
       fetchOptions: fetchMaster('Payment Instruction_20 Init'),
       hideSearch: false,
       disableLazyLoading: false,
+      
     },
     paymentInstruction2: {
       id: 'paymentInstruction2',
@@ -789,6 +944,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Payment Instruction',
       labelFlag: false,
+      maxLength: 40,
     },
     paymentInstruction3: {
       id: 'paymentInstruction3',
@@ -802,6 +958,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Payment Instruction',
       labelFlag: false,
+      maxLength: 40,
     },
     carriageChargePaid: {
       id: 'carriageChargePaid',
@@ -872,6 +1029,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: "Enter Consignor's Declarations",
+      maxLength: 500,
     },
     documentsAttached: {
       id: 'documentsAttached',
@@ -884,6 +1042,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Documents Attached',
+      maxLength: 500,
     },
     commercialSpecifications: {
       id: 'commercialSpecifications',
@@ -896,6 +1055,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter Commercial Specifications',
+      maxLength: 500,
     },
     informationForConsignee: {
       id: 'informationForConsignee',
@@ -908,6 +1068,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Information for the Consignee',
+      maxLength: 255,
     },
   };
 
@@ -939,19 +1100,23 @@ const TemplateCreate = () => {
       placeholder: 'Enter Interest in Delivery',
       fetchOptions: fetchMaster('Currency Init'),
     },
-    cashOnDelivery: {
-      id: 'cashOnDelivery',
-      label: 'Cash on Delivery [28]',
-      fieldType: 'inputdropdown',
-      value: '',
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 3,
-      width: 'four',
-      placeholder: 'Enter Cash on Delivery',
-      fetchOptions: fetchMaster('Currency Init'),
-    },
+   cashOnDelivery: {
+  id: 'cashOnDelivery',
+  label: 'Cash on Delivery [28]',
+  fieldType: 'inputdropdown',
+  value: {
+    input: '',
+    dropdown: '',
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 3,
+  width: 'four',
+  placeholder: 'Enter Cash on Delivery',
+  options: getUomOptions(currencyUomList), 
+},
+
   };
 
   // Coding Boxes Panel Config
@@ -967,6 +1132,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Coding Box 1',
+      maxLength: 500,
     },
     codingBox2: {
       id: 'codingBox2',
@@ -979,6 +1145,8 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Coding Box 2',
+            maxLength: 500,
+
     },
     codingBox3: {
       id: 'codingBox3',
@@ -991,6 +1159,8 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter Coding Box 3',
+            maxLength: 500,
+
     },
     codingBox4: {
       id: 'codingBox4',
@@ -1003,6 +1173,8 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Coding Box 4',
+            maxLength: 500,
+
     },
     codingBox5: {
       id: 'codingBox5',
@@ -1015,6 +1187,8 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Coding Box 5',
+            maxLength: 500,
+
     },
     codingBox6: {
       id: 'codingBox6',
@@ -1027,6 +1201,8 @@ const TemplateCreate = () => {
       order: 6,
       width: 'four',
       placeholder: 'Enter Coding Box 6',
+            maxLength: 500,
+
     },
     codingBox7: {
       id: 'codingBox7',
@@ -1039,6 +1215,8 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter Coding Box 7',
+           maxLength: 500,
+ 
     },
     codingBox8: {
       id: 'codingBox8',
@@ -1051,6 +1229,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Coding Box 8',
+      maxLength: 500,
     },
   };
 
@@ -1067,6 +1246,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Examination',
+      maxLength: 500,
     },
     prepaymentCoding: {
       id: 'prepaymentCoding',
@@ -1079,6 +1259,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Prepayment Coding',
+      maxLength: 500,
     },
     chargesNote: {
       id: 'chargesNote',
@@ -1102,6 +1283,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Cash on Delivery Receipt',
+      maxLength: 500,
     },
     formalReport: {
       id: 'formalReport',
@@ -1114,6 +1296,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Formal Report',
+      maxLength: 500,
     },
     extensionOfTransitPeriod: {
       id: 'extensionOfTransitPeriod',
@@ -1126,6 +1309,7 @@ const TemplateCreate = () => {
       order: 6,
       width: 'four',
       placeholder: 'Enter Extension of Transit Period',
+      maxLength: 500,
     },
     dateOfArrival: {
       id: 'dateOfArrival',
@@ -1180,6 +1364,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Code for the Charging Sections',
+      maxLength: 500,
     },
     routeCode: {
       id: 'routeCode',
@@ -1192,6 +1377,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Route Code',
+      maxLength: 500,
     },
     nhmCode: {
       id: 'nhmCode',
@@ -1264,6 +1450,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Supplements, Fees, Deductions',
+      maxLength: 500,
     },
     unitPrice: {
       id: 'unitPrice',
@@ -1566,6 +1753,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter itinerary',
       labelFlag: true,
+      maxLength: 500,
     },
     dataOfDispatch: {
       id: 'dataOfDispatch',
@@ -1593,6 +1781,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Customer Code for the Pay...',
       hideSearch: false,
+      maxLength: 255,
     },
     toBeClearedAt: {
       id: 'toBeClearedAt',
@@ -1606,19 +1795,27 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter To Be Cleared At',
       hideSearch: false,
+      maxLength: 255,
     },
-    fixedNetTrain: {
-      id: 'fixedNetTrain',
-      label: 'Fixed Net Train [13]',
-      fieldType: 'inputdropdown',
-      value: '',
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 6,
-      width: 'four',
-      placeholder: 'Enter Fixed Net Train [13]',
-    },
+ fixedNetTrain: {
+  id: 'fixedNetTrain',
+  label: 'Fixed Net Weight Train [13]',
+  fieldType: 'inputdropdown',
+  value: {
+    input: '',
+    dropdown: '',
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 6,
+  width: 'four',
+  placeholder: 'Enter Fixed Net Weight Train',
+  options: getUomOptions(weightUomList), // ✅ SAME PATTERN
+},
+
+
+
     number: {
       id: 'number',
       label: 'No./Number [14]',
@@ -1642,6 +1839,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Customer Code for the Pay...',
+      maxLength: 255,
     },
     wagonNumber: {
       id: 'wagonNumber',
@@ -1654,6 +1852,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: 'Enter wagon number',
+      maxLength: 1000,
 
     },
     DescriptionoftheGoods: {
@@ -1667,6 +1866,8 @@ const TemplateCreate = () => {
       order: 10,
       width: 'four',
       placeholder: 'Enter Description of the Goods',
+      maxLength: 255,
+     
     },
     ExceptionalConsignment: {
       id: 'ExceptionalConsignment',
@@ -1692,7 +1893,7 @@ const TemplateCreate = () => {
     },
     UTICODE: {
       id: 'UTICODE',
-      label: 'UTI Code (Intermodal Transport Unit) [23]',
+      label: 'UTI Code (Wagon type Init) [23]',
       fieldType: 'lazyselect',
       value: '',
       mandatory: false,
@@ -1705,18 +1906,23 @@ const TemplateCreate = () => {
       hideSearch: false,
       disableLazyLoading: false,
     },
-    LengthWidthHeight: {
-      id: 'LengthWidthHeight',
-      label: "Length x Width x Height [24]",
-      fieldType: 'inputdropdown',
-      value: '',
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 14,
-      width: 'four',
-      placeholder: 'Enter Tare Weight',
-    },
+   LengthWidthHeight: {
+  id: 'LengthWidthHeight',
+  label: "Length x Width x Height [24]",
+  fieldType: 'inputdropdown',
+  value: {
+    input: '',
+    dropdown: '',
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 14,
+  width: 'four',
+  placeholder: 'Enter Length x Width x Height',
+  options: getUomOptions(lengthWeightUomList), // or dimension UOM list if available
+},
+
     MarkandNumber: {
       id: 'MarkandNumber',
       label: "Mark and Number [25]",
@@ -1728,6 +1934,7 @@ const TemplateCreate = () => {
       order: 15,
       width: 'four',
       placeholder: 'Enter Mark and Number',
+      maxLength: 500,
     },
     DeliveryNoteNumber: {
       id: 'DeliveryNoteNumber',
@@ -1740,6 +1947,7 @@ const TemplateCreate = () => {
       order: 16,
       width: 'four',
       placeholder: 'Enter Delivery Note Number ',
+      maxLength: 500,
     },
     NHMCode: {
       id: 'NHMCode',
@@ -1904,6 +2112,7 @@ const TemplateCreate = () => {
       placeholder: 'Enter Country',
       hideSearch: false,
       disableLazyLoading: false,
+      maxLength: 255,
     },
     Station: {
       id: 'Station',
@@ -1919,6 +2128,7 @@ const TemplateCreate = () => {
       hideSearch: false,
       fetchOptions: fetchMaster('Location Init'),
       disableLazyLoading: false,
+      
     },
     StationValue: {
       id: 'StationValue',
@@ -1932,6 +2142,7 @@ const TemplateCreate = () => {
       width: 'third',
       placeholder: 'Enter Station Value',
       labelFlag: false,
+      maxLength: 255, 
     },
     UndertakingEnterprise: {
       id: 'UndertakingEnterprise',
@@ -1960,6 +2171,7 @@ const TemplateCreate = () => {
       width: 'third',
       placeholder: 'Enter Undertaking Enterprise Value',
       labelFlag: false,
+      maxLength: 255,
     },
   };
 
@@ -1975,6 +2187,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'third',
       placeholder: 'Enter Customs Endorsements',
+      maxLength: 500,
 
     },
     Route_50: {
@@ -2006,6 +2219,7 @@ const TemplateCreate = () => {
       placeholder: 'Enter Customs Procedures',
       hideSearch: false,
       disableLazyLoading: false,
+      maxLength: 500,
     },
     ContractualCarrier: {
       id: 'ContractualCarrier',
@@ -2034,6 +2248,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Contractual Carrier',
       labelFlag: false,
+      maxLength: 255,
     },
     TransitProcedure: {
       id: 'UndertakingEnterprise',
@@ -2045,6 +2260,7 @@ const TemplateCreate = () => {
       editable: true,
       order: 6,
       width: 'four',
+      maxLength: 500,
 
     },
     EnterTransitProcedure: {
@@ -2271,12 +2487,12 @@ const sanitizeRouteRows = (rows: any[]) =>
 
 
   const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
-    PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction1 || null,
+    PaymentInstructionDescriptionvalue1: splitIdName(paymentFormData.paymentInstruction1).id || null,
     PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
     IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
     Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
-    PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
+    PlaceAndDateMadeOut_29_value1: splitIdName(placeAndDateFormData.place).id || null,
     PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
   });
 
@@ -2290,12 +2506,9 @@ const sanitizeRouteRows = (rows: any[]) =>
   const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
     const declarationOfValue = splitIdName(formData.declarationOfValue);
     const interestInDelivery = splitIdName(formData.interestInDelivery);
-
+    const currencyDelivery = splitIdName(formData.cashOnDelivery);
     // cash on delivery may be inputdropdown → handle carefully
-    const cashOnDelivery =
-      typeof formData.cashOnDelivery === "string"
-        ? splitIdName(formData.cashOnDelivery)
-        : { id: formData.cashOnDelivery, name: "" };
+   
 
     return {
       // Declaration of Value [26]
@@ -2308,8 +2521,8 @@ const sanitizeRouteRows = (rows: any[]) =>
       //   Currency_27: interestInDelivery.name || null,
 
       //   // Cash on Delivery [28]
-      //   CashOnDelivery_28: cashOnDelivery.id || null,
-      //   Currency_28: cashOnDelivery.name || null,
+      //   CashOnDelivery_28: formData.cashOnDelivery?.dropdown,
+      //   Currency_28: formData.cashOnDelivery?.dropdown,
 
       DeclarationOfValue_26: "CAD",
       Currency_26: "454.00000000",
@@ -2464,11 +2677,10 @@ const sanitizeRouteRows = (rows: any[]) =>
       r.LegID === "" || r.LegID === undefined
         ? null
         : Number(r.LegID),
-
-    FromLocationID: r.FromLocationID || null,
+    FromLocationID: splitIdName(r.FromLocationID).id || null,
     FromLocationDesc: r.FromLocationDesc || "",
 
-    ToLocationID: r.ToLocationID || null,
+    ToLocationID: splitIdName(r.ToLocationID).id|| null,
     ToLocationDesc: r.ToLocationDesc || "",
 
     AdhocLeg: r.AdhocLeg ? 1 : 0,
@@ -2551,11 +2763,18 @@ const sanitizeRouteRows = (rows: any[]) =>
   //   };
   // };
 
+  // const toNumberOrNull = (v: any) => {
+  //   if (v === "" || v === null || v === undefined) return null;
+  //   const n = Number(v);
+  //   return isNaN(n) ? null : n;
+  // };
+
   const toNumberOrNull = (v: any) => {
-    if (v === "" || v === null || v === undefined) return null;
-    const n = Number(v);
-    return isNaN(n) ? null : n;
-  };
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+};
+
 
   const toBit = (v: any) => (v ? 1 : 0);
 
@@ -2741,6 +2960,11 @@ const sanitizeRouteRows = (rows: any[]) =>
 
 
 
+useEffect(() => {
+  console.log("Currency UOM", currencyUomList);
+  console.log("Weight UOM", weightUomList);
+  console.log("Length UOM", lengthWeightUomList);
+}, [currencyUomList, weightUomList, lengthWeightUomList]);
 
 
   const [isFormInitialized, setIsFormInitialized] = useState(false);
@@ -3092,6 +3316,44 @@ const sanitizeRouteRows = (rows: any[]) =>
               dropdown: wagon.TareWeight_25_20_UOM,
             }
             : null,
+//22
+          TotalBrutto:
+  wagon.Total_Brutto !== null && wagon.Total_Brutto !== undefined
+    ? {
+        input: String(wagon.Total_Brutto),
+        dropdown: wagon.Total_Brutto_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+
+
+
+             TotalNetto:
+  wagon.Total_Netto !== null && wagon.Total_Netto !== undefined
+    ? {
+        input: String(wagon.Total_Netto),
+        dropdown: wagon.Total_Netto_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+
+            TotalGross:
+  wagon.Total_Gross !== null && wagon.Total_Gross !== undefined
+    ? {
+        input: String(wagon.Total_Gross),
+        dropdown: wagon.Total_Gross_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
 
           NetWeight: wagon.NetWeight_25_21
             ? {
@@ -3099,6 +3361,8 @@ const sanitizeRouteRows = (rows: any[]) =>
               dropdown: wagon.NetWeight_25_21_UOM,
             }
             : null,
+
+
         });
       }
 
@@ -3132,7 +3396,7 @@ const sanitizeRouteRows = (rows: any[]) =>
           routeEndorsement: RouteEndorsementDetailsRef.current?.getFormValues(),
           wagon: WagonDetailsRef.current?.getFormValues(), // ✅ SINGLE FORM
         };
-        console.log("SNAPSHOT CAPTURED", initialSnapshotRef.current);
+        console.log("SNAPSHOT CAPTURED", lengthWeightUomList);
       }
 
 
@@ -3395,14 +3659,79 @@ const sanitizeRouteRows = (rows: any[]) =>
     };
   };
  // --- Wagon Line sanitization ---
+// const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
+//   wagonGritDetails
+//     .map(row => ({
+//       WagsdfvonNo: row.WagonNo || "",
+
+//       No_of_Axle: toNumberOrNull(row.No_of_Axle),
+//       NHM: toNumberOrNull(row.NHM),
+
+//       Mass_Weight: toNumberOrNull(row.Mass_Weight),
+//       Mass_Weight_UOM: row.Mass_Weight_UOM || null,
+
+//       Tare_Weight: toNumberOrNull(row.Tare_Weight),
+//       Tare_Weight_UOM: row.Tare_Weight_UOM || null,
+
+//       Brut_Weight: toNumberOrNull(row.Brut_Weight),
+//       Brut_Weight_UOM: row.Brut_Weight_UOM || null,
+
+//       Gross_Weight: toNumberOrNull(row.Gross_Weight),
+//       Gross_weight_UOM: row.Gross_weight_UOM || null,
+
+//       Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+//       Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
+
+//       Wagon_Length: toNumberOrNull(row.Wagon_Length),
+//       Wagon_Length_UOM: row.Wagon_Length_UOM || null,
+
+//       Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+//       Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+//       Container_load_weight: toNumberOrNull(row.Container_load_weight),
+
+//       Total_Mass: toNumberOrNull(row.Total_Mass),
+//       Total_Brutt: toNumberOrNull(row.Total_Brutt),
+//       Total_Tare: toNumberOrNull(row.Total_Tare),
+
+//       Environmentally_Hazardous:
+//         row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
+
+//       UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+//       UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+//       UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+//       UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+
+//       RID: toBit(row.RID),
+
+//       ModeFlag: row.ModeFlag || "NoChange",
+//     }))
+//     // ❗ remove empty rows so API does not fail
+//     // .filter(row =>
+//     //   row.WagonNo ||
+//     //   row.NHM ||
+//     //   row.No_of_Axle ||
+//     //   row.Gross_Weight ||
+//     //   row.Net_Weight_Commodity_Qty
+//     // );
+
+//     .filter(() => true)
 const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
   wagonGritDetails
     .map(row => ({
-      WagonNo: row.WagonNo || "",
+      // =========================
+      // Identity
+      // =========================
+      WagonNo: row.WagonNo?.trim() || "",
 
-      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      // =========================
+      // Axle / Codes
+      // =========================
+      No_of_Axle:toNumberOrNull(row.No_of_Axle) ,
       NHM: toNumberOrNull(row.NHM),
 
+      // =========================
+      // Weights + UOM
+      // =========================
       Mass_Weight: toNumberOrNull(row.Mass_Weight),
       Mass_Weight_UOM: row.Mass_Weight_UOM || null,
 
@@ -3416,39 +3745,122 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       Gross_weight_UOM: row.Gross_weight_UOM || null,
 
       Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
-      Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
+      Net_Weight_Commodity_Qty_UOM:
+        row.Net_Weight_Commodity_Qty_UOM || null,
 
       Wagon_Length: toNumberOrNull(row.Wagon_Length),
       Wagon_Length_UOM: row.Wagon_Length_UOM || null,
 
+      // =========================
+      // Container weights
+      // =========================
       Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+      Container_Tare_Weight_UOM:
+        row.Container_Tare_Weight_UOM || null,
+
       Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+      Container_tare_weight_2_UOM:
+        row.Container_tare_weight_2_UOM || null,
+
       Container_load_weight: toNumberOrNull(row.Container_load_weight),
+      Container_Load_Weight_UOM:
+        row.Container_Load_Weight_UOM || null,
 
+      // =========================
+      // Totals
+      // =========================
       Total_Mass: toNumberOrNull(row.Total_Mass),
-      Total_Brutt: toNumberOrNull(row.Total_Brutt),
-      Total_Tare: toNumberOrNull(row.Total_Tare),
+      Total_Mass_UOM: row.Total_Mass_UOM || null,
 
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Brutt_UOM: row.Total_Brutt_UOM || null,
+
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      Total_Tare_UOM: row.Total_Tare_UOM || null,
+
+      // =========================
+      // Text / Descriptive fields
+      // =========================
+      Short_Description_of_Goods:
+        row.Short_Description_of_Goods || "",
+
+      Specificity: row.Specificity || "",
+      UTI_Type: row.UTI_Type || "",
+
+      Long_x_larg_x_haut: row.Long_x_larg_x_haut || "",
+      Long_x_larg_x_haut_UOM:
+        row.Long_x_larg_x_haut_UOM || "",
+
+      Brand_and_No: row.Brand_and_No || "",
+      Remittance_Slip_Number:
+        row.Remittance_Slip_Number || "",
+
+      Customs_Document: row.Customs_Document || "",
+      UN_Code: row.UN_Code || "",
+      Load_Type: row.Load_Type || "",
+      Packing_Group: row.Packing_Group || "",
+      Label: row.Label || "",
+      Special_Provision: row.Special_Provision || "",
+      Hazard_ID_Number: row.Hazard_ID_Number || "",
+
+      // =========================
+      // Environment / Hazard
+      // =========================
       Environmentally_Hazardous:
         row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
 
-      UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
-      UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
-      UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
-      UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+      Last_Loaded_Commodity:
+        row.Last_Loaded_Commodity || null,
 
+      // =========================
+      // Container / Country
+      // =========================
+      Container_No: row.Container_No || null,
+      Container_Type: row.Container_Type || null,
+
+      From_Country: row.From_Country || null,
+      To_Country: row.To_Country || null,
+
+      Commodity_Description:
+        row.Commodity_Description || null,
+
+      Container_load_type:
+        row.Container_load_type || null,
+
+      // =========================
+      // UN Descriptions
+      // =========================
+      UN_Desc_English: row.UN_Desc_English || null,
+      UN_Desc_French: row.UN_Desc_French || null,
+      UN_Desc_German: row.UN_Desc_German || null,
+      UN_Desc_Other_Language:
+        row.UN_Desc_Other_Language || null,
+
+      UN_Desc_English_Check:
+        toBit(row.UN_Desc_English_Check),
+      UN_Desc_French_Check:
+        toBit(row.UN_Desc_French_Check),
+      UN_Desc_German_Check:
+        toBit(row.UN_Desc_German_Check),
+      UN_Desc_Other_Language_Check:
+        toBit(row.UN_Desc_Other_Language_Check),
+
+      // =========================
+      // Flags
+      // =========================
       RID: toBit(row.RID),
 
       ModeFlag: row.ModeFlag || "NoChange",
     }))
-    // ❗ remove empty rows so API does not fail
-    .filter(row =>
-      row.WagonNo ||
-      row.NHM ||
-      row.No_of_Axle ||
-      row.Gross_Weight ||
-      row.Net_Weight_Commodity_Qty
-    );
+    // ❗ remove empty rows
+    // .filter(row =>
+    //   row.WagonNo &&
+    //   (
+    //     row.Gross_Weight !== null ||
+    //     row.Net_Weight_Commodity_Qty !== null ||
+    //     row.Mass_Weight !== null
+    //   )
+    // );
 
 
 
@@ -3475,19 +3887,6 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       initialSnapshotRef.current?.WagonInfodetails,
       workOrderNo
     );
-
-    const sanitizedWagonLines = wagonGritDetails.map(row => ({
-      ...row,
-      No_of_Axle: toNumberOrNull(row.No_of_Axle),
-      NHM: toNumberOrNull(row.NHM),
-      Mass_Weight: toNumberOrNull(row.Mass_Weight),
-      Tare_Weight: toNumberOrNull(row.Tare_Weight),
-      Brut_Weight: toNumberOrNull(row.Brut_Weight),
-      Total_Mass: toNumberOrNull(row.Total_Mass),
-      Total_Brutt: toNumberOrNull(row.Total_Brutt),
-      Total_Tare: toNumberOrNull(row.Total_Tare),
-      RID: toBit(row.RID),
-    }));
 
     const payload = {
       Header: {
@@ -3622,8 +4021,14 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       ),
 
       WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
+      // WagonLineDetails: wagonGritDetails
+
 
     };
+    console.log(
+  "FINAL WAGON PAYLOAD",
+  sanitizeWagonLineDetails(wagonGritDetails)
+);
 
     console.log("✅ FINAL PAYLOAD", JSON.stringify(payload, null, 2));
     console.log("✅ FINAL PAYLOAD", workOrderNo);
