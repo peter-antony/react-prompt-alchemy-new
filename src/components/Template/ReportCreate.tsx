@@ -3,7 +3,7 @@ import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ChevronDown } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services/quickOrderService";
@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import CancelConfirmationModal from "./CancelConfirmationModal";
 import ConsignorConsigneeSideDraw from "./ConsignorConsigneeSideDraw";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const ReportCreate = () => {
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
@@ -262,6 +263,67 @@ const ReportCreate = () => {
       console.log("response.data1", responseData);
       setApiResponse(responseData);
       setInitialApiResponse(responseData); // Store the initial response
+    } catch (error) {
+      console.error("Error fetching template data:", error);
+      setApiResponse(null);
+      setInitialApiResponse(null);
+    }
+  };
+
+  // Function to fetch template data from API
+  const getTemplateDataByID = async (templateId: string) => {
+    console.log("Fetching template data for template ID:", templateId);
+    try {
+      const response = await CimCuvService.getTemplateDataByID(templateId);
+      console.log("response.data1", response);
+      const fullResponseData = JSON.parse((response as any).data?.ResponseData);
+      console.log("response.data1", fullResponseData);
+      
+      // Destructure to exclude the Header object, or explicitly set other parts
+      const { Header, ...restOfResponseData } = fullResponseData;
+
+      // Set apiResponse and initialApiResponse with data excluding the Header
+      setApiResponse(restOfResponseData);
+      setInitialApiResponse(restOfResponseData); // Store the initial response without Header
+    } catch (error) {
+      console.error("Error fetching template data:", error);
+      setApiResponse(null);
+      setInitialApiResponse(null);
+    }
+  };
+
+  // Function to fetch template data from API
+  const getReportDataChangeByID = async (templateId: string) => {
+    console.log("Fetching template data for template ID:", templateId);
+    try {
+      const response = await CimCuvService.getReportDataByID(templateId);
+      console.log("response.data1", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+          console.log("Report data changed successfully");
+          const fullResponseData = JSON.parse((response as any)?.data?.ResponseData);
+          console.log("response.data1", fullResponseData);
+        // toast({
+        //   title: "✅ Template Saved Successfully",
+        //   description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+        //   variant: "default",
+        // });
+        // Destructure to exclude the Header object, or explicitly set other parts
+        const { Header, ...restOfResponseData } = fullResponseData;
+
+        // Set apiResponse and initialApiResponse with data excluding the Header
+        setApiResponse(restOfResponseData);
+        setInitialApiResponse(restOfResponseData); // Store the initial response without Header
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Get Failed",
+          description: (response as any)?.data?.Message || "Failed to get data.",
+          variant: "destructive",
+        });
+
+      }
+      
     } catch (error) {
       console.error("Error fetching template data:", error);
       setApiResponse(null);
@@ -536,7 +598,7 @@ const ReportCreate = () => {
       order: 5,
       width: "four",
       placeholder: "Enter Consignee",
-      fetchOptions: fetchMaster("Consignee4 Init"),
+      fetchOptions: fetchMaster("Consignee Init"),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -564,7 +626,7 @@ const ReportCreate = () => {
       order: 7,
       width: "four",
       placeholder: "Enter Customer Code for Consign...",
-      fetchOptions: fetchMaster("Consignee CustomerCode5 Init"),
+      fetchOptions: fetchMaster("Customer code for consignee [5] Init"),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -747,6 +809,14 @@ const ReportCreate = () => {
       fetchOptions: fetchMaster("TemplateID Description Init"),
       hideSearch: false,
       disableLazyLoading: false,
+      events: {
+          onChange: (value: any) => {
+            console.log("change the ID ===", value.value);
+            const tempID = splitIdName(value.value).id;
+            console.log("change the ID ===", tempID);
+            getTemplateDataByID(tempID);
+          },
+      },
     },
     templateType: {
       id: "templateType",
@@ -775,9 +845,17 @@ const ReportCreate = () => {
       order: 3,
       width: "four",
       placeholder: "",
-      fetchOptions: fetchMaster("Dispatch Document No Init"),
+      fetchOptions: fetchMaster("Dispatch DocumentNumber Init"),
       hideSearch: false,
       disableLazyLoading: false,
+      events: {
+        onChange: (value: any) => {
+          console.log("change the ID ===", value);
+          const tempID = splitIdName(value.value).id;
+          console.log("change the ID ===", tempID);
+          getReportDataChangeByID(tempID);
+        },
+      },
     },
     dispatchDocNoDescription: {
       id: "dispatchDocNoDescription",
@@ -974,7 +1052,7 @@ const ReportCreate = () => {
       order: 1,
       width: "one-third",
       placeholder: "Enter Place",
-      fetchOptions: fetchMaster("Place_29 Init"),
+      fetchOptions: fetchMaster("Location Init"),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -2222,6 +2300,12 @@ const ReportCreate = () => {
       : "Update";
   };
 
+  const toIntOrNull = (v: any) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isInteger(n) ? n : null;
+  };
+
   // Deep equality check utility
   const deepEqual = (obj1: any, obj2: any): boolean => {
     if (obj1 == obj2) return true;
@@ -2251,8 +2335,7 @@ const ReportCreate = () => {
     DocType: formData.templateType,
     CIMCUVNo: workOrderNo || null,
     CustomerOrderNo: formData.customerOrderNo || null,
-    DispatchDocNo:
-      formData.dispatchDocNo || apiResponse?.Header?.DispatchDocNo || null,
+    DispatchDocNo: splitIdName(formData.dispatchDocNo).id || apiResponse?.Header?.DispatchDocNo || null,
     UNCode: splitIdName(formData.unCode).id || null,
     TripPlanID: splitIdName(formData.tripPlanId).id || null,
     Status: formData.status || "Confirmed",
@@ -2537,25 +2620,55 @@ const ReportCreate = () => {
     };
   };
   //for grid
-  const mapRouteCodeCDetailsPayload = (rows: any[]) => {
-    return rows
-      .filter((row) => row.RouteID || row.LegID)
-      .map((row) => ({
-        RouteID: row.RouteID ?? "",
-       LegSequence: row.LegSequence !== null && row.LegSequence !== undefined
-  ? Number(row.LegSequence)
-  : null,
+//   const mapRouteCodeCDetailsPayload = (rows: any[]) => {
+//     return rows
+//       .filter((row) => row.RouteID || row.LegID)
+//       .map((row) => ({
+//         RouteID: row.RouteID ?? "",
+//        LegSequence: row.LegSequence !== null && row.LegSequence !== undefined
+//   ? Number(row.LegSequence)
+//   : null,
 
-        LegID: row.LegID ?? "",
-        FromLocationID: row.FromLocationID ?? "",
-        FromLocationDesc: row.FromLocationDesc ?? "",
-        ToLocationID: row.ToLocationID ?? "",
-        ToLocationDesc: row.ToLocationDesc ?? "",
-        AdhocLeg: row.AdhocLeg ?? "",
-        ViaPoint: row.ViaPoint ?? "",
-        ModeFlag: row.ModeFlag,
-      }));
-  };
+//         LegID: row.LegID ?? "",
+//         FromLocationID: row.FromLocationID ?? "",
+//         FromLocationDesc: row.FromLocationDesc ?? "",
+//         ToLocationID: row.ToLocationID ?? "",
+//         ToLocationDesc: row.ToLocationDesc ?? "",
+//         AdhocLeg: row.AdhocLeg ?? "",
+//         ViaPoint: row.ViaPoint ?? "",
+//         ModeFlag: row.ModeFlag,
+//       }));
+//   };
+
+    const mapRouteCodeCDetailsPayload = (rows: any[]) =>
+        rows.map(r => ({
+        RouteID:
+            r.RouteID === "" || r.RouteID === undefined
+            ? null
+            : Number(r.RouteID),
+    
+        LegSequence:
+            r.LegSequence === "" || r.LegSequence === undefined
+            ? null
+            : Number(r.LegSequence),
+    
+        LegID:
+            r.LegID === "" || r.LegID === undefined
+            ? null
+            : Number(r.LegID),
+    
+        FromLocationID: r.FromLocationID || null,
+        FromLocationDesc: r.FromLocationDesc || "",
+    
+        ToLocationID: r.ToLocationID || null,
+        ToLocationDesc: r.ToLocationDesc || "",
+    
+        AdhocLeg: r.AdhocLeg ? 1 : 0,
+    
+        ViaPoint: r.ViaPoint || "",
+    
+        ModeFlag: r.ModeFlag || "Insert",
+    }));
 
   const mapOtherCarriersPayload = (rows: any[]) =>
     rows.map((row) => ({
@@ -2619,21 +2732,23 @@ const ReportCreate = () => {
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-      GrossWeight_25_19: toNumberOrNull(gross?.val),
-      GrossWeight_25_19_UOM: gross?.uom || null,
-
-      TareWeight_25_20: toNumberOrNull(tare?.val),
-      TareWeight_25_20_UOM: tare?.uom || null,
-
-      NetWeight_25_21: toNumberOrNull(net?.val),
-      NetWeight_25_21_UOM: net?.uom || null,
-
-      Total_Brutto_UOM: formData.TotalBrutto?.dropdown,
-      Total_Brutto: formData.TotalBrutto?.input,
-      Total_Netto_UOM: formData.TotalNetto?.dropdown,
-      Total_Netto: formData.TotalNetto?.input,
-      Total_Gross_UOM: formData.TotalGross?.dropdown,
-      Total_Gross: toNumberOrNull(formData.TotalGross?.input),
+      GrossWeight_25_19: formData.GrossWeight?.input || 0,
+      GrossWeight_25_19_UOM: formData.GrossWeight?.dropdown || null,
+ 
+      TareWeight_25_20: formData.TareWeight?.input || 0,
+      TareWeight_25_20_UOM: formData.TareWeight?.dropdown || null,
+ 
+      NetWeight_25_21: formData.NetWeight?.input || 0,
+      NetWeight_25_21_UOM: formData.NetWeight?.dropdown || null,
+ 
+      Total_Brutto: formData.TotalBrutto?.input || 0,
+      Total_Netto: formData.TotalNetto?.input || 0,
+      Total_Gross: formData.TotalGross?.input || 0,
+     
+      Total_Brutto_UOM: formData.TotalBrutto?.dropdown || null,
+      Total_Netto_UOM: formData.TotalNetto?.dropdown || null,
+      Total_Gross_UOM: formData.TotalGross?.dropdown || null,
+ 
 
       ModeFlag: modeFlag,
     };
@@ -2806,7 +2921,7 @@ const ReportCreate = () => {
         examinationDetailsRef.current.setFormValues({
           examination: apiResponse.Declarations.Examination_48,
           prepaymentCoding: apiResponse.Declarations.PrepaymentCoding_49,
-          chargesNote: apiResponse.Declarations.ChargesNote_52 === 1,
+          chargesNote: apiResponse.Declarations.ChargesNote_52 === "1",
           cashOnDeliveryReceipt:
             apiResponse.Declarations.CashOnDeliveryReceipt_53,
           formalReport: apiResponse.Declarations.FormalReport_54,
@@ -3059,41 +3174,96 @@ const ReportCreate = () => {
       uom: parts[1] ?? null,
     };
   };
-  const sanitizedWagonLineDetails = wagonGritDetails.map((row) => ({
-    ...row,
+//   const sanitizedWagonLineDetails = wagonGritDetails.map((row) => ({
+//     ...row,
 
-    // --- NUMERIC FIELDS ---
-    No_of_Axle: toNumberOrNull(row.No_of_Axle),
-    NHM: toNumberOrNull(row.NHM),
-    Mass_Weight: toNumberOrNull(row.Mass_Weight),
-    Tare_Weight: toNumberOrNull(row.Tare_Weight),
-    Brut_Weight: toNumberOrNull(row.Brut_Weight),
+//     // --- NUMERIC FIELDS ---
+//     No_of_Axle: toNumberOrNull(row.No_of_Axle),
+//     NHM: toNumberOrNull(row.NHM),
+//     Mass_Weight: toNumberOrNull(row.Mass_Weight),
+//     Tare_Weight: toNumberOrNull(row.Tare_Weight),
+//     Brut_Weight: toNumberOrNull(row.Brut_Weight),
 
-    Total_Mass: toNumberOrNull(row.Total_Mass),
-    Total_Brutt: toNumberOrNull(row.Total_Brutt),
-    Total_Tare: toNumberOrNull(row.Total_Tare),
+//     Total_Mass: toNumberOrNull(row.Total_Mass),
+//     Total_Brutt: toNumberOrNull(row.Total_Brutt),
+//     Total_Tare: toNumberOrNull(row.Total_Tare),
 
-    Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
-    Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
-    Container_load_weight: toNumberOrNull(row.Container_load_weight),
+//     Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+//     Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+//     Container_load_weight: toNumberOrNull(row.Container_load_weight),
 
-    Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
-    Gross_Weight: toNumberOrNull(row.Gross_Weight),
-    Wagon_Length: toNumberOrNull(row.Wagon_Length),
+//     Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+//     Gross_Weight: toNumberOrNull(row.Gross_Weight),
+//     Wagon_Length: toNumberOrNull(row.Wagon_Length),
 
-    // --- BIT / BOOLEAN FIELDS ---
-    Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
-    UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
-    UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
-    UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
-    UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+//     // --- BIT / BOOLEAN FIELDS ---
+//     Environmentally_Hazardous: toBit(row.Environmentally_Hazardous),
+//     UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+//     UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+//     UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+//     UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
 
-    RID: toBit(row.RID),
+//     RID: toBit(row.RID),
 
-    ModeFlag: row.ModeFlag || "Update",
-  }));
+//     ModeFlag: row.ModeFlag || "Update",
+//   }));
 
-  const handleSaveTemplate = async () => {
+    const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
+    wagonGritDetails
+      .map(row => ({
+        WagonNo: row.WagonNo || "",
+   
+        No_of_Axle: toNumberOrNull(row.No_of_Axle),
+        NHM: toNumberOrNull(row.NHM),
+   
+        Mass_Weight: toNumberOrNull(row.Mass_Weight),
+        Mass_Weight_UOM: row.Mass_Weight_UOM || null,
+   
+        Tare_Weight: toNumberOrNull(row.Tare_Weight),
+        Tare_Weight_UOM: row.Tare_Weight_UOM || null,
+   
+        Brut_Weight: toNumberOrNull(row.Brut_Weight),
+        Brut_Weight_UOM: row.Brut_Weight_UOM || null,
+   
+        Gross_Weight: toNumberOrNull(row.Gross_Weight),
+        Gross_weight_UOM: row.Gross_weight_UOM || null,
+   
+        Net_Weight_Commodity_Qty: toNumberOrNull(row.Net_Weight_Commodity_Qty),
+        Net_Weight_Commodity_Qty_UOM: row.Net_Weight_Commodity_Qty_UOM || null,
+   
+        Wagon_Length: toNumberOrNull(row.Wagon_Length),
+        Wagon_Length_UOM: row.Wagon_Length_UOM || null,
+   
+        Container_Tare_Weight: toNumberOrNull(row.Container_Tare_Weight),
+        Container_Tare_Weight_2: toNumberOrNull(row.Container_Tare_Weight_2),
+        Container_load_weight: toNumberOrNull(row.Container_load_weight),
+   
+        Total_Mass: toNumberOrNull(row.Total_Mass),
+        Total_Brutt: toNumberOrNull(row.Total_Brutt),
+        Total_Tare: toNumberOrNull(row.Total_Tare),
+   
+        Environmentally_Hazardous:
+          row.Environmentally_Hazardous === "Yes" ? "Yes" : "No",
+   
+        UN_Desc_English_Check: toBit(row.UN_Desc_English_Check),
+        UN_Desc_French_Check: toBit(row.UN_Desc_French_Check),
+        UN_Desc_German_Check: toBit(row.UN_Desc_German_Check),
+        UN_Desc_Other_Language_Check: toBit(row.UN_Desc_Other_Language_Check),
+   
+        RID: toBit(row.RID),
+   
+        ModeFlag: row.ModeFlag || "NoChange",
+      }))
+      // ❗ remove empty rows so API does not fail
+      .filter(row =>
+        row.WagonNo ||
+        row.NHM ||
+        row.No_of_Axle ||
+        row.Gross_Weight ||
+        row.Net_Weight_Commodity_Qty
+      );
+
+  const handleSaveReport = async () => {
     if (workOrderNo && !initialSnapshotRef.current) return;
 
     const headerFV = headerTemplateRef.current.getFormValues();
@@ -3230,7 +3400,7 @@ const ReportCreate = () => {
         wagonInfoModeFlag
       ),
 
-      WagonLineDetails: sanitizedWagonLineDetails,
+      WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
     };
 
     console.log("pYLOAD", JSON.stringify(payload, null, 2));
@@ -3273,6 +3443,191 @@ const ReportCreate = () => {
         title: "⚠️ Save Failed",
         description:
           "An error occurred while saving the template. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateTemplate = async () => {
+    if (workOrderNo && !initialSnapshotRef.current) return;
+
+    const headerFV = headerTemplateRef.current.getFormValues();
+    const generalFV = generalDetailsRef.current.getFormValues();
+    const paymentFV = paymentInstructionRef.current.getFormValues();
+    const placeDateFV = placeAndDateRef.current.getFormValues();
+    const consignorFV = consignorDeclarationsRef.current.getFormValues();
+    const valueDeliveryFV = valueDeliveryCashRef.current.getFormValues();
+    const codingFV = codingBoxesRef.current.getFormValues();
+    const examFV = examinationDetailsRef.current.getFormValues();
+    const secAFV = sectionARef.current.getFormValues();
+    const secBFV = sectionBRef.current.getFormValues();
+    const secCFV = sectionCRef.current.getFormValues();
+    const routeFV = RouteDetailsRef.current.getFormValues();
+    const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
+    const wagonFormData = WagonDetailsRef.current.getFormValues();
+
+    const wagonInfoModeFlag = resolveModeFlag(
+      wagonFormData,
+      initialSnapshotRef.current?.WagonInfodetails,
+      workOrderNo
+    );
+
+    const sanitizedWagonLines = wagonGritDetails.map((row) => ({
+      ...row,
+      No_of_Axle: toNumberOrNull(row.No_of_Axle),
+      NHM: toNumberOrNull(row.NHM),
+      Mass_Weight: toNumberOrNull(row.Mass_Weight),
+      Tare_Weight: toNumberOrNull(row.Tare_Weight),
+      Brut_Weight: toNumberOrNull(row.Brut_Weight),
+      Total_Mass: toNumberOrNull(row.Total_Mass),
+      Total_Brutt: toNumberOrNull(row.Total_Brutt),
+      Total_Tare: toNumberOrNull(row.Total_Tare),
+      RID: toBit(row.RID),
+    }));
+
+    const payload = {
+      Header: {
+        ...mapFormToHeaderPayload(headerFV),
+        ModeFlag: resolveModeFlag(
+          headerFV,
+          initialSnapshotRef.current?.header,
+          workOrderNo
+        ),
+      },
+
+      General: {
+        Details: {
+          ...mapFormToGeneralDetailsPayload(generalFV),
+          ModeFlag: resolveModeFlag(
+            generalFV,
+            initialSnapshotRef.current?.general,
+            workOrderNo
+          ),
+        },
+
+        PaymentInstruction: {
+          ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
+          ModeFlag: resolveModeFlag(
+            paymentFV,
+            initialSnapshotRef.current?.payment,
+            workOrderNo
+          ),
+        },
+      },
+
+      Declarations: {
+        ...mapFormToConsignorDeclarationsPayload(consignorFV),
+        ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
+        ...mapFormToCodingBoxesPayload(codingFV),
+        ...mapFormToExaminationDetailsPayload(examFV),
+        ModeFlag: resolveModeFlag(
+          {
+            ...consignorFV,
+            ...valueDeliveryFV,
+            ...codingFV,
+            ...examFV,
+          },
+          initialSnapshotRef.current?.declarations,
+          workOrderNo
+        ),
+
+        SectionA: {
+          ...mapFormToSectionAPayload(secAFV),
+          ModeFlag: resolveModeFlag(
+            secAFV,
+            initialSnapshotRef.current?.sectionA,
+            workOrderNo
+          ),
+        },
+
+        SectionB: {
+          ...mapFormToSectionBPayload(secBFV),
+          ModeFlag: resolveModeFlag(
+            secBFV,
+            initialSnapshotRef.current?.sectionB,
+            workOrderNo
+          ),
+        },
+
+        SectionC: {
+          ...mapFormToSectionCPayload(secCFV),
+          ModeFlag: resolveModeFlag(
+            secCFV,
+            initialSnapshotRef.current?.sectionC,
+            workOrderNo
+          ),
+        },
+      },
+
+      RouteDetails: {
+        ...mapFormToRouteEndorsementPayload(routeEndFV),
+        ModeFlag: resolveModeFlag(
+          routeEndFV,
+          initialSnapshotRef.current?.routeEndorsement,
+          workOrderNo
+        ),
+        //loading grid data
+          Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
+          OtherCarriers_57: mapOtherCarriersPayload(otherCarriers),
+      },
+
+      ConsignmentDetails: {
+        ...mapFormToRoutePayload(routeFV),
+        ModeFlag: resolveModeFlag(
+          routeFV,
+          initialSnapshotRef.current?.route,
+          workOrderNo
+        ),
+      },
+
+      WagonInfodetails: mapFormToWagonInfoDetails(
+        wagonFormData,
+        wagonInfoModeFlag
+      ),
+
+      WagonLineDetails: sanitizeWagonLineDetails(wagonGritDetails),
+    };
+
+    console.log("pYLOAD", JSON.stringify(payload, null, 2));
+    try {
+      console.log(" Sending payload to save template...");
+      const response = await CimCuvService.updateCimCuvReport(payload);
+      console.log("✅ SAVE TEMPLATE RESPONSE", response);
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      // const data = parsedResponse;
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      console.log("parsedResponse ====", parsedResponse);
+      if (resourceStatus) {
+        console.log("Template updated successfully");
+        toast({
+          title: "✅ Template Updated Successfully",
+          description:
+            (response as any)?.data?.ResponseData?.Message ||
+            "Your changes have been saved.",
+          variant: "default",
+        });
+
+        if (!workOrderNo) {
+          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          fetchTemplateData(parsedResponse?.Header?.TemplateID);
+        } else {
+          fetchTemplateData(workOrderNo);
+        }
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Update Failed",
+          description:
+            (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("❌ UPDATE TEMPLATE FAILED", error);
+      toast({
+        title: "⚠️ Update Failed",
+        description:
+          "An error occurred while updating the template. Please try again.",
         variant: "destructive",
       });
     }
@@ -3774,12 +4129,27 @@ const ReportCreate = () => {
             >
               Cancel
             </button>
-            <button
-              className="inline-flex items-center justify-center gap-2 whitespace-nowra bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-              onClick={handleSaveTemplate}
-            >
-              Save
-            </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 border border-blue-600 hover:bg-blue-100 font-semibold transition-colors rounded-sm h-8 px-3 text-[13px] relative"
+                >
+                  Save
+                  <span className="ml-2 pl-2 border-l border-blue-600 h-[28px] flex items-center">
+                    <ChevronDown className="w-4 h-4" />
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleSaveReport}>
+                  Save
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleUpdateTemplate}>
+                  Update Template
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
