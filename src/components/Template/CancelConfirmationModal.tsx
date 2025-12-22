@@ -103,7 +103,7 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
               type="text"
               value={reasonDescription}
               onChange={(e) => setReasonDescription(e.target.value)}
-              placeholder="Enter Reason Code Description"
+              placeholder=""
               className="mt-1"
             />
           </div>
@@ -111,7 +111,7 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
 
         {/* Footer */}
         <div className="mt-6 flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onClose}>Close</Button>
+          {/* <Button type="button" variant="outline" onClick={onClose}>Close</Button> */}
           <Button type="button" className="bg-red-500 hover:bg-red-600 text-white" onClick={handleCancelClick}>Cancel</Button>
         </div>
       </div>

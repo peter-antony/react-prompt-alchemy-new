@@ -4159,6 +4159,7 @@ const ReportCreate = () => {
           variant: "default",
         });
         setIsCancelModalOpen(false);
+        fetchTemplateData(parsedResponse?.CIMCUVNo);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -4210,6 +4211,7 @@ const ReportCreate = () => {
           variant: "default",
         });
         setIsAmendModalOpen(false);
+        fetchTemplateData(parsedResponse?.CIMCUVNo);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({

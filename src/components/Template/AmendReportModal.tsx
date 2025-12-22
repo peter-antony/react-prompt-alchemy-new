@@ -70,9 +70,9 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <div className="flex items-center">
-            <div className="bg-red-100 rounded-full p-2 mr-3">
+            <div className="bg-blue-100 rounded-full p-2 mr-3">
               {/* <X className="h-5 w-5 text-red-500" /> */}
-              <Pencil className="w-5 h-5 text-red-500" />
+              <Pencil className="w-5 h-5 text-blue-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">Amend</h3>
           </div>
@@ -103,7 +103,7 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
               type="text"
               value={reasonDescription}
               onChange={(e) => setReasonDescription(e.target.value)}
-              placeholder="Enter Reason Code Description"
+              placeholder=""
               className="mt-1"
             />
           </div>
@@ -111,8 +111,8 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
 
         {/* Footer */}
         <div className="mt-6 flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onClose}>Close</Button>
-          <Button type="button" className="bg-red-500 hover:bg-red-600 text-white" onClick={handleAmendClick}>Amend</Button>
+          {/* <Button type="button" variant="outline" onClick={onClose}>Close</Button> */}
+          <Button type="button" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={handleAmendClick}>Amend</Button>
         </div>
       </div>
     </div>
