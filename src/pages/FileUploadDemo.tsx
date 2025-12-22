@@ -90,7 +90,7 @@ const FileUploadDemo: React.FC = () => {
         config={{
           categories: ['BR Amendment', 'Invoice', 'Contract', 'Other'],
           maxFiles: 10,
-          maxFileSizeMB: 2,
+          maxFileSizeMB: 5,
           allowedTypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'xls', 'xlsx', 'doc', 'docx']
         }}
         onUpload={handleUpload}
