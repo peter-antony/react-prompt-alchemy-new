@@ -94,7 +94,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
       if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "File Upload Error",
-          description: "File size exceeds 2MB limit",
+          description: "File size exceeds 50 MB limit",
           variant: "destructive",
         });
         return acc; // skip this file
