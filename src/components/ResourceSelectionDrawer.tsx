@@ -261,7 +261,7 @@ const resourceConfigs = {
     title: 'Select Schedule',
     buttonText: 'Add Schedule to Trip',
     gridTitle: 'Schedule',
-    idField: 'SupplierID', // Primary ID field for this resource type
+    idField: 'ScheduleNo', // Primary ID field for this resource type
     columns: [
       {
         key: 'SupplierID',
@@ -799,6 +799,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
     // Get the ID field for current resource type
     const idField = getIdField();
+    console.log("idField Select = ", idField);
     const rowId = row[idField];
 
     // Check if this resource type should use single selection
@@ -822,9 +823,9 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         setSelectedRowIds(new Set([rowId]));
         setSelectedRowObjects([row]);
         setRowTripId([rowId]);
-        console.log('Selected only this row (cleared previous selections):', rowId);
-        console.log('Selected row objects after click (computed):', [row]);
-        console.log('Selected row IDs after click (computed):', [rowId]);
+        console.log('Selected only this row Select (cleared previous selections):', rowId);
+        console.log('Selected row objects after click Select (computed):', [row]);
+        console.log('Selected row IDs after click Select[rowId] (computed):', [rowId]);
       }
     } else {
       // Multi-selection mode for other resource types (Equipment, Driver, Handler, Vehicle)
@@ -1146,11 +1147,11 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       // Get the resource details key for the current resource type being edited
       const currentResourceDetailsKey = getResourceDetailsKey(resourceType);
       console.log('Updating ResourceDetails for resource type:', resourceType, '-> key:', currentResourceDetailsKey);
-
       // Get existing items for the current resource type only
       const existingItems = Array.isArray(existingResourceDetails[currentResourceDetailsKey]) 
-        ? existingResourceDetails[currentResourceDetailsKey] 
-        : [];
+      ? existingResourceDetails[currentResourceDetailsKey] 
+      : [];
+      console.log("existingItems ====", existingItems);
       
       // New items from formattedDataArray (should all be of the current resource type)
       const newItems = formattedDataArray || [];
@@ -1158,6 +1159,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       // Create a map of existing items by ResourceID for quick lookup
       const existingMap = new Map<string, any>();
       existingItems.forEach((item: any) => {
+        console.log("item ====", item);
         // Handle different ID field names based on resource type
         let resourceId = '';
         if (currentResourceDetailsKey === 'Equipments') {
