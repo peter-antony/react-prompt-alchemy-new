@@ -307,10 +307,10 @@ export const ReportSearchHub = () => {
         const getStatusColorLocal = (status: string) => {
           const statusColors: Record<string, string> = {
             // Status column colors
-            'Released': 'badge-fresh-green rounded-2xl',
-            'Executed': 'badge-purple rounded-2xl',
             'Under Amendment': 'badge-orange rounded-2xl',
-            'Completed': 'badge-green rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
@@ -322,10 +322,10 @@ export const ReportSearchHub = () => {
           RouteID: pipedData(row.RouteID, row.RouteDescription),
           Departure: pipedData(row.Departure, row.DepartureDescription),
           Arrival: pipedData(row.Arrival, row.ArrivalDescription),
-          // WorkOrderStatus: {
-          //   value: row.WorkOrderStatus,
-          //   variant: getStatusColorLocal(row.WorkOrderStatus),
-          // },
+          Status: {
+            value: row.Status,
+            variant: getStatusColorLocal(row.Status),
+          },
         }
       });
 
@@ -677,10 +677,10 @@ export const ReportSearchHub = () => {
         const getStatusColorLocal = (status: string) => {
           const statusColors: Record<string, string> = {
             // Status column colors
-            'Released': 'badge-fresh-green rounded-2xl',
-            'Executed': 'badge-purple rounded-2xl',
             'Under Amendment': 'badge-orange rounded-2xl',
-            'Completed': 'badge-green rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
           };
           return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
         };
@@ -692,10 +692,10 @@ export const ReportSearchHub = () => {
           RouteID: pipedData(row.RouteID, row.RouteDescription),
           Departure: pipedData(row.Departure, row.DepartureDescription),
           Arrival: pipedData(row.Arrival, row.ArrivalDescription),
-          // WorkOrderStatus: {
-          //   value: row.WorkOrderStatus,
-          //   variant: getStatusColorLocal(row.WorkOrderStatus),
-          // },
+          Status: {
+            value: row.Status,
+            variant: getStatusColorLocal(row.Status),
+          },
         };
       });
       gridState.setGridData(processedData);
@@ -763,7 +763,7 @@ export const ReportSearchHub = () => {
     },
     {
       key: 'CIMCUVID',
-      label: 'CIM/CUV ID/ Description',
+      label: 'CIM/CUV ID',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("CIMCUV NO Init"),
     },
@@ -771,18 +771,18 @@ export const ReportSearchHub = () => {
       key: 'Status',
       label: 'Status',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("CIMCUV Status Init"),
+      fetchOptions: makeLazyFetcher("CIM CUV Status Init"),
     },
     {
       key: 'ConsignorID',
-      label: 'Consignor ID/ Description',
+      label: 'Consignor ID',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Consignor Init"),
       // hideSearch: true,
       // disableLazyLoading: true
     },
     {
-      key: 'ConsigneeID', label: 'Consignee ID/ Description',
+      key: 'ConsigneeID', label: 'Consignee ID',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Consignee Init")
     },

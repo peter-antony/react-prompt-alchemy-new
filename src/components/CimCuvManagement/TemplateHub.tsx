@@ -738,31 +738,31 @@ export const TemplateSearchHub = () => {
   const dynamicServerFilters: ServerFilter[] = [
     {
       key: 'TemplateID',
-      label: 'Template ID/Description',
+      label: 'Template ID',
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("TemplateID Description Init"),
       hideSearch: false,
-      disableLazyLoading: true
+      disableLazyLoading: false
     },
     {
-      key: 'ConsignorID', label: 'Consignor ID/description', 
+      key: 'ConsignorID', label: 'Consignor ID', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Consignor Init"),
     },
     {
-      key: 'ConsigneeID', label: 'Consignee Name', 
+      key: 'ConsigneeID', label: 'Consignee ID', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Consignee Init"),
     },
     {
-      key: 'CustomerID', label: 'Customer ID/description', 
+      key: 'CustomerID', label: 'Customer ID', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Customer Init"),
       // hideSearch: true,
       // disableLazyLoading: true
     },
     {
-      key: 'ContractID', label: 'Contract ID/description', 
+      key: 'ContractID', label: 'Contract ID', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Contract Init")
     },
@@ -772,7 +772,7 @@ export const TemplateSearchHub = () => {
       fetchOptions: makeLazyFetcher("UN Code Init")
     },
     {
-      key: 'RouteID', label: 'Route ID/description', 
+      key: 'RouteID', label: 'Route ID', 
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Route ID Init")
     },
