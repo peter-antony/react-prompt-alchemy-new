@@ -33,6 +33,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   workOrderNoCallback?: (value: string) => void;
   workOrderCopy?: (value: any) => void;
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
+  currency?: string;
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
@@ -63,8 +64,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   workOrderNo = '',
   workOrderStatus = '',
   workOrderNoCallback,
-  workOrderCopy
+  workOrderCopy,
   // onBadgeChange
+  currency
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -431,6 +433,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   control={control}
                   fieldId={fieldId}
                   tabIndex={tabIndex}
+                   currency={currency}
                   validationErrors={validationErrors}
                   mandatory={config.mandatory}
                   tooltip={config.tooltip}
@@ -460,6 +463,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   control={control}
                   fieldId={fieldId}
                   tabIndex={tabIndex}
+                  currency={currency}
                   validationErrors={validationErrors}
                   // Pass mandatory info
                   mandatory={config.mandatory}

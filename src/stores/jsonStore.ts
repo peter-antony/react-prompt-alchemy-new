@@ -1019,7 +1019,7 @@ function setResourceType(fields: { Resource?: any, ResourceDescription?: any, Re
   return false;
 }
 
-function setTariffFields(fields: { tariff?: any, tariffDescription?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any, tariffTypeDescription?: any, billToID?: any}) {
+function setTariffFields(fields: { tariff?: any, tariffDescription?: any, contractPrice?: any, unitPrice?: any, netAmount?: any, tariffType?: any, tariffTypeDescription?: any, billToID?: any, ValueCurrency?:any}) {
   console.log("resourceJsonData === ^^^^", resourceJsonData)
   if (resourceJsonData) {
     if (!resourceJsonData.BillingDetails) {
@@ -1027,12 +1027,13 @@ function setTariffFields(fields: { tariff?: any, tariffDescription?: any, contra
     }
     if (fields.tariff !== undefined) resourceJsonData.BillingDetails.Tariff = fields.tariff;
     if (fields.tariffDescription !== undefined) resourceJsonData.BillingDetails.TariffIDDescription = fields.tariffDescription;
-    if(fields.unitPrice !== undefined) resourceJsonData.BillingDetails.UnitPrice = fields.contractPrice;
+    if (fields.unitPrice !== undefined) resourceJsonData.BillingDetails.UnitPrice = fields.contractPrice;
     if (fields.contractPrice !== undefined) resourceJsonData.BillingDetails.ContractPrice = fields.contractPrice;
     if (fields.netAmount !== undefined) resourceJsonData.BillingDetails.NetAmount = fields.netAmount;
     if (fields.tariffType !== undefined) resourceJsonData.BillingDetails.TariffType = fields.tariffType;
     if (fields.tariffTypeDescription !== undefined) resourceJsonData.BillingDetails.TariffTypeDescription = fields.tariffTypeDescription;
     if (fields.billToID !== undefined) resourceJsonData.BillingDetails.BillToID = fields.billToID;
+    if (fields.ValueCurrency !== undefined) resourceJsonData.BillingDetails.ValueCurrency = fields.ValueCurrency;
     return true;
   }
   return false;

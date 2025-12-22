@@ -26,6 +26,7 @@ interface FieldRendererProps {
   mandatory:boolean;
   allowedType?: string; // To restrict input types
   tooltip?: string;
+  currency?: string;
 }
 
 // Add this helper above your component:
@@ -51,7 +52,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   validationErrors = {},
   mandatory,
   allowedType,
-  tooltip
+  tooltip,
+  currency
 }) => {
   // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
@@ -230,7 +232,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   <div className="flex items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
                     {/* Fixed currency label */}
                    
-                    <span className="px-2 text-gray-700 font-normal font-[13px]">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'}</span>
+                    {/* <span className="px-2 text-gray-700 font-normal font-[13px]">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'}</span> */}
+                    <span className="px-2 text-gray-700 font-normal font-[13px]">{currency?currency:'EUR'}</span>
                     {/* Editable input */}
                     <input
                       type="text"
@@ -589,7 +592,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   className="text-lg font-bold"
                   style={{ color: fieldColour || 'inherit' }}
                 >
-                {jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {field.value || ' 0.00'}
+                {/* {jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {field.value || ' 0.00'} */}
+                {currency?currency:'EUR'} {field.value || ' 0.00'}
                 </div>
               </div>
             );

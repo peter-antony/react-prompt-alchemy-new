@@ -90,7 +90,8 @@ const Resource_Group_BASIC_JSON = {
     "TariffType": "",
     "TariffTypeDescription": null,
     "BillingRemarks": "",
-    "InternalOrderNo": null
+    "InternalOrderNo": null,
+    "ValueCurrency": "",
   },
   "MoreRefDocs": {
     "PrimaryDocType": null,
@@ -283,7 +284,8 @@ const Resource_Group_JSON = {
     "TariffType": "",
     "TariffTypeDescription": null,
     "BillingRemarks": "",
-    "InternalOrderNo": null
+    "InternalOrderNo": null,
+    "ValueCurrency": "EUR"
   },
   "MoreRefDocs": {
     "PrimaryDocType": null,

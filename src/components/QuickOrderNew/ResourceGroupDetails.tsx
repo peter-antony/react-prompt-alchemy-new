@@ -834,6 +834,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
             "TariffType": formValues.billingDetails?.TariffType?.value || '',
             "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
+            "ValueCurrency": currency || 'EUR',
           }
 
           setBasicDetailsData(formValues.basicDetails);
@@ -1114,6 +1115,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
             "TariffType": formValues.billingDetails?.TariffType?.value || '',
             "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
+            "ValueCurrency": jsonStore.getQuickOrder().Currency || '',
+
           });
           console.log("]]]]]]]]]]]", formValues.billingDetails);
           jsonStore.setResourceMoreInfoDetails({
@@ -1280,6 +1283,8 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
             "TariffIDDescription": formValues.billingDetails?.Tariff?.label || '',
             "TariffType": formValues.billingDetails?.TariffType?.value || '',
             "TariffTypeDescription": formValues.billingDetails?.TariffType?.label || '',
+            "ValueCurrency": jsonStore.getQuickOrder().Currency || '',
+
           });
           jsonStore.setResourceMoreInfoDetails({
             ...jsonStore.getResourceJsonData().MoreRefDocs,
@@ -1608,6 +1613,7 @@ export const ResourceGroupDetailsForm = ({ isEditQuickOrder, resourceId, onSaveS
       BillingType: data.BillingType ?? '',
       UnitPrice: data.UnitPrice ?? 0,
       BillingQty: data.BillingQty ?? '',
+      ValueCurrency: data.ValueCurrency ?? '',
       // Tariff: data.Tariff ?? '',
       Tariff: formatFieldWithName(data.Tariff, data.TariffIDDescription),
       TariffType: formatFieldWithName(data.TariffType, data.TariffTypeDescription),
@@ -1992,6 +1998,7 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
   const [selectedType, setSelectedType] = useState("");
   const [resourceGroupStatus, setResourceGroupStatus] = useState("Fresh");
   const [currency, setCurrency] = useState("EUR");
+  const RGCurrency = useState("EUR");
   const messageTypes = [
     // "Quick Order Resource Combo Init",
     // "ResourceType Init",
@@ -2012,7 +2019,7 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
     setLoading(false);
     console.log("load data=== ", jsonStore.getQuickUniqueID());
     console.log("load % data getQuickOrder=== ", jsonStore.getQuickOrder().Currency);
-    setCurrency(jsonStore.getQuickOrder().Currency)
+    // setCurrency(jsonStore.getQuickOrder().Currency)
     const cur=jsonStore.getQuickOrder().Currency;
     console.log("jsonStore.getResourceGroupBasicDetails() == ", jsonStore.getResourceGroupBasicDetails())
 
@@ -2024,7 +2031,7 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
       console.log("Parsed result: useeffect", (parsedData?.ResponseResult)[0]);
       console.log("Parsed id:", (parsedData?.ResponseResult)[0]);
       jsonStore.setQuickOrder((parsedData?.ResponseResult)[0]);
-      jsonStore.setQuickOrderFields({  Currency: cur });
+      // jsonStore.setQuickOrderFields({  Currency: cur });
 
       const fullJson2 = jsonStore.getJsonData();
       console.log("FULL JSON --RESOURCE GROUP 33:: ", fullJson2?.ResourceGroup);
@@ -2060,7 +2067,9 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
       console.log("rawMoreInfo ===", rawMoreInfo);
       setMoreInfoDetailsData(normalizeMoreInfoDetailsWithInputDropdown(rawMoreInfo));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getBillingDetailsByResourceUniqueID(resourceId) || {}));
-      console.log("resourceId Edit == ", resourceId);
+      setCurrency(jsonStore.getBillingDetailsByResourceUniqueID(resourceId).ValueCurrency?.trim() || 'EUR')
+    console.log("currency == ", currency);
+    console.log("resourceId Edit == ", resourceId);
       jsonStore.setTariffDateFields({
         fromDate: jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.FromDate
           ? jsonStore.getOperationalDetailsByResourceUniqueID(resourceId)?.FromDate.split("T")[0]
@@ -2080,6 +2089,8 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
       setOperationalDetailsData(normalizeOperationalDetails(jsonStore.getResourceGroupOperationalDetails() || {}));
       setMoreInfoDetailsData(normalizeMoreInfoDetails(jsonStore.getResourceGroupMoreRefDocs() || {}));
       setBillingDetailsData(normalizeBillingDetails(jsonStore.getResourceGroupBillingDetails() || {}));
+      // setCurrency(jsonStore.getBillingDetailsByResourceUniqueID(resourceId).ValueCurrency?.trim() || 'EUR')
+      setCurrency('EUR')
       setLoading(true);
     }
     const planCount = jsonStore.getAllPlanDetailsByResourceUniqueID(resourceId);
@@ -2675,9 +2686,11 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
               UnitPrice: tariffRate,
               TariffType: matchedTariff.TariffType + ' || ' + matchedTariff.TariffTypeDescription
             });
+            setCurrency(matchedTariff?.ValueCurrency?.trim() || 'EUR')
           }
-          const tariffCurrency = matchedTariff.ValueCurrency?.trim() || 'EUR';
+          const tariffCurrency = matchedTariff?.ValueCurrency?.trim() || 'EUR';
           jsonStore.setQuickOrderFields({ Currency: tariffCurrency });
+          setCurrency(tariffCurrency);
           console.log('✅ Currency updated based on tariff:', tariffCurrency);
           if (matchedTariff && basicDetailsRef && basicDetailsRef.current && typeof basicDetailsRef.current.setFormValues === "function") {
             basicDetailsRef.current.setFormValues({
@@ -3211,8 +3224,9 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
                             key="billing-details"
                             panelId="billing-details"
                             panelOrder={3}
+                             currency={currency}
                             panelIcon={<Banknote className="w-5 h-5 text-orange-500" />}
-                            startingTabIndex={currentTabIndex}
+                           startingTabIndex={currentTabIndex}
                             panelTitle={billingDetailsTitle}
                             panelConfig={billingDetailsConfig}
                             formName="billingDetailsForm"

@@ -238,7 +238,8 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                             </div>
                             <div className="flex items-center gap-2 text-gray-700 text-xs">
                                 <Banknote className="w-4 h-4 text-gray-600" />
-                                <span className="truncate">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
+                                {/* <span className="truncate">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'} {formattedAmount(item?.BillingDetails?.NetAmount)}</span> */}
+                                <span className="truncate">{item?.BillingDetails?.ValueCurrency?item?.BillingDetails?.ValueCurrency:'EUR'} {formattedAmount(item?.BillingDetails?.NetAmount)}</span>
                                 {/* <span className="truncate">€ {formattedAmount(item?.BillingDetails?.NetAmount)}</span> */}
                                 {/* <span className="truncate">{item.price}</span> */}
                             </div>
