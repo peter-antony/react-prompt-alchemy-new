@@ -298,20 +298,6 @@ const resourceConfigs = {
         width: 150,
         editable: false
       },
-      // {
-      //   key: '',
-      //   label: 'Via',
-      //   type: 'Text' as GridColumnType,
-      //   width: 150,
-      //   editable: false
-      // },
-      // {
-      //   key: '',
-      //   label: 'Reccuring Schedule (RS)',
-      //   type: 'Text' as GridColumnType,
-      //   width: 150,
-      //   editable: false
-      // },
       {
         key: 'FromLocation',
         label: 'From Location',
@@ -387,6 +373,20 @@ const resourceConfigs = {
         label: 'Max No of Wagon',
         type: 'Date' as GridColumnType,
         width: 120,
+        editable: false
+      },
+      {
+        key: 'Viadummy',  // dummy field. later replace with implementation logic
+        label: 'Via',
+        type: 'Text' as GridColumnType,
+        width: 150,
+        editable: false
+      },
+      {
+        key: 'ReccuringScheduledummy',  // dummy field. later replace with implementation logic
+        label: 'Reccuring Schedule (RS)',
+        type: 'Text' as GridColumnType,
+        width: 150,
         editable: false
       },
     ]
