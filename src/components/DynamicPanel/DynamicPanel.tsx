@@ -33,6 +33,8 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   workOrderNoCallback?: (value: string) => void;
   workOrderCopy?: (value: any) => void;
   // onBadgeChange?: (fieldId: string, newValue: string) => void;
+  templateNumber?: any;
+  templateNumberCallback?: (value: string) => void;
   currency?: string;
 }
 
@@ -65,6 +67,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   workOrderStatus = '',
   workOrderNoCallback,
   workOrderCopy,
+  templateNumberCallback,
+  templateNumber = '',
   // onBadgeChange
   currency
 }, ref) => {
@@ -84,8 +88,12 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [workOrderNoValue, setWorkOrderNoValue] = useState(workOrderNo || '');
   const [isWorkOrderMenuOpen, setWorkOrderMenuOpen] = useState(false);
   const workOrderMenuRef = useRef<HTMLDivElement | null>(null);
+    const [templateNumberValue, setTemplateNumberValue] = useState(templateNumber || '');
 
   // Keep badge in sync with prop
+  useEffect(() => {
+    setTemplateNumberValue(templateNumber || '');
+  }, [templateNumber]);
   useEffect(() => {
     setCurrentBadgeValue(badgeValue || '');
   }, [badgeValue]);
@@ -694,6 +702,22 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   </span>
                 );
               })()}
+
+              {panelSubTitle == "Templated" && (
+                <Input
+                  type="text"
+                  value={templateNumberValue}
+                  className="text-xs text-blue-600 border px-3 py-1 rounded-lg cursor-pointer"
+                  style={{ width: '160px' }}
+                   onChange={(e) => setTemplateNumberValue(e.target.value)}
+                 onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                   templateNumberCallback?.(templateNumberValue.trim());
+                    e.currentTarget.blur();
+                    }
+                  }}
+                />
+              )}
 
               {panelSubTitle == "Work Order Details" && !!workOrderNoValue && (
                 <Input 

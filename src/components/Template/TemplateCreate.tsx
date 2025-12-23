@@ -36,7 +36,6 @@ const TemplateCreate = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-
   const [generalDetailsData, setGeneralDetailsData] = useState<Record<string, any>>({});
   const [headerTemplateData, setHeaderTemplateData] = useState<Record<string, any>>({}); // New State
   const [paymentInstructionData, setPaymentInstructionData] = useState<Record<string, any>>({}); // New State
@@ -57,6 +56,9 @@ const TemplateCreate = () => {
   const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
   const [weightUomList, setWeightUomList] = useState<any[]>([]);
   const [lengthWeightUomList, setlengthWeightUomList] = useState<any[]>([]);
+  
+
+
   const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
   const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
   const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
@@ -1077,28 +1079,35 @@ const TemplateCreate = () => {
     declarationOfValue: {
       id: 'declarationOfValue',
       label: 'Declaration of Value [26]',
-      fieldType: 'lazyselect',
-      value: '',
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      width: 'four',
-      placeholder: 'Enter Declaration of Value',
-      fetchOptions: fetchMaster('Currency Init'),
+      fieldType: 'inputdropdown',
+  value: {
+    input: '',
+    dropdown: '',
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 1,
+  width: 'four',
+  placeholder: 'Declaration of Value',
+  options: getUomOptions(currencyUomList), 
     },
+    
     interestInDelivery: {
       id: 'interestInDelivery',
       label: 'Interest in Delivery [27]',
-      fieldType: 'lazyselect',
-      value: '',
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      width: 'four',
-      placeholder: 'Enter Interest in Delivery',
-      fetchOptions: fetchMaster('Currency Init'),
+      fieldType: 'inputdropdown',
+  value: {
+    input: '',
+    dropdown: '',
+  },
+  mandatory: false,
+  visible: true,
+  editable: true,
+  order: 2,
+  width: 'four',
+  placeholder: 'Interest in Delivery',
+  options: getUomOptions(currencyUomList), 
     },
    cashOnDelivery: {
   id: 'cashOnDelivery',
@@ -2513,25 +2522,25 @@ const sanitizeRouteRows = (rows: any[]) =>
     return {
       // Declaration of Value [26]
 
-      //   DeclarationOfValue_26: declarationOfValue.id || null,
-      //  Currency_26: declarationOfValue.name || null,
+        DeclarationOfValue_26: formData?.declarationOfValue?.input,
+       Currency_26: formData?.declarationOfValue?.dropdown,
 
-      //   // Interest in Delivery [27]
-      //   InterestInDelivery_27: interestInDelivery.id || null,
-      //   Currency_27: interestInDelivery.name || null,
+        // Interest in Delivery [27] , 
+        InterestInDelivery_27: formData?.interestInDelivery?.input,
+        Currency_27: formData?.interestInDelivery?.dropdown,
 
-      //   // Cash on Delivery [28]
-      //   CashOnDelivery_28: formData.cashOnDelivery?.dropdown,
-      //   Currency_28: formData.cashOnDelivery?.dropdown,
+        // Cash on Delivery [28]
+        CashOnDelivery_28: formData?.cashOnDelivery?.input,
+        Currency_28: formData?.cashOnDelivery?.dropdown,
 
-      DeclarationOfValue_26: "CAD",
-      Currency_26: "454.00000000",
+      // DeclarationOfValue_26: "CAD",
+      // Currency_26: "454.00000000",
 
-      InterestInDelivery_27: "454.00000000",
-      Currency_27: "454.00000000",
+      // InterestInDelivery_27: "454.00000000",
+      // Currency_27: "454.00000000",
 
-      CashOnDelivery_28: "CHF",
-      Currency_28: "6333.00000000"
+      // CashOnDelivery_28: "CHF",
+      // Currency_28: "6333.00000000"
     };
   };
 
@@ -3029,16 +3038,26 @@ useEffect(() => {
         });
       }
 
-      if (valueDeliveryCashRef.current && apiResponse.Declarations) {
-        valueDeliveryCashRef.current.setFormValues({
-          // declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
-          // interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
-          // cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
-          // Currency_26: apiResponse.Declarations.Currency_26,
-          // Currency_27: apiResponse.Declarations.Currency_27,
-          // Currency_28: apiResponse.Declarations.Currency_28,
-        });
-      }
+     if (valueDeliveryCashRef.current && apiResponse?.Declarations) {
+  const decl = apiResponse.Declarations;
+  console.log("test", )
+
+  valueDeliveryCashRef.current.setFormValues({
+    // ✅ inputdropdown — NEVER null
+    declarationOfValue: {
+      input: decl.Currency_26 ? String(decl.DeclarationOfValue_26) : "",
+      dropdown: decl.Currency_26 ?? "",
+    },
+     interestInDelivery: {
+      input: decl.Currency_27 ? String(decl.InterestInDelivery_27) : "",
+      dropdown: decl.Currency_27 ?? "",
+    },
+     cashOnDelivery: {
+      input: decl.Currency_28 ? String(decl.CashOnDelivery_28) : "",
+      dropdown: decl.CashOnDelivery_28 ?? "",
+    },
+  });
+}
 
       if (codingBoxesRef.current && apiResponse.Declarations) {
         codingBoxesRef.current.setFormValues({
@@ -3865,7 +3884,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
 
 
   const handleSaveTemplate = async () => {
-    if (!initialSnapshotRef.current) return;
+    // if (!initialSnapshotRef.current) return;
 
     const headerFV = headerTemplateRef.current.getFormValues();
     const generalFV = generalDetailsRef.current.getFormValues();
@@ -3893,7 +3912,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         ...mapFormToHeaderPayload(headerFV),
         ModeFlag: resolveModeFlag(
           headerFV,
-          initialSnapshotRef.current.header,
+          initialSnapshotRef?.current?.header,
           workOrderNo
         ),
       },
@@ -3903,7 +3922,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           ...mapFormToGeneralDetailsPayload(generalFV),
           ModeFlag: resolveModeFlag(
             generalFV,
-            initialSnapshotRef.current.general,
+            initialSnapshotRef?.current?.general,
             workOrderNo
           ),
         },
@@ -3912,7 +3931,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
           ModeFlag: resolveModeFlag(
             paymentFV,
-            initialSnapshotRef.current.payment,
+            initialSnapshotRef?.current?.payment,
             workOrderNo
           ),
         },
@@ -3930,7 +3949,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
             ...codingFV,
             ...examFV,
           },
-          initialSnapshotRef.current.declarations,
+          initialSnapshotRef?.current?.declarations,
           workOrderNo
         ),
 
@@ -3938,7 +3957,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           ...mapFormToSectionAPayload(secAFV),
           ModeFlag: resolveModeFlag(
             secAFV,
-            initialSnapshotRef.current.sectionA,
+            initialSnapshotRef?.current?.sectionA,
             workOrderNo
           ),
         },
@@ -3947,7 +3966,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           ...mapFormToSectionBPayload(secBFV),
           ModeFlag: resolveModeFlag(
             secBFV,
-            initialSnapshotRef.current.sectionB,
+            initialSnapshotRef?.current?.sectionB,
             workOrderNo
           ),
         },
@@ -3956,7 +3975,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           ...mapFormToSectionCPayload(secCFV),
           ModeFlag: resolveModeFlag(
             secCFV,
-            initialSnapshotRef.current.sectionC,
+            initialSnapshotRef?.current?.sectionC,
             workOrderNo
           ),
         },
@@ -3966,7 +3985,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         ...mapFormToRouteEndorsementPayload(routeEndFV),
         ModeFlag: resolveModeFlag(
           routeEndFV,
-          initialSnapshotRef.current.routeEndorsement,
+          initialSnapshotRef?.current?.routeEndorsement,
           workOrderNo
         ),
         //loading grid data
@@ -3978,7 +3997,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         ...mapFormToRoutePayload(routeFV),
         ModeFlag: resolveModeFlag(
           routeFV,
-          initialSnapshotRef.current.route,
+          initialSnapshotRef?.current?.route,
           workOrderNo
         ),
       },
@@ -4235,7 +4254,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               ref={headerTemplateRef} // New Panel
               panelId="header-template"
               panelOrder={0} // Render before general details
-              panelTitle="Template"
+              panelTitle="Templatehead"
+               panelSubTitle="Work Order Details"
               panelConfig={headerTemplateConfig} // New Config
               formName="headerTemplateForm"
               initialData={headerTemplateData}

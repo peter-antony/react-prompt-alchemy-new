@@ -241,6 +241,31 @@ const ReportCreate = () => {
   const [consignorConsigneeData, setConsignorConsigneeData] =
     useState<any>(null);
 
+  const [templateNumber, setTemplateNumber] = useState<string>(workOrderNo); // or initial number as string
+ 
+  // const handleTemplateNumberCallback = (value: string) => {
+  //   console.log('templateNumberValue', value);
+  //   setTemplateNumber(value);           // keep it in parent state
+  // };
+
+  const handleTemplateNumberCallback = (value: string) => {
+  console.log("Template number changed:", value);
+
+  const trimmedValue = value?.trim();
+
+  // 1️⃣ Update local state (if you still need it)
+  setTemplateNumber(trimmedValue);
+
+  // 2️⃣ (Optional) Update store – only if you are using one
+  // useTemplateStore.getState().updateHeader('TemplateId',   trimmedValue);
+
+  // 3️⃣ Update URL → triggers useEffect → API auto call
+  if (trimmedValue) {
+    setSearchParams({ id: trimmedValue });
+  }
+};
+
+
   const buttonCancel =
     "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
   /**
@@ -4718,7 +4743,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       <div className="main-content-h bg-gray-100">
         <div className="mt-6">
           <div className="">
-            <DynamicPanel
+            {/* <DynamicPanel
               ref={headerTemplateRef} // New Panel
               panelId="header-template"
               panelOrder={0} // Render before general details
@@ -4730,6 +4755,22 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               panelWidth="full"
               collapsible={true} // Added collapsible prop
               showHeader={false} // Hide header to match screenshot
+            /> */}
+            <DynamicPanel
+              ref={headerTemplateRef} // New Panel
+              panelId="header-template"
+              panelOrder={0} // Render before general details
+              panelTitle="Template"
+              panelSubTitle="Templated"
+              templateNumber={templateNumber}
+              panelConfig={headerTemplateConfig} // New Config
+              formName="headerTemplateForm"
+              initialData={headerTemplateData}
+              templateNumberCallback={handleTemplateNumberCallback}
+              // onDataChange={handleHeaderTemplateDataChange}
+              panelWidth="full"
+              // collapsible={true} // Added collapsible prop
+              // showHeader={false} // Hide header to match screenshot
             />
           </div>
           <Tabs
