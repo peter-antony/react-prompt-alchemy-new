@@ -19,8 +19,158 @@ import CancelConfirmationModal from "./CancelConfirmationModal";
 import ConsignorConsigneeSideDraw from "./ConsignorConsigneeSideDraw";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AmendReportModal from "./AmendReportModal";
+import DraftBillDetailsSideDraw from "./DraftBillDetailsSideDraw";
 
 const ReportCreate = () => {
+  const draftBillData = {
+    "Header": {
+        "DraftBillNo": "DB/00000939",
+        "DraftBillDate": "2021-09-01T00:00:00",
+        "DBStatus": "AP",
+        "DBStatusDescription": "Approved",
+        "FromLocation": "27-706709",
+        "FromLocationDescription": "Assa ( 27-706709- )",
+        "ToLocation": "NRSP00007",
+        "ToLocationDescription": "Charleston",
+        "WBS": "DE17KAZ109",
+        "DBTotalValue": 104995,
+        "BusinessPartnerID": "10026536",
+        "BusinessPartnerName": "KAZPHOSPHATE LLC test",
+        "BusinessPartnerType": "Customer",
+        "ContractID": "CON000000104",
+        "ContractDescription": "YP_Kazphosphate",
+        "ContractType": "Sell",
+        "DraftbillValidationDate": "2021-09-19T21:11:18.563",
+        "InvoiceNo": null,
+        "InvoiceDate": null,
+        "InvoiceStatus": null,
+        "TransferInvoiceNo": null,
+        "LatestJournalVoucher": null,
+        "GLAccount": null,
+        "DBAcceptedValue": 104995,
+        "DraftBillStage": "Trip Initiated (Loading completed/BR Released for execution)",
+        "WorkFlowStatus": "As per workflow",
+        "CustomerGroup": null,
+        "SupplierGroup": null,
+        "Cluster": null,
+        "Attribute1": null
+    },
+    "ReverseJournalVoucher": [
+        {
+            "JournalVoucherNo": null
+        }
+    ],
+    "ItemDetails": [
+        {
+            "DBLineNo": 1,
+            "BillToID": "10026536",
+            "RefDocIDType": "DD",
+            "RefDocIDTypeDescription": "Dispatch Document",
+            "RefDocDate": "2021-09-01T00:00:00",
+            "ReferenceInformation": "RR/2021/00001953",
+            "EquipmentType": null,
+            "EquipmentID": null,
+            "EquipmentDescription": null,
+            "AcceptedValue": "95450.00000000",
+            "BillingCurrency": "EUR  ",
+            "TriggerDocType": "Trip Log",
+            "TriggerDocID": "TP/2021/00001512",
+            "TariffID": "YP_KAZ1",
+            "TariffIDType": "Rate Per Rail Container",
+            "TariffDescription": "YP_KAZ1",
+            "InvoiceNo": null,
+            "InvoiceDate": null,
+            "InvoiceStatus": null,
+            "TransferInvoiceNo": null,
+            "LatestJournalVoucher": "JV_DE01034",
+            "Attribute1": null,
+            "Remark1": null,
+            "Remark2": null,
+            "Remark3": null,
+            "QC1": null,
+            "QCValue1": null,
+            "QC2": null,
+            "QCValue2": null,
+            "QC3": null,
+            "QCValue3": null,
+            "SecondaryRefNo": null,
+            "RemarkForAssignedUser": null,
+            "ProposedValue": "95450.00000000",
+            "TriggeringDocDate": "2021-06-07T11:06:32.307",
+            "FinancialYear": null,
+            "UserAssigned": null,
+            "Remark": null,
+            "ReasonForAmendment": null,
+            "ReasonForCancellation": null,
+            "QTY": 10,
+            "UOM": null,
+            "Rate": 9545,
+            "BasicCharge": 95450,
+            "MinimumCharge": null,
+            "MaximumCharge": null,
+            "CustomerSupplierRefNo": "QE17KAZ109",
+            "DD1": null,
+            "DD2": null,
+            "DBLineStatus": "AP",
+            "CustomerOrderNo": null,
+            "ModeFlag": "NoChange"
+        },
+        {
+            "DBLineNo": 2,
+            "BillToID": "10026536",
+            "RefDocIDType": "DD",
+            "RefDocIDTypeDescription": "Dispatch Document",
+            "RefDocDate": "2021-09-01T00:00:00",
+            "ReferenceInformation": "RR/2021/00002223",
+            "EquipmentType": null,
+            "EquipmentID": null,
+            "EquipmentDescription": null,
+            "AcceptedValue": "9545.00000000",
+            "BillingCurrency": "EUR  ",
+            "TriggerDocType": "Trip Log",
+            "TriggerDocID": "TP/2021/00001853",
+            "TariffID": "YP_KAZ1",
+            "TariffIDType": "Rate Per Rail Container",
+            "TariffDescription": "YP_KAZ1",
+            "InvoiceNo": null,
+            "InvoiceDate": null,
+            "InvoiceStatus": null,
+            "TransferInvoiceNo": null,
+            "LatestJournalVoucher": null,
+            "Attribute1": null,
+            "Remark1": null,
+            "Remark2": null,
+            "Remark3": null,
+            "QC1": null,
+            "QCValue1": null,
+            "QC2": null,
+            "QCValue2": null,
+            "QC3": null,
+            "QCValue3": null,
+            "SecondaryRefNo": null,
+            "RemarkForAssignedUser": null,
+            "ProposedValue": "9545.00000000",
+            "TriggeringDocDate": "2021-07-28T10:34:00.643",
+            "FinancialYear": null,
+            "UserAssigned": null,
+            "Remark": null,
+            "ReasonForAmendment": null,
+            "ReasonForCancellation": null,
+            "QTY": 1,
+            "UOM": null,
+            "Rate": 9545,
+            "BasicCharge": 9545,
+            "MinimumCharge": null,
+            "MaximumCharge": null,
+            "CustomerSupplierRefNo": "QE17KAZ109",
+            "DD1": null,
+            "DD2": null,
+            "DBLineStatus": "AP",
+            "CustomerOrderNo": null,
+            "ModeFlag": "NoChange"
+        }
+    ]
+};
   const generalDetailsRef = useRef<DynamicPanelRef>(null);
   const WagonDetailsRef = useRef<DynamicPanelRef>(null);
   const RouteDetailsRef = useRef<DynamicPanelRef>(null);
@@ -83,6 +233,10 @@ const ReportCreate = () => {
   const [
     isConsignorConsigneeSideDrawOpen,
     setIsConsignorConsigneeSideDrawOpen,
+  ] = useState(false);
+  const [
+    isDraftBillDetailsSideDrawOpen,
+    setIsDraftBillDetailsSideDraw,
   ] = useState(false);
   const [consignorConsigneeData, setConsignorConsigneeData] =
     useState<any>(null);
@@ -4500,6 +4654,13 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
     // setIsCancelModalOpen(false);
   };
 
+  const handleSaveDraftBillDetails = (payload: { updatedLineItems: any[] }) => {
+    console.log("Draft Bill Details Saved:", payload);
+    // Update the apiResponse with the new lineItems
+    setApiResponse((prev: any) => ({ ...prev, LineItems: payload.updatedLineItems }));
+    setIsDraftBillDetailsSideDraw(false);
+  };
+
   const handleConfirmAmend = async (
     reasonCode: string,
     reasonDescription: string
@@ -4872,6 +5033,12 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
           <div className="flex items-center gap-4"></div>
           <div className="flex items-center gap-4">
+            {/* <button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+              onClick={() => setIsDraftBillDetailsSideDraw(true)}
+            >
+              open draft bill
+            </button> */}
             <button
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
               onClick={() => setIsCancelModalOpen(true)}
@@ -4931,6 +5098,14 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         isOpen={isAmendModalOpen}
         onClose={() => setIsAmendModalOpen(false)}
         onConfirmAmend={handleConfirmAmend}
+      />
+
+      <DraftBillDetailsSideDraw
+        isOpen={isDraftBillDetailsSideDrawOpen}
+        onClose={() => setIsDraftBillDetailsSideDraw(false)}
+        lineItems={draftBillData.ItemDetails}
+        onSave={handleSaveDraftBillDetails}
+        headerData={draftBillData.Header}
       />
     </>
   );
