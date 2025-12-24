@@ -232,6 +232,8 @@ const TripPlanning = () => {
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [isLoadingResource, setIsLoadingResource] = useState(false);
   const [isCreatingTrip, setIsCreatingTrip] = useState(false);
+  // Equipment filters from ResourceSelectionDrawer (for list view API call)
+  const [equipmentFilters, setEquipmentFilters] = useState<any>(null);
   const [tripCOHubReloadKey, setTripCOHubReloadKey] = useState(0);
   const [tripCOMulipleHubReloadKey, setTripCOMulipleHubReloadKey] = useState(0);
   const [tripCustomerOrdersData, setTripCustomerOrdersData] = useState<any[]>([]);
@@ -722,6 +724,68 @@ const TripPlanning = () => {
     return newTripData;
   }
 
+  // Helper: extract ID or Name from piped data "ID || Name"
+  const getPipedPart = (value: string | undefined, part: 'id' | 'name'): string => {
+    if (!value) return '';
+    const raw = String(value);
+    const [idPart, namePart] = raw.split('||').map((s) => s?.trim());
+
+    if (!namePart) {
+      // Not actually piped data, just return the whole value
+      return raw.trim();
+    }
+
+    return part === 'id' ? (idPart || '') : (namePart || '');
+  };
+
+  // Helper function to fetch equipment data with optional filters
+  const fetchEquipmentData = async (filters?: any) => {
+    const baseSearchCriteria = {
+      "PlanningProfileID": "General-GMBH",
+      "Location": "10-00004",
+      "PlanDate": "",
+      "ResourceProfileID": "",
+      "Service": "",
+      "ServiceDescription": "",
+      "SubServiceType": "",
+      "SubServiceDescription": "",
+      "EquipmentType": "",
+      "EquipmentStatus": "",
+      "EquipmentContract": "",
+      "ContractAgent": "",
+      "EquipmentGroup": "",
+      "EquipmentOwner": "",
+      "EquipmentCode":"",
+      "EquipmentCategory":""
+    };
+
+    // Merge filters into searchCriteria if provided
+    // Extract IDs from piped data (e.g., "ID || Name") for list view API
+    // Note: FromDate and ToDate are excluded from searchCriteria (as per requirement)
+    const finalSearchCriteria = filters ? {
+      ...baseSearchCriteria,
+      // Map filter fields to searchCriteria format, extracting IDs from piped data
+      "EquipmentCategory": getPipedPart(filters.EquipmentCategory, 'id') || "",
+      "EquipmentType": getPipedPart(filters.EquipmentType, 'id') || "",
+      "EquipmentCode": getPipedPart(filters.EquipmentCode, 'id') || "",
+      "EquipmentStatus": getPipedPart(filters.EquipmentStatus, 'name') || "",
+      "EquipmentGroup": getPipedPart(filters.EquipmentGroup, 'id') || "",
+      "EquipmentContract": getPipedPart(filters.EquipmentContract, 'id') || "",
+      "ContractAgent": getPipedPart(filters.ContractAgent, 'id') || "",
+      "EquipmentOwner": getPipedPart(filters.EquipmentOwner, 'id') || "",
+    } : baseSearchCriteria;
+
+    const response: any = await tripPlanningService.getEquipmentList({
+      searchCriteria: finalSearchCriteria
+    });
+
+    const parsedResponse = JSON.parse((response as any)?.data?.ResponseData || "{}");
+    console.log('Equipment Response:', parsedResponse);
+    const resourceDetails = parsedResponse.ResourceDetails;
+    console.log("Equipment resourceDetails data ====", resourceDetails);
+    setResourceData(resourceDetails?.Equipments || []);
+  };
+
   // Handle resource drawer open/close
   const handleOpenResourceDrawer = async (resourceType: 'Equipment' | 'Supplier' | 'Driver' | 'Handler' | 'Vehicle' | 'Schedule') => {
     console.log(`Opening ${resourceType.toLowerCase()} drawer`);
@@ -746,10 +810,12 @@ const TripPlanning = () => {
       // Call appropriate API based on resource type
       switch (resourceType) {
         case 'Equipment':
-          response = await tripPlanningService.getEquipmentList({
-            searchCriteria: finalSearchCriteria
-          });
-          break;
+          // For Equipment, use the helper function which can accept filters
+          // On initial open, filters might not be set yet, so use base criteria
+          await fetchEquipmentData(equipmentFilters);
+          // Equipment is fully handled in fetchEquipmentData, skip rest of processing
+          setIsLoadingResource(false);
+          return;
         case 'Supplier':
           response = await tripPlanningService.getAgentsList({
             searchCriteria: finalSearchCriteria
@@ -785,25 +851,17 @@ const TripPlanning = () => {
       console.log("resourceDetails data ====", resourceDetails);
 
       // Set data based on resource type
-      switch (resourceType) {
-        case 'Equipment':
-          setResourceData(resourceDetails.Equipments || []);
-          break;
-        case 'Supplier':
-          setResourceData(resourceDetails.Supplier || []);
-          break;
-        case 'Driver':
-          setResourceData(resourceDetails.Drivers || []);
-          break;
-        case 'Handler':
-          setResourceData(resourceDetails.Handlers || []);
-          break;
-        case 'Vehicle':
-          setResourceData(resourceDetails.Vehicles || []);
-          break;
-        case 'Schedule':
-          setResourceData(resourceDetails.Schedule || []);
-          break;
+      // Note: Equipment is already handled in fetchEquipmentData above, so skip it here
+      if (resourceType === 'Supplier') {
+        setResourceData(resourceDetails.Supplier || []);
+      } else if (resourceType === 'Driver') {
+        setResourceData(resourceDetails.Drivers || []);
+      } else if (resourceType === 'Handler') {
+        setResourceData(resourceDetails.Handlers || []);
+      } else if (resourceType === 'Vehicle') {
+        setResourceData(resourceDetails.Vehicles || []);
+      } else if (resourceType === 'Schedule') {
+        setResourceData(resourceDetails.Schedule || []);
       }
 
       console.log("data ==== after set", resourceDetails);
@@ -818,7 +876,25 @@ const TripPlanning = () => {
 
   const handleCloseResourceDrawer = () => {
     setIsResourceDrawerOpen(false);
+    // Reset filters when drawer closes
+    setEquipmentFilters(null);
   };
+
+  // Refetch equipment data when filters change (only if Equipment drawer is open)
+  // Always call API when filters are provided (no comparison)
+  useEffect(() => {
+    if (isResourceDrawerOpen && currentResourceType === 'Equipment' && equipmentFilters) {
+      setIsLoadingResource(true);
+      fetchEquipmentData(equipmentFilters)
+        .catch((error) => {
+          console.error('Error fetching equipment data with filters:', error);
+        })
+        .finally(() => {
+          setIsLoadingResource(false);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equipmentFilters, isResourceDrawerOpen, currentResourceType]);
 
   const changeSupplier = (value: string) => {
     setSupplier(value);
@@ -4420,6 +4496,10 @@ const TripPlanning = () => {
         }}
         isLoading={isLoadingResource}
 		    saveButtonEnableFlag={saveButtonEnableFlag}
+        onFiltersChange={(filters) => {
+          // Store filters and trigger API call if Equipment drawer is open
+          setEquipmentFilters(filters);
+        }}
       />
       { /* Others Selection Drawer */}
       {otherInfo ?

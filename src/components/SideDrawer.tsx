@@ -231,7 +231,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="p-1 h-8 w-8 transition-colors duration-200 hover:bg-gray-100"
+              className="rounded-full border border-input p-1 h-8 w-8 transition-colors duration-200 hover:bg-gray-100"
             >
               <X className="h-4 w-4" />
             </Button>

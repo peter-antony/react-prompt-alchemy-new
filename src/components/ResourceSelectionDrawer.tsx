@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
 import { SmartGrid, SmartGridWithGrouping } from '@/components/SmartGrid';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, X } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 import { GridColumnConfig, GridColumnType } from '@/types/smartgrid';
 import { quickOrderService } from '@/api/services/quickOrderService';
 import { toast } from '@/hooks/use-toast';
 import { tripPlanningService } from '@/api/services/tripPlanningService';
-import { SmartEquipmentCalendar } from '@/components/SmartEquipmentCalendar';
+import EquipmentCalendarPanel from '@/components/EquipmentCalendarPanel';
 import { EquipmentItem, EquipmentCalendarEvent } from '@/types/equipmentCalendar';
 
 interface ResourceSelectionDrawerProps {
@@ -25,6 +25,8 @@ interface ResourceSelectionDrawerProps {
   tripInformation?: any;
   onUpdateTripInformation?: (updatedTripInformation: any) => void;
   onRefresh?: () => void;
+  /** Callback to expose current filter state for list view API calls */
+  onFiltersChange?: (filters: any) => void;
 }
 
 // Resource type configurations
@@ -298,6 +300,20 @@ const resourceConfigs = {
         width: 150,
         editable: false
       },
+      // {
+      //   key: '',
+      //   label: 'Via',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
+      // {
+      //   key: '',
+      //   label: 'Reccuring Schedule (RS)',
+      //   type: 'Text' as GridColumnType,
+      //   width: 150,
+      //   editable: false
+      // },
       {
         key: 'FromLocation',
         label: 'From Location',
@@ -404,7 +420,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   saveButtonEnableFlag = false,
   tripInformation,
   onUpdateTripInformation,
-  onRefresh
+  onRefresh,
+  onFiltersChange
 }) => {
   const [serviceType, setServiceType] = useState<string>();
   const [subServiceType, setSubServiceType] = useState<string>();
@@ -417,6 +434,71 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const [selectedRowObjects, setSelectedRowObjects] = useState<any[]>([]);
   const [rowTripId, setRowTripId] = useState<any>([]);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list'); // View mode state
+  const [isCalendarFilterOpen, setIsCalendarFilterOpen] = useState(false);
+  const [applyCalendarFilter, setApplyCalendarFilter] = useState<((payload: any) => Promise<void> | void) | null>(null);
+  const [getCalendarEquipments, setGetCalendarEquipments] = useState<(() => EquipmentItem[]) | null>(null);
+
+  // Calendar filter form state
+  const [equipmentTypeFilter, setEquipmentTypeFilter] = useState<'Wagon' | 'Container' | ''>('');
+  const [wagonSelection, setWagonSelection] = useState<string | undefined>();
+  const [containerSelection, setContainerSelection] = useState<string | undefined>();
+  const [equipmentStatusFilter, setEquipmentStatusFilter] = useState<string>('');
+  const [fromDateTime, setFromDateTime] = useState<string>('');
+  const [toDateTime, setToDateTime] = useState<string>('');
+  const [equipmentGroup, setEquipmentGroup] = useState<string | undefined>();
+  const [equipmentContract, setEquipmentContract] = useState<string | undefined>();
+  const [contractSupplier, setContractSupplier] = useState<string | undefined>();
+  const [equipmentOwner, setEquipmentOwner] = useState<string | undefined>();
+
+  // Helper: extract ID or Name from piped data "ID || Name" (same as EquipmentCalendarPanel)
+  const getPipedPart = (value: string | undefined, part: 'id' | 'name'): string => {
+    if (!value) return '';
+    const raw = String(value);
+    const [idPart, namePart] = raw.split('||').map((s) => s?.trim());
+
+    if (!namePart) {
+      // Not actually piped data, just return the whole value
+      return raw.trim();
+    }
+
+    return part === 'id' ? (idPart || '') : (namePart || '');
+  };
+
+  // Helper: build filter payload for calendar view (includes FromDate/ToDate)
+  const buildCalendarFilterPayload = () => {
+    if (resourceType !== 'Equipment') {
+      return null;
+    }
+    const payload = {
+      EquipmentCategory: equipmentTypeFilter || '',
+      EquipmentType: wagonSelection || '',
+      EquipmentCode: '',
+      EquipmentStatus: equipmentStatusFilter || '',
+      FromDate: fromDateTime || '',
+      ToDate: toDateTime || '',
+      EquipmentGroup: equipmentGroup || '',
+      EquipmentContract: equipmentContract || '',
+      ContractAgent: contractSupplier || '',
+      EquipmentOwner: equipmentOwner || '',
+    };
+    console.log('ResourceSelectionDrawer: buildCalendarFilterPayload - built payload:', payload);
+    return payload;
+  };
+
+  // Handler to clear all filter values
+  const handleClearFilters = () => {
+    setEquipmentTypeFilter('');
+    setWagonSelection(undefined);
+    setContainerSelection(undefined);
+    setEquipmentStatusFilter('');
+    setFromDateTime('');
+    setToDateTime('');
+    setEquipmentGroup(undefined);
+    setEquipmentContract(undefined);
+    setContractSupplier(undefined);
+    setEquipmentOwner(undefined);
+    console.log('ResourceSelectionDrawer: All filters cleared');
+  };
 
   // Get configuration for current resource type
   const config = resourceConfigs[resourceType];
@@ -501,6 +583,31 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         }));
     } catch (error) {
       console.error("Error fetching sub service type options:", error);
+      return [];
+    }
+  };
+
+  // Helper to create lazy fetchers for calendar filter
+  const fetchMasterData = (messageType: string) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+      });
+
+      const rr: any = response.data;
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
       return [];
     }
   };
@@ -652,6 +759,68 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   }, [isOpen, selectedResourcesRq, currentResourceData, resourceType]);
 
+  // Store last applied filters (single shared payload with FromDate/ToDate for both views)
+  const lastAppliedFiltersRef = useRef<any>(null);
+
+  // Memoize the callback to register the calendar filter function
+  // This prevents the child component's useEffect from running multiple times
+  const handleRegisterApplyFilter = useCallback((fn: (payload: any) => Promise<void> | void) => {
+    setApplyCalendarFilter(() => fn);
+  }, []);
+
+  // Memoize the callback to register the function to get equipment objects from calendar
+  const handleRegisterGetEquipments = useCallback((fn: () => EquipmentItem[]) => {
+    setGetCalendarEquipments(() => fn);
+  }, []);
+
+  // When view mode changes, apply the stored filters to the new view
+  // Same payload (with dates) applies to both views
+  useEffect(() => {
+    if (resourceType === 'Equipment' && isOpen) {
+      if (viewMode === 'list') {
+        // Switching to list view: apply stored filters (full payload with dates)
+        if (lastAppliedFiltersRef.current && onFiltersChange) {
+          onFiltersChange(lastAppliedFiltersRef.current);
+        }
+      } else if (viewMode === 'calendar') {
+        // Switching to calendar view: apply stored filters (full payload with dates)
+        // Apply filters immediately - they will be stored in EquipmentCalendarPanel's ref
+        // This ensures filters are available when handleDateRangeChange is called
+        if (applyCalendarFilter) {
+          if (lastAppliedFiltersRef.current) {
+            console.log('ResourceSelectionDrawer: Applying stored filters on calendar view switch:', lastAppliedFiltersRef.current);
+            // Apply stored filters - pass isInitialLoad: false to ensure filters are preserved
+            // The filters will be stored in EquipmentCalendarPanel's ref before handleDateRangeChange runs
+            // Use setTimeout to ensure this runs before SmartEquipmentCalendar's initial render
+            setTimeout(() => {
+              applyCalendarFilter(lastAppliedFiltersRef.current);
+            }, 0);
+          } else {
+            // No stored filters - apply empty filters so they're available for handleDateRangeChange
+            // This ensures handleDateRangeChange always has filters (even if empty) to pass to API
+            const emptyFilters = {
+              EquipmentType: '',
+              EquipmentCode: '',
+              EquipmentStatus: '',
+              FromDate: '',
+              ToDate: '',
+              EquipmentGroup: '',
+              EquipmentContract: '',
+              ContractAgent: '',
+              EquipmentOwner: '',
+              EquipmentCategory: '',
+            };
+            console.log('ResourceSelectionDrawer: No stored filters, applying empty filters:', emptyFilters);
+            setTimeout(() => {
+              applyCalendarFilter(emptyFilters);
+            }, 0);
+          }
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, resourceType, isOpen]);
+
   // Reset viewMode to 'list' when drawer opens or resource type changes
   useEffect(() => {
     if (isOpen) {
@@ -664,6 +833,26 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         // For Equipment, reset to list when drawer opens (fresh start)
         setViewMode('list');
       }
+    }
+  }, [isOpen, resourceType]);
+
+  // Clear all filter states when drawer opens (fresh start)
+  useEffect(() => {
+    if (isOpen && resourceType === 'Equipment') {
+      // Clear all filter-related states
+      setEquipmentTypeFilter('');
+      setWagonSelection(undefined);
+      setContainerSelection(undefined);
+      setEquipmentStatusFilter('');
+      setFromDateTime('');
+      setToDateTime('');
+      setEquipmentGroup(undefined);
+      setEquipmentContract(undefined);
+      setContractSupplier(undefined);
+      setEquipmentOwner(undefined);
+      // Clear the last applied filters ref
+      lastAppliedFiltersRef.current = null;
+      console.log('ResourceSelectionDrawer: All filters cleared on drawer open');
     }
   }, [isOpen, resourceType]);
 
@@ -1147,10 +1336,11 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       // Get the resource details key for the current resource type being edited
       const currentResourceDetailsKey = getResourceDetailsKey(resourceType);
       console.log('Updating ResourceDetails for resource type:', resourceType, '-> key:', currentResourceDetailsKey);
+
       // Get existing items for the current resource type only
       const existingItems = Array.isArray(existingResourceDetails[currentResourceDetailsKey]) 
-      ? existingResourceDetails[currentResourceDetailsKey] 
-      : [];
+        ? existingResourceDetails[currentResourceDetailsKey] 
+        : [];
       console.log("existingItems ====", existingItems);
       
       // New items from formattedDataArray (should all be of the current resource type)
@@ -1364,131 +1554,32 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
   ];
 
-  // Sample equipment data
-  const equipments: EquipmentItem[] = [
-    { id: 'eq1', title: 'W001', supplier: 'ABC Logistics', status: 'available', type: 'Freight', capacity: '50T' },
-    { id: 'eq2', title: 'W002', supplier: 'XYZ Transport', status: 'available', type: 'Passenger', capacity: '80 seats' },
-    { id: 'eq3', title: 'W003', supplier: 'ABC Logistics', status: 'occupied', type: 'Tank', capacity: '40T' },
-    { id: 'eq4', title: 'W004', supplier: 'Delta Movers', status: 'available', type: 'Freight', capacity: '50T' },
-    { id: 'eq5', title: 'W005', supplier: 'XYZ Transport', status: 'occupied', type: 'Freight', capacity: '55T' },
-    { id: 'eq6', title: 'W006', supplier: 'ABC Logistics', status: 'workshop', type: 'Tank', capacity: '45T' },
-    { id: 'eq7', title: 'W007', supplier: 'Gamma Fleet', status: 'available', type: 'Freight', capacity: '50T' },
-    { id: 'eq8', title: 'W008', supplier: 'Delta Movers', status: 'workshop', type: 'Passenger', capacity: '75 seats' },
-  ];
 
-  // Sample events
-  const events: EquipmentCalendarEvent[] = [
-    {
-      id: 'ev1',
-      equipmentId: 'eq1',
-      label: 'Trip to NYC',
-      type: 'trip',
-      start: '2025-11-17T08:00:00',
-      end: '2025-11-17T16:00:00',
-    },
-    {
-      id: 'ev2',
-      equipmentId: 'eq1',
-      label: 'Trip to Boston',
-      type: 'trip',
-      start: '2025-11-18T10:00:00',
-      end: '2025-11-18T18:00:00',
-    },
-    {
-      id: 'ev3',
-      equipmentId: 'eq2',
-      label: 'Maintenance Check',
-      type: 'maintenance',
-      start: '2025-11-17T09:00:00',
-      end: '2025-11-17T12:00:00',
-    },
-    {
-      id: 'ev4',
-      equipmentId: 'eq2',
-      label: 'Trip to Chicago',
-      type: 'trip',
-      start: '2025-11-18T06:00:00',
-      end: '2025-11-19T14:00:00',
-    },
-    {
-      id: 'ev5',
-      equipmentId: 'eq3',
-      label: 'Hold for Inspection',
-      type: 'hold',
-      start: '2025-11-17T08:00:00',
-      end: '2025-11-17T17:00:00',
-    },
-    {
-      id: 'ev6',
-      equipmentId: 'eq4',
-      label: 'Scheduled Maintenance',
-      type: 'maintenance',
-      start: '2025-11-17T08:00:00',
-      end: '2025-11-19T17:00:00',
-    },
-    {
-      id: 'ev7',
-      equipmentId: 'eq5',
-      label: 'Trip to LA',
-      type: 'trip',
-      start: '2025-11-17T12:00:00',
-      end: '2025-11-20T15:00:00',
-    },
-    {
-      id: 'ev8',
-      equipmentId: 'eq6',
-      label: 'Trip to Seattle',
-      type: 'trip',
-      start: '2025-11-18T07:00:00',
-      end: '2025-11-19T19:00:00',
-    },
-    {
-      id: 'ev9',
-      equipmentId: 'eq7',
-      label: 'Trip to Portland',
-      type: 'trip',
-      start: '2025-11-19T08:00:00',
-      end: '2025-11-20T16:00:00',
-    },
-    {
-      id: 'ev10',
-      equipmentId: 'eq8',
-      label: 'Oil Change',
-      type: 'maintenance',
-      start: '2025-11-17T10:00:00',
-      end: '2025-11-17T14:00:00',
-    },
-  ];
-
-  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
-  const [startDate, setStartDate] = useState(new Date('2025-11-17'));
-  const [showHourView, setShowHourView] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
+  
 
   const handleEquipmentClick = (equipment: EquipmentItem) => {
-    toast({
-      title: "✅ Equipment Selected Successfully",
-      description: `Supplier: ${equipment.supplier} | Status: ${equipment.status}`,
-      variant: "default",
-    });
+    // toast({
+    //   title: "✅ Equipment Selected Successfully",
+    //   description: `Supplier: ${equipment.supplier} | Status: ${equipment.status}`,
+    //   variant: "default",
+    // });
   };
 
   const handleAddToTrip = (selectedIds: string[]) => {
-    toast({
-      title: "✅ Equipment Added to Trip Successfully",
-      description: `Adding ${selectedIds.length} wagon(s) to CO/Trip`,
-      variant: "default",
-    });
-    setSelectedEquipments([]);
+    // toast({
+    //   title: "✅ Equipment Added to Trip Successfully",
+    //   description: `Adding ${selectedIds.length} wagon(s) to CO/Trip`,
+    //   variant: "default",
+    // });
+    // setSelectedEquipments([]);
   };
 
   const handleBarClick = (event: EquipmentCalendarEvent) => {
-    toast({
-      title: "✅ Equipment Bar Clicked Successfully",
-      description: `Type: ${event.type} | Equipment: ${event.equipmentId}`,
-      variant: "default",
-    });
+    // toast({
+    //   title: "✅ Equipment Bar Clicked Successfully",
+    //   description: `Type: ${event.type} | Equipment: ${event.equipmentId}`,
+    //   variant: "default",
+    // });
   };
 
   return (
@@ -1504,7 +1595,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       <div className="space-y-6">
         {/* Filter Section */}
         <div className="space-y-4 px-4 mt-4">
-          {/* Service Type and Sub Service Type */}
+          {/* Service Type, Sub Service Type and Calendar Filter */}
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Service Type</label>
@@ -1526,6 +1617,19 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                 className="w-full"
               />
             </div>
+            {resourceType === 'Equipment' && (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Filter</label>
+                  <button
+                    type="button"
+                    className="rounded-md hover:bg-accent/100 bg-gray-50 border border-input h-10 p-3"
+                    onClick={() => setIsCalendarFilterOpen(true)}
+                    title="Open equipment calendar filter"
+                  >
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                  </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1534,23 +1638,23 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           {/* View Toggle - Only for Equipment */}
           {resourceType === 'Equipment' && (
             <div className="flex items-center justify-start mb-2">
-              <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 shadow-sm">
+              <div className="inline-flex rounded-lg p-1" style={{background: '#EBEFF9'}}>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-all ${
+                  className={`px-4 py-2 text-sm rounded-md transition-all ${
                     viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-blue-600 shadow-sm font-medium'
+                      : 'text-gray-600 hover:text-gray-900 font-normal'
                   }`}
                 >
                   List View
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-all ${
+                  className={`px-4 py-2 text-sm rounded-md transition-all ${
                     viewMode === 'calendar'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-blue-600 shadow-sm font-medium'
+                      : 'text-gray-600 hover:text-gray-900 font-normal'
                   }`}
                 >
                   Calendar View
@@ -1676,35 +1780,259 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             </>
           ) : (
             <>
-              {/* Calendar View - Empty div for now (Schedule component will be added later) */}
-              <div className="flex-1 overflow-hidden">
-                <SmartEquipmentCalendar
-                  equipments={equipments}
-                  events={events}
-                  view={view}
-                  startDate={startDate}
-                  showHourView={showHourView}
-                  statusFilter={statusFilter}
-                  selectedEquipments={selectedEquipments}
-                  onViewChange={setView}
-                  onShowHourViewChange={setShowHourView}
-                  onStatusFilterChange={setStatusFilter}
-                  onSelectionChange={setSelectedEquipments}
-                  onAddToTrip={handleAddToTrip}
-                  onBarClick={handleBarClick}
-                  onEquipmentClick={handleEquipmentClick}
-                  enableDrag={false}
-                />
-              </div>
+              {/* Calendar View - calendar panel is only mounted when viewMode === 'calendar' */}
+              <EquipmentCalendarPanel
+                selectedEquipments={Array.from(selectedRowIds)} // Pass selected IDs from list view
+                onSelectionChange={(ids) => {
+                  // Update selections when calendar view selection changes
+                  console.log('ResourceSelectionDrawer: Calendar selection changed:', ids);
+                  const newSelectedRowIds = new Set(ids);
+                  setSelectedRowIds(newSelectedRowIds);
+                  
+                  const idField = getIdField(); // For Equipment, this is 'EquipmentID'
+                  
+                  // First, try to find equipment from currentResourceData (list view data)
+                  const listViewObjects = currentResourceData.filter(item => 
+                    ids.includes(item[idField])
+                  );
+                  
+                  // Get equipment objects from calendar view (apiEquipments)
+                  // Calendar uses EquipmentCode as ID (stored in EquipmentItem.id), but list view uses EquipmentID
+                  let calendarObjects: any[] = [];
+                  if (getCalendarEquipments && viewMode === 'calendar') {
+                    const calendarEquipments = getCalendarEquipments(); // Returns EquipmentItem[]
+                    console.log('ResourceSelectionDrawer: Got equipment from calendar:', calendarEquipments);
+                    console.log('ResourceSelectionDrawer: Selected IDs to match:', ids);
+                    
+                    // Convert EquipmentItem format to list view format
+                    // EquipmentItem.id is EquipmentCode, list view needs EquipmentID
+                    // For Equipment, EquipmentID and EquipmentCode might be the same or different
+                    // We'll use EquipmentCode (eq.id) as EquipmentID for now
+                    calendarObjects = calendarEquipments
+                      .filter(eq => ids.includes(eq.id)) // Filter by selected IDs (EquipmentCode from calendar)
+                      .map(eq => {
+                        // Convert EquipmentItem to list view format
+                        // EquipmentItem has: id (EquipmentCode), type (EquipmentType), owner, etc.
+                        // List view format needs: EquipmentID, EquipmentType, OwnerID, EquipmentCategory, etc.
+                        return {
+                          EquipmentID: eq.id, // Use EquipmentCode as EquipmentID (calendar's ID)
+                          EquipmentCode: eq.id, // Also keep EquipmentCode
+                          EquipmentType: eq.type || '',
+                          OwnerID: eq.owner || '',
+                          EquipmentCategory: eq.title || eq.id || '', // Use title or id as category
+                          // Preserve other EquipmentItem fields for reference
+                          supplier: eq.supplier,
+                          status: eq.status,
+                          capacity: eq.capacity,
+                          ownerDesc: eq.ownerDesc,
+                        };
+                      });
+                    console.log('ResourceSelectionDrawer: Converted calendar equipment to list format:', calendarObjects);
+                  }
+                  
+                  // Merge list view objects and calendar objects
+                  // Priority: list view objects (if available), then calendar objects
+                  const foundInList = new Set(listViewObjects.map(item => item[idField]));
+                  const calendarOnlyObjects = calendarObjects.filter(obj => 
+                    !foundInList.has(obj.EquipmentID) // EquipmentID is the ID field
+                  );
+                  
+                  const mergedObjects = [...listViewObjects, ...calendarOnlyObjects];
+                  console.log('ResourceSelectionDrawer: Merged selectedRowObjects (list + calendar):', mergedObjects);
+                  setSelectedRowObjects(mergedObjects);
+                  
+                  // Also update selectedRows indices for list view sync
+                  const newSelectedRows = new Set<number>();
+                  currentResourceData.forEach((item, index) => {
+                    if (ids.includes(item[idField])) {
+                      newSelectedRows.add(index);
+                    }
+                  });
+                  setSelectedRows(newSelectedRows);
+                }}
+                onAddToTrip={handleAddToTrip}
+                onBarClick={handleBarClick}
+                onEquipmentClick={handleEquipmentClick}
+                enableDrag={false}
+                tripInformation={tripInformation}
+                onRegisterApplyFilter={handleRegisterApplyFilter}
+                onRegisterGetEquipments={handleRegisterGetEquipments}
+              />
               {/* <div className="flex items-center justify-center py-12 min-h-[400px]">
                 <div className="text-sm text-gray-500">Calendar View - Schedule component will be added here</div>
               </div> */}
             </>
-          )}
-          
-          
+          )} 
         </div>
       </div>
+      {/* Calendar filter drawer - shared for calendar (and later list) view */}
+    <SideDrawer
+    isOpen={isCalendarFilterOpen}
+    onClose={() => setIsCalendarFilterOpen(false)}
+    title={`Filter By`}
+    width="40%"
+    slideDirection="right"
+    showFooter={true}
+    footerButtons={[
+      {
+        label: 'Clear',
+        variant: 'outline' as const,
+        action: () => {
+          handleClearFilters();
+        },
+        disabled: false,
+      },
+      {
+        label: 'Apply',
+        variant: 'default' as const,
+        action: async () => {
+          // Build full payload with FromDate/ToDate (same for both views)
+          const fullPayload = buildCalendarFilterPayload();
+          
+          if (fullPayload) {
+            // Store the same payload for both views
+            lastAppliedFiltersRef.current = fullPayload;
+
+            // Apply to the active view
+            if (viewMode === 'calendar') {
+              // Calendar view: apply full payload with dates
+              if (applyCalendarFilter) {
+                console.log('ResourceSelectionDrawer: Calling applyCalendarFilter with:', fullPayload);
+                await applyCalendarFilter(fullPayload);
+              } else {
+                console.warn('ResourceSelectionDrawer: applyCalendarFilter is not available');
+              }
+            } else if (viewMode === 'list') {
+              // List view: apply same full payload (parent will handle dates if needed)
+              if (onFiltersChange) {
+                onFiltersChange(fullPayload);
+              }
+            }
+          } else {
+            console.warn('ResourceSelectionDrawer: fullPayload is null');
+          }
+          setIsCalendarFilterOpen(false);
+        },
+        disabled: false,
+      }
+    ]}
+  >
+    <div className="p-4 space-y-4">
+      <div className="space-y-4">
+        <div>
+          <div className="text-sm font-medium mb-2">Equipment Type *</div>
+          <div className="flex items-center gap-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="equipmentType"
+                value="Wagon"
+                checked={equipmentTypeFilter === 'Wagon'}
+                onChange={() => setEquipmentTypeFilter('Wagon')}
+                className="mr-2"
+              />
+              Wagon
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="equipmentType"
+                value="Container"
+                checked={equipmentTypeFilter === 'Container'}
+                onChange={() => setEquipmentTypeFilter('Container')}
+                className="mr-2"
+              />
+              Container
+            </label>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <div className="text-sm font-medium mb-2">Wagon/Container</div>
+            <DynamicLazySelect
+              fetchOptions={fetchMasterData(equipmentTypeFilter === 'Wagon' ? 'Wagon id Init' : 'Container ID Init')}
+              value={wagonSelection}
+              onChange={(v) => setWagonSelection(v as string | undefined)}
+              placeholder="Select Wagon/Container"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="text-sm font-medium mb-2">Equipment Status</div>
+          <DynamicLazySelect
+            fetchOptions={fetchMasterData('Equipment OperationStatus Init')}
+            value={equipmentStatusFilter}
+            onChange={(v) => setEquipmentStatusFilter(v as string)}
+            hideSearch={true}
+            disableLazyLoading={true}
+            placeholder="Select Equipment Status"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-sm font-medium mb-2">From Date and Time</div>
+            <Input
+              type="datetime-local"
+              value={fromDateTime}
+              onChange={(e) => setFromDateTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <div className="text-sm font-medium mb-2">To Date and Time</div>
+            <Input
+              type="datetime-local"
+              value={toDateTime}
+              onChange={(e) => setToDateTime(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="text-sm font-medium mb-2">Equipment Group</div>
+          <DynamicLazySelect
+            fetchOptions={fetchMasterData('Equipment Group Init')}
+            value={equipmentGroup}
+            onChange={(v) => setEquipmentGroup(v as string | undefined)}
+            placeholder="Select Equipment Group"
+          />
+        </div>
+
+        <div>
+          <div className="text-sm font-medium mb-2">Equipment Contract</div>
+          <DynamicLazySelect
+            fetchOptions={fetchMasterData('Equipment Contract Init')}
+            value={equipmentContract}
+            onChange={(v) => setEquipmentContract(v as string | undefined)}
+            placeholder="Select Equipment Contract"
+          />
+        </div>
+
+        <div>
+          <div className="text-sm font-medium mb-2">Contract Supplier</div>
+          <DynamicLazySelect
+            fetchOptions={fetchMasterData('Contract Agent Init')}
+            value={contractSupplier}
+            onChange={(v) => setContractSupplier(v as string | undefined)}
+            placeholder="Select Contract Supplier"
+          />
+        </div>
+
+        <div>
+          <div className="text-sm font-medium mb-2">Equipment Owner</div>
+          <DynamicLazySelect
+            fetchOptions={fetchMasterData('Equipment Owner Init')}
+            value={equipmentOwner}
+            onChange={(v) => setEquipmentOwner(v as string | undefined)}
+            placeholder="Select Equipment Owner"
+          />
+        </div>
+      </div>
+    </div>
+  </SideDrawer>
     </SideDrawer>
+    
   );
 };

@@ -404,4 +404,33 @@ export const tripPlanningService = {
       );
       return response.data;
     },
+
+    getEquipmentCalendarData: async (params?: any): Promise<any> => {
+      console.log("params ", params);
+      const userContext = getUserContext();
+      const requestPayload = JSON.stringify({
+        context: {
+          UserID: "ramcouser",
+          OUID: userContext.ouId,
+          Role: userContext.roleName,
+          MessageID: "12345",
+          MessageType: "Equipment Calender Resource View",
+        },
+        RequestHeader: {
+          RefDocNo: params?.TripNo || "",
+          RefDocType: "TRIP",
+          ResourceType: "Equipment",
+          PlanningProfile: "General-GMBH",
+          AdditionalFilter: params?.RequestHeader?.AdditionalFilter || [],
+        },
+      });
+      const requestBody = {
+        RequestData: requestPayload,
+      };
+      const response = await apiClient.post(
+        `${API_ENDPOINTS.Equipment_Calendar.EQUIPMENTS}`,
+        requestBody
+      );
+      return response.data;
+    }
 }
