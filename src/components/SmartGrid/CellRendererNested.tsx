@@ -269,6 +269,26 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
             {getPipedValue(row, 'LegToDescription', 'LegTo')}
           </div>
         )}
+        {column.key === "FromLocationDescription" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {getPipedValue(row, 'FromLocationDescription', 'FromLocation')}
+          </div>
+        )}
+        {column.key === "ToLocationDescription" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {getPipedValue(row, 'ToLocationDescription', 'ToLocation')}
+          </div>
+        )}
+        {column.key === "BusinessPartnerName" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {getPipedValue(row, 'BusinessPartnerName', 'BusinessPartnerID')}
+          </div>
+        )}
+        {column.key === "RefDocIDType" && (
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {getPipedValue(row, 'RefDocIDType', 'RefDocIDTypeDescription')}
+          </div>
+        )}
       </div>
     );
   }

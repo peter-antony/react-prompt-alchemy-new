@@ -32,6 +32,7 @@ import CreateWorkerOrder from "./pages/CreateWorkerOrder";
 import CreateTemplateMain from "./pages/CreateTemplateMain";
 import CreateReportMain from "./pages/CreateReportMain";
 import CimCuvHub from "./pages/CimCuvHubManagement";
+import DraftBillHubManagement from "./pages/DraftBillHubManagement";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -110,7 +111,8 @@ const App = () => (
           <Route path="/trip-planning" element={<TripPlanning />} />
           <Route path="/smart-grid-plus-demo" element={<SmartGridPlusDemo />} />
           <Route path="/cim-cuv" element={<CimCuvHub />} />
-          
+          <Route path="/draft-bill" element={<DraftBillHubManagement />} />
+
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
           <Route path={ROUTES.OAUTH_CALLBACK} element={<OAuthCallback />} />

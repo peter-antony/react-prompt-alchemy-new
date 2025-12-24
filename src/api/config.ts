@@ -175,6 +175,9 @@ export const API_ENDPOINTS = {
     CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
     CANCEL: '/workorder/cancel',
   },
+  DRAFT_BILL: {
+    SEARCH: 'managedraftbill/hubsearch',
+  },
   Equipment_Calendar: {
     EQUIPMENTS: "/equipmentcalender/resourceview",
   },
