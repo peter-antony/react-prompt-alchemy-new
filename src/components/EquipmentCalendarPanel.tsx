@@ -379,13 +379,13 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
         const events = parsed.ResourceDetails.flatMap(transformTripDataToEvents);
         setApiEquipments(equipments);
         setApiEvents(events);
-        toast({ title: 'Filter applied', description: 'Equipment filter applied', variant: 'default' });
+        // toast({ title: 'Filter applied', description: 'Equipment filter applied', variant: 'default' });
       } else {
         // Clear cached data when ResourceDetails is null, empty, or not an array
         console.log('EquipmentCalendarPanel: ResourceDetails is null/empty, clearing cached data');
         setApiEquipments([]);
         setApiEvents([]);
-        toast({ title: 'No results', description: 'No equipment returned for filter', variant: 'default' });
+        // toast({ title: 'No results', description: 'No equipment returned for filter', variant: 'default' });
       }
     } catch (err) {
       console.error('Error applying equipment filter', err);

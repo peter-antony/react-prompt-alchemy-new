@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EquipmentCalendarViewProps, EquipmentItem, EquipmentCalendarEvent, DateRangeParams } from '@/types/equipmentCalendar';
 import { format, addHours, addDays, startOfDay, endOfDay, differenceInMinutes, differenceInDays, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
@@ -474,6 +474,52 @@ export const SmartEquipmentCalendar = ({
           </div>
         </div>
       </div>
+
+      {/* Selected Equipment Badges */}
+      {selectedEquipments.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-blue-700 font-medium">
+              {selectedEquipments.length} equipment{selectedEquipments.length !== 1 ? 's' : ''} selected:
+            </span>
+            {selectedEquipments.map((equipmentId) => {
+              const equipment = equipments.find(eq => eq.id === equipmentId);
+              return (
+                <Badge
+                  key={equipmentId}
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                >
+                  {equipment?.title || equipmentId}
+                  {/* Future: Uncomment to add individual remove button on each badge
+                  <button
+                    onClick={() => handleEquipmentSelect(equipmentId, false)}
+                    className="ml-2 hover:bg-blue-300 rounded-full p-0.5"
+                    title="Remove selection"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                  */}
+                </Badge>
+              );
+            })}
+          </div>
+          {/* Future: Uncomment to add clear all button
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              // Clear all selections by calling handleSelectAll(false)
+              handleSelectAll(false);
+            }}
+            title="Clear all selections"
+            className="h-6 w-6 p-0 bg-gray-50 hover:bg-gray-100 border border-blue-500"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+          */}
+        </div>
+      )}
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
