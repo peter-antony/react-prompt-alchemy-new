@@ -36,6 +36,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   templateNumber?: any;
   templateNumberCallback?: (value: string) => void;
   currency?: string;
+  reportStatus?: string;
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
@@ -64,6 +65,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   badgeValue = '',
   quickOrderNoCallback,
   workOrderNo = '',
+  reportStatus= '',
   workOrderStatus = '',
   workOrderNoCallback,
   workOrderCopy,
@@ -718,6 +720,30 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                   }}
                 />
               )}
+                {panelSubTitle == "Templated" && (() => {
+                const status = reportStatus || "";
+                if (!status) {
+                  return null;
+                }
+                let statusClass = "bg-gray-100 text-gray-600 border border-gray-300";
+                let label = status;
+                if (status.toLowerCase() === "completed") {
+                  statusClass = "bg-green-100 text-green-600 border border-green-300";
+                } else if (status.toLowerCase() === "closed") {
+                  statusClass = "bg-gray-100 text-gray-600 border border-gray-300";
+                } else if (status.toLowerCase() === "in-progress") {
+                  statusClass = "bg-orange-100 text-orange-600 border border-orange-300";
+                } else if (status.toLowerCase() === "fresh") {
+                  statusClass = "bg-blue-100 text-blue-600 border border-blue-300";
+                }
+                return (
+                  <span
+                    className={`text-xs ${statusClass} font-semibold px-3 py-1 rounded-full cursor-pointer`}
+                  >
+                    {label}
+                  </span>
+                );
+              })()}
 
               {panelSubTitle == "Work Order Details" && !!workOrderNoValue && (
                 <Input 

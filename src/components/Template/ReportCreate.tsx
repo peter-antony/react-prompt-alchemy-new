@@ -250,18 +250,20 @@ const ReportCreate = () => {
 
   const handleTemplateNumberCallback = (value: string) => {
   console.log("Template number changed:", value);
+  setCimCuvNo(value)
 
   const trimmedValue = value?.trim();
 
   // 1️⃣ Update local state (if you still need it)
   setTemplateNumber(trimmedValue);
+  console.log("trimmedValue",trimmedValue )
 
   // 2️⃣ (Optional) Update store – only if you are using one
   // useTemplateStore.getState().updateHeader('TemplateId',   trimmedValue);
 
   // 3️⃣ Update URL → triggers useEffect → API auto call
   if (trimmedValue) {
-    setSearchParams({ id: trimmedValue });
+    setSearchParams({ id: cimCuvNo });
   }
 };
 
@@ -511,10 +513,13 @@ const ReportCreate = () => {
   }, [routeCodeCDetails]);
 
   // Simulate API response for demonstration
-  useEffect(() => {
-    // Call the API to fetch template data
-    fetchTemplateData(workOrderNo); // Replace with actual template ID or a dynamic value
-  }, [workOrderNo]); // Removed activeTab from the dependency array
+ useEffect(() => {
+  const id = cimCuvNo ?? (workOrderNo || null);
+  if (!id) return;
+
+  fetchTemplateData(id);
+}, [cimCuvNo, workOrderNo]);
+
 
   useEffect(() => {
     const loadUomMasters = async () => {
@@ -604,6 +609,7 @@ const ReportCreate = () => {
           const fullResponseData = JSON.parse((response as any)?.data?.ResponseData);
           console.log("res", fullResponseData?.Header?.CIMCUVNo);
           setCimCuvNo( fullResponseData?.Header?.CIMCUVNo)
+          setSearchParams({ id: fullResponseData?.Header?.CIMCUVNo });
         // toast({
         //   title: "✅ Template Saved Successfully",
         //   description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -830,276 +836,274 @@ const ReportCreate = () => {
     ];
 
   // General Details Panel Config
-  const generalDetailsConfig: PanelConfig = {
-    consignor: {
-      id: "consignor",
-      label: "Consignor [1]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      width: "four",
-      placeholder: "Enter Consignor",
-      fetchOptions: fetchMaster("Consignor Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    consignorDescription: {
-      id: "consignorDescription",
-      label: "",
-      fieldType: "text",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      width: "four",
-      placeholder: "Enter Consignor",
-      labelFlag: false,
-      maxLength: 255,
-    },
-    customerCodeConsignor: {
-      id: "customerCodeConsignor",
-      label: "Customer Code for the Consignor [2]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 3,
-      width: "four",
-      placeholder: "Enter Customer Code",
-      fetchOptions: fetchMaster("Consignor CustomerCode2 Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    customerCodePrePaid: {
-      id: "customerCodePrePaid",
-      label: "Customer Code for Payer of Pre-Paid Charges [3]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 4,
-      width: "four",
-      placeholder: "Enter Customer Code for the Pay...",
-      fetchOptions: fetchMaster(
-        "Customercode for payer pre-paid charges_3 Init"
-      ),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    consignee: {
-      id: "consignee",
-      label: "Consignee [4]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 5,
-      width: "four",
-      placeholder: "Enter Consignee",
-      fetchOptions: fetchMaster("Consignee Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    consigneeDescription: {
-      id: "consigneeDescription",
-      label: "",
-      fieldType: "text",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 6,
-      width: "four",
-      placeholder: "Enter Consignee",
-      labelFlag: false,
-      maxLength: 255,
-    },
-    customerCodeConsignee: {
-      id: "customerCodeConsignee",
-      label: "Customer Code for Consignee [5]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 7,
-      width: "four",
-      placeholder: "Enter Customer Code for Consign...",
-      fetchOptions: fetchMaster("Customer code for consignee [5] Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    customerCodeNonPrePaid: {
-      id: "customerCodeNonPrePaid",
-      label: "Customer Code for Payer of Non Pre-Paid Charges [6]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 8,
-      width: "four",
-      placeholder: "Enter Customer Code for the Pay...",
-      fetchOptions: fetchMaster(
-        "Customercode for payer Nonpre-paid charges_6 Init"
-      ),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    consignorReference: {
-      id: "consignorReference",
-      label: "Consignor's Reference [8]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 9,
-      width: "four",
-      placeholder: "Enter Consignor's Reference",
-      fetchOptions: fetchMaster("Consignors Reference8 Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    consignorReferenceDescription: {
-      id: "consignorReferenceDescription",
-      label: "",
-      fieldType: "text",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 10,
-      width: "four",
-      placeholder: "Enter Consignor's Reference",
-      labelFlag: false,
-      maxLength: 40,
-    },
-    deliveryPoint: {
-      id: "deliveryPoint",
-      label: "Delivery Point [10]/[4]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 11,
-      width: "four",
-      placeholder: "Enter Delivery Point",
-      fetchOptions: fetchMaster("Location Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    deliveryPointDescription: {
-      id: "deliveryPointDescription",
-      label: "",
-      fieldType: "text",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 12,
-      width: "four",
-      placeholder: "Enter Delivery Point",
-      labelFlag: false,
-      maxLength: 255,
-    },
-    codeDeliveryPoint: {
-      id: "codeDeliveryPoint",
-      label: "Code for the Delivery Point [11]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 13,
-      width: "four",
-      placeholder: "Enter Code for the Delivery Point",
-      fetchOptions: fetchMaster("Location Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    codeStationServing: {
-      id: "codeStationServing",
-      label: "Code for the Station Serving the Delivery Point [12]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 14,
-      width: "four",
-      placeholder: "Enter Code for the Station Serving...",
-      fetchOptions: fetchMaster("Location Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    customerAgreementTariff: {
-      id: "customerAgreementTariff",
-      label: "No. of the Customer Agreement/Tariff [14]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 15,
-      width: "four",
-      placeholder: "Select No. of the Customer Agree...",
-      fetchOptions: fetchMaster("Contract Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    acceptanceDate: {
-      id: "acceptanceDate",
-      label: "Acceptance Date [16]/[2]",
-      fieldType: "date",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 16,
-      width: "four",
-      placeholder: "Select Acceptance Date",
-      dateFormat: "dd/MM/yyyy",
-    },
-    acceptanceFrom: {
-      id: "acceptanceFrom",
-      label: "Acceptance From [16]/[3]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 17,
-      width: "four",
-      placeholder: "Select Acceptance From",
-      fetchOptions: fetchMaster("Location Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-    codeAcceptancePoint: {
-      id: "codeAcceptancePoint",
-      label: "Code for the Acceptance Point [17]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 18,
-      width: "four",
-      placeholder: "Enter Code for the Acceptance Point",
-      fetchOptions: fetchMaster("Location Init"),
-      hideSearch: false,
-      disableLazyLoading: false,
-    },
-  };
+ const generalDetailsConfig: PanelConfig = {
+     consignor: {
+       id: 'consignor',
+       label: 'Consignor [1]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 1,
+       width: 'four',
+       placeholder: 'Enter Consignor',
+       fetchOptions: fetchMaster('Consignor Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+       
+     },
+     consignorDescription: {
+       id: 'consignorDescription',
+       label: '',
+       fieldType: 'text',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 2,
+       width: 'four',
+       placeholder: 'Enter Consignor',
+       labelFlag: false,
+        maxLength: 255,
+     },
+     customerCodeConsignor: {
+       id: 'customerCodeConsignor',
+       label: 'Customer Code for the Consignor [2]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 3,
+       width: 'four',
+       placeholder: 'Enter Customer Code',
+       fetchOptions: fetchMaster('Consignor CustomerCode2 Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     customerCodePrePaid: {
+       id: 'customerCodePrePaid',
+       label: 'Customer Code for Payer of Pre-Paid Charges [3]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 4,
+       width: 'four',
+       placeholder: 'Enter Customer Code for the Pay...',
+       fetchOptions: fetchMaster('Customercode for payer pre-paid charges_3 Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     consignee: {
+       id: 'consignee',
+       label: 'Consignee [4]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 5,
+       width: 'four',
+       placeholder: 'Enter Consignee',
+       fetchOptions: fetchMaster('Consignee Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     consigneeDescription: {
+       id: 'consigneeDescription',
+       label: '',
+       fieldType: 'text',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 6,
+       width: 'four',
+       placeholder: 'Enter Consignee',
+       labelFlag: false,
+        maxLength: 255,
+     },
+     customerCodeConsignee: {
+       id: 'customerCodeConsignee',
+       label: 'Customer Code for Consignee [5]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 7,
+       width: 'four',
+       placeholder: 'Enter Customer Code for Consign...',
+       fetchOptions: fetchMaster('Customer code for consignee [5] Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+ 
+     },
+     customerCodeNonPrePaid: {
+       id: 'customerCodeNonPrePaid',
+       label: 'Customer Code for Payer of Non Pre-Paid Charges [6]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 8,
+       width: 'four',
+       placeholder: 'Enter Customer Code for the Pay...',
+       fetchOptions: fetchMaster('Customercode for payer Nonpre-paid charges_6 Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     consignorReference: {
+       id: 'consignorReference',
+       label: "Consignor's Reference [8]",
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 9,
+       width: 'four',
+       placeholder: "Enter Consignor's Reference",
+       fetchOptions: fetchMaster('Consignors Reference8 Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     consignorReferenceDescription: {
+       id: 'consignorReferenceDescription',
+       label: '',
+       fieldType: 'text',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 10,
+       width: 'four',
+       placeholder: "Enter Consignor's Reference",
+       labelFlag: false,
+        maxLength: 40,
+     },
+     deliveryPoint: {
+       id: 'deliveryPoint',
+       label: 'Delivery Point [10]/[4]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 11,
+       width: 'four',
+       placeholder: 'Enter Delivery Point',
+       fetchOptions: fetchMaster('Location Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     deliveryPointDescription: {
+       id: 'deliveryPointDescription',
+       label: '',
+       fieldType: 'text',
+       value: '',
+       mandatory: false,
+       visible: true,
+       editable: true,
+       order: 12,
+       width: 'four',
+       placeholder: 'Enter Delivery Point',
+       labelFlag: false,
+         maxLength: 40,
+     },
+     codeDeliveryPoint: {
+       id: 'codeDeliveryPoint',
+       label: 'Code for the Delivery Point [11]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 13,
+       width: 'four',
+       placeholder: 'Enter Code for the Delivery Point',
+       fetchOptions: fetchMaster('Location Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     codeStationServing: {
+       id: 'codeStationServing',
+       label: 'Code for the Station Serving the Delivery Point [12]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 14,
+       width: 'four',
+       placeholder: 'Enter Code for the Station Serving...',
+       fetchOptions: fetchMaster('Location Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     customerAgreementTariff: {
+       id: 'customerAgreementTariff',
+       label: 'No. of the Customer Agreement/Tariff [14]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 15,
+       width: 'four',
+       placeholder: 'Select No. of the Customer Agree...',
+       fetchOptions: fetchMaster('Contract Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     acceptanceDate: {
+       id: 'acceptanceDate',
+       label: 'Acceptance Date [16]/[2]',
+       fieldType: 'date',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 16,
+       width: 'four',
+       placeholder: 'Select Acceptance Date',
+       dateFormat: 'dd/MM/yyyy',
+     },
+     acceptanceFrom: {
+       id: 'acceptanceFrom',
+       label: 'Acceptance From [16]/[3]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 17,
+       width: 'four',
+       placeholder: 'Select Acceptance From',
+       fetchOptions: fetchMaster('Location Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+     codeAcceptancePoint: {
+       id: 'codeAcceptancePoint',
+       label: 'Code for the Acceptance Point [17]',
+       fieldType: 'lazyselect',
+       value: '',
+       mandatory: true,
+       visible: true,
+       editable: true,
+       order: 18,
+       width: 'four',
+       placeholder: 'Enter Code for the Acceptance Point',
+       fetchOptions: fetchMaster('Location Init'),
+       hideSearch: false,
+       disableLazyLoading: false,
+     },
+   };
 
   // New Header Template Panel Config
   const headerTemplateConfig: PanelConfig = {
@@ -1119,8 +1123,8 @@ const ReportCreate = () => {
       disableLazyLoading: false,
       events: {
           onChange: (value: any) => {
-            console.log("change the ID ===", value.value);
-            const tempID = splitIdName(value.value).id;
+            console.log("change the ID ===", value?.value);
+            const tempID = splitIdName(value?.value).id;
             console.log("change the ID ===", tempID);
             getTemplateDataByID(tempID);
           },
@@ -1440,47 +1444,58 @@ const ReportCreate = () => {
   };
 
   // Declaration of Value, Interest in Delivery, Cash on Delivery Panel Config
-  const valueDeliveryCashConfig: PanelConfig = {
-    declarationOfValue: {
-      id: "declarationOfValue",
-      label: "Declaration of Value [26]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 1,
-      width: "four",
-      placeholder: "Enter Declaration of Value",
-      fetchOptions: fetchMaster("Currency Init"),
+   const valueDeliveryCashConfig: PanelConfig = {
+      declarationOfValue: {
+        id: 'declarationOfValue',
+        label: 'Declaration of Value [26]',
+        fieldType: 'inputdropdown',
+    value: {
+      input: '',
+      dropdown: '',
     },
-    interestInDelivery: {
-      id: "interestInDelivery",
-      label: "Interest in Delivery [27]",
-      fieldType: "lazyselect",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 2,
-      width: "four",
-      placeholder: "Enter Interest in Delivery",
-      fetchOptions: fetchMaster("Currency Init"),
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 1,
+    width: 'four',
+    placeholder: 'Declaration of Value',
+    options: getUomOptions(currencyUomList), 
+      },
+      
+      interestInDelivery: {
+        id: 'interestInDelivery',
+        label: 'Interest in Delivery [27]',
+        fieldType: 'inputdropdown',
+    value: {
+      input: '',
+      dropdown: '',
     },
-    cashOnDelivery: {
-      id: "cashOnDelivery",
-      label: "Cash on Delivery [28]",
-      fieldType: "inputdropdown",
-      value: "",
-      mandatory: false,
-      visible: true,
-      editable: true,
-      order: 3,
-      width: "four",
-      placeholder: "Enter Cash on Delivery",
-      fetchOptions: fetchMaster("Currency Init"),
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 2,
+    width: 'four',
+    placeholder: 'Interest in Delivery',
+    options: getUomOptions(currencyUomList), 
+      },
+     cashOnDelivery: {
+    id: 'cashOnDelivery',
+    label: 'Cash on Delivery [28]',
+    fieldType: 'inputdropdown',
+    value: {
+      input: '',
+      dropdown: '',
     },
-  };
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 3,
+    width: 'four',
+    placeholder: 'Enter Cash on Delivery',
+    options: getUomOptions(currencyUomList), 
+  },
+  
+    };
 
   // Coding Boxes Panel Config
   const codingBoxesConfig: PanelConfig = {
@@ -2842,25 +2857,25 @@ const effectiveCimCuvNo: string | null =
     return {
       // Declaration of Value [26]
 
-      //   DeclarationOfValue_26: declarationOfValue.id || null,
-      //  Currency_26: declarationOfValue.name || null,
+        DeclarationOfValue_26: formData?.declarationOfValue?.input || null,
+       Currency_26: formData?.declarationOfValue?.dropdown || null,
 
-      //   // Interest in Delivery [27]
-      //   InterestInDelivery_27: interestInDelivery.id || null,
-      //   Currency_27: interestInDelivery.name || null,
+        // Interest in Delivery [27] , 
+        InterestInDelivery_27: formData?.interestInDelivery?.input || null,
+        Currency_27: formData?.interestInDelivery?.dropdown || null,
 
-      //   // Cash on Delivery [28]
-      //   CashOnDelivery_28: cashOnDelivery.id || null,
-      //   Currency_28: cashOnDelivery.name || null,
+        // Cash on Delivery [28]
+        CashOnDelivery_28: formData?.cashOnDelivery?.input || null,
+        Currency_28: formData?.cashOnDelivery?.dropdown || null,
 
-      DeclarationOfValue_26: 111,
-      Currency_26: "CAD",
+      // DeclarationOfValue_26: "CAD",
+      // Currency_26: "454.00000000",
 
-      InterestInDelivery_27: 222,
-      Currency_27: "GBP",
+      // InterestInDelivery_27: "454.00000000",
+      // Currency_27: "454.00000000",
 
-      CashOnDelivery_28: 333,
-      Currency_28: "HKD",
+      // CashOnDelivery_28: "CHF",
+      // Currency_28: "6333.00000000"
     };
   };
 
@@ -2942,17 +2957,17 @@ const effectiveCimCuvNo: string | null =
 
       // Country
       Countryvalue1: country.id,
-      Countryvalue2: country.name,
-      CountryValueText: formData.COUNtryValue || "",
+      // Countryvalue2: country.name,
+      Countryvalue2: formData.COuntryValue || "",
 
       // Station
       Stationvalue1: station.id,
-      Stationvalue2: station.name,
-      StationValueText: formData.StationValue || "",
+      // Stationvalue2: station.name,
+      Stationvalue2: formData.StationValue || "",
 
       // Undertaking Enterprise
       UndertakingEnterprisesvalue1: enterprise.id,
-      UndertakingEnterprisesvalue2: enterprise.name,
+      UndertakingEnterprisesvalue2: formData.UndertakingEnterprisesvalue2,
       UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
     };
   };
@@ -3250,16 +3265,40 @@ const effectiveCimCuvNo: string | null =
         });
       }
 
-      if (valueDeliveryCashRef.current && apiResponse.Declarations) {
-        valueDeliveryCashRef.current.setFormValues({
-          // declarationOfValue: apiResponse.Declarations.DeclarationOfValue_26,
-          // interestInDelivery: apiResponse.Declarations.InterestInDelivery_27,
-          // cashOnDelivery: apiResponse.Declarations.CashOnDelivery_28,
-          // Currency_26: apiResponse.Declarations.Currency_26,
-          // Currency_27: apiResponse.Declarations.Currency_27,
-          // Currency_28: apiResponse.Declarations.Currency_28,
-        });
-      }
+    if (valueDeliveryCashRef.current && apiResponse?.Declarations) {
+  const decl = apiResponse.Declarations;
+
+  valueDeliveryCashRef.current.setFormValues({
+    declarationOfValue: {
+      input:
+        decl.DeclarationOfValue_26 != null
+          ? String(decl.DeclarationOfValue_26)
+          : "",
+      dropdown: decl.Currency_26 != null ? decl.Currency_26 : "",
+    },
+
+    interestInDelivery: {
+      input:
+        decl.InterestInDelivery_27 != null
+          ? String(decl.InterestInDelivery_27)
+          : "",
+      dropdown: decl.Currency_27 != null ? decl.Currency_27 : "",
+    },
+
+    // ✅ backend changed → CashOnDelivery_28 drives dropdown
+    cashOnDelivery: {
+      input:
+        decl.CashOnDelivery_28 != null
+          ? String(decl.CashOnDelivery_28)
+          : "",
+      dropdown:
+        decl.CashOnDelivery_28 != null
+          ? String(decl.CashOnDelivery_28)
+          : "",
+    },
+  });
+}
+
 
       if (codingBoxesRef.current && apiResponse.Declarations) {
         codingBoxesRef.current.setFormValues({
@@ -4762,10 +4801,11 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               panelOrder={0} // Render before general details
               panelTitle="Template"
               panelSubTitle="Templated"
-              templateNumber={templateNumber}
+              templateNumber={cimCuvNo}
               panelConfig={headerTemplateConfig} // New Config
               formName="headerTemplateForm"
               initialData={headerTemplateData}
+              reportStatus={apiResponse?.Header?.Status || ''}
               templateNumberCallback={handleTemplateNumberCallback}
               // onDataChange={handleHeaderTemplateDataChange}
               panelWidth="full"

@@ -2434,7 +2434,7 @@ const sanitizeRouteRows = (rows: any[]) =>
     return {
       // Consignor
       Consignor_1_value1: consignor.id,
-      ConsignorName_value2: consignor.name,
+      ConsignorName_value2: formData.consignorDescription,
 
       // Customer Code for Consignor
       CustomerCodeForConsignor_2: custConsignor.id,
@@ -2446,7 +2446,7 @@ const sanitizeRouteRows = (rows: any[]) =>
 
       // Consignee
       Consignee_4_value1: consignee.id,
-      ConsigneeName_4_value2: consignee.name,
+      ConsigneeName_4_value2: formData?.consigneeDescription,
 
       // Customer Code for Consignee
       CustomerCodeForConsignee_5: custConsignee.id,
@@ -2459,12 +2459,12 @@ const sanitizeRouteRows = (rows: any[]) =>
       // Consignor Reference
 
       ConsignorsReference_8_value1: consignorRef.id,
-      ConsignorsReference_8_value2: consignorRef.name,
+      ConsignorsReference_8_value2: formData?.consignorReferenceDescription,
 
 
       // Delivery Point
       DeliveryPoint_10_4_value1: deliveryPoint.id,
-      DeliveryPoint_10_4_value2: deliveryPoint.name,
+      DeliveryPoint_10_4_value2: formData?.deliveryPointDescription,
 
       // Code for Delivery Point
       CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
@@ -2522,16 +2522,16 @@ const sanitizeRouteRows = (rows: any[]) =>
     return {
       // Declaration of Value [26]
 
-        DeclarationOfValue_26: formData?.declarationOfValue?.input,
-       Currency_26: formData?.declarationOfValue?.dropdown,
+        DeclarationOfValue_26: formData?.declarationOfValue?.input || null,
+       Currency_26: formData?.declarationOfValue?.dropdown || null,
 
         // Interest in Delivery [27] , 
-        InterestInDelivery_27: formData?.interestInDelivery?.input,
-        Currency_27: formData?.interestInDelivery?.dropdown,
+        InterestInDelivery_27: formData?.interestInDelivery?.input || null,
+        Currency_27: formData?.interestInDelivery?.dropdown || null,
 
         // Cash on Delivery [28]
-        CashOnDelivery_28: formData?.cashOnDelivery?.input,
-        Currency_28: formData?.cashOnDelivery?.dropdown,
+        CashOnDelivery_28: formData?.cashOnDelivery?.input || null,
+        Currency_28: formData?.cashOnDelivery?.dropdown || null,
 
       // DeclarationOfValue_26: "CAD",
       // Currency_26: "454.00000000",
@@ -2618,13 +2618,13 @@ const sanitizeRouteRows = (rows: any[]) =>
 
       // Country
       Countryvalue1: country.id,
-      Countryvalue2: country.name,
-      CountryValueText: formData.COUNtryValue || "",
+      // Countryvalue2: country.name,
+      Countryvalue2: formData.COuntryValue || "",
 
       // Station
       Stationvalue1: station.id,
-      Stationvalue2: station.name,
-      StationValueText: formData.StationValue || "",
+      // Stationvalue2: station.name,
+      Stationvalue2: formData.StationValue || "",
 
       // Undertaking Enterprise
       UndertakingEnterprisesvalue1: enterprise.id,
@@ -3042,21 +3042,40 @@ useEffect(() => {
   const decl = apiResponse.Declarations;
   console.log("test", )
 
+ if (valueDeliveryCashRef.current && apiResponse?.Declarations) {
+  const decl = apiResponse.Declarations;
+
   valueDeliveryCashRef.current.setFormValues({
-    // ✅ inputdropdown — NEVER null
     declarationOfValue: {
-      input: decl.Currency_26 ? String(decl.DeclarationOfValue_26) : "",
-      dropdown: decl.Currency_26 ?? "",
+      input:
+        decl.DeclarationOfValue_26 != null
+          ? String(decl.DeclarationOfValue_26)
+          : "",
+      dropdown: decl.Currency_26 != null ? decl.Currency_26 : "",
     },
-     interestInDelivery: {
-      input: decl.Currency_27 ? String(decl.InterestInDelivery_27) : "",
-      dropdown: decl.Currency_27 ?? "",
+
+    interestInDelivery: {
+      input:
+        decl.InterestInDelivery_27 != null
+          ? String(decl.InterestInDelivery_27)
+          : "",
+      dropdown: decl.Currency_27 != null ? decl.Currency_27 : "",
     },
-     cashOnDelivery: {
-      input: decl.Currency_28 ? String(decl.CashOnDelivery_28) : "",
-      dropdown: decl.CashOnDelivery_28 ?? "",
+
+    // ✅ backend changed → CashOnDelivery_28 drives dropdown
+    cashOnDelivery: {
+      input:
+        decl.CashOnDelivery_28 != null
+          ? String(decl.CashOnDelivery_28)
+          : "",
+      dropdown:
+        decl.CashOnDelivery_28 != null
+          ? String(decl.CashOnDelivery_28)
+          : "",
     },
   });
+}
+
 }
 
       if (codingBoxesRef.current && apiResponse.Declarations) {
