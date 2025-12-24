@@ -1911,7 +1911,7 @@ const TemplateCreate = () => {
       order: 13,
       width: 'four',
       placeholder: 'Enter Place',
-      fetchOptions: fetchMaster('UTI Code 23 Init'),
+      fetchOptions: fetchMaster('Wagon type Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -2675,7 +2675,7 @@ const sanitizeRouteRows = (rows: any[]) =>
     RouteID:
       r.RouteID === "" || r.RouteID === undefined
         ? null
-        : Number(r.RouteID),
+        : String(r.RouteID),
 
     LegSequence:
       r.LegSequence === "" || r.LegSequence === undefined
@@ -2900,6 +2900,8 @@ const sanitizeRouteRows = (rows: any[]) =>
       NHM_Code_24_18: toNumberOrNull(
         splitIdName(formData.NHMCode).id
       ),
+      
+      UTI_Code_23: splitIdName(formData.UTICODE).id,
 
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
@@ -3069,8 +3071,8 @@ useEffect(() => {
           ? String(decl.CashOnDelivery_28)
           : "",
       dropdown:
-        decl.CashOnDelivery_28 != null
-          ? String(decl.CashOnDelivery_28)
+        decl.Currency_28 != null
+          ? String(decl.Currency_28)
           : "",
     },
   });
@@ -3200,7 +3202,7 @@ useEffect(() => {
             : apiRoute.ContractualCarrier_58a_value1 || "";
 
         RouteEndorsementDetailsRef.current.setFormValues({
-          CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
+          CustomsEndorsements_99: apiRoute.CustomsEndorsements_99 || "",
           Route_50: apiRoute.Route_50 || "",
           CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
           ContractualCarrier: ContractualCarrier,
@@ -4273,8 +4275,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               ref={headerTemplateRef} // New Panel
               panelId="header-template"
               panelOrder={0} // Render before general details
-              panelTitle="Templatehead"
-               panelSubTitle="Work Order Details"
+              panelTitle="Template"
+               panelSubTitle=""
               panelConfig={headerTemplateConfig} // New Config
               formName="headerTemplateForm"
               initialData={headerTemplateData}

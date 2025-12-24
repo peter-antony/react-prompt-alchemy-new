@@ -247,6 +247,9 @@ const ReportCreate = () => {
   //   console.log('templateNumberValue', value);
   //   setTemplateNumber(value);           // keep it in parent state
   // };
+  const isValidId = (val?: string | null) =>
+  val != null && val.trim() !== "";
+
 
   const handleTemplateNumberCallback = (value: string) => {
   console.log("Template number changed:", value);
@@ -262,7 +265,7 @@ const ReportCreate = () => {
   // useTemplateStore.getState().updateHeader('TemplateId',   trimmedValue);
 
   // 3️⃣ Update URL → triggers useEffect → API auto call
-  if (trimmedValue) {
+  if (isValidId(trimmedValue)) {
     setSearchParams({ id: cimCuvNo });
   }
 };
@@ -609,7 +612,9 @@ const ReportCreate = () => {
           const fullResponseData = JSON.parse((response as any)?.data?.ResponseData);
           console.log("res", fullResponseData?.Header?.CIMCUVNo);
           setCimCuvNo( fullResponseData?.Header?.CIMCUVNo)
-          setSearchParams({ id: fullResponseData?.Header?.CIMCUVNo });
+         if (isValidId(fullResponseData?.Header?.CIMCUVNo)) {
+  setSearchParams({ id: fullResponseData!.Header!.CIMCUVNo });
+}
         // toast({
         //   title: "✅ Template Saved Successfully",
         //   description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -2271,7 +2276,7 @@ const ReportCreate = () => {
       order: 13,
       width: "four",
       placeholder: "Enter Place",
-      fetchOptions: fetchMaster("UTI Code 23 Init"),
+      fetchOptions: fetchMaster("Wagon type Init"),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -3017,7 +3022,7 @@ const effectiveCimCuvNo: string | null =
         RouteID:
             r.RouteID === "" || r.RouteID === undefined
             ? null
-            : Number(r.RouteID),
+            : String(r.RouteID),
     
         LegSequence:
             r.LegSequence === "" || r.LegSequence === undefined
@@ -3100,6 +3105,8 @@ const effectiveCimCuvNo: string | null =
       RID_23_28: toBit(formData.RID),
 
       NHM_Code_24_18: toNumberOrNull(splitIdName(formData.NHMCode).id),
+            UTI_Code_23: splitIdName(formData.UTICODE).id,
+
 
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
@@ -3292,8 +3299,8 @@ const effectiveCimCuvNo: string | null =
           ? String(decl.CashOnDelivery_28)
           : "",
       dropdown:
-        decl.CashOnDelivery_28 != null
-          ? String(decl.CashOnDelivery_28)
+        decl.Currency_28 != null
+          ? String(decl.Currency_28)
           : "",
     },
   });
@@ -3411,7 +3418,7 @@ const effectiveCimCuvNo: string | null =
             : apiRoute.UndertakingEnterprisesvalue1 || "";
 
         RouteDetailsRef.current.setFormValues({
-          ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
+          ConsignmentNumber: apiRoute.CustomsEndorsements_99 || "",
           Country: country,
           COuntryValue: apiRoute.Countryvalue2 || "",
           Station: station,
