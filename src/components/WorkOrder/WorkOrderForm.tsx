@@ -3173,6 +3173,7 @@ if (formatted.Provider?.includes(" || ")) {
                                 </button>
 
                                 {/* Create Return Trip Button */}
+                                {selectedOperation?.IsOneWay =="0" && (
                                 <button
                                   onClick={handleCreateReturnTugOperation}
                                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 transition-colors"
@@ -3180,8 +3181,10 @@ if (formatted.Provider?.includes(" || ")) {
                                   <Plus className="w-7 h-7 text-gray-600 border border-gray-300 rounded-md p-1" />
                                   <span>Create Return Trip</span>
                                 </button>
+                                )}
 
                                 {/* Return Trip Execution Button */}
+                                {selectedOperation?.IsOneWay =="0" && (
                                 <button
                                   onClick={() => {
                                     console.log(
@@ -3261,6 +3264,7 @@ if (formatted.Provider?.includes(" || ")) {
                                     </button>
                                   </span>
                                 </button>
+                                )}
                               </div>
                             )}
                           </div>
