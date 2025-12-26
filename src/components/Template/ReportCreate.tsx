@@ -19,7 +19,6 @@ import CancelConfirmationModal from "./CancelConfirmationModal";
 import ConsignorConsigneeSideDraw from "./ConsignorConsigneeSideDraw";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AmendReportModal from "./AmendReportModal";
-import DraftBillDetailsSideDraw from "./DraftBillDetailsSideDraw";
 
 const ReportCreate = () => {
   const draftBillData = {
@@ -234,10 +233,7 @@ const ReportCreate = () => {
     isConsignorConsigneeSideDrawOpen,
     setIsConsignorConsigneeSideDrawOpen,
   ] = useState(false);
-  const [
-    isDraftBillDetailsSideDrawOpen,
-    setIsDraftBillDetailsSideDraw,
-  ] = useState(false);
+  
   const [consignorConsigneeData, setConsignorConsigneeData] =
     useState<any>(null);
 
@@ -4725,13 +4721,6 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
     // setIsCancelModalOpen(false);
   };
 
-  const handleSaveDraftBillDetails = (payload: { updatedLineItems: any[] }) => {
-    console.log("Draft Bill Details Saved:", payload);
-    // Update the apiResponse with the new lineItems
-    setApiResponse((prev: any) => ({ ...prev, LineItems: payload.updatedLineItems }));
-    setIsDraftBillDetailsSideDraw(false);
-  };
-
   const handleConfirmAmend = async (
     reasonCode: string,
     reasonDescription: string
@@ -5121,12 +5110,6 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         <div className="mt-6 flex items-center justify-between border-t border-border fixed bottom-0 right-0 left-[60px] bg-white px-6 py-3">
           <div className="flex items-center gap-4"></div>
           <div className="flex items-center gap-4">
-            {/* <button
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
-              onClick={() => setIsDraftBillDetailsSideDraw(true)}
-            >
-              open draft bill
-            </button> */}
             <button
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
               onClick={() => setIsCancelModalOpen(true)}
@@ -5186,14 +5169,6 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         isOpen={isAmendModalOpen}
         onClose={() => setIsAmendModalOpen(false)}
         onConfirmAmend={handleConfirmAmend}
-      />
-
-      <DraftBillDetailsSideDraw
-        isOpen={isDraftBillDetailsSideDrawOpen}
-        onClose={() => setIsDraftBillDetailsSideDraw(false)}
-        lineItems={draftBillData.ItemDetails}
-        onSave={handleSaveDraftBillDetails}
-        headerData={draftBillData.Header}
       />
     </>
   );

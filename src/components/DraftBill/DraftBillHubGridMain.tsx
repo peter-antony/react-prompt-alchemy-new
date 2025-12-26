@@ -7,13 +7,21 @@ import { useToast } from '@/hooks/use-toast';
 import { dateFormatter } from "@/utils/formatter";
 import { useFilterStore } from '@/stores/filterStore';
 import { DraftBillSearchCriteria, draftBillSearchCriteria } from '@/constants/draftBillSearchCriteria';
+import DraftBillDetailsSideDraw from './DraftBillDetailsSideDraw';
+import { CimCuvService } from '@/api/services/CimCuvService';
 
 const DraftBillHubGridMain = () => {
     const { toast } = useToast();
     const [gridData, setGridData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
-
+    const [
+        isDraftBillDetailsSideDrawOpen,
+        setIsDraftBillDetailsSideDraw,
+    ] = useState(false);
+    const [draftBillData, setDraftBillData] = useState<any>(null);
+    const [loadingDrawerData, setLoadingDrawerData] = useState(false);
+    
     const columns: GridColumnConfig[] = useMemo(() => [
         {
             key: 'DraftBillNo',
@@ -909,8 +917,44 @@ const DraftBillHubGridMain = () => {
         console.log('Cleared all filters sets');
     }
 
-    const handleLinkClick = (value: any, row: any) => {
+    const handleLinkClick = async (value: any, row: any) => {
         console.log("Link clicked:", value, row);
+        setLoadingDrawerData(true);
+        setIsDraftBillDetailsSideDraw(true);
+
+        try {
+            const response = await draftBillService.getDraftBillByID({
+                searchCriteria: { DraftBillNo: value.id }
+            });
+            
+            console.log("Draft Bill By ID API response:", response);
+            
+            const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
+            const resourceStatus = (response as any)?.data?.IsSuccess;
+            
+            console.log("parsedResponse ====", parsedResponse);
+            
+            if (resourceStatus) {
+                console.log("Draft Bill By ID fetched successfully");
+                // Set the draft bill data in state
+                setDraftBillData(parsedResponse);
+            } else {
+                throw new Error("Failed to fetch draft bill details");
+            }
+        } catch (error) {
+            console.error("Error fetching draft bill:", error);
+            toast({
+                title: "Error",
+                description: error instanceof Error 
+                    ? error.message 
+                    : "Failed to fetch draft bill details.",
+                variant: "destructive"
+            });
+            setIsDraftBillDetailsSideDraw(false);
+            setDraftBillData(null);
+        } finally {
+            setLoadingDrawerData(false);
+        }
     };
 
     return (
@@ -951,6 +995,20 @@ const DraftBillHubGridMain = () => {
                     editableColumns: false
                 }}
             />
+            
+            {/* Draft Bill Details Side Drawer */}
+            {isDraftBillDetailsSideDrawOpen && (
+                <DraftBillDetailsSideDraw
+                    isOpen={isDraftBillDetailsSideDrawOpen}
+                    onClose={() => {
+                        setIsDraftBillDetailsSideDraw(false);
+                        setDraftBillData(null);
+                    }}
+                    lineItems={loadingDrawerData ? [] : (draftBillData?.ItemDetails || [])}
+                    headerData={loadingDrawerData ? null : (draftBillData?.Header || null)}
+                    isLoading={loadingDrawerData}
+                />
+            )}
         </div>
     );
 };

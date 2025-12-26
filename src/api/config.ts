@@ -177,6 +177,7 @@ export const API_ENDPOINTS = {
   },
   DRAFT_BILL: {
     SEARCH: 'managedraftbill/hubsearch',
+    DRAFT_GET: '/managedraftbill/getdraftbill'
   },
   Equipment_Calendar: {
     EQUIPMENTS: "/equipmentcalender/resourceview",
