@@ -790,8 +790,8 @@ if (formatted.Provider?.includes(" || ")) {
       const data = parsedData?.ResponsePayload;
 
       if (data) {
-        const contractId = data.SupplierContract; //Binding SupplierContractID 
-        const contractDesc = data.SupplierContractDescription; // Binding SupplierContractDescription
+        const contractId = data.AgencyContractID; //Binding SupplierContractID 
+        const contractDesc = data.AgencyContractDescription; // Binding SupplierContractDescription
         const formattedContract = formatIdDesc(contractId, contractDesc);
 
         // Update the form values
