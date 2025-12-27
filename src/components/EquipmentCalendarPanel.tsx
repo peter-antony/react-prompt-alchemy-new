@@ -40,7 +40,7 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
   initialView = 'week',
   initialStartDate = new Date(),
   initialShowHourView = false,
-  initialStatusFilter = 'Available',
+  initialStatusFilter = 'all',
   selectedEquipments: initialSelectedEquipments = [],
   onViewChange,
   onShowHourViewChange,

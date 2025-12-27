@@ -471,8 +471,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     }
     const payload = {
       EquipmentCategory: equipmentTypeFilter || '',
-      EquipmentType: wagonSelection || '',
-      EquipmentCode: '',
+      EquipmentType: '',
+      EquipmentCode: wagonSelection || '',
       EquipmentStatus: equipmentStatusFilter || '',
       FromDate: fromDateTime || '',
       ToDate: toDateTime || '',
@@ -1971,24 +1971,27 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-sm font-medium mb-2">From Date and Time</div>
-            <Input
-              type="datetime-local"
-              value={fromDateTime}
-              onChange={(e) => setFromDateTime(e.target.value)}
-            />
+        {/* Date fields - only show for calendar view */}
+        {viewMode === 'calendar' && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm font-medium mb-2">From Date and Time</div>
+              <Input
+                type="datetime-local"
+                value={fromDateTime}
+                onChange={(e) => setFromDateTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="text-sm font-medium mb-2">To Date and Time</div>
+              <Input
+                type="datetime-local"
+                value={toDateTime}
+                onChange={(e) => setToDateTime(e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <div className="text-sm font-medium mb-2">To Date and Time</div>
-            <Input
-              type="datetime-local"
-              value={toDateTime}
-              onChange={(e) => setToDateTime(e.target.value)}
-            />
-          </div>
-        </div>
+        )}
 
         <div>
           <div className="text-sm font-medium mb-2">Equipment Group</div>

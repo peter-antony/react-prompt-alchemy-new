@@ -550,8 +550,11 @@ export const SmartEquipmentCalendar = ({
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div
-                    className="flex-1 min-w-0 cursor-pointer font-medium text-sm"
-                    onClick={() => onEquipmentClick?.(equipment)}
+                    className="flex-1 min-w-0 font-medium text-sm"
+                    // onClick={() => onEquipmentClick?.(equipment)}
+                    title={equipment.title}
+                    tabIndex={0}
+                    style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
                   >
                     {equipment.title}
                   </div>
