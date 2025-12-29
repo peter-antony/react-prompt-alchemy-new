@@ -62,4 +62,30 @@ export const draftBillService = {
         );
         return response.data;
     },
+
+    // Draft Bill Hub Search API, fetching grid data
+    saveDraftBillByID: async (params?: any): Promise<any> => {
+        const userContext = getUserContext();
+
+        const requestPayload = JSON.stringify({
+            context: {
+                UserID: "RAMCOUSER", // Fixed as per requirements
+                OUID: userContext.ouId,
+                Role: userContext.roleName,
+                MessageID: "12345",
+                MessageType: "DraftBill-Save"
+            },
+            RequestPayload: params,
+        });
+
+        const requestBody = {
+            RequestData: requestPayload,
+        };
+
+        const response = await apiClient.post(
+            API_ENDPOINTS.DRAFT_BILL.SAVE_DRAFT,
+            requestBody
+        );
+        return response.data;
+    },
 };

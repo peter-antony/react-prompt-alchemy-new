@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import {DynamicPanel, DynamicPanelRef} from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { splitInputDropdownValue, combineInputDropdownValue, InputDropdownValue } from "@/utils/inputDropdown";
+import { draftBillService } from "@/api/services/DraftBillService";
+import { useToast } from "@/hooks/use-toast";
 
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
@@ -238,6 +240,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   const [activeLine, setActiveLine] = useState<any | null>(null);
   const basicDetailsPanelRef = useRef<DynamicPanelRef>(null);
   const otherDetailsPanelRef = useRef<DynamicPanelRef>(null);
+  const { toast } = useToast();
 
   // Mapping function: Convert activeLine data to BasicDetails form fields
   const mapActiveLineToBasicDetails = (line: any): Record<string, any> => {
@@ -673,7 +676,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     return cleaned;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!activeLine || !headerData) {
       console.warn("No active line or header data selected");
       return;
@@ -750,9 +753,39 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     console.log("Final Payload:", payload);
     console.log("Final Payload:", JSON.stringify(payload, null, 2));
     
+    try {
+      const response = await draftBillService.saveDraftBillByID(payload);
+      
+      console.log("Draft Bill By ID API response:", response);
+      
+      const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      
+      console.log("parsedResponse ====", parsedResponse);
+      
+      if (resourceStatus) {
+          console.log("Draft Bill By ID fetched successfully");
+          toast({
+            title: "✅ Draft Bill Saved Successfully",
+            description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+            variant: "default",
+          });
+          // Set the draft bill data in state
+      } else {
+          // throw new Error("Failed to fetch draft bill details");
+          toast({
+            title: "⚠️ Draft Bill Save Failed",
+            description: (response as any)?.data?.Message || "Failed to save changes.",
+            variant: "destructive",
+          });
+      }
+    } catch (error) {
+        console.error("Error fetching draft bill:", error);
+    } 
+
     // TODO: Call API to save the payload
     // onSave(payload);
-    
+    onClose();
     // return payload;
   };
 
