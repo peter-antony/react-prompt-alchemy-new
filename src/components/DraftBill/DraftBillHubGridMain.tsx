@@ -9,6 +9,10 @@ import { useFilterStore } from '@/stores/filterStore';
 import { DraftBillSearchCriteria, draftBillSearchCriteria } from '@/constants/draftBillSearchCriteria';
 import DraftBillDetailsSideDraw from './DraftBillDetailsSideDraw';
 import { CimCuvService } from '@/api/services/CimCuvService';
+import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
+import { useFooterStore } from '@/stores/footerStore';
+import { filterService } from '@/api/services';
+// import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
 
 const DraftBillHubGridMain = () => {
     const { toast } = useToast();
@@ -22,6 +26,11 @@ const DraftBillHubGridMain = () => {
     const [draftBillData, setDraftBillData] = useState<any>(null);
     const [loadingDrawerData, setLoadingDrawerData] = useState(false);
     
+    const { setFooter, resetFooter } = useFooterStore();
+
+    // State for nested row selections
+    // const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
+
     const columns: GridColumnConfig[] = useMemo(() => [
         {
             key: 'DraftBillNo',
@@ -372,35 +381,35 @@ const DraftBillHubGridMain = () => {
             width: 350
         },
         // Duplicate from main grid, leaving commented unless needed
-        { 
-            key: 'InvoiceNo', 
-            label: 'Invoice No', 
-            type: 'Text', 
-            width: 150 
-        }, 
-        { 
-            key: 'InvoiceDate', 
-            label: 'Invoice Date', 
-            type: 'Date', 
-            width: 150 
+        {
+            key: 'InvoiceNo',
+            label: 'Invoice No',
+            type: 'Text',
+            width: 150
         },
-        { 
-            key: 'InvoiceStatus', 
-            label: 'Invoice Status', 
-            type: 'Text', 
-            width: 150 
+        {
+            key: 'InvoiceDate',
+            label: 'Invoice Date',
+            type: 'Date',
+            width: 150
         },
-        { 
-            key: 'TransferInvoiceNo', 
-            label: 'Transfer Invoice No', 
-            type: 'Text', 
-            width: 200 
+        {
+            key: 'InvoiceStatus',
+            label: 'Invoice Status',
+            type: 'Text',
+            width: 150
         },
-        { 
-            key: 'LatestJournalVoucher', 
-            label: 'Latest Journal Voucher', 
-            type: 'Text', 
-            width: 150 
+        {
+            key: 'TransferInvoiceNo',
+            label: 'Transfer Invoice No',
+            type: 'Text',
+            width: 200
+        },
+        {
+            key: 'LatestJournalVoucher',
+            label: 'Latest Journal Voucher',
+            type: 'Text',
+            width: 150
         },
         {
             key: 'Attribute1',
@@ -573,8 +582,17 @@ const DraftBillHubGridMain = () => {
         {
             key: 'DBLineStatus',
             label: 'DB Line Status',
-            type: 'Text',
-            width: 250
+            type: 'Badge',
+            width: 250,
+            statusMap: {
+                'OPN': 'badge-blue rounded-2xl',
+                'IP': 'badge-orange rounded-2xl',
+                // 'Approved': 'badge-green rounded-2xl',
+                'CN': 'badge-red rounded-2xl',
+                // 'Hold': 'badge-yellow rounded-2xl',
+                // 'Rerun Triggered': 'badge-purple rounded-2xl',
+                // 'Returned': 'badge-fresh-green rounded-2xl'
+            }
         },
         {
             key: 'CustomerOrderNo',
@@ -588,6 +606,126 @@ const DraftBillHubGridMain = () => {
     const { activeFilters } = useFilterStore();
     const gridId = "draft-bill-grid";
     const filtersForThisGrid = activeFilters[gridId] || {};
+
+    // Footer Configuration
+    useEffect(() => {
+        setFooter({
+            visible: true,
+            pageName: 'Draft_Bill',
+            leftButtons: [],
+            rightButtons: [
+                {
+                    label: "Cancel",
+                    onClick: () => {
+                        console.log("Cancel clicked");
+                    },
+                    type: 'Button',
+                },
+                {
+                    label: "Approve",
+                    onClick: () => {
+                        console.log("Approve clicked");
+                    },
+                    type: 'Button',
+                },
+                {
+                    label: "Generate Invoice",
+                    onClick: () => {
+                        console.log("Generate Invoice clicked");
+                    },
+                    type: 'Button',
+                },
+            ],
+        });
+        return () => resetFooter();
+    }, [setFooter, resetFooter]);
+
+    const renderSubRow = (row: any, rowIndex: number) => {
+        return (
+            <DraggableSubRow
+                row={row}
+                rowIndex={rowIndex}
+                columns={columns}
+                subRowColumnOrder={[]} // Pass appropriate order if needed
+                editingCell={null} // Pass editing state if needed
+                onReorderSubRowColumns={() => { }} // Pass handler
+                onSubRowEdit={() => { }} // Pass handler
+                onSubRowEditStart={() => { }} // Pass handler
+                onSubRowEditCancel={() => { }} // Pass handler
+            />
+        );
+    };
+
+    const handleServerSideSearch = async () => {
+        let latestFilters = filterService.applyGridFiltersSet();
+        console.log('LatestFilters Draft Bill: ', latestFilters);
+
+        const searchCriteria = buildSearchCriteria(latestFilters);
+
+        try {
+            setLoading(true);
+            const response = await draftBillService.getDraftBillsForHub({ searchCriteria });
+
+            // Check if response has ResponseData and parse it
+            let parsedResponse;
+            if (response?.data?.ResponseData) {
+                try {
+                    parsedResponse = JSON.parse(response.data.ResponseData);
+                } catch (e) {
+                    console.error("Failed to parse response.data.ResponseData", e);
+                }
+            } else if (response?.ResponseData) {
+                try {
+                    parsedResponse = JSON.parse(response.ResponseData);
+                } catch (e) {
+                    console.error("Failed to parse ResponseData", e);
+                }
+            } else if (response?.ResultSet || response?.ResponseResult) {
+                parsedResponse = response;
+            }
+
+            console.log("DraftBill API Response:", response);
+            console.log("Parsed Response:", parsedResponse);
+
+            const resultSet = parsedResponse?.ResultSet || parsedResponse?.ResponseResult;
+
+            if (Array.isArray(resultSet)) {
+                const processedData = resultSet.map((item: any, index: number) => {
+                    const header = item.Header || item;
+                    const itemDetails = item.ItemDetails || [];
+
+                    return {
+                        id: header.DraftBillNo || index + 1,
+                        ...header,
+                        DraftBillDate: header.DraftBillDate ? header.DraftBillDate : null,
+                        lineItems: itemDetails.map((detail: any, detailIndex: number) => ({
+                            id: `${(header.DraftBillNo || index + 1)}-${detailIndex + 1}`,
+                            ...detail
+                        }))
+                    };
+                });
+                setGridData(processedData);
+            } else {
+                setGridData([]);
+                console.warn("No ResultSet or ResponseResult found in parsed response", parsedResponse);
+                toast({
+                    title: "No Results",
+                    description: "No draft bills found matching your criteria",
+                });
+            }
+
+        } catch (error) {
+            console.error("Error fetching draft bills:", error);
+            toast({
+                title: "Error",
+                description: "Failed to fetch draft bills.",
+                variant: "destructive"
+            });
+            setGridData([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const buildSearchCriteria = (latestFilters: any) => {
         const criteria: DraftBillSearchCriteria = { ...draftBillSearchCriteria };
@@ -979,9 +1117,12 @@ const DraftBillHubGridMain = () => {
                 hideCheckboxToggle={false}
                 showDefaultConfigurableButton={false}
                 onClearAll={clearAllFilters}
+                onSearch={handleServerSideSearch}
                 serverFilters={dynamicServerFilters}
                 showServersideFilter={showServersideFilter}
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                api={filterService}
+                // nestedRowRenderer={renderSubRow}
                 selectionMode='multi'
                 onSelectedRowsChange={(selectedRows) => {
                     console.log("Selected rows:", selectedRows)
@@ -992,7 +1133,10 @@ const DraftBillHubGridMain = () => {
                     title: 'Line Level Info',
                     initiallyExpanded: false,
                     showNestedRowCount: true,
-                    editableColumns: false
+                    editableColumns: false,
+                    // selectionMode: "multi",
+                    // selectedRows: selectedDbLines,
+                    // onSelectionChange: setselectedDbLines,
                 }}
             />
             

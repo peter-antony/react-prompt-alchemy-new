@@ -26,7 +26,7 @@ const renderButton = (
         return buttonStyles.cancelQuickOrder;
       }
       return buttonStyles.cancel;
-    } else if (config.label.toLowerCase() === "save") {
+    } else if (config.label.toLowerCase() === "save" || config.label.toLowerCase() === "approve") {
       return buttonStyles.secondary;
     }
     return config.type === "Button"
