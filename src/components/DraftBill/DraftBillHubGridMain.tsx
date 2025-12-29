@@ -12,7 +12,7 @@ import { CimCuvService } from '@/api/services/CimCuvService';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { useFooterStore } from '@/stores/footerStore';
 import { filterService } from '@/api/services';
-// import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
+import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
 
 const DraftBillHubGridMain = () => {
     const { toast } = useToast();
@@ -29,7 +29,7 @@ const DraftBillHubGridMain = () => {
     const { setFooter, resetFooter } = useFooterStore();
 
     // State for nested row selections
-    // const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
+    const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
 
     const columns: GridColumnConfig[] = useMemo(() => [
         {
@@ -1134,9 +1134,9 @@ const DraftBillHubGridMain = () => {
                     initiallyExpanded: false,
                     showNestedRowCount: true,
                     editableColumns: false,
-                    // selectionMode: "multi",
-                    // selectedRows: selectedDbLines,
-                    // onSelectionChange: setselectedDbLines,
+                    selectionMode: "multi",
+                    selectedRows: selectedDbLines,
+                    onSelectionChange: setselectedDbLines,
                 }}
             />
             
