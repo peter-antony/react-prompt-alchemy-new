@@ -638,6 +638,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     label: "Approve",
                     onClick: () => {
                         console.log("Approve clicked");
+                        handleApprove()
                     },
                     type: 'Button',
                 },
@@ -1205,87 +1206,77 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         setIsCancelModalOpen(false);
       };
 
-//       const handleApprove = async (reasonCode: string, reasonDescription: string) => {
+      const handleApprove = async () => {
         
 
-//         console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
-//          const payload = {
-//             Header: {
-//               "DraftBillNo": selectedDraftBills[0]?.id,
-//               "ReasonCode": splitIdName(reasonCode).id,
-//               "ReasonforComments": reasonDescription,       
-//             },
-//             ItemDetails: 
-//                 selectedDraftBills[0]?.lineItems ?? []    
-//             ,
-//         };
-//             console.log(JSON.stringify(payload , null , 2))
-//         try {
-//         //    const payload = {
+        console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
+      
 
-//         //     Header: {
-//         //       "DraftBillNo": selectedDraftBills[0]?.id,
-//         //       "ReasonCode": splitIdName(reasonCode).id,
-//         //       "ReasonforComments": reasonDescription,       
-//         //     },
-//         //     ItemDetails: 
-//         //         selectedDraftBills[0]?.lineItems ?? []    
-//         //     ,
-//         // };
+        const payload = {
+  Header: {
+    DraftBillNo: selectedDraftBills[0]?.id,
+   
+  },
+  ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+    ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+      ...rest,
 
-//         const payload = {
-//   Header: {
-//     DraftBillNo: selectedDraftBills[0]?.id,
-//     ReasonCode: splitIdName(reasonCode).id,
-//     ReasonforComments: reasonDescription ?? "",
-//   },
-//   ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-//     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-//       ...rest,
+      // 1️⃣ Force ModeFlag to "Checked" if it exists
+      ...(ModeFlag  && { ModeFlag: "Checked" }),
 
-//       // 1️⃣ Force ModeFlag to "Checked" if it exists
-//       ...("ModeFlag" in item && { ModeFlag: "Checked" }),
+      // 2️⃣ Only include ReasonForCancellation if NOT null
+      ...(ReasonForCancellation != null && {
+        ReasonForCancellation,
+      }),
 
-//       // 2️⃣ Only include ReasonForCancellation if NOT null
-//       ...(ReasonForCancellation != null && {
-//         ReasonForCancellation,
-//       }),
+      // 3️⃣ Backend hates null remarks → normalize
+      Remark: rest.Remark ?? "",
+    })
+  ),
+};
 
-//       // 3️⃣ Backend hates null remarks → normalize
-//       Remark: rest.Remark ?? "",
-//     })
-//   ),
-// };
 
-//           console.log("payload ===", payload);
-//                       const response = await draftBillService.cancelDraftBillByID(payload);
+            console.log(JSON.stringify(payload , null , 2))
+        try {
+           const payload = {
+            Header: {
+              "DraftBillNo": selectedDraftBills[0]?.id,
+                
+            },
+            ItemDetails: 
+                selectedDraftBills[0]?.lineItems ?? []    
+            ,
+        };
+          console.log("payload ===", payload);
+                      const response = await draftBillService.approveDraftBillByID(payload);
 
-//           console.log("Cancel API response:", response);
-//           const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-//           const resourceStatus = (response as any)?.data?.IsSuccess;
-//           console.log("parsedResponse ====", parsedResponse);
-//           if (resourceStatus) {
-//             console.log("Template cancelled successfully");
-//             toast({
-//               title: "✅ Draf Cancelled Successfully",
-//               description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
-//               variant: "default",
-//             });
-//             setIsCancelModalOpen(false);
-//           } else {
-//             console.log("error as any ===", (response as any)?.data?.Message);
-//             toast({
-//               title: "⚠️ Cancel Failed",
-//               description: (response as any)?.data?.Message || "Failed to cancel changes.",
-//               variant: "destructive",
-//             });
-//           }
-//           // Optionally, handle success or display a message
-//         } catch (error) {
-//           console.error("Error canceling Draft:", error);
-//           // Optionally, handle error or display an error message
-//         }
-//       };
+          console.log("Cancel API response:", response);
+          const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("parsedResponse ====", parsedResponse);
+          if (resourceStatus) {
+            console.log("Approved successfully");
+            toast({
+              title: "✅ Approved Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+              variant: "default",
+            });
+            setIsCancelModalOpen(false);
+          } else {
+            console.log("error as any ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Approved Failed",
+              description: (response as any)?.data?.Message || "Failed to Approve changes.",
+              variant: "destructive",
+            });
+          }
+          // Optionally, handle success or display a message
+        } catch (error) {
+          console.error("Error canceling Draft:", error);
+          // Optionally, handle error or display an error message
+        }
+        setIsCancelModalOpen(false);
+      };
 
     return (
         <div className="h-full flex flex-col relative">
