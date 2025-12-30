@@ -43,6 +43,9 @@ export function SmartGridWithNestedRows({
   const [expandedNestedSections, setExpandedNestedSections] = useState<Set<number>>(
     new Set(nestedSectionConfig?.initiallyExpanded ? [] : [])
   );
+  
+  // Get gridTitle from smartGridProps
+  const gridTitle = smartGridProps.gridTitle;
  
   // Internal state for selection if not controlled externally
   const [internalSelectedRows, setInternalSelectedRows] = useState<NestedRowSelection[]>([]);
@@ -213,26 +216,85 @@ export function SmartGridWithNestedRows({
                 </div>
               ) : (
                 <div className="p-3">
-                  <SmartGridNested
-                    columns={nestedSectionConfig.columns}
-                    data={nestedData}
-                    paginationMode="infinite"
-                    hideToolbar={true}
-                    customPageSize={rowCount}
-                    editableColumns={nestedSectionConfig.editableColumns}
-                    onInlineEdit={nestedSectionConfig.onInlineEdit
-                      ? async (nestedRowIndex, updatedRow) => {
-                          nestedSectionConfig.onInlineEdit!(rowIndex, nestedRowIndex, updatedRow);
-                          // Trigger server callback if provided
-                          if (nestedSectionConfig.onServerUpdate) {
-                            await nestedSectionConfig.onServerUpdate(row, nestedData[nestedRowIndex], updatedRow);
+                  {gridTitle === "Draft Bill" ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border">
+                            {nestedSectionConfig.columns.map((col) => (
+                              <th
+                                key={col.key}
+                                className="px-3 py-2 text-left text-muted-foreground"
+                                style={{ width: col.width }}
+                              >
+                                {col.label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {nestedData.map((nestedRow: any, nestedIdx: number) => {
+                            const isSelected = isNestedRowSelected(rowIndex, nestedIdx);
+                            return (
+                              <tr
+                                key={nestedIdx}
+                                className={cn(
+                                  "border-b border-border/50 transition-colors",
+                                  selectionMode !== 'none' && "cursor-pointer hover:bg-muted/30",
+                                  selectionMode === 'none' && "hover:bg-muted/20",
+                                  isSelected && "bg-primary/10 hover:bg-primary/15"
+                                )}
+                                onClick={() => handleNestedRowClick(rowIndex, nestedIdx, row, nestedRow)}
+                              >
+                                {nestedSectionConfig.columns.map((col) => {
+                                  const cellValue = nestedRow[col.key];
+                                  return (
+                                    <td
+                                      key={col.key}
+                                      className="px-3 py-2"
+                                      style={{ width: col.width }}
+                                    >
+                                      {col.type === 'Badge' ? (
+                                        <span className={cn(
+                                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                          col.statusMap?.[cellValue] || "bg-gray-100 text-gray-800"
+                                        )}>
+                                          {cellValue}
+                                        </span>
+                                      ) : (
+                                        cellValue ?? '-'
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <SmartGridNested
+                      columns={nestedSectionConfig.columns}
+                      data={nestedData}
+                      paginationMode="infinite"
+                      hideToolbar={true}
+                      customPageSize={rowCount}
+                      editableColumns={nestedSectionConfig.editableColumns}
+                      onInlineEdit={nestedSectionConfig.onInlineEdit
+                        ? async (nestedRowIndex, updatedRow) => {
+                            nestedSectionConfig.onInlineEdit!(rowIndex, nestedRowIndex, updatedRow);
+                            // Trigger server callback if provided
+                            if (nestedSectionConfig.onServerUpdate) {
+                              await nestedSectionConfig.onServerUpdate(row, nestedData[nestedRowIndex], updatedRow);
+                            }
                           }
-                        }
-                      : undefined}
-                    onUpdate={nestedSectionConfig.onUpdate
-                      ? (updatedRow) => nestedSectionConfig.onUpdate!(rowIndex, nestedData.findIndex((item: any) => item === updatedRow), updatedRow)
-                      : undefined}
-                  />
+                        : undefined}
+                      onUpdate={nestedSectionConfig.onUpdate
+                        ? (updatedRow) => nestedSectionConfig.onUpdate!(rowIndex, nestedData.findIndex((item: any) => item === updatedRow), updatedRow)
+                        : undefined}
+                    />
+                  )}
                   {/* Custom table for nested rows with row-level selection */}
                   {/* <div className="overflow-x-auto">
                     <table className="w-full text-sm">

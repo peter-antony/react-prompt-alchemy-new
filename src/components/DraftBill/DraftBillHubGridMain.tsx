@@ -38,6 +38,48 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     setSelectedDraftBills(rows);
   };
 
+    // Helper to get selected nested row data objects (ONLY the current sub-row object, not parent)
+    // This returns an array of individual nested row objects - each is a SINGLE sub-row
+    // Example: If you select 2 nested rows, this returns [subRow1, subRow2]
+    // Each subRow is just that one row's data, NOT the parent with all nested rows
+    const selectedNestedRowData = useMemo(() => {
+        return selectedDbLines.map(sel => {
+            // sel.nestedRow is the individual nested row object (the sub-row you clicked)
+            // This is NOT the parent row - it's just the one nested row
+            // Example: If parent has lineItems: [row1, row2, row3] and you click row2,
+            // then sel.nestedRow is just row2, not the parent with all lineItems
+            return { ...sel.nestedRow };
+        });
+    }, [selectedDbLines]);
+
+    // Helper to get selected parent row data objects
+    const selectedParentRowData = useMemo(() => {
+        return selectedDbLines.map(sel => sel.parentRow);
+    }, [selectedDbLines]);
+
+    // Effect to handle selected nested row data
+    useEffect(() => {
+        if (selectedDbLines.length > 0) {
+            console.log("=== Selected Nested Row Data ===");
+            console.log("Total selections:", selectedDbLines.length);
+            
+            // Log each selected nested row (the actual sub-row object)
+            selectedDbLines.forEach((selection, index) => {
+                console.log(`\n--- Selected Sub-Row ${index + 1} ---`);
+                console.log("Sub-Row Object (nestedRow - this is what you need):", selection.nestedRow);
+                console.log("Sub-Row Index:", selection.nestedRowIndex);
+                console.log("Parent Row Index:", selection.parentRowIndex);
+                console.log("Parent Row (for reference only):", selection.parentRow);
+            });
+            
+            // Log all selected nested row objects as an array
+            console.log("\n=== All Selected Sub-Row Objects (Array) ===");
+            console.log("selectedNestedRowData:", selectedNestedRowData);
+        } else {
+            console.log("No nested rows selected");
+        }
+    }, [selectedDbLines, selectedNestedRowData]);
+    
     const columns: GridColumnConfig[] = useMemo(() => [
         {
             key: 'DraftBillNo',
@@ -646,6 +688,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     label: "Generate Invoice",
                     onClick: () => {
                         console.log("Generate Invoice clicked");
+                        const selectedRows = getSelectedNestedRows();
+                        console.log("Selected rows:", selectedRows);
                     },
                     type: 'Button',
                 },
@@ -1070,17 +1114,36 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     }
 
     const splitIdName = (value: any) => {
-    if (!value || typeof value !== "string") {
-      return { id: "", name: "" };
+        if (!value || typeof value !== "string") {
+        return { id: "", name: "" };
+        }
+
+        if (value.includes("||")) {
+        const [id, name] = value.split("||").map(v => v.trim());
+        return { id, name };
+        }
+
+        return { id: value.trim(), name: "" };
+    };
+
+    // Helper function to get the current selected nested row objects
+    // Returns: Array of individual nested row objects (sub-rows only, not parent)
+    // Usage: const selectedRows = getSelectedNestedRows();
+    //        selectedRows[0] is the first selected sub-row object
+    const getSelectedNestedRows = () => {
+        return selectedNestedRowData;
     }
 
-    if (value.includes("||")) {
-      const [id, name] = value.split("||").map(v => v.trim());
-      return { id, name };
+    // Helper function to get a specific selected nested row by index
+    // Returns: Single nested row object (sub-row only, not parent)
+    // Usage: const firstRow = getSelectedNestedRow(0);
+    const getSelectedNestedRow = (index: number) => {
+        if (index >= 0 && index < selectedDbLines.length) {
+            // Return just the nested row object, not the parent
+            return { ...selectedDbLines[index].nestedRow };
+        }
+        return null;
     }
-
-    return { id: value.trim(), name: "" };
-  };
 
     const handleLinkClick = async (value: any, row: any) => {
         console.log("Link clicked:", value, row);
