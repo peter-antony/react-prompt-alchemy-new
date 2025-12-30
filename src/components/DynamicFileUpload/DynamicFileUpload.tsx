@@ -45,6 +45,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
   onDownload,
   className = '',
   isTripLogAttachments,
+  isWorkOrderAttachment,
   isEditQuickOrder,
   isResourceGroupAttchment,
   loadAttachmentData,
@@ -73,6 +74,7 @@ const DynamicFileUpload: React.FC<FileUploadProps> = ({
     console.log("uploaded JSON :: ", isResourceGroupAttchment);
     console.log("loadAttachmentData :: ", loadAttachmentData);
     console.log("isTripLogAttachments :: ", isTripLogAttachments);
+    console.log("isWorkOrderAttachment :: ", isWorkOrderAttachment);
     // if(isResourceGroupAttchment){
     //   setLoadedFiles(jsonStore.getResourceGroupAttachments());    
     // }else{

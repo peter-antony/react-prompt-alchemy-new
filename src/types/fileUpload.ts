@@ -35,6 +35,7 @@ export interface FileUploadProps {
   className?: string;
   isEditQuickOrder?: boolean;
   isTripLogAttachments?: boolean;
+  isWorkOrderAttachment?: boolean;
   isResourceGroupAttchment?: boolean;
   loadAttachmentData?: any;
 }

@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
-import { Shuffle, Plus, ExternalLink, MapPin } from "lucide-react";
+import { Shuffle, Plus, ExternalLink, MapPin, Paperclip, BookX, Link, Copy } from "lucide-react";
 import type { PanelConfig } from "@/types/dynamicPanel";
 import { MapPinned } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 import { Ban } from "lucide-react";
 import { workOrderService } from "@/api/services/workOrderService";
+import Attachments from "./Attachments";
 
 /** ---------------------------------------------------
  * Exposed handle type
@@ -98,6 +99,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
   ]);
 const [getCUUCodes, setGetCUUCodes] = useState<Record<string, any>>({});
 const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
+const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
 
   const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
   const returnTripId = workOrder?.WorkorderSchedule?.RUReturnTripID || "";
@@ -3005,6 +3007,20 @@ if (formatted.Provider?.includes(" || ")) {
 
                         />
                       </div>
+                      {/* Form Actions */}
+                      <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200">
+                        {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setMoreInfoOpen(true)}>
+                          <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
+                        </button> */}
+                        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)} >
+                          <Paperclip className="w-5 h-5 text-gray-600" />
+                        </button>
+                        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Copy" onClick={()=>handleWorkOrderCopy(workOrderNo)} >
+                          <Copy className="w-5 h-5 text-gray-600" />
+                        </button>
+                      
+                        
+                      </div>
 
                       {/* Buttons Row */}
                       <div className="flex justify-center gap-3 py-3 mt-2 border-t border-gray-200"></div>
@@ -3509,7 +3525,12 @@ if (formatted.Provider?.includes(" || ")) {
                 workOrderNumber={workOrder?.Header?.WorkorderNo}
               />
             </SideDrawer>
-
+            {/* Attachment SideDrawer */}
+            <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={workOrderNo} onScrollPanel={true} isBadgeRequired={true}>
+            <div className="">
+              <div className="mt-0 text-sm text-gray-600"><Attachments isWorkOrderAttachment={true} /></div>
+            </div>
+          </SideDrawer>
             <WorkOrderOperationDetails
               onClose={closeOperationDetails}
               value={showOperstionDetails}

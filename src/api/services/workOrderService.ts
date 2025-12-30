@@ -1,7 +1,7 @@
 // api/services/workOrderService.ts
 import { apiClient } from "@/api/client";
 import { API_ENDPOINTS, getUserContext } from "@/api/config";
-import { ApiResponse } from "../types";
+import { ApiResponse, PaginatedResponse, Trip } from "../types";
 
 // ---- Types for selection payload ----
 export interface WorkOrderSelectionPayload {
@@ -469,4 +469,73 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     );
     return response.data;
   },
+  saveAttachments: async (params: any, workId?: any): Promise<ApiResponse<Trip>> => {
+    console.log("params = ",params)
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Save Attachment",
+      },
+      RequestPayload:{
+        "Attachments": {
+            "ReferenceType": "Work Order Header",
+            "ReferenceDocNo": workId,
+            "TotalAttachment": 10,
+            "AttachItems":[params]
+          },
+      }
+      // RequestPayload: params,
+      // Pagination: {
+      //   PageNumber: 1,
+      //   PageSize: 10,
+      //   TotalRecords: 200,
+      // },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log("SAVE ATTACHMENT % REQUEST BODY : ",requestBody)
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_ATTACHMENT}`,
+      requestBody
+    );
+    return response.data;
+  },
+  getAttachments: async ( workId?: any): Promise<PaginatedResponse<Trip>> => {
+    const userContext = getUserContext();
+    // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Get Attachment",
+      },
+      SearchCriteria: {
+        "ReferenceType": "Work Order Header",
+        "ReferenceDocNo": workId,
+        "ExtraRef1": "",
+        "ExtraRef2": "",
+        "ExtraRef3": "",
+        "ExtraRef4": "",
+        "AdditionalFilter": []
+      },
+      
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log(" GET ATTACHMENT requestPayload ",requestPayload)
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_ATTACHMENT,
+      requestBody
+    );
+    return response.data;
+  },
+
 };

@@ -174,6 +174,9 @@ export const API_ENDPOINTS = {
     CUSTOMER_BILLING_CONFIRM: '/workorder/customerbillingconfirm',
     CUSTOMER_BILLING_AMEND: '/workorder/customerbillingamend',
     CANCEL: '/workorder/cancel',
+    SAVE_ATTACHMENT: "/transportexecution/saveattachment",
+    GET_ATTACHMENT: "/transportexecution/getattachment",
+
   },
   DRAFT_BILL: {
     SEARCH: 'managedraftbill/hubsearch',

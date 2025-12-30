@@ -786,13 +786,13 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
               })()}
               {panelSubTitle == "Work Order Details" && workOrderNo && (
                 <div className="relative">
-                  <button
+                  {/* <button
                     className="text-xs text-gray-500 h-8 px-0 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
                     onClick={(e) => { e.stopPropagation(); setWorkOrderMenuOpen(!isWorkOrderMenuOpen); }}
                   >
                     <EllipsisVertical size={20} />
-                  </button>
-                  {isWorkOrderMenuOpen && (
+                  </button> */}
+                  {/* {isWorkOrderMenuOpen && (
                     <div ref={workOrderMenuRef} className="absolute right-0 top-9 z-20 w-40 bg-white border border-gray-200 rounded-md shadow-lg p-1">
                       <button
                         className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-50 text-xs gap-2"
@@ -808,7 +808,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                         <Copy className="w-4 h-4 text-gray-600" /> Copy
                       </button>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
               {/* {panelSubTitle == "Billing Details" && (
