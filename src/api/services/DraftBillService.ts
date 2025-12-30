@@ -164,4 +164,54 @@ export const draftBillService = {
         );
         return response.data;
     },
+
+      revertDraftBillByID: async (params?: any): Promise<any> => {
+        const userContext = getUserContext();
+
+        const requestPayload = JSON.stringify({
+            context: {
+                UserID: "RAMCOUSER", // Fixed as per requirements
+                OUID: userContext.ouId,
+                Role: userContext.roleName,
+                MessageID: "12345",
+                MessageType: "DraftBill-Revert"
+            },
+            RequestPayload: params,
+        });
+
+        const requestBody = {
+            RequestData: requestPayload,
+        };
+
+        const response = await apiClient.post(
+            API_ENDPOINTS.DRAFT_BILL.REVERT_DRAFT,
+            requestBody
+        );
+        return response.data;
+    },
+
+    reRuntDraftBillByID: async (params?: any): Promise<any> => {
+        const userContext = getUserContext();
+
+        const requestPayload = JSON.stringify({
+            context: {
+                UserID: "RAMCOUSER", // Fixed as per requirements
+                OUID: userContext.ouId,
+                Role: userContext.roleName,
+                MessageID: "12345",
+                MessageType: "DraftBill-Rerun"
+            },
+            RequestPayload: params,
+        });
+
+        const requestBody = {
+            RequestData: requestPayload,
+        };
+
+        const response = await apiClient.post(
+            API_ENDPOINTS.DRAFT_BILL.RERUN_DRAFT,
+            requestBody
+        );
+        return response.data;
+    },
 };

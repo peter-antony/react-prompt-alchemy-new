@@ -687,6 +687,21 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     type: 'Button',
                 },
                 {
+                    label: "Rerun",
+                    onClick: () => {
+                        console.log("Approve clicked");
+                        handleReRun()
+                    },
+                    type: 'Button',
+                },
+                {
+                    label: "Revert",
+                    onClick: () => {
+                        handleReTreat()
+                    },
+                    type: 'Button',
+                },
+                {
                     label: "Generate Invoice",
                     onClick: () => {
                         setIsGenerateInvoiceModalOpen(true);
@@ -1398,6 +1413,159 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         }
         setIsGenerateInvoiceModalOpen(false);
     };
+
+      const handleReRun= async () => {
+        
+
+        console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
+        const selectedBill = selectedDraftBills[0];
+
+        const payload = {
+ Header: {
+    DraftBillNo: selectedBill.DraftBillNo,
+    DraftBillDate: selectedBill.DraftBillDate,
+    DBStatus: selectedBill.DBStatus,
+    DBStatusDescription: selectedBill.DBStatusDescription,
+    FromLocation: selectedBill.FromLocation,
+    FromLocationDescription: selectedBill.FromLocationDescription,
+    ToLocation: selectedBill.ToLocation,
+    ToLocationDescription: selectedBill.ToLocationDescription,
+    WBS: selectedBill.WBS,
+    DBTotalValue: selectedBill.DBTotalValue,
+    BusinessPartnerID: selectedBill.BusinessPartnerID,
+    BusinessPartnerName: selectedBill.BusinessPartnerName,
+    BusinessPartnerType: selectedBill.BusinessPartnerType,
+    ContractID: selectedBill.ContractID,
+    ContractDescription: selectedBill.ContractDescription,
+    ContractType: selectedBill.ContractType,
+    DraftbillValidationDate: selectedBill.DraftbillValidationDate,
+    InvoiceNo: selectedBill.InvoiceNo,
+    InvoiceDate: selectedBill.InvoiceDate,
+    InvoiceStatus: selectedBill.InvoiceStatus,
+    TransferInvoiceNo: selectedBill.TransferInvoiceNo,
+    LatestJournalVoucher: selectedBill.LatestJournalVoucher,
+    GLAccount: selectedBill.GLAccount,
+    DBAcceptedValue: selectedBill.DBAcceptedValue,
+    DraftBillStage: selectedBill.DraftBillStage,
+    WorkFlowStatus: selectedBill.WorkFlowStatus,
+    CustomerGroup: selectedBill.CustomerGroup,
+    SupplierGroup: selectedBill.SupplierGroup,
+    Cluster: selectedBill.Cluster,
+    Attribute1: selectedBill.Attribute1
+  },
+  ReverseJournalVoucher:[{
+JournalVoucherNo:null
+  }],
+  ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+    ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+      ...rest,
+
+      // 1️⃣ Force ModeFlag to "Checked" if it exists
+      ...(ModeFlag  && { ModeFlag: "UPDATE" }),
+
+      // 2️⃣ Only include ReasonForCancellation if NOT null
+      ...(ReasonForCancellation != null && {
+        ReasonForCancellation,
+      }),
+
+      // 3️⃣ Backend hates null remarks → normalize
+      Remark: rest.Remark ?? "",
+    })
+  ),
+};
+
+
+            console.log(JSON.stringify(payload , null , 2))
+        try {
+        //    const payload = {
+        //     Header: {
+        //       "DraftBillNo": selectedDraftBills[0]?.id,
+                
+        //     },
+        //     ItemDetails: 
+        //         selectedDraftBills[0]?.lineItems ?? []    
+        //     ,
+        // };
+          console.log("payload ===", payload);
+                      const response = await draftBillService.reRuntDraftBillByID(payload);
+
+          console.log("Cancel API response:", response);
+          const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("parsedResponse ====", parsedResponse);
+          if (resourceStatus) {
+            console.log("Approved successfully");
+            toast({
+              title: "✅ Approved Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+              variant: "default",
+            });
+            setIsCancelModalOpen(false);
+          } else {
+            console.log("error as any ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Approved Failed",
+              description: (response as any)?.data?.Message || "Failed to Approve changes.",
+              variant: "destructive",
+            });
+          }
+          // Optionally, handle success or display a message
+        } catch (error) {
+          console.error("Error canceling Draft:", error);
+        }
+        
+      };
+
+       const handleReTreat= async () => {
+        
+
+        console.log("handleReTreat" , selectedDraftBills)
+
+    const payload = {
+  TriggerType: {
+    IsRevertTransferInvoice: 1,
+    IsRevertFinanceInvoice: 1
+  },
+  DraftBills: selectedDraftBills.map(bill => ({
+    DraftBillNo: bill.DraftBillNo
+  }))
+};
+
+
+
+            console.log(JSON.stringify(payload , null , 2))
+        try {
+         
+          console.log("payload ===", payload);
+                      const response = await draftBillService.revertDraftBillByID(payload);
+
+          console.log("Cancel API response:", response);
+          const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("parsedResponse ====", parsedResponse);
+          if (resourceStatus) {
+            console.log("Approved successfully");
+            toast({
+              title: "✅ Approved Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+              variant: "default",
+            });
+            setIsCancelModalOpen(false);
+          } else {
+            console.log("error as any ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Approved Failed",
+              description: (response as any)?.data?.Message || "Failed to Approve changes.",
+              variant: "destructive",
+            });
+          }
+          // Optionally, handle success or display a message
+        } catch (error) {
+          console.error("Error canceling Draft:", error);
+          // Optionally, handle error or display an error message
+        }
+        
+      };
 
     return (
         <div className="h-full flex flex-col relative">
