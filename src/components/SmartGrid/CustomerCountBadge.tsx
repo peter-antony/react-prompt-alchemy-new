@@ -10,6 +10,7 @@ interface Customer {
   id?: string;
   name?: string;
   description?: string;
+  [key: string]: any; // Allow other properties
 }
 
 interface CustomerCountBadgeProps {
@@ -29,23 +30,34 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const badgeRef = useRef<HTMLDivElement>(null);
 
-  // Normalize count to a number. Prefer explicit prop, fall back to customers.length
-  const countNumber = Number(count ?? customers.length) || customers.length || 0;
-
   // Default customers if none provided
-  const defaultCustomers: Customer[] = [
-    // { Customer: "DB Cargo", CustomerDescription: "DB Cargo", id: "CUS00000123" },
-    // { Customer: "ABC Rail Goods", CustomerDescription: "ABC Rail Goods", id: "CUS00003214" },
-    // { Customer: "Wave Cargo", CustomerDescription: "Wave Cargo", id: "CUS00012345" }
-  ];
+  const defaultCustomers: Customer[] = [];
+  const rawCustomers = customers && customers.length > 0 ? customers : defaultCustomers;
 
-  const displayCustomers = customers && customers.length > 0 ? customers : defaultCustomers;
+  // Filter unique customers based on Customer ID and Description used for display
+  const uniqueCustomers = React.useMemo(() => {
+    const uniqueMap = new Map();
+    rawCustomers.forEach(c => {
+      // Use a composite key of Customer ID and Description to identify uniqueness
+      const id = c.Customer || c.id || '';
+      const desc = c.CustomerDescription || c.name || '';
+      const key = `${id}-${desc}`;
+
+      if (!uniqueMap.has(key) && (id || desc)) {
+        uniqueMap.set(key, c);
+      }
+    });
+    return Array.from(uniqueMap.values());
+  }, [rawCustomers]);
+
+  // If no customers, fallback to count prop if valid
+  const effectiveCount = uniqueCustomers.length || (typeof count === 'number' ? count : parseInt(String(count || 0), 10));
 
   const calculatePosition = () => {
     if (badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
       const popoverWidth = 224; // w-56 = 224px
-      const popoverHeight = Math.min(displayCustomers.length * 48 + 24, 200); // Estimate height
+      const popoverHeight = Math.min(uniqueCustomers.length * 48 + 24, 200); // Estimate height
 
       let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
       let top = rect.bottom + 6;
@@ -72,14 +84,27 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    calculatePosition();
-    setIsOpen(true);
+
+    if (isOpen) {
+      setIsOpen(false);
+    } else {
+      calculatePosition();
+      setIsOpen(true);
+    }
   };
 
   // Close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && !badgeRef.current?.contains(event.target as Node)) {
+      // If clicking on the badge itself, do nothing (handled by handleClick)
+      if (badgeRef.current?.contains(event.target as Node)) {
+        return;
+      }
+
+      // If clicking outside the badge, close the popover
+      // adding id to the portal element
+      const portalEl = document.getElementById('customer-count-badge-portal');
+      if (isOpen && !portalEl?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -106,7 +131,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
   return (
     <>
       <div ref={badgeRef} className="inline-block">
-        {countNumber > 1 && (
+        {effectiveCount > 1 && (
           <Badge
             variant="outline"
             className={cn(
@@ -118,32 +143,30 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
             )}
             onClick={handleClick}
           >
-            {String(countNumber)}
+            {effectiveCount}
           </Badge>
         )}
 
-        {countNumber === 1 && (
-          // When there's exactly one customer, show the customer's name inline
+        {effectiveCount === 1 && (
+          // When there's exactly one unique customer (even if multiple duplicate rows), show inline
           <div
             className={cn(
               "text-[13px] font-normal text-Gray-800 truncate",
               "px-2 py-0.5 rounded",
               className
             )}
-            title={displayCustomers[0]?.CustomerDescription}
+            title={uniqueCustomers[0]?.CustomerDescription}
           >
-            {/* {displayCustomers && displayCustomers.length > 0
-              ? (displayCustomers[0]?.Customer || displayCustomers[0]?.name || String(countNumber))
-              : String(countNumber)} */}
-            { displayCustomers?.[0]?.Customer && displayCustomers[0]?.CustomerDescription
-              ? `${displayCustomers[0]?.CustomerDescription} || ${displayCustomers?.[0]?.Customer}`
-              : displayCustomers?.[0]?.CustomerDescription || displayCustomers?.[0]?.Customer}
+            {uniqueCustomers?.[0]?.Customer && uniqueCustomers[0]?.CustomerDescription
+              ? `${uniqueCustomers[0]?.CustomerDescription} || ${uniqueCustomers?.[0]?.Customer}`
+              : uniqueCustomers?.[0]?.CustomerDescription || uniqueCustomers?.[0]?.Customer}
           </div>
         )}
       </div>
 
       {isOpen && createPortal(
         <div
+          id="customer-count-badge-portal"
           className="fixed z-[9999] max-w-md p-0 border border-gray-200 shadow-lg rounded-lg bg-white max-h-48 overflow-y-auto"
           style={{
             top: `${position.top}px`,
@@ -152,7 +175,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
         >
           <div className="p-3">
             <div className="space-y-1">
-              {displayCustomers.map((customer: any, index) => (
+              {uniqueCustomers.map((customer, index) => (
                 <div
                   key={'Customer-' + index}
                   className="flex items-start space-x-3 p-2 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
@@ -165,7 +188,7 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
                       {customer.CustomerDescription || customer.name}
                     </div>
                     <div className="text-[13px] text-Gray-800 truncate">
-                      {customer.Customer || (customer.description ?? customer.Customer)}
+                      {customer.Customer || customer.id || (customer.description)}
                     </div>
                   </div>
                 </div>
@@ -177,4 +200,4 @@ export const CustomerCountBadge: React.FC<CustomerCountBadgeProps> = ({
       )}
     </>
   );
-}; 
+};
