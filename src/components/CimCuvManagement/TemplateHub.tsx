@@ -579,8 +579,11 @@ export const TemplateSearchHub = () => {
       tooltipPosition: "top" as const,
       onClick: () => {
         console.log('create-template');
+        setApiStatus('loading');
         // No redirection here right now.
-        navigate('/create-template');
+        setTimeout(() => {  // Simulate manual API call delay
+          navigate('/create-template');
+        }, 1000);
       }
     }
   ];

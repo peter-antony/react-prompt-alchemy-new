@@ -819,8 +819,11 @@ export const WorkOrderHub = () => {
       tooltipPosition: "top" as const,
       onClick: () => {
         console.log('nav work-order');
-        // No redirection here right now.
-        navigate('/create-work-order');
+        setApiStatus('loading');
+        setTimeout(() => {   // Simulate manual API call delay 
+          // No redirection here right now.
+          navigate('/create-work-order');
+        }, 1000);
       }
     }
   ];

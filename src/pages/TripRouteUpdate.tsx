@@ -504,7 +504,7 @@ export const TripRouteUpdate = () => {
   // Navigate to the create new quick order page
   const navigate = useNavigate();
 
-  const handleLinkClick = (rowData: any, columnKey: any, rowIndex: any) => {
+  const handleLinkClick = async (rowData: any, columnKey: any, rowIndex: any) => {
     console.log("Link clicked:", rowData, columnKey, rowIndex);
     
     if (columnKey == "CustomerOrderNo") {
@@ -513,11 +513,14 @@ export const TripRouteUpdate = () => {
       console.log('Available data keys:', rowData ? Object.keys(rowData) : 'No row data');
       
       if (rowData?.CustomerOrderNo) {
+        setApiStatus('loading');  // Loading indicator
         // Call the API with the actual row data
-        openRouteDrawer(rowData);
+        await openRouteDrawer(rowData);
+        setApiStatus('idle');
       } else {
         console.error('No CustomerOrderID found in clicked row');
         console.error('Available row data:', rowData);
+        // setApiStatus('error');
         toast({
           title: "Error",
           description: "Unable to find Customer Order ID for this row",

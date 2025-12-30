@@ -595,8 +595,11 @@ export const ReportSearchHub = () => {
       tooltipPosition: "top" as const,
       onClick: () => {
         console.log('create-report');
-        // No redirection here right now.
-        navigate('/create-report');
+        setApiStatus('loading');
+        setTimeout(() => {   // Simulate manual API call delay
+          // No redirection here right now.
+          navigate('/create-report');
+        }, 1000);
       }
     }
   ];
