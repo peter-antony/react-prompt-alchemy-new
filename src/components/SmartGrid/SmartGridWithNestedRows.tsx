@@ -218,6 +218,7 @@ export function SmartGridWithNestedRows({
                 <div className="p-3">
                   {gridTitle === "Draft Bill" ? (
                     <div className="overflow-x-auto">
+                      {/* Custom table for nested rows with row-level selection */}
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border">
@@ -295,62 +296,6 @@ export function SmartGridWithNestedRows({
                         : undefined}
                     />
                   )}
-                  {/* Custom table for nested rows with row-level selection */}
-                  {/* <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border">
-                          {nestedSectionConfig.columns.map((col) => (
-                            <th
-                              key={col.key}
-                              className="px-3 py-2 text-left font-medium text-muted-foreground"
-                              style={{ width: col.width }}
-                            >
-                              {col.label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {nestedData.map((nestedRow: any, nestedIdx: number) => {
-                          const isSelected = isNestedRowSelected(rowIndex, nestedIdx);
-                          return (
-                            <tr
-                              key={nestedIdx}
-                              className={cn(
-                                "border-b border-border/50 transition-colors",
-                                selectionMode !== 'none' && "cursor-pointer hover:bg-muted/30",
-                                selectionMode === 'none' && "hover:bg-muted/20",
-                                isSelected && "bg-primary/10 hover:bg-primary/15"
-                              )}
-                              onClick={() => handleNestedRowClick(rowIndex, nestedIdx, row, nestedRow)}
-                            >
-                              {nestedSectionConfig.columns.map((col) => (
-                                <td
-                                  key={col.key}
-                                  className="px-3 py-2"
-                                  style={{ width: col.width }}
-                                >
-                                  {col.type === 'Badge' ? (
-                                    <span className={cn(
-                                      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                                      nestedRow[col.key] === 'Completed' && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-                                      nestedRow[col.key] === 'In Progress' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                                      nestedRow[col.key] === 'Pending' && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                    )}>
-                                      {nestedRow[col.key]}
-                                    </span>
-                                  ) : (
-                                    nestedRow[col.key]
-                                  )}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div> */}
                 </div>
               )}
             </div>
