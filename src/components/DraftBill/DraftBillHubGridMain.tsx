@@ -13,8 +13,9 @@ import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { useFooterStore } from '@/stores/footerStore';
 import { filterService } from '@/api/services';
 import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
+import CancelConfirmationModal from '../Template/CancelConfirmationModal';
 
-const DraftBillHubGridMain = () => {
+const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const { toast } = useToast();
     const [gridData, setGridData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -25,11 +26,17 @@ const DraftBillHubGridMain = () => {
     ] = useState(false);
     const [draftBillData, setDraftBillData] = useState<any>(null);
     const [loadingDrawerData, setLoadingDrawerData] = useState(false);
+     const [selectedDraftBills, setSelectedDraftBills] = useState<any[]>([]);
     
     const { setFooter, resetFooter } = useFooterStore();
 
     // State for nested row selections
     const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
+
+    const handleDraftBillSelection = (rows: any[]) => {
+    console.log("12-----------------", rows[0]);
+    setSelectedDraftBills(rows);
+  };
 
     const columns: GridColumnConfig[] = useMemo(() => [
         {
@@ -601,11 +608,17 @@ const DraftBillHubGridMain = () => {
             width: 250
         }
     ], []);
+      const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
 
 
     const { activeFilters } = useFilterStore();
     const gridId = "draft-bill-grid";
     const filtersForThisGrid = activeFilters[gridId] || {};
+
+    useEffect(()=>{
+     console.log(onDraftBillSelection , "onDraftBillSelection")
+    },[onDraftBillSelection])
 
     // Footer Configuration
     useEffect(() => {
@@ -617,7 +630,7 @@ const DraftBillHubGridMain = () => {
                 {
                     label: "Cancel",
                     onClick: () => {
-                        console.log("Cancel clicked");
+                          setIsCancelModalOpen(true)
                     },
                     type: 'Button',
                 },
@@ -1055,6 +1068,19 @@ const DraftBillHubGridMain = () => {
         console.log('Cleared all filters sets');
     }
 
+    const splitIdName = (value: any) => {
+    if (!value || typeof value !== "string") {
+      return { id: "", name: "" };
+    }
+
+    if (value.includes("||")) {
+      const [id, name] = value.split("||").map(v => v.trim());
+      return { id, name };
+    }
+
+    return { id: value.trim(), name: "" };
+  };
+
     const handleLinkClick = async (value: any, row: any) => {
         console.log("Link clicked:", value, row);
         setLoadingDrawerData(true);
@@ -1095,6 +1121,172 @@ const DraftBillHubGridMain = () => {
         }
     };
 
+    const handleCancel = async (reasonCode: string, reasonDescription: string) => {
+        
+
+        console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
+        //  const payload = {
+
+        //     Header: {
+        //       "DraftBillNo": selectedDraftBills[0]?.id,
+        //       "ReasonCode": splitIdName(reasonCode).id,
+        //       "ReasonforComments": reasonDescription,       
+        //     },
+        //     ItemDetails: 
+        //         selectedDraftBills[0]?.lineItems ?? []    
+        //     ,
+        // };
+
+        const payload = {
+  Header: {
+    DraftBillNo: selectedDraftBills[0]?.id,
+    ReasonCode: splitIdName(reasonCode).id,
+    ReasonforComments: reasonDescription ?? "",
+  },
+  ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+    ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+      ...rest,
+
+      // 1️⃣ Force ModeFlag to "Checked" if it exists
+      ...(ModeFlag  && { ModeFlag: "Checked" }),
+
+      // 2️⃣ Only include ReasonForCancellation if NOT null
+      ...(ReasonForCancellation != null && {
+        ReasonForCancellation,
+      }),
+
+      // 3️⃣ Backend hates null remarks → normalize
+      Remark: rest.Remark ?? "",
+    })
+  ),
+};
+
+
+            console.log(JSON.stringify(payload , null , 2))
+        try {
+           const payload = {
+            Header: {
+              "DraftBillNo": selectedDraftBills[0]?.id,
+              "ReasonCode": splitIdName(reasonCode).id,
+              "ReasonforComments": reasonDescription,       
+            },
+            ItemDetails: 
+                selectedDraftBills[0]?.lineItems ?? []    
+            ,
+        };
+          console.log("payload ===", payload);
+                      const response = await draftBillService.cancelDraftBillByID(payload);
+
+          console.log("Cancel API response:", response);
+          const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+          const resourceStatus = (response as any)?.data?.IsSuccess;
+          console.log("parsedResponse ====", parsedResponse);
+          if (resourceStatus) {
+            console.log("Template cancelled successfully");
+            toast({
+              title: "✅ Draf Cancelled Successfully",
+              description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
+              variant: "default",
+            });
+            setIsCancelModalOpen(false);
+          } else {
+            console.log("error as any ===", (response as any)?.data?.Message);
+            toast({
+              title: "⚠️ Cancel Failed",
+              description: (response as any)?.data?.Message || "Failed to cancel changes.",
+              variant: "destructive",
+            });
+          }
+          // Optionally, handle success or display a message
+        } catch (error) {
+          console.error("Error canceling Draft:", error);
+          // Optionally, handle error or display an error message
+        }
+        setIsCancelModalOpen(false);
+      };
+
+//       const handleApprove = async (reasonCode: string, reasonDescription: string) => {
+        
+
+//         console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
+//          const payload = {
+//             Header: {
+//               "DraftBillNo": selectedDraftBills[0]?.id,
+//               "ReasonCode": splitIdName(reasonCode).id,
+//               "ReasonforComments": reasonDescription,       
+//             },
+//             ItemDetails: 
+//                 selectedDraftBills[0]?.lineItems ?? []    
+//             ,
+//         };
+//             console.log(JSON.stringify(payload , null , 2))
+//         try {
+//         //    const payload = {
+
+//         //     Header: {
+//         //       "DraftBillNo": selectedDraftBills[0]?.id,
+//         //       "ReasonCode": splitIdName(reasonCode).id,
+//         //       "ReasonforComments": reasonDescription,       
+//         //     },
+//         //     ItemDetails: 
+//         //         selectedDraftBills[0]?.lineItems ?? []    
+//         //     ,
+//         // };
+
+//         const payload = {
+//   Header: {
+//     DraftBillNo: selectedDraftBills[0]?.id,
+//     ReasonCode: splitIdName(reasonCode).id,
+//     ReasonforComments: reasonDescription ?? "",
+//   },
+//   ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+//     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+//       ...rest,
+
+//       // 1️⃣ Force ModeFlag to "Checked" if it exists
+//       ...("ModeFlag" in item && { ModeFlag: "Checked" }),
+
+//       // 2️⃣ Only include ReasonForCancellation if NOT null
+//       ...(ReasonForCancellation != null && {
+//         ReasonForCancellation,
+//       }),
+
+//       // 3️⃣ Backend hates null remarks → normalize
+//       Remark: rest.Remark ?? "",
+//     })
+//   ),
+// };
+
+//           console.log("payload ===", payload);
+//                       const response = await draftBillService.cancelDraftBillByID(payload);
+
+//           console.log("Cancel API response:", response);
+//           const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+//           const resourceStatus = (response as any)?.data?.IsSuccess;
+//           console.log("parsedResponse ====", parsedResponse);
+//           if (resourceStatus) {
+//             console.log("Template cancelled successfully");
+//             toast({
+//               title: "✅ Draf Cancelled Successfully",
+//               description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
+//               variant: "default",
+//             });
+//             setIsCancelModalOpen(false);
+//           } else {
+//             console.log("error as any ===", (response as any)?.data?.Message);
+//             toast({
+//               title: "⚠️ Cancel Failed",
+//               description: (response as any)?.data?.Message || "Failed to cancel changes.",
+//               variant: "destructive",
+//             });
+//           }
+//           // Optionally, handle success or display a message
+//         } catch (error) {
+//           console.error("Error canceling Draft:", error);
+//           // Optionally, handle error or display an error message
+//         }
+//       };
+
     return (
         <div className="h-full flex flex-col relative">
             {loading && (
@@ -1122,11 +1314,17 @@ const DraftBillHubGridMain = () => {
                 showServersideFilter={showServersideFilter}
                 onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
                 api={filterService}
+                
+                
+                 onRowSelectionChange={handleDraftBillSelection}
+
                 // nestedRowRenderer={renderSubRow}
-                selectionMode='multi'
-                onSelectedRowsChange={(selectedRows) => {
-                    console.log("Selected rows:", selectedRows)
-                }}
+                    // selectionMode='multi'
+                  onSelectedRowsChange={(selectedRows) => {
+  console.log("✅ Selected rows from grid:", selectedRows);
+  onDraftBillSelection?.(selectedRows);
+}}
+
                 nestedSectionConfig={{
                     nestedDataKey: 'lineItems',
                     columns: nestedColumns,
@@ -1153,6 +1351,11 @@ const DraftBillHubGridMain = () => {
                     isLoading={loadingDrawerData}
                 />
             )}
+             <CancelConfirmationModal
+                    isOpen={isCancelModalOpen}
+                    onClose={() => setIsCancelModalOpen(false)}
+                    onConfirmCancel={handleCancel}
+                  />
         </div>
     );
 };

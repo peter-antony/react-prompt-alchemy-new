@@ -31,10 +31,13 @@ export interface NestedSectionConfig {
  
 export interface SmartGridWithNestedRowsProps extends SmartGridProps {
   nestedSectionConfig?: NestedSectionConfig;
+  onRowSelectionChange?: (rows: any[]) => void;
 }
  
 export function SmartGridWithNestedRows({
+  
   nestedSectionConfig,
+   onRowSelectionChange,
   ...smartGridProps
 }: SmartGridWithNestedRowsProps) {
   const [expandedNestedSections, setExpandedNestedSections] = useState<Set<number>>(
@@ -68,42 +71,83 @@ export function SmartGridWithNestedRows({
   }, [selectedRows]);
  
   // Handle nested row selection via row Click
+  // const handleNestedRowClick = useCallback((
+  //   parentRowIndex: number,
+  //   nestedRowIndex: number,
+  //   parentRow: any,
+  //   nestedRow: any
+  // ) => {
+  //   if (selectionMode === 'none') return;
+ 
+  //   const isCurrentlySelected = isNestedRowSelected(parentRowIndex, nestedRowIndex);
+  //   const newSelection: NestedRowSelection = {
+  //     parentRowIndex,
+  //     nestedRowIndex,
+  //     parentRow,
+  //     nestedRow,
+  //   };
+ 
+  //   if (selectionMode === 'single') {
+  //     // Single selection - toggle or replace
+  //     if (isCurrentlySelected) {
+  //       onSelectionChange([]);
+  //     } else {
+  //       onSelectionChange([newSelection]);
+  //     }
+  //   } else if (selectionMode === 'multi') {
+  //     // Multi selection - toggle
+  //     if (isCurrentlySelected) {
+  //       onSelectionChange(
+  //         selectedRows.filter(
+  //           (sel) => !(sel.parentRowIndex === parentRowIndex && sel.nestedRowIndex === nestedRowIndex)
+  //         )
+  //       );
+  //     } else {
+  //       onSelectionChange([...selectedRows, newSelection]);
+  //     }
+  //   }
+  // }, [selectionMode, selectedRows, onSelectionChange, isNestedRowSelected]);
+
   const handleNestedRowClick = useCallback((
-    parentRowIndex: number,
-    nestedRowIndex: number,
-    parentRow: any,
-    nestedRow: any
-  ) => {
-    if (selectionMode === 'none') return;
- 
-    const isCurrentlySelected = isNestedRowSelected(parentRowIndex, nestedRowIndex);
-    const newSelection: NestedRowSelection = {
-      parentRowIndex,
-      nestedRowIndex,
-      parentRow,
-      nestedRow,
-    };
- 
-    if (selectionMode === 'single') {
-      // Single selection - toggle or replace
-      if (isCurrentlySelected) {
-        onSelectionChange([]);
-      } else {
-        onSelectionChange([newSelection]);
-      }
-    } else if (selectionMode === 'multi') {
-      // Multi selection - toggle
-      if (isCurrentlySelected) {
-        onSelectionChange(
-          selectedRows.filter(
-            (sel) => !(sel.parentRowIndex === parentRowIndex && sel.nestedRowIndex === nestedRowIndex)
+  parentRowIndex: number,
+  nestedRowIndex: number,
+  parentRow: any,
+  nestedRow: any
+) => {
+  if (selectionMode === 'none') return;
+
+  // ✅ LOG FULL OBJECT ON CHECKBOX CLICK
+  console.log("Checkbox clicked → FULL DATA:", {
+    parentRowIndex,
+    nestedRowIndex,
+    parentRow,
+    nestedRow,
+  });
+
+  const isCurrentlySelected = isNestedRowSelected(parentRowIndex, nestedRowIndex);
+
+  const newSelection: NestedRowSelection = {
+    parentRowIndex,
+    nestedRowIndex,
+    parentRow,
+    nestedRow,
+  };
+
+  if (selectionMode === 'single') {
+    onSelectionChange(isCurrentlySelected ? [] : [newSelection]);
+  } else if (selectionMode === 'multi') {
+    onSelectionChange(
+      isCurrentlySelected
+        ? selectedRows.filter(
+            (sel) =>
+              !(sel.parentRowIndex === parentRowIndex &&
+                sel.nestedRowIndex === nestedRowIndex)
           )
-        );
-      } else {
-        onSelectionChange([...selectedRows, newSelection]);
-      }
-    }
-  }, [selectionMode, selectedRows, onSelectionChange, isNestedRowSelected]);
+        : [...selectedRows, newSelection]
+    );
+  }
+}, [selectionMode, selectedRows, onSelectionChange, isNestedRowSelected]);
+
  
  
   // Create a nested row renderer that includes both the original nested content
@@ -263,6 +307,8 @@ export function SmartGridWithNestedRows({
     <SmartGridNested
       {...smartGridProps}
       nestedRowRenderer={finalNestedRowRenderer}
+      onRowDataSelection={onRowSelectionChange}
+      // selectedRows={smartGridProps.selectedRows}
     />
   );
 }

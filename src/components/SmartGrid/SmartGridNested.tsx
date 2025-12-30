@@ -67,6 +67,7 @@ export function SmartGridNested({
   showCreateButton,
   searchPlaceholder,
   extraFilters,
+  onRowDataSelection,
   subRowFilters,
   groupByField,
   onGroupByChange,
@@ -93,7 +94,7 @@ export function SmartGridNested({
   onSearch,
   onClearAll,
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`
-}: SmartGridProps & { exportFilename?: string }) {
+}: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void;}) {
   const {
     gridData,
     setGridData,
@@ -143,6 +144,7 @@ export function SmartGridNested({
     handleSubRowToggle,
     handleSubRowEdit,
     handleSubRowEditStart,
+    
     handleSubRowEditCancel
   } = useSmartGridState();
 
@@ -1259,6 +1261,9 @@ export function SmartGridNested({
                             className="rounded cursor-pointer w-4 h-4"
                             checked={currentSelectedRows.has(rowIndex)}
                             onChange={() => {
+                               console.log("Checkbox clicked → FULL ROW OBJECT:", row);
+      console.log("Row index:", rowIndex);
+                              console.log("check index " , rowIndex)
                               const newSet = new Set(currentSelectedRows);
                               if (newSet.has(rowIndex)) {
                                 newSet.delete(rowIndex);
@@ -1266,6 +1271,20 @@ export function SmartGridNested({
                                 newSet.add(rowIndex);
                               }
                               handleSelectionChange(newSet);
+                              const selectedRowsData = Array.from(newSet).map(
+    (idx) => paginatedData[idx]
+  );
+
+  onSelectionChange?.(newSet); // ✅ DO NOT REMOVE
+
+  // 2️⃣ Send FULL ROW OBJECTS upward
+  const selectedRowObjects = Array.from(newSet)
+    .map((idx) => paginatedData[idx])
+    .filter(Boolean);
+
+  console.log("✅ Emitting full row objects:", selectedRowObjects);
+
+  onRowDataSelection?.(selectedRowObjects); // 
                             }}
                           />
                         </TableCell>
