@@ -33,6 +33,7 @@ import CreateTemplateMain from "./pages/CreateTemplateMain";
 import CreateReportMain from "./pages/CreateReportMain";
 import CimCuvHub from "./pages/CimCuvHubManagement";
 import DraftBillHubManagement from "./pages/DraftBillHubManagement";
+import { ClaimsHub } from "./pages/ClaimsHub";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const App = () => (
           <Route path="/smart-grid-plus-demo" element={<SmartGridPlusDemo />} />
           <Route path="/cim-cuv" element={<CimCuvHub />} />
           <Route path="/draft-bill" element={<DraftBillHubManagement />} />
+          <Route path="/claims-hub" element={<ClaimsHub />} />
 
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />
