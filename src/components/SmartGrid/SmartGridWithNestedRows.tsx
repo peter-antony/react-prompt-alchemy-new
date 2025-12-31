@@ -4,7 +4,9 @@ import { SmartGridProps, GridColumnConfig } from '@/types/smartgrid';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SmartGridNested } from './SmartGridNested';
- 
+import { CellRendererNested } from './CellRendererNested';
+
+
 export type NestedSelectionMode = 'none' | 'single' | 'multi';
  
 export interface NestedRowSelection {
@@ -215,56 +217,76 @@ export function SmartGridWithNestedRows({
                   No nested records available
                 </div>
               ) : (
-                <div className="p-3">
+                <div className="p-0">
                   {gridTitle === "Draft Bill" ? (
                     <div className="overflow-x-auto">
-                      {/* Custom table for nested rows with row-level selection */}
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border">
-                            {nestedSectionConfig.columns.map((col) => (
-                              <th
-                                key={col.key}
-                                className="px-3 py-2 text-left text-muted-foreground"
-                                style={{ width: col.width }}
-                              >
-                                {col.label}
-                              </th>
-                            ))}
+                      {/* Custom table for nested rows with row-level selection - styled to match SmartGridNested */}
+                      <table className="w-full">
+                        <thead className="sticky top-0 bg-white border-b-2 border-gray-100">
+                          <tr className="hover:bg-transparent">
+                            {nestedSectionConfig.columns.map((col) => {
+                              const totalWidth = nestedSectionConfig.columns.reduce((sum, c) => sum + c.width, 0);
+                              const widthPercentage = (col.width / totalWidth) * 100;
+                              return (
+                                <th
+                                  key={col.key}
+                                  className="bg-gray-100 backdrop-blur-sm font-semibold text-Gray-800 pl-3 py-3 pr-0 border-r border-gray-100 last:border-r-0 h-9 text-left text-sm"
+                                  style={{
+                                    width: `${widthPercentage}%`,
+                                    minWidth: `${Math.max(80, col.width * 0.8)}px`,
+                                    maxWidth: `${col.width * 1.5}px`
+                                  }}
+                                >
+                                  <span className="select-none truncate" title={col.label}>
+                                    {col.label}
+                                  </span>
+                                </th>
+                              );
+                            })}
                           </tr>
                         </thead>
                         <tbody>
                           {nestedData.map((nestedRow: any, nestedIdx: number) => {
                             const isSelected = isNestedRowSelected(rowIndex, nestedIdx);
+                            const totalWidth = nestedSectionConfig.columns.reduce((sum, c) => sum + c.width, 0);
                             return (
                               <tr
                                 key={nestedIdx}
                                 className={cn(
-                                  "border-b border-border/50 transition-colors",
-                                  selectionMode !== 'none' && "cursor-pointer hover:bg-muted/30",
-                                  selectionMode === 'none' && "hover:bg-muted/20",
-                                  isSelected && "bg-primary/10 hover:bg-primary/15"
+                                  "hover:bg-gray-100 transition-all duration-100 border-gray-100",
+                                  selectionMode !== 'none' && "cursor-pointer",
+                                  isSelected && "bg-blue-100 border-l-4 border-blue-500 hover:bg-blue-100/80"
                                 )}
                                 onClick={() => handleNestedRowClick(rowIndex, nestedIdx, row, nestedRow)}
                               >
-                                {nestedSectionConfig.columns.map((col) => {
+                                {nestedSectionConfig.columns.map((col, colIdx) => {
                                   const cellValue = nestedRow[col.key];
+                                  const widthPercentage = (col.width / totalWidth) * 100;
                                   return (
                                     <td
                                       key={col.key}
-                                      className="px-3 py-2"
-                                      style={{ width: col.width }}
+                                      className="relative text-[13px] pl-3 py-1 border-r border-gray-50 last:border-r-0 align-middle"
+                                      style={{
+                                        width: `${widthPercentage}%`,
+                                        minWidth: `${Math.max(80, col.width * 0.8)}px`,
+                                        maxWidth: `${col.width * 1.5}px`
+                                      }}
                                     >
-                                      {col.type === 'Badge' ? (
-                                        <span className={cn(
-                                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                                          col.statusMap?.[cellValue] || "bg-gray-100 text-gray-800"
-                                        )}>
-                                          {cellValue}
-                                        </span>
-                                      ) : (
-                                        cellValue ?? '-'
-                                      )}
+                                      <div className="overflow-hidden">
+                                        <CellRendererNested
+                                          value={cellValue}
+                                          row={nestedRow}
+                                          column={col}
+                                          rowIndex={nestedIdx}
+                                          columnIndex={colIdx}
+                                          isEditing={false}
+                                          isEditable={false}
+                                          onEdit={() => { }}
+                                          onEditStart={() => { }}
+                                          onEditCancel={() => { }}
+                                          loading={false}
+                                        />
+                                      </div>
                                     </td>
                                   );
                                 })}
