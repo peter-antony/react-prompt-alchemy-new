@@ -36,8 +36,12 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
     const handleDraftBillSelection = (rows: any[]) => {
         console.log("12-----------------", rows[0]);
+        console.log("selectedDbLines",selectedDbLines)
         setSelectedDraftBills(rows);
     };
+    useEffect(()=>{
+console.log("123" , selectedDbLines)
+},[selectedDbLines , handleDraftBillSelection])
 
     // Helper to get selected nested row data objects (ONLY the current sub-row object, not parent)
     // This returns an array of individual nested row objects - each is a SINGLE sub-row
@@ -692,58 +696,119 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     useEffect(() => {
         console.log(onDraftBillSelection, "onDraftBillSelection")
     }, [onDraftBillSelection])
+  
+
+ useEffect(() => {
+  const rightButtons = [];
+
+  // 1️⃣ Parent rows selected (PRIORITY)
+  if (selectedDraftBills.length > 0) {
+    rightButtons.push(
+      {
+        label: "Generate Invoice",
+        onClick: () => setIsGenerateInvoiceModalOpen(true),
+        type: "Button",
+      },
+      {
+        label: "Revert",
+        onClick: () => handleReTreat(),
+        type: "Button",
+      }
+    );
+  }
+
+  // 2️⃣ ONLY DB lines selected
+  else if (selectedDbLines.length > 0) {
+    rightButtons.push(
+      {
+        label: "Cancel",
+        onClick: () => setIsCancelModalOpen(true),
+        type: "Button",
+      },
+      {
+        label: "Approve",
+        onClick: () => handleApprove(),
+        type: "Button",
+      },
+      {
+        label: "Rerun",
+        onClick: () => handleReRun(),
+        type: "Button",
+      }
+    );
+  }
+
+  // 3️⃣ Nothing selected → no buttons
+
+  setFooter({
+    visible: true,
+    pageName: "Draft_Bill",
+    leftButtons: [],
+    rightButtons,
+  });
+
+  return () => resetFooter();
+}, [
+  setFooter,
+  resetFooter,
+  selectedDbLines,
+  selectedDraftBills,
+]);
+
+
+
 
     // Footer Configuration
-    useEffect(() => {
-        setFooter({
-            visible: true,
-            pageName: 'Draft_Bill',
-            leftButtons: [],
-            rightButtons: [
-                {
-                    label: "Cancel",
-                    onClick: () => {
-                        setIsCancelModalOpen(true)
-                    },
-                    type: 'Button',
-                },
-                {
-                    label: "Approve",
-                    onClick: () => {
-                        console.log("Approve clicked");
-                        handleApprove()
-                    },
-                    type: 'Button',
-                },
-                {
-                    label: "Rerun",
-                    onClick: () => {
-                        console.log("Approve clicked");
-                        handleReRun()
-                    },
-                    type: 'Button',
-                },
-                {
-                    label: "Revert",
-                    onClick: () => {
-                        handleReTreat()
-                    },
-                    type: 'Button',
-                },
-                {
-                    label: "Generate Invoice",
-                    onClick: () => {
-                        setIsGenerateInvoiceModalOpen(true);
-                        console.log("Generate Invoice clicked");
-                        const selectedRows = getSelectedNestedRows();
-                        console.log("Selected rows:", selectedRows);
-                    },
-                    type: 'Button',
-                },
-            ],
-        });
-        return () => resetFooter();
-    }, [setFooter, resetFooter]);
+    // useEffect(() => {
+    //     setFooter({
+    //         visible: true,
+    //         pageName: 'Draft_Bill',
+    //         leftButtons: [],
+    //         rightButtons: [
+    //             {
+    //                 label: "Cancel",
+    //                 onClick: () => {
+    //                     setIsCancelModalOpen(true)
+    //                 },
+    //                 type: 'Button',
+    //             },
+    //             {
+    //                 label: "Approve",
+    //                 onClick: () => {
+    //                     console.log("Approve clicked");
+    //                     handleApprove()
+    //                 },
+    //                 type: 'Button',
+    //             },
+    //             {
+    //                 label: "Rerun",
+    //                 onClick: () => {
+    //                     console.log("Approve clicked");
+    //                     handleReRun()
+    //                 },
+    //                 type: 'Button',
+    //             },
+    //             {
+    //                 label: "Revert",
+    //                 onClick: () => {
+    //                     handleReTreat()
+    //                 },
+    //                 type: 'Button',
+    //             },
+    //             {
+    //                 label: "Generate Invoice",
+    //                 onClick: () => {
+    //                     setIsGenerateInvoiceModalOpen(true);
+    //                     console.log("Generate Invoice clicked");
+    //                     const selectedRows = getSelectedNestedRows();
+    //                     console.log("Selected rows:", selectedRows);
+    //                 },
+    //                 type: 'Button',
+    //             },
+    //         ],
+    //     });
+    //     return () => resetFooter();
+    // }, [setFooter, resetFooter , selectedDbLines]);
 
     const renderSubRow = (row: any, rowIndex: number) => {
         return (
@@ -1247,51 +1312,64 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         //         selectedDraftBills[0]?.lineItems ?? []    
         //     ,
         // };
-
+        console.log("mk" ,  selectedDbLines[0]?.parentRow?.DraftBillNo)
         const payload = {
             Header: {
-                DraftBillNo: selectedDraftBills[0]?.id,
-                ReasonCode: splitIdName(reasonCode).id,
-                ReasonforComments: reasonDescription ?? "",
+                "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
+               "ReasonCode": splitIdName(reasonCode).id,
+                    "ReasonforComments": reasonDescription,
             },
-            ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-                ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-                    ...rest,
+            // ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+            //     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+            //         ...rest,
 
-                    // 1️⃣ Force ModeFlag to "Checked" if it exists
-                    ...(ModeFlag && { ModeFlag: "Checked" }),
+            //         // 1️⃣ Force ModeFlag to "Checked" if it exists
+            //         ...(ModeFlag && { ModeFlag: "Checked" }),
 
-                    // 2️⃣ Only include ReasonForCancellation if NOT null
-                    ...(ReasonForCancellation != null && {
-                        ReasonForCancellation,
-                    }),
+            //         // 2️⃣ Only include ReasonForCancellation if NOT null
+            //         ...(ReasonForCancellation != null && {
+            //             ReasonForCancellation,
+            //         }),
 
-                    // 3️⃣ Backend hates null remarks → normalize
-                    Remark: rest.Remark ?? "",
-                })
-            ),
+            //         // 3️⃣ Backend hates null remarks → normalize
+            //         Remark: rest.Remark ?? "",
+            //     })
+            // ),
+            ItemDetails: selectedDbLines.map(({ nestedRow }) => {
+  const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
+
+  return {
+    ...rest,
+
+    // 1️⃣ If ModeFlag field exists → force to Checked
+    ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
+
+    // 2️⃣ Send ReasonForCancellation only if NOT null
+    ...(ReasonForCancellation != null && { ReasonForCancellation }),
+
+    // 3️⃣ Backend hates null
+    Remark: rest.Remark ?? "",
+  };
+}),
+
         };
 
 
         console.log(JSON.stringify(payload, null, 2))
         try {
-            const payload = {
-                Header: {
-                    "DraftBillNo": selectedDraftBills[0]?.id,
-                    "ReasonCode": splitIdName(reasonCode).id,
-                    "ReasonforComments": reasonDescription,
-                },
-                ItemDetails:
-                    selectedDraftBills[0]?.lineItems ?? []
-                ,
-            };
-            console.log("payload ===", payload);
+            // const payload = {
+            //     Header: {
+            //         "DraftBillNo": selectedDraftBills[0]?.id,
+                    
+            //     },
+            //     ItemDetails:
+            //         selectedDraftBills[0]?.lineItems ?? []
+            //     ,
+            // };
             const response = await draftBillService.cancelDraftBillByID(payload);
 
-            console.log("Cancel API response:", response);
             const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
             const resourceStatus = (response as any)?.data?.IsSuccess;
-            console.log("parsedResponse ====", parsedResponse);
             if (resourceStatus) {
                 console.log("Template cancelled successfully");
                 toast({
@@ -1319,44 +1397,54 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const handleApprove = async () => {
 
 
-        console.log("selectedDraftBills", selectedDraftBills[0]?.lineItems ?? [])
-
+console.log("mk2",selectedDbLines)
 
         const payload = {
             Header: {
-                DraftBillNo: selectedDraftBills[0]?.id,
-
+                "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
+            
             },
-            ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-                ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-                    ...rest,
+            // ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+            //     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+            //         ...rest,
 
-                    // 1️⃣ Force ModeFlag to "Checked" if it exists
-                    ...(ModeFlag && { ModeFlag: "Checked" }),
+            //         // 1️⃣ Force ModeFlag to "Checked" if it exists
+            //         ...(ModeFlag && { ModeFlag: "Checked" }),
 
-                    // 2️⃣ Only include ReasonForCancellation if NOT null
-                    ...(ReasonForCancellation != null && {
-                        ReasonForCancellation,
-                    }),
+            //         // 2️⃣ Only include ReasonForCancellation if NOT null
+            //         ...(ReasonForCancellation != null && {
+            //             ReasonForCancellation,
+            //         }),
 
-                    // 3️⃣ Backend hates null remarks → normalize
-                    Remark: rest.Remark ?? "",
-                })
-            ),
+            //         // 3️⃣ Backend hates null remarks → normalize
+            //         Remark: rest.Remark ?? "",
+            //     })
+            // ),
+            ItemDetails: selectedDbLines.map(({ nestedRow }) => {
+  const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
+
+  return {
+    ...rest,
+
+    // 1️⃣ If ModeFlag field exists → force to Checked
+    ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
+
+    // 2️⃣ Send ReasonForCancellation only if NOT null
+    ...(ReasonForCancellation != null && { ReasonForCancellation }),
+
+    // 3️⃣ Backend hates null
+    Remark: rest.Remark ?? "",
+  };
+}),
+
         };
 
 
         console.log(JSON.stringify(payload, null, 2))
-        try {
-            const payload = {
-                Header: {
-                    "DraftBillNo": selectedDraftBills[0]?.id,
 
-                },
-                ItemDetails:
-                    selectedDraftBills[0]?.lineItems ?? []
-                ,
-            };
+
+        try {
+           
             console.log("payload ===", payload);
             const response = await draftBillService.approveDraftBillByID(payload);
 
@@ -1365,7 +1453,6 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             const resourceStatus = (response as any)?.data?.IsSuccess;
             console.log("parsedResponse ====", parsedResponse);
             if (resourceStatus) {
-                console.log("Approved successfully");
                 toast({
                     title: "✅ Approved Successfully",
                     description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
@@ -1447,11 +1534,11 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         
 
         console.log("selectedDraftBills" , selectedDraftBills[0]?.lineItems ?? []    )
-        const selectedBill = selectedDraftBills[0];
+        const selectedBill = selectedDbLines[0]?.parentRow;
 
         const payload = {
  Header: {
-    DraftBillNo: selectedBill.DraftBillNo,
+    DraftBillNo: selectedBill?.DraftBillNo,
     DraftBillDate: selectedBill.DraftBillDate,
     DBStatus: selectedBill.DBStatus,
     DBStatusDescription: selectedBill.DBStatusDescription,
@@ -1485,22 +1572,38 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
   ReverseJournalVoucher:[{
 JournalVoucherNo:null
   }],
-  ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-    ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-      ...rest,
+//   ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+//     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+//       ...rest,
 
-      // 1️⃣ Force ModeFlag to "Checked" if it exists
-      ...(ModeFlag  && { ModeFlag: "UPDATE" }),
+//       // 1️⃣ Force ModeFlag to "Checked" if it exists
+//       ...(ModeFlag  && { ModeFlag: "UPDATE" }),
 
-      // 2️⃣ Only include ReasonForCancellation if NOT null
-      ...(ReasonForCancellation != null && {
-        ReasonForCancellation,
-      }),
+//       // 2️⃣ Only include ReasonForCancellation if NOT null
+//       ...(ReasonForCancellation != null && {
+//         ReasonForCancellation,
+//       }),
 
-      // 3️⃣ Backend hates null remarks → normalize
-      Remark: rest.Remark ?? "",
-    })
-  ),
+//       // 3️⃣ Backend hates null remarks → normalize
+//       Remark: rest.Remark ?? "",
+//     })
+//   ),
+ ItemDetails: selectedDbLines.map(({ nestedRow }) => {
+  const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
+
+  return {
+    ...rest,
+
+    // 1️⃣ If ModeFlag field exists → force to Checked
+    ...("ModeFlag" in nestedRow && { ModeFlag: "UPDATE" }),
+
+    // 2️⃣ Send ReasonForCancellation only if NOT null
+    ...(ReasonForCancellation != null && { ReasonForCancellation }),
+
+    // 3️⃣ Backend hates null
+    Remark: rest.Remark ?? "",
+  };
+}),
 };
 
 
@@ -1547,7 +1650,6 @@ JournalVoucherNo:null
 
        const handleReTreat= async () => {
         
-
         console.log("handleReTreat" , selectedDraftBills)
 
     const payload = {
@@ -1632,6 +1734,8 @@ JournalVoucherNo:null
                 // selectionMode='multi'
                 onSelectedRowsChange={(selectedRows) => {
                     console.log("✅ Selected rows from grid:", selectedRows);
+                    console.log("selectedDbLines",selectedDbLines)
+                    setSelectedDraftBills(selectedRows);
                     onDraftBillSelection?.(selectedRows);
                 }}
 
