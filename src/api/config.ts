@@ -228,6 +228,10 @@ export const API_ENDPOINTS = {
     SAVE: (userId: string, gridId: string) =>
       `/users/${userId}/preferences/${gridId}`,
   },
+  // Claims management
+  CLAIMS: {
+    HUBSEARCH: 'ManageClaims/HubSearch',
+  }
 } as const;
 
 export const ROUTES = {

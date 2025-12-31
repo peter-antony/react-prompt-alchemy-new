@@ -20,7 +20,7 @@ export const ClaimService = {
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      API_ENDPOINTS.CLAIMS.HUBSEARCH,
       requestBody
     );
     return response.data;

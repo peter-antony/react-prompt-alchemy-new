@@ -145,7 +145,7 @@ export const ClaimsHub = () => {
       key: "ClaimNo",
       label: "Claim No.",
       type: "Link",
-      width: 150,
+      width: 180,
       sortable: true,
       editable: false,
       mandatory: true,
@@ -697,9 +697,26 @@ export const ClaimsHub = () => {
       leftButtons: [],
       rightButtons: [
         {
-          label: "Cancel",
+          label: "Short Close",
           onClick: () => {
-            console.log("Cancel clicked");
+            console.log('Short Close clicked');
+          },
+          type: 'Button',
+          disabled: true, // <-- Enable if at least one row is selected
+        },
+        {
+          label: "Amend",
+          onClick: () => {
+            console.log("Amend clicked");
+            // setPopupOpen(true);
+          },
+          type: 'Button',
+          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        },
+        {
+          label: "Audit Trail",
+          onClick: () => {
+            console.log("Audit Trail clicked");
             // setPopupOpen(true);
           },
           type: 'Button',
@@ -854,6 +871,11 @@ export const ClaimsHub = () => {
         } else if (key === "ClaimDates") {
           criteria.ClaimDateFrom = filter?.value?.from.replace(/-/g, "/");
           criteria.ClaimDateTo = filter?.value?.to.replace(/-/g, "/");
+        } else if (key === "ClaimStatus") {
+          // Convert to array if it's a string
+          criteria.ClaimStatus = Array.isArray(filter.value) 
+            ? filter.value 
+            : filter.value ? [filter.value] : [];
         } else {
           // all other keys map directly
           criteria[key] = filter.value;
@@ -1365,13 +1387,13 @@ export const ClaimsHub = () => {
       </AppLayout>
 
       {/* Add a beautiful loading overlay when fetching data from API */}
-      {/* {apiStatus === 'loading' && (
+      {apiStatus === 'loading' && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
           <div className="text-lg font-semibold text-blue-700">Loading...</div>
           <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
-      )} */}
+      )}
 
     </>
   );
