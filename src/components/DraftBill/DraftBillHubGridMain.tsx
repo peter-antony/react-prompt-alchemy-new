@@ -15,11 +15,11 @@ import { filterService } from '@/api/services';
 import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
 import CancelConfirmationModal from '../Template/CancelConfirmationModal';
 import GenerateInvoiceModal from './generateInvioceModal';
+import { useSmartGridState } from '@/hooks/useSmartGridState';
 
 const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const { toast } = useToast();
-    const [gridData, setGridData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+    const gridState = useSmartGridState();
     const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
     const [
         isDraftBillDetailsSideDrawOpen,
@@ -86,8 +86,11 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'DraftBillNo',
             label: 'Draft Bill No',
             type: 'Link',
+            mandatory: true,
             sortable: true,
             filterable: true,
+            editable: false,
+            subRow: false,
             width: 200
         },
         {
@@ -96,6 +99,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'DateTimeRange',
             sortable: true,
             filterable: true,
+            editable: false,
+            subRow: false,
             width: 250
         },
         // { 
@@ -112,6 +117,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Badge',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 150,
             statusMap: {
                 'Open': 'badge-blue rounded-2xl',
@@ -129,6 +135,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'TextPipedData',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 300
         },
         // {
@@ -145,6 +152,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'TextPipedData',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 300
         },
         // {
@@ -161,6 +169,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 150
         },
         {
@@ -169,6 +178,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'CurrencyWithSymbol',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 150
         },
         {
@@ -177,6 +187,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'TextPipedData',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 300
         },
         // {
@@ -193,6 +204,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 150
         },
         {
@@ -201,6 +213,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 200
         },
         {
@@ -209,6 +222,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 250
         },
         {
@@ -217,6 +231,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: false,
             width: 100
         },
         {
@@ -225,6 +240,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Date',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -233,6 +249,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -241,6 +258,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Date',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -249,6 +267,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -257,6 +276,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -265,6 +285,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -273,6 +294,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -281,6 +303,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Integer',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -289,6 +312,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 200
         },
         {
@@ -297,6 +321,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -305,6 +330,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -313,6 +339,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -321,6 +348,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         },
         {
@@ -329,6 +357,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             sortable: true,
             filterable: true,
+            subRow: true,
             width: 150
         }
     ], []);
@@ -722,12 +751,12 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 row={row}
                 rowIndex={rowIndex}
                 columns={columns}
-                subRowColumnOrder={[]} // Pass appropriate order if needed
-                editingCell={null} // Pass editing state if needed
-                onReorderSubRowColumns={() => { }} // Pass handler
-                onSubRowEdit={() => { }} // Pass handler
-                onSubRowEditStart={() => { }} // Pass handler
-                onSubRowEditCancel={() => { }} // Pass handler
+                subRowColumnOrder={gridState.subRowColumnOrder} // Pass appropriate order if needed
+                editingCell={gridState.editingCell} // Pass editing state if needed
+                onReorderSubRowColumns={gridState.handleReorderSubRowColumns} // Pass handler
+                onSubRowEdit={gridState.handleSubRowEdit} // Pass handler
+                onSubRowEditStart={gridState.handleSubRowEditStart} // Pass handler
+                onSubRowEditCancel={gridState.handleSubRowEditCancel} // Pass handler
             />
         );
     };
@@ -739,7 +768,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         const searchCriteria = buildSearchCriteria(latestFilters);
 
         try {
-            setLoading(true);
+            gridState.setLoading(true);
             const response = await draftBillService.getDraftBillsForHub({ searchCriteria });
 
             // Check if response has ResponseData and parse it
@@ -780,9 +809,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         }))
                     };
                 });
-                setGridData(processedData);
+                gridState.setGridData(processedData);
             } else {
-                setGridData([]);
+                gridState.setGridData([]);
                 console.warn("No ResultSet or ResponseResult found in parsed response", parsedResponse);
                 toast({
                     title: "No Results",
@@ -797,9 +826,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 description: "Failed to fetch draft bills.",
                 variant: "destructive"
             });
-            setGridData([]);
+            gridState.setGridData([]);
         } finally {
-            setLoading(false);
+            gridState.setLoading(false);
         }
     };
 
@@ -841,7 +870,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     }
 
     const fetchDraftBills = async () => {
-        setLoading(true);
+        gridState.setLoading(true);
         try {
             let searchCriteria;
             if (Object.keys(filtersForThisGrid).length > 0) {
@@ -897,9 +926,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         }))
                     };
                 });
-                setGridData(processedData);
+                gridState.setGridData(processedData);
             } else {
-                setGridData([]);
+                gridState.setGridData([]);
                 console.warn("No ResultSet or ResponseResult found in parsed response", parsedResponse);
             }
 
@@ -910,9 +939,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 description: "Failed to fetch draft bills.",
                 variant: "destructive"
             });
-            setGridData([]);
+            gridState.setGridData([]);
         } finally {
-            setLoading(false);
+            gridState.setLoading(false);
         }
     };
 
@@ -1569,7 +1598,7 @@ JournalVoucherNo:null
 
     return (
         <div className="h-full flex flex-col relative">
-            {loading && (
+            {gridState.loading && (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
                     <div className="text-lg font-semibold text-blue-700">Loading Draft Bills...</div>
@@ -1579,10 +1608,11 @@ JournalVoucherNo:null
             <SmartGridWithNestedRows
                 gridId="draft-bill-grid"
                 gridTitle="Draft Bill"
-                recordCount={gridData.length}
-                data={gridData}
+                recordCount={gridState.gridData.length}
+                data={gridState.gridData}
                 columns={columns}
                 onLinkClick={handleLinkClick}
+                onSubRowToggle={gridState.handleSubRowToggle}
                 paginationMode="pagination"
                 customPageSize={20}
                 clientSideSearch={true}
