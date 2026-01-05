@@ -5,6 +5,7 @@ import {DynamicPanel, DynamicPanelRef} from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { splitInputDropdownValue, combineInputDropdownValue, InputDropdownValue } from "@/utils/inputDropdown";
 import { draftBillService } from "@/api/services/DraftBillService";
+import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DraftBillDetailsSideDrawProps {
@@ -274,6 +275,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
       }
       return { input: '', dropdown: 'TON' };
     };
+
+  //   useEffect(()=>{
+  //  console.clear();
+  //  console.log(headerData, "Accepted Value")
+  //   },[])
     
     // Helper function to get Rate field (checking multiple possible field names)
     const getRateField = () => {
@@ -871,13 +877,115 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                       <div className="flex items-center text-sm text-gray-700">
                         <FileText className="w-4 h-4 mr-2 text-gray-400" />
                         <span>
-                          {headerData?.ReferenceInformation || 'IO_D25_003'} <Info className="w-4 h-4 inline-block ml-1 text-gray-400" /> 
+                          {headerData?.ReferenceInformation || 'IO_D25_003'}
+                           <div className="relative group inline-block">
+                                                          <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                                          <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                                                              <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+                                                                { "Reference Doc. ID"}
+                                                              </div>
+                                                              <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
+                                                                      <div className="">{"Reference Doc. ID"}</div>
+                                                                  </div>
+                                                                  <div className="font-semibold text-gray-700">
+                                                                      <div>I0_D@%_003</div>
+                                                                      
+                                                                  </div>
+                      
+                                                                 
+                                                              </div>
+                                                          </div>
+                                                          <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                                                              <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+                                                                { "Reference Doc. ID"}
+                                                              </div>
+                                                              <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
+                                                                      <div className="">{"Reference Doc. ID"}</div>
+                                                                  </div>
+                                                                  <div className="font-semibold text-gray-700">
+                                                                      <div>I0_D@%_003</div>
+                                                                      
+                                                                  </div>
+                      
+                                                                 
+                                                              </div>
+
+                                                                <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
+                                                                      <div className="">{"Reference Doc. Type"}</div>
+                                                                  </div>
+                                                                  <div className="font-semibold text-gray-700">
+                                                                      <div>I0_D@%_003</div>
+                                                                      
+                                                                  </div>
+                      
+                                                                 
+                                                              </div>
+
+                                                                <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
+                                                                      <div className="">{"Reference Doc. Date"}</div>
+                                                                  </div>
+                                                                  <div className="font-semibold text-gray-700">
+                                                                      <div>I0_D@%_003</div>
+                                                                      
+                                                                  </div>
+                      
+                                                                 
+                                                              </div>
+                                                          </div>
+                                                      </div>
                         </span>
                         <FileText className="w-4 h-4 ml-3 text-gray-400" />
                         <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">Multiple
-                          <Info className="w-4 h-4 inline-block ml-1 text-gray-400" />
+                         <div className="relative group inline-block">
+                                                          <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                                          <div className="absolute -right-20 hidden top-5 z-30 group-hover:block min-w-[175px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                                                              <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+                                                                { "Contract Details"}
+                                                              </div>
+                                                              <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center mb-2">
+                                                                      <div className="font-semibold text-gray-700">{headerData?.ContractID}</div>
+                                                                      <div className="font-semibold text-gray-700">{headerData?.ContractType}</div>
+
+                                                                  </div>
+                                                                
+                      
+                                                                  <div className="text-[11px] text-gray-400 ">Internal Order</div>
+                                                                  <div className="text-xs text-gray-400">
+                                                                      stage{" Order"}
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                          
                         </span> 
                       </div>
+                      <div className="relative group inline-block">
+                                                          <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                                          <div className="absolute right-0 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                                                              <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+                                                                { "mmk"}
+                                                              </div>
+                                                              <div className="px-4 py-3">
+                                                                  <div className="flex justify-between items-center mb-2">
+                                                                      <div className="font-semibold text-gray-700">{"mmk"}</div>
+                                                                  </div>
+                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
+                                                                      <div>Tariff ID</div>
+                                                                      <div>Unit Price</div>
+                                                                  </div>
+                      
+                                                                  <div className="text-[11px] text-gray-400 mb-1 pt-2 border-t border-gray-300">Tariff Description</div>
+                                                                  <div className="text-xs text-gray-700 font-medium">
+                                                                      {"mmk"}
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      </div>
                       <div className="flex items-start text-sm text-gray-700 mt-4">
                         <UserPlus className="w-4 h-4 mr-2 text-gray-400" />
                         <span>Reason : Mismatch in consignee details between shipping manifest and bill.</span>
