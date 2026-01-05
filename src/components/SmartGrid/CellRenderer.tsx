@@ -7,7 +7,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Info, Package } from 'lucide-react';
+import { Info, Package, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { GridColumnConfig } from '@/types/smartgrid';
 import { cn } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
@@ -146,6 +147,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   };
 
   // Link renderer
+  const [copied, setCopied] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+
   const renderLink = () => {
     const handleClick = () => {
       if (onLinkClick) {
@@ -155,15 +159,43 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       }
     };
 
+    const handleCopy = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(String(value));
+      setCopied(true);
+      toast.success('Copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
-      <button
-        onClick={handleClick}
-        className="text-Primary-500 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate max-w-full"
-        disabled={loading}
-        title={String(value)}
+      <div 
+        className="flex items-center gap-1 group min-w-0"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {value}
-      </button>
+        <button
+          onClick={handleClick}
+          className="text-Primary-500 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate"
+          disabled={loading}
+          title={String(value)}
+        >
+          {value}
+        </button>
+        <button
+          onClick={handleCopy}
+          className={cn(
+            "flex-shrink-0 p-0.5 rounded hover:bg-muted transition-all duration-150",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+          title="Copy to clipboard"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-green-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+          )}
+        </button>
+      </div>
     );
   };
 

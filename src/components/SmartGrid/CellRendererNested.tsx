@@ -16,6 +16,8 @@ import { WorkOrderBadge } from './WorkOrderBadge';
 import { OrderCountBadge } from './OrderCountBadge';
 import { IncidentBadgeComponent } from './BadgeComponents/IncidentBadge';
 import LocationDetailsTooltip from '@/components/Common/LocationDetailsTooltip';
+import { Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CellRendererNestedProps {
   value: any;
@@ -184,6 +186,9 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
   };
 
   // Link renderer
+  const [copied, setCopied] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+  
   const renderLink = () => {
     const handleClick = () => {
       if (onLinkClick) {
@@ -193,15 +198,43 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       }
     };
 
+    const handleCopy = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(String(value));
+      setCopied(true);
+      toast.success('Copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
-      <button
-        onClick={handleClick}
-        className="text-Primary-500 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate max-w-full"
-        disabled={loading}
-        title={String(value)}
+      <div 
+        className="flex items-center gap-1 group min-w-0"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {value}
-      </button>
+        <button
+          onClick={handleClick}
+          className="text-Primary-500 hover:text-blue-800 cursor-pointer font-medium hover:underline transition-colors duration-150 truncate"
+          disabled={loading}
+          title={String(value)}
+        >
+          {value}
+        </button>
+        <button
+          onClick={handleCopy}
+          className={cn(
+            "flex-shrink-0 p-0.5 rounded hover:bg-muted transition-all duration-150",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+          title="Copy to clipboard"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-green-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+          )}
+        </button>
+      </div>
     );
   };
 
