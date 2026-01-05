@@ -2,6 +2,7 @@
 import React from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { dateFormatter } from "@/utils/formatter";
 
 interface SideDrawerProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ interface SideDrawerProps {
     isStatusBadgeRquired?: boolean;
     children: React.ReactNode;
     contentBgColor?: string;
+    additionalBadge?: string;
 }
 
 export const SideDrawer: React.FC<SideDrawerProps> = ({
@@ -31,6 +33,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
     isStatusBadgeRquired,
     children,
     contentBgColor,
+    additionalBadge,
 }) => {
     return (
         <AnimatePresence>
@@ -90,6 +93,11 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                                             }`}
                                     >
                                         {statusBadgeContent}
+                                    </span>
+                                )}
+                                {additionalBadge && (
+                                    <span className="px-3 py-1 rounded-full border text-xs font-medium ml-4 bg-gray-100 text-gray-800 border-gray-200">
+                                        {dateFormatter(additionalBadge)}
                                     </span>
                                 )}
                             </div>

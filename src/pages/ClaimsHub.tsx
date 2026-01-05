@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { GridColumnConfig, ServerFilter } from '@/types/smartgrid';
-import { X, Ban } from 'lucide-react';
+import { SquarePen, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -10,12 +10,13 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { AppLayout } from '@/components/AppLayout';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useFooterStore } from '@/stores/footerStore';
-import { filterService, quickOrderService, tripService } from '@/api/services';
+import { filterService, quickOrderService } from '@/api/services';
 import { ClaimSearchCriteria, DEFAULT_CLAIM_SEARCH_CRITERIA } from "@/constants/claimSearchCriteria";
 import { useFilterStore } from "@/stores/filterStore";
 import { Button } from "@/components/ui/button";
-import { dateFormatter } from "@/utils/formatter";
 import { ClaimService } from "@/api/services/ClaimService";
+import { ClaimsHubAuditTrail } from "@/components/Claims/ClaimsHubAuditTrail";
+import { ClaimsHubEditSave } from "@/components/Claims/ClaimsHubEditSave";
 
 export const ClaimsHub = () => {
   const [searchParams] = useSearchParams();
@@ -29,18 +30,19 @@ export const ClaimsHub = () => {
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const gridState = useSmartGridState();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { config, setFooter, resetFooter } = useFooterStore();
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+  const [auditClaimNo, setAuditClaimNo] = useState<string | null>(null);
+  const [selectedEditAndSaveRow, setSelectedEditAndSaveRow] = useState<any>(null);
+  const [isClaimsEditOpen, setIsClaimsEditOpen] = useState(false);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [popupTitle] = useState('Cancel Trip');
-  const [popupButtonName] = useState('Cancel');
 
   // State for server filtering
   const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering
   const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
   const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
-
 
   const handleGridPreferenceSave = async (preferences: any) => {
     try {
@@ -91,55 +93,56 @@ export const ClaimsHub = () => {
   };
 
   const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
-          console.log('ClaimsHub: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
-          try {
-            const preferencesToSave = {
-              visibleFields,
-              fieldOrder
-            };
-      
-            const response = await quickOrderService.savePersonalization({
-              LevelType: 'User',
-              // LevelKey: 'ramcouser',
-              ScreenName: 'ClaimsHub',
-              ComponentName: 'smartgrid-serverside-filtersearch-preferences',
-              JsonData: preferencesToSave,
-              IsActive: "1",
-              ModeFlag: isServerFilterPersonalizationEmpty ? "Insert" : "Update"
-            });
-      
-            const apiData = response?.data;
-      
-            if (apiData?.IsSuccess) {
-              setServerFilterVisibleFields(visibleFields);
-              setServerFilterFieldOrder(fieldOrder);
-              // Update the empty flag since we now have saved data
-              setIsServerFilterPersonalizationEmpty(false);
-      
-              toast({
-                title: "✅ Filter Preferences Saved",
-                description: "Your search field preferences have been saved.",
-                variant: "default",
-              });
-            } else {
-              throw new Error(apiData?.Message || "Invalid API response");
-            }
-          } catch (error) {
-            console.error("Failed to save server filter preferences:", error);
-            toast({
-              title: "Error",
-              description: "Failed to save filter preferences",
-              variant: "destructive",
-            });
-          }
-        };
+    console.log('ClaimsHub: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+    try {
+      const preferencesToSave = {
+        visibleFields,
+        fieldOrder
+      };
 
+      const response = await quickOrderService.savePersonalization({
+        LevelType: 'User',
+        // LevelKey: 'ramcouser',
+        ScreenName: 'ClaimsHub',
+        ComponentName: 'smartgrid-serverside-filtersearch-preferences',
+        JsonData: preferencesToSave,
+        IsActive: "1",
+        ModeFlag: isServerFilterPersonalizationEmpty ? "Insert" : "Update"
+      });
 
+      const apiData = response?.data;
+
+      if (apiData?.IsSuccess) {
+        setServerFilterVisibleFields(visibleFields);
+        setServerFilterFieldOrder(fieldOrder);
+        // Update the empty flag since we now have saved data
+        setIsServerFilterPersonalizationEmpty(false);
+
+        toast({
+          title: "✅ Filter Preferences Saved",
+          description: "Your search field preferences have been saved.",
+          variant: "default",
+        });
+      } else {
+        throw new Error(apiData?.Message || "Invalid API response");
+      }
+    } catch (error) {
+      console.error("Failed to save server filter preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save filter preferences",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Breadcrumb items
   const breadcrumbItems = [
     { label: "Home", href: "/", active: false },
     { label: "Manage Claims", active: true }
   ];
 
+  // Initial column configuration for the grid
   const initialColumns: GridColumnConfig[] = [
     {
       key: "ClaimNo",
@@ -224,6 +227,31 @@ export const ClaimsHub = () => {
       sortable: true,
       editable: false,
       subRow: false
+    },
+    {
+      key: 'actions',
+      label: 'Edit',
+      type: 'ActionButton',
+      sortable: false,
+      editable: false,
+      subRow: false,
+      filterable: false,
+      width: 50,
+      actionButtons: [
+        {
+          icon: <SquarePen size={18} strokeWidth={1.2} />,
+          tooltip: 'Edit Claim',
+          onClick: async (rowData) => {
+            console.log('clicked for:', rowData);
+            if (rowData) {
+              setSelectedEditAndSaveRow(rowData);
+              setIsClaimsEditOpen(true);
+            }
+          },
+          variant: 'ghost',
+          size: 'lg',
+        }
+      ]
     },
     {
       key: "ActionResolution",
@@ -476,14 +504,7 @@ export const ClaimsHub = () => {
     return id || desc || '-';
   }
 
-  // Helper function From & To date formatter
-  const formatDateRange = (from: string | null, to: string | null): string => {
-    if (!from && !to) return '-';
-    if (!from) return `${dateFormatter(to)}`;
-    if (!to) return `${dateFormatter(from)}`;
-    return `${dateFormatter(from)} to ${dateFormatter(to)}`;
-  };
-
+  // Fetch claims data from the API
   const fetchClaims = async () => {
     gridState.setColumns(initialColumns);
     gridState.setLoading(true);
@@ -693,42 +714,50 @@ export const ClaimsHub = () => {
   useEffect(() => {
     setFooter({
       visible: true,
-      pageName: 'Trip_Execution',
+      pageName: 'Claims_Hub',
       leftButtons: [],
       rightButtons: [
         {
           label: "Short Close",
+          type: 'Button',
+          disabled: false, // <-- Enable if at least one row is selected
           onClick: () => {
             console.log('Short Close clicked');
           },
-          type: 'Button',
-          disabled: true, // <-- Enable if at least one row is selected
         },
         {
           label: "Amend",
+          type: 'Button',
+          disabled: selectedRowObjects.length !== 1, // <-- Enable if at least one row is selected
           onClick: () => {
             console.log("Amend clicked");
             // setPopupOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+          }
         },
         {
           label: "Audit Trail",
+          type: 'Button',
+          disabled: selectedRowObjects.length !== 1, // <-- Enable if exactly one row is selected
           onClick: () => {
             console.log("Audit Trail clicked");
-            // setPopupOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
+            if (selectedRowObjects.length === 0) {
+              toast({
+                title: "Select Claim",
+                description: "Please select a claim to view audit trail",
+                variant: 'destructive'
+              });
+              return;
+            }
+
+            const claimNo = selectedRowObjects[0]?.ClaimNo || null;
+            setAuditClaimNo(claimNo);
+            setIsAuditOpen(true);
+          }
+        }
       ],
     });
     return () => resetFooter();
-  }, [setFooter, resetFooter, selectedRows, createTripPlan]);
-
-  // Navigate to the create new quick order page
-  const navigate = useNavigate();
+  }, [setFooter, resetFooter, selectedRows, createTripPlan, toast]);
 
   const handleLinkClick = (value: any, columnKey: any) => {
     console.log("Link clicked:", value, columnKey);
@@ -873,8 +902,8 @@ export const ClaimsHub = () => {
           criteria.ClaimDateTo = filter?.value?.to.replace(/-/g, "/");
         } else if (key === "ClaimStatus") {
           // Convert to array if it's a string
-          criteria.ClaimStatus = Array.isArray(filter.value) 
-            ? filter.value 
+          criteria.ClaimStatus = Array.isArray(filter.value)
+            ? filter.value
             : filter.value ? [filter.value] : [];
         } else {
           // all other keys map directly
@@ -1068,7 +1097,7 @@ export const ClaimsHub = () => {
       hideSearch: true,
       disableLazyLoading: true
     },
-    { key:"ClaimDate", label: "Claim Date", type: 'date'},
+    { key: "ClaimDate", label: "Claim Date", type: 'date' },
     {
       key: 'Type',
       label: 'Type',
@@ -1081,8 +1110,8 @@ export const ClaimsHub = () => {
       key: 'CounterParty',
       label: 'Counter Party',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Counter Party Init"),
-      // hideSearch: true,
+      fetchOptions: makeLazyFetcher("Claims Counter Party Init"),
+      hideSearch: true,
       // disableLazyLoading: true
     },
     {
@@ -1098,6 +1127,7 @@ export const ClaimsHub = () => {
       label: 'Ref. Doc. Type/No',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Claim Ref Doc Type Init"),
+      hideSearch: true,
     },
     {
       key: 'ClaimCategory',
@@ -1137,12 +1167,12 @@ export const ClaimsHub = () => {
       type: 'lazyselect', // lazy-loaded dropdown
       fetchOptions: makeLazyFetcher("Createdby Init")
     },
-    { key: 'NoteDate', label: 'Credit Note Date', type: 'date'},
+    { key: 'NoteDate', label: 'Credit Note Date', type: 'date' },
     {
       key: 'ClaimantRefNo',
       label: 'Claimant Ref. No.',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("")
+      fetchOptions: makeLazyFetcher("Claiment Ref No Init")
     },
     {
       key: 'AdjustmentInvoiceNo',
@@ -1154,8 +1184,8 @@ export const ClaimsHub = () => {
       key: 'IncidentDate', label: 'Incident Date', type: 'dateRange'
     },
     {
-      key: 'Investigation', 
-      label: 'Investigation', 
+      key: 'Investigation',
+      label: 'Investigation',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Claim Investigation Required Init"),
       hideSearch: true,
@@ -1165,43 +1195,43 @@ export const ClaimsHub = () => {
       key: 'ClaimDates', label: 'Claim Date', type: 'dateRange'
     },
     {
-      key: 'SupplierNoteNumber', 
-      label: 'Supplier Note Number', 
+      key: 'SupplierNoteNumber',
+      label: 'Supplier Note Number',
+      type: 'lazyselect',
+      fetchOptions: makeLazyFetcher("Claim Supplier Note No Init")
+    },
+    {
+      key: 'DraftBill',
+      label: 'DraftBill',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("")
     },
     {
-      key: 'DraftBill', 
-      label: 'DraftBill', 
-      type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
-    },
-    {
-      key: 'IncidentLocation', 
-      label: 'Incident Location', 
+      key: 'IncidentLocation',
+      label: 'Incident Location',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Location Init")
     },
     {
-      key: 'IncidentType', 
-      label: 'Incident type', 
+      key: 'IncidentType',
+      label: 'Incident type',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Claim Incident Type Init"),
       hideSearch: true,
       disableLazyLoading: true
     },
     {
-      key: 'ClaimInitiatedBy', 
-      label: 'Claim Initiated by', 
+      key: 'ClaimInitiatedBy',
+      label: 'Claim Initiated by',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      fetchOptions: makeLazyFetcher("Claims Initiated by Init")
     },
     { key: 'CommentRemark', label: 'Comment / Remark', type: 'text' },
     { key: 'Remark1', label: 'Remark 1', type: 'text' },
     { key: 'Remark2', label: 'Remark 2', type: 'text' },
     { key: 'Remark3', label: 'Remark 3', type: 'text' },
     {
-      key: 'QC1', 
+      key: 'QC1',
       label: 'QC1',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher('Claim QC1 Init'),
@@ -1210,7 +1240,7 @@ export const ClaimsHub = () => {
     },
     { key: 'QCValue1', label: 'QC Value 1', type: 'text' },
     {
-      key: 'QC2', 
+      key: 'QC2',
       label: 'QC2',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher('Claim QC2 Init'),
@@ -1219,7 +1249,7 @@ export const ClaimsHub = () => {
     },
     { key: 'QCValue2', label: 'QC Value 2', type: 'text' },
     {
-      key: 'QC3', 
+      key: 'QC3',
       label: 'QC3',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher('Claim QC3 Init'),
@@ -1228,35 +1258,41 @@ export const ClaimsHub = () => {
     },
     { key: 'QCValue3', label: 'QC Value 3', type: 'text' },
     {
-      key: 'ActionResolution', 
+      key: 'ActionResolution',
       label: 'Action/Resolution',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('')
+      fetchOptions: makeLazyFetcher('Claims Action/Resolution Init')
     },
     { key: 'SecondaryRefNo', label: 'Secondary ref no', type: 'text' },
     {
-      key: 'InitiatedBy', 
+      key: 'InitiatedBy',
       label: 'Initiated by',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('')
+      fetchOptions: makeLazyFetcher('Claims Initiated by Init')
     },
     {
-      key: 'ForwardIsFinancialAction', 
+      key: 'ForwardIsFinancialAction',
       label: 'Forwardis Financial action',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('')
+      fetchOptions: makeLazyFetcher('Claims Forwardis Financial Action Init')
     },
     {
-      key: 'ExpectedDocument', 
+      key: 'ExpectedDocument',
       label: 'Expected document',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('')
+      fetchOptions: makeLazyFetcher('Claims Expected Document Init')
     },
   ];
 
   const clearAllFilters = async () => {
     console.log('Clear all filters');
   }
+
+  const saveClaimFieldsFromSidedraw = (data: any) => {
+    console.log('Data received from sidedraw to save:', data);
+    setIsClaimsEditOpen(false);
+    // Implement saving logic here
+  };
 
   return (
     <>
@@ -1328,63 +1364,78 @@ export const ClaimsHub = () => {
           `}</style>
               {/* Load the grid only when preferences are loaded */}
               {isPreferencesLoaded ? (
-              <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
-                onPreferenceSave={handleGridPreferenceSave}
-                columns={gridState.columns}
-                data={gridState.gridData}
-                groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
-                showGroupingDropdown={true}
-                editableColumns={['plannedStartEndDateTime']}
-                paginationMode="pagination"
-                onLinkClick={handleLinkClick}
-                onUpdate={handleUpdate}
-                onSubRowToggle={gridState.handleSubRowToggle}
-                selectedRows={selectedRows}
-                onSelectionChange={handleRowSelection}
-                onRowClick={handleRowClick}
-                // onFiltersChange={handleServerFiltersChange}
-                onSearch={handleServerSideSearch}
-                onClearAll={clearAllFilters}
-                // rowClassName={(row: any, index: number) =>
-                //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
-                // }
-                rowClassName={(row: any, index: number) => {
-                  return selectedRowIds.has(row.ClaimNo) ? 'selected' : '';
-                }}
-                nestedRowRenderer={renderSubRow}
-                configurableButtons={gridConfigurableButtons}
-                showDefaultConfigurableButton={false}
-                gridTitle="Manage Claims"
-                recordCount={gridState.gridData.length}
-                showCreateButton={true}
-                searchPlaceholder="Search"
-                clientSideSearch={true}
-                showSubHeaders={false}
-                hideAdvancedFilter={true}
-                hideCheckboxToggle={true}
-                serverFilters={dynamicServerFilters}
-                showFilterTypeDropdown={false}
-                showServersideFilter={showServersideFilter}
-                onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                gridId={gridId}
-                userId="current-user"
-                api={filterService}
-                serverFilterVisibleFields={serverFilterVisibleFields}
-                serverFilterFieldOrder={serverFilterFieldOrder}
-                onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
-              />
-               ) : (
-                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
-                   <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
-                   <div className="text-lg font-semibold text-blue-700">Loading...</div>
-                   <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
-                 </div>
-               )} 
+                <SmartGridWithGrouping
+                  key={`grid-${gridState.forceUpdate}`}
+                  onPreferenceSave={handleGridPreferenceSave}
+                  columns={gridState.columns}
+                  data={gridState.gridData}
+                  groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
+                  showGroupingDropdown={true}
+                  editableColumns={['plannedStartEndDateTime']}
+                  paginationMode="pagination"
+                  onLinkClick={handleLinkClick}
+                  onUpdate={handleUpdate}
+                  onSubRowToggle={gridState.handleSubRowToggle}
+                  selectedRows={selectedRows}
+                  onSelectionChange={handleRowSelection}
+                  onRowClick={handleRowClick}
+                  // onFiltersChange={handleServerFiltersChange}
+                  onSearch={handleServerSideSearch}
+                  onClearAll={clearAllFilters}
+                  // rowClassName={(row: any, index: number) =>
+                  //   selectedRows.has(index) ? 'smart-grid-row-selected' : ''
+                  // }
+                  rowClassName={(row: any, index: number) => {
+                    return selectedRowIds.has(row.ClaimNo) ? 'selected' : '';
+                  }}
+                  nestedRowRenderer={renderSubRow}
+                  configurableButtons={gridConfigurableButtons}
+                  showDefaultConfigurableButton={false}
+                  gridTitle="Manage Claims"
+                  recordCount={gridState.gridData.length}
+                  showCreateButton={true}
+                  searchPlaceholder="Search"
+                  clientSideSearch={true}
+                  showSubHeaders={false}
+                  hideAdvancedFilter={true}
+                  hideCheckboxToggle={true}
+                  serverFilters={dynamicServerFilters}
+                  showFilterTypeDropdown={false}
+                  showServersideFilter={showServersideFilter}
+                  onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                  gridId={gridId}
+                  userId="current-user"
+                  api={filterService}
+                  serverFilterVisibleFields={serverFilterVisibleFields}
+                  serverFilterFieldOrder={serverFilterFieldOrder}
+                  onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
+                />
+              ) : (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                  <div className="text-lg font-semibold text-blue-700">Loading...</div>
+                  <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </AppLayout>
+
+      {/* Audit Trail Side Drawer */}
+      <ClaimsHubAuditTrail
+        isOpen={isAuditOpen}
+        onClose={() => setIsAuditOpen(false)}
+        auditClaimNo={auditClaimNo}
+      />
+
+      {/* Claims Hub Edit Save Component */}
+      <ClaimsHubEditSave
+        isOpen={isClaimsEditOpen}
+        onClose={() => setIsClaimsEditOpen(false)}
+        rowEditData={selectedEditAndSaveRow}
+        onSave={saveClaimFieldsFromSidedraw}
+      />
 
       {/* Add a beautiful loading overlay when fetching data from API */}
       {apiStatus === 'loading' && (
