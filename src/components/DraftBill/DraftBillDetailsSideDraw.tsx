@@ -964,28 +964,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                           
                         </span> 
                       </div>
-                      <div className="relative group inline-block">
-                                                          <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
-                                                          <div className="absolute right-0 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
-                                                              <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                                                { "mmk"}
-                                                              </div>
-                                                              <div className="px-4 py-3">
-                                                                  <div className="flex justify-between items-center mb-2">
-                                                                      <div className="font-semibold text-gray-700">{"mmk"}</div>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
-                                                                      <div>Tariff ID</div>
-                                                                      <div>Unit Price</div>
-                                                                  </div>
-                      
-                                                                  <div className="text-[11px] text-gray-400 mb-1 pt-2 border-t border-gray-300">Tariff Description</div>
-                                                                  <div className="text-xs text-gray-700 font-medium">
-                                                                      {"mmk"}
-                                                                  </div>
-                                                              </div>
-                                                          </div>
-                                                      </div>
+                    
                       <div className="flex items-start text-sm text-gray-700 mt-4">
                         <UserPlus className="w-4 h-4 mr-2 text-gray-400" />
                         <span>Reason : Mismatch in consignee details between shipping manifest and bill.</span>

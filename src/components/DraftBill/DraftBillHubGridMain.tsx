@@ -1071,20 +1071,24 @@ const selectedNestedRowData = useMemo(() => {
             const response: any = await quickOrderService.getMasterCommonData(payload);
             let parsed = JSON.parse(response?.data?.ResponseData || '[]');
 
-            try {
-                console.log('data: ', parsed);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-                if (parsed?.error) {
-                    // Error case → handle gracefully
-                    console.error('API Error:', parsed.error.errorMessage);
-                    return [];
-                }
-            } catch (err) {
-                console.error(`Failed to parse ResponseData for ${messageType}:`, err);
-                return [];
-            }
+           try {
+  if (Array.isArray(parsed)) {
+    return parsed.map((o: any) => ({
+      ...o,
+      id: String(o.id ?? o.value ?? o.ID ?? o.Id ?? ""),
+      name: o.name ?? o.label ?? o.description ?? "",
+    }));
+  }
+
+  if (parsed?.error) {
+    console.error('API Error:', parsed.error.errorMessage);
+    return [];
+  }
+} catch (err) {
+  console.error(`Failed to parse ResponseData for ${messageType}:`, err);
+  return [];
+}
+
         };
     };
 
@@ -1150,7 +1154,7 @@ const selectedNestedRowData = useMemo(() => {
         },
         {
             key: 'RefDocType', label: 'Ref Doc Type', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('DB Ref Doc Type Init'),
+            fetchOptions: makeLazyFetcher('DB Status Init'),
             disableLazyLoading: true, hideSearch: true,
         },
         {
