@@ -7,6 +7,7 @@ import { splitInputDropdownValue, combineInputDropdownValue, InputDropdownValue 
 import { draftBillService } from "@/api/services/DraftBillService";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { quickOrderService } from "@/api/services";
 
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
@@ -19,6 +20,38 @@ interface DraftBillDetailsSideDrawProps {
   headerData: any; // Header data for the Static Display and Summary panels
   isLoading?: boolean; // Loading state while fetching data
 }
+
+ const fetchMaster = (
+        messageType: string,
+        extraParams?: Record<string, any>
+      ) => {
+        return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+          try {
+            const response = await quickOrderService.getMasterCommonData({
+              messageType,
+              searchTerm: searchTerm || "",
+              offset,
+              limit,
+              ...(extraParams || {}),
+            });
+    
+            const rr: any = response?.data;
+            const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+    
+            return arr.map((item: any) => {
+              const id = item.id ?? item.ID ?? item.value ?? "";
+              const name = item.name ?? item.Name ?? item.label ?? "";
+              return {
+                label: `${id} || ${name}`,
+                value: `${id} || ${name}`,
+              };
+            });
+          } catch (err) {
+            console.error(`Error fetching ${messageType}:`, err);
+            return [];
+          }
+        };
+      };
 
 const BasicDetailsPanelConfig: PanelConfig = {
   quantity: {
@@ -71,7 +104,9 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 4,
     width: "four",
     placeholder: "",
-    fetchOptions: () => Promise.resolve([]), // Placeholder, implement actual fetch options
+      fetchOptions: fetchMaster('Createdby Init'),
+    // fetchOptions: () => Promise.resolve([]), // Placeholder, implement actual fetch options
+    
   },
   remarks: {
     id: "remarks",
@@ -98,134 +133,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
   },
 };
-
-const OtherDetailsPanelConfig: PanelConfig = {
-  billToID: {
-    id: "billToID",
-    label: "Bill To ID",
-    fieldType: "lazyselect", // Assuming it's a searchable dropdown
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 1,
-    width: "four",
-    placeholder: "Enter Bill To ID",
-    fetchOptions: () => Promise.resolve([]), // Placeholder
-  },
-  customerSupplierRefNo: {
-    id: "customerSupplierRefNo",
-    label: "Customer/Supplier Ref No.",
-    fieldType: "text",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 2,
-    width: "four",
-    placeholder: "Enter Customer Ref. No.",
-  },
-  financialYear: {
-    id: "financialYear",
-    label: "Financial Year",
-    fieldType: "select", // Assuming it's a dropdown
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 3,
-    width: "four",
-    placeholder: "",
-    options: [{ value: "2025", label: "2025" }], // Placeholder
-  },
-  secondaryRefNo: {
-    id: "secondaryRefNo",
-    label: "Secondary Ref. No.",
-    fieldType: "text",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 4,
-    width: "four",
-    placeholder: "Train001",
-  },
-  qcUserdefined1: {
-    id: "qcUserdefined1",
-    label: "QC Userdefined 1",
-    fieldType: "inputdropdown",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 5,
-    width: "four",
-    placeholder: "Enter Value",
-    options: [{ value: "QC", label: "QC" }], // Placeholder
-  },
-  qcUserdefined2: {
-    id: "qcUserdefined2",
-    label: "QC Userdefined 2",
-    fieldType: "inputdropdown",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 6,
-    width: "four",
-    placeholder: "Enter Value",
-    options: [{ value: "QC", label: "QC" }], // Placeholder
-  },
-  qcUserdefined3: {
-    id: "qcUserdefined3",
-    label: "QC Userdefined 3",
-    fieldType: "inputdropdown",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 7,
-    width: "four",
-    placeholder: "Enter Value",
-    options: [{ value: "QC", label: "QC" }], // Placeholder
-  },
-  remarks1: {
-    id: "remarks1",
-    label: "Remarks 1",
-    fieldType: "textarea",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 8,
-    width: "four",
-    placeholder: "Enter Remarks",
-  },
-  remarks2: {
-    id: "remarks2",
-    label: "Remarks 2",
-    fieldType: "textarea",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 9,
-    width: "half",
-    placeholder: "Enter Remarks",
-  },
-  remarks3: {
-    id: "remarks3",
-    label: "Remarks 3",
-    fieldType: "textarea",
-    value: "",
-    mandatory: false,
-    visible: true,
-    editable: true,
-    order: 10,
-    width: "half",
-    placeholder: "Enter Remarks",
-  },
-};
+ 
 
 const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   isOpen,
@@ -242,7 +150,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   const basicDetailsPanelRef = useRef<DynamicPanelRef>(null);
   const otherDetailsPanelRef = useRef<DynamicPanelRef>(null);
   const { toast } = useToast();
+ 
 
+     
   // Mapping function: Convert activeLine data to BasicDetails form fields
   const mapActiveLineToBasicDetails = (line: any): Record<string, any> => {
     if (!line) return {};
@@ -276,10 +186,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
       return { input: '', dropdown: 'TON' };
     };
 
-  //   useEffect(()=>{
-  //  console.clear();
-  //  console.log(headerData, "Accepted Value")
-  //   },[])
+    
     
     // Helper function to get Rate field (checking multiple possible field names)
     const getRateField = () => {
@@ -802,7 +709,178 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   //   }));
   // };
 
+   const [qcList1, setqcList1] = useState<any>();
+    const [qcList2, setqcList2] = useState<any>();
+    const [qcList3, setqcList3] = useState<any>();
+
+    useEffect(() => {
+        const loadQcMasters = async () => {
+          try {
+            const [res1, res2, res3]: any = await Promise.all([
+              quickOrderService.getMasterCommonData({
+                messageType: "Work Order QC1 Init",
+              }),
+              quickOrderService.getMasterCommonData({
+                messageType: "Work Order QC2 Init",
+              }),
+              quickOrderService.getMasterCommonData({
+                messageType: "Work Order QC3 Init",
+              }),
+            ]);
+            console.log("res1?.data?.ResponseData",JSON.parse(res1?.data?.ResponseData))
+            setqcList1(JSON.parse(res1?.data?.ResponseData || "[]"));
+            setqcList2(JSON.parse(res2?.data?.ResponseData || "[]"));
+            setqcList3(JSON.parse(res3?.data?.ResponseData || "[]"));
+          } catch (err) {
+            console.error("QC API failed", err);
+          }
+        };
+        loadQcMasters();
+      }, []);
+  const getQcOptions = (list: any[]) =>
+  list
+    ?.filter((qc) => qc.id) 
+    .map((qc) => ({
+      label: `${qc.id} || ${qc.name}`, 
+      value: qc.id,                     
+      name: qc.name                    
+    })) || [];
+
+const OtherDetailsPanelConfig: PanelConfig = {
+  billToID: {
+    id: "billToID",
+    label: "Bill To ID",
+    fieldType: "lazyselect", // Assuming it's a searchable dropdown
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 1,
+    width: "four",
+    placeholder: "Enter Bill To ID",
+   fetchOptions: fetchMaster(''), // Placeholder
+  },
+  customerSupplierRefNo: {
+    id: "customerSupplierRefNo",
+    label: "Customer/Supplier Ref No.",
+    fieldType: "text",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 2,
+    width: "four",
+    placeholder: "Enter Customer Ref. No.",
+  },
+  financialYear: {
+    id: "financialYear",
+    label: "Financial Year",
+    fieldType: "select", // Assuming it's a dropdown
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 3,
+    width: "four",
+    placeholder: "",
+    options: [{ value: "2025", label: "2025" }], // Placeholder
+  },
+  secondaryRefNo: {
+    id: "secondaryRefNo",
+    label: "Secondary Ref. No.",
+    fieldType: "text",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 4,
+    width: "four",
+    placeholder: "Train001",
+  },
+  qcUserdefined1: {
+    id: "qcUserdefined1",
+    label: "QC Userdefined 1",
+    fieldType: "inputdropdown",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 5,
+    width: "four",
+    placeholder: "Enter Value",
+    options: getQcOptions(qcList1),
+  },
+  qcUserdefined2: {
+    id: "qcUserdefined2",
+    label: "QC Userdefined 2",
+    fieldType: "inputdropdown",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 6,
+    width: "four",
+    placeholder: "Enter Value",
+    options: getQcOptions(qcList2),
+  },
+  qcUserdefined3: {
+    id: "qcUserdefined3",
+    label: "QC Userdefined 3",
+    fieldType: "inputdropdown",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 7,
+    width: "four",
+    placeholder: "Enter Value",
+   options: getQcOptions(qcList3),
+  },
+  remarks1: {
+    id: "remarks1",
+    label: "Remarks 1",
+    fieldType: "textarea",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 8,
+    width: "four",
+    placeholder: "Enter Remarks",
+  },
+  remarks2: {
+    id: "remarks2",
+    label: "Remarks 2",
+    fieldType: "textarea",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 9,
+    width: "half",
+    placeholder: "Enter Remarks",
+  },
+  remarks3: {
+    id: "remarks3",
+    label: "Remarks 3",
+    fieldType: "textarea",
+    value: "",
+    mandatory: false,
+    visible: true,
+    editable: true,
+    order: 10,
+    width: "half",
+    placeholder: "Enter Remarks",
+  },
+};
+
   if (!isOpen) return null;
+
+
+  useEffect(()=>{
+   console.clear();
+   console.log({lineItems}, "Accepted Value")
+    },[])
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
