@@ -179,7 +179,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return { 
             input: quantity || '', 
-            dropdown: quantityUOM || 'TON' 
+            dropdown: quantityUOM 
           };
         }
       }
@@ -203,11 +203,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return { 
             input: rate || '', 
-            dropdown: rateCurrency || 'EUR' 
+            dropdown: rateCurrency || '' 
           };
         }
       }
-      return { input: '', dropdown: 'EUR' };
+      return { input: '', dropdown: '' };
     };
     
     // Helper function to get AcceptedValue field (checking multiple possible field names)
@@ -225,11 +225,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return { 
             input: acceptedValue || '', 
-            dropdown: acceptedValueCurrency || 'EUR' 
+            dropdown: acceptedValueCurrency || '' 
           };
         }
       }
-      return { input: '', dropdown: 'EUR' };
+      return { input: '', dropdown: '' };
     };
     
     // Helper function to get UserAssigned field (checking multiple possible field names)
@@ -316,7 +316,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return { 
             input: qcInputValue || '', 
-            dropdown: qcValue || 'QC' 
+            dropdown: qcValue || '' 
           };
         }
       }
@@ -718,13 +718,13 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           try {
             const [res1, res2, res3]: any = await Promise.all([
               quickOrderService.getMasterCommonData({
-                messageType: "Work Order QC1 Init",
+                messageType: "Draft Bill QC1 Init",
               }),
               quickOrderService.getMasterCommonData({
-                messageType: "Work Order QC2 Init",
+                messageType: "Draft Bill QC2 Init",
               }),
               quickOrderService.getMasterCommonData({
-                messageType: "Work Order QC3 Init",
+                messageType: "Draft Bill QC3 Init",
               }),
             ]);
             console.log("res1?.data?.ResponseData",JSON.parse(res1?.data?.ResponseData))
@@ -745,7 +745,12 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
       value: qc.id,                     
       name: qc.name                    
     })) || [];
+    
 
+    useEffect(()=>{
+      console.log(headerData , "headerData123")
+console.log(headerData?.DBAcceptedValue , "headerData123")
+    },[headerData])
 const OtherDetailsPanelConfig: PanelConfig = {
   billToID: {
     id: "billToID",
@@ -839,7 +844,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
   remarks1: {
     id: "remarks1",
     label: "Remarks 1",
-    fieldType: "textarea",
+    fieldType: "text",
     value: "",
     mandatory: false,
     visible: true,
@@ -876,11 +881,6 @@ const OtherDetailsPanelConfig: PanelConfig = {
 
   if (!isOpen) return null;
 
-
-  useEffect(()=>{
-   console.clear();
-   console.log({lineItems}, "Accepted Value")
-    },[])
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -929,33 +929,33 @@ const OtherDetailsPanelConfig: PanelConfig = {
                   {/* Part 1: Static Display Section */}
                   <div className="p-3 m-4 bg-gray-100 border border-gray-200 rounded-md">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">{headerData?.DraftBillNo || 'DB_D25_0001'}</h3>
-                      <span className="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md">Open</span>
+                      <h3 className="text-lg font-semibold text-gray-900">{headerData?.DraftBillNo}</h3>
+                      <span className="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md">{headerData?.DBStatusDescription}</span>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">{headerData?.DraftBillDate ? new Date(headerData.DraftBillDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '12-Mar-2025'}</p>
                     <div className="grid grid-cols-2 gap-y-2 mb-4">
                       <div>
                         <p className="text-sm text-gray-500">Total Value</p>
-                        <p className="text-base font-medium text-purple-600">€ {headerData?.DBTotalValue?.toLocaleString('en-US') || '1,200.000'}</p>
+                        <p className="text-base font-medium text-purple-600">€ {headerData?.DBTotalValue}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Accepted Value</p>
-                        <p className="text-base font-medium text-green-600">€ {headerData?.DBAcceptedValue?.toLocaleString('en-US') || '1,200.000'}</p>
+                        <p className="text-sm text-gray-500">Accepted SSSSValue</p>
+                        <p className="text-base font-medium text-green-600">€ {headerData?.DBAcceptedValue}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center text-sm text-gray-700">
                         <UserPlus className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{headerData?.BusinessPartnerName || 'Felbermayr Kran'} - {headerData?.BusinessPartnerID || '10029114'}</span>
+                        <span>{headerData?.BusinessPartnerName } - {headerData?.BusinessPartnerID}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-700">
                         <FileText className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{headerData?.InvoiceNo || 'INV00024324'} <span className="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">Under Amendment</span></span>
+                        <span>{headerData?.InvoiceNo} <span className="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">{headerData?.InvoiceStatus}</span></span>
                       </div>
                       <div className="flex items-center text-sm text-gray-700">
                         <FileText className="w-4 h-4 mr-2 text-gray-400" />
                         <span>
-                          {headerData?.ReferenceInformation || 'IO_D25_003'}
+                          {lineItems[0]?.ReferenceInformation}
                            <div className="relative group inline-block">
                                                           <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
                                                           <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
@@ -967,7 +967,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
                                                                       <div className="">{"Reference Doc. ID"}</div>
                                                                   </div>
                                                                   <div className="font-semibold text-gray-700">
-                                                                      <div>I0_D@%_003</div>
+                                                                      <div>{lineItems[0]?.ReferenceInformation}</div>
                                                                       
                                                                   </div>
                       
@@ -983,7 +983,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
                                                                       <div className="">{"Reference Doc. ID"}</div>
                                                                   </div>
                                                                   <div className="font-semibold text-gray-700">
-                                                                      <div>I0_D@%_003</div>
+                                                                      <div>{lineItems[0]?.ReferenceInformation}</div>
                                                                       
                                                                   </div>
                       
@@ -995,7 +995,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
                                                                       <div className="">{"Reference Doc. Type"}</div>
                                                                   </div>
                                                                   <div className="font-semibold text-gray-700">
-                                                                      <div>I0_D@%_003</div>
+                                                                      <div>{lineItems[0]?.RefDocIDTypeDescription}</div>
                                                                       
                                                                   </div>
                       
@@ -1007,7 +1007,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
                                                                       <div className="">{"Reference Doc. Date"}</div>
                                                                   </div>
                                                                   <div className="font-semibold text-gray-700">
-                                                                      <div>I0_D@%_003</div>
+                                                                      <div>{lineItems[0]?.RefDocDate}</div>
                                                                       
                                                                   </div>
                       
@@ -1043,10 +1043,10 @@ const OtherDetailsPanelConfig: PanelConfig = {
                         </span> 
                       </div>
                     
-                      <div className="flex items-start text-sm text-gray-700 mt-4">
+                      {/* <div className="flex items-start text-sm text-gray-700 mt-4">
                         <UserPlus className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>Reason : Mismatch in consignee details between shipping manifest and bill.</span>
-                      </div>
+                       
+                      </div> */}
                     </div>
                   </div>
 
@@ -1066,24 +1066,73 @@ const OtherDetailsPanelConfig: PanelConfig = {
                               {line.DBLineStatus === "AP" && (
                                 <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Approved</span>
                               )}
-                              {line.DBLineStatus === "OC" && (
+                              {line.DBLineStatus === "OPN" && (
                                 <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">Open</span>
                               )}
-                              {line.DBLineStatus === "CA" && (
+                              {line.DBLineStatus === "RR" && (
+                                <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">Rerun Triggered</span>
+                              )}
+                              {line.DBLineStatus === "CN" && (
                                 <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">Cancelled</span>
                               )}
+                               {/* {line.DBLineStatus === "" && (
+                                <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">"qw"</span>
+                              )} */}
                               <Trash2 className="h-4 w-4 text-red-400 hover:text-red-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleLineDelete(line); }} />
                             </div>
                           </div>
-                          <p className="text-xs text-gray-700 mb-1">{line.TariffDescription}</p>
-                          <div className="flex justify-between text-xs">
-                            <div>Proposed: 
-                              <div className="text-purple-600">€ {parseFloat(line.ProposedValue).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</div>
-                            </div>
-                            <div>Accepted: 
-                              <div className="text-green-600">€ {parseFloat(line.AcceptedValue).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</div>
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-700 border-b border-gray-200 pb-2 mb-3">
+  <span>{line.TariffDescription}</span>
+
+  <div className="relative group inline-block">
+    <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+
+    <div className="absolute -right-[0px] hidden top-5 z-[9999] group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+      <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+        Traff Details 
+      </div>
+
+      <div className="px-4 py-3">
+        <div className="text-[11px] text-gray-400 mb-2">
+          Traff ID and Description
+        </div>
+
+        <div className="font-semibold text-gray-700">
+          {line?.TariffIDType} - {line?.TariffDescription}
+        </div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-[11px] text-gray-400 mb-2">
+          Traff Type 
+        </div>
+
+        <div className="font-semibold text-gray-700">
+          {line?.TariffIDType}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+                         <div className="flex gap-6 text-xs">
+  <div>
+    Proposed:
+    <div className="text-purple-600">
+      € {parseFloat(line.ProposedValue).toLocaleString('en-US', {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+      })}
+    </div>
+  </div>
+
+  <div>
+    Accepted:
+    <div className="text-green-600">
+      € {line.AcceptedValue}
+    </div>
+  </div>
+</div>
+
                         </div>
                       ))}
                     </div>
@@ -1108,7 +1157,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
                       </div>
                       <div>
                         <p className="text-gray-500">Basic Charge</p>
-                        <p className="font-medium text-gray-900">€ {activeLine?.BasicCharge || '0.00'}</p>
+                        <p className="font-medium text-gray-900">€ {activeLine?.BasicCharge}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Triggering Date</p>
