@@ -28,6 +28,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const [draftBillData, setDraftBillData] = useState<any>(null);
     const [loadingDrawerData, setLoadingDrawerData] = useState(false);
     const [selectedDraftBills, setSelectedDraftBills] = useState<any[]>([]);
+       const [qc1, setQc1] = useState<any[]>([]);
+         const [qc2, setQc2] = useState<any[]>([]);
+           const [qc3, setQc3] = useState<any[]>([]);
 
     const { setFooter, resetFooter } = useFooterStore();
 
@@ -38,7 +41,41 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         console.log("12-----------------", rows[0]);
         console.log("selectedDbLines",selectedDbLines)
         setSelectedDraftBills(rows);
+        setselectedDbLines([])
     };
+
+      const fetchMaster = (
+        messageType: string,
+        extraParams?: Record<string, any>
+      ) => {
+        return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+          try {
+            const response = await quickOrderService.getMasterCommonData({
+              messageType,
+              searchTerm: searchTerm || "",
+              offset,
+              limit,
+              ...(extraParams || {}),
+            });
+    
+            const rr: any = response?.data;
+            const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+    
+            return arr.map((item: any) => {
+              const id = item.id ?? item.ID ?? item.value ?? "";
+              const name = item.name ?? item.Name ?? item.label ?? "";
+              return {
+                label: `${id} || ${name}`,
+                value: `${id} || ${name}`,
+              };
+            });
+          } catch (err) {
+            console.error(`Error fetching ${messageType}:`, err);
+            return [];
+          }
+        };
+      };
+
     useEffect(()=>{
 console.log("123" , selectedDbLines)
 },[selectedDbLines , handleDraftBillSelection])
@@ -47,15 +84,25 @@ console.log("123" , selectedDbLines)
     // This returns an array of individual nested row objects - each is a SINGLE sub-row
     // Example: If you select 2 nested rows, this returns [subRow1, subRow2]
     // Each subRow is just that one row's data, NOT the parent with all nested rows
-    const selectedNestedRowData = useMemo(() => {
-        return selectedDbLines.map(sel => {
-            // sel.nestedRow is the individual nested row object (the sub-row you clicked)
-            // This is NOT the parent row - it's just the one nested row
-            // Example: If parent has lineItems: [row1, row2, row3] and you click row2,
-            // then sel.nestedRow is just row2, not the parent with all lineItems
-            return { ...sel.nestedRow };
-        });
-    }, [selectedDbLines]);
+
+    // const selectedNestedRowData = useMemo(() => {
+    //     return selectedDbLines.map(sel => {
+    //         // sel.nestedRow is the individual nested row object (the sub-row you clicked)
+    //         // This is NOT the parent row - it's just the one nested row
+    //         // Example: If parent has lineItems: [row1, row2, row3] and you click row2,
+    //         // then sel.nestedRow is just row2, not the parent with all lineItems
+    //         return { ...sel.nestedRow };
+    //     });
+    // }, [selectedDbLines]);
+
+const selectedNestedRowData = useMemo(() => {
+  return selectedDbLines.length > 0
+    ? [{ ...selectedDbLines[0].nestedRow }]
+    : [];
+}, [selectedDbLines]);
+
+
+
 
     // Helper to get selected parent row data objects
     const selectedParentRowData = useMemo(() => {
@@ -1045,6 +1092,41 @@ console.log("123" , selectedDbLines)
         fetchDraftBills();
     }, [JSON.stringify(filtersForThisGrid)]); // Re-fetch when filters change
 
+      useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+          try {
+            const   QC1 = makeLazyFetcher('Draft Bill QC1 Init');
+            const QC2 = makeLazyFetcher('Draft Bill QC1 Init');
+                        const QC3 = makeLazyFetcher('Draft Bill QC1 Init');
+
+    
+            const [primaryRaw, secondaryRaw] = await Promise.all([
+                QC1({ searchTerm: "", offset: 0, limit: 1000 }),
+
+             QC2({ searchTerm: "", offset: 0, limit: 1000 }),
+             QC3({ searchTerm: "", offset: 0, limit: 1000 })
+
+
+            ]);
+    
+            if (!mounted) return;
+    
+            const mapFn = (o: any) => ({ id: o.id ?? o.value ?? o.ID ?? o.Id ?? String(o), name: o.name ?? o.label ?? o.description ?? o.value ?? String(o) });
+    
+            setQc1(Array.isArray(primaryRaw) ? primaryRaw : []);
+            setQc1(Array.isArray(secondaryRaw) ? secondaryRaw : []);
+                        setQc3(Array.isArray(secondaryRaw) ? secondaryRaw : []);
+
+          } catch (err) {
+            console.error('Failed to preload ref doc options:', err);
+          }
+        };
+    
+        load();
+        return () => { mounted = false; };
+      }, []);
+
     const dynamicServerFilters: ServerFilter[] = [
         // { 
         //     key: 'DraftBillNo', label: 'Draft Bill No', type: 'text',
@@ -1063,7 +1145,7 @@ console.log("123" , selectedDbLines)
             disableLazyLoading: true, hideSearch: true,
         },
         {
-            key: 'RefDocNo', label: 'Ref Doc ID', type: 'lazyselect',
+            key: 'RefDocNo', label: 'Ref Doc ID', type: 'text',
             fetchOptions: makeLazyFetcher(''),
         },
         {
@@ -1133,7 +1215,7 @@ console.log("123" , selectedDbLines)
         },
         {
             key: 'InvoiceStatus', label: 'Invoice Status', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('	DB Invoice Status Init'),
+            fetchOptions: makeLazyFetcher('DB Invoice Status Init'),
             disableLazyLoading: true, hideSearch: true
         },
         {
@@ -1145,7 +1227,7 @@ console.log("123" , selectedDbLines)
             key: 'ReverserJournalVoucherNo', label: 'Reverser Journal Voucher No', type: 'text'
         },
         {
-            key: 'TriggeringDocID', label: 'Triggering Doc ID', type: 'lazyselect',
+            key: 'TriggeringDocID', label: 'Triggering Doc ID', type: 'text',
             fetchOptions: makeLazyFetcher('')
         },
         {
@@ -1195,30 +1277,25 @@ console.log("123" , selectedDbLines)
         {
             key: 'Remark3', label: 'Remark 3', type: 'text'
         },
+       
         {
-            key: 'QC1', label: 'QC 1', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('Draft Bill QC1 Init'),
-            disableLazyLoading: true, hideSearch: true
+            key: 'QC1Value', label: 'QC 1 Value', type: 'dropdownText',
+            options:[
+                ...qc1
+            ]
         },
         {
-            key: 'QC1Value', label: 'QC 1 Value', type: 'text'
+            key: 'QC2Value', label: 'QC 2 Value', type: 'dropdownText',
+            options:[
+              ...qc2
+            ]
         },
-        {
-            key: 'QC2', label: 'QC 2', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('Draft Bill QC2 Init'),
-            disableLazyLoading: true, hideSearch: true
+         {
+            key: 'QC3Value', label: 'QC 3 Value', type: 'dropdownText',
+            options:[
+                ...qc3
+            ]
         },
-        {
-            key: 'QC2Value', label: 'QC 2 Value', type: 'text'
-        },
-        {
-            key: 'QC3', label: 'QC 3', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('Draft Bill QC3 Init'),
-            disableLazyLoading: true, hideSearch: true
-        },
-        {
-            key: 'QC3Value', label: 'QC 3 Value', type: 'text'
-        }
     ];
 
     const clearAllFilters = async () => {
@@ -1319,22 +1396,7 @@ console.log("123" , selectedDbLines)
                "ReasonCode": splitIdName(reasonCode).id,
                     "ReasonforComments": reasonDescription,
             },
-            // ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-            //     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-            //         ...rest,
-
-            //         // 1️⃣ Force ModeFlag to "Checked" if it exists
-            //         ...(ModeFlag && { ModeFlag: "Checked" }),
-
-            //         // 2️⃣ Only include ReasonForCancellation if NOT null
-            //         ...(ReasonForCancellation != null && {
-            //             ReasonForCancellation,
-            //         }),
-
-            //         // 3️⃣ Backend hates null remarks → normalize
-            //         Remark: rest.Remark ?? "",
-            //     })
-            // ),
+           
             ItemDetails: selectedDbLines.map(({ nestedRow }) => {
   const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
 
@@ -1748,7 +1810,35 @@ JournalVoucherNo:null
                     editableColumns: false,
                     selectionMode: "multi",
                     selectedRows: selectedDbLines,
-                    onSelectionChange: setselectedDbLines,
+                    // onSelectionChange: setselectedDbLines,
+                   onSelectionChange: (rows) => {
+  if (!rows || rows.length === 0) {
+    setselectedDbLines([]);
+    return;
+  }
+
+  const latest = rows[rows.length - 1];
+
+  const latestParentId =
+    latest.parentRow?.DraftBillNo || latest.parentRow?.id;
+
+  setselectedDbLines((prev) => {
+    if (prev.length === 0) {
+      return [latest];
+    }
+
+    const prevParentId =
+      prev[0]?.parentRow?.DraftBillNo || prev[0]?.parentRow?.id;
+
+    if (prevParentId === latestParentId) {
+      return rows;
+    }
+
+    return [latest];
+  });
+},
+
+
                 }}
             />
 
