@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings, X, CalendarX2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EquipmentCalendarViewProps, EquipmentItem, EquipmentCalendarEvent, DateRangeParams } from '@/types/equipmentCalendar';
 import { format, addHours, addDays, startOfDay, endOfDay, differenceInMinutes, differenceInDays, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
@@ -691,7 +691,7 @@ export const SmartEquipmentCalendar = ({
                         </TooltipTrigger>
                         <TooltipContent side="top" align="start" className="p-0 w-[420px] bg-background border shadow-lg">
                           <div className="p-3 border-b bg-muted/50">
-                            <div className="text-xs font-medium">{ event.type === 'trip' ? 'Trip Details' : event.type === 'workorder' ? 'Workorder Details' : 'Maintenance Details'}</div>
+                            <div className="text-sm font-medium">{ event.type === 'trip' ? 'Trip Details' : event.type === 'workorder' ? 'Workorder Details' : 'Maintenance Details'}</div>
                           </div>
                           <div className="p-3 space-y-3">
                             {/* Trip ID and Status */}
@@ -732,19 +732,26 @@ export const SmartEquipmentCalendar = ({
 
                             {/* Additional Info */}
                             <div className="grid grid-cols-2">
-                              {serviceType && (
+                              {/* {serviceType && ( */}
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                   <Settings className="h-3.5 w-3.5" />
-                                  <span>{serviceType}</span>
+                                  <span title='Service'>{serviceType || '-'}</span>
                                 </div>
-                              )}
-                              {subServiceType && (
+                              {/* )} */}
+                              {/* {subServiceType && ( */}
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                   <Wrench className="h-3.5 w-3.5" />
-                                  <span>{subServiceType}</span>
+                                  <span title='Sub Service'>{subServiceType || '-'}</span>
                                 </div>
-                              )}
+                              {/* )} */}
                             </div>
+                            {/* Contract Expire Date */}
+                            {/* {equipment.contractExpireDate && ( */}
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <CalendarX2 className="h-3.5 w-3.5" />
+                                  <span title='Contract Expiry Date'>{equipment.contractExpireDate || '-'}</span>
+                                </div>
+                              {/* )} */}
                           </div>
                         </TooltipContent>
                       </Tooltip>

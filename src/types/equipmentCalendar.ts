@@ -21,6 +21,7 @@ export interface ResourceDetail {
   EquipmentGroup: string | null;
   EquipmentOwner: string;
   EquipmentOwnerDescription: string | null;
+  ContractExpireDate: string | null;
   WeightUOM: string | null;
   AvilableStatus: string;
   IsChecked: number;
@@ -43,6 +44,7 @@ export interface EquipmentItem {
   capacity?: string;
   owner?: string;
   ownerDesc?: string;
+  contractExpireDate?: string;
 }
 
 export interface EquipmentCalendarEvent {
@@ -74,6 +76,7 @@ export const transformResourceToEquipment = (resource: ResourceDetail): Equipmen
     capacity: resource.WeightUOM || undefined,
     owner: resource.EquipmentOwner,
     ownerDesc: resource.EquipmentOwnerDescription || undefined,
+    contractExpireDate: resource.ContractExpireDate || undefined,
   };
 };
 
