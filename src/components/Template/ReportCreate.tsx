@@ -4069,6 +4069,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       const resourceStatus = (response as any)?.data?.IsSuccess;
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
+         setCimCuvNo(parsedResponse?.CIMCUVNo),
+         setSearchParams({id : parsedResponse?.CIMCUVNo})
         toast({
           title: "✅ Report Saved Successfully",
           description:
@@ -4078,7 +4080,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         });
 
         if (!workOrderNo) {
-          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          // setSearchParams({ id: parsedResponse?.Header?.TemplateID });
           fetchTemplateData(parsedResponse?.Header?.TemplateID);
         } else {
           fetchTemplateData(workOrderNo);
@@ -4263,10 +4265,10 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         });
 
         if (!workOrderNo) {
-          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
-          fetchTemplateData(parsedResponse?.Header?.TemplateID);
+          // setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          // fetchTemplateData(parsedResponse?.Header?.TemplateID);
         } else {
-          fetchTemplateData(workOrderNo);
+          // fetchTemplateData(workOrderNo);
         }
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -4448,7 +4450,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         });
 
         if (!workOrderNo) {
-          setSearchParams({ id: parsedResponse?.Header?.TemplateID });
+          // setSearchParams({ id: parsedResponse?.Header?.TemplateID });
           fetchTemplateData(parsedResponse?.Header?.TemplateID);
         } else {
           fetchTemplateData(workOrderNo);

@@ -723,7 +723,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                    onChange={(e) => setTemplateNumberValue(e.target.value)}
                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      alert("clicked")
+              
                    templateNumberCallback?.(templateNumberValue.trim());
                    
                     }

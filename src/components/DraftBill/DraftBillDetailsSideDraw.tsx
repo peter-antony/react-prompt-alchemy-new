@@ -780,7 +780,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
   financialYear: {
     id: "financialYear",
     label: "Financial Year",
-    fieldType: "select", // Assuming it's a dropdown
+    fieldType: "lazyselect", // Assuming it's a dropdown
     value: "",
     mandatory: false,
     visible: true,
