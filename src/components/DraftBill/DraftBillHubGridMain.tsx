@@ -22,6 +22,11 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const { toast } = useToast();
     const gridState = useSmartGridState();
     const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
+    const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(false); // SmartGrid Preferences loaded state
+    const [isPersonalizationEmpty, setIsPersonalizationEmpty] = useState(false); // State to check if personalization is empty
+    const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering  
+    const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
+    const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
     const [
         isDraftBillDetailsSideDrawOpen,
         setIsDraftBillDetailsSideDraw,
@@ -740,6 +745,88 @@ const selectedNestedRowData = useMemo(() => {
     const { activeFilters } = useFilterStore();
     const gridId = "draft-bill-grid";
     const filtersForThisGrid = activeFilters[gridId] || {};
+
+
+    useEffect(() => {
+        const initPersonalization = async () => {
+            // Fetch Grid Personalization
+            try {
+                const personalizationResponse: any = await quickOrderService.getPersonalization({
+                    LevelType: 'User',
+                    // LevelKey: 'ramcouser',
+                    ScreenName: 'DraftBillManagement',
+                    ComponentName: 'smartgrid-preferences'
+                });
+
+                // Extract columns with subRow = true from initialColumns
+                const subRowColumns = columns
+                    .filter(col => col.subRow === true)
+                    .map(col => col.key);
+
+                console.log('DraftBillHub Nested SmartGrid - Extracted subRow columns:', subRowColumns);
+
+                // Parse and set personalization data to localStorage
+                let isEmptyResponse = true;
+                if (personalizationResponse?.data?.ResponseData) {
+                    const parsedPersonalization = JSON.parse(personalizationResponse.data.ResponseData);
+
+                    if (parsedPersonalization?.PersonalizationResult && parsedPersonalization.PersonalizationResult.length > 0) {
+                        isEmptyResponse = false;
+                        const personalizationData = parsedPersonalization.PersonalizationResult[0];
+
+                        // Set the JsonData to localStorage
+                        if (personalizationData.JsonData) {
+                            const jsonData = personalizationData.JsonData;
+
+                            // If subRowColumns is empty in the API response, populate it with extracted columns
+                            if (!jsonData.subRowColumns || jsonData.subRowColumns.length === 0) {
+                                jsonData.subRowColumns = subRowColumns;
+                                console.log('DraftBillHub Nested SmartGrid - subRowColumns was empty, populated with:', subRowColumns);
+                            }
+
+                            localStorage.setItem('smartgrid-preferences', JSON.stringify(jsonData));
+                            console.log('DraftBillHub Nested SmartGrid Personalization data set to localStorage:', jsonData);
+                        }
+                    }
+                }
+                setIsPersonalizationEmpty(isEmptyResponse);
+            } catch (error) {
+                console.error("Failed to fetch grid preferences:", error);
+            }
+
+            // Fetch Server-side Filter Personalization
+            try {
+                console.log('DraftBillHub: Fetching server-side filter personalization...');
+                const serverFilterPersonalizationResponse: any = await quickOrderService.getPersonalization({
+                    LevelType: 'User',
+                    // LevelKey: 'ramcouser',
+                    ScreenName: 'DraftBillManagement',
+                    ComponentName: 'smartgrid-serverside-filtersearch-preferences'
+                });
+                console.log('DraftBillHub: Server-side filter personalization response:', serverFilterPersonalizationResponse);
+
+                let isServerFilterEmpty = true;
+                if (serverFilterPersonalizationResponse?.data?.ResponseData) {
+                    const parsed = JSON.parse(serverFilterPersonalizationResponse.data.ResponseData);
+                    if (parsed?.PersonalizationResult && parsed.PersonalizationResult.length > 0) {
+                        isServerFilterEmpty = false;
+                        const data = parsed.PersonalizationResult[0].JsonData;
+                        if (data) {
+                            if (data.visibleFields) setServerFilterVisibleFields(data.visibleFields);
+                            if (data.fieldOrder) setServerFilterFieldOrder(data.fieldOrder);
+                        }
+                    }
+                }
+                setIsServerFilterPersonalizationEmpty(isServerFilterEmpty);
+            } catch (error) {
+                console.error('Failed to fetch server-side filter personalization:', error);
+            } finally {
+                setIsPreferencesLoaded(true); // Set to true after personalization is loaded
+            }
+        };
+
+        initPersonalization();
+    }, [columns]);
 
     useEffect(() => {
         console.log(onDraftBillSelection, "onDraftBillSelection")
@@ -1770,6 +1857,243 @@ JournalVoucherNo:null
         
       };
 
+    // Helper to fetch filter sets (used internally and exposed via service)
+    const fetchFilterSets = async (userId: string, gridId: string) => {
+        try {
+            console.log(`Fetching filter sets for ${userId} - ${gridId}`);
+            const response: any = await quickOrderService.getPersonalization({
+                LevelType: 'User',
+                // LevelKey: 'ramcouser', // Should ideally come from user context
+                ScreenName: 'DraftBillManagement',
+                ComponentName: 'filterSets_serverside-filter_preferences'
+            });
+
+            if (response?.data?.ResponseData) {
+                const parsedData = JSON.parse(response.data.ResponseData);
+                if (parsedData?.PersonalizationResult && parsedData.PersonalizationResult.length > 0) {
+                    const jsonData = parsedData.PersonalizationResult[0].JsonData;
+                    return {
+                        sets: jsonData?.filterSets || [],
+                        recordExists: true
+                    };
+                }
+            }
+            return { sets: [], recordExists: false };
+        } catch (error) {
+            console.error('Failed to fetch filter sets:', error);
+            return { sets: [], recordExists: false };
+        }
+    };
+
+    // Custom Filter Service to handle Personalization API for Filter Sets
+    const customFilterService = useMemo(() => ({
+        getUserFilterSets: async (userId: string, gridId: string) => {
+            const { sets } = await fetchFilterSets(userId, gridId);
+            return sets;
+        },
+
+        saveUserFilterSet: async (userId: string, name: string, filters: Record<string, any>, isDefault: boolean = false, gridId: string = 'default') => {
+            try {
+                // 1. Get existing sets first
+                const { sets: existingSets, recordExists } = await fetchFilterSets(userId, gridId);
+
+                // 2. Create new set
+                const newSet = {
+                    id: `set_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    name,
+                    userId,
+                    gridId,
+                    filters,
+                    isDefault,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+
+                // 3. Update list (handle default logic)
+                let updatedSets = [...existingSets];
+                if (isDefault) {
+                    updatedSets = updatedSets.map((s: any) => ({ ...s, isDefault: false }));
+                }
+                updatedSets.push(newSet);
+
+                // 4. Save to API
+                await quickOrderService.savePersonalization({
+                    LevelType: 'User',
+                    // LevelKey: 'ramcouser',
+                    ScreenName: 'DraftBillManagement',
+                    ComponentName: 'filterSets_serverside-filter_preferences',
+                    JsonData: { filterSets: updatedSets },
+                    IsActive: "1",
+                    ModeFlag: recordExists ? "Update" : "Insert"
+                });
+
+                return newSet;
+            } catch (error) {
+                console.error('Failed to save filter set:', error);
+                throw error;
+            }
+        },
+
+        updateFilterSet: async (filterId: string, updates: any) => {
+            try {
+                // 1. Get existing sets
+                const { sets: existingSets } = await fetchFilterSets('ramcouser', 'draft-bill-management'); // Hardcoded for now as per context
+
+                // 2. Find and update
+                const index = existingSets.findIndex((s: any) => s.id === filterId);
+                if (index === -1) throw new Error('Filter set not found');
+
+                const updatedSet = { ...existingSets[index], ...updates, updatedAt: new Date().toISOString() };
+
+                let updatedSets = [...existingSets];
+                if (updates.isDefault) {
+                    updatedSets = updatedSets.map((s: any) => ({ ...s, isDefault: false }));
+                }
+                updatedSets[index] = updatedSet;
+
+                // 3. Save to API
+                await quickOrderService.savePersonalization({
+                    LevelType: 'User',
+                    // LevelKey: 'ramcouser',
+                    ScreenName: 'DraftBillManagement',
+                    ComponentName: 'filterSets_serverside-filter_preferences',
+                    JsonData: { filterSets: updatedSets },
+                    IsActive: "1",
+                    ModeFlag: "Update"
+                });
+
+                return updatedSet;
+            } catch (error) {
+                console.error('Failed to update filter set:', error);
+                throw error;
+            }
+        },
+
+        deleteFilterSet: async (filterId: string) => {
+            try {
+                // 1. Get existing sets
+                const { sets: existingSets } = await fetchFilterSets('ramcouser', 'draft-bill-management');
+
+                // 2. Filter out
+                const updatedSets = existingSets.filter((s: any) => s.id !== filterId);
+
+                // 3. Save to API
+                await quickOrderService.savePersonalization({
+                    LevelType: 'User',
+                    // LevelKey: 'ramcouser',
+                    ScreenName: 'DraftBillManagement',
+                    ComponentName: 'filterSets_serverside-filter_preferences',
+                    JsonData: { filterSets: updatedSets },
+                    IsActive: "1",
+                    ModeFlag: "Update"
+                });
+            } catch (error) {
+                console.error('Failed to delete filter set:', error);
+                throw error;
+            }
+        },
+
+        applyGridFilters: async (filters: Record<string, any>) => {
+            // Delegate to the global filterService so handleServerSideSearch can pick it up
+            console.log('CustomFilterService: Applying filters via global service', filters);
+            return filterService.applyGridFilters(filters);
+        }
+    }), []);
+
+
+    const handleGridPreferenceSave = async (preferences: any) => {
+        try {
+            // Get the latest preferences from localStorage to ensure we have the full state
+            const storedPreferences = localStorage.getItem('smartgrid-preferences');
+            const preferencesToSave = storedPreferences ? JSON.parse(storedPreferences) : preferences;
+
+            console.log('Saving DraftBillHub Nested SmartGrid preferences:', preferencesToSave);
+
+            const response = await quickOrderService.savePersonalization({
+                LevelType: 'User',
+                // LevelKey: 'ramcouser',
+                ScreenName: 'DraftBillManagement',
+                ComponentName: 'smartgrid-preferences',
+                JsonData: preferencesToSave,
+                IsActive: "1",
+                ModeFlag: isPersonalizationEmpty ? "Insert" : "Update"
+            });
+
+            const apiData = response?.data;
+
+            if (apiData) {
+                const isSuccess = apiData?.IsSuccess;
+                // const message = apiData?.Message || "No message returned";
+
+                toast({
+                    title: isSuccess ? "✅ Preferences Saved Successfully" : "⚠️ Error Saving Preferences",
+                    description: apiData?.Message,
+                    variant: isSuccess ? "default" : "destructive",
+                });
+
+                // If success, update the empty flag
+                if (isSuccess) setIsPersonalizationEmpty(false);
+
+            } else {
+                throw new Error("Invalid API response");
+            }
+        } catch (error) {
+            console.error("Failed to save grid preferences:", error);
+            toast({
+                title: "Error",
+                description: "Failed to save grid preferences",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
+        console.log('DraftBillHubGridMain: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+        try {
+            const preferencesToSave = {
+                visibleFields,
+                fieldOrder
+            };
+
+            const response = await quickOrderService.savePersonalization({
+                LevelType: 'User',
+                // LevelKey: 'ramcouser',
+                ScreenName: 'DraftBillManagement',
+                ComponentName: 'smartgrid-serverside-filtersearch-preferences',
+                JsonData: preferencesToSave,
+                IsActive: "1",
+                ModeFlag: isServerFilterPersonalizationEmpty ? "Insert" : "Update"
+            });
+
+            const apiData = response?.data;
+
+            if (apiData?.IsSuccess) {
+                setServerFilterVisibleFields(visibleFields);
+                setServerFilterFieldOrder(fieldOrder);
+                // Update the empty flag since we now have saved data
+                setIsServerFilterPersonalizationEmpty(false);
+
+                toast({
+                    title: "✅ Filter Preferences Saved",
+                    description: "Your search field preferences have been saved.",
+                    variant: "default",
+                });
+
+                // Refresh data to reflect any changes (optional, but good practice if filters affect data fetching)
+                // handleServerSideSearch(); 
+            } else {
+                throw new Error(apiData?.Message || "Invalid API response");
+            }
+        } catch (error) {
+            console.error("Failed to save server filter preferences:", error);
+            toast({
+                title: "Error",
+                description: "Failed to save filter preferences",
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className="h-full flex flex-col relative">
             {gridState.loading && (
@@ -1779,79 +2103,93 @@ JournalVoucherNo:null
                     <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
                 </div>
             )}
-            <SmartGridWithNestedRows
-                key={`grid-${gridState.forceUpdate}`}
-                gridId="draft-bill-grid"
-                gridTitle="Draft Bill"
-                recordCount={gridState.gridData.length}
-                data={gridState.gridData}
-                columns={gridState.columns}
-                onLinkClick={handleLinkClick}
-                onSubRowToggle={gridState.handleSubRowToggle}
-                paginationMode="pagination"
-                customPageSize={20}
-                clientSideSearch={true}
-                hideCheckboxToggle={false}
-                showDefaultConfigurableButton={false}
-                onClearAll={clearAllFilters}
-                onSearch={handleServerSideSearch}
-                serverFilters={dynamicServerFilters}
-                showServersideFilter={showServersideFilter}
-                onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
-                api={filterService}
+            {/* Load the grid only when preferences are loaded */}
+              {isPreferencesLoaded ? (
+                <SmartGridWithNestedRows
+                    key={`grid-${gridState.forceUpdate}`}
+                    gridId="draft-bill-grid"
+                    gridTitle="Draft Bill"
+                    recordCount={gridState.gridData.length}
+                    data={gridState.gridData}
+                    columns={gridState.columns}
+                    onLinkClick={handleLinkClick}
+                    onSubRowToggle={gridState.handleSubRowToggle}
+                    paginationMode="pagination"
+                    customPageSize={20}
+                    clientSideSearch={true}
+                    hideCheckboxToggle={false}
+                    showDefaultConfigurableButton={false}
+                    onClearAll={clearAllFilters}
+                    onSearch={handleServerSideSearch}
+                    serverFilters={dynamicServerFilters}
+                    showServersideFilter={showServersideFilter}
+                    onToggleServersideFilter={() => setShowServersideFilter(prev => !prev)}
+                    api={customFilterService}
+                    onPreferenceSave={handleGridPreferenceSave}
+                    serverFilterVisibleFields={serverFilterVisibleFields}
+                    serverFilterFieldOrder={serverFilterFieldOrder}
+                    onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
 
 
-                onRowSelectionChange={handleDraftBillSelection}
 
-                // nestedRowRenderer={renderSubRow}
-                // selectionMode='multi'
-                onSelectedRowsChange={(selectedRows) => {
-                    console.log("✅ Selected rows from grid:", selectedRows);
-                    console.log("selectedDbLines",selectedDbLines)
-                    setSelectedDraftBills(selectedRows);
-                    onDraftBillSelection?.(selectedRows);
-                }}
+                    onRowSelectionChange={handleDraftBillSelection}
 
-                nestedSectionConfig={{
-                    nestedDataKey: 'lineItems',
-                    columns: nestedColumns,
-                    title: 'Line Level Info',
-                    initiallyExpanded: false,
-                    showNestedRowCount: true,
-                    editableColumns: false,
-                    selectionMode: "multi",
-                    selectedRows: selectedDbLines,
-                    // onSelectionChange: setselectedDbLines,
-                   onSelectionChange: (rows) => {
-  if (!rows || rows.length === 0) {
-    setselectedDbLines([]);
-    return;
-  }
+                    // nestedRowRenderer={renderSubRow}
+                    // selectionMode='multi'
+                    onSelectedRowsChange={(selectedRows) => {
+                        console.log("✅ Selected rows from grid:", selectedRows);
+                        console.log("selectedDbLines", selectedDbLines)
+                        setSelectedDraftBills(selectedRows);
+                        onDraftBillSelection?.(selectedRows);
+                    }}
 
-  const latest = rows[rows.length - 1];
+                    nestedSectionConfig={{
+                        nestedDataKey: 'lineItems',
+                        columns: nestedColumns,
+                        title: 'Line Level Info',
+                        initiallyExpanded: false,
+                        showNestedRowCount: true,
+                        editableColumns: false,
+                        selectionMode: "multi",
+                        selectedRows: selectedDbLines,
+                        // onSelectionChange: setselectedDbLines,
+                        onSelectionChange: (rows) => {
+                            if (!rows || rows.length === 0) {
+                                setselectedDbLines([]);
+                                return;
+                            }
 
-  const latestParentId =
-    latest.parentRow?.DraftBillNo || latest.parentRow?.id;
+                            const latest = rows[rows.length - 1];
 
-  setselectedDbLines((prev) => {
-    if (prev.length === 0) {
-      return [latest];
-    }
+                            const latestParentId =
+                                latest.parentRow?.DraftBillNo || latest.parentRow?.id;
 
-    const prevParentId =
-      prev[0]?.parentRow?.DraftBillNo || prev[0]?.parentRow?.id;
+                            setselectedDbLines((prev) => {
+                                if (prev.length === 0) {
+                                    return [latest];
+                                }
 
-    if (prevParentId === latestParentId) {
-      return rows;
-    }
+                                const prevParentId =
+                                    prev[0]?.parentRow?.DraftBillNo || prev[0]?.parentRow?.id;
 
-    return [latest];
-  });
-},
+                                if (prevParentId === latestParentId) {
+                                    return rows;
+                                }
+
+                                return [latest];
+                            });
+                        },
 
 
-                }}
-            />
+                    }}
+                />
+            ) : (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                    <div className="text-lg font-semibold text-blue-700">Loading Draft Bills...</div>
+                    <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+                </div>
+            )}
 
             {/* Draft Bill Details Side Drawer */}
             {isDraftBillDetailsSideDrawOpen && (

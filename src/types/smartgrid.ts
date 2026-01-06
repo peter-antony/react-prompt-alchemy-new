@@ -257,6 +257,10 @@ export interface SmartGridProps {
   // Control whether to show the toolbar
   hideToolbar?: boolean;
   customPageSize?: number | any;
+  // Server-side filter personalization props
+  serverFilterVisibleFields?: string[];
+  serverFilterFieldOrder?: string[];
+  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[]) => void;
 }
 
 // Legacy interface for backward compatibility

@@ -93,8 +93,12 @@ export function SmartGridNested({
   customPageSize,
   onSearch,
   onClearAll,
-  exportFilename = `export-${new Date().toISOString().split('T')[0]}`
-}: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void;}) {
+  exportFilename = `export-${new Date().toISOString().split('T')[0]}`,
+  // Server-side filter personalization props
+  serverFilterVisibleFields,
+  serverFilterFieldOrder,
+  onServerFilterPreferenceSave
+}: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void; }) {
   const {
     gridData,
     setGridData,
@@ -189,14 +193,15 @@ export function SmartGridNested({
     preferencesColumns,
     true, // persistPreferences
     'smartgrid-preferences',
-    onPreferenceSave ? async (preferences) => {
-      try {
-        await Promise.resolve(onPreferenceSave(preferences));
-      } catch (error) {
-        console.error('Failed to save preferences:', error);
-        setError('Failed to save preferences');
-      }
-    } : undefined
+    // onPreferenceSave ? async (preferences) => {
+    //   try {
+    //     await Promise.resolve(onPreferenceSave(preferences));
+    //   } catch (error) {
+    //     console.error('Failed to save preferences:', error);
+    //     setError('Failed to save preferences');
+    //   }
+    // } : undefined
+    undefined // Decoupled: Do not auto-save to API on every change. Only save manually.
   );
 
   // Calculate responsive column widths based on content type and available space
@@ -879,6 +884,29 @@ export function SmartGridNested({
     }
   }, [preferences, columns, data, savePreferences, setColumns, setGridData]);
 
+  // Handle manual preference save for grid
+  const handleManualSave = useCallback(async () => {
+    if (onPreferenceSave) {
+      setLoading(true);
+      try {
+        await onPreferenceSave(preferences);
+        toast({
+          title: "Success",
+          description: "Grid preferences saved successfully"
+        });
+      } catch (err) {
+        console.error('Failed to save preferences:', err);
+        toast({
+          title: "Error",
+          description: "Failed to save preferences",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [onPreferenceSave, preferences, toast, setLoading]);
+
   // Error boundary component
   if (error) {
     return (
@@ -940,6 +968,7 @@ export function SmartGridNested({
          // Selection props
         selectedRowsCount={currentSelectedRows.size}
         onClearSelection={handleClearSelection}
+        onSavePreferences={handleManualSave}
       />
       )}
 
@@ -956,6 +985,9 @@ export function SmartGridNested({
           gridId={gridId || gridTitle || 'default'}
           userId={userId || 'default-user'}
           api={api}
+          initialVisibleFields={serverFilterVisibleFields}
+          initialFieldOrder={serverFilterFieldOrder}
+          onFilterPreferencesSave={onServerFilterPreferenceSave}
         />
       )}
 
