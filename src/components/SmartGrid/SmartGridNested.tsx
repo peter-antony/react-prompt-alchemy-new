@@ -245,6 +245,7 @@ export function SmartGridNested({
       .filter(col => !preferences.hiddenColumns.includes(col.key))
       .map(col => ({
         ...col,
+        subRow: true, // EXPLICITLY set subRow to true
         label: preferences.columnHeaders[col.key] || col.label // Apply custom headers
       }));
 
