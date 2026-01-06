@@ -48,7 +48,7 @@ interface TripPlanActionModalProps {
   onFieldChange: (name: string, value: string) => void;
   onSubmit: (fields: PopupField[]) => void;
   submitLabel?: string;
-  actionType: "cancel" | "amend"; // New prop to determine action type
+  actionType: "cancel" | "amend" | "short close"; // New prop to determine action type
   titleColor?: string;
   titleBGColor?: string;
   submitColor?: string;
@@ -81,6 +81,14 @@ const TripPlanActionModal: React.FC<TripPlanActionModalProps> = ({
         submitBg: "bg-red-500",
         submitHover: "hover:bg-red-600",
         borderColor: "border-red-200"
+      };
+    } else if (actionType === "short close") {
+      return {
+        iconBg: "bg-orange-100",
+        iconColor: "text-orange-600",
+        submitBg: "bg-[#F79009]",
+        submitHover: "hover:bg-[#FF9800]",
+        borderColor: "border-orange-200"
       };
     } else { // amend
       return {

@@ -230,7 +230,12 @@ export const API_ENDPOINTS = {
   },
   // Claims management
   CLAIMS: {
+    COMBO: '/common/combo',
     HUBSEARCH: 'ManageClaims/HubSearch',
+    CANCEL: 'manageclaims/claimcancel',
+    SHORTCLOSE: 'manageclaims/claimshortclose',
+    AMEND: 'manageclaims/claimamend',
+    REJECT: 'manageclaims/claimreject'
   }
 } as const;
 

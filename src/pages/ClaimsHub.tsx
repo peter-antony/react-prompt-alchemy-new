@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { SmartGridWithGrouping } from "@/components/SmartGrid";
 import { GridColumnConfig, ServerFilter } from '@/types/smartgrid';
-import { SquarePen, X } from 'lucide-react';
+import { Ban, SquarePen, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ClaimService } from "@/api/services/ClaimService";
 import { ClaimsHubAuditTrail } from "@/components/Claims/ClaimsHubAuditTrail";
 import { ClaimsHubEditSave } from "@/components/Claims/ClaimsHubEditSave";
+import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
 
 export const ClaimsHub = () => {
   const [searchParams] = useSearchParams();
@@ -34,7 +35,7 @@ export const ClaimsHub = () => {
   const { toast } = useToast();
   const { config, setFooter, resetFooter } = useFooterStore();
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const [auditClaimNo, setAuditClaimNo] = useState<string | null>(null);
+  const [auditClaimNo, setAuditClaimNo] = useState<any | null>(null);
   const [selectedEditAndSaveRow, setSelectedEditAndSaveRow] = useState<any>(null);
   const [isClaimsEditOpen, setIsClaimsEditOpen] = useState(false);
   const [showServersideFilter, setShowServersideFilter] = useState<boolean>(false);
@@ -43,6 +44,153 @@ export const ClaimsHub = () => {
   const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering
   const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
   const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
+
+  const [fields, setFields] = useState([
+    {
+      type: "date",
+      label: "Requested Date and Time",
+      name: "date",
+      placeholder: "Select Requested Date and Time",
+      value: "",
+      required: true,
+      mappedName: 'Canceldatetime'
+    },
+    {
+      type: "select",
+      label: "Reason Code and Description",
+      name: "ReasonCode",
+      placeholder: "Enter Reason Code and Description",
+      options: [],
+      value: "",
+      required: true,
+      mappedName: 'ReasonCode'
+    },
+    {
+      type: "text",
+      label: "Remarks",
+      name: "remarks",
+      placeholder: "Enter Remarks",
+      value: "",
+      mappedName: 'Remarks'
+    },
+  ]);
+
+  const handleFieldChange = (name, value) => {
+    console.log('Field changed:', name, value);
+    setFields(fields =>
+      fields.map(f => (f.name === name ? { ...f, value } : f))
+    );
+  };
+
+  const cancelClaimsubmission = async (formFields: any) => {
+    console.log("Cancel Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Cancel API:', mappedObj);
+    const messageType = "Manage Trip Plan - cancel Trip";
+
+    let payload = {
+      "Header": {
+        "ClaimNo": selectedRowObjects?.[0]?.ClaimNo,
+        "ClaimStatus": "",
+        "ClaimStatusDescription": "",
+        "Reason": {
+          "Cancel": {
+            "ReasonCode": mappedObj.ReasonCode.split(' || ')[0] || "",
+            "ReasonDescription": mappedObj.ReasonCode.split(' || ')[1] || "",
+            "Remarks": mappedObj.Remarks || "",
+            "RecordedDateTime": mappedObj.Canceldatetime || "",
+            "ModeFlag": ""
+          }
+        }
+      }
+    }
+    console.log("Payload:", payload);
+    try {
+      const response = await ClaimService.cancelClaim(payload);
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Cancelled",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+        // Refresh the grid data to show the updated trip status and close the modal
+        setCancelModalOpen(false);
+        await fetchClaims();
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Cancellation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    }
+  };
+
+  const shortCloseClaimsubmission = async (formFields: any) => {
+    console.log("Short Close Trip Plan Submit:", formFields);
+    let mappedObj: any = {}
+    formFields.forEach(field => {
+      const mappedName = field.mappedName;
+      mappedObj[mappedName] = field.value;
+    });
+    console.log('Mapped Object for Cancel API:', mappedObj);
+    const messageType = "Manage Trip Plan - cancel Trip";
+
+    let payload = {
+      "Header": {
+        "ClaimNo": selectedRowObjects?.[0]?.ClaimNo,
+        "ClaimStatus": "",
+        "ClaimStatusDescription": "",
+        "Reason": {
+          "ShortClosed": {
+            "ReasonCode": mappedObj.ReasonCode.split(' || ')[0] || "",
+            "ReasonDescription": mappedObj.ReasonCode.split(' || ')[1] || "",
+            "Remarks": mappedObj.Remarks || "",
+            "RecordedDateTime": mappedObj.Canceldatetime || "",
+            "ModeFlag": "Insert"
+          }
+        }
+      }
+    }
+    console.log("Payload:", payload);
+    try {
+      const response = await ClaimService.shortCloseClaim(payload);
+      console.log("response ===", response);
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      if (resourceStatus) {
+        console.log("Trip data updated in store");
+        toast({
+          title: "✅ Trip Cancelled",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          variant: "default",
+        });
+        // Refresh the grid data to show the updated trip status and close the modal
+        setCancelModalOpen(false);
+        await fetchClaims();
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Trip Cancellation Failed",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming trip:", error);
+    }
+  };
 
   const handleGridPreferenceSave = async (preferences: any) => {
     try {
@@ -720,17 +868,19 @@ export const ClaimsHub = () => {
         {
           label: "Short Close",
           type: 'Button',
-          disabled: false, // <-- Enable if at least one row is selected
+          disabled: selectedRowObjects.length !== 1, // <-- Enable if at least one row is selected
           onClick: () => {
             console.log('Short Close clicked');
+            setShortCloseModalOpen(true);
           },
         },
         {
-          label: "Amend",
+          label: "Cancel",
           type: 'Button',
           disabled: selectedRowObjects.length !== 1, // <-- Enable if at least one row is selected
           onClick: () => {
-            console.log("Amend clicked");
+            console.log("Cancel clicked");
+            setCancelModalOpen(true);
             // setPopupOpen(true);
           }
         },
@@ -748,8 +898,8 @@ export const ClaimsHub = () => {
               });
               return;
             }
-
-            const claimNo = selectedRowObjects[0]?.ClaimNo || null;
+            console.log("Selected Row Objects for Audit:", selectedRowObjects);
+            const claimNo = selectedRowObjects[0] || null;
             setAuditClaimNo(claimNo);
             setIsAuditOpen(true);
           }
@@ -784,70 +934,63 @@ export const ClaimsHub = () => {
   };
 
   const handleRowSelection = (selectedRowIndices: Set<number>) => {
-    console.log('Selected rows changed via checkbox:', selectedRowIndices);
-    setSelectedRows(selectedRowIndices);
-    // Update selected row objects and IDs using unique row identification
-
+    console.log('Selected rows changed via checkbox (raw):', selectedRowIndices);
     const currentData = gridState.gridData.length > 0 ? gridState.gridData : [];
-    const selectedObjects = Array.from(selectedRowIndices)
-      .map(index => currentData[index])
-      .filter(Boolean);
 
-    // Create a new Set of unique row IDs
-    const newSelectedRowIds = new Set(selectedObjects.map(row => row.ClaimNo));
+    // If nothing selected, clear all
+    if (selectedRowIndices.size === 0) {
+      setSelectedRows(new Set());
+      setSelectedRowIds(new Set());
+      setSelectedRowObjects([]);
+      setRowTripId([]);
+      console.log('Cleared selection via checkbox');
+      return;
+    }
 
-    // Update selected row objects to ensure uniqueness by ID
-    const uniqueSelectedObjects = selectedObjects.filter((row, index, self) =>
-      self.findIndex(r => r.id === row.ClaimNo) === index
-    );
+    // Keep only the latest selected index (user expectation: latest replaces previous)
+    const indicesArray = Array.from(selectedRowIndices);
+    const lastIndex = indicesArray[indicesArray.length - 1];
+    const row = currentData[lastIndex];
+    if (!row) return;
 
+    const newSelectedRows = new Set<number>([lastIndex]);
+    const newSelectedRowIds = new Set<string>([row.ClaimNo]);
+    const newSelectedRowObjects = [row];
+
+    setSelectedRows(newSelectedRows);
     setSelectedRowIds(newSelectedRowIds);
-    setSelectedRowObjects(uniqueSelectedObjects);
-    console.log('Selected row objects:', uniqueSelectedObjects);
-    console.log('Selected row IDs:', Array.from(newSelectedRowIds));
+    setSelectedRowObjects(newSelectedRowObjects);
+    setRowTripId(Array.from(newSelectedRowIds));
+    console.log('Selected row objects (single):', newSelectedRowObjects);
+    console.log('Selected row IDs (single):', Array.from(newSelectedRowIds));
   };
 
   const [rowTripId, setRowTripId] = useState<any>([]);
   const handleRowClick = (row: any, index: number) => {
     console.log('Row clicked:', row, index);
-
-    // Toggle row selection
-    const newSelectedRows = new Set(selectedRows);
-    // if (newSelectedRows.has(index)) {
-    const newSelectedRowIds = new Set(selectedRowIds);
-    const newSelectedRowObjects = [...selectedRowObjects];
-
-    // Check if this row is already selected by ID (not index)
-    const isRowSelected = newSelectedRowIds.has(row.ClaimNo);
+    // New behaviour: single selection — clicking a row selects it and clears previous selection.
+    const isRowSelected = selectedRowIds.has(row.ClaimNo);
 
     if (isRowSelected) {
-      // Remove row: remove from all tracking sets/arrays
-      newSelectedRows.delete(index);
-      newSelectedRowIds.delete(row.ClaimNo);
-      const objectIndex = newSelectedRowObjects.findIndex(obj => obj.ClaimNo === row.ClaimNo);
-      if (objectIndex > -1) {
-        newSelectedRowObjects.splice(objectIndex, 1);
-      }
-      console.log('Removed row:', row.ClaimNo);
+      // If clicked existing selection -> clear selection
+      setSelectedRows(new Set());
+      setSelectedRowIds(new Set());
+      setSelectedRowObjects([]);
+      setRowTripId([]);
+      console.log('Cleared selection by clicking the same row:', row.ClaimNo);
+      return;
     }
-    else {
-      // Add row: add to all tracking sets/arrays (ensure uniqueness)
-      newSelectedRows.add(index);
-      newSelectedRowIds.add(row.ClaimNo);
-      // Only add if not already in objects array (double-check uniqueness)
-      if (!newSelectedRowObjects.some(obj => obj.ClaimNo === row.ClaimNo)) {
-        newSelectedRowObjects.push(row);
-      }
-      console.log('Added row:', row.ClaimNo);
-    }
-    // Update all state
+
+    // Otherwise select only this row (replace previous)
+    const newSelectedRows = new Set<number>([index]);
+    const newSelectedRowIds = new Set<string>([row.ClaimNo]);
+    const newSelectedRowObjects = [row];
+
     setSelectedRows(newSelectedRows);
     setSelectedRowIds(newSelectedRowIds);
     setSelectedRowObjects(newSelectedRowObjects);
-    console.log('Selected row objects after click:', newSelectedRowObjects);
     setRowTripId(Array.from(newSelectedRowIds));
-    console.log('new set: ', Array.from(newSelectedRowIds)); // ✅ log directly
-    console.log('Selected row IDs after click:', Array.from(newSelectedRowIds));
+    console.log('Selected row (replaced previous):', row.ClaimNo);
   };
 
   useEffect(() => {
@@ -1033,7 +1176,7 @@ export const ClaimsHub = () => {
   };
 
   useEffect(() => {
-    const equipmentCategory = filtersForThisGrid['EquipmentCategory'];
+    const equipmentCategory = filtersForThisGrid['Type'];
 
     if (equipmentCategory) {
       console.log('Selected Equipment Category:', equipmentCategory);
@@ -1042,7 +1185,6 @@ export const ClaimsHub = () => {
     }
   }, [filtersForThisGrid]);
 
-  const [selectedEquipmentCategory, setSelectedEquipmentCategory] = useState<string | null>(null);
   // utils/fetchOptionsHelper.ts
   const makeLazyFetcher = (messageType: string, extraParams?: Record<string, any>) => {
     return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
@@ -1070,6 +1212,39 @@ export const ClaimsHub = () => {
         }
       } catch (err) {
         console.error(`Failed to parse ResponseData for ${messageType}:`, err);
+        return [];
+      }
+    };
+  };
+  const makeLazyFetcher1 = () => {
+    return async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+      // Merge standard params with any additional params supplied by caller
+      console.log('claimType:', selectedClaimType);
+      console.log('selectedClaimCounterParty:', selectedClaimCounterParty);
+      const payload = {
+        messageType: selectedClaimType ? 'Claims Type OnSelect' : 'Claims Counter Party OnSelect',
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        selectedClaimType: selectedClaimType || '',
+        selectedClaimCounterParty: selectedClaimCounterParty || '',
+        // ...(extraParams),
+      };
+
+      const response: any = await ClaimService.getMasterCommonData(payload);
+      let parsed = JSON.parse(response?.data?.ResponseData || '[]');
+
+      try {
+        console.log('data: ', parsed);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+        if (parsed?.error) {
+          // Error case → handle gracefully
+          console.error('API Error:', parsed.error.errorMessage);
+          return [];
+        }
+      } catch (err) {
         return [];
       }
     };
@@ -1118,7 +1293,7 @@ export const ClaimsHub = () => {
       key: 'NoteNo',
       label: 'Credit Note No.',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Credit Note No Init"),
+      fetchOptions: makeLazyFetcher("Claim Credit Note No Init"),
       // hideSearch: true,
       // disableLazyLoading: true
     },
@@ -1142,12 +1317,13 @@ export const ClaimsHub = () => {
       label: 'WBS No.',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("WBS Init"),
+      hideSearch: true
     },
     {
       key: 'BusinessPartnerID',
       label: 'Business Partner ID',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Business Partner Init"),
+      fetchOptions: makeLazyFetcher1(),
     },
     {
       key: 'ClaimLocationID',
@@ -1198,13 +1374,14 @@ export const ClaimsHub = () => {
       key: 'SupplierNoteNumber',
       label: 'Supplier Note Number',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Claim Supplier Note No Init")
+      fetchOptions: makeLazyFetcher("Claim Supplier Note No Init"),
+      hideSearch: true
     },
     {
       key: 'DraftBill',
       label: 'DraftBill',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("")
+      fetchOptions: makeLazyFetcher("Claim Draft Bill No Init")
     },
     {
       key: 'IncidentLocation',
@@ -1224,7 +1401,8 @@ export const ClaimsHub = () => {
       key: 'ClaimInitiatedBy',
       label: 'Claim Initiated by',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Claims Initiated by Init")
+      fetchOptions: makeLazyFetcher("Claims Initiated by Init"),
+      hideSearch: true
     },
     { key: 'CommentRemark', label: 'Comment / Remark', type: 'text' },
     { key: 'Remark1', label: 'Remark 1', type: 'text' },
@@ -1261,32 +1439,53 @@ export const ClaimsHub = () => {
       key: 'ActionResolution',
       label: 'Action/Resolution',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('Claims Action/Resolution Init')
+      fetchOptions: makeLazyFetcher('Claims Action/Resolution Init'),
+      hideSearch: true
     },
     { key: 'SecondaryRefNo', label: 'Secondary ref no', type: 'text' },
     {
       key: 'InitiatedBy',
       label: 'Initiated by',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('Claims Initiated by Init')
+      fetchOptions: makeLazyFetcher('Claims Initiated by Init'),
+      hideSearch: true
     },
     {
       key: 'ForwardIsFinancialAction',
       label: 'Forwardis Financial action',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('Claims Forwardis Financial Action Init')
+      fetchOptions: makeLazyFetcher('Claims Forwardis Financial Action Init'),
+      hideSearch: true
     },
     {
       key: 'ExpectedDocument',
       label: 'Expected document',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher('Claims Expected Document Init')
-    },
+      fetchOptions: makeLazyFetcher('Claims Expected Document Init'),
+      hideSearch: true
+    }
   ];
 
   const clearAllFilters = async () => {
     console.log('Clear all filters');
   }
+
+  const [selectedClaimType, setSelectedClaimType] = useState<string | null>("");
+  const [selectedClaimCounterParty, setSelectedClaimCounterParty] = useState<string | null>("");
+
+  // this is called whenever any serverside filter (including EquipmentCategory) changes
+  const handleServerFiltersChange = (filters: Record<string, any>) => {
+    const claimTypeFilter = filters['Type'];
+    const claimCounterPartyFilter = filters['CounterParty'];
+
+    // Filters from ServersideFilter are usually { value, operator }
+    const type = claimTypeFilter && typeof claimTypeFilter === 'object' ? claimTypeFilter.value : claimTypeFilter;
+    const counterParty = claimCounterPartyFilter && typeof claimCounterPartyFilter === 'object' ? claimCounterPartyFilter.value : claimCounterPartyFilter;
+
+    setSelectedClaimType(type || null);
+    setSelectedClaimCounterParty(counterParty || null);
+    // console.log('Serverside filters changed. Claim Type:', type, 'Counter Party:', counterParty);
+  };
 
   const saveClaimFieldsFromSidedraw = (data: any) => {
     console.log('Data received from sidedraw to save:', data);
@@ -1379,7 +1578,7 @@ export const ClaimsHub = () => {
                   selectedRows={selectedRows}
                   onSelectionChange={handleRowSelection}
                   onRowClick={handleRowClick}
-                  // onFiltersChange={handleServerFiltersChange}
+                  onFiltersChange={handleServerFiltersChange}
                   onSearch={handleServerSideSearch}
                   onClearAll={clearAllFilters}
                   // rowClassName={(row: any, index: number) =>
@@ -1426,7 +1625,7 @@ export const ClaimsHub = () => {
       <ClaimsHubAuditTrail
         isOpen={isAuditOpen}
         onClose={() => setIsAuditOpen(false)}
-        auditClaimNo={auditClaimNo}
+        auditClaimObj={auditClaimNo}
       />
 
       {/* Claims Hub Edit Save Component */}
@@ -1435,6 +1634,32 @@ export const ClaimsHub = () => {
         onClose={() => setIsClaimsEditOpen(false)}
         rowEditData={selectedEditAndSaveRow}
         onSave={saveClaimFieldsFromSidedraw}
+      />
+
+      {/* New TripPlan Action Modals */}
+      <TripPlanActionModal
+        open={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        title="Cancel Claim"
+        icon={<Ban className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={cancelClaimsubmission}
+        submitLabel="Cancel"
+        actionType="cancel"
+      />
+
+      {/* New TripPlan Action Modals */}
+      <TripPlanActionModal
+        open={shortCloseModalOpen}
+        onClose={() => setShortCloseModalOpen(false)}
+        title="Short Close Claim"
+        icon={<Ban className="w-4 h-4" />}
+        fields={fields as any}
+        onFieldChange={handleFieldChange}
+        onSubmit={shortCloseClaimsubmission}
+        submitLabel="Short Close"
+        actionType="short close"
       />
 
       {/* Add a beautiful loading overlay when fetching data from API */}

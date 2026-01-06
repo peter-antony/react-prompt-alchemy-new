@@ -1,18 +1,74 @@
 import React, { useState, useEffect } from 'react';
 import { SideDrawer } from '@/components/Common/SideDrawer';
-import { SquarePen, X, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
+import { ClaimService } from '@/api/services/ClaimService';
 
-
-export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimNo }) => {
+export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimObj }) => {
   const [auditEntries, setAuditEntries] = useState<any[]>([]);
+  const DEFAULT_AUDIT_TRAILS = [
+    {
+      id: '1',
+      title: 'Processed Event - 13435',
+      date: '10-May-2025 10:10:00 AM',
+      userName: 'Samuel',
+      userRole: 'Finance Manager',
+      reasonCode: '2324',
+      systemRemarks: '--',
+    },
+    {
+      id: '2',
+      title: 'Save - 56565',
+      date: '10-May-2025 10:10:00 AM',
+      userName: 'Samuel',
+      userRole: 'Finance Manager',
+      reasonCode: '2324',
+      systemRemarks: '--',
+    },
+    {
+      id: '3',
+      title: 'Cancel - 76587',
+      date: '10-May-2025 10:10:00 AM',
+      userName: 'Samuel',
+      userRole: 'Finance Manager',
+      reasonCode: '2324',
+      systemRemarks: '--',
+    },
+  ];
 
   useEffect(() => {
-    setAuditEntries([
-      { id: '3', title: 'Processed Event - 13435', date: '10-May-2025 10:10:00 AM', userName: 'Samuel', userRole: 'Finance Manager', reasonCode: '2324', systemRemarks: '--' },
-      { id: '1', title: 'Save - 56565', date: '10-May-2025 10:10:00 AM', userName: 'Samuel', userRole: 'Finance Manager', reasonCode: '2324', systemRemarks: '--' },
-      { id: '2', title: 'Cancel - 76587', date: '10-May-2025 10:10:00 AM', userName: 'Samuel', userRole: 'Finance Manager', reasonCode: '2324', systemRemarks: '--' },
-    ]);
-  }, []);
+    const fetchAuditTrail = async () => {
+      try {
+        const response = await ClaimService.viewAuditTrail({
+          RefDocType: auditClaimObj.RefDocType,
+          RefDocNo: auditClaimObj.RefDocNo,
+        });
+
+        const responseDataString = response?.data?.ResponseData;
+
+        // Case 1: Backend returned error inside ResponseData
+        if (responseDataString) {
+          const parsed = JSON.parse(responseDataString);
+
+          if (parsed?.error) {
+            // console.error('Audit Trail SP Error:', parsed.error.errorMessage);
+            setAuditEntries(DEFAULT_AUDIT_TRAILS);
+            return;
+          }
+        }
+
+        // Case 2: Valid data
+        setAuditEntries(response?.data?.data ?? DEFAULT_AUDIT_TRAILS);
+      } catch (error) {
+        // Case 3: Network / runtime error
+        console.error('Audit Trail API Error:', error);
+        setAuditEntries(DEFAULT_AUDIT_TRAILS);
+      }
+    };
+
+    if (auditClaimObj) {
+      fetchAuditTrail();
+    }
+  }, [auditClaimObj]);
 
   return (
     <SideDrawer
@@ -24,13 +80,13 @@ export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimNo }) => {
       contentBgColor='#f8f9fc'
       onScrollPanel={true}
       isBadgeRequired={true}
-      badgeContent={auditClaimNo}
-      >
+      badgeContent={auditClaimObj?.ClaimNo || ''}
+    >
       <div className="p-4">
-        {auditEntries.length === 0 ? (
+        {auditEntries?.length === 0 ? (
           <div className="text-sm text-gray-500">No audit entries available.</div>
         ) : (
-          auditEntries.map(entry => (
+          auditEntries?.map(entry => (
             <div key={entry.id} className="bg-white rounded-lg shadow-sm p-4 mb-4 border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

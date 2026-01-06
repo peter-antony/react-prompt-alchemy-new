@@ -18,6 +18,7 @@ const renderButton = (
     cancel: "bg-red-100 text-red-600  hover:bg-red-200 hover:text-red-700",
     // cancel: "bg-white text-red-300 hover:text-red-600 hover:bg-red-100",
     cancelQuickOrder: "bg-red-100 text-red-600  hover:bg-red-200 hover:text-red-700",
+    shortClose: "bg-gray-300 text-gray-600 font-semibold hover:bg-gray-200 hover:text-gray-700",
   };
 
   const getButtonClass = () => {
@@ -28,6 +29,10 @@ const renderButton = (
       return buttonStyles.cancel;
     } else if (config.label.toLowerCase() === "save" || config.label.toLowerCase() === "approve") {
       return buttonStyles.secondary;
+    } else if (config.label.toLowerCase() === "short close") {
+      if (pageName === "Claims_Hub") {
+        return buttonStyles.shortClose;
+      }
     }
     return config.type === "Button"
       ? buttonStyles.primary
