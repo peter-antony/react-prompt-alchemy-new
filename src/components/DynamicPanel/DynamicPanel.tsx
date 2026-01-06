@@ -37,6 +37,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   templateNumberCallback?: (value: string) => void;
   currency?: string;
   reportStatus?: string;
+  editCimNO?:string;
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
@@ -71,6 +72,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   workOrderCopy,
   templateNumberCallback,
   templateNumber = '',
+  editCimNO,
   // onBadgeChange
   currency
 }, ref) => {
@@ -104,6 +106,13 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   useEffect(() => {
     setPanelConfig(initialPanelConfig);
   }, [initialPanelConfig]);
+
+  useEffect(()=>{
+  console.log(editCimNO , "initialData123")
+  if(editCimNO){
+    setTemplateNumberValue(editCimNO)
+  }
+  },[])
 
   // Sync quickOrderNoValue with jsonStore when it changes
   useEffect(() => {
@@ -714,8 +723,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                    onChange={(e) => setTemplateNumberValue(e.target.value)}
                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
+                      alert("clicked")
                    templateNumberCallback?.(templateNumberValue.trim());
-                    e.currentTarget.blur();
+                   
                     }
                   }}
                 />

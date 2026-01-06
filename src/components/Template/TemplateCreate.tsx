@@ -336,7 +336,7 @@ const TemplateCreate = () => {
       }),
 
        quickOrderService.getMasterCommonData({
-        messageType: "THU Init", 
+        messageType: "THU UOM Init", 
       }),
     ]);
     console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"));
@@ -962,10 +962,26 @@ const TemplateCreate = () => {
       labelFlag: false,
       maxLength: 40,
     },
+      paymentInstruction4: {
+      id: 'paymentInstruction4',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Payment Instruction',
+      labelFlag: false,
+      maxLength: 40,
+    },
     carriageChargePaid: {
       id: 'carriageChargePaid',
       label: 'Carriage Charge Paid',
+       
       fieldType: 'checkbox',
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -977,6 +993,7 @@ const TemplateCreate = () => {
       id: 'incoTerms',
       label: 'Inco Terms',
       fieldType: 'checkbox',
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1274,6 +1291,7 @@ const TemplateCreate = () => {
       id: 'chargesNote',
       label: 'Charges Note [52]',
       fieldType: 'checkbox',
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1820,7 +1838,7 @@ const TemplateCreate = () => {
   order: 6,
   width: 'four',
   placeholder: 'Enter Fixed Net Weight Train',
-  options: getUomOptions(weightUomList), // ✅ SAME PATTERN
+  options: getUomOptions(weightUomList), 
 },
 
 
@@ -1882,6 +1900,7 @@ const TemplateCreate = () => {
       id: 'ExceptionalConsignment',
       label: 'Exceptional Consignment [22]',
       fieldType: 'checkbox',
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1893,6 +1912,7 @@ const TemplateCreate = () => {
       id: 'RID',
       label: 'RID [23]/[28]',
       fieldType: 'checkbox',
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1958,8 +1978,39 @@ const TemplateCreate = () => {
       placeholder: 'Enter Delivery Note Number ',
       maxLength: 500,
     },
-    NHMCode: {
-      id: 'NHMCode',
+   
+    NHMCode1: {
+      id: 'NHMCode1',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    NHMCode2: {
+      id: 'NHMCode2',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    NHMCode3: {
+      id: 'NHMCode3',
       label: 'NHM Code [24]/[18]',
       fieldType: 'lazyselect',
       value: '',
@@ -2263,6 +2314,7 @@ const TemplateCreate = () => {
       id: 'UndertakingEnterprise',
       label: 'Simplified Transit Procedure For Rail [56 b]',
       fieldType: 'checkbox',
+      labelFlag: false,
       value: '',
       mandatory: false,
       visible: true,
@@ -2498,6 +2550,7 @@ const sanitizeRouteRows = (rows: any[]) =>
   const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
     PaymentInstructionDescriptionvalue1: splitIdName(paymentFormData.paymentInstruction1).id || null,
     PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
+    PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction3 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
     IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
     Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
@@ -2884,6 +2937,7 @@ const sanitizeRouteRows = (rows: any[]) =>
       Fixed_Net_Weight_Train_13: toNumberOrNull(
         formData.fixedNetTrain?.input
       ),
+      Fixed_Net_Weight_Train_13_UOM: formData.fixedNetTrain?.dropdown || null,
 
       No_Number_14: toNumberOrNull(formData.number),
 
@@ -2897,8 +2951,15 @@ const sanitizeRouteRows = (rows: any[]) =>
       ),
       RID_23_28: toBit(formData.RID),
 
-      NHM_Code_24_18: toNumberOrNull(
-        splitIdName(formData.NHMCode).id
+     
+       NHM_Code_24_18_1: toNumberOrNull(
+        splitIdName(formData.NHMCode1).id
+      ),
+       NHM_Code_24_18_2: toNumberOrNull(
+        splitIdName(formData.NHMCode2).id
+      ),
+       NHM_Code_24_18_3: toNumberOrNull(
+        splitIdName(formData.NHMCode3).id
       ),
       
       UTI_Code_23: splitIdName(formData.UTICODE).id,
@@ -2995,7 +3056,7 @@ useEffect(() => {
         const transformedDetails = {
           consignor: apiDetails.Consignor_1_value1, // Assuming this is the main consignor value
           consignorDescription: apiDetails.ConsignorName_value2, // Assuming this is the description
-          customerCodeConsignor: apiDetails.CustomerCodeForConsignor_2,
+          customerCodeConsignor: apiDetails.CustomerCodeForConsignor_2 ,
           customerCodePrePaid: apiDetails.CustomerCodeForPayerOfPrePaidCharges_3,
           consignee: apiDetails.Consignee_4_value1,
           consigneeDescription: apiDetails.ConsigneeName_4_value2,
@@ -3019,6 +3080,7 @@ useEffect(() => {
         paymentInstructionRef.current.setFormValues({
           paymentInstruction1: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
           paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
+          paymentInstruction3: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
           carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
           incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
         });
@@ -3325,6 +3387,7 @@ useEffect(() => {
 
           fixedNetTrain: {
             input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+             dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
           },
 
           number: wagon.No_Number_14 ?? 1,
@@ -3342,6 +3405,19 @@ useEffect(() => {
           NHMCode: wagon.NHM_Code_24_18
             ? String(wagon.NHM_Code_24_18)
             : "",
+
+             NHMCode1: wagon.NHMcode_24_18_1
+            ? String(wagon.NHMcode_24_18_1)
+            : "",
+
+             NHMCode2: wagon.NHMcode_24_18_2
+            ? String(wagon.NHMcode_24_18_2)
+            : "",
+
+             NHMCode3: wagon.NHMcode_24_18_3
+            ? String(wagon.NHMcode_24_18_3)
+            : "",
+
 
           GrossWeight: wagon.GrossWeight_25_19
             ? {
@@ -4081,7 +4157,6 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       const resourceStatus = (response as any)?.data?.IsSuccess;
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
-        console.log("Template saved successfully");
         toast({
           title: "✅ Template Saved Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",

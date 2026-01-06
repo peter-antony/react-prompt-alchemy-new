@@ -223,6 +223,8 @@ const ReportCreate = () => {
   const workOrderNo = searchParams.get("id");
   const [thuQtyUomList, setThuQtyUomList] = useState<any[]>([]);
   const [currencyUomList, setCurrencyUomList] = useState<any[]>([]);
+   const [weightUomList, setWeightUomList] = useState<any[]>([]);
+  const [lengthWeightUomList, setlengthWeightUomList] = useState<any[]>([]);
   const [otherCarriers, setOtherCarriers] = useState<any[]>([]);
   const [routeCodeCDetails, setRouteCodeCDetails] = useState<any[]>([]);
   const [wagonGritDetails, setWagonGritDetails] = useState<any[]>([]);
@@ -247,24 +249,41 @@ const ReportCreate = () => {
   val != null && val.trim() !== "";
 
 
-  const handleTemplateNumberCallback = (value: string) => {
-  console.log("Template number changed:", value);
-  setCimCuvNo(value)
+//   const handleTemplateNumberCallback = (value: string) => {
+//   console.log("Template number changed:", value);
+//   setCimCuvNo(value)
 
+//   const trimmedValue = value?.trim();
+
+//   // 1️⃣ Update local state (if you still need it)
+//   setTemplateNumber(trimmedValue);
+//   console.log("trimmedValue",trimmedValue )
+
+//   // 2️⃣ (Optional) Update store – only if you are using one
+//   // useTemplateStore.getState().updateHeader('TemplateId',   trimmedValue);
+
+//   // 3️⃣ Update URL → triggers useEffect → API auto call
+//   if (isValidId(trimmedValue)) {
+//     setSearchParams({ id: cimCuvNo });
+//   }
+// };
+
+const handleTemplateNumberCallback = (value: string) => {
   const trimmedValue = value?.trim();
 
-  // 1️⃣ Update local state (if you still need it)
+  console.log("Template number changed:", value);
+  console.log("trimmedValue", trimmedValue);
+
+  // 1️⃣ Update state
+  setCimCuvNo(trimmedValue);
   setTemplateNumber(trimmedValue);
-  console.log("trimmedValue",trimmedValue )
 
-  // 2️⃣ (Optional) Update store – only if you are using one
-  // useTemplateStore.getState().updateHeader('TemplateId',   trimmedValue);
-
-  // 3️⃣ Update URL → triggers useEffect → API auto call
+  // 2️⃣ Update URL using the SAME value (not state)
   if (isValidId(trimmedValue)) {
-    setSearchParams({ id: cimCuvNo });
+    setSearchParams({ id: trimmedValue });
   }
 };
+
 
 
   const buttonCancel =
@@ -523,17 +542,26 @@ const ReportCreate = () => {
   useEffect(() => {
     const loadUomMasters = async () => {
       try {
-        const [thuRes, currencyRes]: any = await Promise.all([
+        const [thuRes, currencyRes, weightRes, length]: any = await Promise.all([
           quickOrderService.getMasterCommonData({
             messageType: "THU QTY UOM Init",
           }),
           quickOrderService.getMasterCommonData({
             messageType: "Currency Init",
           }),
+            quickOrderService.getMasterCommonData({
+        messageType: "Weight UOM Init", 
+      }),
+
+       quickOrderService.getMasterCommonData({
+        messageType: "THU UOM Init", 
+      }),
         ]);
         console.log(JSON.parse(thuRes?.data?.ResponseData || "[]"), "123");
         setThuQtyUomList(JSON.parse(thuRes?.data?.ResponseData || "[]"));
         setCurrencyUomList(JSON.parse(currencyRes?.data?.ResponseData || "[]"));
+         setWeightUomList(JSON.parse(weightRes?.data?.ResponseData || "[]")); // ✅
+    setlengthWeightUomList(JSON.parse(length?.data?.ResponseData || "[]")); // ✅
       } catch (err) {
         console.error("UOM master API failed", err);
       }
@@ -1332,10 +1360,25 @@ const ReportCreate = () => {
             maxLength: 40,
 
     },
+      paymentInstruction4: {
+      id: 'paymentInstruction4',
+      label: '',
+      fieldType: 'text',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 3,
+      width: 'four',
+      placeholder: 'Enter Payment Instruction',
+      labelFlag: false,
+      maxLength: 40,
+    },
     carriageChargePaid: {
       id: "carriageChargePaid",
       label: "Carriage Charge Paid",
       fieldType: "checkbox",
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1347,6 +1390,7 @@ const ReportCreate = () => {
       id: "incoTerms",
       label: "Inco Terms",
       fieldType: "checkbox",
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -1645,6 +1689,7 @@ const ReportCreate = () => {
       id: "chargesNote",
       label: "Charges Note [52]",
       fieldType: "checkbox",
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -2187,6 +2232,7 @@ const ReportCreate = () => {
       order: 6,
       width: "four",
       placeholder: "Enter Fixed Net Train [13]",
+       options: getUomOptions(weightUomList), 
     },
     number: {
       id: "number",
@@ -2243,6 +2289,7 @@ const ReportCreate = () => {
       id: "ExceptionalConsignment",
       label: "Exceptional Consignment [22]",
       fieldType: "checkbox",
+      labelFlag: false,
       value: false,
       mandatory: false,
       visible: true,
@@ -2256,6 +2303,7 @@ const ReportCreate = () => {
       fieldType: "checkbox",
       value: false,
       mandatory: false,
+      labelFlag: false,
       visible: true,
       editable: true,
       order: 12,
@@ -2286,7 +2334,8 @@ const ReportCreate = () => {
       editable: true,
       order: 14,
       width: "four",
-      placeholder: "Enter Tare Weight",
+      placeholder: "Length x Width x Height",
+       options: getUomOptions(lengthWeightUomList)
     },
     MarkandNumber: {
       id: "MarkandNumber",
@@ -2314,18 +2363,48 @@ const ReportCreate = () => {
       placeholder: "Enter Delivery Note Number ",
       maxLength: 500,
     },
-    NHMCode: {
-      id: "NHMCode",
-      label: "NHM Code [24]/[18]",
-      fieldType: "lazyselect",
-      value: "",
+   NHMCode1: {
+      id: 'NHMCode1',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
       mandatory: false,
       visible: true,
       editable: true,
       order: 17,
-      width: "four",
-      placeholder: "Enter NHM Code",
-      fetchOptions: fetchMaster("NHM Init"),
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    NHMCode2: {
+      id: 'NHMCode2',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
+      hideSearch: false,
+      disableLazyLoading: false,
+    },
+    NHMCode3: {
+      id: 'NHMCode3',
+      label: 'NHM Code [24]/[18]',
+      fieldType: 'lazyselect',
+      value: '',
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 17,
+      width: 'four',
+      placeholder: 'Enter NHM Code',
+      fetchOptions: fetchMaster('NHM Init'),
       hideSearch: false,
       disableLazyLoading: false,
     },
@@ -2514,6 +2593,7 @@ const ReportCreate = () => {
       fieldType: "lazyselect",
       value: "",
       mandatory: false,
+      labelFlag: false,
       visible: true,
       editable: true,
       order: 5,
@@ -2829,6 +2909,8 @@ const effectiveCimCuvNo: string | null =
       paymentFormData.paymentInstruction1 || null,
     PaymentInstructionDescriptionvalue2:
       paymentFormData.paymentInstruction2 || null,
+          PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction3 || null,
+
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
     IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
     Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
@@ -3090,6 +3172,7 @@ const effectiveCimCuvNo: string | null =
       To_be_cleared_at_12: formData.toBeClearedAt || null,
 
       Fixed_Net_Weight_Train_13: toNumberOrNull(formData.fixedNetTrain?.input),
+      Fixed_Net_Weight_Train_13_UOM: formData.fixedNetTrain?.dropdown || null,
 
       No_Number_14: toNumberOrNull(formData.number),
 
@@ -3102,6 +3185,17 @@ const effectiveCimCuvNo: string | null =
 
       NHM_Code_24_18: toNumberOrNull(splitIdName(formData.NHMCode).id),
             UTI_Code_23: splitIdName(formData.UTICODE).id,
+
+
+              NHM_Code_24_18_1: toNumberOrNull(
+        splitIdName(formData.NHMCode1).id
+      ),
+       NHM_Code_24_18_2: toNumberOrNull(
+        splitIdName(formData.NHMCode2).id
+      ),
+       NHM_Code_24_18_3: toNumberOrNull(
+        splitIdName(formData.NHMCode3).id
+      ),
 
 
       Mark_and_Number_25: formData.MarkandNumber || null,
@@ -3239,8 +3333,9 @@ const effectiveCimCuvNo: string | null =
           paymentInstruction2:
             apiResponse.General.PaymentInstruction
               .PaymentInstructionDescriptionvalue2,
-          carriageChargePaid:
-            apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+
+              paymentInstruction3:apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
+          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
           incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
         });
       }
@@ -3490,6 +3585,7 @@ const effectiveCimCuvNo: string | null =
 
           fixedNetTrain: {
             input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+            dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
           },
 
           number: wagon.No_Number_14 ?? 1,
@@ -3505,6 +3601,19 @@ const effectiveCimCuvNo: string | null =
           UTICODE: wagon.UTI_Code_23 ?? "",
 
           NHMCode: wagon.NHM_Code_24_18 ? String(wagon.NHM_Code_24_18) : "",
+
+            NHMCode1: wagon.NHMcode_24_18_1
+            ? String(wagon.NHMcode_24_18_1)
+            : "",
+
+             NHMCode2: wagon.NHMcode_24_18_2
+            ? String(wagon.NHMcode_24_18_2)
+            : "",
+
+             NHMCode3: wagon.NHMcode_24_18_3
+            ? String(wagon.NHMcode_24_18_3)
+            : "",
+
 
           GrossWeight: wagon.GrossWeight_25_19
             ? {
@@ -3960,9 +4069,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       const resourceStatus = (response as any)?.data?.IsSuccess;
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
-        console.log("Template saved successfully");
         toast({
-          title: "✅ Template Saved Successfully",
+          title: "✅ Report Saved Successfully",
           description:
             (response as any)?.data?.ResponseData?.Message ||
             "Your changes have been saved.",
@@ -3989,7 +4097,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       toast({
         title: "⚠️ Save Failed",
         description:
-          "An error occurred while saving the template. Please try again.",
+          "An error occurred while saving the report. Please try again.",
         variant: "destructive",
       });
     }
@@ -4145,9 +4253,9 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       const resourceStatus = (response as any)?.data?.IsSuccess;
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
-        console.log("Template updated successfully");
+        console.log("Report updated successfully");
         toast({
-          title: "✅ Template Updated Successfully",
+          title: "✅ Report Updated Successfully",
           description:
             (response as any)?.data?.ResponseData?.Message ||
             "Your changes have been saved.",
@@ -4174,7 +4282,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       toast({
         title: "⚠️ Update Failed",
         description:
-          "An error occurred while updating the template. Please try again.",
+          "An error occurred while updating the Report. Please try again.",
         variant: "destructive",
       });
     }
@@ -4355,11 +4463,11 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         });
       }
     } catch (error) {
-      console.error("❌ CONFIRM TEMPLATE FAILED", error);
+      console.error("❌ CONFIRM Report FAILED", error);
       toast({
         title: "⚠️ Confirm Failed",
         description:
-          "An error occurred while confirming the template. Please try again.",
+          "An error occurred while confirming the Report. Please try again.",
         variant: "destructive",
       });
     }
@@ -4697,9 +4805,9 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       const resourceStatus = (response as any)?.data?.IsSuccess;
       console.log("parsedResponse ====", parsedResponse);
       if (resourceStatus) {
-        console.log("Template cancelled successfully");
+        console.log("Report cancelled successfully");
         toast({
-          title: "✅ Template Cancelled Successfully",
+          title: "✅ Report Cancelled Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
           variant: "default",
         });
@@ -4715,7 +4823,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
       }
       // Optionally, handle success or display a message
     } catch (error) {
-      console.error("Error canceling template/report:", error);
+      console.error("Error canceling Report:", error);
       // Optionally, handle error or display an error message
     }
     // setIsCancelModalOpen(false);
@@ -4795,7 +4903,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               ref={headerTemplateRef} // New Panel
               panelId="header-template"
               panelOrder={0} // Render before general details
-              panelTitle="Template"
+              panelTitle="CIM/CUV no"
               panelSubTitle="Templated"
               templateNumber={cimCuvNo}
               panelConfig={headerTemplateConfig} // New Config
@@ -4805,6 +4913,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               templateNumberCallback={handleTemplateNumberCallback}
               // onDataChange={handleHeaderTemplateDataChange}
               panelWidth="full"
+              editCimNO = {workOrderNo}
               // collapsible={true} // Added collapsible prop
               // showHeader={false} // Hide header to match screenshot
             />

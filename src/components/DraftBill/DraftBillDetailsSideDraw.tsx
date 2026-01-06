@@ -763,7 +763,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
     order: 1,
     width: "four",
     placeholder: "Enter Bill To ID",
-   fetchOptions: fetchMaster(''), // Placeholder
+   fetchOptions: fetchMaster('Bill to ID Init'), // Placeholder
   },
   customerSupplierRefNo: {
     id: "customerSupplierRefNo",
@@ -788,7 +788,7 @@ const OtherDetailsPanelConfig: PanelConfig = {
     order: 3,
     width: "four",
     placeholder: "",
-    options: [{ value: "2025", label: "2025" }], // Placeholder
+    fetchOptions: fetchMaster('Financial Year Init'),
   },
   secondaryRefNo: {
     id: "secondaryRefNo",
