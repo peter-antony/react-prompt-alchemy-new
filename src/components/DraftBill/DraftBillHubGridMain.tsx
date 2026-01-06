@@ -14,8 +14,9 @@ import { useFooterStore } from '@/stores/footerStore';
 import { filterService } from '@/api/services';
 import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
 import CancelConfirmationModal from '../Template/CancelConfirmationModal';
-import GenerateInvoiceModal from './generateInvioceModal';
+// import GenerateInvoiceModal from './generateInvioceModal';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
+import GenerateInvoiceModal from './GenerateInvioceModal';
 
 const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const { toast } = useToast();
@@ -291,7 +292,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Date',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -300,7 +301,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -309,7 +310,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Date',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -318,7 +319,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -327,7 +328,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -336,7 +337,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -345,7 +346,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -354,7 +355,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Integer',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -363,7 +364,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 200
         },
         {
@@ -372,7 +373,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -381,7 +382,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -390,7 +391,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -399,7 +400,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         },
         {
@@ -408,7 +409,7 @@ const selectedNestedRowData = useMemo(() => {
             type: 'Text',
             sortable: true,
             filterable: true,
-            subRow: true,
+            subRow: false,
             width: 150
         }
     ], []);
@@ -802,6 +803,11 @@ const selectedNestedRowData = useMemo(() => {
   selectedDraftBills,
 ]);
 
+    // Initialize grid columns in state
+    useEffect(() => {
+        gridState.setColumns(columns);
+    }, [columns]);
+
 
 
 
@@ -862,7 +868,7 @@ const selectedNestedRowData = useMemo(() => {
             <DraggableSubRow
                 row={row}
                 rowIndex={rowIndex}
-                columns={columns}
+                columns={gridState.columns}
                 subRowColumnOrder={gridState.subRowColumnOrder} // Pass appropriate order if needed
                 editingCell={gridState.editingCell} // Pass editing state if needed
                 onReorderSubRowColumns={gridState.handleReorderSubRowColumns} // Pass handler
@@ -1774,11 +1780,12 @@ JournalVoucherNo:null
                 </div>
             )}
             <SmartGridWithNestedRows
+                key={`grid-${gridState.forceUpdate}`}
                 gridId="draft-bill-grid"
                 gridTitle="Draft Bill"
                 recordCount={gridState.gridData.length}
                 data={gridState.gridData}
-                columns={columns}
+                columns={gridState.columns}
                 onLinkClick={handleLinkClick}
                 onSubRowToggle={gridState.handleSubRowToggle}
                 paginationMode="pagination"
