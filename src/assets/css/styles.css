@@ -374,7 +374,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .draftBillScrollBar {
-  height: calc(100vh - 150px);
+  height: calc(100vh - 120px);
   overflow: hidden;
   overflow-y: scroll;
 }
