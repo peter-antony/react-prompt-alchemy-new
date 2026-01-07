@@ -86,8 +86,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     };
 
     useEffect(() => {
-        console.log("123", selectedDbLines)
-    }, [selectedDbLines, handleDraftBillSelection])
+      setSelectedDraftBills([])
+          smartGridRef.current?.setShowCheckboxes(false);
+    }, [selectedDbLines,])
 
     // Helper to get selected nested row data objects (ONLY the current sub-row object, not parent)
     // This returns an array of individual nested row objects - each is a SINGLE sub-row
@@ -849,7 +850,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 },
                 {
                     label: "Approve",
-                    onClick: () => handleApprove(),
+                    onClick: () => handleNewApprove(),
                     type: "Button",
                 },
                 {
@@ -875,7 +876,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 },
                 {
                     label: "Approve",
-                    onClick: () => handleApprove(),
+                    onClick: () => handleNewApprove(),
                     type: "Button",
                 },
                 {
@@ -1792,87 +1793,284 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     //     setIsCancelModalOpen(false);
     // };
 
-    const handleApprove = async () => {
+    // const handleApprove = async () => {
 
 
-        console.log("mk2", selectedDbLines)
+    //     console.log("mk2", selectedDbLines)
 
-        const payload = {
-            Header: {
-                "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
+    //     const payload = {
+    //         Header: {
+    //             "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
 
-            },
-            // ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
-            //     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
-            //         ...rest,
+    //         },
+    //         // ItemDetails: (selectedDraftBills[0]?.lineItems ?? []).map(
+    //         //     ({ ReasonForCancellation, ModeFlag, ...rest }) => ({
+    //         //         ...rest,
 
-            //         // 1️⃣ Force ModeFlag to "Checked" if it exists
-            //         ...(ModeFlag && { ModeFlag: "Checked" }),
+    //         //         // 1️⃣ Force ModeFlag to "Checked" if it exists
+    //         //         ...(ModeFlag && { ModeFlag: "Checked" }),
 
-            //         // 2️⃣ Only include ReasonForCancellation if NOT null
-            //         ...(ReasonForCancellation != null && {
-            //             ReasonForCancellation,
-            //         }),
+    //         //         // 2️⃣ Only include ReasonForCancellation if NOT null
+    //         //         ...(ReasonForCancellation != null && {
+    //         //             ReasonForCancellation,
+    //         //         }),
 
-            //         // 3️⃣ Backend hates null remarks → normalize
-            //         Remark: rest.Remark ?? "",
-            //     })
-            // ),
-            ItemDetails: selectedDbLines.map(({ nestedRow }) => {
-                const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
+    //         //         // 3️⃣ Backend hates null remarks → normalize
+    //         //         Remark: rest.Remark ?? "",
+    //         //     })
+    //         // ),
+    //         ItemDetails: selectedDbLines.map(({ nestedRow }) => {
+    //             const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
 
-                return {
-                    ...rest,
+    //             return {
+    //                 ...rest,
 
-                    // 1️⃣ If ModeFlag field exists → force to Checked
-                    ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
+    //                 // 1️⃣ If ModeFlag field exists → force to Checked
+    //                 ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
 
-                    // 2️⃣ Send ReasonForCancellation only if NOT null
-                    ...(ReasonForCancellation != null && { ReasonForCancellation }),
+    //                 // 2️⃣ Send ReasonForCancellation only if NOT null
+    //                 ...(ReasonForCancellation != null && { ReasonForCancellation }),
 
-                    // 3️⃣ Backend hates null
-                    Remark: rest.Remark ?? "",
-                };
-            }),
+    //                 // 3️⃣ Backend hates null
+    //                 Remark: rest.Remark ?? "",
+    //             };
+    //         }),
 
-        };
-
-
-        console.log(JSON.stringify(payload, null, 2))
+    //     };
 
 
-        try {
+    //     console.log(JSON.stringify(payload, null, 2))
 
-            console.log("payload ===", payload);
-            const response = await draftBillService.approveDraftBillByID(payload);
 
-            console.log("Cancel API response:", response);
-            const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
-            const resourceStatus = (response as any)?.data?.IsSuccess;
-            console.log("parsedResponse ====", parsedResponse);
-            if (resourceStatus) {
-                toast({
-                    title: "✅ Approved Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
-                    variant: "default",
+    //     try {
+
+    //         console.log("payload ===", payload);
+    //         const response = await draftBillService.approveDraftBillByID(payload);
+
+    //         console.log("Cancel API response:", response);
+    //         const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+    //         const resourceStatus = (response as any)?.data?.IsSuccess;
+    //         console.log("parsedResponse ====", parsedResponse);
+    //         if (resourceStatus) {
+    //             toast({
+    //                 title: "✅ Approved Successfully",
+    //                 description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+    //                 variant: "default",
+    //             });
+    //             setIsCancelModalOpen(false);
+    //         } else {
+    //             console.log("error as any ===", (response as any)?.data?.Message);
+    //             toast({
+    //                 title: "⚠️ Approved Failed",
+    //                 description: (response as any)?.data?.Message || "Failed to Approve changes.",
+    //                 variant: "destructive",
+    //             });
+    //         }
+    //         // Optionally, handle success or display a message
+    //     } catch (error) {
+    //         console.error("Error canceling Draft:", error);
+    //         // Optionally, handle error or display an error message
+    //     }
+    //     setIsCancelModalOpen(false);
+    // };
+   const handleNewApprove = async () => {
+        console.log("setSelectedBillItemsFlag", selectedBillItemsFlag);
+        console.log("selectedDraftBills", selectedDraftBills);
+        console.log("selectedDraftBills", selectedDraftBills[0]?.lineItems ?? [])
+
+        console.log("mk", selectedDbLines[0]?.parentRow?.DraftBillNo)
+
+        if (selectedBillItemsFlag) {
+            // Header level payload - make separate API calls for each selected draft bill
+            try {
+                const apiCalls = selectedDraftBills.map(async (draftBill) => {
+                    const headerLevelPayload = {
+                        Header: {
+                            "DraftBillNo": draftBill.DraftBillNo || draftBill.id,
+                           
+                        },
+                        ItemDetails: [
+                            ...(draftBill.lineItems || []).map((item: any) => ({
+                                ...item,
+                                ModeFlag: "Checked",
+                            })),
+                        ],
+                    };
+
+                    console.log(`Header Level Payload for ${draftBill.DraftBillNo || draftBill.id}:`, JSON.stringify(headerLevelPayload, null, 2));
+
+                    return await draftBillService.approveDraftBillByID(headerLevelPayload);
                 });
+
+                // Execute all API calls
+                const responses = await Promise.all(apiCalls);
+
+                // Process responses
+                let successCount = 0;
+                let failureCount = 0;
+                const failureMessages: string[] = [];
+                const successfullyCancelledDraftBillNos: string[] = [];
+
+                responses.forEach((response, index) => {
+                    const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
+                    const resourceStatus = (response as any)?.data?.IsSuccess;
+                    const draftBillNo = selectedDraftBills[index]?.DraftBillNo || selectedDraftBills[index]?.id;
+
+                    if (resourceStatus) {
+                        successCount++;
+                        successfullyCancelledDraftBillNos.push(draftBillNo);
+                        console.log(`Draft Bill ${draftBillNo} Approved successfully`);
+                    } else {
+                        failureCount++;
+                        const errorMessage = (response as any)?.data?.Message || `Failed to Approve draft bill ${draftBillNo}`;
+                        failureMessages.push(errorMessage);
+                        console.log(`Error Approving draft bill ${draftBillNo}:`, errorMessage);
+                    }
+                });
+
+                // Remove successfully cancelled draft bills from grid data
+                if (successfullyCancelledDraftBillNos.length > 0) {
+                    const updatedGridData = gridState.gridData.filter((item: any) => {
+                        const draftBillNo = item.DraftBillNo || item.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    });
+                    gridState.setGridData(updatedGridData);
+                }
+
+                // Show appropriate toast based on results
+                if (successCount > 0 && failureCount === 0) {
+                    toast({
+                        title: "✅ Draft Bills Approved Successfully",
+                        description: `Successfully Approved ${successCount} draft bill(s).`,
+                        variant: "default",
+                    });
+                    // Clear all selections and uncheck checkboxes on full success
+                    clearAllSelections();
+                } else if (successCount > 0 && failureCount > 0) {
+                    toast({
+                        title: "⚠️ Partial Success",
+                        description: `Approved ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
+                        variant: "default",
+                    });
+                    // Remove successfully cancelled bills from selection
+                    setSelectedDraftBills(selectedDraftBills.filter((bill) => {
+                        const draftBillNo = bill.DraftBillNo || bill.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    }));
+                    // Force grid update
+                    setForceGridUpdate((prev: number) => prev + 1);
+                    handleDraftBillSelection(selectedDraftBills.filter((bill) => {
+                        const draftBillNo = bill.DraftBillNo || bill.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    }));
+                } else {
+                    toast({
+                        title: "⚠️ Approve Failed",
+                        description: failureMessages.join('; ') || "Failed to Approve draft bills.",
+                        variant: "destructive",
+                    });
+                }
+                fetchDraftBills();
                 setIsCancelModalOpen(false);
-            } else {
-                console.log("error as any ===", (response as any)?.data?.Message);
+            } catch (error) {
+                console.error("Error Approving Draft:", error);
                 toast({
-                    title: "⚠️ Approved Failed",
-                    description: (response as any)?.data?.Message || "Failed to Approve changes.",
+                    title: "⚠️ Error",
+                    description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill(s).",
                     variant: "destructive",
                 });
+                setIsCancelModalOpen(false);
             }
-            // Optionally, handle success or display a message
-        } catch (error) {
-            console.error("Error canceling Draft:", error);
-            // Optionally, handle error or display an error message
-        }
-        setIsCancelModalOpen(false);
-    };
+        } else {
+            // Line level payload - existing logic (no changes)
+            const lineLevelPayload = {
+                Header: {
+                    "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
+                   
+                },
 
+                ItemDetails: selectedDbLines.map(({ nestedRow }) => {
+                    const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
+
+                    return {
+                        ...rest,
+
+                        // 1️⃣ If ModeFlag field exists → force to Checked
+                        ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
+
+                        // 2️⃣ Send ReasonForCancellation only if NOT null
+                        ...(ReasonForCancellation != null && { ReasonForCancellation }),
+
+                        // 3️⃣ Backend hates null
+                        Remark: rest.Remark ?? "",
+                    };
+                }),
+
+            };
+
+            console.log("lineLevelPayload", JSON.stringify(lineLevelPayload, null, 2));
+
+            try {
+                const response = await draftBillService.approveDraftBillByID(lineLevelPayload);
+
+                const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
+                const resourceStatus = (response as any)?.data?.IsSuccess;
+                if (resourceStatus) {
+                    console.log("Approve successfully");
+                    
+                    // Track successfully cancelled line items
+                    const cancelledLineNos = selectedDbLines.map(({ nestedRow }) => nestedRow.DBLineNo).filter(Boolean);
+                    const parentDraftBillNo = selectedDbLines[0]?.parentRow?.DraftBillNo;
+
+                    // Remove cancelled line items from grid data
+                    if (cancelledLineNos.length > 0 && parentDraftBillNo) {
+                        const updatedGridData = gridState.gridData.map((item: any) => {
+                            const draftBillNo = item.DraftBillNo || item.id;
+                            if (draftBillNo === parentDraftBillNo && item.lineItems) {
+                                // Filter out cancelled line items
+                                const updatedLineItems = item.lineItems.filter((lineItem: any) => {
+                                    return !cancelledLineNos.includes(lineItem.DBLineNo);
+                                });
+                                return {
+                                    ...item,
+                                    lineItems: updatedLineItems
+                                };
+                            }
+                            return item;
+                        });
+                        gridState.setGridData(updatedGridData);
+                    }
+
+                    // Clear all selections and uncheck checkboxes
+                    clearAllSelections();
+
+                    toast({
+                        title: "✅ Draft Approve Successfully",
+                        description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approve.",
+                        variant: "default",
+                    });
+                    setIsCancelModalOpen(false);
+                    fetchDraftBills();
+                } else {
+                    console.log("error as any ===", (response as any)?.data?.Message);
+                    toast({
+                        title: "⚠️ Approve Failed",
+                        description: (response as any)?.data?.Message || "Failed to Approve changes.",
+                        variant: "destructive",
+                    });
+                }
+                setIsCancelModalOpen(false);
+            } catch (error) {
+                console.error("Error Approving Draft:", error);
+                toast({
+                    title: "⚠️ Error",
+                    description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill.",
+                    variant: "destructive",
+                });
+                setIsCancelModalOpen(false);
+            }
+        }
+    };
     const handleGenerateInvoice = async (consolidationCode: string) => {
         console.log("selectedDraftBills", selectedDraftBills);
         console.log("selectedDraftBills", selectedDraftBills[0]);
