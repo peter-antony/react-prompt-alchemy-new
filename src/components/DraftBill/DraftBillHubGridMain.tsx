@@ -40,7 +40,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
     const { setFooter, resetFooter } = useFooterStore();
     const [selectedBillItemsFlag, setSelectedBillItemsFlag] = useState(false);
-
+    const [forceGridUpdate, setForceGridUpdate] = useState(0);
 
     // State for nested row selections
     const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
@@ -1494,6 +1494,20 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         }
     };
 
+    // Helper function to clear all selections and uncheck checkboxes
+    const clearAllSelections = () => {
+        // Clear parent row selections
+        setSelectedDraftBills([]);
+        // Clear nested row selections
+        setselectedDbLines([]);
+        // Reset flag
+        setSelectedBillItemsFlag(false);
+        // Force grid re-render to uncheck checkboxes
+        setForceGridUpdate((prev: number) => prev + 1);
+        // Trigger parent row selection change callback with empty array
+        handleDraftBillSelection([]);
+    };
+
     const handleNewCancel = async (reasonCode: string, reasonDescription: string) => {
         console.log("setSelectedBillItemsFlag", selectedBillItemsFlag);
         console.log("selectedDraftBills", selectedDraftBills);
@@ -1531,6 +1545,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 let successCount = 0;
                 let failureCount = 0;
                 const failureMessages: string[] = [];
+                const successfullyCancelledDraftBillNos: string[] = [];
 
                 responses.forEach((response, index) => {
                     const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
@@ -1539,6 +1554,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
                     if (resourceStatus) {
                         successCount++;
+                        successfullyCancelledDraftBillNos.push(draftBillNo);
                         console.log(`Draft Bill ${draftBillNo} cancelled successfully`);
                     } else {
                         failureCount++;
@@ -1548,6 +1564,15 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     }
                 });
 
+                // Remove successfully cancelled draft bills from grid data
+                if (successfullyCancelledDraftBillNos.length > 0) {
+                    const updatedGridData = gridState.gridData.filter((item: any) => {
+                        const draftBillNo = item.DraftBillNo || item.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    });
+                    gridState.setGridData(updatedGridData);
+                }
+
                 // Show appropriate toast based on results
                 if (successCount > 0 && failureCount === 0) {
                     toast({
@@ -1555,13 +1580,25 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         description: `Successfully cancelled ${successCount} draft bill(s).`,
                         variant: "default",
                     });
-                    // fetchDraftBills();
+                    // Clear all selections and uncheck checkboxes on full success
+                    clearAllSelections();
                 } else if (successCount > 0 && failureCount > 0) {
                     toast({
                         title: "⚠️ Partial Success",
                         description: `Cancelled ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
                         variant: "default",
                     });
+                    // Remove successfully cancelled bills from selection
+                    setSelectedDraftBills(selectedDraftBills.filter((bill) => {
+                        const draftBillNo = bill.DraftBillNo || bill.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    }));
+                    // Force grid update
+                    setForceGridUpdate((prev: number) => prev + 1);
+                    handleDraftBillSelection(selectedDraftBills.filter((bill) => {
+                        const draftBillNo = bill.DraftBillNo || bill.id;
+                        return !successfullyCancelledDraftBillNos.includes(draftBillNo);
+                    }));
                 } else {
                     toast({
                         title: "⚠️ Cancel Failed",
@@ -1617,6 +1654,33 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 const resourceStatus = (response as any)?.data?.IsSuccess;
                 if (resourceStatus) {
                     console.log("Template cancelled successfully");
+                    
+                    // Track successfully cancelled line items
+                    const cancelledLineNos = selectedDbLines.map(({ nestedRow }) => nestedRow.DBLineNo).filter(Boolean);
+                    const parentDraftBillNo = selectedDbLines[0]?.parentRow?.DraftBillNo;
+
+                    // Remove cancelled line items from grid data
+                    if (cancelledLineNos.length > 0 && parentDraftBillNo) {
+                        const updatedGridData = gridState.gridData.map((item: any) => {
+                            const draftBillNo = item.DraftBillNo || item.id;
+                            if (draftBillNo === parentDraftBillNo && item.lineItems) {
+                                // Filter out cancelled line items
+                                const updatedLineItems = item.lineItems.filter((lineItem: any) => {
+                                    return !cancelledLineNos.includes(lineItem.DBLineNo);
+                                });
+                                return {
+                                    ...item,
+                                    lineItems: updatedLineItems
+                                };
+                            }
+                            return item;
+                        });
+                        gridState.setGridData(updatedGridData);
+                    }
+
+                    // Clear all selections and uncheck checkboxes
+                    clearAllSelections();
+
                     toast({
                         title: "✅ Draft Cancelled Successfully",
                         description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
@@ -2281,7 +2345,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             {/* Load the grid only when preferences are loaded */}
             {isPreferencesLoaded ? (
                 <SmartGridWithNestedRows
-                    key={`grid-${gridState.forceUpdate}`}
+                    key={`grid-${gridState.forceUpdate}-${forceGridUpdate}`}
                     gridId="draft-bill-grid"
                     gridTitle="Draft Bill"
                     recordCount={gridState.gridData.length}
