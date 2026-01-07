@@ -570,13 +570,20 @@ const handleTemplateNumberCallback = (value: string) => {
     loadUomMasters();
   }, []);
 
-  const getUomOptions = (list: any[]) =>
-    list
-      .filter((item) => item.id && item.name) // remove empty row
-      .map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
+ const getUomOptions = (list: any[]) =>
+  list
+    .map(item => {
+      const id = item.id ?? item.ID ?? item.value ?? "";
+      const name = item.name ?? item.Name ?? item.label ?? "";
+
+      if (!id) return null;
+
+      return {
+        label: name ? `${id} || ${name}` : id,
+        value: id,
+      };
+    })
+    .filter(Boolean);
 
   const buildWeightWithUom = (
     value?: { input?: string; dropdown?: string } | null
@@ -753,8 +760,9 @@ const handleTemplateNumberCallback = (value: string) => {
     {
       key: "FromLocationID",
       label: "From Location ID",
-      type: "Text",
+      type: "LazySelect",
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "FromLocationDesc",
@@ -765,8 +773,9 @@ const handleTemplateNumberCallback = (value: string) => {
     {
       key: "ToLocationID",
       label: "To Location ID",
-      type: "Text",
+      type: "LazySelect",
       editable: true,
+      fetchOptions: fetchSectionsList,
     },
     {
       key: "ToLocationDesc",
@@ -2696,6 +2705,7 @@ const handleTemplateNumberCallback = (value: string) => {
     TransitProcedure: {
       id: "UndertakingEnterprise",
       label: "Simplified Transit Procedure For Rail [56 b]",
+      labelFlag:false,
       fieldType: "checkbox",
       value: "",
       mandatory: false,
@@ -2811,14 +2821,96 @@ const effectiveCimCuvNo: string | null =
     }
 
     if (value.includes("||")) {
-      const [id, name] = value.split("||").map((v) => v.trim());
+      const [id, name] = value.split("||").map(v => v.trim());
       return { id, name };
     }
 
     return { id: value.trim(), name: "" };
   };
+  // const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
+  //   const consignor = splitIdName(formData.consignor);
+  //   const consignee = splitIdName(formData.consignee);
 
-  const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
+  //   const custConsignor = splitIdName(formData.customerCodeConsignor);
+  //   const custPrePaid = splitIdName(formData.customerCodePrePaid);
+
+  //   const custConsignee = splitIdName(formData.customerCodeConsignee);
+  //   const custNonPrePaid = splitIdName(formData.customerCodeNonPrePaid);
+  //   const consignorRef = splitIdName(formData.consignorReference);
+
+  //   const deliveryPoint = splitIdName(formData.deliveryPoint);
+  //   const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
+  //   const stationServing = splitIdName(formData.codeStationServing);
+  //   const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
+  //   const NumberOfCustomerAgreementOrTariff = splitIdName(
+  //     formData.customerAgreementTariff
+  //   );
+  //   const acceptance = splitIdName(formData.acceptanceFrom);
+
+  //   return {
+  //     // Consignor
+  //     Consignor_1_value1: consignor.id,
+  //     ConsignorName_value2: formData.consignorDescription,
+
+  //     // Customer Code for Consignor
+  //     CustomerCodeForConsignor_2: custConsignor.id,
+  //     CustomerCodeForConsignor_value2: custConsignor.name,
+
+  //     // Pre-paid payer
+  //     CustomerCodeForPayerOfPrePaidCharges_3: custPrePaid.id,
+  //     CustomerCodeForPayerOfPrePaidCharges_value3: custPrePaid.name,
+
+  //     // Consignee
+  //     Consignee_4_value1: consignee.id,
+  //     ConsigneeName_4_value2: consignee.name,
+
+  //     // Customer Code for Consignee
+  //     CustomerCodeForConsignee_5: custConsignee.id,
+  //     CustomerCodeForConsignee_value5: custConsignee.name,
+
+  //     // Non-prepaid payer
+  //     CustomerCodeForPayerOfNonPrePaidCharges_6: custNonPrePaid.id,
+  //     CustomerCodeForPayerOfNonPrePaidCharges_value6: custNonPrePaid.name,
+
+  //     // Consignor Reference
+
+  //     ConsignorsReference_8_value1: consignorRef.id,
+  //     ConsignorsReference_8_value2: consignorRef.name,
+
+  //     // Delivery Point
+  //     DeliveryPoint_10_4_value1: deliveryPoint.id,
+  //     DeliveryPoint_10_4_value2: deliveryPoint.name,
+
+  //     // Code for Delivery Point
+  //     CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
+  //     CodeForDeliveryPoint_11_value2: codeDeliveryPoint.name,
+
+  //     // Station Serving
+  //     CodeForStationServingDeliveryPoint_12_value1: stationServing.id,
+  //     CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
+
+  //     // Agreement/Tariff
+  //     NumberOfCustomerAgreementOrTariff_14:
+  //       NumberOfCustomerAgreementOrTariff.id || "",
+
+  //     // Acceptance Date / From
+  //     AcceptanceDate_16_2: formData.acceptanceDate || "",
+  //     AcceptanceFrom_16_3: acceptance.id || "",
+
+  //     // Acceptance Point
+  //     CodeForAcceptancePoint_17: acceptancePoint.id,
+  //     CodeForAcceptancePoint_17_1: acceptancePoint.name,
+
+  //     // Other fields
+  //     WagonNo_18: null,
+  //     DeliveryStationName: stationServing.name || "",
+  //     DeliveryCountryName: formData.deliveryCountryName || "",
+  //     NameForAcceptancePoint_16: acceptance.id || "",
+  //     NameForAcceptancePoint_16_1: acceptance.name || "",
+  //   };
+  // };
+
+   const mapFormToGeneralDetailsPayload = (formData: Record<string, any>) => {
     const consignor = splitIdName(formData.consignor);
     const consignee = splitIdName(formData.consignee);
 
@@ -2833,15 +2925,13 @@ const effectiveCimCuvNo: string | null =
     const codeDeliveryPoint = splitIdName(formData.codeDeliveryPoint);
     const stationServing = splitIdName(formData.codeStationServing);
     const acceptancePoint = splitIdName(formData.codeAcceptancePoint);
-    const NumberOfCustomerAgreementOrTariff = splitIdName(
-      formData.customerAgreementTariff
-    );
+    const NumberOfCustomerAgreementOrTariff = splitIdName(formData.customerAgreementTariff);
     const acceptance = splitIdName(formData.acceptanceFrom);
 
     return {
       // Consignor
       Consignor_1_value1: consignor.id,
-      ConsignorName_value2: consignor.name,
+      ConsignorName_value2: formData.consignorDescription,
 
       // Customer Code for Consignor
       CustomerCodeForConsignor_2: custConsignor.id,
@@ -2853,7 +2943,7 @@ const effectiveCimCuvNo: string | null =
 
       // Consignee
       Consignee_4_value1: consignee.id,
-      ConsigneeName_4_value2: consignee.name,
+      ConsigneeName_4_value2: formData?.consigneeDescription,
 
       // Customer Code for Consignee
       CustomerCodeForConsignee_5: custConsignee.id,
@@ -2866,11 +2956,12 @@ const effectiveCimCuvNo: string | null =
       // Consignor Reference
 
       ConsignorsReference_8_value1: consignorRef.id,
-      ConsignorsReference_8_value2: consignorRef.name,
+      ConsignorsReference_8_value2: formData?.consignorReferenceDescription,
+
 
       // Delivery Point
       DeliveryPoint_10_4_value1: deliveryPoint.id,
-      DeliveryPoint_10_4_value2: deliveryPoint.name,
+      DeliveryPoint_10_4_value2: formData?.deliveryPointDescription,
 
       // Code for Delivery Point
       CodeForDeliveryPoint_11_value1: codeDeliveryPoint.id,
@@ -2881,8 +2972,7 @@ const effectiveCimCuvNo: string | null =
       CodeForStationServingDeliveryPoint_12_value2: stationServing.name,
 
       // Agreement/Tariff
-      NumberOfCustomerAgreementOrTariff_14:
-        NumberOfCustomerAgreementOrTariff.id || "",
+      NumberOfCustomerAgreementOrTariff_14: NumberOfCustomerAgreementOrTariff.id || "",
 
       // Acceptance Date / From
       AcceptanceDate_16_2: formData.acceptanceDate || "",
@@ -2901,20 +2991,32 @@ const effectiveCimCuvNo: string | null =
     };
   };
 
-  const mapFormToPaymentInstructionPayload = (
-    paymentFormData: Record<string, any>,
-    placeAndDateFormData: Record<string, any>
-  ) => ({
-    PaymentInstructionDescriptionvalue1:
-      paymentFormData.paymentInstruction1 || null,
-    PaymentInstructionDescriptionvalue2:
-      paymentFormData.paymentInstruction2 || null,
-          PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction3 || null,
+  // const mapFormToPaymentInstructionPayload = (
+  //   paymentFormData: Record<string, any>,
+  //   placeAndDateFormData: Record<string, any>
+  // ) => ({
+  //   PaymentInstructionDescriptionvalue1:
+  //     paymentFormData.paymentInstruction1 || null,
+  //   PaymentInstructionDescriptionvalue2:
+  //     paymentFormData.paymentInstruction2 || null,
+  //         PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction3 || null,
 
+  //   CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
+  //   IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
+  //   Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
+  //   PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
+  //   PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
+  // });
+
+   const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
+    Incotermsvalue: splitIdName(paymentFormData.paymentInstruction1).id || null,
+    PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction2 || null,
+    PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction3 || null,
+    PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction4 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
-    IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
-    Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
-    PlaceAndDateMadeOut_29_value1: placeAndDateFormData.place || null,
+    IncoTerms: paymentFormData.incoTerms ? "1" : "0", // Assuming IncoTerms is from placeAndDateFormData
+    // This might need to be dynamic if there's a form field for it
+    PlaceAndDateMadeOut_29_value1: splitIdName(placeAndDateFormData.place).id || null,
     PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
   });
 
@@ -3030,7 +3132,7 @@ const effectiveCimCuvNo: string | null =
     Charges_79: formData.chargesC || null,
   });
 
-  const mapFormToRoutePayload = (formData: Record<string, any>) => {
+ const mapFormToRoutePayload = (formData: Record<string, any>) => {
     const country = splitIdName(formData.Country);
     const station = splitIdName(formData.Station);
     const enterprise = splitIdName(formData.UndertakingEnterprise);
@@ -3050,8 +3152,7 @@ const effectiveCimCuvNo: string | null =
 
       // Undertaking Enterprise
       UndertakingEnterprisesvalue1: enterprise.id,
-      UndertakingEnterprisesvalue2: formData.UndertakingEnterprisesvalue2,
-      UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
+      UndertakingEnterprisesvalue2: formData.UndertakingEnterpriseValue,
     };
   };
 
@@ -3065,7 +3166,7 @@ const effectiveCimCuvNo: string | null =
       CustomsProcedure_51_27_value1: formData.CustomsProcedures || null,
       CustomsProcedure_51_27_value2: formData.CustomsProcedures || null,
       ContractualCarrier_58a_value1: contractualCarrier.id || null,
-      ContractualCarrier_58a_value2: contractualCarrier.name || null,
+      ContractualCarrier_58a_value2: formData.EnterContractual|| null,
       EnterContractualCarrier_58a: formData.EnterContractual || null,
       SimplifiedTransitProcedureForRail_58b_value1: formData.TransitProcedure
         ? "1"
@@ -3095,41 +3196,88 @@ const effectiveCimCuvNo: string | null =
 //       }));
 //   };
 
-    const mapRouteCodeCDetailsPayload = (rows: any[]) =>
-        rows.map(r => ({
-        RouteID:
-            r.RouteID === "" || r.RouteID === undefined
-            ? null
-            : String(r.RouteID),
+    // const mapRouteCodeCDetailsPayload = (rows: any[]) =>
+    //     rows.map(r => ({
+          
+    //     RouteID:
+    //         r.RouteID === "" || r.RouteID === undefined
+    //         ? null
+    //         : String(r.RouteID),
     
-        LegSequence:
-            r.LegSequence === "" || r.LegSequence === undefined
-            ? null
-            : Number(r.LegSequence),
+    //     LegSequence:
+    //         r.LegSequence === "" || r.LegSequence === undefined
+    //         ? null
+    //         : Number(r.LegSequence),
     
-        LegID:
-            r.LegID === "" || r.LegID === undefined
-            ? null
-            : Number(r.LegID),
-    
-        FromLocationID: r.FromLocationID || null,
-        FromLocationDesc: r.FromLocationDesc || "",
-    
-        ToLocationID: r.ToLocationID || null,
-        ToLocationDesc: r.ToLocationDesc || "",
-    
-        AdhocLeg: r.AdhocLeg ? 1 : 0,
-    
-        ViaPoint: r.ViaPoint || "",
-    
-        ModeFlag: r.ModeFlag || "Insert",
-    }));
+    //     LegID:
+    //         r.LegID === "" || r.LegID === undefined
+    //         ? null
+    //         : Number(r.LegID),
 
-  const mapOtherCarriersPayload = (rows: any[]) =>
-    rows.map((row) => ({
-      Name: row.Name ?? "",
-      Section1: row.Section1 ?? "",
-      Section2: row.Section2 ?? "",
+         
+    
+    //     FromLocationID: r.FromLocationID|| null,
+    //     FromLocationDesc: r.FromLocationDesc || "",
+    
+    //     ToLocationID: r.ToLocationID || null,
+    //     ToLocationDesc: r.ToLocationDesc || "",
+    
+    //     AdhocLeg: r.AdhocLeg ? 1 : 0,
+    
+    //     ViaPoint: r.ViaPoint || "",
+    
+    //     ModeFlag: r.ModeFlag || "Insert",
+    // }));
+
+    const extractId = (value?: string) =>
+  value?.includes("||") ? value.split("||")[0].trim() : value ?? null;
+
+
+    const mapRouteCodeCDetailsPayload = (rows: any[]) =>
+  rows.map(r => {
+   
+
+    return {
+      RouteID:
+        r.RouteID === "" || r.RouteID === undefined
+          ? null
+          : String(r.RouteID),
+
+      LegSequence:
+        r.LegSequence === "" || r.LegSequence === undefined
+          ? null
+          : Number(r.LegSequence),
+
+      LegID:
+        r.LegID === "" || r.LegID === undefined
+          ? null
+          : Number(r.LegID),
+
+  //       FromLocationID: r.FromLocationID
+  // ? r.ToLocationDesc.split("||")[0].trim()
+  // : null,
+  FromLocationID: extractId(r.FromLocationID),
+
+    ToLocationID: extractId(r.ToLocationID),
+
+  //    ToLocationID: r.ToLocationDesc
+  // ? r.ToLocationDesc.split("||")[0].trim()
+  // : null,
+
+      ToLocationDesc: r.ToLocationDesc || "",
+
+      AdhocLeg: r.AdhocLeg ? 1 : 0,
+      ViaPoint: r.ViaPoint || "",
+      ModeFlag: r.ModeFlag || "Insert",
+    };
+  });
+
+
+ const mapOtherCarriersPayload = (rows: any[]) =>
+    rows.map(row => ({
+      Name: splitIdName(row.Name).id ?? "",
+      Section1: splitIdName(row.Section1).id ?? "",
+      Section2: splitIdName(row.Section2).id ?? "",
       Status: row.Status ?? "",
       ModeFlag: row.ModeFlag,
     }));
@@ -3201,18 +3349,21 @@ const effectiveCimCuvNo: string | null =
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-      GrossWeight_25_19: formData.GrossWeight?.input || 0,
+      GrossWeight_25_19: formData.GrossWeight?.input || null,
       GrossWeight_25_19_UOM: formData.GrossWeight?.dropdown || null,
  
-      TareWeight_25_20: formData.TareWeight?.input || 0,
+      TareWeight_25_20: formData.TareWeight?.input || null,
       TareWeight_25_20_UOM: formData.TareWeight?.dropdown || null,
- 
-      NetWeight_25_21: formData.NetWeight?.input || 0,
+
+      Length_Width_Height_24: formData.LengthWidthHeight?.input || null,
+      Length_Width_Height_24_UOM: formData.LengthWidthHeight?.dropdown || null,
+      
+      NetWeight_25_21: formData.NetWeight?.input || null,
       NetWeight_25_21_UOM: formData.NetWeight?.dropdown || null,
  
-      Total_Brutto: formData.TotalBrutto?.input || 0,
-      Total_Netto: formData.TotalNetto?.input || 0,
-      Total_Gross: formData.TotalGross?.input || 0,
+      Total_Brutto: formData.TotalBrutto?.input || null,
+      Total_Netto: formData.TotalNetto?.input || null,
+      Total_Gross: formData.TotalGross?.input || null,
      
       Total_Brutto_UOM: formData.TotalBrutto?.dropdown || null,
       Total_Netto_UOM: formData.TotalNetto?.dropdown || null,
@@ -3321,21 +3472,33 @@ const effectiveCimCuvNo: string | null =
         };
         generalDetailsRef.current.setFormValues(transformedDetails);
       }
-      if (
-        paymentInstructionRef.current &&
-        apiResponse.General?.PaymentInstruction
-      ) {
+      // if (
+      //   paymentInstructionRef.current &&
+      //   apiResponse.General?.PaymentInstruction
+      // ) {
+      //   // Map API response to paymentInstruction form fields
+      //   paymentInstructionRef.current.setFormValues({
+      //     Incotermsvalue:
+      //       apiResponse.General.PaymentInstruction
+      //         .PaymentInstructionDescriptionvalue1,
+      //     paymentInstruction2:
+      //       apiResponse.General.PaymentInstruction
+      //         .PaymentInstructionDescriptionvalue2,
+
+      //         paymentInstruction3:apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
+      //          paymentInstruction4:apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue4,
+      //     carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+      //     incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
+      //   });
+      // }
+      if (paymentInstructionRef.current && apiResponse.General?.PaymentInstruction) {
         // Map API response to paymentInstruction form fields
         paymentInstructionRef.current.setFormValues({
-          paymentInstruction1:
-            apiResponse.General.PaymentInstruction
-              .PaymentInstructionDescriptionvalue1,
-          paymentInstruction2:
-            apiResponse.General.PaymentInstruction
-              .PaymentInstructionDescriptionvalue2,
-
-              paymentInstruction3:apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
-          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+          paymentInstruction1: apiResponse.General.PaymentInstruction.Incotermsvalue,
+          paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
+          paymentInstruction3: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
+          paymentInstruction4: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
+          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === "1", // Convert to boolean
           incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
         });
       }
@@ -3493,14 +3656,10 @@ const effectiveCimCuvNo: string | null =
         const apiRoute = apiResponse.ConsignmentDetails;
 
         const country =
-          apiRoute.Countryvalue1 && apiRoute.Countryvalue2
-            ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
-            : apiRoute.Countryvalue1 || "";
+          apiRoute.Countryvalue1 
 
         const station =
-          apiRoute.Stationvalue1 && apiRoute.Stationvalue2
-            ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
-            : apiRoute.Stationvalue1 || "";
+          apiRoute.Stationvalue1 
 
         const enterprise =
           apiRoute.UndertakingEnterprisesvalue1 &&
@@ -3508,15 +3667,24 @@ const effectiveCimCuvNo: string | null =
             ? `${apiRoute.UndertakingEnterprisesvalue1} || ${apiRoute.UndertakingEnterprisesvalue2}`
             : apiRoute.UndertakingEnterprisesvalue1 || "";
 
-        RouteDetailsRef.current.setFormValues({
-          ConsignmentNumber: apiRoute.CustomsEndorsements_99 || "",
+        // RouteDetailsRef.current.setFormValues({
+        //   ConsignmentNumber: apiRoute.CustomsEndorsements_99 || "",
+        //   Country: country,
+        //   COuntryValue: apiRoute.Countryvalue2 || "",
+        //   Station: station,
+        //   StationValue: apiRoute.Stationvalue2 || "",
+        //   UndertakingEnterprise: apiRoute.UndertakingEnterprisesvalue2 || "",
+        //   UndertakingEnterpriseValue:
+        //     apiRoute.UndertakingEnterprisesvalue2 || "",
+        // });
+         RouteDetailsRef.current.setFormValues({
+          ConsignmentNumber: apiRoute.ConsignmentNo_62_6 || "",
           Country: country,
           COuntryValue: apiRoute.Countryvalue2 || "",
           Station: station,
           StationValue: apiRoute.Stationvalue2 || "",
-          UndertakingEnterprise: enterprise,
-          UndertakingEnterpriseValue:
-            apiRoute.UndertakingEnterprisesvalue2 || "",
+          UndertakingEnterprise: apiRoute.UndertakingEnterprisesvalue1,
+          UndertakingEnterpriseValue: apiRoute.UndertakingEnterprisesvalue2 || "",
         });
       }
       if (RouteEndorsementDetailsRef.current && apiResponse?.RouteDetails) {
@@ -3536,21 +3704,22 @@ const effectiveCimCuvNo: string | null =
             : apiRoute.ContractualCarrier_58a_value1 || "";
 
         RouteEndorsementDetailsRef.current.setFormValues({
-          CustomsEndorsements_99: apiRoute.ConsignmentNo_62_6 || "",
+          CustomsEndorsements_99: apiRoute.CustomsEndorsements_99 || "",
           Route_50: apiRoute.Route_50 || "",
           CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
           ContractualCarrier: ContractualCarrier,
-          EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
+          EnterContractual: apiRoute.ContractualCarrier_58a_value2 || "",
           TransitProcedure:
-            apiRoute.SimplifiedTransitProcedureForRail_58b_value1,
+            apiRoute.SimplifiedTransitProcedureForRail_58b_value1 === "1",
           EnterTransitProcedure:
             apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
         });
       }
+ if (apiResponse?.RouteDetails?.OtherCarriers_57) {
 
-      if (apiResponse?.RouteDetails?.OtherCarriers_57) {
         setOtherCarriers(
           apiResponse.RouteDetails.OtherCarriers_57.map((c: any) => ({
+            Name: c.Name || "",
             Section1: c.Section1 || "",
             Section2: c.Section2 || "",
             Status: c.Status || "",
@@ -3573,7 +3742,71 @@ const effectiveCimCuvNo: string | null =
         );
       }
 
-      if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+      // if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
+      //   const wagon = apiResponse.WagonInfodetails;
+
+      //   WagonDetailsRef.current.setFormValues({
+      //     train: wagon.Train_1 ?? "",
+      //     itinerary: wagon.Itinerary_5 ?? "",
+      //     dataOfDispatch: wagon.Date_of_Dispatch_7 ?? "",
+      //     Page: wagon.Page_9 ?? "",
+      //     toBeClearedAt: wagon.To_be_cleared_at_12 ?? "",
+
+      //     fixedNetTrain: {
+      //       input: wagon.Fixed_Net_Weight_Train_13 ?? "",
+      //       dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
+      //     },
+
+      //     number: wagon.No_Number_14 ?? null,
+      //     LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
+
+      //     wagonNumber: wagon.WagonNo_18_15 ?? "",
+      //     DescriptionoftheGoods: wagon.Description_of_the_goods_21_17 ?? "",
+
+      //     ExceptionalConsignment: wagon.Exceptional_Consignment_22 === "1",
+      //     RID: wagon.RID_23_28 === "1",
+      //     MarkandNumber: wagon.Mark_and_Number_25 ?? "",
+      //     DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
+      //     UTICODE: wagon.UTI_Code_23 ?? "",
+
+      //     NHMCode: wagon.NHM_Code_24_18 ? String(wagon.NHM_Code_24_18) : "",
+
+      //       NHMCode1: wagon.NHM_Code_24_18_1
+      //       ? String(wagon.NHM_Code_24_18_1)
+      //       : "",
+
+      //        NHMCode2: wagon.NHM_Code_24_18_2
+      //       ? String(wagon.NHM_Code_24_18_2)
+      //       : "",
+
+      //        NHMCode3: wagon.NHM_Code_24_18_3
+      //       ? String(wagon.NHM_Code_24_18_3)
+      //       : "",
+
+
+      //     GrossWeight: wagon.GrossWeight_25_19
+      //       ? {
+      //           input: String(wagon.GrossWeight_25_19),
+      //           dropdown: wagon.GrossWeight_25_19_UOM,
+      //         }
+      //       : null,
+
+      //     TareWeight: wagon.TareWeight_25_20
+      //       ? {
+      //           input: String(wagon.TareWeight_25_20),
+      //           dropdown: wagon.TareWeight_25_20_UOM,
+      //         }
+      //       : null,
+
+      //     NetWeight: wagon.NetWeight_25_21
+      //       ? {
+      //           input: String(wagon.NetWeight_25_21),
+      //           dropdown: wagon.NetWeight_25_21_UOM,
+      //         }
+      //       : null,
+      //   });
+      // }
+       if (WagonDetailsRef.current && apiResponse?.WagonInfodetails) {
         const wagon = apiResponse.WagonInfodetails;
 
         WagonDetailsRef.current.setFormValues({
@@ -3585,10 +3818,10 @@ const effectiveCimCuvNo: string | null =
 
           fixedNetTrain: {
             input: wagon.Fixed_Net_Weight_Train_13 ?? "",
-            dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
+             dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
           },
 
-          number: wagon.No_Number_14 ?? 1,
+          number: wagon.No_Number_14 ?? null,
           LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
 
           wagonNumber: wagon.WagonNo_18_15 ?? "",
@@ -3600,41 +3833,94 @@ const effectiveCimCuvNo: string | null =
           DeliveryNoteNumber: wagon.Delivery_Note_Number_26 ?? "",
           UTICODE: wagon.UTI_Code_23 ?? "",
 
-          NHMCode: wagon.NHM_Code_24_18 ? String(wagon.NHM_Code_24_18) : "",
-
-            NHMCode1: wagon.NHMcode_24_18_1
-            ? String(wagon.NHMcode_24_18_1)
+          NHMCode: wagon.NHM_Code_24_18
+            ? String(wagon.NHM_Code_24_18)
             : "",
 
-             NHMCode2: wagon.NHMcode_24_18_2
-            ? String(wagon.NHMcode_24_18_2)
+             NHMCode1: wagon.NHM_Code_24_18_1
+            ? String(wagon.NHM_Code_24_18_1)
             : "",
 
-             NHMCode3: wagon.NHMcode_24_18_3
-            ? String(wagon.NHMcode_24_18_3)
+             NHMCode2: wagon.NHM_Code_24_18_2
+            ? String(wagon.NHM_Code_24_18_2)
+            : "",
+
+             NHMCode3: wagon.NHM_Code_24_18_3
+            ? String(wagon.NHM_Code_24_18_3)
             : "",
 
 
           GrossWeight: wagon.GrossWeight_25_19
             ? {
-                input: String(wagon.GrossWeight_25_19),
-                dropdown: wagon.GrossWeight_25_19_UOM,
-              }
+              input: String(wagon.GrossWeight_25_19),
+              dropdown: wagon.GrossWeight_25_19_UOM,
+            }
             : null,
 
           TareWeight: wagon.TareWeight_25_20
             ? {
-                input: String(wagon.TareWeight_25_20),
-                dropdown: wagon.TareWeight_25_20_UOM,
-              }
+              input: String(wagon.TareWeight_25_20),
+              dropdown: wagon.TareWeight_25_20_UOM,
+            }
             : null,
+//22
+          TotalBrutto:
+  wagon.Total_Brutto !== null && wagon.Total_Brutto !== undefined
+    ? {
+        input: String(wagon.Total_Brutto),
+        dropdown: wagon.Total_Brutto_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+       LengthWidthHeight:
+  wagon.Length_Width_Height_24 !== null && wagon.Length_Width_Height_24 !== undefined
+    ? {
+        input: String(wagon.Length_Width_Height_24),
+        dropdown: wagon.Length_Width_Height_24_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+
+
+
+             TotalNetto:
+  wagon.Total_Netto !== null && wagon.Total_Netto !== undefined
+    ? {
+        input: String(wagon.Total_Netto),
+        dropdown: wagon.Total_Netto_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+
+            TotalGross:
+  wagon.Total_Gross !== null && wagon.Total_Gross !== undefined
+    ? {
+        input: String(wagon.Total_Gross),
+        dropdown: wagon.Total_Gross_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
 
           NetWeight: wagon.NetWeight_25_21
             ? {
-                input: String(wagon.NetWeight_25_21),
-                dropdown: wagon.NetWeight_25_21_UOM,
-              }
+              input: String(wagon.NetWeight_25_21),
+              dropdown: wagon.NetWeight_25_21_UOM,
+            }
             : null,
+
+
         });
       }
 

@@ -1244,8 +1244,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         //     key: 'DraftBillNo', label: 'Draft Bill No', type: 'text',
         // },
         {
-            key: 'DraftBillNo', label: 'Draft Bill No', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('Customer Init')
+            key: 'DraftBillNo', label: 'Draft Bill No', type: 'text',
+            // fetchOptions: makeLazyFetcher('Customer Init')
         },
         {
             key: 'CustomerID', label: 'Customer ID / Name', type: 'lazyselect',

@@ -2548,12 +2548,13 @@ const sanitizeRouteRows = (rows: any[]) =>
 
 
   const mapFormToPaymentInstructionPayload = (paymentFormData: Record<string, any>, placeAndDateFormData: Record<string, any>) => ({
-    PaymentInstructionDescriptionvalue1: splitIdName(paymentFormData.paymentInstruction1).id || null,
-    PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction2 || null,
-    PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction3 || null,
+    Incotermsvalue: splitIdName(paymentFormData.paymentInstruction1).id || null,
+    PaymentInstructionDescriptionvalue1: paymentFormData.paymentInstruction2 || null,
+    PaymentInstructionDescriptionvalue2: paymentFormData.paymentInstruction3 || null,
+     PaymentInstructionDescriptionvalue3: paymentFormData.paymentInstruction4 || null,
     CarriageChargePaid: paymentFormData.carriageChargePaid ? 1 : 0,
     IncoTerms: paymentFormData.incoTerms ? 1 : 0, // Assuming IncoTerms is from placeAndDateFormData
-    Incotermsvalue: "Fleet On Board", // This might need to be dynamic if there's a form field for it
+   // This might need to be dynamic if there's a form field for it
     PlaceAndDateMadeOut_29_value1: splitIdName(placeAndDateFormData.place).id || null,
     PlaceAndDateMadeOut_29_value2: placeAndDateFormData.dateMadeOut || null,
   });
@@ -2681,7 +2682,7 @@ const sanitizeRouteRows = (rows: any[]) =>
 
       // Undertaking Enterprise
       UndertakingEnterprisesvalue1: enterprise.id,
-      UndertakingEnterprisesvalue2: enterprise.name,
+      UndertakingEnterprisesvalue2: formData.UndertakingEnterpriseValue,
       UndertakingEnterpriseValueText: formData.UndertakingEnterpriseValue || "",
     };
   };
@@ -2967,18 +2968,21 @@ const sanitizeRouteRows = (rows: any[]) =>
       Mark_and_Number_25: formData.MarkandNumber || null,
       Delivery_Note_Number_26: formData.DeliveryNoteNumber || null,
 
-      GrossWeight_25_19: formData.GrossWeight?.input || 0,
+      GrossWeight_25_19: formData.GrossWeight?.input || null,
       GrossWeight_25_19_UOM: formData.GrossWeight?.dropdown || null,
 
-      TareWeight_25_20: formData.TareWeight?.input || 0,
+      TareWeight_25_20: formData.TareWeight?.input || null,
       TareWeight_25_20_UOM: formData.TareWeight?.dropdown || null,
 
-      NetWeight_25_21: formData.NetWeight?.input || 0,
+       Length_Width_Height_24: formData.LengthWidthHeight?.input || null,
+      Length_Width_Height_24_UOM: formData.LengthWidthHeight?.dropdown || null,
+
+      NetWeight_25_21: formData.NetWeight?.input || null,
       NetWeight_25_21_UOM: formData.NetWeight?.dropdown || null,
 
-      Total_Brutto: formData.TotalBrutto?.input || 0,
-      Total_Netto: formData.TotalNetto?.input || 0,
-      Total_Gross: formData.TotalGross?.input || 0,
+      Total_Brutto: formData.TotalBrutto?.input || null,
+      Total_Netto: formData.TotalNetto?.input || null,
+      Total_Gross: formData.TotalGross?.input || null,
       
       Total_Brutto_UOM: formData.TotalBrutto?.dropdown || null,
       Total_Netto_UOM: formData.TotalNetto?.dropdown || null,
@@ -3078,10 +3082,11 @@ useEffect(() => {
       if (paymentInstructionRef.current && apiResponse.General?.PaymentInstruction) {
         // Map API response to paymentInstruction form fields
         paymentInstructionRef.current.setFormValues({
-          paymentInstruction1: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
-          paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
-          paymentInstruction3: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
-          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === 1, // Convert to boolean
+          paymentInstruction1: apiResponse.General.PaymentInstruction.Incotermsvalue,
+          paymentInstruction2: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue1,
+          paymentInstruction3: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue2,
+          paymentInstruction4: apiResponse.General.PaymentInstruction.PaymentInstructionDescriptionvalue3,
+          carriageChargePaid: apiResponse.General.PaymentInstruction.CarriageChargePaid === "1", // Convert to boolean
           incoTerms: apiResponse.General.PaymentInstruction.IncoTerms === "1", // Convert to boolean
         });
       }
@@ -3221,14 +3226,10 @@ useEffect(() => {
         const apiRoute = apiResponse.ConsignmentDetails;
 
         const country =
-          apiRoute.Countryvalue1 && apiRoute.Countryvalue2
-            ? `${apiRoute.Countryvalue1} || ${apiRoute.Countryvalue2}`
-            : apiRoute.Countryvalue1 || "";
+          apiRoute.Countryvalue1 
 
         const station =
-          apiRoute.Stationvalue1 && apiRoute.Stationvalue2
-            ? `${apiRoute.Stationvalue1} || ${apiRoute.Stationvalue2}`
-            : apiRoute.Stationvalue1 || "";
+          apiRoute.Stationvalue1 
 
         const enterprise =
           apiRoute.UndertakingEnterprisesvalue1 &&
@@ -3242,7 +3243,7 @@ useEffect(() => {
           COuntryValue: apiRoute.Countryvalue2 || "",
           Station: station,
           StationValue: apiRoute.Stationvalue2 || "",
-          UndertakingEnterprise: enterprise,
+          UndertakingEnterprise: apiRoute.UndertakingEnterprisesvalue1,
           UndertakingEnterpriseValue: apiRoute.UndertakingEnterprisesvalue2 || "",
         });
       }
@@ -3269,7 +3270,8 @@ useEffect(() => {
           CustomsProcedures: apiRoute.CustomsProcedure_51_27_value1,
           ContractualCarrier: ContractualCarrier,
           EnterContractual: apiRoute.ContractualCarrier_58a_value1 || "",
-          TransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value1,
+         TransitProcedure:
+            apiRoute.SimplifiedTransitProcedureForRail_58b_value1 === "1",
           EnterTransitProcedure: apiRoute.SimplifiedTransitProcedureForRail_58b_value2 || "",
         });
       }
@@ -3390,7 +3392,7 @@ useEffect(() => {
              dropdown: wagon.Fixed_Net_Weight_Train_13_UOM ,
           },
 
-          number: wagon.No_Number_14 ?? 1,
+          number: wagon.No_Number_14 ?? null,
           LoadingConfiguration: wagon.Loading_Configuration_16 ?? "",
 
           wagonNumber: wagon.WagonNo_18_15 ?? "",
@@ -3406,16 +3408,16 @@ useEffect(() => {
             ? String(wagon.NHM_Code_24_18)
             : "",
 
-             NHMCode1: wagon.NHMcode_24_18_1
-            ? String(wagon.NHMcode_24_18_1)
+             NHMCode1: wagon.NHM_Code_24_18_1
+            ? String(wagon.NHM_Code_24_18_1)
             : "",
 
-             NHMCode2: wagon.NHMcode_24_18_2
-            ? String(wagon.NHMcode_24_18_2)
+             NHMCode2: wagon.NHM_Code_24_18_2
+            ? String(wagon.NHM_Code_24_18_2)
             : "",
 
-             NHMCode3: wagon.NHMcode_24_18_3
-            ? String(wagon.NHMcode_24_18_3)
+             NHMCode3: wagon.NHM_Code_24_18_3
+            ? String(wagon.NHM_Code_24_18_3)
             : "",
 
 
@@ -3425,6 +3427,19 @@ useEffect(() => {
               dropdown: wagon.GrossWeight_25_19_UOM,
             }
             : null,
+
+             LengthWidthHeight:
+  wagon.Length_Width_Height_24 !== null && wagon.Length_Width_Height_24 !== undefined
+    ? {
+        input: String(wagon.Length_Width_Height_24),
+        dropdown: wagon.Length_Width_Height_24_UOM ?? "",
+      }
+    : {
+        input: "",
+        dropdown: "",
+      },
+
+      
 
           TareWeight: wagon.TareWeight_25_20
             ? {
