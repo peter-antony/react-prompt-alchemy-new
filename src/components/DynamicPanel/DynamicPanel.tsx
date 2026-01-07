@@ -38,6 +38,8 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   currency?: string;
   reportStatus?: string;
   editCimNO?:string;
+  isExpanded?: boolean; // prop for syncing expand/collapse state 
+  onOpenChange?: (isOpen: boolean) => void; // prop for syncing expand/collapse state
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
@@ -74,7 +76,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   templateNumber = '',
   editCimNO,
   // onBadgeChange
-  currency
+  currency,
+  isExpanded,
+  onOpenChange
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -101,6 +105,13 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   useEffect(() => {
     setCurrentBadgeValue(badgeValue || '');
   }, [badgeValue]);
+
+  // Sync open state with isExpanded prop
+  useEffect(() => {
+    if (isExpanded !== undefined) {
+      setIsOpen(isExpanded);
+    }
+  }, [isExpanded]);
 
   // Keep internal panelConfig in sync with incoming prop so option updates reflect
   useEffect(() => {
@@ -551,7 +562,10 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     return (
       <Collapsible 
         open={isOpen} 
-        onOpenChange={setIsOpen} 
+        onOpenChange={(val) => {
+          setIsOpen(val);
+          onOpenChange?.(val);
+        }}
         className={`${getWidthClass()}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

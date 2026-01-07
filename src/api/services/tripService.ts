@@ -717,6 +717,71 @@ export const tripService = {
     return response.data;
   },
 
+  // get attachments for transport route update
+  getTransportRouteUpdateAttachments: async (customerOrderID: any): Promise<PaginatedResponse<Trip>> => {
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Get Attachment",
+      },
+      SearchCriteria: {
+        "ReferenceType": "Transport Route Update",
+        "ReferenceDocNo": customerOrderID,
+        "ExtraRef1": "",
+        "ExtraRef2": "",
+        "ExtraRef3": "",
+        "ExtraRef4": "",
+        "AdditionalFilter": []
+      },
+
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log(" GET TRANSPORT ROUTE UPDATE ATTACHMENT requestPayload ", requestPayload)
+    const response = await apiClient.post(
+      API_ENDPOINTS.TRIPS.GET_ATTACHMENT,
+      requestBody
+    );
+    return response.data;
+  },
+
+  // save attachments for transport route update
+  saveTransportRouteUpdateAttachments: async (params: any, customerOrderID?: any): Promise<ApiResponse<Trip>> => {
+    console.log("params = ", params)
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        Role: userContext.roleName,
+        OUID: userContext.ouId,
+        MessageID: "12345",
+        MessageType: "Save Attachment",
+      },
+      RequestPayload: {
+        "Attachments": {
+          "ReferenceType": "Transport Route Update",
+          "ReferenceDocNo": customerOrderID,
+          "TotalAttachment": 10,
+          "AttachItems": [params]
+        },
+      }
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    console.log("SAVE TRANSPORT ROUTE UPDATE ATTACHMENT % REQUEST BODY : ", requestBody)
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.TRIPS.SAVE_ATTACHMENT}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   getPODLegAttachments: async (params: {
     TripNo: string;
     LegNumber: string | number;

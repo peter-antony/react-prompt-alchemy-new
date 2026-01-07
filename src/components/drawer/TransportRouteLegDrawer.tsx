@@ -3,7 +3,9 @@ import { DynamicPanel } from '@/components/DynamicPanel/DynamicPanel';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PanelConfig , PanelSettings } from '@/types/dynamicPanel';
-import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, Expand, Paperclip } from 'lucide-react';
+import { SideDrawer } from '@/components/Common/SideDrawer';
+import TransportRouteLegDrawerAttachments from './TransportRouteLegDrawerAttachments';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
@@ -136,6 +138,56 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
     fetchArrivals,
     openRouteDrawer
   } = useTransportRouteStore();
+
+  // State for panel expansion
+  const [isAllExpanded, setIsAllExpanded] = useState(true);
+  const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
+  // State for attachments
+  const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
+  const [hasAttachments, setHasAttachments] = useState(false); // State for attachments indicator
+
+  // Function to check if attachments exist
+  const checkAttachments = async () => {
+    const tripId = selectedRoute?.CustomerOrderID;
+    if (!tripId) return;
+    try {
+      // const response = await tripService.getAttachments(tripId);
+      const response = await tripService.getTransportRouteUpdateAttachments(tripId);
+      const res: any = response.data;
+      const parsedData = JSON.parse(res?.ResponseData) || [];
+      if (parsedData?.AttachItems?.length > 0) {
+        setHasAttachments(true);
+      } else {
+        setHasAttachments(false);
+      }
+    } catch (error) {
+      console.error("Error checking attachments:", error);
+    }
+  };
+
+  // Check attachments when selectedRoute changes
+  useEffect(() => {
+    checkAttachments();
+  }, [selectedRoute?.CustomerOrderID]);
+
+  // Handle expand/collapse all
+  const handleToggleExpandAll = () => {
+    const newVal = !isAllExpanded;
+    setIsAllExpanded(newVal);
+
+    // Update all visible legs
+    const newExpandedState: Record<string, boolean> = {};
+    if (selectedRoute?.LegDetails) {
+      selectedRoute.LegDetails.forEach((leg) => {
+        if (leg.LegUniqueId) {
+          newExpandedState[leg.LegUniqueId] = newVal;
+        }
+      });
+    }
+    setExpandedState(newExpandedState);
+
+    console.log("Expand/Collapse All clicked", newVal);
+  };
 
   console.log('selectedRoute from store: --------------- ', selectedRoute);
   console.log('isLoading: --------------- ', isLoading);
@@ -990,6 +1042,50 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       {/* Header Section */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
 
+        {/* Action Buttons Row */}
+        <div className='flex justify-end gap-2'>
+          {/* Add new leg */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={addLegPanel}
+            aria-label="Add Leg"
+            title="Add Leg"
+            className="h-11 w-11 border-gray-300 hover:bg-gray-50 bg-white"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+          {/* Add attachments */}
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label='Attachments'
+            title='Attachments'
+            className="h-11 w-11 border-gray-300 hover:bg-gray-50 bg-white relative"
+            onClick={() => setAttachmentsOpen(true)}
+          >
+            {/* dot indicator if attachments exist */}
+            {hasAttachments && (
+              <span
+                className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-green-600 ring-2 ring-white shadow-sm`}
+              />
+            )}
+            <Paperclip className="h-5 w-5" strokeWidth={1.5} />
+          </Button>
+          {/* expand/collapse all */}
+          <button
+            className={`rounded-lg p-3 cursor-pointer transition-colors ${isAllExpanded
+              ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+              : "bg-white border border-gray-300 hover:bg-gray-100"
+              }`}
+            aria-label="Expand/Collapse All"
+            title="Expand/Collapse All"  // tooltip
+            onClick={handleToggleExpandAll}
+          >
+            <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+          </button>
+        </div>
+
         {/* Customer & Service Info Grid */}
         <div className="grid grid-cols-6 gap-6 text-sm">
           <div>
@@ -1012,16 +1108,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
             <p className="text-gray-500 mb-1 font-medium">Route ID</p>
             <p className="font-semibold text-gray-900">{selectedRoute?.RouteID} || {selectedRoute?.RouteDescription}</p>
           </div>
-          <div className='flex justify-end'>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={addLegPanel}
-              className="h-8 w-8 border-gray-300 hover:bg-gray-50"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+
         </div>
       </div>
 
@@ -1030,6 +1117,7 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
         <div className="space-y-6">
           {selectedRoute?.LegDetails?.map((leg, index) => {
             console.log(`🎨 Rendering DynamicPanel for leg ${index} with config:`, createLegPanelConfig(index));
+            const isExpanded = expandedState[leg.LegUniqueId] ?? true; // default to true
             return (
               <Card key={leg.LegUniqueId} className="relative bg-white border border-gray-200 shadow-sm">
 
@@ -1065,10 +1153,19 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
                   badgeValue={leg.LegSequence.toString()}
                   getUserPanelConfig={getUserPanelConfig}
                   saveUserPanelConfig={saveUserPanelConfig}
+                  isExpanded={isExpanded}
+                  onOpenChange={(isOpen) => {
+                    if (leg.LegUniqueId) {
+                      setExpandedState(prev => ({
+                        ...prev,
+                        [leg.LegUniqueId]: isOpen
+                      }));
+                    }
+                  }}
                 />
 
                 {/* Trip Details with Badges */}
-                {leg.TripInfo && leg.TripInfo.length > 0 && (
+                {isExpanded && leg.TripInfo && leg.TripInfo.length > 0 && (
                   <div className="px-6 pb-4">
                     {leg.TripInfo.map((trip, tripIndex) => (
                       <div
@@ -1287,6 +1384,27 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
           <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
         </div>
       )}
+
+      {/* SideDrawer for Attachments */}
+      <SideDrawer
+        isOpen={isAttachmentsOpen}
+        onClose={() => { setAttachmentsOpen(false); checkAttachments(); }}
+        width="80%"
+        title="Attachments"
+        isBack={false}
+        badgeContent={selectedRoute?.CustomerOrderID}
+        onScrollPanel={true}
+        isBadgeRequired={true}
+      >
+        <div className="">
+          <div className="mt-0 text-sm text-gray-600">
+            <TransportRouteLegDrawerAttachments
+              isTripLogAttachments={true}
+              tripId={selectedRoute?.CustomerOrderID}  // Pass the BR Id
+            />
+          </div>
+        </div>
+      </SideDrawer>
     </div>
   );
 });
