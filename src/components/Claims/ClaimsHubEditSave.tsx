@@ -68,7 +68,7 @@ export const ClaimsHubEditSave: React.FC<Props> = ({ isOpen, onClose, rowEditDat
               type="text"
               value={refDocTypeNo}
               onChange={(e) => setRefDocTypeNo(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 bg-gray-50"
+              className="w-full rounded-md border px-3 py-2 bg-gray-50 text-xs"
               placeholder="Enter Ref. Doc. Type/No."
               readOnly={true}
               disabled={true}
@@ -81,7 +81,7 @@ export const ClaimsHubEditSave: React.FC<Props> = ({ isOpen, onClose, rowEditDat
             <input
               value={claimantRefNo}
               onChange={(e) => setClaimantRefNo(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 bg-white"
+              className="w-full rounded-md border px-3 py-2 bg-white text-xs"
               placeholder="Enter Claimant Ref. No."
             />
           </div>
@@ -91,7 +91,7 @@ export const ClaimsHubEditSave: React.FC<Props> = ({ isOpen, onClose, rowEditDat
             <input
               value={secondaryRefNo}
               onChange={(e) => setSecondaryRefNo(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 bg-white"
+              className="w-full rounded-md border px-3 py-2 bg-white text-xs"
               placeholder="Enter Secondary Ref. No."
             />
           </div>

@@ -131,7 +131,40 @@ export const ClaimService = {
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.CLAIMS.COMBO,
+      API_ENDPOINTS.CLAIMS.AUDIT_TRAIL,
+      requestBody
+    );
+    return response.data;
+  },
+
+  claimHubSmartEdit: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-SmartEdit",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: {
+        Header: {
+          ClaimNo: params?.ClaimNo,
+          Reference: {
+            ClaimantRefNo: params?.ClaimantRefNo,
+            SecondaryRefNo: params?.SecondaryRefNo,
+            ModeFlag: "Update"
+          }
+        }
+      }
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.SMARTEDIT,
       requestBody
     );
     return response.data;

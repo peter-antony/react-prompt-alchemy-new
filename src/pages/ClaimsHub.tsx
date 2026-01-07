@@ -118,7 +118,7 @@ export const ClaimsHub = () => {
       if (resourceStatus) {
         console.log("Trip data updated in store");
         toast({
-          title: "✅ Trip Cancelled",
+          title: "Claim Cancelled",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
           variant: "default",
         });
@@ -128,7 +128,7 @@ export const ClaimsHub = () => {
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
-          title: "⚠️ Trip Cancellation Failed",
+          title: "Claim Cancellation Failed",
           description: (response as any)?.data?.Message || "Failed to save changes.",
           variant: "destructive",
         });
@@ -172,18 +172,18 @@ export const ClaimsHub = () => {
       if (resourceStatus) {
         console.log("Trip data updated in store");
         toast({
-          title: "✅ Trip Cancelled",
-          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
+          title: "Success",
+          description: "Claim has been short closed successfully.",
           variant: "default",
         });
         // Refresh the grid data to show the updated trip status and close the modal
-        setCancelModalOpen(false);
+        setShortCloseModalOpen(false);
         await fetchClaims();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
-          title: "⚠️ Trip Cancellation Failed",
-          description: (response as any)?.data?.Message || "Failed to save changes.",
+          title: "Error",
+          description: "Failed to save changes.",
           variant: "destructive",
         });
       }
@@ -887,7 +887,8 @@ export const ClaimsHub = () => {
         {
           label: "Audit Trail",
           type: 'Button',
-          disabled: selectedRowObjects.length !== 1, // <-- Enable if exactly one row is selected
+          // disabled: selectedRowObjects.length !== 1, // <-- Enable if exactly one row is selected
+          disabled: true, // <-- Enable if exactly one row is selected
           onClick: () => {
             console.log("Audit Trail clicked");
             if (selectedRowObjects.length === 0) {
@@ -1487,10 +1488,30 @@ export const ClaimsHub = () => {
     // console.log('Serverside filters changed. Claim Type:', type, 'Counter Party:', counterParty);
   };
 
-  const saveClaimFieldsFromSidedraw = (data: any) => {
+  const saveClaimFieldsFromSidedraw = async (data: any) => {
     console.log('Data received from sidedraw to save:', data);
-    setIsClaimsEditOpen(false);
-    // Implement saving logic here
+    const Payload = {
+      ClaimNo: data.ClaimNo,
+      ClaimantRefNo: data.ClaimantRefNo,
+      SecondaryRefNo: data.SecondaryRefNo
+    };
+
+    try {
+      const response = await ClaimService.claimHubSmartEdit(Payload);
+      const responseDataString = response?.data?.ResponseData;
+      if (!responseDataString) return;
+      if(response?.data?.IsSuccess) {
+        setIsClaimsEditOpen(false);
+        fetchClaims(); // Refresh the grid data
+        toast({
+        title: "Success",
+        description: `Claim fields updated successfully`,
+      });
+      }
+    }
+    catch (error) {
+      console.error('Error saving claim fields from sidedraw:', error);
+    }
   };
 
   return (
