@@ -1300,11 +1300,12 @@ export const ClaimsHub = () => {
     },
     {
       key: 'RefDocType',
-      label: 'Ref. Doc. Type/No',
+      label: 'Ref. Doc. Type',
       type: 'lazyselect',
       fetchOptions: makeLazyFetcher("Claim Ref Doc Type Init"),
       hideSearch: true,
     },
+    { key: 'RefDocNo', label: 'Ref. Doc. No.', type: 'text' },
     {
       key: 'ClaimCategory',
       label: 'Claim Category',
