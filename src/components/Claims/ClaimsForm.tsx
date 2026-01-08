@@ -13,6 +13,10 @@ import { GridColumnConfig } from "@/types/smartgrid";
 import { useFooterStore } from "@/stores/footerStore";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { InvestigationDetails } from "./InvestigationDetails";
+import { ClaimFindings } from "./ClaimFindings";
+import ClaimLinkedInternalOrders from "./ClaimLinkedInternalOrders";
+import { quickOrderService } from "@/api/services";
 
 const ClaimsForm = () => {
     const navigate = useNavigate();
@@ -25,7 +29,9 @@ const ClaimsForm = () => {
     const [showDropdownMenu, setShowDropdownMenu] = useState(false);
     const [investigationCount, setInvestigationCount] = useState(3); // State for investigation count
     const [isDocumentDetailsOpen, setIsDocumentDetailsOpen] = useState(true); // State for document details collapse
-
+    const [investigationDetailsOpen, setInvestigationDetailsOpen] = useState(false); // State for investigation details sidedrawer
+    const [claimFindingsOpen, setClaimFindingsOpen] = useState(false); // State for claim findings sidedrawer
+    const [linkedInternalOrdersOpen, setLinkedInternalOrdersOpen] = useState(false); // State for linked internal orders sidedrawer
     // Function to get status color classes based on status name (same as ClaimsHub)
     const getStatusColor = (status: string) => {
         const statusColors: Record<string, string> = {
@@ -48,27 +54,6 @@ const ClaimsForm = () => {
             'Draft': 'badge-orange rounded-2xl',
         };
         return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
-    };
-
-    // Function to get status text and color classes for badge
-    const getStatusBadgeClasses = (status: string) => {
-        const statusClass = getStatusColor(status);
-        // Extract color classes and convert to appropriate badge styling
-        if (statusClass.includes('badge-green')) {
-            return 'px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full';
-        } else if (statusClass.includes('badge-fresh-green')) {
-            return 'px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full';
-        } else if (statusClass.includes('badge-blue')) {
-            return 'px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full';
-        } else if (statusClass.includes('badge-red')) {
-            return 'px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full';
-        } else if (statusClass.includes('badge-orange')) {
-            return 'px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full';
-        } else if (statusClass.includes('badge-purple')) {
-            return 'px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full';
-        } else {
-            return 'px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full';
-        }
     };
 
     // Get claim ID and status from URL and bind to searchQuery
@@ -251,14 +236,42 @@ const ClaimsForm = () => {
     ];
 
     // Dummy fetcher for lazyselect fields
-    const dummyFetcher = async ({ searchTerm }: { searchTerm: string }) => {
-        return [];
-    };
+    const fetchMaster = (
+        messageType: string,
+        // additionalFilter?: { FilterName: string; FilterValue: string }[]
+        extraParams?: Record<string, any>
+      ) => {
+        return async ({ searchTerm, offset, limit }) => {
+          try {
+            const response = await quickOrderService.getMasterCommonData({
+              messageType,
+              searchTerm: searchTerm || "",
+              offset,
+              limit,
+              ...(extraParams || {}),
+            });
+    
+            const rr: any = response?.data;
+            const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+    
+            return arr.map((item: any) => {
+              const id = item.id ?? "";
+              const name = item.name ?? "";
+              return {
+                label: `${id} || ${name}`,
+                value: `${id} || ${name}`,
+              };
+            });
+          } catch (err) {
+            return [];
+          }
+        };
+      };
 
     // Defining the config as PanelConfig object (Record<string, FieldConfig>)
     const claimPanelConfig: PanelConfig = {
-        InvestigationRequired: {
-            id: "InvestigationRequired",
+        InvestigationNeeded: {
+            id: "InvestigationNeeded",
             label: "Investigation Required",
             fieldType: "switch",
             width: "full",
@@ -268,12 +281,12 @@ const ClaimsForm = () => {
             editable: true,
             order: 1
         },
-        InitiateBy: {
-            id: "InitiateBy",
+        InitiatedBy: {
+            id: "InitiatedBy",
             label: "Initiate By",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Initiated by Init"),
             value: "",
             mandatory: true,
             visible: true,
@@ -285,7 +298,7 @@ const ClaimsForm = () => {
             label: "Counterparty",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Counter Party Init"),
             value: "",
             mandatory: true,
             visible: true,
@@ -297,7 +310,7 @@ const ClaimsForm = () => {
             label: "Forwardis Financial Action",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
             value: "",
             mandatory: true,
             visible: true,
@@ -309,19 +322,19 @@ const ClaimsForm = () => {
             label: "Expected Document",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Expected Document Init"),
             value: "",
             mandatory: true,
             visible: true,
             editable: true,
             order: 5
         },
-        BusinessPartner: {
-            id: "BusinessPartner",
+        BusinessPartnerID: {
+            id: "BusinessPartnerID",
             label: "Business Partner",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Counter Party OnSelect"),
             value: "",
             mandatory: true,
             visible: true,
@@ -344,7 +357,7 @@ const ClaimsForm = () => {
             label: "Claim Category",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claim Category Init"),
             value: "",
             mandatory: false,
             visible: true,
@@ -378,15 +391,15 @@ const ClaimsForm = () => {
             label: "Incident Type",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claim Incident Type Init"),
             value: "",
             mandatory: true,
             visible: true,
             editable: true,
             order: 11
         },
-        IncidentDateAndTime: {
-            id: "IncidentDateAndTime",
+        IncidentDateTime: {
+            id: "IncidentDateTime",
             label: "Incident Date and Time",
             fieldType: "date",
             width: "four",
@@ -401,31 +414,31 @@ const ClaimsForm = () => {
             label: "Incident Location",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Location Init"),
             value: "",
             mandatory: false,
             visible: true,
             editable: true,
             order: 13
         },
-        RefDocTypeID: {
-            id: "RefDocTypeID",
+        RefDocType: {
+            id: "RefDocType",
             label: "Ref. Doc. Type/ ID",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claim Ref Doc Type Init"),
             value: "",
             mandatory: false,
             visible: true,
             editable: true,
             order: 14
         },
-        WagonNo: {
-            id: "WagonNo",
+        Wagon: {
+            id: "Wagon",
             label: "Wagon No.",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
             value: [],
             mandatory: false,
             visible: true,
@@ -433,12 +446,12 @@ const ClaimsForm = () => {
             order: 15,
             // multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
         },
-        ContainerID: {
-            id: "ContainerID",
+        Container: {
+            id: "Container",
             label: "Container ID",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
             value: [],
             mandatory: false,
             visible: true,
@@ -446,12 +459,12 @@ const ClaimsForm = () => {
             order: 16,
             // multiSelect: true
         },
-        THUID: {
-            id: "THUID",
+        THU: {
+            id: "THU",
             label: "THU ID",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
             value: [],
             mandatory: false,
             visible: true,
@@ -464,7 +477,7 @@ const ClaimsForm = () => {
             label: "WBS",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("WBS Init"),
             value: "",
             mandatory: true,
             visible: true,
@@ -476,7 +489,7 @@ const ClaimsForm = () => {
             label: "Action/ Resolution",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Claims Action/Resolution Init"),
             value: "",
             mandatory: true,
             visible: true,
@@ -488,7 +501,7 @@ const ClaimsForm = () => {
             label: "Assigned User",
             fieldType: "lazyselect",
             width: "four",
-            fetchOptions: dummyFetcher,
+            fetchOptions: fetchMaster("Createdby Init"),
             value: "",
             mandatory: false,
             visible: true,
@@ -507,8 +520,8 @@ const ClaimsForm = () => {
             editable: true,
             order: 21
         },
-        RemarkforActionResolution: {
-            id: "RemarkforActionResolution",
+        ActionResolutionRemark: {
+            id: "ActionResolutionRemark",
             label: "Remark for Action/Resolution",
             fieldType: "text",
             width: "half",
@@ -641,14 +654,14 @@ const ClaimsForm = () => {
                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="">
-                            <span className={getStatusBadgeClasses(claimStatus)}>
+                            <span className={getStatusColor(claimStatus) + ' text-xs'}>
                                 {claimStatus}
                             </span>
                         </div>
                     </div>
 
                     {/* new claim button and action buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         {/* New Claim Button */}
                         <div className="relative inline-block">
                             <button
@@ -685,18 +698,18 @@ const ClaimsForm = () => {
                                 // Handle copy action
                                 console.log("Copy clicked");
                             }}
-                            className="h-9 w-9 rounded border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
+                            className="h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
                             type='button'
                             title="Copy"
                         >
-                            <Files className="h-4 w-4 text-gray-600" />
+                            <Copy className="h-4 w-4 text-gray-600" />
                         </button>
 
                         {/* 3 Dots Menu Button */}
                         <div className="relative inline-block">
                             <button
                                 onClick={() => setShowDropdownMenu(!showDropdownMenu)}
-                                className="h-9 w-9 rounded border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
+                                className="h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
                                 type='button'
                                 title="More options"
                             >
@@ -774,6 +787,7 @@ const ClaimsForm = () => {
                                             </button>
                                             <button
                                                 onClick={() => {
+                                                    setLinkedInternalOrdersOpen(true);
                                                     setShowDropdownMenu(false);
                                                     console.log("Linked Claims and IO clicked");
                                                 }}
@@ -839,6 +853,7 @@ const ClaimsForm = () => {
                                         onClick={() => {
                                             // Handle edit action
                                             console.log("Edit Investigation Details clicked");
+                                            setInvestigationDetailsOpen(true);
                                         }}
                                     >
                                         <SquarePen className="h-4 w-4 text-gray-600" />
@@ -869,6 +884,7 @@ const ClaimsForm = () => {
                                     onClick={() => {
                                         // Handle edit action
                                         console.log("Edit Claims Findings clicked");
+                                        setClaimFindingsOpen(true);
                                     }}
                                 >
                                     <SquarePen className="h-4 w-4 text-gray-600" />
@@ -1020,6 +1036,24 @@ const ClaimsForm = () => {
 
                 </div>
             </div>
+
+            {/* Investigation Details Section */}
+            <InvestigationDetails
+                isOpen={investigationDetailsOpen}
+                onClose={() => setInvestigationDetailsOpen(false)}
+            />
+
+            {/* Claim Findings Section */}
+            <ClaimFindings
+                isOpen={claimFindingsOpen}
+                onClose={() => setClaimFindingsOpen(false)}
+            />
+            {/* Linked Internal Orders Section */}
+            <ClaimLinkedInternalOrders
+                isOpen={linkedInternalOrdersOpen}
+                onClose={() => setLinkedInternalOrdersOpen(false)}
+                claimNo={searchQuery}
+            />
         </AppLayout>
     );
 };
