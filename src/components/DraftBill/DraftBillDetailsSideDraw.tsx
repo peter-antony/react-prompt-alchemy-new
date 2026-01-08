@@ -1272,13 +1272,16 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                     </div>
 
                     {/* Panel 1: Summary Panel */}
-                    <div className="p-4 border rounded-md bg-white shadow-sm">
+                    <div className="border rounded-md bg-white shadow-sm">
+                      {/* Summary Header */}
                       <div
-                        className={`flex items-center justify-between cursor-pointer ${isSummaryExpanded ? "mb-4 border-b border-gray-200 pb-3" : ""}`}
+                        className={`flex items-center justify-between cursor-pointer px-4 py-3 hover:bg-gray-50
+                          ${isSummaryExpanded ? "border-b border-gray-200" : ""}`}
                         onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
                       >
-                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                          <Bookmark className="w-5 h-5 text-orange-500" /> Summary
+                        <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                          <Bookmark className="w-5 h-5 text-orange-500" />
+                          Summary
                         </h3>
                         {isSummaryExpanded ? (
                           <ChevronUp className="h-5 w-5 text-gray-500" />
@@ -1287,8 +1290,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                         )}
                       </div>
 
+                      {/* Summary Content */}
                       {isSummaryExpanded && (
-                        <>
+                        <div className="p-4">
                           <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
                             <div>
                               <p className="text-gray-500">Tariff ID</p>
@@ -1308,7 +1312,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Minimum/Maximum Charge</p>
-                              <p className="font-medium text-gray-900">€ {activeLine?.MinimumCharge || '0.00'} / € {activeLine?.MaximumCharge || '0.00'}</p>
+                              <p className="font-medium text-gray-900">
+                                € {activeLine?.MinimumCharge || '0.00'} / € {activeLine?.MaximumCharge || '0.00'}
+                              </p>
                             </div>
                             <div>
                               <p className="text-gray-500">Reference Doc. No.</p>
@@ -1340,12 +1346,12 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                           </div>
                           <hr className="my-4" />
-                          <h3 className="text-base font-semibold text-gray-900 mt-4 mb-4 flex items-center gap-2">
+                          <h3 className="text-base font-semibold text-gray-800 mb-4">
                             Reason Details
                           </h3>
                           <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
                             <div>
-                              <p className="text-gray-500">Reason for Amendment.</p>
+                              <p className="text-gray-500">Reason for Amendment</p>
                               <p className="font-medium text-gray-900">{activeLine?.ReasonForAmendment || '--'}</p>
                             </div>
                             <div>
@@ -1357,7 +1363,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <p className="font-medium text-gray-900">{activeLine?.Remark || '--'}</p>
                             </div>
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
 
