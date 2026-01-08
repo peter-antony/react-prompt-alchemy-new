@@ -3,11 +3,11 @@ import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { Expand, UserPlus } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { quickOrderService } from '@/api/services/quickOrderService';
-import { FileText } from 'lucide-react';
+import { FileText, Files } from 'lucide-react';
 import { CimCuvService } from '@/api/services/CimCuvService'; // Import CimCuvService
 import { useSearchParams } from "react-router-dom";
 import { SmartGridWithGrouping } from '../SmartGrid';
@@ -65,8 +65,37 @@ const TemplateCreate = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
   const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
+  
+  // State for expand/collapse all panels
+  const [isAllPanelsExpanded, setIsAllPanelsExpanded] = useState(true);
+  const [panelExpandedStates, setPanelExpandedStates] = useState<Record<string, boolean>>({
+    'general-details': true,
+    'payment-instruction': true,
+    'place-and-date': true,
+    'consignor-declarations': true,
+    'value-delivery-cash': true,
+    'coding-boxes': true,
+    'examination-details': true,
+    'section-a': true,
+    'section-b': true,
+    'section-c': true,
+    'RouteConsignmentDetails': true,
+    'RouteDetails': true,
+    'WagonInfoDetails': true,
+  });
 
   const buttonCancel = "inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm";
+  
+  // Handler for individual panel expand/collapse
+  const handlePanelOpenChange = (panelId: string, isOpen: boolean) => {
+    setPanelExpandedStates(prev => {
+      const updatedStates = { ...prev, [panelId]: isOpen };
+      // Update isAllPanelsExpanded based on all panel states
+      const allExpanded = Object.values(updatedStates).every(state => state === true);
+      setIsAllPanelsExpanded(allExpanded);
+      return updatedStates;
+    });
+  };
   /**
    * fetchMaster helper for lazy select dropdowns
    */
@@ -4372,11 +4401,11 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               initialData={headerTemplateData}
               // onDataChange={handleHeaderTemplateDataChange}
               panelWidth="full"
-              collapsible={true} // Added collapsible prop
+              // collapsible={true} // Added collapsible prop
               showHeader={false} // Hide header to match screenshot
             />
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12 relative">
             <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
               <TabsTrigger
                 value="general"
@@ -4415,7 +4444,39 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                 Wagon Info
               </TabsTrigger>
             </TabsList>
-
+            <div className='flex items-center justify-end mb-4 absolute right-0 top-0'>
+              <button
+                  onClick={() => {
+                      // Handle copy action
+                      console.log("Copy clicked");
+                  }}
+                  className="mr-3 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
+                  type='button'
+                  title="Copy"
+              >
+                  <Files className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                className={`rounded-lg p-2 cursor-pointer ${isAllPanelsExpanded
+                  ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                  : "bg-white border border-gray-300 hover:bg-gray-100"
+                  }`}
+                aria-label="Expand/Collapse All"
+                title="Expand/Collapse All"
+                onClick={() => {
+                  const newState = !isAllPanelsExpanded;
+                  setIsAllPanelsExpanded(newState);
+                  // Update all panel states
+                  const newPanelStates: Record<string, boolean> = {};
+                  Object.keys(panelExpandedStates).forEach(panelId => {
+                    newPanelStates[panelId] = newState;
+                  });
+                  setPanelExpandedStates(newPanelStates);
+                }}
+              >
+                <Expand className={`w-4 h-4 ${isAllPanelsExpanded ? "text-white" : "text-gray-700"}`} />
+              </button>
+            </div>
             <TabsContent value="general" className="mt-6" forceMount>
               <div className=''>
                 <div className="">
@@ -4434,16 +4495,20 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                       // onDataChange={handleGeneralDataChange}
                       panelWidth="full"
                       collapsible={true} // Added collapsible prop
+                      isExpanded={panelExpandedStates['general-details']}
+                      onOpenChange={(isOpen) => handlePanelOpenChange('general-details', isOpen)}
                     />
-                    <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{ marginTop: '-25px' }}>
-                      <Button
-                        onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
-                        className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
-                      >
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Add Consignor/Consignee
-                      </Button>
-                    </div>
+                    {panelExpandedStates['general-details'] && (
+                      <div className="flex justify-start mb-6 bg-white py-3 px-4 border-t border-gray-200" style={{ marginTop: '-25px' }}>
+                        <Button
+                          onClick={() => setIsConsignorConsigneeSideDrawOpen(true)}
+                          className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add Consignor/Consignee
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* New Payment Instruction Panel */}
@@ -4458,6 +4523,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                     // onDataChange={handlePaymentInstructionDataChange}
                     panelWidth="full"
                     collapsible={true} // Added collapsible prop
+                    isExpanded={panelExpandedStates['payment-instruction']}
+                    onOpenChange={(isOpen) => handlePanelOpenChange('payment-instruction', isOpen)}
                   />
 
                   {/* New Place and Date Made Out Panel */}
@@ -4472,6 +4539,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                     // onDataChange={handlePlaceAndDateDataChange}
                     panelWidth="full"
                     collapsible={true} // Added collapsible prop
+                    isExpanded={panelExpandedStates['place-and-date']}
+                    onOpenChange={(isOpen) => handlePanelOpenChange('place-and-date', isOpen)}
                   />
                 </div>
               </div>
@@ -4489,6 +4558,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={consignorDeclarationsData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['consignor-declarations']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('consignor-declarations', isOpen)}
                 />
                 <DynamicPanel
                   ref={valueDeliveryCashRef}
@@ -4500,6 +4571,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={valueDeliveryCashData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['value-delivery-cash']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('value-delivery-cash', isOpen)}
                 />
                 <DynamicPanel
                   ref={codingBoxesRef}
@@ -4511,6 +4584,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={codingBoxesData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['coding-boxes']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('coding-boxes', isOpen)}
                 />
                 <DynamicPanel
                   ref={examinationDetailsRef}
@@ -4522,6 +4597,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={examinationDetailsData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['examination-details']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('examination-details', isOpen)}
                 />
                 <DynamicPanel
                   ref={sectionARef}
@@ -4533,6 +4610,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={sectionAData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['section-a']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('section-a', isOpen)}
                 />
                 <DynamicPanel
                   ref={sectionBRef}
@@ -4544,6 +4623,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={sectionBData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['section-b']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('section-b', isOpen)}
                 />
                 <DynamicPanel
                   ref={sectionCRef}
@@ -4555,6 +4636,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   initialData={sectionCData}
                   panelWidth="full"
                   collapsible={true}
+                  isExpanded={panelExpandedStates['section-c']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('section-c', isOpen)}
                 />
               </div>
             </TabsContent>
@@ -4579,6 +4662,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   // onDataChange={handleGeneralDataChange}
                   panelWidth="full"
                   collapsible={true} // Added collapsible prop
+                  isExpanded={panelExpandedStates['RouteConsignmentDetails']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('RouteConsignmentDetails', isOpen)}
                 />
               </div>
               {/* //table */}
@@ -4609,6 +4694,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   // onDataChange={handleGeneralDataChange}
                   panelWidth="full"
                   collapsible={true} // Added collapsible prop
+                  isExpanded={panelExpandedStates['RouteDetails']}
+                  onOpenChange={(isOpen) => handlePanelOpenChange('RouteDetails', isOpen)}
                 />
 
               </div>
@@ -4646,6 +4733,8 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                     // onDataChange={handleGeneralDataChange}
                     panelWidth="full"
                     collapsible={true} // Added collapsible prop
+                    isExpanded={panelExpandedStates['WagonInfoDetails']}
+                    onOpenChange={(isOpen) => handlePanelOpenChange('WagonInfoDetails', isOpen)}
                   />
                 </div>
 
