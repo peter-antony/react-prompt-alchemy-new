@@ -856,10 +856,10 @@ const handleTemplateNumberCallback = (value: string) => {
       { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
       { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
   
-      { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
-      { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
-      { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
-      { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
+      { key: "UN_Desc_English_Check", label: "UN English Check", type: "checkbox", editable: true },
+      { key: "UN_Desc_French_Check", label: "UN French Check", type: "checkbox", editable: true },
+      { key: "UN_Desc_German_Check", label: "UN German Check", type: "checkbox", editable: true },
+      { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "checkbox", editable: true },
       { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
   
       // { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },

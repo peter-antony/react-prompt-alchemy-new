@@ -940,9 +940,29 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     return null; // Fallback
   };
 
+  // Checkbox renderer
+  const renderCheckbox = () => {
+    // Convert value to boolean for checkbox display
+    const checked = Boolean(value === true || value === 1 || value === '1' || value === 'true');
+    
+    return (
+      <div className="flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={checked}
+          readOnly
+          disabled={!isEditable}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+        />
+      </div>
+    );
+  };
+
   // Main renderer switch
   const renderCellContent = () => {
     switch (column.type) {
+      case 'checkbox':
+        return renderCheckbox();
       case 'Link':
         return renderLink();
       case 'Badge':

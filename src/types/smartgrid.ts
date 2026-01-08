@@ -33,6 +33,7 @@ export type GridColumnType =
   | 'Select'               // Select dropdown
   | 'LazySelect'           // Lazy-loaded select with search
   | 'MultiselectLazySelect' // Lazy-loaded multi-select with search
+  | 'checkbox'             // Checkbox input for boolean values
   | 'CurrencyWithSymbol'   // Currency with symbol
   | 'ActionButton'         // Action button column
   | 'LegLocationFormat'   // Location format for legs

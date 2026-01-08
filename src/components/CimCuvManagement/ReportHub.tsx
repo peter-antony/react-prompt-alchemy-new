@@ -475,15 +475,15 @@ export const ReportSearchHub = () => {
       pageName: 'Trip_Execution',
       leftButtons: [],
       rightButtons: [
-        {
-          label: "Cancel",
-          onClick: () => {
-            console.log("Cancel clicked - TemplateHub");
-            // setPopupOpen(true);
-          },
-          type: 'Button',
-          disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
-        },
+        // {
+        //   label: "Cancel",
+        //   onClick: () => {
+        //     console.log("Cancel clicked - TemplateHub");
+        //     // setPopupOpen(true);
+        //   },
+        //   type: 'Button',
+        //   disabled: selectedRows.size === 0, // <-- Enable if at least one row is selected
+        // },
       ],
     });
     return () => resetFooter();

@@ -532,7 +532,7 @@ const TemplateCreate = () => {
     { key: "RID", label: "RID", type: "Text", editable: true },
     { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
     { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-    { key: "Net_Weight_Commodity_Qty", label: "Net Weight", type: "Text", editable: true },
+    { key: "Net_Weight_", label: "Net Weight", type: "Text", editable: true },
     { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
     { key: "NHM", label: "NHM", type: "Text", editable: true },
     { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
@@ -585,10 +585,10 @@ const TemplateCreate = () => {
     { key: "UN_Desc_German", label: "UN Desc German", type: "Text", editable: true },
     { key: "UN_Desc_Other_Language", label: "UN Desc Other Language", type: "Text", editable: true },
 
-    { key: "UN_Desc_English_Check", label: "UN English Check", type: "Text", editable: true },
-    { key: "UN_Desc_French_Check", label: "UN French Check", type: "Text", editable: true },
-    { key: "UN_Desc_German_Check", label: "UN German Check", type: "Text", editable: true },
-    { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "Text", editable: true },
+    { key: "UN_Desc_English_Check", label: "UN English Check", type: "checkbox", editable: true },
+    { key: "UN_Desc_French_Check", label: "UN French Check", type: "checkbox", editable: true },
+    { key: "UN_Desc_German_Check", label: "UN German Check", type: "checkbox", editable: true },
+    { key: "UN_Desc_Other_Language_Check", label: "UN Other Language Check", type: "checkbox", editable: true },
     { key: "Net_Weight_Commodity_Qty", label: "Net Weight Commodity Qty", type: "Text", editable: true },
 
     // { key: "Net_Weight_Commodity_Qty_UOM", label: "Net Weight Commodity Qty UOM", type: "Text", editable: true },

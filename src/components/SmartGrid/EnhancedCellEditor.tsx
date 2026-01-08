@@ -20,11 +20,16 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
 
   // Sync internal state when external value changes (e.g., when dependent fields are cleared)
   useEffect(() => {
-    setEditValue(value ?? '');
-  }, [value]);
+    // For checkbox, preserve boolean values; for others, use empty string as default
+    if (column.type === 'checkbox') {
+      setEditValue(value ?? false);
+    } else {
+      setEditValue(value ?? '');
+    }
+  }, [value, column.type]);
 
   useEffect(() => {
-    if (shouldAutoFocus && inputRef.current && !['LazySelect', 'MultiselectLazySelect', 'Select'].includes(column.type)) {
+    if (shouldAutoFocus && inputRef.current && !['LazySelect', 'MultiselectLazySelect', 'Select', 'checkbox'].includes(column.type)) {
       inputRef.current.focus();
     }
   }, [column.type, shouldAutoFocus]);
@@ -45,6 +50,10 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
       case 'Date':
       case 'Time':
         finalValue = newValue || null;
+        break;
+      case 'checkbox':
+        // For checkbox, convert to boolean
+        finalValue = Boolean(newValue);
         break;
     }
     
@@ -94,6 +103,32 @@ export function EnhancedCellEditor({ value, column, onChange, onSave, error, sho
           hideSearch={column.hideSearch}
           disableLazyLoading={column.disableLazyLoading}
           rowData={rowData}
+        />
+        {error && (
+          <div className="mt-1 text-xs text-destructive">
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Checkbox renderer
+  if (column.type === 'checkbox') {
+    // Convert value to boolean for checkbox
+    const checked = Boolean(editValue === true || editValue === 1 || editValue === '1' || editValue === 'true');
+    
+    return (
+      <div className="w-full flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => handleChange(e.target.checked)}
+          className={cn(
+            "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+            error && 'border-destructive'
+          )}
+          ref={inputRef as React.RefObject<HTMLInputElement>}
         />
         {error && (
           <div className="mt-1 text-xs text-destructive">
