@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, Trash2, FileText, UserPlus, Info, Bookmark, ChevronLeft } from "lucide-react";
+import { X, Trash2, FileText, UserPlus, Info, Bookmark, ChevronLeft, Expand, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
@@ -164,6 +164,20 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     setLocalLineItems(lineItems);
     setLocalHeaderData(headerData);
   }, [lineItems, headerData]);
+
+  // Expansion State
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
+  const [isBasicDetailsExpanded, setIsBasicDetailsExpanded] = useState(true);
+  const [isOtherDetailsExpanded, setIsOtherDetailsExpanded] = useState(true);
+
+  const isAllExpanded = isSummaryExpanded && isBasicDetailsExpanded && isOtherDetailsExpanded;
+
+  const handleToggleExpandAll = () => {
+    const newState = !isAllExpanded;
+    setIsSummaryExpanded(newState);
+    setIsBasicDetailsExpanded(newState);
+    setIsOtherDetailsExpanded(newState);
+  };
 
   // Mapping function: Convert activeLine data to BasicDetails form fields
   const mapActiveLineToBasicDetails = (line: any): Record<string, any> => {
@@ -1241,83 +1255,114 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
                   {/* Right Section: Collapsible Panels with scrollbar */}
                   <div className="w-3/4 draftBillScrollBar p-6 space-y-6">
+                    {/* Header - Title & expand button */}
+                    <div className="flex items-center justify-between pb-2">
+                      <h3 className="text-xl font-semibold text-gray-900">Tariff Details</h3>
+                      <button
+                        className={`rounded-lg p-2 cursor-pointer ${isAllExpanded
+                          ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                          : "bg-white border border-gray-300 hover:bg-gray-100"
+                          }`}
+                        aria-label="Expand/Collapse All"
+                        title="Expand/Collapse All"
+                        onClick={handleToggleExpandAll}
+                      >
+                        <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+                      </button>
+                    </div>
+
                     {/* Panel 1: Summary Panel */}
-                    <div className="p-6 border rounded-md bg-white shadow-sm">
-                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Bookmark className="w-5 h-5 text-orange-500" /> Summary
-                      </h3>
-                      <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
-                        <div>
-                          <p className="text-gray-500">Tariff ID</p>
-                          <p className="font-medium text-gray-900">{activeLine?.TariffID || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Triggering Doc.</p>
-                          <p className="font-medium text-gray-900">{activeLine?.TriggerDocID || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Basic Charge</p>
-                          <p className="font-medium text-gray-900">€ {activeLine?.BasicCharge}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Triggering Date</p>
-                          <p className="font-medium text-gray-900">{activeLine?.TriggeringDocDate || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Minimum/Maximum Charge</p>
-                          <p className="font-medium text-gray-900">€ {activeLine?.MinimumCharge || '0.00'} / € {activeLine?.MaximumCharge || '0.00'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Reference Doc. No.</p>
-                          <p className="font-medium text-gray-900">{activeLine?.ReferenceInformation || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Reference Doc. Type</p>
-                          <p className="font-medium text-gray-900">{activeLine?.RefDocIDType || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Agent</p>
-                          <p className="font-medium text-gray-900">{activeLine?.Agent || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Equipment</p>
-                          <p className="font-medium text-gray-900">{activeLine?.EquipmentDescription || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Invoice No.</p>
-                          <p className="font-medium text-gray-900">{activeLine?.InvoiceNo || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Invoice Status</p>
-                          <p className="font-medium text-gray-900">{activeLine?.InvoiceStatus || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Invoice Date</p>
-                          <p className="font-medium text-gray-900">{activeLine?.InvoiceDate || '--'}</p>
-                        </div>
+                    <div className="p-4 border rounded-md bg-white shadow-sm">
+                      <div
+                        className={`flex items-center justify-between cursor-pointer ${isSummaryExpanded ? "mb-4 border-b border-gray-200 pb-3" : ""}`}
+                        onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                      >
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <Bookmark className="w-5 h-5 text-orange-500" /> Summary
+                        </h3>
+                        {isSummaryExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                        )}
                       </div>
-                      <hr className="my-4" />
-                      <h3 className="text-base font-semibold text-gray-900 mt-4 mb-4 flex items-center gap-2">
-                        Reason Details
-                      </h3>
-                      <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
-                        <div>
-                          <p className="text-gray-500">Reason for Amendment.</p>
-                          <p className="font-medium text-gray-900">{activeLine?.ReasonForAmendment || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Reason for Cancellation</p>
-                          <p className="font-medium text-gray-900">{activeLine?.ReasonForCancellation || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Remarks</p>
-                          <p className="font-medium text-gray-900">{activeLine?.Remark || '--'}</p>
-                        </div>
-                      </div>
+
+                      {isSummaryExpanded && (
+                        <>
+                          <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
+                            <div>
+                              <p className="text-gray-500">Tariff ID</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TariffID || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Triggering Doc.</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TriggerDocID || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Basic Charge</p>
+                              <p className="font-medium text-gray-900">€ {activeLine?.BasicCharge}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Triggering Date</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TriggeringDocDate || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Minimum/Maximum Charge</p>
+                              <p className="font-medium text-gray-900">€ {activeLine?.MinimumCharge || '0.00'} / € {activeLine?.MaximumCharge || '0.00'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Reference Doc. No.</p>
+                              <p className="font-medium text-gray-900">{activeLine?.ReferenceInformation || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Reference Doc. Type</p>
+                              <p className="font-medium text-gray-900">{activeLine?.RefDocIDType || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Agent</p>
+                              <p className="font-medium text-gray-900">{activeLine?.Agent || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Equipment</p>
+                              <p className="font-medium text-gray-900">{activeLine?.EquipmentDescription || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Invoice No.</p>
+                              <p className="font-medium text-gray-900">{activeLine?.InvoiceNo || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Invoice Status</p>
+                              <p className="font-medium text-gray-900">{activeLine?.InvoiceStatus || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Invoice Date</p>
+                              <p className="font-medium text-gray-900">{activeLine?.InvoiceDate || '--'}</p>
+                            </div>
+                          </div>
+                          <hr className="my-4" />
+                          <h3 className="text-base font-semibold text-gray-900 mt-4 mb-4 flex items-center gap-2">
+                            Reason Details
+                          </h3>
+                          <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
+                            <div>
+                              <p className="text-gray-500">Reason for Amendment.</p>
+                              <p className="font-medium text-gray-900">{activeLine?.ReasonForAmendment || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Reason for Cancellation</p>
+                              <p className="font-medium text-gray-900">{activeLine?.ReasonForCancellation || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Remarks</p>
+                              <p className="font-medium text-gray-900">{activeLine?.Remark || '--'}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Panel 2: Basic Details Panel */}
-                    <div className="bg-white shadow-sm">
+                    <div className="shadow-sm">
                       {/* <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <FileText className="w-5 h-5 text-gray-500" /> Basic Details
                       </h3> */}
@@ -1330,12 +1375,15 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                           initialData={basicDetailsInitialData}
                           panelIcon={<FileText className="w-5 h-5 text-cyan-500" />}
                           showHeader={false} // Hide panel header as it's part of the parent div
+                          collapsible={true}
+                          isExpanded={isBasicDetailsExpanded}
+                          onOpenChange={setIsBasicDetailsExpanded}
                         />
                       </div>
                     </div>
 
                     {/* Panel 3: Other Details Panel */}
-                    <div className="bg-white shadow-sm">
+                    <div className="shadow-sm">
                       {/* <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <Info className="w-5 h-5 text-orange-500" /> Other Details
                       </h3> */}
@@ -1348,6 +1396,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                           initialData={otherDetailsInitialData}
                           panelIcon={<Info className="w-5 h-5 text-orange-500" />}
                           showHeader={false} // Hide panel header as it's part of the parent div
+                          collapsible={true}
+                          isExpanded={isOtherDetailsExpanded}
+                          onOpenChange={setIsOtherDetailsExpanded}
                         />
                       </div>
                     </div>
