@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { SideDrawer } from '../Common/SideDrawer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, LucidePaperclip, Link } from 'lucide-react';
+import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
+import { quickOrderService } from '@/api/services';
 
 type ClaimCard = {
   id: string;
@@ -35,11 +37,57 @@ export const ClaimLinkedInternalOrders: React.FC<{
 }> = ({ isOpen, onClose, claimNo }) => {
   const [activeTab, setActiveTab] = useState<'claims' | 'internal'>('claims');
   const [query, setQuery] = useState('');
+  const [showLinkClaimDialog, setShowLinkClaimDialog] = useState(false);
+  const [showLinkInternalOrderDialog, setShowLinkInternalOrderDialog] = useState(false);
+  const [linkClaimObj, setLinkClaimObj] = useState<any>({
+    Type: '',
+    Category: '',
+    ClaimNo: ''
+  });
+  const [linkInternalOrderObj, setLinkInternalOrderObj] = useState<any>({
+    Type: '',
+    Contract: '',
+    InternalOrderNo: ''
+  });
 
   const claims = useMemo(() => {
     if (!query) return sampleClaims;
     return sampleClaims.filter(c => c.title.toLowerCase().includes(query.toLowerCase()) || (c.reference || '').toLowerCase().includes(query.toLowerCase()));
   }, [query]);
+
+  const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await quickOrderService.getMasterCommonData({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        ...(extraParams || {}),
+      });
+
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  const fetchTypes = fetchMasterData("Claim For Init");
+  const fetchCategories = fetchMasterData("Claim Category Init");
+  const fetchClaims = fetchMasterData("Claim No Init");
+  const fetchContracts = fetchMasterData("Contract Init");
+  const fetchInternalOrderNo = fetchMasterData("Internal Order No Init");
 
   return (
     <SideDrawer
@@ -52,7 +100,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
       onScrollPanel={true}
       isBadgeRequired={true}
       badgeContent={claimNo || ''}
-      // badgeContent could be dynamic
+    // badgeContent could be dynamic
     >
       <div className="flex flex-col h-full bg-[#F8F9FC]">
         <style>{`
@@ -75,7 +123,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                   data-[state=inactive]:text-[#475467]
                 `}>Claims</TabsTrigger>
                 <TabsTrigger value="internal"
-                className={`px-4 py-1 text-[12px] font-normal transition-all rounded-md h-[26px] 
+                  className={`px-4 py-1 text-[12px] font-normal transition-all rounded-md h-[26px] 
                   data-[state=active]:bg-white
                   data-[state=active]:text-[#0073E6]
                   data-[state=active]:font-medium
@@ -99,11 +147,77 @@ export const ClaimLinkedInternalOrders: React.FC<{
                   </div>
                   {/* <button className="p-2 rounded-md border bg-white"><Filter className="w-4 h-4 text-gray-600" /></button> */}
                   {/* <button className="p-2 rounded-md border bg-white h-9">+</button> */}
-                  <button className="p-1 rounded-lg text-gray-600 hover:bg-blue-50 border border-[#D0D5DD]" title="Add">
+                  <button className="p-1 rounded-lg text-gray-600 hover:bg-blue-50 border border-[#D0D5DD]"
+                    title="Add Claim"
+                    onClick={() => setShowLinkClaimDialog(true)}>
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+
+              {/* Link Claim Modal (fixed overlay format) */}
+              {showLinkClaimDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowLinkClaimDialog(false)} />
+                  <div className="relative bg-white rounded-lg w-[350px] shadow-lg z-10">
+                    <div className="flex items-center justify-between px-6 py-4 border-b">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#EAF4FF] text-[#0068CF] flex items-center justify-center">
+                          <Link size={16} />
+                        </div>
+                        <div className="font-semibold text-sm text-gray-700">Link Claim</div>
+                      </div>
+                      <button onClick={() => setShowLinkClaimDialog(false)} className="text-gray-400">✕</button>
+                    </div>
+
+                    <div className="space-y-3 px-6 py-4 border-b">
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Type</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchTypes}
+                          value={linkClaimObj.Type}
+                          onChange={(value) => setLinkClaimObj({...linkClaimObj, Type: value as string})}
+                          placeholder="Select Type"
+                          className="w-full h-9 text-[13px] mt-1"
+                          hideSearch={true}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Category</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchCategories}
+                          value={linkClaimObj.Category}
+                          onChange={(value) => setLinkClaimObj({...linkClaimObj, Category: value as string})}
+                          placeholder="Select Category"
+                          className="w-full h-9 text-[13px] mt-1"
+                          hideSearch={true}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Claim No.</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchClaims}
+                          value={linkClaimObj.ClaimNo}
+                          onChange={(value) => setLinkClaimObj({...linkClaimObj, ClaimNo: value as string})}
+                          placeholder="Select Claim No."
+                          className="w-full h-9 text-[13px] mt-1 z-9999"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="px-6 py-4">
+                      <button onClick={() => {
+                        console.log('Link Claim payload:', linkClaimObj);
+                        // TODO: emit payload to parent via prop or API call
+                        setShowLinkClaimDialog(false);
+                        setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
+                      }} className="w-full bg-blue-600 text-white py-2 rounded">Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-6">
                 {claims.map(c => (
@@ -144,11 +258,79 @@ export const ClaimLinkedInternalOrders: React.FC<{
                   </div>
                   {/* <button className="p-2 rounded-md border bg-white"><Filter className="w-4 h-4 text-gray-600" /></button> */}
                   {/* <button className="p-2 rounded-md border bg-white h-9">+</button> */}
-                  <button className="p-1 rounded-lg text-gray-600 hover:bg-blue-50 border border-[#D0D5DD]" title="Add">
+                  <button className="p-1 rounded-lg text-gray-600 hover:bg-blue-50 border border-[#D0D5DD]"
+                    title="Add Internal Order"
+                    onClick={() => {
+                      console.log('Add Internal Orders Dialog');
+                      setShowLinkInternalOrderDialog(true);
+                    }}>
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+
+              {/* Link Internal Order Modal (fixed overlay format) */}
+              {showLinkInternalOrderDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowLinkInternalOrderDialog(false)} />
+                  <div className="relative bg-white rounded-lg w-[350px] shadow-lg z-10">
+                    <div className="flex items-center justify-between px-6 py-4 border-b">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#EAF4FF] text-[#0068CF] flex items-center justify-center">
+                          <Link size={16} />
+                        </div>
+                        <div className="font-semibold text-sm text-gray-700">Link Internal Order</div>
+                      </div>
+                      <button onClick={() => setShowLinkInternalOrderDialog(false)} className="text-gray-400">✕</button>
+                    </div>
+
+                    <div className="space-y-3 px-6 py-4 border-b">
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Type</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchTypes}
+                          value={linkInternalOrderObj.Type}
+                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, Type: value as string})}
+                          placeholder="Select Type"
+                          className="w-full h-9 text-[13px] mt-1"
+                          hideSearch={true}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Contract</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchContracts}
+                          value={linkInternalOrderObj.Contract}
+                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, Contract: value as string})}
+                          placeholder="Select Contract"
+                          className="w-full h-9 text-[13px] mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600 font-medium">Internal Order No.</label>
+                        <DynamicLazySelect
+                          fetchOptions={fetchInternalOrderNo}
+                          value={linkInternalOrderObj.InternalOrderNo}
+                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, InternalOrderNo: value as string})}
+                          placeholder="Internal Order No."
+                          className="w-full h-9 text-[13px] mt-1 z-9999"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="px-6 py-4">
+                      <button onClick={() => {
+                        console.log('Link Internal Order payload:', linkInternalOrderObj);
+                        // TODO: emit payload to parent via prop or API call
+                        setShowLinkInternalOrderDialog(false);
+                        setLinkInternalOrderObj({ Type: '', Contract: '', InternalOrderNo: '' });
+                      }} className="w-full bg-blue-600 text-white py-2 rounded">Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-6">
                 {sampleIO.map(io => (

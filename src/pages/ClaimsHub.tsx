@@ -1278,7 +1278,7 @@ export const ClaimsHub = () => {
       key: 'Type',
       label: 'Type',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher("Claim Type Init"),
+      fetchOptions: makeLazyFetcher("Claim For Init"),
       hideSearch: true,
       disableLazyLoading: true
     },

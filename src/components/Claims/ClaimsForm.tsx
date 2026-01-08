@@ -32,6 +32,9 @@ const ClaimsForm = () => {
     const [investigationDetailsOpen, setInvestigationDetailsOpen] = useState(false); // State for investigation details sidedrawer
     const [claimFindingsOpen, setClaimFindingsOpen] = useState(false); // State for claim findings sidedrawer
     const [linkedInternalOrdersOpen, setLinkedInternalOrdersOpen] = useState(false); // State for linked internal orders sidedrawer
+    const [qcList1, setqcList1] = useState<any>();
+    const [qcList2, setqcList2] = useState<any>();
+    const [qcList3, setqcList3] = useState<any>();
     // Function to get status color classes based on status name (same as ClaimsHub)
     const getStatusColor = (status: string) => {
         const statusColors: Record<string, string> = {
@@ -60,15 +63,40 @@ const ClaimsForm = () => {
     useEffect(() => {
         const claimId = searchParams.get('id') || searchParams.get('claimId') || searchParams.get('claimNo');
         const status = searchParams.get('status') || searchParams.get('claimStatus');
-        
+
         if (claimId) {
             setSearchQuery(claimId);
         }
-        
+
         if (status) {
             setClaimStatus(status);
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        const loadQcMasters = async () => {
+            try {
+                const [res1, res2, res3]: any = await Promise.all([
+                    quickOrderService.getMasterCommonData({
+                        messageType: "Claim QC1 Init",
+                    }),
+                    quickOrderService.getMasterCommonData({
+                        messageType: "Claim QC2 Init",
+                    }),
+                    quickOrderService.getMasterCommonData({
+                        messageType: "Claim QC3 Init",
+                    }),
+                ]);
+                console.log("res1?.data?.ResponseData", JSON.parse(res1?.data?.ResponseData))
+                setqcList1(JSON.parse(res1?.data?.ResponseData || "[]"));
+                setqcList2(JSON.parse(res2?.data?.ResponseData || "[]"));
+                setqcList3(JSON.parse(res3?.data?.ResponseData || "[]"));
+            } catch (err) {
+                console.error("QC API failed", err);
+            }
+        };
+        loadQcMasters();
+    }, []);
 
     // Claims Findings data state - bound to form fields
     const [claimsFindingsData, setClaimsFindingsData] = useState({
@@ -240,33 +268,42 @@ const ClaimsForm = () => {
         messageType: string,
         // additionalFilter?: { FilterName: string; FilterValue: string }[]
         extraParams?: Record<string, any>
-      ) => {
+    ) => {
         return async ({ searchTerm, offset, limit }) => {
-          try {
-            const response = await quickOrderService.getMasterCommonData({
-              messageType,
-              searchTerm: searchTerm || "",
-              offset,
-              limit,
-              ...(extraParams || {}),
-            });
-    
-            const rr: any = response?.data;
-            const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
-    
-            return arr.map((item: any) => {
-              const id = item.id ?? "";
-              const name = item.name ?? "";
-              return {
-                label: `${id} || ${name}`,
-                value: `${id} || ${name}`,
-              };
-            });
-          } catch (err) {
-            return [];
-          }
+            try {
+                const response = await quickOrderService.getMasterCommonData({
+                    messageType,
+                    searchTerm: searchTerm || "",
+                    offset,
+                    limit,
+                    ...(extraParams || {}),
+                });
+
+                const rr: any = response?.data;
+                const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+
+                return arr.map((item: any) => {
+                    const id = item.id ?? "";
+                    const name = item.name ?? "";
+                    return {
+                        label: `${id} || ${name}`,
+                        value: `${id} || ${name}`,
+                    };
+                });
+            } catch (err) {
+                return [];
+            }
         };
-      };
+    };
+
+    const getQcOptions = (list: any[]) =>
+        list
+            ?.filter((qc) => qc.id)
+            .map((qc) => ({
+                label: `${qc.id} || ${qc.name}`,
+                value: qc.id,
+                name: qc.name
+            })) || [];
 
     // Defining the config as PanelConfig object (Record<string, FieldConfig>)
     const claimPanelConfig: PanelConfig = {
@@ -423,10 +460,21 @@ const ClaimsForm = () => {
         },
         RefDocType: {
             id: "RefDocType",
-            label: "Ref. Doc. Type/ ID",
+            label: "Ref. Doc. Type",
             fieldType: "lazyselect",
             width: "four",
             fetchOptions: fetchMaster("Claim Ref Doc Type Init"),
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 14
+        },
+        RefDocID: {
+            id: "RefDocID",
+            label: "Ref. Doc. ID",
+            fieldType: "text",
+            width: "four",
             value: "",
             mandatory: false,
             visible: true,
@@ -524,7 +572,7 @@ const ClaimsForm = () => {
             id: "ActionResolutionRemark",
             label: "Remark for Action/Resolution",
             fieldType: "text",
-            width: "half",
+            width: "four",
             value: "",
             maxLength: 255,
             placeholder: "Enter Remark for Action/Resolution",
@@ -537,7 +585,7 @@ const ClaimsForm = () => {
             id: "FirstInformationRegister",
             label: "First Information Register",
             fieldType: "text",
-            width: "half",
+            width: "four",
             maxLength: 255,
             placeholder: "Enter First Information Register",
             value: "",
@@ -545,6 +593,128 @@ const ClaimsForm = () => {
             visible: true,
             editable: true,
             order: 23
+        },
+        FinanceYear: {
+            id: "FinanceYear",
+            label: "Finance Year",
+            fieldType: "lazyselect",
+            width: "four",
+            fetchOptions: fetchMaster("Financial Year Init"),
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 24
+        },
+        QCUserDefined1: {
+            id: "QCUserDefined1",
+            label: "QC Userdefined 1",
+            fieldType: "inputdropdown",
+            width: "four",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            value: {
+                dropdown: "",
+                input: "",
+            },
+            options: getQcOptions(qcList1),
+            order: 25,
+        },
+        QCUserDefined2: {
+            id: "QCUserDefined2",
+            label: "QC Userdefined 2",
+            fieldType: "inputdropdown",
+            width: "four",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            value: {
+                dropdown: "",
+                input: "",
+            },
+            options: getQcOptions(qcList2),
+            order: 26,
+        },
+        QCUserDefined3: {
+            id: "QCUserDefined3",
+            label: "QC Userdefined 3",
+            fieldType: "inputdropdown",
+            width: "four",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            value: {
+                dropdown: "",
+                input: "",
+            },
+            options: getQcOptions(qcList3),
+            order: 27,
+        },
+        Remark1: {
+            id: "Remark1",
+            label: "Remarks 1",
+            fieldType: "text",
+            width: "four",
+            maxLength: 255,
+            placeholder: "Enter Remarks",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 28
+        },
+        Remark2: {
+            id: "Remark2",
+            label: "Remarks 2",
+            fieldType: "text",
+            width: "four",
+            maxLength: 255,
+            placeholder: "Enter Remarks",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 29
+        },
+        Remark3: {
+            id: "Remark3",
+            label: "Remarks 3",
+            fieldType: "text",
+            width: "four",
+            maxLength: 255,
+            placeholder: "Enter Remarks",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 30
+        },
+        Remark4: {
+            id: "Remark4",
+            label: "Remarks 4",
+            fieldType: "text",
+            width: "four",
+            maxLength: 255,
+            placeholder: "Enter Remarks",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 31
+        },
+        Remark5: {
+            id: "Remark5",
+            label: "Remarks 5",
+            fieldType: "text",
+            width: "four",
+            maxLength: 255,
+            placeholder: "Enter Remarks",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 32
         },
     };
 
