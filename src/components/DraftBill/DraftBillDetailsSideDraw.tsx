@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { quickOrderService } from "@/api/services";
 import { DraftBillAuditTrail } from "./DraftBillAuditTrail";
 import CancelConfirmationModal from '../Template/CancelConfirmationModal';
+import AmendReportModal from "../Template/AmendReportModal";
 
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
@@ -154,6 +155,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   const { toast } = useToast();
   const [isAuditTrailOpen, setIsAuditTrailOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
   
   // Local state to manage lineItems and headerData (can be updated after refresh)
   const [localLineItems, setLocalLineItems] = useState<any[]>(lineItems);
@@ -591,6 +593,87 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     console.log("Deleting line:", lineToDelete);
     setActiveLine(lineToDelete);
     setIsCancelModalOpen(true);
+  };
+
+   const handleAmend = async (reasonCode: string, reasonDescription: string) => {
+    console.log("activeLine", activeLine);
+
+    console.log("mk", reasonCode);
+    console.log("mk", reasonDescription);
+
+    const payload = {
+      Header: {
+        "DraftBillNo": localHeaderData?.DraftBillNo,
+        "ReasonCode": splitIdName(reasonCode).id,
+        "ReasonforComments": reasonDescription,
+      },
+      ItemDetails: [{
+        ...activeLine,
+        ModeFlag: "Checked",
+      }]
+    };
+    console.log(JSON.stringify(payload, null, 2))
+    try {
+      const response = await draftBillService.amendDraftBillByID(payload);
+
+      const parsedResponse = JSON.parse(response?.data.ResponseData || "{}");
+      const resourceStatus = (response as any)?.data?.IsSuccess;
+      
+      if (resourceStatus) {
+        console.log("cancelled successfully");
+        
+        // Refresh the data by calling getDraftBillByID API
+        try {
+          const refreshResponse = await draftBillService.getDraftBillByID({
+            searchCriteria: { DraftBillNo: localHeaderData?.DraftBillNo }
+          });
+
+          const refreshParsedResponse = JSON.parse(refreshResponse?.data?.ResponseData || "{}");
+          const refreshResourceStatus = (refreshResponse as any)?.data?.IsSuccess;
+
+          if (refreshResourceStatus) {
+            // Update local state with refreshed data
+            const refreshedItemDetails = refreshParsedResponse?.ItemDetails || [];
+            const refreshedHeader = refreshParsedResponse?.Header || null;
+            
+            setLocalLineItems(refreshedItemDetails);
+            setLocalHeaderData(refreshedHeader);
+            
+            // Update activeLine if it still exists, otherwise select first line
+            if (refreshedItemDetails.length > 0) {
+              const updatedLine = refreshedItemDetails.find((line: any) => line.DBLineNo === activeLine?.DBLineNo);
+              if (updatedLine) {
+                setActiveLine(updatedLine);
+              } else {
+                setActiveLine(refreshedItemDetails[0]);
+              }
+            }
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing data after cancel:", refreshError);
+          // Still show success toast even if refresh fails
+        }
+        
+        toast({
+          title: "✅ Draft Bill Amended Successfully",
+          description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Amended.",
+          variant: "default",
+        });
+        setIsAmendModalOpen(false);
+      } else {
+        console.log("error as any ===", (response as any)?.data?.Message);
+        toast({
+          title: "⚠️ Cancel Failed",
+          description: (response as any)?.data?.Message || "Failed to Amend changes.",
+          variant: "destructive",
+        });
+      }
+      // Optionally, handle success or display a message
+    } catch (error) {
+      console.error("Error Amended Draft:", error);
+      // Optionally, handle error or display an error  message
+    }
+    setIsAmendModalOpen(false);
   };
 
   const handleCancel = async (reasonCode: string, reasonDescription: string) => {
@@ -1423,13 +1506,23 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                     <Workflow className="w-8 h-8 text-gray-500" />
                   </Button>
                 </div>
-                <div className="">
+                <div className="p-2 flex gap-3">
+                   <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white h-8 py-1"  onClick={() => setIsAmendModalOpen(true)} >
+                    Amend
+                  </Button>
+
                   <Button type="submit" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white h-8 py-1">
                     Save
-                  </Button>
+                  </Button>      
                 </div>
 
+
+                 
+
+                 
+
               </div>
+              
             </div>
           </div>
         </section>
@@ -1448,6 +1541,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
         onClose={() => setIsCancelModalOpen(false)}
         onConfirmCancel={handleCancel}
       />
+       <AmendReportModal
+              isOpen={isAmendModalOpen}
+              onClose={() => setIsAmendModalOpen(false)}
+              onConfirmAmend={handleAmend}
+            />
     </>
   );
 };

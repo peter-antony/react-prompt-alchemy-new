@@ -186,7 +186,8 @@ export const API_ENDPOINTS = {
     APPROVE_DRAFT: 'managedraftbill/approve',
     GENERATE_INVOICE: 'managedraftbill/generateinvoice',
     REVERT_DRAFT: 'managedraftbill/revertinvoice',
-    RERUN_DRAFT:'managedraftbill/returndraftbill'
+    RERUN_DRAFT:'managedraftbill/returndraftbill',
+    AMEND_DRAFT:"managedraftbill/amend"
     },
   Equipment_Calendar: {
     EQUIPMENTS: "/equipmentcalender/resourceview",

@@ -557,6 +557,27 @@ const handleTemplateNumberCallback = (value: string) => {
   };
 
   useEffect(() => {
+  const isCimCuvNoEmpty =
+    cimCuvNo === null ||
+    cimCuvNo === undefined ||
+    (typeof cimCuvNo === 'string' && cimCuvNo.trim() === '') ||
+    Number.isNaN(cimCuvNo);
+
+  const hasWorkOrderNo =
+    workOrderNo !== null &&
+    workOrderNo !== undefined &&
+    String(workOrderNo).trim() !== '';
+
+  if (isCimCuvNoEmpty && !hasWorkOrderNo) {
+    setSearchParams({});
+  }
+
+  if (isCimCuvNoEmpty && hasWorkOrderNo) {
+    setCimCuvNo(workOrderNo);
+  }
+}, [cimCuvNo, workOrderNo, setSearchParams]);
+
+  useEffect(() => {
     console.log("SETTING OTHER CARRIERS", routeCodeCDetails);
   }, [routeCodeCDetails]);
 
@@ -1523,6 +1544,32 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 4,
       width: "four",
       placeholder: "Enter Information for the Consignee",
+      maxLength: 255,
+    },
+      DescriptionoftheGoods_21: {
+      id: "DescriptionoftheGoods_21",
+      label: "Description of the Goods [21]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Description of the Goods",
+      maxLength: 255,
+    },
+      Remarks: {
+      id: "Remarks",
+      label: "Remarks",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Remarks",
       maxLength: 255,
     },
   };
@@ -3057,6 +3104,9 @@ const effectiveCimCuvNo: string | null =
     DocumentsAttached_9: formData.documentsAttached || null,
     CommercialSpecifications_13: formData.commercialSpecifications || null,
     InformationForTheConsignee_15: formData.informationForConsignee || null,
+    DescriptionoftheGoods_21:formData.DescriptionoftheGoods_21 || null,
+       Remarks:formData.Remarks || null,
+
   });
 
   const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
@@ -3352,7 +3402,7 @@ const effectiveCimCuvNo: string | null =
       Fixed_Net_Weight_Train_13: toNumberOrNull(formData.fixedNetTrain?.input),
       Fixed_Net_Weight_Train_13_UOM: formData.fixedNetTrain?.dropdown || null,
 
-      No_Number_14: toNumberOrNull(formData.number),
+      No_Number_14: (formData.number) || null,
 
       Loading_Configuration_16: formData.LoadingConfiguration || null,
       WagonNo_18_15: formData.wagonNumber || null,
@@ -3553,6 +3603,12 @@ const effectiveCimCuvNo: string | null =
             apiResponse.Declarations.CommercialSpecifications_13,
           informationForConsignee:
             apiResponse.Declarations.InformationForTheConsignee_15,
+
+              DescriptionoftheGoods_21:
+            apiResponse.Declarations.DescriptionoftheGoods_21,
+
+              Remarks:
+            apiResponse.Declarations.Remarks,
         });
       }
 
@@ -5130,7 +5186,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           variant: "default",
         });
         setIsCancelModalOpen(false);
-        fetchTemplateData(parsedResponse?.CIMCUVNo);
+        fetchTemplateData(cimCuvNo);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -5182,7 +5238,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           variant: "default",
         });
         setIsAmendModalOpen(false);
-        fetchTemplateData(parsedResponse?.CIMCUVNo);
+        fetchTemplateData(cimCuvNo);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
@@ -5655,11 +5711,16 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {apiResponse?.Header?.Status === "Fresh" && (
-                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleConfirmReport} > 
-                    Confirm 
-                </button>
-            )}
+          {(apiResponse?.Header?.Status === "Fresh" ||
+  apiResponse?.Header?.Status === "Under Amendment") && (
+  <button
+    className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm"
+    onClick={handleConfirmReport}
+  >
+    Confirm
+  </button>
+)}
+
             {apiResponse?.Header?.Status === "Confirmed" && (
                 <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={() => setIsAmendModalOpen(true)} >
                     Amend

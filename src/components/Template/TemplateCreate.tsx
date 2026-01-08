@@ -1119,6 +1119,32 @@ const TemplateCreate = () => {
       placeholder: 'Enter Information for the Consignee',
       maxLength: 255,
     },
+      DescriptionoftheGoods_21: {
+      id: "DescriptionoftheGoods_21",
+      label: "Description of the Goods [21]",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 5,
+      width: "four",
+      placeholder: "Enter Description of the Goods",
+      maxLength: 255,
+    },
+      Remarks: {
+      id: "Remarks",
+      label: "Remarks",
+      fieldType: "text",
+      value: "",
+      mandatory: false,
+      visible: true,
+      editable: true,
+      order: 6,
+      width: "four",
+      placeholder: "Enter Remarks",
+      maxLength: 255,
+    },
   };
 
   // Declaration of Value, Interest in Delivery, Cash on Delivery Panel Config
@@ -2594,6 +2620,9 @@ const sanitizeRouteRows = (rows: any[]) =>
     DocumentsAttached_9: formData.documentsAttached || null,
     CommercialSpecifications_13: formData.commercialSpecifications || null,
     InformationForTheConsignee_15: formData.informationForConsignee || null,
+      DescriptionoftheGoods_21:formData.DescriptionoftheGoods_21 || null,
+       Remarks:formData.Remarks || null,
+
   });
 
   const mapFormToValueDeliveryCashPayload = (formData: Record<string, any>) => {
@@ -2970,7 +2999,7 @@ const sanitizeRouteRows = (rows: any[]) =>
       ),
       Fixed_Net_Weight_Train_13_UOM: formData.fixedNetTrain?.dropdown || null,
 
-      No_Number_14: toNumberOrNull(formData.number),
+      No_Number_14: toNumberOrNull(formData.number) || null,
 
       Loading_Configuration_16: formData.LoadingConfiguration || null,
       WagonNo_18_15: formData.wagonNumber || null,
@@ -3134,6 +3163,12 @@ useEffect(() => {
           documentsAttached: apiResponse.Declarations.DocumentsAttached_9,
           commercialSpecifications: apiResponse.Declarations.CommercialSpecifications_13,
           informationForConsignee: apiResponse.Declarations.InformationForTheConsignee_15,
+
+              DescriptionoftheGoods_21:
+            apiResponse.Declarations.DescriptionoftheGoods_21,
+
+              Remarks:
+            apiResponse.Declarations.Remarks,
         });
       }
 
