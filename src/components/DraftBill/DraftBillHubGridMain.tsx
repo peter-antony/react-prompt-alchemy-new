@@ -86,9 +86,9 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     };
 
     useEffect(() => {
-      setSelectedDraftBills([])
-          smartGridRef.current?.setShowCheckboxes(false);
-    }, [selectedDbLines,])
+    //   setSelectedDraftBills([])
+        //   smartGridRef.current?.setShowCheckboxes(false);
+    }, [selectedDbLines, handleDraftBillSelection])
 
     // Helper to get selected nested row data objects (ONLY the current sub-row object, not parent)
     // This returns an array of individual nested row objects - each is a SINGLE sub-row
