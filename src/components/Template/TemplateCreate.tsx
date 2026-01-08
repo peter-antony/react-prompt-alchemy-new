@@ -3,7 +3,7 @@ import { DynamicPanel, DynamicPanelRef } from '@/components/DynamicPanel';
 import { PanelConfig } from '@/types/dynamicPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Expand, UserPlus } from 'lucide-react';
+import { Expand, UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { quickOrderService } from '@/api/services/quickOrderService';
@@ -80,6 +80,7 @@ const TemplateCreate = () => {
     'section-b': true,
     'section-c': true,
     'RouteConsignmentDetails': true,
+    'other-carriers-grid': true,
     'RouteDetails': true,
     'WagonInfoDetails': true,
   });
@@ -557,7 +558,7 @@ const TemplateCreate = () => {
 
   const wagonGritDetailsColumns: GridColumnConfig[] = [
     { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
-    { key: "Short_Description_of_Goods", label: "Goods Description", type: "Text", editable: true },
+    { key: "Short_Description_of_Goods", label: "Short Description of Goods", type: "Text", editable: true },
     { key: "RID", label: "RID", type: "Text", editable: true },
     { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
     { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
@@ -1841,7 +1842,7 @@ const TemplateCreate = () => {
     },
     toBeClearedAt: {
       id: 'toBeClearedAt',
-      label: 'To Be Cleared At',
+      label: 'To Be Cleared At [12]',
       fieldType: 'text',
       value: '',
       mandatory: false,
@@ -4667,15 +4668,42 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                 />
               </div>
               {/* //table */}
-              <div className='mb-6'>
-                <SmartGridPlus
-                  columns={otherCarriersColumns}
-                  data={otherCarriers}
-                  hideToolbar={true}
-                  hideCheckboxToggle={true}
-                  onAddRow={handleAddOtherCarrierRow}
-                  onEditRow={handleEditOtherCarrierRow}
-                />
+              <div className='mb-6 bg-white rounded-lg border border-gray-200'>
+                <div 
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handlePanelOpenChange('other-carriers-grid', !panelExpandedStates['other-carriers-grid'])}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <h3 className="text-sm font-medium text-gray-800">Other Carriers [57]</h3>
+                  </div>
+                  <button
+                    className="p-1 rounded hover:bg-gray-200 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePanelOpenChange('other-carriers-grid', !panelExpandedStates['other-carriers-grid']);
+                    }}
+                    aria-label={panelExpandedStates['other-carriers-grid'] ? 'Collapse' : 'Expand'}
+                  >
+                    {panelExpandedStates['other-carriers-grid'] ? (
+                      <ChevronUp className="w-5 h-5 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+                {panelExpandedStates['other-carriers-grid'] && (
+                  <div className="p-4 border-t border-gray-200">
+                    <SmartGridPlus
+                      columns={otherCarriersColumns}
+                      data={otherCarriers}
+                      hideToolbar={true}
+                      hideCheckboxToggle={true}
+                      onAddRow={handleAddOtherCarrierRow}
+                      onEditRow={handleEditOtherCarrierRow}
+                    />
+                  </div>
+                )}
               </div>
 
 
