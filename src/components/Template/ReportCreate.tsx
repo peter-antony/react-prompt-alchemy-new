@@ -3,7 +3,7 @@ import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ChevronDown, Expand } from "lucide-react";
+import { UserPlus, ChevronDown, Expand, Files } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { quickOrderService } from "@/api/services/quickOrderService";
@@ -5238,7 +5238,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full mb-12"
+            className="w-full mb-12 relative"
           >
             <TabsList className="grid w-2/6 grid-cols-4 bg-gray-100 border border-gray-200 rounded-md p-0">
               <TabsTrigger
@@ -5282,7 +5282,18 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                 Wagon Info
               </TabsTrigger>
             </TabsList>
-            <div className='flex items-center justify-end mb-4'>
+            <div className='flex items-center justify-end mb-4 absolute right-0 top-0'>
+              <button
+                  onClick={() => {
+                      // Handle copy action
+                      console.log("Copy clicked");
+                  }}
+                  className="mr-3 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
+                  type='button'
+                  title="Copy"
+              >
+                  <Files className="h-4 w-4 text-gray-600" />
+              </button>
               <button
                 className={`rounded-lg p-2 cursor-pointer ${isAllPanelsExpanded
                   ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
