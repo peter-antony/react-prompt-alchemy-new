@@ -195,5 +195,31 @@ export const ClaimService = {
       requestBody
     );
     return response.data;
-  }
-}
+  },
+
+  getClaimData: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Get",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      SearchCriteria: {
+        ClaimNo: params?.claimNo
+      }
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.GET,
+      requestBody
+    );
+    return response.data;
+  },
+};
