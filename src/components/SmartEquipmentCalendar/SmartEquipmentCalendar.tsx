@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings, X, CalendarX2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Train, Wrench, Loader2, Settings, X, CalendarX2, Truck, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EquipmentCalendarViewProps, EquipmentItem, EquipmentCalendarEvent, DateRangeParams } from '@/types/equipmentCalendar';
 import { format, addHours, addDays, startOfDay, endOfDay, differenceInMinutes, differenceInDays, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
@@ -650,6 +650,8 @@ export const SmartEquipmentCalendar = ({
                   const trainType = event.additionalData?.find(d => d.Name === 'TrainType')?.Value;
                   const serviceType = event.additionalData?.find(d => d.Name === 'ServiceType')?.Value;
                   const subServiceType = event.additionalData?.find(d => d.Name === 'SubServiceType')?.Value;
+                  const tripSupplier = event.additionalData?.find(d => d.Name === 'TripSupplier')?.Value;
+                  const loadEmpty = event.additionalData?.find(d => d.Name === 'Loaded/Empty')?.Value;
                   const STATUS_BADGE_CLASS_MAP: Record<string, string> = {
                     'Released': 'badge-fresh-green rounded-2xl',
                     'Executed': 'badge-purple rounded-2xl',
@@ -742,6 +744,20 @@ export const SmartEquipmentCalendar = ({
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                   <Wrench className="h-3.5 w-3.5" />
                                   <span title='Sub Service'>{subServiceType || '-'}</span>
+                                </div>
+                              {/* )} */}
+                            </div>
+                            <div className="grid grid-cols-2">
+                              {/* {tripSupplier && ( */}
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <User className="h-3.5 w-3.5" />
+                                  <span title='Trip Supplier'>{tripSupplier || '-'}</span>
+                                </div>
+                              {/* )} */}
+                              {/* {loadEmpty && ( */}
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <Truck className="h-3.5 w-3.5" />
+                                  <span title='Loaded / Empty'>{loadEmpty || '-'}</span>
                                 </div>
                               {/* )} */}
                             </div>
