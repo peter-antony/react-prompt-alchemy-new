@@ -2241,7 +2241,7 @@ const handleTemplateNumberCallback = (value: string) => {
   const wagonDetailsConfig: PanelConfig = {
     train: {
       id: "train",
-      label: "train [1]",
+      label: "Train [1]",
       fieldType: "text",
       value: "",
       mandatory: false,
@@ -2253,7 +2253,7 @@ const handleTemplateNumberCallback = (value: string) => {
     },
     itinerary: {
       id: "itinerary",
-      label: "itinerary [5]",
+      label: "Itinerary [5]",
       fieldType: "text",
       value: "",
       mandatory: false,

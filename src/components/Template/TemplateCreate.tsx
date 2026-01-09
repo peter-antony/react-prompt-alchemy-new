@@ -1814,7 +1814,7 @@ const TemplateCreate = () => {
   const wagonDetailsConfig: PanelConfig = {
     train: {
       id: 'train',
-      label: 'train [1]',
+      label: 'Train [1]',
       fieldType: 'text',
       value: '',
       mandatory: false,
@@ -1826,7 +1826,7 @@ const TemplateCreate = () => {
     },
     itinerary: {
       id: 'itinerary',
-      label: 'itinerary [5]',
+      label: 'Itinerary [5]',
       fieldType: 'text',
       value: '',
       mandatory: false,

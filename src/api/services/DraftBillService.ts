@@ -26,10 +26,18 @@ export const draftBillService = {
             RequestData: requestPayload,
         };
 
-        const response = await apiClient.post(
-            API_ENDPOINTS.DRAFT_BILL.SEARCH,
-            requestBody
-        );
+        // const response = await apiClient.post(
+        //     API_ENDPOINTS.DRAFT_BILL.SEARCH,
+        //     requestBody
+    
+
+         const response = await apiClient.post(
+    API_ENDPOINTS.DRAFT_BILL.SEARCH,
+    requestBody,
+    {
+      timeout: 170000, 
+    }
+  );
         return response.data;
     },
 

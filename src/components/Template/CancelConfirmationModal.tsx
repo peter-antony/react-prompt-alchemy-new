@@ -21,6 +21,16 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
   const [reasonCode, setReasonCode] = useState<{ value: string; label: string } | string>('');
   const [reasonDescription, setReasonDescription] = useState('');
 
+  const resetFields = () => {
+  setReasonCode('');
+  setReasonDescription('');
+};
+
+const isReasonCodeEmpty =
+  !reasonCode ||
+  (typeof reasonCode === 'object' && !reasonCode.value);
+
+
   if (!isOpen) return null;
 
   // const [reasonCodes, setReasonCodes] = useState('');
@@ -59,10 +69,30 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
   const fetchReasonCode = fetchMasterData("Cancellation Reason Init");
 
 
+  // const handleCancelClick = () => {
+  //   onConfirmCancel(typeof reasonCode === 'string' ? reasonCode : reasonCode?.value || '', reasonDescription);
+  //   onClose();
+  // };
+
   const handleCancelClick = () => {
-    onConfirmCancel(typeof reasonCode === 'string' ? reasonCode : reasonCode?.value || '', reasonDescription);
-    onClose();
-  };
+  if (isReasonCodeEmpty) return;
+
+  onConfirmCancel(
+    typeof reasonCode === 'string'
+      ? reasonCode
+      : reasonCode.value,
+    reasonDescription
+  );
+
+  resetFields();
+  onClose();
+};
+
+const handleClose = () => {
+  resetFields();
+  onClose();
+};
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50 flex justify-center items-center">
@@ -79,7 +109,8 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
           <Button
             type="button"
             className="text-gray-400 hover:text-gray-500 bg-white hover:bg-gray-100"
-            onClick={onClose}
+            // onClick={onClose}
+            onClick={handleClose}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -88,7 +119,7 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
         {/* Body */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="reasonCode" className="block text-sm font-medium text-gray-700">Reason Code</Label>
+            <Label htmlFor="reasonCode" className="block text-sm font-medium text-gray-700">  Reason Code <span className="text-red-500">*</span></Label>
             <DynamicLazySelect
               fetchOptions={fetchReasonCode}
               value={typeof reasonCode === 'object' ? reasonCode.value : reasonCode}
@@ -112,7 +143,13 @@ const CancelConfirmationModal: React.FC<CancelConfirmationModalProps> = ({ isOpe
         {/* Footer */}
         <div className="mt-6 flex justify-end space-x-3">
           {/* <Button type="button" variant="outline" onClick={onClose}>Close</Button> */}
-          <Button type="button" className="bg-red-500 hover:bg-red-600 text-white" onClick={handleCancelClick}>Cancel</Button>
+<Button
+  type="button"
+  className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={handleCancelClick}
+  disabled={isReasonCodeEmpty}
+>
+Cancel</Button>
         </div>
       </div>
     </div>

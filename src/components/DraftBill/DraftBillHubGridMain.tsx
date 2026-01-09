@@ -45,6 +45,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     // State for nested row selections
     const [selectedDbLines, setselectedDbLines] = useState<NestedRowSelection[]>([]);
 
+    
+
     const handleDraftBillSelection = (rows: any[]) => {
         console.log("12-----------------", rows);
         console.log("selectedDbLines", selectedDbLines)
@@ -1212,6 +1214,29 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     };
 
     useEffect(() => {
+  const gridId = 'draft-bill-grid';
+  const store = useFilterStore.getState();
+
+  // ✅ Default ContractType = Sell
+  if (!store.activeFilters[gridId]?.ContractType) {
+    store.setFilter(gridId, 'ContractType', {
+      value: 'Sell',
+    });
+  }
+
+  // ✅ Default DraftBillDate = Last 30 days
+  if (!store.activeFilters[gridId]?.DraftBillDate) {
+    store.setFilter(gridId, 'DraftBillDate', {
+      value: {
+        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd'),
+      },
+    });
+  }
+}, []);
+
+
+    useEffect(() => {
         fetchDraftBills();
     }, [JSON.stringify(filtersForThisGrid)]); // Re-fetch when filters change
 
@@ -1277,7 +1302,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'RefDocType', label: 'Ref Doc Type', type: 'lazyselect',
-            fetchOptions: makeLazyFetcher('DB Status Init'),
+            fetchOptions: makeLazyFetcher('DB Ref Doc Type Init'),
             disableLazyLoading: true, hideSearch: true,
         },
         {
@@ -1305,17 +1330,14 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'DraftBillDate', label: 'Draft Bill Date', type: 'dateRange',
-            // defaultValue: {
-            //     from: "2025-12-17",
-            //     to: "2025-12-18"
-            // }
+           
             defaultValue: {
                 from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
                 to: format(new Date(), 'yyyy-MM-dd')
             }
         },
         {
-            key: 'TripActualPickupDate', label: 'Trip Actual From/To', type: 'dateRange'
+            key: 'TripActualPickupDate', label: 'Trip Actual Pickup Date Range', type: 'dateRange'
 
         },
         {
@@ -1397,7 +1419,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             fetchOptions: makeLazyFetcher('Createdby Init')
         },
         {
-            key: 'SecondaryReferenceNumber', label: 'Secondary Reference Number', type: 'text'
+            key: 'SecondaryReferenceNumber', label: 'Secondary Reference No', type: 'text'
         },
         {
             key: 'Remark1', label: 'Remark 1', type: 'text'
@@ -2117,7 +2139,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             if (resourceStatus) {
                 console.log("Template cancelled successfully");
                 toast({
-                    title: "✅ Draf Cancelled Successfully",
+                    title: "✅ Draft Bill Invoice Generated Successfully",
                     description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
                     variant: "default",
                 });
@@ -2125,14 +2147,14 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             } else {
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
-                    title: "⚠️ Cancel Failed",
-                    description: (response as any)?.data?.Message || "Failed to cancel changes.",
+                    title: "⚠️ Draft Bill Invoice Generated Failed",
+                    description: (response as any)?.data?.Message || "Draft Bill Invoice Generated.",
                     variant: "destructive",
                 });
             }
             // Optionally, handle success or display a message
         } catch (error) {
-            console.error("Error canceling Draft:", error);
+            console.error("Error Draft Bill Invoice Generated", error);
             // Optionally, handle error or display an error message
         }
         setIsGenerateInvoiceModalOpen(false);
@@ -2236,24 +2258,24 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             const resourceStatus = (response as any)?.data?.IsSuccess;
             console.log("parsedResponse ====", parsedResponse);
             if (resourceStatus) {
-                console.log("Approved successfully");
+                console.log("Rerun successfully");
                 toast({
-                    title: "✅ Approved Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+                    title: "✅ Rerun Successfully",
+                    description: (response as any)?.data?.ResponseData?.Message || "Rerun Successfully.",
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
             } else {
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
-                    title: "⚠️ Approved Failed",
-                    description: (response as any)?.data?.Message || "Failed to Approve changes.",
+                    title: "⚠️ Rerun Failed",
+                    description: (response as any)?.data?.Message || "Failed to Rerun changes.",
                     variant: "destructive",
                 });
             }
             // Optionally, handle success or display a message
         } catch (error) {
-            console.error("Error canceling Draft:", error);
+            console.error("Error Rerun Draft:", error);
         }
 
     };
@@ -2285,24 +2307,24 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             const resourceStatus = (response as any)?.data?.IsSuccess;
             console.log("parsedResponse ====", parsedResponse);
             if (resourceStatus) {
-                console.log("Approved successfully");
+                console.log("Revert successfully");
                 toast({
-                    title: "✅ Approved Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approved.",
+                    title: "✅ Revert Successfully",
+                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Reverted.",
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
             } else {
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
-                    title: "⚠️ Approved Failed",
-                    description: (response as any)?.data?.Message || "Failed to Approve changes.",
+                    title: "⚠️ Revert Failed",
+                    description: (response as any)?.data?.Message || "Failed to Revert changes.",
                     variant: "destructive",
                 });
             }
             // Optionally, handle success or display a message
         } catch (error) {
-            console.error("Error canceling Draft:", error);
+            console.error("Error Reverting Draft:", error);
             // Optionally, handle error or display an error message
         }
 

@@ -12,6 +12,7 @@ import { DraftBillAuditTrail } from "./DraftBillAuditTrail";
 import CancelConfirmationModal from '../Template/CancelConfirmationModal';
 import AmendReportModal from "../Template/AmendReportModal";
 import { DraftBillWorkFlow } from "./DraftBillWorkFlow";
+import { ArrowLeft } from "lucide-react";
 
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
@@ -56,7 +57,7 @@ const fetchMaster = (
     }
   };
 };
-
+ 
 const BasicDetailsPanelConfig: PanelConfig = {
   quantity: {
     id: "quantity",
@@ -75,7 +76,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     id: "rate",
     label: "Rate",
     fieldType: "inputdropdown",
-    value: "",
+   value: "EUR",
     mandatory: true,
     visible: true,
     editable: true,
@@ -138,7 +139,6 @@ const BasicDetailsPanelConfig: PanelConfig = {
   },
 };
 
-
 const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   isOpen,
   width,
@@ -168,7 +168,6 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     setLocalLineItems(lineItems);
     setLocalHeaderData(headerData);
   }, [lineItems, headerData]);
-
   // Expansion State
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [isBasicDetailsExpanded, setIsBasicDetailsExpanded] = useState(true);
@@ -233,7 +232,8 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return {
             input: rate || '',
-            dropdown: rateCurrency || ''
+            dropdown: 'EUR'
+
           };
         }
       }
@@ -242,7 +242,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
     // Helper function to get AcceptedValue field (checking multiple possible field names)
     const getAcceptedValueField = () => {
-      const acceptedValue = basicDetails.AcceptedValue || line.AcceptedValue || '';
+      const acceptedValue = basicDetails.AcceptedValue || line.AcceptedValue || 'EUR';
       const acceptedValueCurrency = basicDetails.AcceptedValueCurrency || basicDetails.BillingCurrency || line.AcceptedValueCurrency || line.BillingCurrency || 'EUR';
 
       console.log("AcceptedValue - acceptedValue:", acceptedValue, "acceptedValueCurrency:", acceptedValueCurrency);
@@ -255,7 +255,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           // Return as object with dropdown and input
           return {
             input: acceptedValue || '',
-            dropdown: acceptedValueCurrency || ''
+            dropdown: 'EUR'
           };
         }
       }
@@ -1105,7 +1105,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                       className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       onClick={onClose}
                     >
-                      <ChevronLeft className="h-5 w-5" />
+                      <ArrowLeft className="h-5 w-5" /> 
                     </button>
                     <h2 className="text-lg font-semibold text-gray-900">Draft Bill Details</h2>
                     <div className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">{localHeaderData?.DraftBillNo || ''}</div>
@@ -1129,17 +1129,56 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                     <div className="p-3 m-4 bg-gray-100 border border-gray-200 rounded-md">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">{localHeaderData?.DraftBillNo}</h3>
-                        <span className="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md">{localHeaderData?.DBStatusDescription}</span>
+
+ <div className="flex items-center space-x-2">
+  {localHeaderData?.DBStatus === "AP" && (
+    <span className="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md">
+      Approved
+    </span>
+  )}
+
+  {localHeaderData?.DBStatus === "OPN" && (
+    <span className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md">
+      Open
+    </span>
+  )}
+
+  {localHeaderData?.DBStatus === "RR" && (
+    <span className="px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-md">
+      Rerun Triggered
+    </span>
+  )}
+
+  {localHeaderData?.DBStatus === "IP" && (
+    <span className="px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-md">
+      In Progress
+    </span>
+  )}
+
+  {localHeaderData?.DBStatus === "CN" && (
+    <span className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-md">
+      Cancelled
+    </span>
+  )}
+</div>
+
+
+
                       </div>
-                      <p className="text-sm text-gray-600 mb-4">{localHeaderData?.DraftBillDate ? new Date(localHeaderData.DraftBillDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '12-Mar-2025'}</p>
+                    <p className="text-sm text-gray-600 mb-4">
+  {localHeaderData?.DraftBillDate
+    ? new Date(localHeaderData.DraftBillDate).toISOString().split('T')[0]
+    : ''}
+</p>
+
                       <div className="grid grid-cols-2 gap-y-2 mb-4">
                         <div>
                           <p className="text-sm text-gray-500">Total Value</p>
                           <p className="text-base font-medium text-purple-600">€ {localHeaderData?.DBTotalValue}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Accepted SSSSValue</p>
-                          <p className="text-base font-medium text-green-600">€ {localHeaderData?.DBAcceptedValue}</p>
+                          <p className="text-sm text-gray-500">Accepted Vale</p>
+                          <p className="text-base font-medium text-green-600">€{localHeaderData?.DBAcceptedValue}</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -1156,7 +1195,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                           <span>
                             {localLineItems[0]?.ReferenceInformation}
                             <div className="relative group inline-block">
-                              <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                              <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
                               <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                 <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
                                   {"Reference Doc. ID"}
@@ -1216,9 +1255,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                           </span>
                           <FileText className="w-4 h-4 ml-3 text-gray-400" />
-                          <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">Multiple
+                          <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">{localHeaderData?.ContractID}
                             <div className="relative group inline-block">
-                              <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                              <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
                               <div className="absolute -right-20 hidden top-5 z-30 group-hover:block min-w-[175px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                 <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
                                   {"Contract Details"}
@@ -1231,9 +1270,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                                   </div>
 
 
-                                  <div className="text-[11px] text-gray-400 ">Internal Order</div>
+                                  <div className="text-[11px] text-gray-400 ">{localHeaderData?.ContractDescription}</div>
                                   <div className="text-xs text-gray-400">
-                                    stage{" Order"}
+                                   {localHeaderData?.DraftBillStage}
                                   </div>
                                 </div>
                               </div>
@@ -1284,16 +1323,16 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <span>{line.TariffDescription}</span>
 
                               <div className="relative group inline-block">
-                                <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
 
                                 <div className="absolute -right-[0px] hidden top-5 z-[9999] group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                   <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                    Traff Details
+                                    Tariff Details
                                   </div>
 
                                   <div className="px-4 py-3">
                                     <div className="text-[11px] text-gray-400 mb-2">
-                                      Traff ID and Description
+                                      Tariff ID and Description
                                     </div>
 
                                     <div className="font-semibold text-gray-700">
@@ -1302,7 +1341,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                                   </div>
                                   <div className="px-4 py-3">
                                     <div className="text-[11px] text-gray-400 mb-2">
-                                      Traff Type
+                                      Tariff Type
                                     </div>
 
                                     <div className="font-semibold text-gray-700">

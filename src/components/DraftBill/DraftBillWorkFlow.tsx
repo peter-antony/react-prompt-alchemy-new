@@ -146,7 +146,7 @@ export const DraftBillWorkFlow: any = ({ isOpen, onClose, auditDraftBillObj }) =
         const responseDataString = JSON.parse(response?.data?.ResponseData);
         console.log("responseDataString", responseDataString.WorkFlowReport);
         console.log("responseDataString", loadData);
-        setWorkflowEntries(loadData.WorkFlowReport);
+        setWorkflowEntries(responseDataString.WorkFlowReport);
       } catch (error) {
         console.error('Workflow Report API Error:', error);
         // setAuditEntries(DEFAULT_AUDIT_TRAILS);

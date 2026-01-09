@@ -21,6 +21,16 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
   const [reasonCode, setReasonCode] = useState<{ value: string; label: string } | string>('');
   const [reasonDescription, setReasonDescription] = useState('');
 
+  const resetFields = () => {
+  setReasonCode('');
+  setReasonDescription('');
+};
+
+const isReasonCodeEmpty =
+  !reasonCode ||
+  (typeof reasonCode === 'object' && !reasonCode.value);
+
+
   if (!isOpen) return null;
 
   // const [reasonCodes, setReasonCodes] = useState('');
@@ -59,10 +69,31 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
   const fetchReasonCode = fetchMasterData("Cancellation Reason Init");
 
 
+  // const handleAmendClick = () => {
+  //   onConfirmAmend(typeof reasonCode === 'string' ? reasonCode : reasonCode?.value || '', reasonDescription);
+  //   onClose();
+  // };
+
   const handleAmendClick = () => {
-    onConfirmAmend(typeof reasonCode === 'string' ? reasonCode : reasonCode?.value || '', reasonDescription);
-    onClose();
-  };
+  if (isReasonCodeEmpty) return;
+
+  onConfirmAmend(
+    typeof reasonCode === 'string'
+      ? reasonCode
+      : reasonCode.value,
+    reasonDescription
+  );
+
+  resetFields();
+  onClose();
+};
+
+const handleClose = () => {
+  resetFields();
+  onClose();
+};
+
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50 flex justify-center items-center">
@@ -76,19 +107,20 @@ const AmendReportModal: React.FC<AmendReportModalProps> = ({ isOpen, onClose, on
             </div>
             <h3 className="text-lg font-semibold text-gray-900">Amend</h3>
           </div>
-          <Button
-            type="button"
-            className="text-gray-400 hover:text-gray-500 bg-white hover:bg-gray-100"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+         <Button
+  type="button"
+  className="text-gray-400 hover:text-gray-500 bg-white hover:bg-gray-100"
+  onClick={handleClose}
+>
+  <X className="h-5 w-5" />
+</Button>
+
         </div>
 
         {/* Body */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="reasonCode" className="block text-sm font-medium text-gray-700">Reason Code</Label>
+            <Label htmlFor="reasonCode" className="block text-sm font-medium text-gray-700">  Reason Code <span className="text-red-500">*</span></Label>
             <DynamicLazySelect
               fetchOptions={fetchReasonCode}
               value={typeof reasonCode === 'object' ? reasonCode.value : reasonCode}
