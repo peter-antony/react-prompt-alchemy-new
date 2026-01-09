@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DynamicLazySelect } from '@/components/DynamicPanel/DynamicLazySelect';
 import { CimCuvService } from '@/api/services/CimCuvService';
 import { quickOrderService } from '@/api/services/quickOrderService';
@@ -13,13 +14,13 @@ import { quickOrderService } from '@/api/services/quickOrderService';
 interface GenerateInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmGenerateInvoice: (consolidationCode: string, reasonDescription: string) => void;
+  onConfirmGenerateInvoice: (consolidationCode: string, invoiceType: string) => void;
 }
 
 const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onClose, onConfirmGenerateInvoice }) => {
   console.log("GenerateInvoiceModal - isOpen:", isOpen);
   const [consolidationCode, setconsolidationCode] = useState<{ value: string; label: string } | string>('');
-  const [reasonDescription, setReasonDescription] = useState('');
+  const [invoiceType, setInvoiceType] = useState<string>('Manual');
 
   if (!isOpen) return null;
 
@@ -60,7 +61,7 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
 
 
   const handleCancelClick = () => {
-    onConfirmGenerateInvoice(typeof consolidationCode === 'string' ? consolidationCode : consolidationCode?.value || '', reasonDescription);
+    onConfirmGenerateInvoice(typeof consolidationCode === 'string' ? consolidationCode : consolidationCode?.value || '', invoiceType);
     onClose();
   };
 
@@ -92,6 +93,24 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
               placeholder=""
             />
           </div>
+          
+          {/* <div>
+            <Label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</Label>
+            <RadioGroup value={invoiceType} onValueChange={setInvoiceType} className="flex gap-6">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Manual" id="manual" />
+                <Label htmlFor="manual" className="text-sm font-normal text-gray-700 cursor-pointer">
+                  Manual
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="SFI-STI selection" id="sfi-sti" disabled/>
+                <Label htmlFor="sfi-sti" className="text-sm font-normal text-gray-700 cursor-not-allowed">
+                  SFI-STI selection
+                </Label>
+              </div>
+            </RadioGroup>
+          </div> */}
         </div>
 
         {/* Footer */}

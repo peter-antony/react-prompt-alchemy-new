@@ -197,7 +197,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             sortable: true,
             filterable: true,
             subRow: false,
-            width: 300
+            width: 300,
         },
         // {
         //     key: 'FromLocationDescription',
@@ -216,14 +216,24 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             subRow: false,
             width: 300
         },
-        // {
-        //     key: 'ToLocationDescription',
-        //     label: 'To Location DESC',
-        //     type: 'Text',
-        //     sortable: true,
-        //     filterable: true,
-        //     width: 200
-        // },
+        {
+            key: 'RecordSupplierInvoiceNumber',
+            label: 'Supplier Invoice Number',
+            type: 'Text',
+            sortable: true,
+            filterable: true,
+            width: 200,
+            editable: true
+        },
+        {
+            key: 'RecordSupplierInvoiceDate',
+            label: 'Supplier Invoice Date',
+            type: 'Date',
+            sortable: true,
+            filterable: true,
+            width: 150,
+            editable: true
+        },
         {
             key: 'WBS',
             label: 'WBS',
@@ -231,7 +241,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             sortable: true,
             filterable: true,
             subRow: false,
-            width: 150
+            width: 150,
         },
         {
             key: 'DBTotalValue',
@@ -266,7 +276,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             sortable: true,
             filterable: true,
             subRow: false,
-            width: 150
+            width: 150,
         },
         {
             key: 'ContractID',
@@ -320,7 +330,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             sortable: true,
             filterable: true,
             subRow: false,
-            width: 150
+            width: 150,
         },
         {
             key: 'InvoiceStatus',
@@ -401,7 +411,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             sortable: true,
             filterable: true,
             subRow: false,
-            width: 150
+            width: 150,
         },
         {
             key: 'Cluster',
@@ -2071,20 +2081,22 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             }
         }
     };
-    const handleGenerateInvoice = async (consolidationCode: string) => {
+    const handleGenerateInvoice = async (consolidationCode: string, invoiceType: string) => {
         console.log("selectedDraftBills", selectedDraftBills);
         console.log("selectedDraftBills", selectedDraftBills[0]);
+        console.log("invoiceType", invoiceType);
 
         // Map all selected draft bills to extract DraftBillNo
         // Each draftBill has both DraftBillNo (from header) and id (which is also DraftBillNo)
         const draftBillsArray = selectedDraftBills.map((draftBill) => ({
             "DraftBillNo": draftBill.DraftBillNo || draftBill.id, // Prefer DraftBillNo, fallback to id
-            "RecordSupplierInvoiceNo": "RECINV01212121", // Same for all
-            "RecordSupplierInvoiceDate": "2025-12-12" // Same for all
+            "RecordSupplierInvoiceNo": draftBill.RecordSupplierInvoiceNumber, // Same for all
+            "RecordSupplierInvoiceDate": draftBill.RecordSupplierInvoiceDate // Same for all
         }));
 
         const payload = {
             ConsolidationType: splitIdName(consolidationCode).name,
+            // InvoiceType: invoiceType,
             TriggerType: {
                 "IsGenerateTransferInvoice": 1,
                 "IsGenerateFinanceInvoice": 1
@@ -2142,6 +2154,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 FromLocationDescription: selectedBill.FromLocationDescription,
                 ToLocation: selectedBill.ToLocation,
                 ToLocationDescription: selectedBill.ToLocationDescription,
+                RecordSupplierInvoiceNumber: selectedBill.RecordSupplierInvoiceNumber,
+                RecordSupplierInvoiceDate: selectedBill.RecordSupplierInvoiceDate,
                 WBS: selectedBill.WBS,
                 DBTotalValue: selectedBill.DBTotalValue,
                 BusinessPartnerID: selectedBill.BusinessPartnerID,
@@ -2531,6 +2545,21 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         }
     };
 
+    // Handler to update main trip row
+  const handleTripInlineEdit = (rowIndex: number, updatedRow: any) => {
+    console.log('Inline edit at row index:', rowIndex, 'with data:', updatedRow);
+    console.log('Previous row data:', gridState.gridData);
+    
+    // Update the grid data by merging the updated row with existing row data
+    gridState.setGridData((prevData) => {
+      const newData = [...prevData];
+      if (newData[rowIndex]) {
+        newData[rowIndex] = { ...newData[rowIndex], ...updatedRow };
+      }
+      return newData;
+    });
+  };
+
     return (
         <div className="h-full flex flex-col relative">
             {gridState.loading && (
@@ -2543,7 +2572,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             {/* Load the grid only when preferences are loaded */}
             {isPreferencesLoaded ? (
                 <SmartGridWithNestedRows
-                    key={`grid-${gridState.forceUpdate}-${forceGridUpdate}`}
+                    // key={`grid-${gridState.forceUpdate}-${forceGridUpdate}`}
                     gridId="draft-bill-grid"
                     gridTitle="Draft Bill"
                     recordCount={gridState.gridData.length}
@@ -2566,11 +2595,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     serverFilterVisibleFields={serverFilterVisibleFields}
                     serverFilterFieldOrder={serverFilterFieldOrder}
                     onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
-
-
-
                     onRowSelectionChange={handleDraftBillSelection}
-
                     // nestedRowRenderer={renderSubRow}
                     // selectionMode='multi'
                     onSelectedRowsChange={(selectedRows) => {
@@ -2579,7 +2604,8 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         setSelectedDraftBills(selectedRows);
                         onDraftBillSelection?.(selectedRows);
                     }}
-
+                    onInlineEdit={handleTripInlineEdit}
+                    editableColumns={true}
                     nestedSectionConfig={{
                         nestedDataKey: 'lineItems',
                         columns: nestedColumns,

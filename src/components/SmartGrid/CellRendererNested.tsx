@@ -242,13 +242,41 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
     );
   };
 
-  // Simple text renderer
+  // Simple text renderer with inline editing support
   const renderTextData = () => {
+    if (isEditing) {
+      return (
+        <Input
+          type="text"
+          value={tempValue ?? ''}
+          onChange={(e) => setTempValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          className="w-full min-w-0 h-8 px-2 text-[13px] focus:ring-2 focus:ring-blue-500"
+          autoFocus
+          disabled={loading}
+        />
+      );
+    }
+    if (isEditable) {
+      return (
+        <div
+          onClick={() => onEditStart(rowIndex, column.key)}
+          className={cn(
+            "text-sm min-w-0 min-h-[20px] p-1 hover:bg-blue-50 cursor-pointer rounded transition-colors duration-150",
+            loading && "opacity-50 cursor-not-allowed"
+          )}
+          title={String(value || '')}
+        >
+          <div className="text-Gray-800 font-normal truncate text-[13px]">
+            {value !== null && value !== undefined && value !== '' ? value : <span className="text-gray-400">Click to edit</span>}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="text-sm min-w-0">
         <div className="text-Gray-800 font-normal truncate text-[13px]">{value}</div>
-        {/* {column.key == 'Contract' && (<div className="text-gray-500 text-[11px] truncate">{row?.ContractDescription}</div>)}
-        {column.key == 'CustomerOrVendor' && (<div className="text-gray-500 text-[11px] truncate">{row?.CustomerOrVendorName}</div>)} */}
       </div>
     );
   };
