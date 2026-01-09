@@ -23,7 +23,7 @@ const REACT_APP_API_URL = "http://192.168.2.92/v1"; // Local Dev url
 // const REACT_APP_API_URL = "http://ebswarcnv29.pearl.com/coreapiops/v1"; // Dev url
 // const REACT_APP_API_URL = "https://forwardissim.ramcouat.com/coreapiops/v1"; // Sim url
 // const REACT_APP_API_URL = "https://forwardis.ramcoes.com/coreapiops/v1"; // Live url
-// const REACT_APP_API_URL = "https://forwardislivesim.ramcouat.com/coreapiops/v1"; // Live url
+// const REACT_APP_API_URL = "https://forwardislivesim.ramcouat.com/coreapiops/v1"; // LiveSIM url
 
 const token: any = localStorage.getItem("token");
 // Function to set user context when user makes selection
@@ -239,6 +239,7 @@ export const API_ENDPOINTS = {
     REJECT: "manageclaims/claimreject",
     SMARTEDIT: "manageclaims/claimsmartedit",
     AUDIT_TRAIL: "manageclaims/claimsaudittrail",
+    WORKFLOW_REPORT: "managedraftbill/viewworkflow"
   }
 } as const;
 

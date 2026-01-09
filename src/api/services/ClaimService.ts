@@ -137,6 +137,33 @@ export const ClaimService = {
     return response.data;
   },
 
+  viewWorkFlowReport: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "View Workflow Report",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      SearchCriteria: {
+        RefDocType: params?.RefDocType,
+        RefDocNo: params?.RefDocNo
+      }
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.WORKFLOW_REPORT,
+      requestBody
+    );
+    return response.data;
+  },
+
   claimHubSmartEdit: async (params: any): Promise<any> => {
     const userContext = getUserContext();
     const payload = {

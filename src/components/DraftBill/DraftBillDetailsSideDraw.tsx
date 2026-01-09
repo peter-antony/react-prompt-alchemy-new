@@ -11,6 +11,7 @@ import { quickOrderService } from "@/api/services";
 import { DraftBillAuditTrail } from "./DraftBillAuditTrail";
 import CancelConfirmationModal from '../Template/CancelConfirmationModal';
 import AmendReportModal from "../Template/AmendReportModal";
+import { DraftBillWorkFlow } from "./DraftBillWorkFlow";
 
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
@@ -155,7 +156,8 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   const { toast } = useToast();
   const [isAuditTrailOpen, setIsAuditTrailOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
+  const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
+  const [isWorkFlowOpen, setIsWorkFlowOpen] = useState(false);
   
   // Local state to manage lineItems and headerData (can be updated after refresh)
   const [localLineItems, setLocalLineItems] = useState<any[]>(lineItems);
@@ -1499,10 +1501,10 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                   {/* <Button type="button" onClick={() => setIsAuditTrailOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white h-8 py-1">
                     Audit Trail
                   </Button> */}
-                  <Button title="Audit Trail" onClick={() => setIsAuditTrailOpen(true)} className="bg-white border border-gray-300 h-8 px-2 py-2 text-[13px] rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <Button title="Audit Trail" onClick={() => setIsAuditTrailOpen(true)} className="bg-white border border-gray-300 h-8 px-2 py-2 text-[13px] rounded-lg hover:bg-gray-100 cursor-pointer mt-2">
                     <FileSearchIcon className="w-8 h-8 text-gray-500" />
                   </Button>
-                  <Button title="Workflow" className="ml-3 bg-white border border-gray-300 h-8 px-2 py-2 text-[13px] rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <Button title="Workflow" onClick={() => setIsWorkFlowOpen(true)} className="ml-3 bg-white border border-gray-300 h-8 px-2 py-2 text-[13px] rounded-lg hover:bg-gray-100 cursor-pointer mt-2">
                     <Workflow className="w-8 h-8 text-gray-500" />
                   </Button>
                 </div>
@@ -1532,6 +1534,13 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
       <DraftBillAuditTrail
         isOpen={isAuditTrailOpen}
         onClose={() => setIsAuditTrailOpen(false)}
+        auditDraftBillObj={localHeaderData?.DraftBillNo}
+      />
+
+      {/* Workflow Report Side Drawer */}
+      <DraftBillWorkFlow
+        isOpen={isWorkFlowOpen}
+        onClose={() => setIsWorkFlowOpen(false)}
         auditDraftBillObj={localHeaderData?.DraftBillNo}
       />
 
