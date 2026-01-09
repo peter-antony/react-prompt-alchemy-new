@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Star, X, Search, Settings } from 'lucide-react';
 import { ColumnFilterInput } from './ColumnFilterInput';
@@ -56,15 +56,42 @@ export function ServersideFilter({
   
   const { toast } = useToast();
 
-  // Get current grid's active filters
-  const currentActiveFilters = activeFilters[gridId] || {};
+  // Get current grid's active filters - Memoize to prevent unnecessary re-runs
+  const currentActiveFiltersRaw = activeFilters[gridId] || {};
+  const currentActiveFilters = useMemo(() => currentActiveFiltersRaw, [JSON.stringify(currentActiveFiltersRaw)]);
+
+  // Track initialization to prevent re-applying defaults on subsequent updates (like Clear All)
+  const isInitialized = useRef(false);
+  const prevActiveFiltersRef = useRef(currentActiveFilters);
   
   // Initialize pending filters from active filters OR default values when component mounts
   useEffect(() => {
+    // Check if active filters actually changed from outside
+    const hasActiveFiltersChanged = JSON.stringify(prevActiveFiltersRef.current) !== JSON.stringify(currentActiveFilters);
+
+    // Only run this logic if we haven't initialized yet OR if active filters changed externally
+    if (isInitialized.current) {
+      if (hasActiveFiltersChanged) {
+        // If we are already initialized, we should sync with activeFilters if they change externally
+        // But NOT re-apply defaults if activeFilters is empty (which happens on Clear All)
+        if (Object.keys(currentActiveFilters).length > 0) {
+          setPendingFilters(currentActiveFilters);
+        } else if (Object.keys(pendingFilters).length > 0 && Object.keys(currentActiveFilters).length === 0) {
+          // This case handles external clear (like Clear All button)
+          setPendingFilters({});
+        }
+        prevActiveFiltersRef.current = currentActiveFilters;
+      }
+      return;
+    }
     if (Object.keys(pendingFilters).length === 0) {
       if (Object.keys(currentActiveFilters).length > 0) {
         // Use existing active filters
         setPendingFilters(currentActiveFilters);
+        // Use existing active filters
+        setPendingFilters(currentActiveFilters);
+        isInitialized.current = true;
+        prevActiveFiltersRef.current = currentActiveFilters;
       } else {
         // Initialize with default values from serverFilters
         const defaultFilters: Record<string, FilterValue> = {};
@@ -87,6 +114,8 @@ export function ServersideFilter({
             onSearch();
           }, 100);
         }
+        isInitialized.current = true;
+        prevActiveFiltersRef.current = currentActiveFilters;
       }
     }
   }, [currentActiveFilters, serverFilters, gridId]);
