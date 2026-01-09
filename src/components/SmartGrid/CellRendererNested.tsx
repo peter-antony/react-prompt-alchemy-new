@@ -276,7 +276,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
     }
     return (
       <div className="text-sm min-w-0">
-        <div className="text-Gray-800 font-normal truncate text-[13px]">{value}</div>
+        <div className="text-Gray-800 font-normal truncate text-[13px]" title={String(value)}>{value}</div>
       </div>
     );
   };
@@ -292,7 +292,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
     return (
       <div className="text-sm min-w-0">
         {column.key === "Contract" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'ContractDescription', 'Contract')}>
             {row?.ContractDescription && row?.Contract
               ? `${row.ContractDescription} || ${row.Contract}`
               : row?.ContractDescription || row?.Contract}
@@ -300,7 +300,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
         )}
 
         {column.key === "CustomerOrVendor" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'CustomerOrVendorName', 'CustomerOrVendor')}>
             {row?.CustomerOrVendorName && row?.CustomerOrVendor
               ? `${row.CustomerOrVendorName} || ${row.CustomerOrVendor}`
               : row?.CustomerOrVendorName || row?.CustomerOrVendor}
@@ -308,21 +308,21 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
         )}
 
         {column.key === "DeparturePointDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'DeparturePointDescription', 'DeparturePoint')}>
             {row?.DeparturePointDescription && row?.DeparturePoint
               ? `${row.DeparturePointDescription} || ${row.DeparturePoint}`
               : row?.DeparturePointDescription || row?.DeparturePoint}
           </div>
         )}
         {column.key === "ArrivalPointDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'ArrivalPointDescription', 'ArrivalPoint')}>
             {row?.ArrivalPointDescription && row?.ArrivalPoint
               ? `${row.ArrivalPointDescription} || ${row.ArrivalPoint}`
               : row?.ArrivalPointDescription || row?.ArrivalPoint}
           </div>
         )}
         {column.key === "LegFromDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'LegFromDescription', 'LegFrom')}>
             {/* {row?.LegFromDescription && row?.LegFrom
               ? `${row.LegFromDescription} || ${row.LegFrom}`
               : row?.LegFromDescription || row?.LegFrom} */}
@@ -330,27 +330,27 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
           </div>
         )}
         {column.key === "LegToDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'LegToDescription', 'LegTo')}>
             {getPipedValue(row, 'LegToDescription', 'LegTo')}
           </div>
         )}
         {column.key === "FromLocationDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'FromLocationDescription', 'FromLocation')}>
             {getPipedValue(row, 'FromLocationDescription', 'FromLocation')}
           </div>
         )}
         {column.key === "ToLocationDescription" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'ToLocationDescription', 'ToLocation')}>
             {getPipedValue(row, 'ToLocationDescription', 'ToLocation')}
           </div>
         )}
         {column.key === "BusinessPartnerName" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'BusinessPartnerName', 'BusinessPartnerID')}>
             {getPipedValue(row, 'BusinessPartnerName', 'BusinessPartnerID')}
           </div>
         )}
         {column.key === "RefDocIDType" && (
-          <div className="text-Gray-800 font-normal truncate text-[13px]">
+          <div className="text-Gray-800 font-normal truncate text-[13px]" title={getPipedValue(row, 'RefDocIDType', 'RefDocIDTypeDescription')}>
             {getPipedValue(row, 'RefDocIDType', 'RefDocIDTypeDescription')}
           </div>
         )}
@@ -810,7 +810,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
-    return <span className="font-bold">&euro; {formattedAmount(value)}</span>
+    return <span className="font-bold" title={formattedAmount(value)}>&euro; {formattedAmount(value)}</span>
   }
 
   // Time renderer
