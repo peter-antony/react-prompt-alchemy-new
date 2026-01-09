@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CheckCircle, CircleCheck, Info, MinusCircle, Package } from 'lucide-react';
 import { GridColumnConfig } from '@/types/smartgrid';
-import { cn } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { WorkOrderBadge } from './WorkOrderBadge';
@@ -198,12 +198,16 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       }
     };
 
-    const handleCopy = (e: React.MouseEvent) => {
+    const handleCopy = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      navigator.clipboard.writeText(String(value));
-      setCopied(true);
-      toast.success('Copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      const success = await copyToClipboard(String(value));
+      if (success) {
+        setCopied(true);
+        toast.success('Copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        toast.error('Failed to copy');
+      }
     };
 
     return (

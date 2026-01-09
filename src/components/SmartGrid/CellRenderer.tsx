@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Info, Package, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { GridColumnConfig } from '@/types/smartgrid';
-import { cn } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { CustomerCountBadge } from './CustomerCountBadge';
 import { formattedAmount, dateFormatter, dateTimeFormatter } from '@/utils/formatter';
 import { WorkOrderBadge } from './WorkOrderBadge';
@@ -159,12 +159,16 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       }
     };
 
-    const handleCopy = (e: React.MouseEvent) => {
+    const handleCopy = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      navigator.clipboard.writeText(String(value));
-      setCopied(true);
-      toast.success('Copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      const success = await copyToClipboard(String(value));
+      if (success) {
+        setCopied(true);
+        toast.success('Copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        toast.error('Failed to copy');
+      }
     };
 
     return (
