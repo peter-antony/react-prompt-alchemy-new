@@ -449,6 +449,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const [equipmentContract, setEquipmentContract] = useState<string | undefined>();
   const [contractSupplier, setContractSupplier] = useState<string | undefined>();
   const [equipmentOwner, setEquipmentOwner] = useState<string | undefined>();
+  const [wagonContainerKeeper, setWagonContainerKeeper] = useState<string | undefined>();
+  const [currentLocation, setCurrentLocation] = useState<string | undefined>();
 
   // Helper: extract ID or Name from piped data "ID || Name" (same as EquipmentCalendarPanel)
   const getPipedPart = (value: string | undefined, part: 'id' | 'name'): string => {
@@ -480,6 +482,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       EquipmentContract: equipmentContract || '',
       ContractAgent: contractSupplier || '',
       EquipmentOwner: equipmentOwner || '',
+      WagonContainerKeeper: wagonContainerKeeper || '',
+      CurrentLocation: currentLocation || '',
     };
     console.log('ResourceSelectionDrawer: buildCalendarFilterPayload - built payload:', payload);
     return payload;
@@ -497,6 +501,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
     setEquipmentContract(undefined);
     setContractSupplier(undefined);
     setEquipmentOwner(undefined);
+    setWagonContainerKeeper(undefined);
+    setCurrentLocation(undefined);
     console.log('ResourceSelectionDrawer: All filters cleared');
   };
 
@@ -850,6 +856,8 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
       setEquipmentContract(undefined);
       setContractSupplier(undefined);
       setEquipmentOwner(undefined);
+      setWagonContainerKeeper(undefined);
+      setCurrentLocation(undefined);
       // Clear the last applied filters ref
       lastAppliedFiltersRef.current = null;
       console.log('ResourceSelectionDrawer: All filters cleared on drawer open');
@@ -2032,6 +2040,29 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             placeholder="Select Equipment Owner"
           />
         </div>
+
+            {viewMode === 'calendar' && (
+              <>
+                <div>
+                  <div className="text-sm font-medium mb-2">Wagon Container Keeper</div>
+                  <DynamicLazySelect
+                    fetchOptions={fetchMasterData('Wagon owner name')}
+                    value={wagonContainerKeeper}
+                    onChange={(v) => setWagonContainerKeeper(v as string | undefined)}
+                    placeholder="Select Wagon Container Keeper"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-2">Current Location</div>
+                  <DynamicLazySelect
+                    fetchOptions={fetchMasterData('Location Init')}
+                    value={currentLocation}
+                    onChange={(v) => setCurrentLocation(v as string | undefined)}
+                    placeholder="Select Current Location"
+                  />
+                </div>
+              </>
+            )}
       </div>
     </div>
   </SideDrawer>

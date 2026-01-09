@@ -135,7 +135,9 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
       payload.hasOwnProperty('EquipmentContract') || 
       payload.hasOwnProperty('ContractAgent') || 
       payload.hasOwnProperty('EquipmentOwner') || 
-      payload.hasOwnProperty('EquipmentCategory')
+      payload.hasOwnProperty('EquipmentCategory') ||
+      payload.hasOwnProperty('WagonContainerKeeper') ||
+      payload.hasOwnProperty('CurrentLocation')
     );
     
     if (hasFilterProperties) {
@@ -150,6 +152,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
         ContractAgent: payload.ContractAgent !== undefined ? (payload.ContractAgent || '') : (currentFilterPayloadRef.current?.ContractAgent || ''),
         EquipmentOwner: payload.EquipmentOwner !== undefined ? (payload.EquipmentOwner || '') : (currentFilterPayloadRef.current?.EquipmentOwner || ''),
         EquipmentCategory: payload.EquipmentCategory !== undefined ? (payload.EquipmentCategory || '') : (currentFilterPayloadRef.current?.EquipmentCategory || ''),
+        WagonContainerKeeper: payload.WagonContainerKeeper !== undefined ? (payload.WagonContainerKeeper || '') : (currentFilterPayloadRef.current?.WagonContainerKeeper || ''),
+        CurrentLocation: payload.CurrentLocation !== undefined ? (payload.CurrentLocation || '') : (currentFilterPayloadRef.current?.CurrentLocation || ''),
         FromDate: currentFilterPayloadRef.current?.FromDate || '', // Preserve existing dates if any
         ToDate: currentFilterPayloadRef.current?.ToDate || '',   // Preserve existing dates if any
       };
@@ -248,7 +252,9 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
           payload.hasOwnProperty('EquipmentContract') || 
           payload.hasOwnProperty('ContractAgent') || 
           payload.hasOwnProperty('EquipmentOwner') || 
-          payload.hasOwnProperty('EquipmentCategory')
+          payload.hasOwnProperty('EquipmentCategory') ||
+          payload.hasOwnProperty('WagonContainerKeeper') ||
+          payload.hasOwnProperty('CurrentLocation')
         );
         
         if (hasFilterProperties) {
@@ -263,6 +269,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
             ContractAgent: payload.ContractAgent !== undefined ? (payload.ContractAgent || '') : (currentFilterPayloadRef.current?.ContractAgent || ''),
             EquipmentOwner: payload.EquipmentOwner !== undefined ? (payload.EquipmentOwner || '') : (currentFilterPayloadRef.current?.EquipmentOwner || ''),
             EquipmentCategory: payload.EquipmentCategory !== undefined ? (payload.EquipmentCategory || '') : (currentFilterPayloadRef.current?.EquipmentCategory || ''),
+            WagonContainerKeeper: payload.WagonContainerKeeper !== undefined ? (payload.WagonContainerKeeper || '') : (currentFilterPayloadRef.current?.WagonContainerKeeper || ''),
+            CurrentLocation: payload.CurrentLocation !== undefined ? (payload.CurrentLocation || '') : (currentFilterPayloadRef.current?.CurrentLocation || ''),
             FromDate: fromDate, // Keep dates from ref
             ToDate: toDate,     // Keep dates from ref
           };
@@ -286,7 +294,9 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
           payload.hasOwnProperty('EquipmentContract') || 
           payload.hasOwnProperty('ContractAgent') || 
           payload.hasOwnProperty('EquipmentOwner') || 
-          payload.hasOwnProperty('EquipmentCategory')
+          payload.hasOwnProperty('EquipmentCategory') ||
+          payload.hasOwnProperty('WagonContainerKeeper') ||
+          payload.hasOwnProperty('CurrentLocation')
         );
         
         if (hasFilterProperties) {
@@ -301,6 +311,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
             ContractAgent: payload.ContractAgent !== undefined ? (payload.ContractAgent || '') : (currentFilterPayloadRef.current?.ContractAgent || ''),
             EquipmentOwner: payload.EquipmentOwner !== undefined ? (payload.EquipmentOwner || '') : (currentFilterPayloadRef.current?.EquipmentOwner || ''),
             EquipmentCategory: payload.EquipmentCategory !== undefined ? (payload.EquipmentCategory || '') : (currentFilterPayloadRef.current?.EquipmentCategory || ''),
+            WagonContainerKeeper: payload.WagonContainerKeeper !== undefined ? (payload.WagonContainerKeeper || '') : (currentFilterPayloadRef.current?.WagonContainerKeeper || ''),
+            CurrentLocation: payload.CurrentLocation !== undefined ? (payload.CurrentLocation || '') : (currentFilterPayloadRef.current?.CurrentLocation || ''),
             FromDate: '', // Don't store calculated dates
             ToDate: '',   // Don't store calculated dates
           };
@@ -316,6 +328,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
             ContractAgent: existingFilters.ContractAgent || '',
             EquipmentOwner: existingFilters.EquipmentOwner || '',
             EquipmentCategory: existingFilters.EquipmentCategory || '',
+            WagonContainerKeeper: existingFilters.WagonContainerKeeper || '',
+            CurrentLocation: existingFilters.CurrentLocation || '',
             FromDate: '', // Don't store calculated dates
             ToDate: '',   // Don't store calculated dates
           };
@@ -333,6 +347,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
       const equipmentGroupValue = finalPayload.EquipmentGroup || '';
       const equipmentOwnerValue = finalPayload.EquipmentOwner || '';
       const equipmentCategoryValue = finalPayload.EquipmentCategory || '';
+      const wagonContainerKeeperValue = finalPayload.WagonContainerKeeper || '';
+      const currentLocationValue = finalPayload.CurrentLocation || '';
 
       console.log('EquipmentCalendarPanel: Filter values from finalPayload:', {
         EquipmentType: equipmentTypeValue,
@@ -342,6 +358,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
         ContractAgent: contractAgentValue,
         EquipmentOwner: equipmentOwnerValue,
         EquipmentCategory: equipmentCategoryValue,
+        WagonContainerKeeper: wagonContainerKeeperValue,
+        CurrentLocation: currentLocationValue,
       });
 
       const params = {
@@ -359,6 +377,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
             // For EquipmentOwner we expect piped data like \"OWNER01 || Some Owner Name\"; send only ID part
             { FilterName: 'EquipmentOwner', FilterValue: getPipedPart(equipmentOwnerValue, 'id') },
             { FilterName: 'EquipmentCategory', FilterValue: getPipedPart(equipmentCategoryValue, 'id') },
+            { FilterName: 'WagonContainerKeeper', FilterValue: getPipedPart(wagonContainerKeeperValue, 'id') },
+            { FilterName: 'CurrentLocation', FilterValue: getPipedPart(currentLocationValue, 'id') },
           ]
         }
       };
@@ -474,6 +494,8 @@ export const EquipmentCalendarPanel: React.FC<EquipmentCalendarPanelProps> = ({
       ContractAgent: '',
       EquipmentOwner: '',
       EquipmentCategory: '',
+      WagonContainerKeeper: '',
+      CurrentLocation: '',
     };
 
     // Update date range from params (always update dates, preserve filters)
