@@ -65,6 +65,7 @@ const TemplateCreate = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConsignorConsigneeSideDrawOpen, setIsConsignorConsigneeSideDrawOpen] = useState(false);
   const [consignorConsigneeData, setConsignorConsigneeData] = useState<any>(null);
+  const [isCopyMode, setIsCopyMode] = useState(false);
   
   // State for expand/collapse all panels
   const [isAllPanelsExpanded, setIsAllPanelsExpanded] = useState(true);
@@ -4078,38 +4079,41 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
     const routeEndFV = RouteEndorsementDetailsRef.current.getFormValues();
     const wagonFormData = WagonDetailsRef.current.getFormValues();
 
-    const wagonInfoModeFlag = resolveModeFlag(
+    // In copy mode, all ModeFlags should be "Insert"
+    const currentWorkOrderNo = isCopyMode ? null : workOrderNo;
+    
+    const wagonInfoModeFlag = isCopyMode ? "Insert" : resolveModeFlag(
       wagonFormData,
       initialSnapshotRef.current?.WagonInfodetails,
-      workOrderNo
+      currentWorkOrderNo
     );
 
     const payload = {
       Header: {
         ...mapFormToHeaderPayload(headerFV),
-        ModeFlag: resolveModeFlag(
+        ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
           headerFV,
           initialSnapshotRef?.current?.header,
-          workOrderNo
+          currentWorkOrderNo
         ),
       },
 
       General: {
         Details: {
           ...mapFormToGeneralDetailsPayload(generalFV),
-          ModeFlag: resolveModeFlag(
+          ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
             generalFV,
             initialSnapshotRef?.current?.general,
-            workOrderNo
+            currentWorkOrderNo
           ),
         },
 
         PaymentInstruction: {
           ...mapFormToPaymentInstructionPayload(paymentFV, placeDateFV),
-          ModeFlag: resolveModeFlag(
+          ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
             paymentFV,
             initialSnapshotRef?.current?.payment,
-            workOrderNo
+            currentWorkOrderNo
           ),
         },
       },
@@ -4119,7 +4123,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
         ...mapFormToValueDeliveryCashPayload(valueDeliveryFV),
         ...mapFormToCodingBoxesPayload(codingFV),
         ...mapFormToExaminationDetailsPayload(examFV),
-        ModeFlag: resolveModeFlag(
+        ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
           {
             ...consignorFV,
             ...valueDeliveryFV,
@@ -4127,43 +4131,43 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
             ...examFV,
           },
           initialSnapshotRef?.current?.declarations,
-          workOrderNo
+          currentWorkOrderNo
         ),
 
         SectionA: {
           ...mapFormToSectionAPayload(secAFV),
-          ModeFlag: resolveModeFlag(
+          ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
             secAFV,
             initialSnapshotRef?.current?.sectionA,
-            workOrderNo
+            currentWorkOrderNo
           ),
         },
 
         SectionB: {
           ...mapFormToSectionBPayload(secBFV),
-          ModeFlag: resolveModeFlag(
+          ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
             secBFV,
             initialSnapshotRef?.current?.sectionB,
-            workOrderNo
+            currentWorkOrderNo
           ),
         },
 
         SectionC: {
           ...mapFormToSectionCPayload(secCFV),
-          ModeFlag: resolveModeFlag(
+          ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
             secCFV,
             initialSnapshotRef?.current?.sectionC,
-            workOrderNo
+            currentWorkOrderNo
           ),
         },
       },
 
       RouteDetails: {
         ...mapFormToRouteEndorsementPayload(routeEndFV),
-        ModeFlag: resolveModeFlag(
+        ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
           routeEndFV,
           initialSnapshotRef?.current?.routeEndorsement,
-          workOrderNo
+          currentWorkOrderNo
         ),
         //loading grid data
         Route: mapRouteCodeCDetailsPayload(routeCodeCDetails),
@@ -4172,10 +4176,10 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
 
       ConsignmentDetails: {
         ...mapFormToRoutePayload(routeFV),
-        ModeFlag: resolveModeFlag(
+        ModeFlag: isCopyMode ? "Insert" : resolveModeFlag(
           routeFV,
           initialSnapshotRef?.current?.route,
-          workOrderNo
+          currentWorkOrderNo
         ),
       },
 
@@ -4243,7 +4247,14 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
           variant: "default",
         });
 
-        if (!workOrderNo) {
+        // If in copy mode, reset it and update URL with new template ID
+        if (isCopyMode) {
+          setIsCopyMode(false);
+          if (parsedResponse?.Header?.TemplateID) {
+            setSearchParams({ id: parsedResponse.Header.TemplateID });
+            fetchTemplateData(parsedResponse.Header.TemplateID);
+          }
+        } else if (!workOrderNo) {
           setSearchParams({ id: parsedResponse?.Header?.TemplateID });
           fetchTemplateData(parsedResponse?.Header?.TemplateID);
         } else {
@@ -4421,6 +4432,38 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
     // setIsCancelModalOpen(false);
   };
 
+  const handleCopy = async () => {
+    console.log("Copy clicked");
+    
+    // Clear templateID and templateDescription fields
+    if (headerTemplateRef.current) {
+      const currentValues = headerTemplateRef.current.getFormValues();
+      headerTemplateRef.current.setFormValues({
+        ...currentValues,
+        templateId: '',
+        templateDescription: '',
+      });
+    }
+    
+    // Remove id from URL search params
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('id');
+    setSearchParams(newSearchParams);
+    
+    // Set copy mode to true - this will ensure all ModeFlags are "Insert" on save
+    setIsCopyMode(true);
+    
+    // Clear initial snapshot so resolveModeFlag will return "Insert" for all sections
+    initialSnapshotRef.current = null;
+    
+    // Update grid data ModeFlags to "Insert" for copy mode
+    setRouteCodeCDetails(prev => prev.map(row => ({ ...row, ModeFlag: "Insert" })));
+    setOtherCarriers(prev => prev.map(row => ({ ...row, ModeFlag: "Insert" })));
+    setWagonGritDetails(prev => prev.map(row => ({ ...row, ModeFlag: "Insert" })));
+    
+    console.log("Copy mode activated - all fields cleared and ModeFlags set to Insert");
+  };
+
   return (
     <>
       <div className="main-content-h bg-gray-100">
@@ -4485,6 +4528,7 @@ const sanitizeWagonLineDetails = (wagonGritDetails: any[]) =>
                   onClick={() => {
                       // Handle copy action
                       console.log("Copy clicked");
+                      handleCopy();
                   }}
                   className="mr-3 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
                   type='button'
