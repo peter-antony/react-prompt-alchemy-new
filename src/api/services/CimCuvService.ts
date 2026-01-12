@@ -293,6 +293,31 @@ export const CimCuvService = {
     return response.data;
   },
 
+   getReportDataByDispatchID: async (params?: any): Promise<ApiResponse<Trip>> => {
+    console.log("params123", params);
+    const userContext = getUserContext();
+    const requestPayload = JSON.stringify({
+      context: {
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        MessageID: "12345",
+        MessageType: "CIM CUV Dispatch-Get Dispatch No",
+      },
+      SearchCriteria: {
+        CIMCUVDispatchtNo: "RR/2021/00006035",
+      },
+    });
+    const requestBody = {
+      RequestData: requestPayload,
+    };
+    const response = await apiClient.post(
+      `${API_ENDPOINTS.CIM_CUV.GET_DISPATCH_NO}`,
+      requestBody
+    );
+    return response.data;
+  },
+
   saveConsignorConsignee: async (params?: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({

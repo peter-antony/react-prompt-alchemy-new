@@ -198,6 +198,7 @@ export const API_ENDPOINTS = {
     REPORT_HUB: '/cimcuvhub/reporthubsearch',
     SAVE_TEMPLATE: "/cimcuvtemplate/savetemplate/",
     GET_REPORT: '/cimcuv/report/getreport',
+    GET_DISPATCH_NO: '/cimcuv/report/getdispatchno',
     SAVE_REPORT: '/cimcuv/report/savereport',
     CANCEL_CIMCUV: '/cimcuvtemplate/canceltemplate',
     ADD_TEMP_CONSIGNOR_CONSIGNEE: '/cimcuvtemplate/consignorsave',

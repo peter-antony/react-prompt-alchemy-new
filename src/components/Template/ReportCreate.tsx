@@ -686,7 +686,7 @@ const handleTemplateNumberCallback = (value: string) => {
   const getReportDataChangeByID = async (templateId: string) => {
     console.log("Fetching template data for template ID:", templateId);
     try {
-      const response = await CimCuvService.getReportDataByID(templateId);
+      const response = await CimCuvService.getReportDataByDispatchID(templateId);
       console.log("response.data1", response);
       const resourceStatus = (response as any)?.data?.IsSuccess;
       if (resourceStatus) {
@@ -708,6 +708,7 @@ const handleTemplateNumberCallback = (value: string) => {
         // Set apiResponse and initialApiResponse with data excluding the Header
         setApiResponse(restOfResponseData);
         setInitialApiResponse(restOfResponseData); // Store the initial response without Header
+        console.log("restOfResponseData", restOfResponseData);
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
