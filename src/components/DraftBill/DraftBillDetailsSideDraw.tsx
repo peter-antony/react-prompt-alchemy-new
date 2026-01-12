@@ -9,8 +9,10 @@ import { AlertCircle, Workflow, FileSearchIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { quickOrderService } from "@/api/services";
 import { DraftBillAuditTrail } from "./DraftBillAuditTrail";
-import CancelConfirmationModal from '../Template/CancelConfirmationModal';
-import AmendReportModal from "../Template/AmendReportModal";
+// import CancelConfirmationModal from '../Template/CancelConfirmationModal';
+import CancelConfirmationModal from "./DraftCancelConfirmationModal";
+// import AmendReportModal from "../Template/AmendReportModal";
+import AmendReportModal from "./DraftAmendReportModal";
 import { DraftBillWorkFlow } from "./DraftBillWorkFlow";
 import { ArrowLeft } from "lucide-react";
 
@@ -679,10 +681,16 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   };
 
   const handleCancel = async (reasonCode: string, reasonDescription: string) => {
-    console.log("activeLine", activeLine);
+    console.log("activeLine123", activeLine);
+        console.log("lineItems", lineItems);
+    const itemDetailsForPayload = lineItems.map(line => ({
+  ...line,
+  ModeFlag:
+    line.DBLineNo === activeLine.DBLineNo
+      ? "Checked"
+      : "NoChange"
+}));
 
-    console.log("mk", reasonCode);
-    console.log("mk", reasonDescription);
 
     const payload = {
       Header: {
@@ -690,12 +698,13 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
         "ReasonCode": splitIdName(reasonCode).id,
         "ReasonforComments": reasonDescription,
       },
-      ItemDetails: [{
-        ...activeLine,
-        ModeFlag: "Checked",
-      }]
+      // ItemDetails: [{
+      //   ...activeLine,
+      //   ModeFlag: "Checked",
+      // }]
+       ItemDetails: itemDetailsForPayload
     };
-    console.log(JSON.stringify(payload, null, 2))
+    console.log( "payload",JSON.stringify(payload, null, 2))
     try {
       const response = await draftBillService.cancelDraftBillByID(payload);
 
@@ -1080,6 +1089,26 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
   if (!isOpen) return null;
 
+  const formatDateTime = (dateString?: string) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // convert 0 → 12
+
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+};
+
+
   return (
     <>
       <div className="fixed inset-0 z-50 overflow-hidden">
@@ -1166,9 +1195,8 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
                       </div>
                     <p className="text-sm text-gray-600 mb-4">
-  {localHeaderData?.DraftBillDate
-    ? new Date(localHeaderData.DraftBillDate).toISOString().split('T')[0]
-    : ''}
+
+      {formatDateTime(localHeaderData?.DraftBillDate)}
 </p>
 
                       <div className="grid grid-cols-2 gap-y-2 mb-4">
@@ -1424,7 +1452,8 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Triggering Doc.</p>
-                              <p className="font-medium text-gray-900">{activeLine?.TriggerDocID || '--'}</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TriggerDocID}
+                                {"-"}{activeLine?.TriggerDocType}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Basic Charge</p>
@@ -1432,7 +1461,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Triggering Date</p>
-                              <p className="font-medium text-gray-900">{activeLine?.TriggeringDocDate || '--'}</p>
+                              <p className="font-medium text-gray-900">{formatDateTime(activeLine?.TriggeringDocDate || '--')}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Minimum/Maximum Charge</p>
@@ -1447,6 +1476,10 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             <div>
                               <p className="text-gray-500">Reference Doc. Type</p>
                               <p className="font-medium text-gray-900">{activeLine?.RefDocIDType || '--'}</p>
+                            </div>
+                               <div>
+                              <p className="text-gray-500">Reference Doc Description</p>
+                              <p className="font-medium text-gray-900">{activeLine?.RefDocIDTypeDescription || '--'}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Agent</p>

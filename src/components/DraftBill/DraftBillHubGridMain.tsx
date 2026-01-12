@@ -147,7 +147,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const columns: GridColumnConfig[] = useMemo(() => [
         {
             key: 'DraftBillNo',
-            label: 'Draft Bill No',
+            label: 'Draft Bill No.',
             type: 'Link',
             mandatory: true,
             sortable: true,
@@ -318,7 +318,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'InvoiceNo',
-            label: 'Invoice No',
+            label: 'Invoice No.',
             type: 'Text',
             sortable: true,
             filterable: true,
@@ -345,7 +345,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'TransferInvoiceNo',
-            label: 'Transfer Invoice No',
+            label: 'Transfer Invoice No.',
             type: 'Text',
             sortable: true,
             filterable: true,
@@ -438,7 +438,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
     const nestedColumns: GridColumnConfig[] = useMemo(() => [
         {
             key: 'DBLineNo',
-            label: 'DB Line No',
+            label: 'DB Line No.',
             type: 'Integer',
             width: 80
         },
@@ -535,7 +535,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         // Duplicate from main grid, leaving commented unless needed
         {
             key: 'InvoiceNo',
-            label: 'Invoice No',
+            label: 'Invoice No.',
             type: 'Text',
             width: 150
         },
@@ -553,7 +553,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'TransferInvoiceNo',
-            label: 'Transfer Invoice No',
+            label: 'Transfer Invoice No.',
             type: 'Text',
             width: 200
         },
@@ -625,7 +625,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'SecondaryRefNo',
-            label: 'Secondary Ref No',
+            label: 'Secondary Ref No.',
             type: 'Text',
             width: 150
         },
@@ -715,7 +715,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'CustomerSupplierRefNo',
-            label: 'Customer/Supplier Ref No',
+            label: 'Customer/Supplier Ref No.',
             type: 'Text',
             width: 300
         },
@@ -748,7 +748,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'CustomerOrderNo',
-            label: 'Customer Order No',
+            label: 'Customer Order No.',
             type: 'Text',
             width: 250
         }
@@ -1044,7 +1044,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 gridState.setGridData(processedData);
             } else {
                 gridState.setGridData([]);
-                console.warn("No ResultSet or ResponseResult found in parsed response", parsedResponse);
+                console.warn("No. ResultSet or ResponseResult found in parsed response", parsedResponse);
                 toast({
                     title: "No Results",
                     description: "No draft bills found matching your criteria",
@@ -1228,7 +1228,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
   if (!store.activeFilters[gridId]?.DraftBillDate) {
     store.setFilter(gridId, 'DraftBillDate', {
       value: {
-        from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        from: format(subDays(new Date(), 90), 'yyyy-MM-dd'),
         to: format(new Date(), 'yyyy-MM-dd'),
       },
     });
@@ -1277,10 +1277,10 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
     const dynamicServerFilters: ServerFilter[] = [
         // { 
-        //     key: 'DraftBillNo', label: 'Draft Bill No', type: 'text',
+        //     key: 'DraftBillNo', label: 'Draft Bill No.', type: 'text',
         // },
         {
-            key: 'DraftBillNo', label: 'Draft Bill No', type: 'text',
+            key: 'DraftBillNo', label: 'Draft Bill No.', type: 'text',
             // fetchOptions: makeLazyFetcher('Customer Init')
         },
         {
@@ -1310,7 +1310,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
         },
         {
-            key: 'WBSNo', label: 'WBS No', type: 'lazyselect',
+            key: 'WBSNo', label: 'WBS No.', type: 'lazyselect',
             fetchOptions: makeLazyFetcher('DB WBS No Init')
         },
         {
@@ -1332,7 +1332,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'DraftBillDate', label: 'Draft Bill Date', type: 'dateRange',
            
             defaultValue: {
-                from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+                from: format(subDays(new Date(), 90), 'yyyy-MM-dd'),
                 to: format(new Date(), 'yyyy-MM-dd')
             }
         },
@@ -1341,7 +1341,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
 
         },
         {
-            key: 'CustomerOrderNo', label: 'Customer Order No', type: 'lazyselect',
+            key: 'CustomerOrderNo', label: 'Customer Order No.', type: 'lazyselect',
             fetchOptions: makeLazyFetcher('CustomerOrder Number Init')
         },
         {
@@ -1354,7 +1354,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             fetchOptions: makeLazyFetcher('Createdby Init')
         },
         {
-            key: 'InvoiceNo', label: 'Invoice No', type: 'text'
+            key: 'InvoiceNo', label: 'Invoice No.', type: 'text'
 
         },
         {
@@ -1364,7 +1364,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'TotalToValue', label: 'Total To Value', type: 'text'
         },
         {
-            key: 'JournalVoucherNo', label: 'Journal Voucher No', type: 'text'
+            key: 'JournalVoucherNo', label: 'Journal Voucher No.', type: 'text'
         },
         {
             key: 'InvoiceStatus', label: 'Invoice Status', type: 'lazyselect',
@@ -1377,7 +1377,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             disableLazyLoading: true, hideSearch: true
         },
         {
-            key: 'ReverserJournalVoucherNo', label: 'Reverser Journal Voucher No', type: 'text'
+            key: 'ReverserJournalVoucherNo', label: 'Reverser Journal Voucher No.', type: 'text'
         },
         {
             key: 'TriggeringDocID', label: 'Triggering Doc ID', type: 'text',
@@ -1389,10 +1389,10 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             disableLazyLoading: true, hideSearch: true
         },
         {
-            key: 'PurchaseOrderNo', label: 'Purchase Order No', type: 'text'
+            key: 'PurchaseOrderNo', label: 'Purchase Order No.', type: 'text'
         },
         {
-            key: 'TransferInvoiceNo', label: 'Transfer Invoice No', type: 'text'
+            key: 'TransferInvoiceNo', label: 'Transfer Invoice No.', type: 'text'
 
         },
         {
@@ -1403,7 +1403,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'ApprovalDate', label: 'Approval Date', type: 'dateRange'
         },
         {
-            key: 'CustomerReferenceNo', label: 'Customer Reference No', type: 'text'
+            key: 'CustomerReferenceNo', label: 'Customer Reference No.', type: 'text'
         },
         {
             key: 'DraftBillStage', label: 'Draft Bill Stage', type: 'lazyselect',
@@ -1419,7 +1419,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             fetchOptions: makeLazyFetcher('Createdby Init')
         },
         {
-            key: 'SecondaryReferenceNumber', label: 'Secondary Reference No', type: 'text'
+            key: 'SecondaryReferenceNumber', label: 'Secondary Reference No.', type: 'text'
         },
         {
             key: 'Remark1', label: 'Remark 1', type: 'text'
@@ -1652,31 +1652,45 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             }
         } else {
             // Line level payload - existing logic (no changes)
-            const lineLevelPayload = {
+           
+            const paload = await draftBillService.getDraftBillByID({
+                searchCriteria: { DraftBillNo: selectedDbLines[0]?.parentRow?.DraftBillNo }
+            });
+            const paloadHead = JSON.parse(paload?.data?.ResponseData);
+            const itemDetails = paloadHead.ItemDetails;
+            
+           const dbLineNos = selectedDbLines.map(
+  item => item.nestedRow.DBLineNo
+);
+
+console.log("DBLineNos", dbLineNos);
+console.log("itemDetails", itemDetails);
+
+const updatedItemDetails = itemDetails.map(item => ({
+  ...item,
+  ModeFlag: dbLineNos.includes(item.DBLineNo)
+    ? "Checked"
+    : item.ModeFlag
+}));
+
+console.log("updatedItemDetails", updatedItemDetails);
+
+
+
+
+            console.log("paload", itemDetails);
+
+             const lineLevelPayload = {
                 Header: {
                     "DraftBillNo": selectedDbLines[0]?.parentRow?.DraftBillNo,
                     "ReasonCode": splitIdName(reasonCode).id,
                     "ReasonforComments": reasonDescription,
                 },
 
-                ItemDetails: selectedDbLines.map(({ nestedRow }) => {
-                    const { ReasonForCancellation, ModeFlag, ...rest } = nestedRow;
-
-                    return {
-                        ...rest,
-
-                        // 1️⃣ If ModeFlag field exists → force to Checked
-                        ...("ModeFlag" in nestedRow && { ModeFlag: "Checked" }),
-
-                        // 2️⃣ Send ReasonForCancellation only if NOT null
-                        ...(ReasonForCancellation != null && { ReasonForCancellation }),
-
-                        // 3️⃣ Backend hates null
-                        Remark: rest.Remark ?? "",
-                    };
-                }),
+                ItemDetails: updatedItemDetails
 
             };
+            console.log(lineLevelPayload?.ItemDetails[0]?.DBLineNo)
 
             console.log("lineLevelPayload", JSON.stringify(lineLevelPayload, null, 2));
 
