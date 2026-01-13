@@ -439,7 +439,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   const [getCalendarEquipments, setGetCalendarEquipments] = useState<(() => EquipmentItem[]) | null>(null);
 
   // Calendar filter form state
-  const [equipmentTypeFilter, setEquipmentTypeFilter] = useState<'Wagon' | 'Container' | ''>('');
+  const [equipmentTypeFilter, setEquipmentTypeFilter] = useState<'Wagon' | 'Container' | ''>('Wagon');
   const [wagonSelection, setWagonSelection] = useState<string | undefined>();
   const [containerSelection, setContainerSelection] = useState<string | undefined>();
   const [equipmentStatusFilter, setEquipmentStatusFilter] = useState<string>('');
@@ -491,7 +491,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
 
   // Handler to clear all filter values
   const handleClearFilters = () => {
-    setEquipmentTypeFilter('');
+    setEquipmentTypeFilter('Wagon');
     setWagonSelection(undefined);
     setContainerSelection(undefined);
     setEquipmentStatusFilter('');
@@ -846,7 +846,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
   useEffect(() => {
     if (isOpen && resourceType === 'Equipment') {
       // Clear all filter-related states
-      setEquipmentTypeFilter('');
+      setEquipmentTypeFilter('Wagon');
       setWagonSelection(undefined);
       setContainerSelection(undefined);
       setEquipmentStatusFilter('');
@@ -1632,7 +1632,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                     type="button"
                     className="rounded-md hover:bg-accent/100 bg-gray-50 border border-input h-10 p-3"
                     onClick={() => setIsCalendarFilterOpen(true)}
-                    title="Open equipment calendar filter"
+                    title={viewMode === 'calendar' ? 'Open equipment calendar filter' : 'Open filter'}
                   >
                     <Filter className="h-4 w-4 text-muted-foreground" />
                   </button>
@@ -1967,6 +1967,16 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
           </div>
         </div>
 
+            <div>
+              <div className="text-sm font-medium mb-2">Equipment Contract</div>
+              <DynamicLazySelect
+                fetchOptions={fetchMasterData('Equipment Contract Init')}
+                value={equipmentContract}
+                onChange={(v) => setEquipmentContract(v as string | undefined)}
+                placeholder="Select Equipment Contract"
+              />
+            </div>
+
         <div>
           <div className="text-sm font-medium mb-2">Equipment Status</div>
           <DynamicLazySelect
@@ -2008,16 +2018,6 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
             value={equipmentGroup}
             onChange={(v) => setEquipmentGroup(v as string | undefined)}
             placeholder="Select Equipment Group"
-          />
-        </div>
-
-        <div>
-          <div className="text-sm font-medium mb-2">Equipment Contract</div>
-          <DynamicLazySelect
-            fetchOptions={fetchMasterData('Equipment Contract Init')}
-            value={equipmentContract}
-            onChange={(v) => setEquipmentContract(v as string | undefined)}
-            placeholder="Select Equipment Contract"
           />
         </div>
 

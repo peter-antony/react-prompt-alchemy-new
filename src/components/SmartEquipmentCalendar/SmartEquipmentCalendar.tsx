@@ -413,6 +413,7 @@ export const SmartEquipmentCalendar = ({
               </TabsList>
             </Tabs>
 
+            {view !== "month" && (
             <div className="flex items-center gap-2">
               <Checkbox
                 id="show-hour-view"
@@ -423,6 +424,7 @@ export const SmartEquipmentCalendar = ({
                 Show Hour View
               </label>
             </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -456,7 +458,7 @@ export const SmartEquipmentCalendar = ({
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                 <SelectTrigger className="w-[140px] h-9">
                   <SelectValue placeholder="All Status" />
@@ -470,7 +472,7 @@ export const SmartEquipmentCalendar = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
