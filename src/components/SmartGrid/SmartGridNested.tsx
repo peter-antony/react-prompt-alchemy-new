@@ -97,7 +97,8 @@ export function SmartGridNested({
   // Server-side filter personalization props
   serverFilterVisibleFields,
   serverFilterFieldOrder,
-  onServerFilterPreferenceSave
+  onServerFilterPreferenceSave,
+  enableExpandCollapseAll = false
 }: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void; }) {
   const {
     gridData,
@@ -289,6 +290,7 @@ export function SmartGridNested({
       onSubRowToggle(columnKey);
     }
   }, [handleSubRowToggle, onSubRowToggle, toggleSubRow]);
+
 
   // Helper function to render collapsible cell values
   const renderCollapsibleCellValue = useCallback((value: any, column: GridColumnConfig) => {
@@ -603,6 +605,40 @@ export function SmartGridNested({
     const start = (currentPage - 1) * pageSize;
     return processedData.slice(start, start + pageSize);
   }, [processedData, paginationMode, currentPage, pageSize, onDataFetch, setCurrentPage]);
+
+  const areAllRowsExpanded = useMemo(() => {
+  if (!effectiveNestedRowRenderer && !hasCollapsibleColumns) return false;
+  if (paginatedData.length === 0) return false;
+
+  return paginatedData.every((_, index) => expandedRows.has(index));
+}, [
+  expandedRows,
+  paginatedData,
+  effectiveNestedRowRenderer,
+  hasCollapsibleColumns
+]);
+
+const handleExpandCollapseAll = useCallback(() => {
+  if (!effectiveNestedRowRenderer && !hasCollapsibleColumns) return;
+
+  if (areAllRowsExpanded) {
+    // Collapse all
+    setExpandedRows(new Set());
+  } else {
+    // Expand all visible rows
+    const newExpanded = new Set<number>();
+    paginatedData.forEach((_, index) => {
+      newExpanded.add(index);
+    });
+    setExpandedRows(newExpanded);
+  }
+}, [
+  areAllRowsExpanded,
+  paginatedData,
+  setExpandedRows,
+  effectiveNestedRowRenderer,
+  hasCollapsibleColumns
+]);
 
 
   const totalPages = Math.ceil(processedData.length / pageSize);
@@ -970,6 +1006,9 @@ export function SmartGridNested({
         selectedRowsCount={currentSelectedRows.size}
         onClearSelection={handleClearSelection}
         onSavePreferences={handleManualSave}
+        enableExpandCollapseAll={enableExpandCollapseAll}
+  areAllRowsExpanded={areAllRowsExpanded}
+  onExpandCollapseAll={handleExpandCollapseAll}
       />
       )}
 

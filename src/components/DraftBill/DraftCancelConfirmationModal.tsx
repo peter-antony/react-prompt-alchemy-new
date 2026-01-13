@@ -66,7 +66,7 @@ const isReasonCodeEmpty =
     }
   };
 
-  const fetchReasonCode = fetchMasterData("Cancellation Reason Init");
+  const fetchReasonCode = fetchMasterData("DraftBill Reason Code for Cancel Init");
 
 
   // const handleCancelClick = () => {
@@ -127,7 +127,7 @@ const handleClose = () => {
               placeholder=""
             />
           </div>
-          <div>
+          {/* <div>
             <Label htmlFor="reasonDesc" className="block text-sm font-medium text-gray-700">Reason Code Desc.</Label>
             <Input
               id="reasonDesc"
@@ -137,7 +137,7 @@ const handleClose = () => {
               placeholder=""
               className="mt-1"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

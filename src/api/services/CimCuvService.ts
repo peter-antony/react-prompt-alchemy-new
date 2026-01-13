@@ -305,7 +305,7 @@ export const CimCuvService = {
         MessageType: "CIM CUV Dispatch-Get Dispatch No",
       },
       SearchCriteria: {
-        CIMCUVDispatchtNo: "RR/2021/00006035",
+        CIMCUVDispatchtNo: params,
       },
     });
     const requestBody = {

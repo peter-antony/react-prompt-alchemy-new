@@ -481,7 +481,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
     if (!value) return <div className="text-gray-400">-</div>;
     try {
       const date = new Date(value);
-      const formattedDate = dateTimeFormatter(date);
+      const formattedDate = dateFormatter(date);
       return <span className="truncate" title={formattedDate}>{formattedDate}</span>;
     } catch {
       return <span className="truncate" title={String(value)}>{value}</span>;
@@ -810,7 +810,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
-    return <span className="font-bold" title={formattedAmount(value)}>&euro; {formattedAmount(value)}</span>
+    return <span className="font-bold" title={formattedAmount(value)}> EUR {formattedAmount(value)}</span>
   }
 
   // Time renderer

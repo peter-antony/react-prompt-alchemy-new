@@ -449,9 +449,15 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             width: 120
         },
         {
-            key: 'RefDocIDType',
-            label: 'Ref Doc ID Type',
-            type: 'TextPipedData',
+            key: 'RefDocTypeCode',
+            label: 'Ref Doc ID',
+            type: 'Text',
+            width: 300
+        },
+         {
+            key: 'RefDocType',
+            label: 'Ref Doc Type',
+            type: 'Text',
             width: 300
         },
         // {
@@ -1296,15 +1302,21 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             fetchOptions: makeLazyFetcher('DB Status Init'),
             disableLazyLoading: true, hideSearch: true,
         },
-        {
-            key: 'RefDocNo', label: 'Ref Doc ID', type: 'text',
-            fetchOptions: makeLazyFetcher(''),
-        },
-        {
+         {
             key: 'RefDocType', label: 'Ref Doc Type', type: 'lazyselect',
             fetchOptions: makeLazyFetcher('DB Ref Doc Type Init'),
             disableLazyLoading: true, hideSearch: true,
         },
+        {
+            key: 'RefDocNo', label: 'Ref Doc ID', type: 'text',
+            fetchOptions: makeLazyFetcher(''),
+        },
+
+         {
+            key: 'RefDocDate', label: 'Ref Doc Date', type: 'dateRange'
+
+        },
+       
         {
             key: 'TripPlanPickUpDate', label: 'Trip Plan Pick Up Date', type: 'dateRange'
 
@@ -1313,10 +1325,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'WBSNo', label: 'WBS No.', type: 'lazyselect',
             fetchOptions: makeLazyFetcher('DB WBS No Init')
         },
-        {
-            key: 'RefDocDate', label: 'Ref Doc Date', type: 'dateRange'
-
-        },
+       
         {
             key: 'FromShipPointID', label: 'From Ship Point', type: 'text'
         },
@@ -1379,15 +1388,20 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         {
             key: 'ReverserJournalVoucherNo', label: 'Reverser Journal Voucher No.', type: 'text'
         },
-        {
-            key: 'TriggeringDocID', label: 'Triggering Doc ID', type: 'text',
-            fetchOptions: makeLazyFetcher('')
-        },
-        {
+         {
             key: 'TriggeringDocType', label: 'Triggering Doc Type', type: 'lazyselect',
             fetchOptions: makeLazyFetcher('DB Triggering Doc Type Init'),
             disableLazyLoading: true, hideSearch: true
         },
+        {
+            key: 'TriggeringDocID', label: 'Triggering Doc ID', type: 'text',
+            fetchOptions: makeLazyFetcher('')
+        },
+         {
+            key: 'TriggeringDocDate', label: 'Triggering Doc Date', type: 'dateRange'
+
+        },
+       
         {
             key: 'PurchaseOrderNo', label: 'Purchase Order No.', type: 'text'
         },
@@ -1395,10 +1409,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             key: 'TransferInvoiceNo', label: 'Transfer Invoice No.', type: 'text'
 
         },
-        {
-            key: 'TriggeringDocDate', label: 'Triggering Doc Date', type: 'dateRange'
-
-        },
+       
         {
             key: 'ApprovalDate', label: 'Approval Date', type: 'dateRange'
         },
@@ -1929,6 +1940,7 @@ console.log("updatedItemDetails", updatedItemDetails);
         if (selectedBillItemsFlag) {
             // Header level payload - make separate API calls for each selected draft bill
             try {
+                
                 const apiCalls = selectedDraftBills.map(async (draftBill) => {
                     const headerLevelPayload = {
                         Header: {
@@ -2151,10 +2163,9 @@ console.log("updatedItemDetails", updatedItemDetails);
             const resourceStatus = (response as any)?.data?.IsSuccess;
             console.log("parsedResponse ====", parsedResponse);
             if (resourceStatus) {
-                console.log("Template cancelled successfully");
                 toast({
                     title: "✅ Draft Bill Invoice Generated Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
+                    description: (response as any)?.data?.ResponseData?.Message || "Invoice Generated Successfully.",
                     variant: "default",
                 });
                 setIsGenerateInvoiceModalOpen(false);
@@ -2162,7 +2173,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
                     title: "⚠️ Draft Bill Invoice Generated Failed",
-                    description: (response as any)?.data?.Message || "Draft Bill Invoice Generated.",
+                    description: (response as any)?.data?.Message || "Draft Bill Invoice Generated Failed.",
                     variant: "destructive",
                 });
             }
@@ -2312,7 +2323,7 @@ console.log("updatedItemDetails", updatedItemDetails);
 
         console.log(JSON.stringify(payload, null, 2))
         try {
-
+               gridState.setLoading(true);
             console.log("payload ===", payload);
             const response = await draftBillService.revertDraftBillByID(payload);
 
@@ -2328,7 +2339,9 @@ console.log("updatedItemDetails", updatedItemDetails);
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
+                 setActionLoading(null);
             } else {
+                 setActionLoading(null);
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
                     title: "⚠️ Revert Failed",
@@ -2341,6 +2354,10 @@ console.log("updatedItemDetails", updatedItemDetails);
             console.error("Error Reverting Draft:", error);
             // Optionally, handle error or display an error message
         }
+        finally {
+        // ✅ STOP GRID LOADER
+        gridState.setLoading(false);
+    }
 
     };
 
@@ -2611,6 +2628,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     // key={`grid-${gridState.forceUpdate}-${forceGridUpdate}`}
                     gridId="draft-bill-grid"
                     gridTitle="Draft Bill"
+                    enableExpandCollapseAll={true}
                     recordCount={gridState.gridData.length}
                     data={gridState.gridData}
                     columns={gridState.columns}

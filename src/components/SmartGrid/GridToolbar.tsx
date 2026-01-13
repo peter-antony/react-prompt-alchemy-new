@@ -11,6 +11,7 @@ import {
   List,
   Plus,
   ChevronDown,
+  ChevronRight,
   Group,
   Zap,
   EllipsisVertical,
@@ -82,6 +83,11 @@ interface GridToolbarProps {
   onClearSelection?: () => void;
   // Save preferences prop
   onSavePreferences?: () => void;
+   enableExpandCollapseAll?: boolean;
+  areAllRowsExpanded?: boolean;
+  onExpandCollapseAll?: () => void;
+
+  
 }
 
 export function GridToolbar({
@@ -126,7 +132,10 @@ export function GridToolbar({
   hideRightToolbar = false,
   selectedRowsCount = 0,
   onClearSelection,
-  onSavePreferences
+  onSavePreferences,
+  enableExpandCollapseAll,
+  areAllRowsExpanded,
+  onExpandCollapseAll
 }: GridToolbarProps) {
   // Default configurable button configuration
   const defaultConfigurableButton: ConfigurableButtonConfig = {
@@ -399,6 +408,27 @@ export function GridToolbar({
         </Button>
         )}
 
+
+
+     {enableExpandCollapseAll && onExpandCollapseAll && (
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={onExpandCollapseAll}
+    disabled={loading}
+    title={areAllRowsExpanded ? "Collapse all rows" : "Expand all rows"}
+    className={cn(
+      "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 p-0 border border-gray-300",
+      areAllRowsExpanded && "bg-blue-100 text-blue-600"
+    )}
+  >
+    {areAllRowsExpanded ? (
+      <ChevronDown className="h-4 w-4" />
+    ) : (
+      <ChevronRight className="h-4 w-4" />
+    )}
+  </Button>
+)}
         {/* {gridTitle !== 'Plan List' && (
           <Button 
             variant="ghost"

@@ -302,6 +302,7 @@ export function SmartGridWithNestedRows({
                       data={nestedData}
                       paginationMode="infinite"
                       hideToolbar={true}
+                      
                       customPageSize={rowCount}
                       editableColumns={nestedSectionConfig.editableColumns}
                       onInlineEdit={nestedSectionConfig.onInlineEdit

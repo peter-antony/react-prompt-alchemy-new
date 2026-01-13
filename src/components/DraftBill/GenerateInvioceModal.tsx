@@ -94,7 +94,7 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
             />
           </div>
           
-          {/* <div>
+          <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</Label>
             <RadioGroup value={invoiceType} onValueChange={setInvoiceType} className="flex gap-6">
               <div className="flex items-center space-x-2">
@@ -104,13 +104,13 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="SFI-STI selection" id="sfi-sti" disabled/>
+                <RadioGroupItem value="SFI-STI selection" id="sfi-sti"/>
                 <Label htmlFor="sfi-sti" className="text-sm font-normal text-gray-700 cursor-not-allowed">
                   SFI-STI selection
                 </Label>
               </div>
             </RadioGroup>
-          </div> */}
+          </div>
         </div>
 
         {/* Footer */}

@@ -65,14 +65,16 @@ const BasicDetailsPanelConfig: PanelConfig = {
     id: "quantity",
     label: "Quantity",
     fieldType: "inputdropdown",
-    value: "",
+    value: "TON",
     mandatory: true,
     visible: true,
     editable: true,
+     readonlyDropdown: true,
     order: 1,
     width: "four",
     placeholder: "",
-    options: [{ value: "TON", label: "TON" }], // Placeholder, replace with actual units
+    //  disableDropdown: true,
+     options: [{ value: "TON", label: "TON" }], // Placeholder, replace with actual units
   },
   rate: {
     id: "rate",
@@ -85,7 +87,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 2,
     width: "four",
     placeholder: "",
-    options: [{ value: "EUR", label: "€" }], // Placeholder, replace with actual currency
+    options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
   },
   acceptedValue: {
     id: "acceptedValue",
@@ -98,7 +100,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 3,
     width: "four",
     placeholder: "",
-    options: [{ value: "EUR", label: "€" }], // Placeholder, replace with actual currency
+    options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
   },
   userAssigned: {
     id: "userAssigned",
@@ -1064,7 +1066,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     remarks2: {
       id: "remarks2",
       label: "Remarks 2",
-      fieldType: "textarea",
+      fieldType: "text",
       value: "",
       mandatory: false,
       visible: true,
@@ -1076,7 +1078,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     remarks3: {
       id: "remarks3",
       label: "Remarks 3",
-      fieldType: "textarea",
+      fieldType: "text",
       value: "",
       mandatory: false,
       visible: true,
@@ -1106,6 +1108,25 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   hours = hours % 12 || 12; // convert 0 → 12
 
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+};
+
+ const formatDateTimeWithOutDate = (dateString?: string) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // convert 0 → 12
+
+  return `${day}-${month}-${year}`;
 };
 
 
@@ -1138,7 +1159,6 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                     </button>
                     <h2 className="text-lg font-semibold text-gray-900">Draft Bill Details</h2>
                     <div className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">{localHeaderData?.DraftBillNo || ''}</div>
-                    <div className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">BR Released</div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <button
@@ -1196,17 +1216,17 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                       </div>
                     <p className="text-sm text-gray-600 mb-4">
 
-      {formatDateTime(localHeaderData?.DraftBillDate)}
+      {formatDateTimeWithOutDate(localHeaderData?.DraftBillDate)}
 </p>
 
                       <div className="grid grid-cols-2 gap-y-2 mb-4">
                         <div>
                           <p className="text-sm text-gray-500">Total Value</p>
-                          <p className="text-base font-medium text-purple-600">€ {localHeaderData?.DBTotalValue}</p>
+                          <p className="text-base font-medium text-purple-600">EUR {localHeaderData?.DBTotalValue}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Accepted Vale</p>
-                          <p className="text-base font-medium text-green-600">€{localHeaderData?.DBAcceptedValue}</p>
+                          <p className="text-base font-medium text-green-600">EUR{localHeaderData?.DBAcceptedValue}</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -1384,7 +1404,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <div>
                                 Proposed:
                                 <div className="text-purple-600">
-                                  € {parseFloat(line.ProposedValue).toLocaleString('en-US', {
+                                  EUR {parseFloat(line.ProposedValue).toLocaleString('en-US', {
                                     minimumFractionDigits: 3,
                                     maximumFractionDigits: 3,
                                   })}
@@ -1394,7 +1414,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <div>
                                 Accepted:
                                 <div className="text-green-600">
-                                  € {line.AcceptedValue}
+                                  EUR {line.AcceptedValue}
                                 </div>
                               </div>
                             </div>
@@ -1452,21 +1472,25 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Triggering Doc.</p>
-                              <p className="font-medium text-gray-900">{activeLine?.TriggerDocID}
-                                {"-"}{activeLine?.TriggerDocType}</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TriggerDocID}</p>          
+                            </div>
+                             <div>
+                              <p className="text-gray-500">Triggering Doc Type .</p>
+                              <p className="font-medium text-gray-900">
+                              {activeLine?.TriggerDocType}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Basic Charge</p>
-                              <p className="font-medium text-gray-900">€ {activeLine?.BasicCharge}</p>
+                              <p className="font-medium text-gray-900">EUR {activeLine?.BasicCharge}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Triggering Date</p>
-                              <p className="font-medium text-gray-900">{formatDateTime(activeLine?.TriggeringDocDate || '--')}</p>
+                              <p className="font-medium text-gray-900">{formatDateTimeWithOutDate(activeLine?.TriggeringDocDate || '--')}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Minimum/Maximum Charge</p>
                               <p className="font-medium text-gray-900">
-                                € {activeLine?.MinimumCharge || '0.00'} / € {activeLine?.MaximumCharge || '0.00'}
+                                EUR {activeLine?.MinimumCharge || '0.00'} / EUR {activeLine?.MaximumCharge || '0.00'}
                               </p>
                             </div>
                             <div>
@@ -1475,12 +1499,9 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Reference Doc. Type</p>
-                              <p className="font-medium text-gray-900">{activeLine?.RefDocIDType || '--'}</p>
-                            </div>
-                               <div>
-                              <p className="text-gray-500">Reference Doc Description</p>
                               <p className="font-medium text-gray-900">{activeLine?.RefDocIDTypeDescription || '--'}</p>
                             </div>
+                            
                             <div>
                               <p className="text-gray-500">Agent</p>
                               <p className="font-medium text-gray-900">{activeLine?.Agent || '--'}</p>
