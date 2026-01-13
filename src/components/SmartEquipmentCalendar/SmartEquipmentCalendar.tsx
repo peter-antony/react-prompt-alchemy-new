@@ -360,29 +360,50 @@ export const SmartEquipmentCalendar = ({
 
   // Sync vertical scroll between left panel and timeline, and horizontal scroll between header and timeline
   useEffect(() => {
+    const timeline = timelineRef.current;
+    const leftPanel = leftPanelRef.current;
+    const header = headerRef.current;
+
+    let isSyncingLeft = false;
+    let isSyncingRight = false;
+    let isSyncingHeader = false;
+
     const handleTimelineScroll = () => {
-      if (timelineRef.current && leftPanelRef.current) {
-        leftPanelRef.current.scrollTop = timelineRef.current.scrollTop;
+      if (!isSyncingLeft && timeline && leftPanel) {
+        isSyncingRight = true;
+        leftPanel.scrollTop = timeline.scrollTop;
+        isSyncingRight = false;
       }
-      if (timelineRef.current && headerRef.current) {
-        headerRef.current.scrollLeft = timelineRef.current.scrollLeft;
+      if (!isSyncingHeader && timeline && header) {
+        isSyncingHeader = true; // Use same flag or new one? header sync is horizontal
+        header.scrollLeft = timeline.scrollLeft;
+        isSyncingHeader = false;
+      }
+    };
+
+    const handleLeftPanelScroll = () => {
+      if (!isSyncingRight && timeline && leftPanel) {
+        isSyncingLeft = true;
+        timeline.scrollTop = leftPanel.scrollTop;
+        isSyncingLeft = false;
       }
     };
 
     const handleHeaderScroll = () => {
-      if (headerRef.current && timelineRef.current) {
-        timelineRef.current.scrollLeft = headerRef.current.scrollLeft;
+      if (header && timeline) {
+        // Header only controls horizontal scroll of timeline
+        // We don't usually scroll header programmatically from timeline except in handleTimelineScroll
+        timeline.scrollLeft = header.scrollLeft;
       }
     };
 
-    const timeline = timelineRef.current;
-    const header = headerRef.current;
-
     timeline?.addEventListener('scroll', handleTimelineScroll);
+    leftPanel?.addEventListener('scroll', handleLeftPanelScroll);
     header?.addEventListener('scroll', handleHeaderScroll);
 
     return () => {
       timeline?.removeEventListener('scroll', handleTimelineScroll);
+      leftPanel?.removeEventListener('scroll', handleLeftPanelScroll);
       header?.removeEventListener('scroll', handleHeaderScroll);
     };
   }, []);
@@ -527,7 +548,7 @@ export const SmartEquipmentCalendar = ({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Equipment List */}
         <div className="border-r bg-background flex flex-col w-[400px]">
-          <div className="border-b p-3 bg-muted/50 font-medium text-sm flex items-center gap-3">
+          <div className="border-b p-3 pb-[20px] bg-muted/50 font-medium text-sm flex items-center gap-3">
             <Checkbox
               checked={selectedEquipments.length === filteredEquipments.length && filteredEquipments.length > 0}
               onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
@@ -536,7 +557,11 @@ export const SmartEquipmentCalendar = ({
             <span className="w-24">Supplier</span>
             <span className="w-24">Owner</span>
           </div>
-          <ScrollArea className="flex-1" ref={leftPanelRef}>
+          <div
+            className="flex-1 overflow-y-auto no-scrollbar"
+            ref={leftPanelRef}
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             <div>
               {filteredEquipments.map((equipment, index: any) => (
                 <div
@@ -565,7 +590,7 @@ export const SmartEquipmentCalendar = ({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Right Panel - Timeline */}
