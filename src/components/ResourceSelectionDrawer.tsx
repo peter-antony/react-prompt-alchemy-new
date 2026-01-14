@@ -2032,12 +2032,12 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
         </div>
 
         <div>
-          <div className="text-sm font-medium mb-2">Equipment Owner</div>
+          <div className="text-sm font-medium mb-2">Equipment Owner Type</div>
           <DynamicLazySelect
             fetchOptions={fetchMasterData('Equipment Owner Init')}
             value={equipmentOwner}
             onChange={(v) => setEquipmentOwner(v as string | undefined)}
-            placeholder="Select Equipment Owner"
+            placeholder="Select Equipment Owner Type"
           />
         </div>
 
