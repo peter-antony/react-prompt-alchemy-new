@@ -558,7 +558,7 @@ export const SmartEquipmentCalendar = ({
             <span className="w-24">Owner</span>
           </div>
           <div
-            className="flex-1 overflow-y-auto no-scrollbar"
+            className="flex-1 overflow-y-auto no-scrollbar overscroll-contain"
             ref={leftPanelRef}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
@@ -617,7 +617,7 @@ export const SmartEquipmentCalendar = ({
           </div>
 
           {/* Timeline Body */}
-          <div className="flex-1 overflow-auto scrollbar-thin" ref={timelineRef} style={{ scrollbarWidth: 'thin' }}>
+          <div className="flex-1 overflow-auto scrollbar-thin overscroll-contain" ref={timelineRef} style={{ scrollbarWidth: 'thin' }}>
             <div className="relative min-w-max" style={{ minHeight: filteredEquipments.length * ROW_HEIGHT }}>
               {/* Loading overlay */}
               {isLoading && (
