@@ -13,7 +13,8 @@ import { DraggableSubRow } from '@/components/SmartGrid/DraggableSubRow';
 import { useFooterStore } from '@/stores/footerStore';
 import { filterService } from '@/api/services';
 import { NestedRowSelection } from '../SmartGrid/SmartGridWithNestedRows';
-import CancelConfirmationModal from '../Template/CancelConfirmationModal';
+//  import CancelConfirmationModal from '../Template/CancelConfirmationModal';
+import CancelConfirmationModal from './DraftCancelConfirmationModal';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import GenerateInvoiceModal from './GenerateInvioceModal';
 import { format, subDays } from 'date-fns';
@@ -2142,6 +2143,13 @@ console.log("updatedItemDetails", updatedItemDetails);
             "RecordSupplierInvoiceDate": draftBill.RecordSupplierInvoiceDate // Same for all
         }));
 
+        const generateOption = {
+  IsManual: invoiceType === 'MANUAL' ? 1 : 0,
+  IsSTI_SFI: invoiceType === 'STI_SFI' ? 1 : 0,
+  ISSTI_MFI: invoiceType === 'STI_SFI' ? 1 : 0,
+};
+
+
         const payload = {
             ConsolidationType: splitIdName(consolidationCode).name,
             // InvoiceType: invoiceType,
@@ -2149,12 +2157,14 @@ console.log("updatedItemDetails", updatedItemDetails);
                 "IsGenerateTransferInvoice": 1,
                 "IsGenerateFinanceInvoice": 1
             },
+           GenerateOption: generateOption,
             DraftBills: draftBillsArray
         };
 
 
         console.log(JSON.stringify(payload, null, 2))
         try {
+             gridState.setLoading(true);
             console.log("payload ===", payload);
             const response = await draftBillService.generateInvoiceBill(payload);
 
@@ -2170,16 +2180,19 @@ console.log("updatedItemDetails", updatedItemDetails);
                 });
                 setIsGenerateInvoiceModalOpen(false);
             } else {
+                 gridState.setLoading(false);
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
                     title: "⚠️ Draft Bill Invoice Generated Failed",
                     description: (response as any)?.data?.Message || "Draft Bill Invoice Generated Failed.",
                     variant: "destructive",
                 });
+                 window.location.reload();
             }
             // Optionally, handle success or display a message
         } catch (error) {
             console.error("Error Draft Bill Invoice Generated", error);
+             gridState.setLoading(false);
             // Optionally, handle error or display an error message
         }
         setIsGenerateInvoiceModalOpen(false);
@@ -2339,9 +2352,8 @@ console.log("updatedItemDetails", updatedItemDetails);
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
-                 setActionLoading(null);
             } else {
-                 setActionLoading(null);
+                gridState.setLoading(false);
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
                     title: "⚠️ Revert Failed",
@@ -2352,12 +2364,10 @@ console.log("updatedItemDetails", updatedItemDetails);
             // Optionally, handle success or display a message
         } catch (error) {
             console.error("Error Reverting Draft:", error);
+             gridState.setLoading(false);
             // Optionally, handle error or display an error message
         }
-        finally {
-        // ✅ STOP GRID LOADER
-        gridState.setLoading(false);
-    }
+       
 
     };
 

@@ -1226,7 +1226,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Accepted Vale</p>
-                          <p className="text-base font-medium text-green-600">EUR{localHeaderData?.DBAcceptedValue}</p>
+                          <p className="text-base font-medium text-green-600">EUR {localHeaderData?.DBAcceptedValue}</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -1373,7 +1373,15 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <div className="relative group inline-block">
                                 <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
 
-                                <div className="absolute -right-[0px] hidden top-5 z-[9999] group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                                {/* <div className="absolute -left-[0px] hidden top-5 z-[9999] group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700"> */}
+                                <div
+  className="fixed hidden z-[999999]  group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700"
+  style={{
+    top: "var(--tooltip-top)",
+    left: "var(--tooltip-left)"
+  }}
+>
+
                                   <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
                                     Tariff Details
                                   </div>
@@ -1502,10 +1510,10 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               <p className="font-medium text-gray-900">{activeLine?.RefDocIDTypeDescription || '--'}</p>
                             </div>
                             
-                            <div>
+                            {/* <div>
                               <p className="text-gray-500">Agent</p>
                               <p className="font-medium text-gray-900">{activeLine?.Agent || '--'}</p>
-                            </div>
+                            </div> */}
                             <div>
                               <p className="text-gray-500">Equipment</p>
                               <p className="font-medium text-gray-900">{activeLine?.EquipmentDescription || '--'}</p>

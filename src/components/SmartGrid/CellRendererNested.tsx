@@ -810,7 +810,12 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Currency with symbol renderer
   const renderCurrencySymbol = () => {
-    return <span className="font-bold" title={formattedAmount(value)}> EUR {formattedAmount(value)}</span>
+    return <span className="ml-auto pr-4 font-bold" title={formattedAmount(value)}> EUR {formattedAmount(value)}</span>
+//     return
+//     <span className="ml-auto pr-4 font-bold bg-blue-50">
+//   EUR 500,00
+// </span>
+
   }
 
   // Time renderer
@@ -1000,7 +1005,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       case 'Select':
       case 'LazySelect':
         // For these types, just render the value as text
-        return <span className="truncate" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
+        return <span className="truncate ml-auto pr-4 font-bold" title={String(value || '')}>{value !== null && value !== undefined ? String(value) : ''}</span>;
       case 'SubRow':
         // For SubRow type with array data, show count or first item
         if (Array.isArray(value)) {

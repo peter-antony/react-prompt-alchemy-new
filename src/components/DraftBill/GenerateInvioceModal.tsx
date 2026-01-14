@@ -20,9 +20,13 @@ interface GenerateInvoiceModalProps {
 const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onClose, onConfirmGenerateInvoice }) => {
   console.log("GenerateInvoiceModal - isOpen:", isOpen);
   const [consolidationCode, setconsolidationCode] = useState<{ value: string; label: string } | string>('');
-  const [invoiceType, setInvoiceType] = useState<string>('Manual');
+type InvoiceType = 'MANUAL' | 'STI_SFI' | 'STI_MFI';
 
+const [invoiceType, setInvoiceType] = useState<InvoiceType>('MANUAL');
+useEffect(()=>{console.log(invoiceType,"invoiceType")},[invoiceType])
   if (!isOpen) return null;
+
+  
 
   // const [consolidationCodes, setconsolidationCodes] = useState('');
   // const [location, setLocation] = useState('');
@@ -96,17 +100,17 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
           
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</Label>
-            <RadioGroup value={invoiceType} onValueChange={setInvoiceType} className="flex gap-6">
+            <RadioGroup value={invoiceType} onValueChange={(value) => setInvoiceType(value as InvoiceType)} className="flex gap-6">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Manual" id="manual" />
+                <RadioGroupItem value="MANUAL" id="manual" />
                 <Label htmlFor="manual" className="text-sm font-normal text-gray-700 cursor-pointer">
                   Manual
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="SFI-STI selection" id="sfi-sti"/>
+                <RadioGroupItem value="STI_SFI" id="sfi-sti"/>
                 <Label htmlFor="sfi-sti" className="text-sm font-normal text-gray-700 cursor-not-allowed">
-                  SFI-STI selection
+                  STI-SFI
                 </Label>
               </div>
             </RadioGroup>
