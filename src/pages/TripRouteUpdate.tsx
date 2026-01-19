@@ -1211,6 +1211,29 @@ export const TripRouteUpdate = () => {
     console.log('Clear all filters');
   }
 
+  // badge color for the transport route leg sidedrawer
+  const getStatusColorLocal = (status: string) => {
+          const statusColors: Record<string, string> = {
+            'Released': 'badge-fresh-green rounded-2xl',
+            'Executed': 'badge-purple rounded-2xl',
+            'Fresh': 'badge-blue rounded-2xl',
+            'Cancelled': 'badge-red rounded-2xl',
+            'Deleted': 'badge-red rounded-2xl',
+            'Save': 'badge-green rounded-2xl',
+            'Under Amendment': 'badge-orange rounded-2xl',
+            'Confirmed': 'badge-green rounded-2xl',
+            'Planned': 'badge-blue rounded-2xl',
+            "Revenue leakage": 'badge-red rounded-2xl',
+            'Under Execution': 'badge-purple rounded-2xl',
+            // Trip Billing Status colors
+            'Draft Bill Raised': 'badge-orange rounded-2xl',
+            'Not Eligible': 'badge-red rounded-2xl',
+            'Invoice Created': 'badge-blue rounded-2xl',
+            'Under Planning': 'badge-fresh-green rounded-2xl'
+          };
+          return statusColors[status] || "bg-gray-100 text-gray-800 border-gray-300 rounded-2xl";
+        };
+
   return (
     <>
       <AppLayout>
@@ -1392,7 +1415,7 @@ export const TripRouteUpdate = () => {
         titleBadge={selectedRoute?.CustomerOrderID || ''}
         titleBadgeStyles="badge-blue rounded-2xl"
         titleBadgeStatus={selectedRoute?.StatusDescription || ''} 
-        titleBadgeStatusStyles="badge-green rounded-2xl"
+        titleBadgeStatusStyles={getStatusColorLocal(selectedRoute?.StatusDescription || '')} // same badge styles as in grid
         width="100%"
         showFooter={false}
         slideDirection="right"
