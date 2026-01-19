@@ -259,9 +259,14 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 // ...(userSettings.fields[fieldId] || {}) // Override with user settings
                 ...initialField, // Preserve all initial properties including functions
                 ...userField, // Override with user settings (non-function properties)
-                // Explicitly preserve function properties from initial config
+                // Explicitly preserve function properties and validation rules from initial config
                 events: initialField.events,
                 fetchOptions: initialField.fetchOptions,
+                maxLength: initialField.maxLength, // Prioritize code-defined validation
+                mandatory: initialField.mandatory, // Prioritize code-defined validation
+                inputType: initialField.inputType, // Prioritize code-defined validation
+                fieldType: initialField.fieldType, // Prioritize code-defined structure
+                options: initialField.options // Prioritize code-defined options
               };
             });
             setPanelConfig(mergedConfig);

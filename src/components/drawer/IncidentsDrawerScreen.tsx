@@ -584,6 +584,16 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
     }
   };
 
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_IncidentId = 50;
+  const MAX_LENGTH_DetailedDescription = 500;
+  const MAX_LENGTH_IncidentResolution = 100;
+  const MAX_LENGTH_MaintenanceDescription = 500;
+  const MAX_LENGTH_IncidentReportedBy = 100;
+  const MAX_LENGTH_RefDocNo = 100;
+  const MAX_LENGTH_MobileRefIncidentId = 100;
+  const MAX_LENGTH_Remarks = 500;
+
   return (
     <div className="flex flex-col h-full">
       {/* Body */}
@@ -641,7 +651,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Top row with fields and action icons */}
-            <div className="flex items-end gap-4">
+            <div className="flex items-start gap-4 mb-6">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="incidentId">Incident ID <span className="text-destructive">*</span></Label>
                 {/* <Input
@@ -653,7 +663,16 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 <Input id="incidentId" 
                 value={formData.IncidentId} 
                 onChange={(e) => setFormData({ ...formData, IncidentId: e.target.value })} 
-                placeholder="Enter Incident ID" /> 
+                placeholder="Enter Incident ID"
+                className={`h-10 ${
+                  formData.IncidentId && formData.IncidentId.length > MAX_LENGTH_IncidentId ? "border-red-600 focus-visible:ring-red-600" : ""
+                    }`}
+                />
+                <p className="text-xs min-h-[16px] text-red-500">
+                  {formData.IncidentId &&
+                    formData.IncidentId.length > MAX_LENGTH_IncidentId &&
+                    `Maximum character limit is ${MAX_LENGTH_IncidentId}.`}
+                </p>
                 {/* <DynamicLazySelect
                   fetchOptions={fetchIncidentID}
                   value={formData.IncidentId}
@@ -669,8 +688,9 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   onChange={(value) => setFormData({ ...formData, IncidentStatus: value as string })}
                   placeholder="Select Incident Status"
                 />
+                <div className="min-h-[16px]" />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 self-center pt-2">
                 <Button variant="outline" size="icon" className="h-10 w-10">
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -842,7 +862,14 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="col-span-5 space-y-2">
                       <Label htmlFor="detailedDescription">Detailed Description</Label>
-                      <Textarea id="detailedDescription" value={formData.DetailedDescription} onChange={(e) => handleInputChange('DetailedDescription', e.target.value)} placeholder="Enter Description" className="min-h-[80px] resize-none" />
+                      <Textarea id="detailedDescription" value={formData.DetailedDescription} onChange={(e) => handleInputChange('DetailedDescription', e.target.value)} placeholder="Enter Description" 
+                        className={`min-h-[80px] resize-none ${formData.DetailedDescription && formData.DetailedDescription.length > MAX_LENGTH_DetailedDescription ? "border-red-600 focus-visible:ring-red-600" : ""
+                          }`} />
+                      <p className="text-xs  text-red-500">
+                        {formData.DetailedDescription &&
+                          formData.DetailedDescription.length > MAX_LENGTH_DetailedDescription &&
+                          `Maximum character limit is ${MAX_LENGTH_DetailedDescription}.`}
+                      </p>
                     </div>
                   </div>
                 </AccordionContent>
@@ -906,7 +933,13 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="space-y-2">
                         <Label htmlFor="incidentResolution">Incident Resolution <span className="text-destructive">*</span></Label>
-                        <Input id="incidentResolution" value={formData.IncidentResolution} onChange={(e) => handleInputChange('IncidentResolution', e.target.value)} placeholder="Enter Incident Resolution" />
+                        <Input id="incidentResolution" value={formData.IncidentResolution} onChange={(e) => handleInputChange('IncidentResolution', e.target.value)} placeholder="Enter Incident Resolution"
+                          className={`h-10 ${formData.IncidentResolution && formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution ? "border-red-600 focus-visible:ring-red-600" : ""}`} />
+                        <p className="text-xs  text-red-500">
+                          {formData.IncidentResolution &&
+                            formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution &&
+                            `Maximum character limit is ${MAX_LENGTH_IncidentResolution}.`}
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -1016,7 +1049,14 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                       <div className="col-span-5 space-y-2">
                         <Label htmlFor="maintenanceDescription">Maintenance Description <span className="text-destructive">*</span></Label>
-                        <Textarea id="maintenanceDescription" value={formData.MaintenanceDescription} onChange={(e) => handleInputChange('MaintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." className="min-h-[80px] resize-none" />
+                        <Textarea id="maintenanceDescription" value={formData.MaintenanceDescription} onChange={(e) => handleInputChange('MaintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." 
+                        className={`min-h-[80px] resize-none ${formData.MaintenanceDescription && formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription ? "border-red-600 focus-visible:ring-red-600" : ""
+                          }`} />
+                      <p className="text-xs  text-red-500">
+                        {formData.MaintenanceDescription &&
+                          formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription &&
+                          `Maximum character limit is ${MAX_LENGTH_MaintenanceDescription}.`}
+                      </p>
                       </div>
                     </div>
                   </div>
@@ -1079,7 +1119,14 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       id="incidentReportedBy" 
                       value={formData.IncidentReportedBy} 
                       onChange={(e) => handleInputChange('IncidentReportedBy', e.target.value)} 
-                      placeholder="Enter Inc. Reported By" />
+                      placeholder="Enter Inc. Reported By"
+                      className={`h-10 ${formData.IncidentReportedBy && formData.IncidentReportedBy.length > MAX_LENGTH_IncidentReportedBy ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                       />
+                      <p className="text-xs  text-red-500">
+                        {formData.IncidentReportedBy &&
+                          formData.IncidentReportedBy.length > MAX_LENGTH_IncidentReportedBy &&
+                          `Maximum character limit is ${MAX_LENGTH_IncidentReportedBy}.`}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -1151,17 +1198,36 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
 
                     <div className="space-y-2">
                       <Label htmlFor="refDocNo">Ref. Doc. No.</Label>
-                      <Input id="refDocNo" value={formData.RefDocNo} onChange={(e) => handleInputChange('RefDocNo', e.target.value)} placeholder="Enter Ref. Doc. No." />
+                      <Input id="refDocNo" value={formData.RefDocNo} onChange={(e) => handleInputChange('RefDocNo', e.target.value)} placeholder="Enter Ref. Doc. No."
+                      className={`h-10 ${formData.RefDocNo && formData.RefDocNo.length > MAX_LENGTH_RefDocNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                      />
+                      <p className="text-xs  text-red-500">
+                        {formData.RefDocNo &&
+                          formData.RefDocNo.length > MAX_LENGTH_RefDocNo &&
+                          `Maximum character limit is ${MAX_LENGTH_RefDocNo}.`}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="mobileRefIncidentId">Mobile Ref. Incident ID</Label>
-                      <Input id="mobileRefIncidentId" value={formData.MobileRefIncidentId} onChange={(e) => handleInputChange('MobileRefIncidentId', e.target.value)} placeholder="Enter Mobile Ref. Inc. ID" />
+                      <Input id="mobileRefIncidentId" value={formData.MobileRefIncidentId} onChange={(e) => handleInputChange('MobileRefIncidentId', e.target.value)} placeholder="Enter Mobile Ref. Inc. ID"
+                      className={`h-10 ${formData.MobileRefIncidentId && formData.MobileRefIncidentId.length > MAX_LENGTH_MobileRefIncidentId ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                      />
+                      <p className="text-xs  text-red-500">
+                        {formData.MobileRefIncidentId &&
+                          formData.MobileRefIncidentId.length > MAX_LENGTH_MobileRefIncidentId &&
+                          `Maximum character limit is ${MAX_LENGTH_MobileRefIncidentId}.`}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="remarks">Remarks</Label>
-                      <Input id="remarks" value={formData.Remarks} onChange={(e) => handleInputChange('Remarks', e.target.value)} placeholder="Enter Remarks" />
+                      <Input id="remarks" value={formData.Remarks} onChange={(e) => handleInputChange('Remarks', e.target.value)} placeholder="Enter Remarks"
+                      className={`h-10 ${formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                      />
+                      <p className="text-xs  text-red-500">
+                        {formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks && `Maximum character limit is ${MAX_LENGTH_Remarks}.`}
+                      </p>
                     </div>
                   </div>
                 </AccordionContent>
@@ -1179,27 +1245,27 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                   <div className="grid grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <Label>Work Order Number</Label>
-                      <div className="text-sm text-primary font-medium">{formData.WorkOrderNumber}</div>
+                      <div className="text-sm text-primary font-medium">{formData.WorkOrderNumber || '-'}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Order Status</Label>
-                      <div className="text-sm">{formData.WorkOrderStatus}</div>
+                      <div className="text-sm">{formData.WorkOrderStatus || '-'}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Request Number</Label>
-                      <div className="text-sm">{formData.WorkRequestNumber}</div>
+                      <div className="text-sm">{formData.WorkRequestNumber || '-'}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Work Request Status</Label>
-                      <div className="text-sm">{formData.WorkRequestStatus}</div>
+                      <div className="text-sm">{formData.WorkRequestStatus || '-'}</div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Error Message</Label>
-                      <div className="text-sm">{formData.ErrorMessage}</div>
+                      <div className="text-sm">{formData.ErrorMessage || '-'}</div>
                     </div>
                   </div>
                 </AccordionContent>
@@ -1223,12 +1289,12 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Claim No.</Label>
-                        <div className="text-sm text-primary font-medium">{formData.ClaimNumber}</div>
+                        <div className="text-sm text-primary font-medium">{formData.ClaimNumber || '-'}</div>
                       </div>
 
                       <div className="space-y-2">
                         <Label>Claim Status</Label>
-                        <div className="text-sm">{formData.ClaimStatus}</div>
+                        <div className="text-sm">{formData.ClaimStatus || '-'}</div>
                       </div>
                     </div>
                   </div>

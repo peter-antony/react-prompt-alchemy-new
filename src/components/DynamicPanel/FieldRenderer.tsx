@@ -189,9 +189,28 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         <Controller
           name={fieldId}
           control={control}
-          render={({ field }) => {
+          rules={{
+            maxLength: config.maxLength ? {
+              value: config.maxLength,
+              message: `Maximum character limit is ${config.maxLength}`
+            } : undefined
+          }}
+          render={({ field, fieldState }) => {
             const eventHandlers = createEventHandlers(field);
-            const borderClass = getFieldBorderClass(mandatory, field.value);
+            // const borderClass = getFieldBorderClass(mandatory, field.value);
+            // Check for both external validation errors and internal form errors
+            // Also check for maxLength strictly (immediate feedback)
+            const currentLength = field.value?.length || 0;
+            const isMaxLengthExceeded = config.maxLength ? currentLength > config.maxLength : false;
+
+            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}` : '');
+            const isError = !!errorMsg || isMaxLengthExceeded;
+
+            const dynamicBaseInputClasses = `h-8 text-xs focus:ring-1 focus:z-50 focus:relative focus:outline-none ${isError
+              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+              }`;
+
             // ✅ Restrict input based on allowedType
             const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
               let value = e.target.value;
@@ -220,16 +239,17 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   break;
               }
 
-              if (config.maxLength && value.length > config.maxLength) {
-                value = value.slice(0, config.maxLength);
-              }
+			  // Removed strict slicing to allow validation error to appear
+              // if (config.maxLength && value.length > config.maxLength) {
+              //   value = value.slice(0, config.maxLength);
+              // }
 
               field.onChange(value);
             };
             return (
               <div>
                 {fieldId === "UnitPrice" ? (
-                  <div className="flex items-center border border-gray-300 rounded-md bg-gray-100 w-11/12">
+                  <div className={`flex items-center border rounded-md bg-gray-100 w-11/12 ${isError ? 'border-red-500' : 'border-gray-300'}`}>
                     {/* Fixed currency label */}
                    
                     {/* <span className="px-2 text-gray-700 font-normal font-[13px]">{jsonStore.getQuickOrder().Currency?jsonStore.getQuickOrder().Currency:'EUR'}</span> */}
@@ -241,8 +261,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                       {...eventHandlers}
                       placeholder={placeholder}
                       onChange={handleInput}
-                      maxLength={config.maxLength} // also set native maxLength for safety
-                      className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 pl-1 ${baseInputClasses}`}
+                      // maxLength={config.maxLength} // also set native maxLength for safety
+                      className={`h-8 text-[13px] border-none focus:ring-0 bg-transparent pl-1 w-full focus:outline-none`}
                       tabIndex={tabIndex}
                       // className="flex-1 px-3 py-2 text-gray-900 bg-gray-100 focus:outline-none"
                     />
@@ -254,11 +274,16 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                     {...eventHandlers}
                     placeholder={placeholder}
                     onChange={handleInput}
-                    maxLength={config.maxLength} // also set native maxLength for safety
-                    className={`h-8 text-[13px] border-gray-300 focus:border-blue-500 ${baseInputClasses}`}
+                    // maxLength={config.maxLength} // also set native maxLength for safety
+                    className={`h-8 text-[13px] ${isError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500'} focus:ring-1 focus:z-50 focus:relative focus:outline-none`}
                     tabIndex={tabIndex}
                   />
-                )}  
+                )}
+                {isError && (
+                  <div className="text-red-500 text-[10px] mt-1">
+                    {errorMsg}
+                  </div>
+                )}
               </div>
             );
           }}
@@ -270,9 +295,22 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
         <Controller
           name={fieldId}
           control={control}
-          render={({ field }) => {
+          rules={{
+            maxLength: config.maxLength ? {
+              value: config.maxLength,
+              message: `Maximum character limit is ${config.maxLength}`
+            } : undefined
+          }}
+          render={({ field, fieldState }) => {
             const eventHandlers = createEventHandlers(field);
-            const borderClass = getFieldBorderClass(mandatory, field.value);
+            // const borderClass = getFieldBorderClass(mandatory, field.value);
+            // Validation logic for textarea
+            const currentLength = field.value?.length || 0;
+            const isMaxLengthExceeded = config.maxLength ? currentLength > config.maxLength : false;
+
+            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}` : '');
+            const isError = !!errorMsg || isMaxLengthExceeded;
+            
             return (
               <div>
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
@@ -280,14 +318,23 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   {...field}
                   {...eventHandlers}
                   placeholder={placeholder}
-                  className={`min-h-[60px] text-[13px] focus:ring-1 focus:z-50 focus:relative focus:outline-none ${
-                    hasError 
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                  }`}
+                  className={`min-h-[60px] text-[13px] focus:ring-1 focus:z-50 focus:relative focus:outline-none ${hasError || isError
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   tabIndex={tabIndex}
-                  maxLength={config.maxLength}
+                // Removed strict slicing from maxLength prop if we want to allow typing over limit to show error
+                // But Textarea component might use standard maxLength attribute which prevents typing.
+                // If we want to show error, we shouldn't pass maxLength attribute OR we should use it to block.
+                // The user requested: "if the user enter characters execeeding the maxlength, a red border should come"
+                // This implies they CAN enter more than max length. So we should NOT pass maxLength to the HTML element.
+                // maxLength={config.maxLength} 
                 />
+                {isError && (
+                  <div className="text-red-500 text-[10px] mt-1">
+                    {errorMsg}
+                  </div>
+                )}
               </div>
             );
           }}
