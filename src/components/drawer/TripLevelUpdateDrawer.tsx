@@ -368,6 +368,9 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     };
     return statusMap[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
+
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_Remarks = 250;
  
   const renderExecutionLegFields = (
     legIndex: number,
@@ -500,11 +503,16 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
           <div className="space-y-2">
             <Label>Remarks</Label>
             <Input
-              className="h-10"
+              className={`h-10 ${
+                execLeg.Remarks && execLeg.Remarks.length > MAX_LENGTH_Remarks ? "border-red-600 focus-visible:ring-red-600" : ""
+              }`}
               value={execLeg.Remarks || ''}
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Remarks', e.target.value)}
               placeholder="Enter remarks"
             />
+            {execLeg.Remarks && execLeg.Remarks.length > MAX_LENGTH_Remarks && (
+              <p className="text-xs text-red-500">Maximun character limit is {MAX_LENGTH_Remarks}.</p>
+            )}
           </div>
         </div>
       </div>

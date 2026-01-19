@@ -388,6 +388,9 @@ const handleDownloadFile = useCallback(async (file: any) => {
   });
   console.log("filteredFiles ", filteredFiles);
 
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_Remarks = 250;
+
   return (
     <div className={`flex flex-col md:flex-row gap-6 w-full h-full bg-[#f8fafd]`}>
       {/* Left Panel - Upload Form */}
@@ -421,10 +424,19 @@ const handleDownloadFile = useCallback(async (file: any) => {
             <label className="block text-sm font-medium mb-1">Remarks</label>
             <Textarea
               {...register('remarks')}
-              placeholder="Enter Remarks"
-              className="min-h-[80px] resize-none"
-            />
-          </div>
+                placeholder="Enter Remarks"
+                className={`min-h-[80px] resize-none ${watch("remarks") && watch("remarks").length > MAX_LENGTH_Remarks
+                    ? "border-red-600 focus-visible:ring-red-600"
+                  : ""
+                  }`}
+              />
+              {watch("remarks") &&
+                watch("remarks").length > MAX_LENGTH_Remarks && (
+                  <p className="text-xs text-red-500">
+                    Maximun character limit is {MAX_LENGTH_Remarks}.
+                  </p>
+                )}
+            </div>
 
           {/* Attachment Section */}
           <div className="mt-3">

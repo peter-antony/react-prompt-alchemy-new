@@ -468,6 +468,13 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
     onClose();
   };
 
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_ForwardTripID = 50;
+  const MAX_LENGTH_ReturnTripID = 50;
+  const MAX_LENGTH_PassNo = 100;
+  const MAX_LENGTH_Remark = 250;
+  const MAX_LENGTH_SupplierRefNo = 250;
+
   return (
     <SideDrawer
       isOpen={isOpen}
@@ -563,7 +570,11 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     value={forwardTripID || ''}
                     onChange={(e) => setForwardTripID(e.target.value)}
                     placeholder="Enter Forward Trip Plan ID"
+                    className={`${forwardTripID?.length > MAX_LENGTH_ForwardTripID ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   />
+                  {forwardTripID?.length > MAX_LENGTH_ForwardTripID && (
+                    <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_ForwardTripID}.</p>
+                  )}
                 </div>
 
                 {/* Return Trip Plan ID */}
@@ -574,7 +585,11 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     value={returnTripID || ''}
                     onChange={(e) => setReturnTripID(e.target.value)}
                     placeholder="Enter Return Trip Plan ID"
+                    className={`${returnTripID?.length > MAX_LENGTH_ReturnTripID ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   />
+                  {returnTripID?.length > MAX_LENGTH_ReturnTripID && (
+                    <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_ReturnTripID}.</p>
+                  )}
                 </div>
               </div>
             )}
@@ -593,7 +608,11 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 value={passNo}
                 onChange={(e) => setPassNo(e.target.value)}
                 placeholder="Enter Pass No"
+                className={`${passNo?.length > MAX_LENGTH_PassNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
               />
+              {passNo?.length > MAX_LENGTH_PassNo && (
+                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_PassNo}.</p>
+              )}
             </div>
             {/* Trip Start Date & Time Row */}
             <div className="grid grid-cols-2 gap-4">
@@ -676,7 +695,12 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 id="Remark"
                 value={remark}
                 onChange={(e) => setRemark(e.target.value)}
-                placeholder="Enter Remark" />
+                placeholder="Enter Remark"
+                className={`${remark?.length > MAX_LENGTH_Remark ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                />
+              {remark?.length > MAX_LENGTH_Remark && (
+                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_Remark}.</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -685,7 +709,12 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 id="supplierRefNo"
                 value={supplierRefNo}
                 onChange={(e) => setSupplierRefNo(e.target.value)}
-                placeholder="Enter supplier Referenc No." />
+                placeholder="Enter supplier Referenc No."
+                className={`${supplierRefNo?.length > MAX_LENGTH_SupplierRefNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
+                />
+              {supplierRefNo?.length > MAX_LENGTH_SupplierRefNo && (
+                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_SupplierRefNo}.</p>
+              )}
             </div>
           </div>
         </div>
