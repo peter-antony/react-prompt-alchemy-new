@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { SideDrawer } from '../Common/SideDrawer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Filter, Plus, LucidePaperclip, Link } from 'lucide-react';
+import { Search, Filter, Plus, LucidePaperclip, Link, Users, FileText, Calendar, Banknote, ReceiptText } from 'lucide-react';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services';
+import { ClaimService } from '@/api/services/ClaimService';
+import { dateFormatter } from '@/utils/formatter';
 
 type ClaimCard = {
   id: string;
@@ -50,10 +52,32 @@ export const ClaimLinkedInternalOrders: React.FC<{
     InternalOrderNo: ''
   });
 
+  const [linkedClaims, setLinkedClaims] = useState<any[]>([]);
+  const [linkedInternalOrders, setLinkedInternalOrders] = useState<any[]>([]);
+  const [isLoadingLinked, setIsLoadingLinked] = useState(false);
+
   const claims = useMemo(() => {
-    if (!query) return sampleClaims;
-    return sampleClaims.filter(c => c.title.toLowerCase().includes(query.toLowerCase()) || (c.reference || '').toLowerCase().includes(query.toLowerCase()));
-  }, [query]);
+    const source = linkedClaims.length ? linkedClaims : [];
+    if (!query) return source;
+    return source.filter((c: any) => {
+      const title = (c.ClaimNo || c.title || '').toString().toLowerCase();
+      const ref = (c.PartyName || c.reference || '').toString().toLowerCase();
+      return title.includes(query.toLowerCase()) || ref.includes(query.toLowerCase());
+    });
+  }, [query, linkedClaims]);
+
+  const internalOrders = useMemo(() => {
+    const source = linkedInternalOrders.length ? linkedInternalOrders : [];
+    if (!query) return source;
+    const q = query.toLowerCase();
+    return source.filter((io: any) => {
+      const title = (io.InternalOrderNo || io.title || '').toString().toLowerCase();
+      const party = (io.PartyName || io.reference || '').toString().toLowerCase();
+      const contract = (io.ContractId || io.Contract || '').toString().toLowerCase();
+      const refNo = (io.ReferenceNo || '').toString().toLowerCase();
+      return title.includes(q) || party.includes(q) || contract.includes(q) || refNo.includes(q);
+    });
+  }, [query, linkedInternalOrders]);
 
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
@@ -88,6 +112,40 @@ export const ClaimLinkedInternalOrders: React.FC<{
   const fetchClaims = fetchMasterData("Claim No Init");
   const fetchContracts = fetchMasterData("Contract Init");
   const fetchInternalOrderNo = fetchMasterData("Internal Order No Init");
+
+  // Fetch linked claims/internal orders when claimNo or drawer open changes
+  useEffect(() => {
+    let mounted = true;
+    const fetchLinked = async () => {
+      if (!isOpen) return;
+      if (!claimNo) {
+        setLinkedClaims([]);
+        setLinkedInternalOrders([]);
+        return;
+      }
+      setIsLoadingLinked(true);
+      try {
+        const resp: any = await ClaimService.getLinkedIOClaims({ claimNo });
+        const parsed = JSON.parse(resp?.data?.ResponseData || '{}');
+        const record = Array.isArray(parsed?.ResultSet) && parsed.ResultSet.length > 0 ? parsed.ResultSet[0] : parsed;
+        const lc = record?.LinkedClaims || record?.LinkedClaims || [];
+        const li = record?.LinkedInternalOrders || [];
+        if (!mounted) return;
+        setLinkedClaims(lc || []);
+        setLinkedInternalOrders(li || []);
+      } catch (err) {
+        console.error('Failed to load linked claims/internal orders:', err);
+        if (mounted) {
+          setLinkedClaims([]);
+          setLinkedInternalOrders([]);
+        }
+      } finally {
+        if (mounted) setIsLoadingLinked(false);
+      }
+    };
+    fetchLinked();
+    return () => { mounted = false; };
+  }, [claimNo, isOpen]);
 
   return (
     <SideDrawer
@@ -176,7 +234,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchTypes}
                           value={linkClaimObj.Type}
-                          onChange={(value) => setLinkClaimObj({...linkClaimObj, Type: value as string})}
+                          onChange={(value) => setLinkClaimObj({ ...linkClaimObj, Type: value as string })}
                           placeholder="Select Type"
                           className="w-full h-9 text-[13px] mt-1"
                           hideSearch={true}
@@ -188,7 +246,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchCategories}
                           value={linkClaimObj.Category}
-                          onChange={(value) => setLinkClaimObj({...linkClaimObj, Category: value as string})}
+                          onChange={(value) => setLinkClaimObj({ ...linkClaimObj, Category: value as string })}
                           placeholder="Select Category"
                           className="w-full h-9 text-[13px] mt-1"
                           hideSearch={true}
@@ -200,7 +258,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchClaims}
                           value={linkClaimObj.ClaimNo}
-                          onChange={(value) => setLinkClaimObj({...linkClaimObj, ClaimNo: value as string})}
+                          onChange={(value) => setLinkClaimObj({ ...linkClaimObj, ClaimNo: value as string })}
                           placeholder="Select Claim No."
                           className="w-full h-9 text-[13px] mt-1 z-9999"
                         />
@@ -220,26 +278,42 @@ export const ClaimLinkedInternalOrders: React.FC<{
               )}
 
               <div className="grid grid-cols-3 gap-6">
-                {claims.map(c => (
-                  <div key={c.id} className="p-4 rounded-lg border bg-white shadow-sm">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">{c.typeLetter}</div>
-                        <div>
-                          <div className="font-semibold text-sm">{c.title}</div>
-                          <div className="text-xs text-gray-500">{c.subtitle}</div>
-                        </div>
-                      </div>
-                      <div className="text-xs badge-gray rounded-2xl">{c.status}</div>
-                    </div>
+                {claims.map((c: any, idx: number) => {
+                  const partyType = typeof c.PartyType === 'string' ? c.PartyType.toLowerCase() : '';
+                  const PartType = partyType === 'customer' ? 'C' : 'S';
+                  const ClaimNo = c.ClaimNo || '';
+                  const Category = c.ClaimCategoryDescription || c.ClaimCategory || '';
+                  const PartyName = c.PartyName ? `${c.PartyName}${c.PartyCode ? ` - ${c.PartyCode}` : ''}` : '';
+                  const RefDocs = c.RefDocType ? `${c.RefDocType}${c.RefDocNo ? ` - ${c.RefDocNo}` : ''}` : '';
+                  const ClaimDate = c.ClaimDate ? dateFormatter(c.ClaimDate) : '';
+                  const Amount =
+                    c.Amount || c.amount
+                      ? `${c.Currency?.includes('EUR') ? '€' : ''} ${c.Amount || c.amount}`.trim()
+                      : '';
+                  const status = c.ContractType ? c.ContractType : '';
 
-                    <div className="text-xs text-gray-600 mb-3">{c.reference}</div>
-                    <div className="flex items-center justify-between text-xs text-gray-600">
-                      <div>{c.date}</div>
-                      <div className="font-semibold">{c.amount}</div>
+                  return (
+                    <div key={ClaimNo + idx} className="p-4 rounded-lg border bg-white shadow-sm">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">{PartType}</div>
+                          <div>
+                            <div className="font-semibold text-sm">{ClaimNo}</div>
+                            <div className="text-xs text-gray-500">{Category}</div>
+                          </div>
+                        </div>
+                        <div className="text-xs badge-gray rounded-2xl">{status}</div>
+                      </div>
+
+                      <div className="text-[13px] text-gray-700 font-normal mb-3 flex gap-2"><Users className='inline' size={16} color='#475467' />{PartyName}</div>
+                      <div className="text-[13px] text-gray-700 font-normal mb-3 flex gap-2"><FileText className='inline' size={16} color='#475467' />{RefDocs}</div>
+                      <div className="flex items-center justify-between text-[13px] text-gray-700">
+                        <div className="flex items-center gap-2 font-normal"><Calendar className='inline' size={16} color='#475467' />{ClaimDate}</div>
+                        <div className="flex items-center gap-2 font-normal"><Banknote className='inline' size={16} color='#475467' />{Amount}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </TabsContent>
 
@@ -247,8 +321,8 @@ export const ClaimLinkedInternalOrders: React.FC<{
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-md font-semibold text-gray-600">Total Net Amount
                   <span className="ml-4 inline-flex items-center gap-2">
-                    <span className="badge-blue rounded-2xl px-2 py-0.5 text-xs">Customer € 45595.00</span>
-                    <span className="badge-blue rounded-2xl px-2 py-0.5 text-xs">Supplier € 45595.00</span>
+                    {/* <span className="badge-blue rounded-2xl px-2 py-0.5 text-xs">Customer € 45595.00</span> */}
+                    {/* <span className="badge-blue rounded-2xl px-2 py-0.5 text-xs">Supplier € 45595.00</span> */}
                   </span>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
@@ -290,7 +364,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchTypes}
                           value={linkInternalOrderObj.Type}
-                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, Type: value as string})}
+                          onChange={(value) => setLinkInternalOrderObj({ ...linkInternalOrderObj, Type: value as string })}
                           placeholder="Select Type"
                           className="w-full h-9 text-[13px] mt-1"
                           hideSearch={true}
@@ -302,7 +376,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchContracts}
                           value={linkInternalOrderObj.Contract}
-                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, Contract: value as string})}
+                          onChange={(value) => setLinkInternalOrderObj({ ...linkInternalOrderObj, Contract: value as string })}
                           placeholder="Select Contract"
                           className="w-full h-9 text-[13px] mt-1"
                         />
@@ -313,7 +387,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                         <DynamicLazySelect
                           fetchOptions={fetchInternalOrderNo}
                           value={linkInternalOrderObj.InternalOrderNo}
-                          onChange={(value) => setLinkInternalOrderObj({...linkInternalOrderObj, InternalOrderNo: value as string})}
+                          onChange={(value) => setLinkInternalOrderObj({ ...linkInternalOrderObj, InternalOrderNo: value as string })}
                           placeholder="Internal Order No."
                           className="w-full h-9 text-[13px] mt-1 z-9999"
                         />
@@ -333,29 +407,43 @@ export const ClaimLinkedInternalOrders: React.FC<{
               )}
 
               <div className="grid grid-cols-3 gap-6">
-                {sampleIO.map(io => (
-                  <div key={io.id} className="p-4 rounded-lg border bg-white shadow-sm">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-semibold">{io.typeLetter}</div>
-                        <div>
-                          <div className="font-semibold text-sm">{io.title}</div>
-                          <div className="text-xs text-gray-500">{io.subtitle}</div>
+                {internalOrders.map((io: any, idx: number) => {
+                  const InternalOrderNo = io.InternalOrderNo || '';
+                  const ContractId = io.ContractId || io.Contract || '';
+                  const PartyType = (typeof io.PartyType === 'string' ? io.PartyType.toLowerCase() : '') === 'vendor' ? 'S' : 'C';
+                  const PartyName = io.PartyName ? `${io.PartyName}${io.PartyCode ? ` - ${io.PartyCode}` : ''}` : '';
+                  const ReferenceNo = io.ReferenceNo || '';
+                  const OrderDate = io.OrderDate ? dateFormatter(io.OrderDate) : '';
+                  const Amount =
+                    io.Amount || io.amount
+                      ? `${io.Currency?.includes('EUR') ? '€' : ''} ${io.Amount || io.amount}`.trim()
+                      : ''; const ContractType = io.ContractType || '';
+
+                  return (
+                    <div key={InternalOrderNo + idx} className="p-4 rounded-lg border bg-white shadow-sm">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-semibold">{PartyType}</div>
+                          <div>
+                            <div className="font-semibold text-sm">{InternalOrderNo}</div>
+                            <div className="text-xs text-gray-500">{ContractId}</div>
+                          </div>
                         </div>
+                        <div className="text-xs badge-gray rounded-2xl">{ContractType}</div>
                       </div>
-                      <div className="text-xs badge-gray rounded-2xl">{io.status}</div>
-                    </div>
 
-                    <div className="text-xs text-gray-600 mb-3">{io.reference}</div>
+                      <div className="text-[13px] text-gray-700 font-normal mb-3 flex gap-2"><Users className='inline' size={16} color='#475467' />{PartyName}</div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                      <div className="flex items-center gap-2"><span className="text-gray-400">📄</span> <span>{'CUS3433200/01'}</span></div>
-                      <div className="flex items-center justify-end">{io.amount}</div>
-                      <div className="flex items-center gap-2"><span className="text-gray-400">📁</span> <span>{'QO038200/32'}</span></div>
-                      <div className="flex items-center justify-end">{io.date}</div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                        <div className="text-[13px] mb-3 flex items-center gap-2 font-normal"><ReceiptText className='inline' size={16} color='#475467' />{ReferenceNo}</div>
+                        <div className="text-[13px] mb-3 flex items-center gap-2 font-normal"><Banknote className='inline' size={16} color='#475467' />{Amount}</div>
+                        {/* <div className="flex items-center gap-2"><span className="text-gray-400">📁</span> <span>{io.ContractId || io.subtitle || '—'}</span></div> */}
+                        <div className="text-[13px] mb-3 flex items-center gap-2 font-normal"><Calendar className='inline' size={16} color='#475467' />{OrderDate}</div>
+
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </TabsContent>
           </Tabs>

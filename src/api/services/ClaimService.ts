@@ -222,4 +222,30 @@ export const ClaimService = {
     );
     return response.data;
   },
+
+  getLinkedIOClaims: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Get Linked Orders",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      SearchCriteria: {
+        ClaimNo: params?.claimNo
+      }
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
 };
