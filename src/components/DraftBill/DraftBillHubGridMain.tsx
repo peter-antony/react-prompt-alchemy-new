@@ -450,7 +450,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             width: 120
         },
         {
-            key: 'RefDocTypeCode',
+            key: 'RefDocID',
             label: 'Ref Doc ID',
             type: 'Text',
             width: 300
@@ -570,6 +570,13 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             type: 'Text',
             width: 150
         },
+        {
+            key: 'GLAccount',
+            label: 'GL Account',
+            type: 'Text',
+            width: 150
+        },
+
         {
             key: 'Attribute1',
             label: 'Attribute 1',
@@ -739,18 +746,18 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
             width: 120
         },
         {
-            key: 'DBLineStatus',
+            key: 'DBLineStatusDescription',
             label: 'DB Line Status',
             type: 'Badge',
             width: 250,
             statusMap: {
-                'OPN': 'badge-blue rounded-2xl',
-                'IP': 'badge-orange rounded-2xl',
-                // 'Approved': 'badge-green rounded-2xl',
-                'CN': 'badge-red rounded-2xl',
-                // 'Hold': 'badge-yellow rounded-2xl',
-                // 'Rerun Triggered': 'badge-purple rounded-2xl',
-                // 'Returned': 'badge-fresh-green rounded-2xl'
+                'Open': 'badge-blue rounded-2xl',
+                'In Progress': 'badge-orange rounded-2xl',
+                'Approved': 'badge-green rounded-2xl',
+                'Cancelled': 'badge-red rounded-2xl',               
+                 'Hold': 'badge-yellow rounded-2xl',
+                 'Rerun Triggered': 'badge-purple rounded-2xl',
+                 'Returned': 'badge-fresh-green rounded-2xl'
             }
         },
         {
@@ -1627,6 +1634,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     });
                     // Clear all selections and uncheck checkboxes on full success
                     clearAllSelections();
+                    fetchDraftBills();
                 } else if (successCount > 0 && failureCount > 0) {
                     toast({
                         title: "⚠️ Partial Success",
@@ -1651,7 +1659,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         variant: "destructive",
                     });
                 }
-                fetchDraftBills();
+                // 
                 setIsCancelModalOpen(false);
             } catch (error) {
                 console.error("Error canceling Draft:", error);
@@ -2005,6 +2013,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     });
                     // Clear all selections and uncheck checkboxes on full success
                     clearAllSelections();
+                    fetchDraftBills();
                 } else if (successCount > 0 && failureCount > 0) {
                     toast({
                         title: "⚠️ Partial Success",
@@ -2029,7 +2038,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                         variant: "destructive",
                     });
                 }
-                fetchDraftBills();
+                
                 setIsCancelModalOpen(false);
             } catch (error) {
                 console.error("Error Approving Draft:", error);
@@ -2179,6 +2188,8 @@ console.log("updatedItemDetails", updatedItemDetails);
                     variant: "default",
                 });
                 setIsGenerateInvoiceModalOpen(false);
+                gridState.setLoading(false);
+                fetchDraftBills();
             } else {
                  gridState.setLoading(false);
                 console.log("error as any ===", (response as any)?.data?.Message);
@@ -2187,7 +2198,6 @@ console.log("updatedItemDetails", updatedItemDetails);
                     description: (response as any)?.data?.Message || "Draft Bill Invoice Generated Failed.",
                     variant: "destructive",
                 });
-                 window.location.reload();
             }
             // Optionally, handle success or display a message
         } catch (error) {

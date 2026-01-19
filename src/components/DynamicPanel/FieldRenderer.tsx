@@ -602,6 +602,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
       );
 
     case 'inputdropdown':
+const disableDropdown = config.disableDropdown ?? false;
+
       return (
         <Controller
           name={fieldId}
@@ -612,10 +614,31 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const borderClass = getFieldBorderClass(mandatory, fieldValue.input || fieldValue.dropdown);
 
             return (
-              <div>
+            <div
+  className="relative"
+  onMouseDownCapture={(e) => {
+    if (!disableDropdown) return;
+
+    const target = e.target as HTMLElement;
+
+    // block clicks ONLY on dropdown side
+    if (target.closest('.dropdown') || target.closest('.dropdown-arrow')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }}
+>
+
+{disableDropdown && (
+  <div className="absolute inset-y-0 right-0 w-12 z-10 cursor-not-allowed pointer-events-none" />
+)}
+
+
+
                 {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
                 <InputDropdown
                   value={fieldValue}
+                   disableDropdown={config.disableDropdown ?? false}
                   onChange={(newValue) => {
                     // If inputType is 'number', allow only numbers in the input field
                     if (config.inputType === 'number') {
@@ -674,7 +697,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   options={options}
                   placeholder={placeholder}
                   tabIndex={tabIndex}
-                  onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
+                  // onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
+                 onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
+
+
+
                   onInputClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
                   onFocus={events?.onFocus}
                   onBlur={events?.onBlur}
@@ -684,6 +711,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   title={tooltip}
                   maxLength={config.maxLength}
                 />
+                
               </div>
             );
           }}

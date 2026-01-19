@@ -15,6 +15,7 @@ export interface InputDropdownValue {
 export interface InputDropdownProps {
   value?: InputDropdownValue;
   onChange?: (value: InputDropdownValue) => void;
+  disableDropdown?: boolean; 
   options?: InputDropdownOption[];
   placeholder?: string;
   className?: string;
@@ -34,6 +35,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
   ({ 
     value = { dropdown: '', input: '' }, 
     onChange, 
+    disableDropdown = false, 
     options = [], 
     placeholder = '',
     className,
@@ -53,6 +55,10 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     const inputValue = value?.input || '';
 
     const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        if (disableDropdown) {
+    e.preventDefault();
+    return; 
+  }
       const newValue = { ...value, dropdown: e.target.value };
       onChange?.(newValue);
     };
@@ -75,11 +81,16 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           <select
             value={dropdownValue}
             onChange={handleDropdownChange}
-            disabled={!editable}
+             disabled={!editable || disableDropdown}
+            // className={cn(
+            //   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+            //   !editable && "opacity-80 bg-gray-100"
+            // )}
             className={cn(
-              "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
-              !editable && "opacity-80 bg-gray-100"
-            )}
+  "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+  (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
+)}
+
             tabIndex={tabIndex}
             onClick={onDropdownClick}
             onFocus={onFocus}

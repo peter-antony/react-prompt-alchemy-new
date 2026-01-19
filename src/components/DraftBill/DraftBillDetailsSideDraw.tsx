@@ -73,7 +73,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 1,
     width: "four",
     placeholder: "",
-    //  disableDropdown: true,
+     disableDropdown: true,
      options: [{ value: "TON", label: "TON" }], // Placeholder, replace with actual units
   },
   rate: {
@@ -87,6 +87,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 2,
     width: "four",
     placeholder: "",
+    disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
   },
   acceptedValue: {
@@ -100,6 +101,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 3,
     width: "four",
     placeholder: "",
+        disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
   },
   userAssigned: {
@@ -1349,21 +1351,21 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             <div className="flex justify-between items-center mb-2">
                               <span className="text-sm font-semibold">Line No:{line.DBLineNo}</span>
                               <div className="flex items-center space-x-2">
-                                {line.DBLineStatus === "AP" && (
+                                {line.DBLineStatusCode === "AP" && (
                                   <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Approved</span>
                                 )}
-                                {line.DBLineStatus === "OPN" && (
+                                {line.DBLineStatusCode === "OPN" && (
                                   <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">Open</span>
                                 )}
-                                {line.DBLineStatus === "RR" && (
+                                {line.DBLineStatusCode === "RR" && (
                                   <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">Rerun Triggered</span>
                                 )}
-                                {line.DBLineStatus === "CN" && (
+                                {line.DBLineStatusCode === "CN" && (
                                   <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">Cancelled</span>
                                 )}
-                                {/* {line.DBLineStatus === "" && (
+                                {line.DBLineStatusCode === "Fresh" && (
                                   <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">"qw"</span>
-                                )} */}
+                                )}
                                 <Trash2 className="h-4 w-4 text-red-400 hover:text-red-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleLineDelete(line); }} />
                               </div>
                             </div>
@@ -1503,11 +1505,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Reference Doc. No.</p>
-                              <p className="font-medium text-gray-900">{activeLine?.ReferenceInformation || '--'}</p>
+                              <p className="font-medium text-gray-900">{activeLine?.RefDocID || '--'}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Reference Doc. Type</p>
-                              <p className="font-medium text-gray-900">{activeLine?.RefDocIDTypeDescription || '--'}</p>
+                              <p className="font-medium text-gray-900">{activeLine?.RefDocType || '--'}</p>
                             </div>
                             
                             {/* <div>

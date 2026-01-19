@@ -31,6 +31,7 @@ export type PanelFieldConfig =
     };
 
 export interface FieldConfig {
+  disableDropdown?: boolean;
   id: string;
   label: string;
   fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header' | 'checkbox';
