@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { DynamicPanel, DynamicPanelRef } from "@/components/DynamicPanel";
 import { PanelConfig } from "@/types/dynamicPanel"; // Changed import
-import { Banknote, Search, Plus, FileSearch, SquarePen, ClipboardCheck, FileText, FileBarChart, ChevronDown, ChevronUp, Copy, MoreVertical, Files } from "lucide-react";
+import { Banknote, Search, Plus, FileSearch, SquarePen, ClipboardCheck, FileText, FileBarChart, ChevronDown, ChevronUp, Copy, MoreVertical, Files, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -42,6 +42,9 @@ const ClaimsForm = () => {
 	const [qcList3, setqcList3] = useState<any>();
 	const [currencyList, setCurrencyList] = useState<any>();
 
+	// Local loader while fetching claim data
+	const [isLoadingClaim, setIsLoadingClaim] = useState<boolean>(false);
+
 	// API response and snapshot
 	const [apiResponse, setApiResponse] = useState<any>(null);
 	const [initialApiResponse, setInitialApiResponse] = useState<any>(null);
@@ -53,8 +56,6 @@ const ClaimsForm = () => {
 			// Status column colors
 			'Released': 'badge-fresh-green rounded-2xl',
 			'Executed': 'badge-purple rounded-2xl',
-			'Open': 'badge-blue rounded-2xl',
-			'Fresh': 'badge-blue rounded-2xl',
 			'Cancelled': 'badge-red rounded-2xl',
 			'Rejected': 'badge-red rounded-2xl',
 			'Approved': 'badge-green rounded-2xl',
@@ -124,93 +125,6 @@ const ClaimsForm = () => {
 		commentsRemarks: "Mistake Invoice"
 	});
 
-	// Document Details data state
-	const [documentDetailsData, setDocumentDetailsData] = useState({
-		totalInvoiceAmount: 4800.00,
-		totalClaimAmount: 800.00,
-		totalBalanceAmount: 4000.00,
-		lineItems: [
-			{
-				lineNo: 1,
-				tariffUsage: {
-					code: "TAR_HR_DE_22_0016",
-					description: "Crane-Army-Freight SNCF"
-				},
-				refDocument: {
-					type: "Internal Order",
-					date: "12-Mar-2025"
-				},
-				invoiceAmount: 1200.00,
-				claimAmount: 200.00,
-				balanceAmount: 1000.00,
-				creditNoteNo: "CRN10002025/34",
-				supplierNoteNo: "SPN10002025/34"
-			},
-			{
-				lineNo: 2,
-				tariffUsage: {
-					code: "TAR_HR_DE_22_0017",
-					description: "Crane-Army-Freight SNCF"
-				},
-				refDocument: {
-					type: "Internal Order",
-					date: "12-Mar-2025"
-				},
-				invoiceAmount: 1200.00,
-				claimAmount: 200.00,
-				balanceAmount: 1000.00,
-				creditNoteNo: "CRN10002025/35",
-				supplierNoteNo: "SPN10002025/35"
-			},
-			{
-				lineNo: 3,
-				tariffUsage: {
-					code: "TAR_HR_DE_22_0018",
-					description: "Crane-Army-Freight SNCF"
-				},
-				refDocument: {
-					type: "Internal Order",
-					date: "12-Mar-2025"
-				},
-				invoiceAmount: 1200.00,
-				claimAmount: 200.00,
-				balanceAmount: 1000.00,
-				creditNoteNo: "CRN10002025/36",
-				supplierNoteNo: "SPN10002025/36"
-			},
-			{
-				lineNo: 4,
-				tariffUsage: {
-					code: "TAR_HR_DE_22_0019",
-					description: "Crane-Army-Freight SNCF"
-				},
-				refDocument: {
-					type: "Internal Order",
-					date: "12-Mar-2025"
-				},
-				invoiceAmount: 1200.00,
-				claimAmount: 200.00,
-				balanceAmount: 1000.00,
-				creditNoteNo: "CRN10002025/37",
-				supplierNoteNo: "SPN10002025/37"
-			}
-		]
-	});
-
-	// Format line items data for SmartGrid - store full objects for custom rendering
-	const formattedLineItems = documentDetailsData.lineItems.map(item => ({
-		lineNo: item.lineNo,
-		tariffUsage: item.tariffUsage.code, // Link value
-		tariffUsageFull: item.tariffUsage, // Full object for custom display
-		refDocument: item.refDocument.type, // Main text
-		refDocumentFull: item.refDocument, // Full object for custom display
-		invoiceAmount: item.invoiceAmount,
-		claimAmount: item.claimAmount,
-		balanceAmount: item.balanceAmount,
-		creditNoteNo: item.creditNoteNo,
-		supplierNoteNo: item.supplierNoteNo
-	}));
-
 	// Document Details Grid Columns
 	const documentDetailsColumns: GridColumnConfig[] = [
 		{
@@ -219,6 +133,7 @@ const ClaimsForm = () => {
 			type: 'Text',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 100
 		},
 		{
@@ -227,6 +142,7 @@ const ClaimsForm = () => {
 			type: 'Link',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 250
 		},
 		{
@@ -235,6 +151,7 @@ const ClaimsForm = () => {
 			type: 'Text',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 250
 		},
 		{
@@ -243,6 +160,7 @@ const ClaimsForm = () => {
 			type: 'Text',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 100
 		},
 		{
@@ -251,6 +169,7 @@ const ClaimsForm = () => {
 			type: 'Date',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			// width:
 		},
 		// {
@@ -267,6 +186,7 @@ const ClaimsForm = () => {
 			type: 'Integer',
 			sortable: false,
 			editable: true,
+			subRow: false,
 			width: 150
 		},
 		{
@@ -275,6 +195,7 @@ const ClaimsForm = () => {
 			type: 'Integer',
 			sortable: false,
 			editable: true,
+			subRow: false,
 			width: 150
 		},
 		{
@@ -283,6 +204,7 @@ const ClaimsForm = () => {
 			type: 'Link',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 180
 		},
 		{
@@ -291,6 +213,7 @@ const ClaimsForm = () => {
 			type: 'Link',
 			sortable: false,
 			editable: false,
+			subRow: false,
 			width: 180
 		}
 	];
@@ -522,7 +445,7 @@ const ClaimsForm = () => {
 			label: "Wagon No.",
 			fieldType: "lazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
+			fetchOptions: fetchMaster("Wagon id Init"),
 			value: [],
 			mandatory: false,
 			visible: true,
@@ -548,7 +471,7 @@ const ClaimsForm = () => {
 			label: "THU ID",
 			fieldType: "lazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
+			fetchOptions: fetchMaster("THU id Init"),
 			value: [],
 			mandatory: false,
 			visible: true,
@@ -852,6 +775,7 @@ const ClaimsForm = () => {
 
 	const fetchClaimData = async (claimNo: string) => {
 		if (!claimNo) return;
+		setIsLoadingClaim(true);
 		try {
 			const response: any = await ClaimService.getClaimData({ claimNo });
 			const parsed = JSON.parse(response?.data?.ResponseData || '{}');
@@ -868,7 +792,7 @@ const ClaimsForm = () => {
 			// Map returned record to panel fields (best-effort mapping)
 			if (formRef.current && Header) {
 				const mapped: Record<string, any> = {
-					InvestigationNeeded: Header?.Reference?.InvestigationNeeded === 1 || Header?.Reference?.InvestigationNeeded === '1' || Header?.Reference?.InvestigationNeeded === true,
+					InvestigationNeeded: Header?.Reference?.InvestigationNeeded === 1 || Header?.Reference?.InvestigationNeeded === '1' || Header?.Reference?.InvestigationNeeded === 'YES' || Header?.Reference?.InvestigationNeeded === 'Yes',
 					InitiatedBy: Header?.Reference?.InitiatedBy || '',
 					Counterparty: Header?.Reference?.Counterparty || '',
 					ForwardisFinancialAction: Header?.Reference?.ForwardisFinancialAction || '',
@@ -912,6 +836,9 @@ const ClaimsForm = () => {
 			}
 		} catch (err) {
 			console.error('Failed to fetch claim data:', err);
+		}
+		finally {
+			setIsLoadingClaim(false);
 		}
 	};
 
@@ -1006,9 +933,27 @@ const ClaimsForm = () => {
 		gridState.setColumns(documentDetailsColumns);
 	}, []);
 
+	const handleClaimNoChange = async (newClaimNo: string) => {
+		if (!newClaimNo || newClaimNo.trim() === '') {
+			return;
+		}
+
+		// Debounce the API call - wait 800ms after user stops typing
+		// setIsLoading(true)
+		// setLoadingText("Loading Trip")
+		await fetchClaimData(newClaimNo.trim());
+	};
+
 	return (
 		<AppLayout>
-			<div className="flex flex-col h-full bg-gray-50">
+			<div className="relative flex flex-col h-full bg-gray-50">
+				{isLoadingClaim && (
+					<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+						<div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+						<div className="text-lg font-semibold text-blue-700">Loading...</div>
+						<div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+					</div>
+				)}
 				{/* Breadcrumb */}
 				<div className="px-6 pt-4">
 					<Breadcrumb items={breadcrumbItems} />
@@ -1023,9 +968,39 @@ const ClaimsForm = () => {
 								placeholder="Search Claim No."
 								className="pr-10"
 								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
+								onChange={(e) => {
+									const claimNo = e.target.value;
+									setSearchQuery(claimNo);
+								}}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										const claimNo = e.currentTarget.value;
+										if (claimNo && claimNo.trim() !== '') {
+											console.log("🔍 Enter pressed - Fetching claim data for:", claimNo);
+											handleClaimNoChange(claimNo);
+										} else {
+											toast({
+												title: "⚠️ Invalid Claim No.",
+												description: "Please enter a valid Claim No. to search.",
+												variant: "destructive",
+											});
+										}
+									}
+								}}
+								onBlur={(e) => {
+									const claimNo = e.target.value;
+									// Auto-trigger on blur if URL param exists and value changed
+									if (searchQuery && claimNo && claimNo.trim() !== '' && claimNo !== searchQuery) {
+										console.log("🔍 Input blur - Fetching claim data for:", claimNo);
+										handleClaimNoChange(claimNo);
+									}
+								}}
 							/>
-							<Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							{isLoadingClaim ? (
+								<Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+							) : (
+								<Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							)}
 						</div>
 						<div className="">
 							<span className={getStatusColor(claimStatus) + ' text-xs'}>
@@ -1201,41 +1176,41 @@ const ClaimsForm = () => {
 					/>
 
 					{/* Investigation Details Panel */}
-					{ apiResponse?.InvestigationDetails && (<div className="mt-4">
-							<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-								<div className="flex items-center justify-between px-4 py-3">
-									{/* Left side: Icon and Title */}
-									<div className="flex items-center">
-										<div className="flex items-center justify-center w-10 h-10 rounded-lg">
-											<FileSearch className="h-5 w-5 text-purple-600" />
-										</div>
-										<h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
+					{apiResponse?.InvestigationDetails && (<div className="mt-4">
+						<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+							<div className="flex items-center justify-between px-4 py-3">
+								{/* Left side: Icon and Title */}
+								<div className="flex items-center">
+									<div className="flex items-center justify-center w-10 h-10 rounded-lg">
+										<FileSearch className="h-5 w-5 text-purple-600" />
 									</div>
-
-									{/* Right side: Badge and Edit Button */}
-									<div className="flex items-center gap-3 cursor-pointer">
-										{/* Count Badge */}
-										<div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
-											{apiResponse?.InvestigationDetails.length} Nos
-										</div>
-
-										{/* Edit Button */}
-										<Button
-											variant="outline"
-											size="icon"
-											className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-											onClick={() => {
-												// Handle edit action
-												console.log("Edit Investigation Details clicked");
-												setInvestigationDetailsOpen(true);
-											}}
-										>
-											<SquarePen className="h-4 w-4 text-gray-600" />
-										</Button>
-									</div>
+									<h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
 								</div>
-							</Card>
-						</div>)
+
+								{/* Right side: Badge and Edit Button */}
+								<div className="flex items-center gap-3 cursor-pointer">
+									{/* Count Badge */}
+									<div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
+										{apiResponse?.InvestigationDetails.length} Nos
+									</div>
+
+									{/* Edit Button */}
+									<Button
+										variant="outline"
+										size="icon"
+										className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+										onClick={() => {
+											// Handle edit action
+											console.log("Edit Investigation Details clicked");
+											setInvestigationDetailsOpen(true);
+										}}
+									>
+										<SquarePen className="h-4 w-4 text-gray-600" />
+									</Button>
+								</div>
+							</div>
+						</Card>
+					</div>)
 					}
 					{/* Claims Findings Panel */}
 					{apiResponse?.ClaimFindings && (<div className="mt-4">
@@ -1322,7 +1297,7 @@ const ClaimsForm = () => {
 					</div>)
 					}
 					{/* Document Details Panel */}
-					{ apiResponse?.Document.Details && (<div className="mt-4">
+					{apiResponse?.Document.Details && (<div className="mt-4">
 						<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
 							<Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
 								{/* Header Section */}
@@ -1403,6 +1378,8 @@ const ClaimsForm = () => {
 											}}
 											onInlineEdit={handleInlineEditDocumentDetails}
 											gridId={gridId}
+											gridTitle="Document Details"
+											userId="user-1"
 										/>
 										{/* <SmartGridWithGrouping
 											columns={documentDetailsColumns}
@@ -1437,7 +1414,7 @@ const ClaimsForm = () => {
 							</Collapsible>
 						</Card>
 					</div>)
-				}
+					}
 
 				</div>
 			</div>
