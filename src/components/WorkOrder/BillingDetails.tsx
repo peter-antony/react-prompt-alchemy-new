@@ -1486,6 +1486,14 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
         }
     };
 
+    // Max character length validation for text fields - will include special characters and whitespace
+    const MAX_LENGTH_TransportCharges_RUForward_InvoicingReference = 100;
+    const MAX_LENGTH_TransportCharges_RUForward_DraftBillNo = 100;
+    const MAX_LENGTH_TransportCharges_RUReturn_InvoicingReference = 100;
+    const MAX_LENGTH_TransportCharges_RUReturn_DraftBillNo = 100;
+    const MAX_LENGTH_Disposal_ProcessingReference = 100;
+    const MAX_LENGTH_Disposal_QuantityProcessed = 20;
+
     return (
         <div className="flex flex-col h-[calc(100vh-80px)]">
             {/* Header Section with Total Amount, Radio Buttons, and Action Buttons */}
@@ -1669,7 +1677,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                                     handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
                                                 }}
                                                 placeholder="Enter Invoicing Reference"
+                                                className={
+                                                    billingData?.BillingDetails?.TransportCharges?.RUForward?.InvoicingReference &&
+                                                        billingData.BillingDetails.TransportCharges.RUForward.InvoicingReference.length >
+                                                        MAX_LENGTH_TransportCharges_RUForward_InvoicingReference
+                                                        ? "border-red-600 focus-visible:ring-red-600" : ""
+                                                }
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {billingData?.BillingDetails?.TransportCharges?.RUForward?.InvoicingReference &&
+                                                    billingData.BillingDetails.TransportCharges.RUForward.InvoicingReference.length >
+                                                    MAX_LENGTH_TransportCharges_RUForward_InvoicingReference &&
+                                                    `Maximum character limit is ${MAX_LENGTH_TransportCharges_RUForward_InvoicingReference}. [${billingData.BillingDetails.TransportCharges.RUForward.InvoicingReference.length}/${MAX_LENGTH_TransportCharges_RUForward_InvoicingReference}]`}
+                                            </p>
                                         </div>
 
                                         {/* Cost */}
@@ -1725,7 +1745,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                                     handleNestedChange("BillingDetails.TransportCharges.RUForward.ModeFlag", "Update");
                                                 }}
                                                 placeholder="Enter Draft Bill No"
+                                                className={
+                                                    billingData?.BillingDetails?.TransportCharges?.RUForward?.DraftBillNo &&
+                                                        billingData.BillingDetails.TransportCharges.RUForward.DraftBillNo.length >
+                                                        MAX_LENGTH_TransportCharges_RUForward_DraftBillNo
+                                                        ? "border-red-600 focus-visible:ring-red-600" : ""
+                                                }
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {billingData?.BillingDetails?.TransportCharges?.RUForward?.DraftBillNo &&
+                                                    billingData.BillingDetails.TransportCharges.RUForward.DraftBillNo.length >
+                                                    MAX_LENGTH_TransportCharges_RUForward_DraftBillNo &&
+                                                    `Maximum character limit is ${MAX_LENGTH_TransportCharges_RUForward_DraftBillNo}. [${billingData.BillingDetails.TransportCharges.RUForward.DraftBillNo.length}/${MAX_LENGTH_TransportCharges_RUForward_DraftBillNo}]`}
+                                            </p>
                                         </div>
 
                                         {/* Trip No */}
@@ -1799,7 +1831,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                                     handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
                                                 }}
                                                 placeholder="Enter Invoicing Reference"
+                                                className={
+                                                    billingData?.BillingDetails?.TransportCharges?.RUReturn?.InvoicingReference &&
+                                                    billingData.BillingDetails.TransportCharges.RUReturn.InvoicingReference.length >
+                                                        MAX_LENGTH_TransportCharges_RUReturn_InvoicingReference ?
+                                                    "border-red-600 focus-visible:ring-red-600" : ""
+                                                }
                                             />
+                                            <p className="text-xs text-red-600 mt-1">
+                                                {billingData?.BillingDetails?.TransportCharges?.RUReturn?.InvoicingReference &&
+                                                    billingData.BillingDetails.TransportCharges.RUReturn.InvoicingReference.length >
+                                                        MAX_LENGTH_TransportCharges_RUReturn_InvoicingReference &&
+                                                    `Maximum character limit is ${MAX_LENGTH_TransportCharges_RUReturn_InvoicingReference}. [${billingData.BillingDetails.TransportCharges.RUReturn.InvoicingReference.length}/${MAX_LENGTH_TransportCharges_RUReturn_InvoicingReference}]`}
+                                            </p>
                                         </div>
 
                                         {/* Cost */}
@@ -1855,7 +1899,19 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                                     handleNestedChange("BillingDetails.TransportCharges.RUReturn.ModeFlag", "Update");
                                                 }}
                                                 placeholder="Enter Draft Bill No"
+                                                className={
+                                                    billingData?.BillingDetails?.TransportCharges?.RUReturn?.DraftBillNo &&
+                                                    billingData.BillingDetails.TransportCharges.RUReturn.DraftBillNo.length >
+                                                        MAX_LENGTH_TransportCharges_RUReturn_DraftBillNo ?
+                                                    "border-red-600 focus-visible:ring-red-600" : ""
+                                                }
                                             />
+                                            <p className="text-xs text-red-600 mt-1">
+                                                {billingData?.BillingDetails?.TransportCharges?.RUReturn?.DraftBillNo &&
+                                                    billingData.BillingDetails.TransportCharges.RUReturn.DraftBillNo.length >
+                                                        MAX_LENGTH_TransportCharges_RUReturn_DraftBillNo &&
+                                                        `Maximum character limit is ${MAX_LENGTH_TransportCharges_RUReturn_DraftBillNo}. [${billingData.BillingDetails.TransportCharges.RUReturn.DraftBillNo.length}/${MAX_LENGTH_TransportCharges_RUReturn_DraftBillNo}]`}
+                                            </p>
                                         </div>
 
                                         {/* Trip No */}
@@ -2093,7 +2149,18 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                         handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
                                     }}
                                     placeholder="Enter Processing Reference"
+                                    className={
+                                        billingData?.BillingDetails?.Disposal?.ProcessingReference &&
+                                        billingData.BillingDetails.Disposal.ProcessingReference.length > 
+                                            MAX_LENGTH_Disposal_ProcessingReference ? "border-red-600 focus-visible:ring-red-600" : ""
+                                    }
                                 />
+                                <p className="text-xs text-red-600 mt-1">
+                                    {billingData?.BillingDetails?.Disposal?.ProcessingReference &&
+                                        billingData.BillingDetails.Disposal.ProcessingReference.length > 
+                                            MAX_LENGTH_Disposal_ProcessingReference &&
+                                        `Maximum character limit is ${MAX_LENGTH_Disposal_ProcessingReference}. [${billingData.BillingDetails.Disposal.ProcessingReference.length}/${MAX_LENGTH_Disposal_ProcessingReference}]`}
+                                </p>
                             </div>
 
                             {/* Quatity Processed */}
@@ -2107,7 +2174,18 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                         handleNestedChange("BillingDetails.Disposal.ModeFlag", "Update");
                                     }}
                                     placeholder="Enter Quality Processed"
+                                    className={
+                                        billingData?.BillingDetails?.Disposal?.QuantityProcessed &&
+                                        billingData.BillingDetails.Disposal.QuantityProcessed.toString().length > 
+                                            MAX_LENGTH_Disposal_QuantityProcessed ? "border-red-600 focus-visible:ring-red-600" : ""
+                                    }
                                 />
+                                <p className="text-xs text-red-600 mt-1">
+                                    {billingData?.BillingDetails?.Disposal?.QuantityProcessed &&
+                                        billingData.BillingDetails.Disposal.QuantityProcessed.toString().length > 
+                                            MAX_LENGTH_Disposal_QuantityProcessed &&
+                                            `Maximum character limit is ${MAX_LENGTH_Disposal_QuantityProcessed}. [${billingData.BillingDetails.Disposal.QuantityProcessed.toString().length}/${MAX_LENGTH_Disposal_QuantityProcessed}]`}
+                                </p>
                             </div>
 
                             {/* Quantity */}
@@ -2125,6 +2203,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     }}
                                     options={quantityUOMOptions}
                                     placeholder="0"
+                                    maxLength={255}
                                 />
                             </div>
 
@@ -2143,6 +2222,7 @@ const BillingDetails: React.FC<BillingDetailsProps> = ({ workOrderNumber }) => {
                                     }}
                                     options={currencyOptions}
                                     placeholder="0.00"
+                                    maxLength={255}
                                 />
                             </div>
 

@@ -1416,6 +1416,7 @@ if (formatted.Provider?.includes(" || ")) {
       editable: true,
       value: (((() => { const _v = workOrderPanelRef.current?.getFormValues?.()?.AcceptedByForwardis; return typeof _v !== 'undefined' ? !!_v : workOrder?.Header?.BillingHeaderDetails?.IsAcceptedByForwardis === "1"; })()) && workOrderNo) ? workOrder?.Header?.BillingHeaderDetails?.FinancialComments : "",
       order: 18,
+      maxLength: 255
     },
 
     MoreDetails: {
@@ -1515,6 +1516,7 @@ if (formatted.Provider?.includes(" || ")) {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
+      maxLength: 255,
       visible: showMoreDetails,
       editable: true,
       value: {
@@ -1531,6 +1533,7 @@ if (formatted.Provider?.includes(" || ")) {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
+      maxLength: 255,
       visible: showMoreDetails,
       editable: true,
       value: {
@@ -1547,6 +1550,7 @@ if (formatted.Provider?.includes(" || ")) {
       fieldType: "inputdropdown",
       width: "half",
       mandatory: false,
+      maxLength: 255,
       visible: showMoreDetails,
       editable: true,
       value: {
@@ -1567,6 +1571,7 @@ if (formatted.Provider?.includes(" || ")) {
       editable: true,
       value: workOrder?.Header?.Remarks1,
       order: 27,
+      maxLength: 500
     },
     Remarks2: {
       id: "Remarks2",
@@ -1578,6 +1583,7 @@ if (formatted.Provider?.includes(" || ")) {
       editable: true,
       value: workOrder?.Header?.Remarks2,
       order: 28,
+      maxLength: 500
     },
 
     Remarks3: {
@@ -1590,6 +1596,7 @@ if (formatted.Provider?.includes(" || ")) {
       editable: true,
       value: workOrder?.Header?.Remarks3,
       order: 29,
+      maxLength: 500
     },
   });
 
@@ -1773,6 +1780,7 @@ if (formatted.Provider?.includes(" || ")) {
         mandatory: false,
         editable: true,
         order: 5,
+        maxLength: 100,
       },
     };
   }, [isWorkShop, workOrder, selectedOperation, fetchMaster]);
@@ -1854,6 +1862,7 @@ if (formatted.Provider?.includes(" || ")) {
       mandatory: false,
       editable: true,
       order: 6,
+      maxLength: 255,
     },
   };
 
