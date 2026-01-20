@@ -196,6 +196,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
     console.log("=== Mapping BasicDetails ===");
     console.log("line object:", line);
+    setActiveLine(line);
     console.log("basicDetails object:", basicDetails);
     console.log("line object keys:", Object.keys(line));
 
@@ -1255,7 +1256,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                                     <div className="">{"Reference Doc. ID"}</div>
                                   </div>
                                   <div className="font-semibold text-gray-700">
-                                    <div>{localLineItems[0]?.ReferenceInformation}</div>
+                                    <div>{activeLine?.RefDocID}</div>
 
                                   </div>
 
@@ -1264,14 +1265,14 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                               </div>
                               <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                 <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
-                                  {"Reference Doc. ID"}
+                                  {"Reference Doc.Details"}
                                 </div>
                                 <div className="px-4 py-3">
                                   <div className="flex justify-between items-center text-[11px] text-gray-400 mb-2">
                                     <div className="">{"Reference Doc. ID"}</div>
                                   </div>
                                   <div className="font-semibold text-gray-700">
-                                    <div>{localLineItems[0]?.ReferenceInformation}</div>
+                                    <div>{activeLine?.RefDocID}</div>
 
                                   </div>
 
@@ -1283,7 +1284,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                                     <div className="">{"Reference Doc. Type"}</div>
                                   </div>
                                   <div className="font-semibold text-gray-700">
-                                    <div>{localLineItems[0]?.RefDocIDTypeDescription}</div>
+                                    <div>{activeLine?.RefDocType}</div>
 
                                   </div>
 
@@ -1295,7 +1296,13 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                                     <div className="">{"Reference Doc. Date"}</div>
                                   </div>
                                   <div className="font-semibold text-gray-700">
-                                    <div>{localLineItems[0]?.RefDocDate}</div>
+                                 <div>
+  {activeLine?.RefDocDate
+    ? activeLine.RefDocDate.split("T")[0]
+    : ""}
+</div>
+
+
 
                                   </div>
 
@@ -1530,7 +1537,11 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
                             </div>
                             <div>
                               <p className="text-gray-500">Invoice Date</p>
-                              <p className="font-medium text-gray-900">{activeLine?.InvoiceDate || '--'}</p>
+<p className="font-medium text-gray-900">
+  {activeLine?.InvoiceDate
+    ? activeLine.InvoiceDate.split("T")[0]
+    : "--"}
+</p>
                             </div>
                           </div>
                           <hr className="my-4" />

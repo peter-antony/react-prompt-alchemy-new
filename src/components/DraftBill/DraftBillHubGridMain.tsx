@@ -2286,7 +2286,7 @@ console.log("updatedItemDetails", updatedItemDetails);
             }),
         };
 
-
+     
         console.log(JSON.stringify(payload, null, 2))
         try {
             //    const payload = {
@@ -2299,6 +2299,7 @@ console.log("updatedItemDetails", updatedItemDetails);
             //     ,
             // };
             console.log("payload ===", payload);
+               gridState.setLoading(true);
             const response = await draftBillService.reRuntDraftBillByID(payload);
 
             console.log("Cancel API response:", response);
@@ -2313,17 +2314,22 @@ console.log("updatedItemDetails", updatedItemDetails);
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
+                 gridState.setLoading(false);
+                  fetchDraftBills();
             } else {
                 console.log("error as any ===", (response as any)?.data?.Message);
+                   gridState.setLoading(false);
                 toast({
                     title: "⚠️ Rerun Failed",
                     description: (response as any)?.data?.Message || "Failed to Rerun changes.",
                     variant: "destructive",
                 });
+                  
             }
             // Optionally, handle success or display a message
         } catch (error) {
             console.error("Error Rerun Draft:", error);
+             gridState.setLoading(false);
         }
 
     };
@@ -2362,8 +2368,11 @@ console.log("updatedItemDetails", updatedItemDetails);
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
+                 gridState.setLoading(false);
+                  fetchDraftBills();
             } else {
                 gridState.setLoading(false);
+              
                 console.log("error as any ===", (response as any)?.data?.Message);
                 toast({
                     title: "⚠️ Revert Failed",
