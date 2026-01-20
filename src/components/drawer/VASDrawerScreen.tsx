@@ -920,9 +920,9 @@ const saveCurrentFormData = () => {
               rows={3}
               className={`${formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks ? "border-red-600 focus-visible:ring-red-600" : ""}`}
             />
-            {formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks && (
-              <p className="text-xs text-red-500">Maximun character limit is {MAX_LENGTH_Remarks}.</p>
-            )}
+            <p className='text-xs text-red-500'>
+              {formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks ? `Maximum character limit is ${MAX_LENGTH_Remarks}. [${formData.Remarks.length}/${MAX_LENGTH_Remarks}]` : ""}
+            </p>
           </div>
 
           {/* Action Buttons */}

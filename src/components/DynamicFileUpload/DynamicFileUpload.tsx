@@ -433,7 +433,7 @@ const handleDownloadFile = useCallback(async (file: any) => {
               {watch("remarks") &&
                 watch("remarks").length > MAX_LENGTH_Remarks && (
                   <p className="text-xs text-red-500">
-                    Maximun character limit is {MAX_LENGTH_Remarks}.
+                    Maximum character limit is {MAX_LENGTH_Remarks}. [{watch("remarks").length}/{MAX_LENGTH_Remarks}]
                   </p>
                 )}
             </div>

@@ -510,9 +510,11 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               onChange={(e) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Remarks', e.target.value)}
               placeholder="Enter remarks"
             />
-            {execLeg.Remarks && execLeg.Remarks.length > MAX_LENGTH_Remarks && (
-              <p className="text-xs text-red-500">Maximun character limit is {MAX_LENGTH_Remarks}.</p>
-            )}
+            <p className="text-xs text-red-500">
+              {execLeg.Remarks && execLeg.Remarks.length > MAX_LENGTH_Remarks
+                ? `Maximum character limit is ${MAX_LENGTH_Remarks}. [${execLeg.Remarks.length}/${MAX_LENGTH_Remarks}]`
+                : ''}
+            </p>
           </div>
         </div>
       </div>

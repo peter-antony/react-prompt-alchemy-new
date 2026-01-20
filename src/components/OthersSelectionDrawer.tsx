@@ -572,9 +572,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     placeholder="Enter Forward Trip Plan ID"
                     className={`${forwardTripID?.length > MAX_LENGTH_ForwardTripID ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   />
-                  {forwardTripID?.length > MAX_LENGTH_ForwardTripID && (
-                    <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_ForwardTripID}.</p>
-                  )}
+                  <p className="text-xs text-red-500 mt-1">
+                    {forwardTripID?.length > MAX_LENGTH_ForwardTripID && `Maximun character limit is ${MAX_LENGTH_ForwardTripID}. [${forwardTripID?.length}/${MAX_LENGTH_ForwardTripID}]`}
+                  </p>
                 </div>
 
                 {/* Return Trip Plan ID */}
@@ -587,9 +587,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                     placeholder="Enter Return Trip Plan ID"
                     className={`${returnTripID?.length > MAX_LENGTH_ReturnTripID ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   />
-                  {returnTripID?.length > MAX_LENGTH_ReturnTripID && (
-                    <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_ReturnTripID}.</p>
-                  )}
+                  <p className="text-xs text-red-500 mt-1">
+                    {returnTripID?.length > MAX_LENGTH_ReturnTripID && `Maximum character limit is ${MAX_LENGTH_ReturnTripID}. [${returnTripID?.length}/${MAX_LENGTH_ReturnTripID}]`}
+                  </p>
                 </div>
               </div>
             )}
@@ -610,9 +610,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 placeholder="Enter Pass No"
                 className={`${passNo?.length > MAX_LENGTH_PassNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
               />
-              {passNo?.length > MAX_LENGTH_PassNo && (
-                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_PassNo}.</p>
-              )}
+              <p className="text-xs text-red-500 mt-1">
+                {passNo?.length > MAX_LENGTH_PassNo && `Maximum character limit is ${MAX_LENGTH_PassNo}. [${passNo?.length}/${MAX_LENGTH_PassNo}]`}
+              </p>
             </div>
             {/* Trip Start Date & Time Row */}
             <div className="grid grid-cols-2 gap-4">
@@ -698,9 +698,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 placeholder="Enter Remark"
                 className={`${remark?.length > MAX_LENGTH_Remark ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                 />
-              {remark?.length > MAX_LENGTH_Remark && (
-                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_Remark}.</p>
-              )}
+              <p className="text-xs text-red-500 mt-1">
+                {remark?.length > MAX_LENGTH_Remark && `Maximum character limit is ${MAX_LENGTH_Remark}. [${remark?.length}/${MAX_LENGTH_Remark}]`}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -712,9 +712,9 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 placeholder="Enter supplier Referenc No."
                 className={`${supplierRefNo?.length > MAX_LENGTH_SupplierRefNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                 />
-              {supplierRefNo?.length > MAX_LENGTH_SupplierRefNo && (
-                <p className="text-xs text-red-500 mt-1">Maximun character limit is {MAX_LENGTH_SupplierRefNo}.</p>
-              )}
+              <p className="text-xs text-red-500 mt-1">
+                {supplierRefNo?.length > MAX_LENGTH_SupplierRefNo && `Maximum character limit is ${MAX_LENGTH_SupplierRefNo}. [${supplierRefNo?.length}/${MAX_LENGTH_SupplierRefNo}]`}
+              </p>
             </div>
           </div>
         </div>

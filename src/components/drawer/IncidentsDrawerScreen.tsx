@@ -671,7 +671,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 <p className="text-xs min-h-[16px] text-red-500">
                   {formData.IncidentId &&
                     formData.IncidentId.length > MAX_LENGTH_IncidentId &&
-                    `Maximum character limit is ${MAX_LENGTH_IncidentId}.`}
+                    `Maximum character limit is ${MAX_LENGTH_IncidentId}. [${formData.IncidentId.length}/${MAX_LENGTH_IncidentId}]`}
                 </p>
                 {/* <DynamicLazySelect
                   fetchOptions={fetchIncidentID}
@@ -868,7 +868,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <p className="text-xs  text-red-500">
                         {formData.DetailedDescription &&
                           formData.DetailedDescription.length > MAX_LENGTH_DetailedDescription &&
-                          `Maximum character limit is ${MAX_LENGTH_DetailedDescription}.`}
+                          `Maximum character limit is ${MAX_LENGTH_DetailedDescription}. [${formData.DetailedDescription.length} / ${MAX_LENGTH_DetailedDescription}]`}
                       </p>
                     </div>
                   </div>
@@ -938,7 +938,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                         <p className="text-xs  text-red-500">
                           {formData.IncidentResolution &&
                             formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution &&
-                            `Maximum character limit is ${MAX_LENGTH_IncidentResolution}.`}
+                            `Maximum character limit is ${MAX_LENGTH_IncidentResolution}. [${formData.IncidentResolution.length} / ${MAX_LENGTH_IncidentResolution}]`}
                         </p>
                       </div>
 
@@ -1055,7 +1055,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <p className="text-xs  text-red-500">
                         {formData.MaintenanceDescription &&
                           formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription &&
-                          `Maximum character limit is ${MAX_LENGTH_MaintenanceDescription}.`}
+                          `Maximum character limit is ${MAX_LENGTH_MaintenanceDescription}. [${formData.MaintenanceDescription.length} / ${MAX_LENGTH_MaintenanceDescription}]`}
                       </p>
                       </div>
                     </div>
@@ -1125,7 +1125,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <p className="text-xs  text-red-500">
                         {formData.IncidentReportedBy &&
                           formData.IncidentReportedBy.length > MAX_LENGTH_IncidentReportedBy &&
-                          `Maximum character limit is ${MAX_LENGTH_IncidentReportedBy}.`}
+                          `Maximum character limit is ${MAX_LENGTH_IncidentReportedBy}. [${formData.IncidentReportedBy.length} / ${MAX_LENGTH_IncidentReportedBy}]`}
                       </p>
                     </div>
 
@@ -1204,7 +1204,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <p className="text-xs  text-red-500">
                         {formData.RefDocNo &&
                           formData.RefDocNo.length > MAX_LENGTH_RefDocNo &&
-                          `Maximum character limit is ${MAX_LENGTH_RefDocNo}.`}
+                          `Maximum character limit is ${MAX_LENGTH_RefDocNo}. [${formData.RefDocNo.length} / ${MAX_LENGTH_RefDocNo}]`}
                       </p>
                     </div>
 
@@ -1216,7 +1216,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <p className="text-xs  text-red-500">
                         {formData.MobileRefIncidentId &&
                           formData.MobileRefIncidentId.length > MAX_LENGTH_MobileRefIncidentId &&
-                          `Maximum character limit is ${MAX_LENGTH_MobileRefIncidentId}.`}
+                          `Maximum character limit is ${MAX_LENGTH_MobileRefIncidentId}. [${formData.MobileRefIncidentId.length} / ${MAX_LENGTH_MobileRefIncidentId}]`}
                       </p>
                     </div>
 
@@ -1226,7 +1226,7 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       className={`h-10 ${formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                       />
                       <p className="text-xs  text-red-500">
-                        {formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks && `Maximum character limit is ${MAX_LENGTH_Remarks}.`}
+                        {formData.Remarks && formData.Remarks.length > MAX_LENGTH_Remarks && `Maximum character limit is ${MAX_LENGTH_Remarks}. [${formData.Remarks.length} / ${MAX_LENGTH_Remarks}]`}
                       </p>
                     </div>
                   </div>
