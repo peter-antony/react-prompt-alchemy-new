@@ -650,6 +650,9 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWagonIndex]);
+
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_Remarks = 500;
  
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full h-full bg-[#f8fafd]">
@@ -761,7 +764,7 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
         <div className="space-y-2 mt-4">
           <label className="text-sm font-medium">Remarks</label>
           <Textarea
-            className="min-h-[80px] resize-none"
+            className={`min-h-[80px] resize-none ${wagonList[selectedWagonIndex]?.Remarks && wagonList[selectedWagonIndex]?.Remarks.length > MAX_LENGTH_Remarks ? "border-red-600 focus-visible:ring-red-600" : ""}`}
             value={wagonList[selectedWagonIndex]?.Remarks || ""}
             onChange={(e) => {
               const v = e.target.value;
@@ -775,6 +778,9 @@ const PODDrawer: React.FC<PODDrawerProps> = ({ tripNo, legNumber, customerOrderN
               });
             }}
           />
+          <p className='text-xs text-red-500'>
+            {wagonList[selectedWagonIndex]?.Remarks && wagonList[selectedWagonIndex]?.Remarks.length > MAX_LENGTH_Remarks && `Maximum character limit is ${MAX_LENGTH_Remarks}. [${wagonList[selectedWagonIndex]?.Remarks.length}/${MAX_LENGTH_Remarks}]`}
+          </p>
         </div>
  
         <div className="mt-4">
