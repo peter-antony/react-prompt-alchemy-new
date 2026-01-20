@@ -41,6 +41,7 @@ const ClaimsForm = () => {
 	const [qcList2, setqcList2] = useState<any>();
 	const [qcList3, setqcList3] = useState<any>();
 	const [currencyList, setCurrencyList] = useState<any>();
+	const [counterParty, setCounterParty] = useState<any>();
 
 	// Local loader while fetching claim data
 	const [isLoadingClaim, setIsLoadingClaim] = useState<boolean>(false);
@@ -250,6 +251,37 @@ const ClaimsForm = () => {
 			}
 		};
 	};
+	const fetchMasterClaims = (
+		messageType: string,
+		// additionalFilter?: { FilterName: string; FilterValue: string }[]
+		extraParams?: Record<string, any>
+	) => {
+		return async ({ searchTerm, offset, limit }) => {
+			try {
+				const response = await ClaimService.getMasterCommonData({
+					messageType,
+					searchTerm: searchTerm || "",
+					offset,
+					limit,
+					...(extraParams || {}),
+				});
+
+				const rr: any = response?.data;
+				const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+
+				return arr.map((item: any) => {
+					const id = item.id ?? "";
+					const name = item.name ?? "";
+					return {
+						label: `${id} || ${name}`,
+						value: `${id} || ${name}`,
+					};
+				});
+			} catch (err) {
+				return [];
+			}
+		};
+	};
 
 	const getQcOptions = (list: any[]) =>
 		list
@@ -295,7 +327,25 @@ const ClaimsForm = () => {
 			mandatory: true,
 			visible: true,
 			editable: true,
-			order: 3
+			order: 3,
+			events: {
+				onChange: (value) => {
+					// Update CounterParty selection
+					const [id, description] = (value?.value || value || "").split(" || ");
+					setCounterParty(id);
+					if (formRef.current) {
+						const currentValues = formRef.current.getFormValues() || {};
+						// Update form values - explicitly set UNCodeID and UNCodeDescription
+						const updatedValues = {
+							...currentValues,
+							BusinessPartnerID: "",
+							BusinessPartnerDescription: ""
+						};
+						formRef.current.setFormValues(updatedValues);
+					}
+					// Clear Wagon/Container selection in the DynamicPanel UI
+				},
+			},
 		},
 		ForwardisFinancialAction: {
 			id: "ForwardisFinancialAction",
@@ -326,7 +376,7 @@ const ClaimsForm = () => {
 			label: "Business Partner",
 			fieldType: "lazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("Claims Counter Party OnSelect"),
+			fetchOptions: fetchMasterClaims("Claims Counter Party OnSelect", { selectedClaimCounterParty: counterParty || "" }),
 			value: "",
 			mandatory: true,
 			visible: true,
