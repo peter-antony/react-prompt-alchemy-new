@@ -439,6 +439,25 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
     //     );
     //   };
 
+    // Max character length validation for text fields - will include special characters and whitespace
+    const MAX_LENGTH_consignorId = 50;
+    const MAX_LENGTH_consignorName = 100;
+    const MAX_LENGTH_consigneeId = 50;
+    const MAX_LENGTH_consigneeName = 100;
+    const MAX_LENGTH_addressLine1 = 100;
+    const MAX_LENGTH_addressLine2 = 100;
+    const MAX_LENGTH_suburb = 100;
+    const MAX_LENGTH_pincode = 50;
+    const MAX_LENGTH_zone = 100;
+    const MAX_LENGTH_subZone = 100;
+    const MAX_LENGTH_city = 250;
+    const MAX_LENGTH_state = 250;
+    const MAX_LENGTH_country = 250;
+    const MAX_LENGTH_region = 250;
+    const MAX_LENGTH_contactPerson = 255;
+    const MAX_LENGTH_phoneNumber = 50;
+    const MAX_LENGTH_emailId = 150;
+
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 bg-gray-600 bg-opacity-50 transition-opacity" onClick={onClose}></div>
@@ -473,8 +492,16 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Consignor ID"
                                                 value={consignorId}
                                                 onChange={(e) => setConsignorId(e.target.value)}
-                                                className="pr-10 h-10"
+                                                className={`pr-10 h-10 ${consignorId && consignorId.length > MAX_LENGTH_consignorId
+                                                        ? "border-red-600 focus-visible:ring-red-600"
+                                                        : ""
+                                                    }`}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {consignorId &&
+                                                    consignorId.length > MAX_LENGTH_consignorId &&
+                                                    `Maximum character limit is ${MAX_LENGTH_consignorId}. [${consignorId.length}/${MAX_LENGTH_consignorId}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -484,8 +511,16 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Name"
                                                 value={consignorName}
                                                 onChange={(e) => setConsignorName(e.target.value)}
-                                                className="pr-10 h-10"
+                                                className={`pr-10 h-10 ${consignorName && consignorName.length > MAX_LENGTH_consignorName
+                                                        ? "border-red-600 focus-visible:ring-red-600"
+                                                        : ""
+                                                    }`}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {consignorName &&
+                                                    consignorName.length > MAX_LENGTH_consignorName &&
+                                                    `Maximum character limit is ${MAX_LENGTH_consignorName}. [${consignorName.length}/${MAX_LENGTH_consignorName}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -500,8 +535,14 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Consignee ID"
                                                 value={consigneeId}
                                                 onChange={(e) => setConsigneeId(e.target.value)}
-                                                className="pr-10 h-10"
+                                                className={`pr-10 h-10 ${consigneeId && consigneeId.length > MAX_LENGTH_consigneeId
+                                                        ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {consigneeId &&
+                                                    consigneeId.length > MAX_LENGTH_consigneeId &&
+                                                    `Maximum character limit is ${MAX_LENGTH_consigneeId}. [${consigneeId.length}/${MAX_LENGTH_consigneeId}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -511,8 +552,14 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Name"
                                                 value={consigneeName}
                                                 onChange={(e) => setConsigneeName(e.target.value)}
-                                                className="pr-10 h-10"
+                                                className={`pr-10 h-10 ${consigneeName && consigneeName.length > MAX_LENGTH_consigneeName
+                                                        ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {consigneeName &&
+                                                    consigneeName.length > MAX_LENGTH_consigneeName &&
+                                                    `Maximum character limit is ${MAX_LENGTH_consigneeName}. [${consigneeName.length}/${MAX_LENGTH_consigneeName}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -527,7 +574,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Address Line 1"
                                                 value={addressLine1}
                                                 onChange={(e) => setAddressLine1(e.target.value)}
+                                                className={addressLine1 && addressLine1.length > MAX_LENGTH_addressLine1 ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {addressLine1 && addressLine1.length > MAX_LENGTH_addressLine1 && `Maximum character limit is ${MAX_LENGTH_addressLine1}. [${addressLine1.length}/${MAX_LENGTH_addressLine1}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -539,7 +590,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Address Line 2"
                                                 value={addressLine2}
                                                 onChange={(e) => setAddressLine2(e.target.value)}
+                                                className={addressLine2 && addressLine2.length > MAX_LENGTH_addressLine2 ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {addressLine2 && addressLine2.length > MAX_LENGTH_addressLine2 && `Maximum character limit is ${MAX_LENGTH_addressLine2}. [${addressLine2.length}/${MAX_LENGTH_addressLine2}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -549,7 +604,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Suburb"
                                                 value={suburb}
                                                 onChange={(e) => setSuburb(e.target.value)}
+                                                className={suburb && suburb.length > MAX_LENGTH_suburb ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {suburb && suburb.length > MAX_LENGTH_suburb && `Maximum character limit is ${MAX_LENGTH_suburb}. [${suburb.length}/${MAX_LENGTH_suburb}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -561,7 +620,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Pincode"
                                                 value={pincode}
                                                 onChange={(e) => setPincode(e.target.value)}
+                                                className={pincode && pincode.length > MAX_LENGTH_pincode ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {pincode && pincode.length > MAX_LENGTH_pincode && `Maximum character limit is ${MAX_LENGTH_pincode}. [${pincode.length}/${MAX_LENGTH_pincode}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -571,7 +634,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Zone"
                                                 value={zone}
                                                 onChange={(e) => setZone(e.target.value)}
+                                                className={zone && zone.length > MAX_LENGTH_zone ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {zone && zone.length > MAX_LENGTH_zone && `Maximum character limit is ${MAX_LENGTH_zone}. [${zone.length}/${MAX_LENGTH_zone}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -583,7 +650,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Sub Zone"
                                                 value={subZone}
                                                 onChange={(e) => setSubZone(e.target.value)}
+                                                className={subZone && subZone.length > MAX_LENGTH_subZone ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {subZone && subZone.length > MAX_LENGTH_subZone && `Maximum character limit is ${MAX_LENGTH_subZone}. [${subZone.length}/${MAX_LENGTH_subZone}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -593,7 +664,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter City"
                                                 value={city}
                                                 onChange={(e) => setCity(e.target.value)}
+                                                className={city && city.length > MAX_LENGTH_city ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {city && city.length > MAX_LENGTH_city && `Maximum character limit is ${MAX_LENGTH_city}. [${city.length}/${MAX_LENGTH_city}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -605,7 +680,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter State"
                                                 value={state}
                                                 onChange={(e) => setState(e.target.value)}
+                                                className={state && state.length > MAX_LENGTH_state ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {state && state.length > MAX_LENGTH_state && `Maximum character limit is ${MAX_LENGTH_state}. [${state.length}/${MAX_LENGTH_state}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -615,7 +694,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Country"
                                                 value={country}
                                                 onChange={(e) => setCountry(e.target.value)}
+                                                className={country && country.length > MAX_LENGTH_country ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {country && country.length > MAX_LENGTH_country && `Maximum character limit is ${MAX_LENGTH_country}. [${country.length}/${MAX_LENGTH_country}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -627,7 +710,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Region"
                                                 value={region}
                                                 onChange={(e) => setRegion(e.target.value)}
+                                                className={region && region.length > MAX_LENGTH_region ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {region && region.length > MAX_LENGTH_region && `Maximum character limit is ${MAX_LENGTH_region}. [${region.length}/${MAX_LENGTH_region}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -641,7 +728,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Contact Person"
                                                 value={contactPerson}
                                                 onChange={(e) => setContactPerson(e.target.value)}
+                                                className={contactPerson && contactPerson.length > MAX_LENGTH_contactPerson ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {contactPerson && contactPerson.length > MAX_LENGTH_contactPerson && `Maximum character limit is ${MAX_LENGTH_contactPerson}. [${contactPerson.length}/${MAX_LENGTH_contactPerson}]`}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -651,7 +742,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Phone Number"
                                                 value={phoneNumber}
                                                 onChange={(e) => setPhoneNumber(e.target.value)}
+                                                className={phoneNumber && phoneNumber.length > MAX_LENGTH_phoneNumber ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {phoneNumber && phoneNumber.length > MAX_LENGTH_phoneNumber && `Maximum character limit is ${MAX_LENGTH_phoneNumber}. [${phoneNumber.length}/${MAX_LENGTH_phoneNumber}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -663,7 +758,11 @@ const ConsignorConsigneeSideDraw: React.FC<ConsignorConsigneeSideDrawProps> = ({
                                                 placeholder="Enter Email ID"
                                                 value={emailId}
                                                 onChange={(e) => setEmailId(e.target.value)}
+                                                className={emailId && emailId.length > MAX_LENGTH_emailId ? "border-red-600 focus-visible:ring-red-600" : ""}
                                             />
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {emailId && emailId.length > MAX_LENGTH_emailId && `Maximum character limit is ${MAX_LENGTH_emailId}. [${emailId.length}/${MAX_LENGTH_emailId}]`}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

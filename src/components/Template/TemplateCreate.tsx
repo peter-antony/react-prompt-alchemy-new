@@ -916,6 +916,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Template ID',
+      maxLength: 40,
     },
     templateDescription: {
       id: 'templateDescription',
@@ -928,6 +929,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'half',
       placeholder: 'Enter Template Description',
+      maxLength: 255,
     },
     templateType: {
       id: 'templateType',
@@ -1165,6 +1167,7 @@ const TemplateCreate = () => {
   width: 'four',
   placeholder: 'Declaration of Value',
   options: getUomOptions(currencyUomList), 
+  maxLength: 255,
     },
     
     interestInDelivery: {
@@ -1182,6 +1185,7 @@ const TemplateCreate = () => {
   width: 'four',
   placeholder: 'Interest in Delivery',
   options: getUomOptions(currencyUomList), 
+  maxLength: 255,
     },
    cashOnDelivery: {
   id: 'cashOnDelivery',
@@ -1198,6 +1202,7 @@ const TemplateCreate = () => {
   width: 'four',
   placeholder: 'Enter Cash on Delivery',
   options: getUomOptions(currencyUomList), 
+  maxLength: 255,
 },
 
   };
@@ -1432,6 +1437,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'half',
       placeholder: 'Enter Acknowledgement of Receipt',
+      maxLength: 500,
     },
   };
 
@@ -1474,6 +1480,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter NHM Code',
+      maxLength: 500,
     },
     currency: {
       id: 'currency',
@@ -1486,6 +1493,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Currency',
+      maxLength: 500,
     },
     chargedMassWeight: {
       id: 'chargedMassWeight',
@@ -1498,6 +1506,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Charged Mass Weight',
+      maxLength: 500,
     },
     customerAgreementOrTariffApplied: {
       id: 'customerAgreementOrTariffApplied',
@@ -1510,6 +1519,7 @@ const TemplateCreate = () => {
       order: 6,
       width: 'four',
       placeholder: 'Enter Customer Agreement or Tariff Applied',
+      maxLength: 500,
     },
     kmZone: {
       id: 'kmZone',
@@ -1522,6 +1532,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter KM/Zone',
+      maxLength: 500,
     },
     supplementsFeesDeductions: {
       id: 'supplementsFeesDeductions',
@@ -1547,6 +1558,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: 'Enter Unit Price',
+      maxLength: 500,
     },
     charges: {
       id: 'charges',
@@ -1559,6 +1571,7 @@ const TemplateCreate = () => {
       order: 10,
       width: 'four',
       placeholder: 'Enter Charges',
+      maxLength: 500,
     },
   };
 
@@ -1575,6 +1588,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Code for the Charging Sections',
+      maxLength: 500,
     },
     routeCodeB: {
       id: 'routeCodeB',
@@ -1587,6 +1601,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Route Code',
+      maxLength: 500,
     },
     nhmCodeB: {
       id: 'nhmCodeB',
@@ -1599,6 +1614,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter NHM Code',
+      maxLength: 500,
     },
     currencyB: {
       id: 'currencyB',
@@ -1611,6 +1627,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Currency',
+      maxLength: 500,
     },
     chargedMassWeightB: {
       id: 'chargedMassWeightB',
@@ -1623,6 +1640,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Charged Mass Weight',
+      maxLength: 500,
     },
     customerAgreementOrTariffAppliedB: {
       id: 'customerAgreementOrTariffAppliedB',
@@ -1635,6 +1653,7 @@ const TemplateCreate = () => {
       order: 6,
       width: 'four',
       placeholder: 'Enter Customer Agreement or Tariff Applied',
+      maxLength: 500,
     },
     kmZoneB: {
       id: 'kmZoneB',
@@ -1647,6 +1666,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter KM/Zone',
+      maxLength: 500,
     },
     supplementsFeesDeductionsB: {
       id: 'supplementsFeesDeductionsB',
@@ -1659,6 +1679,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Supplements, Fees, Deductions',
+      maxLength: 500,
     },
     unitPriceB: {
       id: 'unitPriceB',
@@ -1671,6 +1692,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: 'Enter Unit Price',
+      maxLength: 500,
     },
     chargesB: {
       id: 'chargesB',
@@ -1683,6 +1705,7 @@ const TemplateCreate = () => {
       order: 10,
       width: 'four',
       placeholder: 'Enter Charges',
+      maxLength: 500,
     },
   };
 
@@ -1699,6 +1722,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter Code for the Charging Sections',
+      maxLength: 500,
     },
     routeCodeC: {
       id: 'routeCodeC',
@@ -1711,6 +1735,7 @@ const TemplateCreate = () => {
       order: 2,
       width: 'four',
       placeholder: 'Enter Route Code',
+      maxLength: 500,
     },
     nhmCodeC: {
       id: 'nhmCodeC',
@@ -1723,6 +1748,7 @@ const TemplateCreate = () => {
       order: 3,
       width: 'four',
       placeholder: 'Enter NHM Code',
+      maxLength: 500,
     },
     currencyC: {
       id: 'currencyC',
@@ -1735,6 +1761,7 @@ const TemplateCreate = () => {
       order: 4,
       width: 'four',
       placeholder: 'Enter Currency',
+      maxLength: 500,
     },
     chargedMassWeightC: {
       id: 'chargedMassWeightC',
@@ -1747,6 +1774,7 @@ const TemplateCreate = () => {
       order: 5,
       width: 'four',
       placeholder: 'Enter Charged Mass Weight',
+      maxLength: 500,
     },
     customerAgreementOrTariffAppliedC: {
       id: 'customerAgreementOrTariffAppliedC',
@@ -1759,6 +1787,7 @@ const TemplateCreate = () => {
       order: 6,
       width: 'four',
       placeholder: 'Enter Customer Agreement or Tariff Applied',
+      maxLength: 500,
     },
     kmZoneC: {
       id: 'kmZoneC',
@@ -1771,6 +1800,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter KM/Zone',
+      maxLength: 500,
     },
     supplementsFeesDeductionsC: {
       id: 'supplementsFeesDeductionsC',
@@ -1783,6 +1813,7 @@ const TemplateCreate = () => {
       order: 8,
       width: 'four',
       placeholder: 'Enter Supplements, Fees, Deductions',
+      maxLength: 500,
     },
     unitPriceC: {
       id: 'unitPriceC',
@@ -1795,6 +1826,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: 'Enter Unit Price',
+      maxLength: 500,
     },
     chargesC: {
       id: 'chargesC',
@@ -1807,6 +1839,7 @@ const TemplateCreate = () => {
       order: 10,
       width: 'four',
       placeholder: 'Enter Charges',
+      maxLength: 500,
     },
   };
 
@@ -1824,6 +1857,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'four',
       placeholder: 'Enter train',
+      maxLength: 500,
     },
     itinerary: {
       id: 'itinerary',
@@ -1896,6 +1930,7 @@ const TemplateCreate = () => {
   width: 'four',
   placeholder: 'Enter Fixed Net Weight Train',
   options: getUomOptions(weightUomList), 
+  maxLength: 255,
 },
 
 
@@ -1911,6 +1946,7 @@ const TemplateCreate = () => {
       order: 7,
       width: 'four',
       placeholder: 'Enter number',
+      maxLength: 255,
     },
     LoadingConfiguration: {
       id: 'LoadingConfiguration',
@@ -1936,7 +1972,7 @@ const TemplateCreate = () => {
       order: 9,
       width: 'four',
       placeholder: 'Enter wagon number',
-      maxLength: 1000,
+      maxLength: 500,
 
     },
     DescriptionoftheGoods: {
@@ -2007,6 +2043,7 @@ const TemplateCreate = () => {
   width: 'four',
   placeholder: 'Enter Length x Width x Height',
   options: getUomOptions(lengthWeightUomList), // or dimension UOM list if available
+  maxLength: 255,
 },
 
     MarkandNumber: {
@@ -2096,6 +2133,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Enter Gross Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     TareWeight: {
@@ -2113,6 +2151,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Enter Tare Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     NetWeight: {
@@ -2130,6 +2169,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Enter Net Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     TotalBrutto: {
@@ -2147,6 +2187,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Total Brutto",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
 
     TotalNetto: {
@@ -2164,6 +2205,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Total Netto",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
 
     TotalGross: {
@@ -2181,6 +2223,7 @@ const TemplateCreate = () => {
       width: "four",
       placeholder: "Total Gross",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
 
   };
@@ -2198,6 +2241,7 @@ const TemplateCreate = () => {
       order: 1,
       width: 'third',
       placeholder: 'Enter Consignment Number',
+      maxLength: 255,
 
     },
     Country: {
@@ -2393,6 +2437,7 @@ const TemplateCreate = () => {
       width: 'four',
       placeholder: 'Enter Simplified Transit Procedure For Rail',
       labelFlag: false,
+      maxLength: 500,
     },
   };
 
