@@ -181,6 +181,9 @@ const TripVendorFeedback = () => {
         }
     };
 
+    // Max character length validation for text fields - will include special characters and whitespace
+    const MAX_LENGTH_remarks = 500;
+
 
     return (
         <div className="flex flex-col w-full h-full bg-white rounded-lg shadow-sm p-6 relative">
@@ -233,7 +236,11 @@ const TripVendorFeedback = () => {
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
                         rows={3}
+                        className={remarks && remarks.length > MAX_LENGTH_remarks ? "border-red-600 focus-visible:ring-red-600" : ""}
                     />
+                    <p className='text-xs text-red-500'>
+                        {remarks && remarks.length > MAX_LENGTH_remarks && `Maximum character limit is ${MAX_LENGTH_remarks}. [${remarks.length}/${MAX_LENGTH_remarks}]`}
+                    </p>
                 </div>
             </div>
 

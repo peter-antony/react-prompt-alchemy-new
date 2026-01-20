@@ -754,6 +754,12 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
       });
     }
   };
+ 
+  // Max character length validation for text fields - will include special characters and whitespace
+  const MAX_LENGTH_supplierRef = 100;
+  const MAX_LENGTH_trainNo = 100;
+  const MAX_LENGTH_pathNo = 100;
+  const MAX_LENGTH_remarks = 500;
   
   return (
     <div className="flex flex-col h-full">
@@ -858,11 +864,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Supplier Ref. No.</Label>
-                <Input className="h-10"
+                <Input 
+                  className={`h-10 ${formData.supplierRef && formData.supplierRef.length > MAX_LENGTH_supplierRef ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   placeholder="Enter Supplier Ref. No."
                   value={formData.supplierRef}
                   onChange={(e) => setFormData({ ...formData, supplierRef: e.target.value })}
                 />
+                <p className='text-xs text-red-500'>
+                  {formData.supplierRef && formData.supplierRef.length > MAX_LENGTH_supplierRef && `Maximum character limit is ${MAX_LENGTH_supplierRef}. [${formData.supplierRef.length}/${MAX_LENGTH_supplierRef}]`}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Carrier Status</Label>
@@ -905,11 +915,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
               </div>
               <div className="space-y-2">
                 <Label>Train No (License Plate No.)</Label>
-                <Input className="h-10"
+                <Input 
+                  className={`h-10 ${formData.trainNo && formData.trainNo.length > MAX_LENGTH_trainNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   placeholder="Enter Train No."
                   value={formData.trainNo}
                   onChange={(e) => setFormData({ ...formData, trainNo: e.target.value })}
                 />
+                <p className='text-xs text-red-500'>
+                  {formData.trainNo && formData.trainNo.length > MAX_LENGTH_trainNo && `Maximum character limit is ${MAX_LENGTH_trainNo}. [${formData.trainNo.length}/${MAX_LENGTH_trainNo}]`}
+                </p>
               </div>
             </div>
 
@@ -917,11 +931,15 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Path No.</Label>
-                <Input className="h-10"
+                <Input 
+                  className={`h-10 ${formData.pathNo && formData.pathNo.length > MAX_LENGTH_pathNo ? "border-red-600 focus-visible:ring-red-600" : ""}`}
                   placeholder="Enter Path No."
                   value={formData.pathNo}
                   onChange={(e) => setFormData({ ...formData, pathNo: e.target.value })}
                 />
+                <p className='text-xs text-red-500'>
+                  {formData.pathNo && formData.pathNo.length > MAX_LENGTH_pathNo && `Maximum character limit is ${MAX_LENGTH_pathNo}. [${formData.pathNo.length}/${MAX_LENGTH_pathNo}]`}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Leg Details</Label>
@@ -1039,7 +1057,11 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
                 value={formData.remarks}
                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                 rows={3}
+                className={formData.remarks && formData.remarks.length > MAX_LENGTH_remarks ? 'border-red-600 focus-visible:ring-red-600' : ''}
               />
+              <p className='text-xs text-red-500'>
+                {formData.remarks && formData.remarks.length > MAX_LENGTH_remarks && `Maximum character limit is ${MAX_LENGTH_remarks}. [${formData.remarks.length}/${MAX_LENGTH_remarks}]`}
+              </p>
             </div>
           </div>
         </div>
