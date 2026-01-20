@@ -801,12 +801,44 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     });
     return cleaned;
   };
+    const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+  
+const handleValidateAllPanels = () => {
+
+  const results: Record<string, any> = {};
+  let overallValid = true;
+
+  if (basicDetailsPanelRef.current) {
+    const orderFormValidation =
+      basicDetailsPanelRef.current.doValidation();
+
+    results['Basic Details'] = orderFormValidation;
+
+    if (!orderFormValidation.isValid) {
+      overallValid = false;
+    }
+  }
+
+  setValidationResults(results);
+  return overallValid;
+};
 
   const handleSave = async () => {
     if (!activeLine || !localHeaderData) {
       console.warn("No active line or header data selected");
       return;
     }
+
+     const isValid = handleValidateAllPanels();
+
+  if (!isValid) {
+    toast({
+      title: "⚠️ Validation Failed",
+      description: "Please fill all mandatory fields",
+      variant: "destructive",
+    });
+    return; // ⛔ STOP SAVE, KEEP DRAWER OPEN
+  }
 
     // Get form data from both panels
     const basicDetailsFormData = basicDetailsPanelRef.current?.getFormValues() || {};
@@ -891,6 +923,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
       if (resourceStatus) {
         console.log("Draft Bill By ID fetched successfully");
+        // isValidatingRef.current = false;
         toast({
           title: "✅ Draft Bill Saved Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been saved.",
@@ -1224,12 +1257,12 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
 
                       <div className="grid grid-cols-2 gap-y-2 mb-4">
                         <div>
-                          <p className="text-sm text-gray-500">Total Value</p>
-                          <p className="text-base font-medium text-purple-600">EUR {localHeaderData?.DBTotalValue}</p>
+                          <p className="text-sm text-gray-500">Total Proposed</p>
+                          <p className="text-base font-medium text-purple-600">EUR {localHeaderData?.DBAcceptedValue}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Accepted Vale</p>
-                          <p className="text-base font-medium text-green-600">EUR {localHeaderData?.DBAcceptedValue}</p>
+                          <p className="text-sm text-gray-500">Total Accepted</p>
+                          <p className="text-base font-medium text-green-600">EUR {localHeaderData?.DBTotalValue}</p>
                         </div>
                       </div>
                       <div className="space-y-3">

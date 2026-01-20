@@ -376,9 +376,45 @@ useEffect(() => {
 
   const removeKeys = (obj, keys = []) =>
   Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
+ const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+        const panelRefs = [
+        { key: "workOrderPanelRef", ref: workOrderPanelRef },
+        { key: "locationDetailsRef", ref: locationDetailsRef },
+        { key: "scheduleDetailsRef", ref: scheduleDetailsRef },
+        
+      ];
 
+       const handleValidateAllPanels = () => {
+        const results: Record<string, any> = {};
+        let overallValid = true;
+      
+        panelRefs.forEach(({ key, ref }) => {
+          if (!ref.current?.doValidation) return;
+      
+          const validationResult = ref.current.doValidation();
+          results[key] = validationResult;
+      
+          if (!validationResult.isValid) {
+            overallValid = false;
+          }
+        });
+      
+        setValidationResults(results);
+        return overallValid;
+      };
 
   const handleGetFormValues = async () => {
+const isValid = handleValidateAllPanels();
+
+  if (!isValid) {
+    toast({
+      title: "⚠️ Validation Failed",
+      description: "Please fill all mandatory fields",
+      variant: "destructive",
+    });
+    return; // ⛔ STOP SAVE, KEEP DRAWER OPEN
+  }
+
     const headerUI = workOrderPanelRef.current?.getFormValues() || {};
     const locationUI = locationDetailsRef.current?.getFormValues?.() || {};
     const scheduleUI = scheduleDetailsRef.current?.getFormValues?.() || {};

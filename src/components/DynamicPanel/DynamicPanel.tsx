@@ -165,8 +165,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     mode: 'onBlur'
   });
 
-  const { control, watch, setValue, getValues, formState: { errors }, trigger } = form;
+  const { control, watch, setValue, getValues,setError, clearErrors,formState: { errors }, trigger } = form;
   const [isSwitchModalOpen, setSwitchModalOpen] = useState(false);
+  const [panelValidationErrors, setPanelValidationErrors] =
+  useState<Record<string, string>>({});
+
 
   // Expose getFormValues and doValidation methods via ref
   useImperativeHandle(ref, () => ({
@@ -200,7 +203,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
         }
       });
     },
-    doValidation: () => {
+   doValidation : () => {
       const values = getValues();
       const validationErrors: Record<string, string> = {};
       const mandatoryFieldsEmpty: string[] = [];
@@ -217,10 +220,15 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
           
           if (isEmpty) {
             mandatoryFieldsEmpty.push(config.label || fieldId);
-            validationErrors[fieldId] = `${config.label || fieldId} is required`;
+            validationErrors[fieldId] = " ";
           }
-        }
-      });
+           else {
+  // ✅ remove error when valid
+  delete validationErrors[fieldId];
+
+
+        
+      }}});
       
       // Check form validation errors
       Object.entries(errors).forEach(([fieldId, error]) => {
@@ -230,7 +238,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       });
       
       const isValid = Object.keys(validationErrors).length === 0;
-      
+      setPanelValidationErrors(validationErrors);
+
       return {
         isValid,
         errors: validationErrors,
@@ -329,6 +338,35 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       onDataChange?.(data);
       // console.log('==========================', data);
       // Derive NetAmount when BillingQty or UnitPrice changes
+      setPanelValidationErrors((prev) => {
+  let updated = { ...prev };
+  let changed = false;
+
+  Object.entries(panelConfig).forEach(([fieldId, config]) => {
+    if (!config.mandatory) return;
+
+    const value = data[fieldId];
+
+    const isEmpty =
+      value === undefined ||
+      value === null ||
+      value === '' ||
+      (Array.isArray(value) && value.length === 0) ||
+      (typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).length === 0);
+
+    // ✅ if field is now valid → remove red border
+    if (!isEmpty && updated[fieldId]) {
+      delete updated[fieldId];
+      changed = true;
+    }
+  });
+
+  return changed ? updated : prev;
+});
+
+
       const qty = parseFloat(String(data?.BillingQty ?? '')) || 0;
       const unit = parseUnitPrice(data?.UnitPrice);
       let computedNetRaw: any;
@@ -466,10 +504,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 <FieldRenderer
                   config={config}
                   control={control}
+                  //  validationErrors={panelValidationErrors} 
                   fieldId={fieldId}
                   tabIndex={tabIndex}
                    currency={currency}
-                  validationErrors={validationErrors}
+                  validationErrors={panelValidationErrors}
                   mandatory={config.mandatory}
                   tooltip={config.tooltip}
                 />
@@ -496,10 +535,11 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
                 <FieldRenderer
                   config={config}
                   control={control}
+                  //  validationErrors={panelValidationErrors} 
                   fieldId={fieldId}
                   tabIndex={tabIndex}
                   currency={currency}
-                  validationErrors={validationErrors}
+                  validationErrors={panelValidationErrors}
                   // Pass mandatory info
                   mandatory={config.mandatory}
                   tooltip={config.tooltip}
