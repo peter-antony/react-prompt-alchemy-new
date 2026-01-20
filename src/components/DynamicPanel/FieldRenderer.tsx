@@ -203,7 +203,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const currentLength = field.value?.length || 0;
             const isMaxLengthExceeded = config.maxLength ? currentLength > config.maxLength : false;
 
-            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}` : '');
+            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}. [${currentLength}/${config.maxLength}]` : '');
             const isError = !!errorMsg || isMaxLengthExceeded;
 
             const dynamicBaseInputClasses = `h-8 text-xs focus:ring-1 focus:z-50 focus:relative focus:outline-none ${isError
@@ -308,7 +308,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
             const currentLength = field.value?.length || 0;
             const isMaxLengthExceeded = config.maxLength ? currentLength > config.maxLength : false;
 
-            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}` : '');
+            const errorMsg = validationErrors[fieldId] || fieldState.error?.message || (isMaxLengthExceeded ? `Maximum character limit is ${config.maxLength}. [${currentLength}/${config.maxLength}]` : '');
             const isError = !!errorMsg || isMaxLengthExceeded;
             
             return (
