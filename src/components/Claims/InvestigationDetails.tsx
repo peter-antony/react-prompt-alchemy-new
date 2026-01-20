@@ -101,7 +101,7 @@ export const InvestigationDetails: React.FC<{
     }
   };
 
-  const fetchUsers = fetchMasterData("Createdby Init");
+  const fetchUsers = fetchMasterData("Employee Init");
 
   useEffect(() => {
     // when selection or drawer open changes, load selected fields into formData

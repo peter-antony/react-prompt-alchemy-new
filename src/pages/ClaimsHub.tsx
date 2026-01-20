@@ -46,6 +46,8 @@ export const ClaimsHub = () => {
   const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
+  const [selectedClaimType, setSelectedClaimType] = useState<string | null>("");
+  const [selectedClaimCounterParty, setSelectedClaimCounterParty] = useState<string | null>("");
 
   const [fields, setFields] = useState([
     {
@@ -1356,7 +1358,7 @@ export const ClaimsHub = () => {
       key: 'AdjustmentInvoiceNo',
       label: 'Adjustment Invoice No.',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher(""),
+      fetchOptions: makeLazyFetcher(selectedClaimType == "CUS" ? "LRI Invoice No Init" : selectedClaimType == "VEN" ? "LPI Invoice No Init": ""),
     },
     {
       key: 'IncidentDate', label: 'Incident Date', type: 'dateRange'
@@ -1471,9 +1473,6 @@ export const ClaimsHub = () => {
   const clearAllFilters = async () => {
     console.log('Clear all filters');
   }
-
-  const [selectedClaimType, setSelectedClaimType] = useState<string | null>("");
-  const [selectedClaimCounterParty, setSelectedClaimCounterParty] = useState<string | null>("");
 
   // this is called whenever any serverside filter (including EquipmentCategory) changes
   const handleServerFiltersChange = (filters: Record<string, any>) => {
