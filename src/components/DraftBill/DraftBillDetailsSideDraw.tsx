@@ -75,6 +75,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
      disableDropdown: true,
      options: [{ value: "TON", label: "TON" }], // Placeholder, replace with actual units
+     maxLength: 50
   },
   rate: {
     id: "rate",
@@ -89,6 +90,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
     disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
+    maxLength: 100
   },
   acceptedValue: {
     id: "acceptedValue",
@@ -103,6 +105,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
         disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
+    maxLength: 100
   },
   userAssigned: {
     id: "userAssigned",
@@ -130,6 +133,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 5,
     width: "half",
     placeholder: "Enter Remarks",
+    maxLength: 255
   },
   remarksForUserAssigned: {
     id: "remarksForUserAssigned",
@@ -142,6 +146,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
     order: 6,
     width: "half",
     placeholder: "",
+    maxLength: 255
   },
 };
 
@@ -1022,6 +1027,7 @@ const handleValidateAllPanels = () => {
       order: 2,
       width: "four",
       placeholder: "Enter Customer Ref. No.",
+      maxLength: 255,
     },
     financialYear: {
       id: "financialYear",
@@ -1047,6 +1053,7 @@ const handleValidateAllPanels = () => {
       order: 4,
       width: "four",
       placeholder: "Train001",
+      maxLength: 255,
     },
     qcUserdefined1: {
       id: "qcUserdefined1",
@@ -1060,6 +1067,7 @@ const handleValidateAllPanels = () => {
       width: "four",
       placeholder: "Enter Value",
       options: getQcOptions(qcList1),
+      maxLength: 255
     },
     qcUserdefined2: {
       id: "qcUserdefined2",
@@ -1073,6 +1081,7 @@ const handleValidateAllPanels = () => {
       width: "four",
       placeholder: "Enter Value",
       options: getQcOptions(qcList2),
+      maxLength: 255
     },
     qcUserdefined3: {
       id: "qcUserdefined3",
@@ -1086,6 +1095,7 @@ const handleValidateAllPanels = () => {
       width: "four",
       placeholder: "Enter Value",
       options: getQcOptions(qcList3),
+      maxLength: 255
     },
     remarks1: {
       id: "remarks1",
@@ -1098,6 +1108,7 @@ const handleValidateAllPanels = () => {
       order: 8,
       width: "four",
       placeholder: "Enter Remarks",
+      maxLength: 255
     },
     remarks2: {
       id: "remarks2",
@@ -1110,6 +1121,7 @@ const handleValidateAllPanels = () => {
       order: 9,
       width: "half",
       placeholder: "Enter Remarks",
+      maxLength: 255
     },
     remarks3: {
       id: "remarks3",
@@ -1122,6 +1134,7 @@ const handleValidateAllPanels = () => {
       order: 10,
       width: "half",
       placeholder: "Enter Remarks",
+      maxLength: 255
     },
   };
 
