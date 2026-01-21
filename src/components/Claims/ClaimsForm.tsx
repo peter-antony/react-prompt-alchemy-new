@@ -16,21 +16,25 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { InvestigationDetails } from "./InvestigationDetails";
 import { ClaimFindings } from "./ClaimFindings";
 import ClaimLinkedInternalOrders from "./ClaimLinkedInternalOrders";
+import { ClaimCancelModal } from "./ClaimCancelModal";
+import { ClaimAmendModal } from "./ClaimAmendModal";
 import { quickOrderService } from "@/api/services";
 import { ClaimService } from '@/api/services/ClaimService';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
+import { Ban, NotebookPen, XCircle, Lock } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const ClaimsForm = () => {
 	const gridId = "ClaimsForm_DocumentDetails";
-	const navigate = useNavigate();
+    const navigate = useNavigate();
 	const gridState = useSmartGridState();
 	const [searchParams] = useSearchParams();
-	const formRef = useRef<DynamicPanelRef>(null);
-	const { setFooter, resetFooter } = useFooterStore();
-	const [searchQuery, setSearchQuery] = useState("");
+    const formRef = useRef<DynamicPanelRef>(null);
+    const { setFooter, resetFooter } = useFooterStore();
+    const [searchQuery, setSearchQuery] = useState("");
 	const [claimStatus, setClaimStatus] = useState<string>(""); // Default status
-	const [showTooltip, setShowTooltip] = useState(false);
+    const [showTooltip, setShowTooltip] = useState(false);
 	const [showDropdownMenu, setShowDropdownMenu] = useState(false);
 	const [investigationCount, setInvestigationCount] = useState(3); // State for investigation count
 	const [isDocumentDetailsOpen, setIsDocumentDetailsOpen] = useState(true); // State for document details collapse
@@ -42,6 +46,136 @@ const ClaimsForm = () => {
 	const [qcList3, setqcList3] = useState<any>();
 	const [currencyList, setCurrencyList] = useState<any>();
 	const [counterParty, setCounterParty] = useState<any>();
+	
+	// Modal states
+	const [cancelModalOpen, setCancelModalOpen] = useState(false);
+	const [amendModalOpen, setAmendModalOpen] = useState(false);
+	const [rejectModalOpen, setRejectModalOpen] = useState(false);
+	const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
+	
+	// Fields for Cancel modal (with date, reasonCode, remarks)
+	const [cancelFields, setCancelFields] = useState([
+		{
+			type: "date",
+			label: "Requested Date and Time",
+			name: "date",
+			placeholder: "Select Requested Date and Time",
+			value: "",
+			required: true,
+			mappedName: 'Canceldatetime'
+		},
+		{
+			type: "select",
+			label: "Reason Code and Description",
+			name: "ReasonCode",
+			placeholder: "Enter Reason Code and Description",
+			options: [],
+			value: "",
+			required: true,
+			mappedName: 'ReasonCode'
+		},
+		{
+			type: "text",
+			label: "Remarks",
+			name: "remarks",
+			placeholder: "Enter Remarks",
+			value: "",
+			mappedName: 'Remarks'
+		},
+	]);
+
+	// Fields for Amend modal (only reasonCode and remarks, no date)
+	const [amendFields, setAmendFields] = useState([
+		{
+			type: "date",
+			label: "Reason Date and Time",
+			name: "date",
+			placeholder: "Select Reason Date and Time",
+			value: "",
+			required: true,
+			mappedName: 'Amenddatetime'
+		},
+		{
+			type: "select",
+			label: "Reason Code and Description",
+			name: "ReasonCode",
+			placeholder: "Enter Reason Code and Description",
+			options: [],
+			value: "",
+			required: true,
+			mappedName: 'ReasonCode'
+		},
+		{
+			type: "text",
+			label: "Remarks",
+			name: "remarks",
+			placeholder: "Enter Remarks",
+			value: "",
+			mappedName: 'Remarks'
+		},
+	]);
+
+	// Fields for Reject modal (same as Cancel modal - with date, reasonCode, remarks)
+	const [rejectFields, setRejectFields] = useState([
+		{
+			type: "date",
+			label: "Requested Date and Time",
+			name: "date",
+			placeholder: "Select Requested Date and Time",
+			value: "",
+			required: true,
+			mappedName: 'Rejectdatetime'
+		},
+		{
+			type: "select",
+			label: "Reason Code and Description",
+			name: "ReasonCode",
+			placeholder: "Enter Reason Code and Description",
+			options: [],
+			value: "",
+			required: true,
+			mappedName: 'ReasonCode'
+		},
+		{
+			type: "text",
+			label: "Remarks",
+			name: "remarks",
+			placeholder: "Enter Remarks",
+			value: "",
+			mappedName: 'Remarks'
+		},
+	]);
+
+	// Fields for Short Close modal (same structure)
+	const [shortCloseFields, setShortCloseFields] = useState([
+		{
+			type: "date",
+			label: "Requested Date and Time",
+			name: "date",
+			placeholder: "Select Requested Date and Time",
+			value: "",
+			required: true,
+			mappedName: 'ShortClosedatetime'
+		},
+		{
+			type: "select",
+			label: "Reason Code and Description",
+			name: "ReasonCode",
+			placeholder: "Enter Reason Code and Description",
+			options: [],
+			value: "",
+			required: true,
+			mappedName: 'ReasonCode'
+		},
+		{
+			type: "text",
+			label: "Remarks",
+			name: "remarks",
+			placeholder: "Enter Remarks",
+			value: "",
+			mappedName: 'Remarks'
+		},
+	]);
 
 	// Local loader while fetching claim data
 	const [isLoadingClaim, setIsLoadingClaim] = useState<boolean>(false);
@@ -219,7 +353,7 @@ const ClaimsForm = () => {
 		}
 	];
 
-	// Dummy fetcher for lazyselect fields
+    // Dummy fetcher for lazyselect fields
 	const fetchMaster = (
 		messageType: string,
 		// additionalFilter?: { FilterName: string; FilterValue: string }[]
@@ -247,7 +381,7 @@ const ClaimsForm = () => {
 					};
 				});
 			} catch (err) {
-				return [];
+        return [];
 			}
 		};
 	};
@@ -292,41 +426,41 @@ const ClaimsForm = () => {
 				name: qc.name
 			})) || [];
 
-	// Defining the config as PanelConfig object (Record<string, FieldConfig>)
-	const claimPanelConfig: PanelConfig = {
+    // Defining the config as PanelConfig object (Record<string, FieldConfig>)
+    const claimPanelConfig: PanelConfig = {
 		InvestigationNeeded: {
 			id: "InvestigationNeeded",
-			label: "Investigation Required",
-			fieldType: "switch",
-			width: "full",
-			value: false,
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 1
-		},
+            label: "Investigation Required",
+            fieldType: "switch",
+            width: "full",
+            value: false,
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 1
+        },
 		InitiatedBy: {
 			id: "InitiatedBy",
-			label: "Initiate By",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "Initiate By",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims Initiated by Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 2
-		},
-		Counterparty: {
-			id: "Counterparty",
-			label: "Counterparty",
-			fieldType: "lazyselect",
-			width: "four",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 2
+        },
+        Counterparty: {
+            id: "Counterparty",
+            label: "Counterparty",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims Counter Party Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
 			order: 3,
 			events: {
 				onChange: (value) => {
@@ -346,139 +480,139 @@ const ClaimsForm = () => {
 					// Clear Wagon/Container selection in the DynamicPanel UI
 				},
 			},
-		},
-		ForwardisFinancialAction: {
-			id: "ForwardisFinancialAction",
-			label: "Forwardis Financial Action",
-			fieldType: "lazyselect",
-			width: "four",
+        },
+        ForwardisFinancialAction: {
+            id: "ForwardisFinancialAction",
+            label: "Forwardis Financial Action",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 4
-		},
-		ExpectedDocument: {
-			id: "ExpectedDocument",
-			label: "Expected Document",
-			fieldType: "lazyselect",
-			width: "four",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 4
+        },
+        ExpectedDocument: {
+            id: "ExpectedDocument",
+            label: "Expected Document",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims Expected Document Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 5
-		},
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 5
+        },
 		BusinessPartnerID: {
 			id: "BusinessPartnerID",
-			label: "Business Partner",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "Business Partner",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMasterClaims("Claims Counter Party OnSelect", { selectedClaimCounterParty: counterParty || "" }),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 6
-		},
-		ClaimDate: {
-			id: "ClaimDate",
-			label: "Claim Date",
-			fieldType: "date",
-			width: "four",
-			value: null,
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 7
-		},
-		ClaimCategory: {
-			id: "ClaimCategory",
-			label: "Claim Category",
-			fieldType: "lazyselect",
-			width: "four",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 6
+        },
+        ClaimDate: {
+            id: "ClaimDate",
+            label: "Claim Date",
+            fieldType: "date",
+            width: "four",
+            value: null,
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 7
+        },
+        ClaimCategory: {
+            id: "ClaimCategory",
+            label: "Claim Category",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claim Category Init"),
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 8
-		},
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 8
+        },
 		CurrencyAmount: {
 			id: "CurrencyAmount",
-			label: "Claim Amount",
+            label: "Claim Amount",
 			fieldType: "inputdropdown",
-			width: "four",
-			mandatory: true,
-			visible: true,
-			editable: true,
+            width: "four",
+            mandatory: true,
+            visible: true,
+            editable: true,
 			order: 9,
 			value: {
 				dropdown: "",
 				input: "",
 			},
 			options: getQcOptions(currencyList),
-		},
-		ClaimantRefNo: {
-			id: "ClaimantRefNo",
-			label: "Claimant Ref. No.",
-			fieldType: "text",
-			width: "four",
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 10
-		},
-		IncidentType: {
-			id: "IncidentType",
-			label: "Incident Type",
-			fieldType: "lazyselect",
-			width: "four",
+        },
+        ClaimantRefNo: {
+            id: "ClaimantRefNo",
+            label: "Claimant Ref. No.",
+            fieldType: "text",
+            width: "four",
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 10
+        },
+        IncidentType: {
+            id: "IncidentType",
+            label: "Incident Type",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claim Incident Type Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 11
-		},
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 11
+        },
 		IncidentDateTime: {
 			id: "IncidentDateTime",
-			label: "Incident Date and Time",
-			fieldType: "date",
-			width: "four",
-			value: null,
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 12
-		},
-		IncidentLocation: {
-			id: "IncidentLocation",
-			label: "Incident Location",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "Incident Date and Time",
+            fieldType: "date",
+            width: "four",
+            value: null,
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 12
+        },
+        IncidentLocation: {
+            id: "IncidentLocation",
+            label: "Incident Location",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Location Init"),
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 13
-		},
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 13
+        },
 		RefDocType: {
 			id: "RefDocType",
 			label: "Ref. Doc. Type",
-			fieldType: "lazyselect",
-			width: "four",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claim Ref Doc Type Init"),
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 14
-		},
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 14
+        },
 		RefDocID: {
 			id: "RefDocID",
 			label: "Ref. Doc. ID",
@@ -492,117 +626,117 @@ const ClaimsForm = () => {
 		},
 		Wagon: {
 			id: "Wagon",
-			label: "Wagon No.",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "Wagon No.",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Wagon id Init"),
-			value: [],
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 15,
-			// multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
-		},
+            value: [],
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 15,
+            // multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
+        },
 		Container: {
 			id: "Container",
-			label: "Container ID",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "Container ID",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
-			value: [],
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 16,
-			// multiSelect: true
-		},
+            value: [],
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 16,
+            // multiSelect: true
+        },
 		THU: {
 			id: "THU",
-			label: "THU ID",
-			fieldType: "lazyselect",
-			width: "four",
+            label: "THU ID",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("THU id Init"),
-			value: [],
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 17,
-			// multiSelect: true
-		},
-		WBS: {
-			id: "WBS",
-			label: "WBS",
-			fieldType: "lazyselect",
-			width: "four",
+            value: [],
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 17,
+            // multiSelect: true
+        },
+        WBS: {
+            id: "WBS",
+            label: "WBS",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("WBS Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 18
-		},
-		ActionResolution: {
-			id: "ActionResolution",
-			label: "Action/ Resolution",
-			fieldType: "lazyselect",
-			width: "four",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 18
+        },
+        ActionResolution: {
+            id: "ActionResolution",
+            label: "Action/ Resolution",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Claims Action/Resolution Init"),
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 19
-		},
-		AssignedUser: {
-			id: "AssignedUser",
-			label: "Assigned User",
-			fieldType: "lazyselect",
-			width: "four",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 19
+        },
+        AssignedUser: {
+            id: "AssignedUser",
+            label: "Assigned User",
+            fieldType: "lazyselect",
+            width: "four",
 			fetchOptions: fetchMaster("Createdby Init"),
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 20
-		},
-		SecondaryRefNo: {
-			id: "SecondaryRefNo",
-			label: "Secondary Ref. No.",
-			fieldType: "text",
-			width: "four",
-			placeholder: "Enter Secondary Ref. No.",
-			value: "",
-			mandatory: false,
-			visible: true,
-			editable: true,
-			order: 21
-		},
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 20
+        },
+        SecondaryRefNo: {
+            id: "SecondaryRefNo",
+            label: "Secondary Ref. No.",
+            fieldType: "text",
+            width: "four",
+            placeholder: "Enter Secondary Ref. No.",
+            value: "",
+            mandatory: false,
+            visible: true,
+            editable: true,
+            order: 21
+        },
 		ActionResolutionRemark: {
 			id: "ActionResolutionRemark",
-			label: "Remark for Action/Resolution",
-			fieldType: "text",
+            label: "Remark for Action/Resolution",
+            fieldType: "text",
 			width: "four",
-			value: "",
-			maxLength: 255,
-			placeholder: "Enter Remark for Action/Resolution",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 22
-		},
-		FirstInformationRegister: {
-			id: "FirstInformationRegister",
-			label: "First Information Register",
-			fieldType: "text",
+            value: "",
+            maxLength: 255,
+            placeholder: "Enter Remark for Action/Resolution",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 22
+        },
+        FirstInformationRegister: {
+            id: "FirstInformationRegister",
+            label: "First Information Register",
+            fieldType: "text",
 			width: "four",
-			maxLength: 255,
-			placeholder: "Enter First Information Register",
-			value: "",
-			mandatory: true,
-			visible: true,
-			editable: true,
-			order: 23
-		},
+            maxLength: 255,
+            placeholder: "Enter First Information Register",
+            value: "",
+            mandatory: true,
+            visible: true,
+            editable: true,
+            order: 23
+        },
 		FinanceYear: {
 			id: "FinanceYear",
 			label: "Finance Year",
@@ -725,32 +859,59 @@ const ClaimsForm = () => {
 			editable: true,
 			order: 32
 		},
+    };
+
+	// Handler functions for Cancel and Amend
+	const handleClaimCancel = () => {
+		setCancelModalOpen(true);
 	};
 
-	useEffect(() => {
-		setFooter({
-			visible: true,
-			leftButtons: [],
-			rightButtons: [
-				{
-					label: "Cancel",
-					onClick: () => navigate(-1),
-					// variant: "outline", // Removed unauthorized property
-					type: "Button"
-				},
-				{
-					label: "Save",
-					onClick: () => {
-						// Sync form data to findings before save then persist
-						handleSaveClaim();
-					},
-					// variant: "default", // Removed unauthorized property
-					type: "Button"
-				},
-			],
-		});
-		return () => resetFooter();
-	}, [setFooter, resetFooter, navigate]);
+	const handleClaimAmend = () => {
+		setAmendModalOpen(true);
+    };
+
+	const handleClaimReject = () => {
+		setRejectModalOpen(true);
+	};
+
+	const handleClaimShortClose = () => {
+		setShortCloseModalOpen(true);
+	};
+
+	const handleRejectFieldChange = (name: string, value: string) => {
+		console.log('Reject field changed:', name, value);
+		setRejectFields(fields =>
+			fields.map(f => (f.name === name ? { ...f, value } : f))
+		);
+	};
+
+	const handleShortCloseFieldChange = (name: string, value: string) => {
+		console.log('Short Close field changed:', name, value);
+		setShortCloseFields(fields =>
+			fields.map(f => (f.name === name ? { ...f, value } : f))
+		);
+	};
+
+    useEffect(() => {
+        setFooter({
+            visible: true,
+            leftButtons: [],
+            rightButtons: [
+                {
+                    label: "Cancel",
+                    onClick: handleClaimCancel,
+                    // variant: "outline", // Removed unauthorized property
+                    type: "Button"
+                },
+                {
+					label: "Amend",
+					onClick: handleClaimAmend,
+                    type: "Button"
+                },
+            ],
+        });
+        return () => resetFooter();
+    }, [setFooter, resetFooter, navigate]);
 
 	// Function to sync form field data to Claims Findings panel
 	const syncFormDataToFindings = () => {
@@ -911,7 +1072,7 @@ const ClaimsForm = () => {
 		if (!values) return;
 
 		// Debug: raw form values
-		console.log('ClaimsForm - form values before payload:', values);
+		console.log('ClaimsForm - Save and Submit - form values before payload:', values);
 
 		// Build a fuller debug payload (mapped from form fields)
 		const payloadFull = {
@@ -964,11 +1125,11 @@ const ClaimsForm = () => {
 		// Call save endpoint (existing limited smart-edit endpoint)
 	};
 
-	const breadcrumbItems = [
-		{ label: "Home", href: "/" },
-		{ label: "Manage Claims", href: "/claims-hub" },
-		{ label: "Claims", active: true },
-	];
+    const breadcrumbItems = [
+        { label: "Home", href: "/" },
+        { label: "Manage Claims", href: "/claims-hub" },
+        { label: "Claims", active: true },
+    ];
 
 	const pipedData = (id: any, desc: any) => {
 		if (id && desc) return `${id} - ${desc}`;
@@ -994,8 +1155,474 @@ const ClaimsForm = () => {
 		await fetchClaimData(newClaimNo.trim());
 	};
 
-	return (
-		<AppLayout>
+	const handleCancelFieldChange = (name: string, value: string) => {
+		console.log('Cancel field changed:', name, value);
+		setCancelFields(fields =>
+			fields.map(f => (f.name === name ? { ...f, value } : f))
+		);
+	};
+
+	const handleAmendFieldChange = (name: string, value: string) => {
+		console.log('Amend field changed:', name, value);
+		setAmendFields(fields =>
+			fields.map(f => (f.name === name ? { ...f, value } : f))
+		);
+	};
+
+	const handleClaimCancelSubmit = async (formFields: any) => {
+		console.log('Cancel form fields received:', formFields);
+		// Map form fields to API object
+		let mappedObj: any = {}
+		formFields.forEach((field: any) => {
+			const mappedName = field.mappedName;
+			mappedObj[mappedName] = field.value;
+		});
+		console.log('Mapped Object for Cancel API:', mappedObj);
+		
+		// Handle ReasonCode splitting if it contains '||'
+		let ReasonCodeValue = '';
+		let ReasonCodeLabel = '';
+
+		if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+			const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+			ReasonCodeValue = value.trim();
+			ReasonCodeLabel = labelParts.join('||').trim();
+		} else if (typeof mappedObj.ReasonCode === 'string') {
+			ReasonCodeValue = mappedObj.ReasonCode;
+			ReasonCodeLabel = mappedObj.ReasonCode;
+		}
+		console.log("1111111111111", searchQuery);
+		console.log("1111111111111", apiResponse);
+		// Prepare claim data object for API
+		const claimPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+                Reason: {
+                    Cancel: {
+                        RecordedDateTime: mappedObj?.Canceldatetime || null,
+                        ReasonCode: ReasonCodeValue,
+                        ReasonDescription: ReasonCodeLabel,
+                        Remarks: mappedObj?.Remarks || null,
+                        ModeFlag: "Update"
+                    },
+                }
+			}
+		};
+		
+		console.log('Claim Data Object for Cancel API:', claimPayload);
+		setIsLoadingClaim(true);
+		
+		try {
+			console.log('Calling cancelClaim API...');
+			const response: any = await ClaimService.cancelClaim(claimPayload);
+			
+			console.log('Cancel Claim API Response:', response);
+			setCancelModalOpen(false);
+			
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim cancelled successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Cancelled",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				
+				// Refresh claim data after successful cancellation
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim cancellation failed.";
+				
+				toast({
+					title: "⚠️ Claim Cancellation Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Cancel Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while cancelling the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error cancelling claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleClaimRejectSubmit = async (formFields: any) => {
+		console.log('Reject form fields received:', formFields);
+		// Map form fields to API object
+		let mappedObj: any = {}
+		formFields.forEach((field: any) => {
+			const mappedName = field.mappedName;
+			mappedObj[mappedName] = field.value;
+		});
+		console.log('Mapped Object for Reject API:', mappedObj);
+		
+		// Handle ReasonCode splitting if it contains '||'
+		let ReasonCodeValue = '';
+		let ReasonCodeLabel = '';
+
+		if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+			const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+			ReasonCodeValue = value.trim();
+			ReasonCodeLabel = labelParts.join('||').trim();
+		} else if (typeof mappedObj.ReasonCode === 'string') {
+			ReasonCodeValue = mappedObj.ReasonCode;
+			ReasonCodeLabel = mappedObj.ReasonCode;
+		}
+		console.log("Reject - searchQuery:", searchQuery);
+		console.log("Reject - apiResponse:", apiResponse);
+		// Prepare claim data object for API
+		const claimPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+                Reason: {
+                    Reject: {
+                        RecordedDateTime: mappedObj?.Rejectdatetime || null,
+                        ReasonCode: ReasonCodeValue,
+                        ReasonDescription: ReasonCodeLabel,
+                        Remarks: mappedObj?.Remarks || null,
+                        ModeFlag: "Update"
+                    },
+                }
+			}
+		};
+		
+		console.log('Claim Data Object for Reject API:', claimPayload);
+		setIsLoadingClaim(true);
+		
+		try {
+			console.log('Calling rejectClaim API...');
+			const response: any = await ClaimService.rejectClaim(claimPayload);
+			
+			console.log('Reject Claim API Response:', response);
+			setRejectModalOpen(false);
+			
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim rejected successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Rejected",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				
+				// Refresh claim data after successful rejection
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim rejection failed.";
+				
+				toast({
+					title: "⚠️ Claim Rejection Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Reject Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while rejecting the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error rejecting claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleClaimShortCloseSubmit = async (formFields: any) => {
+		console.log('Short Close form fields received:', formFields);
+		// Map form fields to API object
+		let mappedObj: any = {}
+		formFields.forEach((field: any) => {
+			const mappedName = field.mappedName;
+			mappedObj[mappedName] = field.value;
+		});
+		console.log('Mapped Object for Short Close API:', mappedObj);
+		
+		// Handle ReasonCode splitting if it contains '||'
+		let ReasonCodeValue = '';
+		let ReasonCodeLabel = '';
+
+		if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+			const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+			ReasonCodeValue = value.trim();
+			ReasonCodeLabel = labelParts.join('||').trim();
+		} else if (typeof mappedObj.ReasonCode === 'string') {
+			ReasonCodeValue = mappedObj.ReasonCode;
+			ReasonCodeLabel = mappedObj.ReasonCode;
+		}
+		console.log("Short Close - searchQuery:", searchQuery);
+		console.log("Short Close - apiResponse:", apiResponse);
+		// Prepare claim data object for API
+		const claimPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+                Reason: {
+                    ShortClose: {
+                        RecordedDateTime: mappedObj?.ShortClosedatetime || null,
+                        ReasonCode: ReasonCodeValue,
+                        ReasonDescription: ReasonCodeLabel,
+                        Remarks: mappedObj?.Remarks || null,
+                        ModeFlag: "Update"
+                    },
+                }
+			}
+		};
+		
+		console.log('Claim Data Object for Short Close API:', claimPayload);
+		setIsLoadingClaim(true);
+		
+		try {
+			console.log('Calling shortCloseClaim API...');
+			const response: any = await ClaimService.shortCloseClaim(claimPayload);
+			
+			console.log('Short Close Claim API Response:', response);
+			setShortCloseModalOpen(false);
+			
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim short closed successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Short Closed",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				
+				// Refresh claim data after successful short close
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim short close failed.";
+				
+				toast({
+					title: "⚠️ Claim Short Close Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Short Close Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while short closing the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error short closing claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleClaimAmendSubmit = async (formFields: any) => {
+		console.log('Amend form fields received:', formFields);
+		
+		// Map form fields to API object
+		let mappedObj: any = {}
+		formFields.forEach((field: any) => {
+			const mappedName = field.mappedName;
+			mappedObj[mappedName] = field.value;
+		});
+		console.log('Mapped Object for Amend API:', mappedObj);
+		
+		// Handle ReasonCode splitting if it contains '||'
+		let ReasonCodeValue = '';
+		let ReasonCodeLabel = '';
+
+		if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+			const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+			ReasonCodeValue = value.trim();
+			ReasonCodeLabel = labelParts.join('||').trim();
+		} else if (typeof mappedObj.ReasonCode === 'string') {
+			ReasonCodeValue = mappedObj.ReasonCode;
+			ReasonCodeLabel = mappedObj.ReasonCode;
+		}
+		console.log("1111111111111", mappedObj);
+		console.log("1111111111111", apiResponse);
+		// Prepare claim data object for API
+		const claimPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Amendment: {
+                    AmendmentRequestedDateTime: mappedObj?.Amenddatetime || null,
+					AmendmentReasonCode: ReasonCodeValue,
+					AmendmentReasonCodeDescription: ReasonCodeLabel,
+					AmendmentRemarks: mappedObj?.Remarks || null,
+                    ModeFlag: "Update"
+				},
+			}
+		};
+		
+		console.log('Claim Data Object for Amend API:', claimPayload);
+		setIsLoadingClaim(true);
+		
+		try {
+			console.log('Calling amendClaim API...');
+			const response: any = await ClaimService.amendClaim(claimPayload);
+			
+			console.log('Amend Claim API Response:', response);
+			setAmendModalOpen(false);
+			
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim amended successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Amended",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				
+				// Refresh claim data after successful amendment
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim amendment failed.";
+				
+				toast({
+					title: "⚠️ Claim Amendment Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Amend Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while amending the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error amending claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleClaimApprove = () => {
+		// TODO: Implement approve functionality
+		console.log("Approve claim clicked");
+	};
+
+    return (
+        <AppLayout>
 			<div className="relative flex flex-col h-full bg-gray-50">
 				{isLoadingClaim && (
 					<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
@@ -1004,20 +1631,20 @@ const ClaimsForm = () => {
 						<div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
 					</div>
 				)}
-				{/* Breadcrumb */}
-				<div className="px-6 pt-4">
-					<Breadcrumb items={breadcrumbItems} />
-				</div>
+                {/* Breadcrumb */}
+                <div className="px-6 pt-4">
+                    <Breadcrumb items={breadcrumbItems} />
+                 </div>
 
-				{/* Header */}
-				<div className="px-6 py-4 flex justify-between items-center">
-					<div className="flex items-center gap-4">
-						<h1 className="text-2xl font-semibold">Claims</h1>
-						<div className="relative max-w-md">
-							<Input
-								placeholder="Search Claim No."
-								className="pr-10"
-								value={searchQuery}
+                {/* Header */}
+                <div className="px-6 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-2xl font-semibold">Claims</h1>
+                        <div className="relative max-w-md">
+                            <Input
+                                placeholder="Search Claim No."
+                                className="pr-10"
+                                value={searchQuery}
 								onChange={(e) => {
 									const claimNo = e.target.value;
 									setSearchQuery(claimNo);
@@ -1049,46 +1676,46 @@ const ClaimsForm = () => {
 							{isLoadingClaim ? (
 								<Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
 							) : (
-								<Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							)}
 						</div>
 						<div className="">
 							<span className={getStatusColor(claimStatus) + ' text-xs'}>
 								{claimStatus}
 							</span>
-						</div>
-					</div>
+                        </div>
+                    </div>
 
 					{/* new claim button and action buttons */}
 					<div className="flex items-center gap-3">
 						{/* New Claim Button */}
-						<div className="relative inline-block">
-							<button
-								onClick={() => {
-									// Dynamically get the base path from the current URL
-									const { pathname } = window.location;
-									// Find the base path 
-									const basePathMatch = pathname.match(/^\/[^/]+/);
-									const basePath = basePathMatch ? basePathMatch[0] : "";
-									window.location.href = `${basePath}/create-claim`;
-								}}
-								className="border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
-								type='button'
-								onMouseEnter={() => setShowTooltip(true)}
-								onMouseLeave={() => setShowTooltip(false)}
-							>
-								<Plus className="h-4 w-4" />
-								New Claim
-							</button>
+                    <div className="relative inline-block">
+                        <button
+                            onClick={() => {
+                                // Dynamically get the base path from the current URL
+                                const { pathname } = window.location;
+                                // Find the base path 
+                                const basePathMatch = pathname.match(/^\/[^/]+/);
+                                const basePath = basePathMatch ? basePathMatch[0] : "";
+                                window.location.href = `${basePath}/create-claim`;
+                            }}
+                            className="border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
+                            type='button'
+                            onMouseEnter={() => setShowTooltip(true)}
+                            onMouseLeave={() => setShowTooltip(false)}
+                        >
+                            <Plus className="h-4 w-4" />
+                            New Claim
+                        </button>
 
-							{/* Tooltip */}
-							{showTooltip && (
-								<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
-									Create New Claim
-									{/* Tooltip arrow */}
-									<div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
-								</div>
-							)}
+                        {/* Tooltip */}
+                        {showTooltip && (
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
+                                Create New Claim
+                                {/* Tooltip arrow */}
+                                <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
+                            </div>
+                        )}
 						</div>
 
 						{/* Copy Icon Button */}
@@ -1208,22 +1835,22 @@ const ClaimsForm = () => {
 								</>
 							)}
 						</div>
-					</div>
-				</div>
+                    </div>
+                </div>
 
-				{/* Scrollable Content */}
-				<div className="flex-1 overflow-auto px-6 pb-20 pt-3">
-					{/* Claim & Reference Panel */}
-					<DynamicPanel
-						ref={formRef}
-						panelId="claim-form-panel"
-						panelIcon={<Banknote className="h-5 w-5 text-green-600" />}
-						panelTitle="Claim & Reference"
-						collapsible={true}
-						panelConfig={claimPanelConfig}
-						initialData={{}}
-						badgeValue=""
-					/>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-auto px-6 pb-20 pt-3">
+                    {/* Claim & Reference Panel */}
+                    <DynamicPanel
+                        ref={formRef}
+                        panelId="claim-form-panel"
+                        panelIcon={<Banknote className="h-5 w-5 text-green-600" />}
+                        panelTitle="Claim & Reference"
+                        collapsible={true}
+                        panelConfig={claimPanelConfig}
+                        initialData={{}}
+                        badgeValue=""
+                    />
 
 					{/* Investigation Details Panel */}
 					{apiResponse?.InvestigationDetails && (<div className="mt-4">
@@ -1235,7 +1862,7 @@ const ClaimsForm = () => {
 										<FileSearch className="h-5 w-5 text-purple-600" />
 									</div>
 									<h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
-								</div>
+                </div>
 
 								{/* Right side: Badge and Edit Button */}
 								<div className="flex items-center gap-3 cursor-pointer">
@@ -1257,7 +1884,7 @@ const ClaimsForm = () => {
 									>
 										<SquarePen className="h-4 w-4 text-gray-600" />
 									</Button>
-								</div>
+            </div>
 							</div>
 						</Card>
 					</div>)
@@ -1486,8 +2113,131 @@ const ClaimsForm = () => {
 				onClose={() => setLinkedInternalOrdersOpen(false)}
 				claimNo={searchQuery}
 			/>
-		</AppLayout>
-	);
+
+			{/* Cancel Modal */}
+			<ClaimCancelModal
+				open={cancelModalOpen}
+				onClose={() => setCancelModalOpen(false)}
+				title="Cancel Claim"
+				icon={<Ban className="w-4 h-4" />}
+				fields={cancelFields as any}
+				onFieldChange={handleCancelFieldChange}
+				onSubmit={handleClaimCancelSubmit}
+				submitLabel="Cancel"
+			/>
+
+			{/* Amend Modal */}
+			<ClaimAmendModal
+				open={amendModalOpen}
+				onClose={() => setAmendModalOpen(false)}
+				title="Amend Claim"
+				icon={<NotebookPen className="w-4 h-4" color="blue" strokeWidth={1.5} />}
+				fields={amendFields as any}
+				onFieldChange={handleAmendFieldChange}
+				onSubmit={handleClaimAmendSubmit}
+				submitLabel="Amend"
+			/>
+
+			{/* Reject Modal */}
+			<ClaimCancelModal
+				open={rejectModalOpen}
+				onClose={() => setRejectModalOpen(false)}
+				title="Reject Claim"
+				icon={<XCircle className="w-4 h-4" />}
+				fields={rejectFields as any}
+				onFieldChange={handleRejectFieldChange}
+				onSubmit={handleClaimRejectSubmit}
+				submitLabel="Reject"
+				iconBg="bg-red-200"
+				iconColor="text-red-700"
+				submitBg="bg-red-600"
+				submitHover="hover:bg-red-700"
+			/>
+
+			{/* Short Close Modal */}
+			<ClaimCancelModal
+				open={shortCloseModalOpen}
+				onClose={() => setShortCloseModalOpen(false)}
+				title="Short Close Claim"
+				icon={<Lock className="w-4 h-4" />}
+				fields={shortCloseFields as any}
+				onFieldChange={handleShortCloseFieldChange}
+				onSubmit={handleClaimShortCloseSubmit}
+				submitLabel="Short Close"
+				iconBg="bg-yellow-100"
+				iconColor="text-yellow-700"
+				submitBg="bg-yellow-500"
+				submitHover="hover:bg-yellow-600"
+			/>
+
+			{/* Custom footer button */}
+			<div className="fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-end items-center gap-3 z-40 shadow-lg">
+                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleClaimCancel}>
+                    Cancel
+                </button>
+                <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+					{/* Save Button - Clickable */}
+					<Button
+						onClick={handleSaveClaim}
+						className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+					>
+						Save
+					</Button>
+					{/* Dropdown Arrow - Only this triggers the dropdown */}
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+								onClick={(e) => {
+									e.stopPropagation();
+								}}
+							>
+								<ChevronDown className="w-4 h-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+							<DropdownMenuItem onClick={handleClaimCancel}>
+								Cancel
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={handleClaimReject}>
+								Reject
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
+                <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+					{/* Save Button - Clickable */}
+					<Button
+						onClick={handleClaimAmend}
+						className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+					>
+						Amend
+					</Button>
+					{/* Dropdown Arrow - Only this triggers the dropdown */}
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+								onClick={(e) => {
+									e.stopPropagation();
+								}}
+							>
+								<ChevronDown className="w-4 h-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+                            <DropdownMenuItem onClick={handleClaimShortClose}>
+                                Short Close
+                            </DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
+                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-white text-blue-500 border-blue-600 border hover:text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleClaimApprove}>
+                    Approve
+                </button>
+            </div>
+        </AppLayout>
+    );
 };
 
 export default ClaimsForm;
