@@ -498,12 +498,45 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
       }
     }
   }));
+   const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+  
+const handleValidateAllLegPanels = () => {
+  const results: Record<string, any> = {};
+  let overallValid = true;
+
+  Object.entries(dynamicPanelRefs.current).forEach(
+    ([panelKey, panelRef]) => {
+      if (!panelRef?.doValidation) return;
+
+      const validationResult = panelRef.doValidation();
+      results[panelKey] = validationResult;
+
+      if (!validationResult.isValid) {
+        overallValid = false;
+      }
+    }
+  );
+
+  setValidationResults(results); // optional (for summary)
+  return overallValid;
+};
 
   const handleSave = async () => {
   // Get all form data from DynamicPanels
   const formData = getFormData();
   console.log('💾 Saving form data:', formData);
   console.log('💾 selectedRoute form data:', selectedRoute);
+
+   const isValid = handleValidateAllLegPanels();
+
+  if (!isValid) {
+    toast({
+      title: "⚠️ Validation Failed",
+      description: "Please fill all mandatory fields in leg details",
+      variant: "destructive",
+    });
+    return;
+  }
 
   // Validate mandatory fields
   let missingFields: string[] = [];

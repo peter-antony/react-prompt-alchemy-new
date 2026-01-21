@@ -29,6 +29,8 @@ export interface InputDropdownProps {
   onKeyUp?: (e: React.KeyboardEvent) => void;
   title?: any;
   editable?: boolean;
+    error?: string;
+
 }
 
 const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
@@ -41,6 +43,7 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
     className,
     tabIndex,
     maxLength,
+    error,
     title,
     editable = true,
     onDropdownClick,
@@ -86,8 +89,13 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
             //   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
             //   !editable && "opacity-80 bg-gray-100"
             // )}
-            className={cn(
-  "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+//             className={cn(
+//   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+//   (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
+// )}
+className={cn(
+  "h-8 w-full px-3 text-sm rounded-l-md border border-r bg-background focus:z-50 focus:outline-none",
+  error ? "border-red-500 focus:border-red-500" : "border-input focus:border-blue-500",
   (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
 )}
 
@@ -115,10 +123,16 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
           onChange={handleInputChange}
           disabled={!editable}
           placeholder={placeholder}
+          // className={cn(
+          //   "rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500",
+          //   !editable && "opacity-80 bg-gray-100"
+          // )}
           className={cn(
-            "rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500",
-            !editable && "opacity-80 bg-gray-100"
-          )}
+  "rounded-l-none border-l-0 flex-1 h-8",
+  error ? "border-red-500 focus:border-red-500" : "border-input focus:border-blue-500",
+  !editable && "opacity-80 bg-gray-100"
+)}
+
           tabIndex={tabIndex ? tabIndex + 1 : undefined}
           onClick={onInputClick}
           onFocus={onFocus}

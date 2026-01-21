@@ -27,22 +27,33 @@ interface FieldRendererProps {
   allowedType?: string; // To restrict input types
   tooltip?: string;
   currency?: string;
+   onFieldChange?: (fieldId: string, value: any) => void;  // ✅ ADD THIS
 }
 
 // Add this helper above your component:
+// const getFieldBorderClass = (mandatory: boolean, value: any) => {
+//   if (mandatory && value && value !== '' && !(typeof value === 'object' && Object.values(value).every(v => !v))) {
+//     // Value entered for mandatory field: bright green border
+//     return;
+//     // return "border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.20)]";
+//   }
+//   if (mandatory) {
+//     // Mandatory but empty: red border
+//     return;
+//     // return "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]";
+//   }
+//   return "";
+// };
+
 const getFieldBorderClass = (mandatory: boolean, value: any) => {
-  if (mandatory && value && value !== '' && !(typeof value === 'object' && Object.values(value).every(v => !v))) {
-    // Value entered for mandatory field: bright green border
-    return;
-    // return "border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.20)]";
+  if (mandatory && (value === undefined || value === null || value === "")) {
+    return "border-red-500";
   }
-  if (mandatory) {
-    // Mandatory but empty: red border
-    return;
-    // return "border-red-300 shadow-[0_0_0_2px_rgba(239,68,68,0.10)]";
-  }
-  return "";
+
+  return "border-gray-300"; // 🔥 ALWAYS return something
 };
+
+
 
 export const FieldRenderer: React.FC<FieldRendererProps> = ({
   config,
@@ -53,7 +64,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
   mandatory,
   allowedType,
   tooltip,
-  currency
+  currency,
+  onFieldChange
+   
 }) => {
   // Remove searchData from destructuring as it's not part of FieldConfig type
   const { fieldType, editable, placeholder, options, color, fieldColour, events } = config;
@@ -662,7 +675,9 @@ const disableDropdown = config.disableDropdown ?? false;
 
             return (
             <div
-  className="relative"
+  className={`relative rounded-md border ${
+    hasError ? "border-red-500" : "border-gray-300"
+  }`}
   onMouseDownCapture={(e) => {
     if (!disableDropdown) return;
 
@@ -686,6 +701,7 @@ const disableDropdown = config.disableDropdown ?? false;
                 <InputDropdown
                   value={fieldValue}
                    disableDropdown={config.disableDropdown ?? false}
+                     error={validationErrors["field.name"]}
                   onChange={(newValue) => {
                     // If inputType is 'number', allow only numbers in the input field
                     if (config.inputType === 'number') {
@@ -748,13 +764,13 @@ const disableDropdown = config.disableDropdown ?? false;
                  onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
 
 
-
+className="border-none focus:ring-0 border-red-900"
                   onInputClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
                   onFocus={events?.onFocus}
                   onBlur={events?.onBlur}
                   onKeyDown={events?.onKeyDown}
                   onKeyUp={events?.onKeyUp}
-                  className={borderClass}
+           
                   title={tooltip}
                   maxLength={config.maxLength}
                 />

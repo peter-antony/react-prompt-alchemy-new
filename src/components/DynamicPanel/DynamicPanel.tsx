@@ -170,8 +170,67 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   const [panelValidationErrors, setPanelValidationErrors] =
   useState<Record<string, string>>({});
 
+  const doValidation = useCallback(() => {
+    const values = getValues();
+    const validationErrors: Record<string, string> = {};
+    const mandatoryFieldsEmpty: string[] = [];
 
-  // Expose getFormValues and doValidation methods via ref
+    Object.entries(panelConfig).forEach(([fieldId, config]) => {
+      if (!config.mandatory || !config.visible) return;
+
+      const value = values[fieldId];
+
+      const isEmpty =
+        // primitive empty
+        value === undefined ||
+        value === null ||
+        value === '' ||
+
+        // arrays (multiselect, checkbox group)
+        (Array.isArray(value) && value.length === 0) ||
+
+        // ✅ InputDropdown → ONLY input matters
+        (
+          typeof value === 'object' &&
+          value !== null &&
+          'input' in value &&
+          (
+            value.input === undefined ||
+            value.input === null ||
+            (typeof value.input === 'string' && value.input.trim() === '')
+          )
+        ) ||
+
+        // LazySelect / other object fields (NO input key)
+        (
+          typeof value === 'object' &&
+          value !== null &&
+          !('input' in value) &&
+          Object.keys(value).length === 0
+        );
+
+      if (isEmpty) {
+        mandatoryFieldsEmpty.push(config.label || fieldId);
+        validationErrors[fieldId] = ' ';
+      }
+    });
+
+    // Merge React Hook Form errors (do NOT override cleared ones)
+    Object.entries(errors).forEach(([fieldId, error]) => {
+      if (error?.message && typeof error.message === 'string') {
+        validationErrors[fieldId] = error.message;
+      }
+    });
+
+    setPanelValidationErrors(validationErrors);
+
+    return {
+      isValid: Object.keys(validationErrors).length === 0,
+      errors: validationErrors,
+      mandatoryFieldsEmpty
+    };
+  }, [getValues, panelConfig, errors]); // ✅ Add dependencies
+
   useImperativeHandle(ref, () => ({
     getFormValues: () => {
       const values = getValues();
@@ -338,35 +397,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       onDataChange?.(data);
       // console.log('==========================', data);
       // Derive NetAmount when BillingQty or UnitPrice changes
-      setPanelValidationErrors((prev) => {
-  let updated = { ...prev };
-  let changed = false;
-
-  Object.entries(panelConfig).forEach(([fieldId, config]) => {
-    if (!config.mandatory) return;
-
-    const value = data[fieldId];
-
-    const isEmpty =
-      value === undefined ||
-      value === null ||
-      value === '' ||
-      (Array.isArray(value) && value.length === 0) ||
-      (typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value).length === 0);
-
-    // ✅ if field is now valid → remove red border
-    if (!isEmpty && updated[fieldId]) {
-      delete updated[fieldId];
-      changed = true;
-    }
-  });
-
-  return changed ? updated : prev;
-});
-
-
+      
       const qty = parseFloat(String(data?.BillingQty ?? '')) || 0;
       const unit = parseUnitPrice(data?.UnitPrice);
       let computedNetRaw: any;
@@ -381,7 +412,6 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       }
       // console.log("computedNet (formatted)", computedNet);
       if ((data?.NetAmount?.toString?.() ?? '') !== computedNet) {
-        setValue('NetAmount', computedNet, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
       }
     });
     return () => subscription.unsubscribe();
