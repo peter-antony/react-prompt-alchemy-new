@@ -515,7 +515,8 @@ export function ServersideFilter({
               filter.type === 'date' ? 'Date' : 'Text',
         filterable: true,
         options: filter.options,
-        multiSelect: filter.multiSelect // Pass multiSelect flag
+        multiSelect: filter.multiSelect, // Pass multiSelect flag
+        // maxLength: filter.maxLength // Pass maxLength
       };
 
       return (

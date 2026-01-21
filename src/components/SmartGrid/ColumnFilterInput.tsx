@@ -571,6 +571,7 @@ export function ColumnFilterInput({
 
       case 'DropdownText':
         return (
+          // <div className="flex flex-col w-full">
           <div className="flex items-center gap-1">
             <Select
               value={dropdownValue || "__all__"}
@@ -607,11 +608,23 @@ export function ColumnFilterInput({
               placeholder="Type text..."
               className="h-7 text-xs flex-1"
             />
+                {/* className={cn(
+                  "h-7 text-xs flex-1",
+                  column.maxLength && textValue.length > column.maxLength && "border-red-600 focus-visible:ring-red-600 focus:border-red-600"
+                )}
+              />
+            </div>
+            {column.maxLength && textValue.length > column.maxLength && (
+              <p className="text-xs text-red-500 mt-1">
+                {`Maximum character limit is ${column.maxLength}. [${textValue.length}/${column.maxLength}]`}
+              </p>
+            )} */}
           </div>
         );
 
       default:
         return (
+          // <div className="flex flex-col w-full">
           <Input
             value={localValue}
             onChange={(e) => handleValueChange(e.target.value)}
@@ -619,6 +632,17 @@ export function ColumnFilterInput({
             placeholder={`Filter ${column.label.toLowerCase()}...`}
             className="h-7 text-xs"
           />
+          //     className={cn(
+          //       "h-7 text-xs",
+          //       column.maxLength && typeof localValue === 'string' && localValue.length > column.maxLength && "border-red-600 focus-visible:ring-red-600 focus:border-red-600"
+          //     )}
+          //   />
+          //   {column.maxLength && typeof localValue === 'string' && localValue.length > column.maxLength && (
+          //     <p className="text-xs text-red-500 mt-1">
+          //       {`Maximum character limit is ${column.maxLength}. [${localValue.length}/${column.maxLength}]`}
+          //     </p>
+          //   )}
+          // </div>
         );
     }
   };
@@ -626,6 +650,7 @@ export function ColumnFilterInput({
   return (
     <div className={cn(
       "flex items-center gap-1 transition-all h-9 relative",
+      // !column.maxLength && "h-9", // Only enforce fixed height if no validation message is expected to shift layout
       isSubRow && "bg-blue-50 border-blue-200"
     )}>
       {/* Operator symbol with dropdown - only show if enabled */}

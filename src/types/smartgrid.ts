@@ -82,6 +82,7 @@ export interface GridColumnConfig {
   placeholder?: string;
   minSearchLength?: number; // Minimum characters required for new entry creation
   dependentFields?: string[]; // Fields to clear when this field changes (for cascading selects)
+  // maxLength?: number; // Maximum character length for text inputs
   // ActionButton specific properties
   actionButtons?: Array<{
     icon: React.ReactNode;
@@ -172,6 +173,7 @@ export interface ServerFilter {
   hideSearch?: boolean; // Hide search box in lazy select
   disableLazyLoading?: boolean; // Disable infinite scroll in lazy select
   returnType?: 'single' | 'array'; // Return type for the filter
+  // maxLength?: number; // Maximum character length for text inputs
 }
 
 export interface ExtraFilter {
