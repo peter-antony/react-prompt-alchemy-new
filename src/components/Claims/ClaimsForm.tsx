@@ -2106,6 +2106,8 @@ const ClaimsForm = () => {
 			<ClaimFindings
 				isOpen={claimFindingsOpen}
 				onClose={() => setClaimFindingsOpen(false)}
+				apiData={apiResponse}
+
 			/>
 			{/* Linked Internal Orders Section */}
 			<ClaimLinkedInternalOrders
