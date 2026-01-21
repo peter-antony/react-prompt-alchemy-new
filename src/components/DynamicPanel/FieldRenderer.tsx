@@ -293,7 +293,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   />
                 )}
                 {isError && (
-                  <div className="text-red-500 text-[10px] mt-1">
+                  <div className="text-red-500 text-xs mt-1">
                     {errorMsg}
                   </div>
                 )}
@@ -344,7 +344,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 // maxLength={config.maxLength} 
                 />
                 {isError && (
-                  <div className="text-red-500 text-[10px] mt-1">
+                  <div className="text-red-500 text-xs mt-1">
                     {errorMsg}
                   </div>
                 )}
@@ -675,9 +675,10 @@ const disableDropdown = config.disableDropdown ?? false;
             const hasError = !!validationErrors[fieldId];
             return (
             <div
-  className={`relative rounded-md border ${
-    hasError  ? "border-red-500" : "border-gray-300"
-  }`}
+  //           className={`relative rounded-md border ${
+  //   hasError  ? "border-red-500" : "border-gray-300"
+  // }`} 
+                className="relative"
   onMouseDownCapture={(e) => {
     if (!disableDropdown) return;
 
@@ -701,7 +702,7 @@ const disableDropdown = config.disableDropdown ?? false;
                 <InputDropdown
                   value={fieldValue}
                    disableDropdown={config.disableDropdown ?? false}
-                     error={validationErrors["field.name"]}
+                     error={validationErrors[fieldId]}
                   onChange={(newValue) => {
                     // If inputType is 'number', allow only numbers in the input field
                     if (config.inputType === 'number') {
@@ -763,8 +764,7 @@ const disableDropdown = config.disableDropdown ?? false;
                   // onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
                  onDropdownClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
 
-
-className="border-none focus:ring-0 border-red-900"
+// className="border-none focus:ring-0 border-red-900"
                   onInputClick={events?.onClick ? (e) => events.onClick!(e, fieldValue) : undefined}
                   onFocus={events?.onFocus}
                   onBlur={events?.onBlur}

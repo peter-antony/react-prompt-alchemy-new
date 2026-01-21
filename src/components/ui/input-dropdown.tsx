@@ -65,82 +65,85 @@ const InputDropdown = React.forwardRef<HTMLDivElement, InputDropdownProps>(
       const newValue = { ...value, dropdown: e.target.value };
       onChange?.(newValue);
     };
+    
+    // Max character length validation
+    const limit = maxLength || 299;
+    const isExceeded = inputValue.length > limit;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let inputValue = e.target.value;
       
-      // Apply maxLength constraint if specified
-      if (maxLength && inputValue.length > maxLength) {
-        inputValue = inputValue.slice(0, maxLength);
-      }
-      
+      // Apply maxLength constraint if specified - strict slicing
+      // if (maxLength && inputValue.length > maxLength) {
+      //   inputValue = inputValue.slice(0, maxLength);
+      // }
+
       const newValue = { ...value, input: inputValue };
       onChange?.(newValue);
     };
 
     return (
-      <div ref={ref} className={cn("flex focus-within:z-50 relative gap-px", className)} {...props}>
-        <div className="relative w-2/5">
-          <select
-            value={dropdownValue}
-            onChange={handleDropdownChange}
-             disabled={!editable || disableDropdown}
-            // className={cn(
-            //   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
-            //   !editable && "opacity-80 bg-gray-100"
-            // )}
-//             className={cn(
-//   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
-//   (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
-// )}
-className={cn(
-  "h-8 w-full px-3 text-sm rounded-l-md border border-r bg-background focus:z-50 focus:outline-none",
-  error ? "border-red-500 focus:border-red-500" : "border-input focus:border-blue-500",
-  (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
-)}
+      <div className="w-full">
+        <div ref={ref} className={cn("flex focus-within:z-50 relative gap-px", className)} {...props}>
+          <div className="relative w-2/5">
+            <select
+              value={dropdownValue}
+              onChange={handleDropdownChange}
+              disabled={!editable || disableDropdown}
+              // className={cn(
+              //   "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+              //   !editable && "opacity-80 bg-gray-100"
+              // )}
+              className={cn(
+                "h-8 w-full px-3 text-sm rounded-l-md border border-r border-input bg-background focus:border-blue-500 focus:ring-ring focus:z-50 focus:relative focus:outline-none appearance-none",
+                error ? "border-red-600 focus:border-red-600" : "border-input focus:border-blue-500",
+                (!editable || disableDropdown) && "opacity-80 bg-gray-100 cursor-not-allowed"
+              )}
 
-            tabIndex={tabIndex}
-            onClick={onDropdownClick}
-            onFocus={onFocus}
-            onBlur={onBlur}
-          >
-            <option value="">Select...</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-            <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+              tabIndex={tabIndex}
+              onClick={onDropdownClick}
+              onFocus={onFocus}
+              onBlur={onBlur}
+            >
+              <option value="">Select...</option>
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+              <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
+          <Input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            disabled={!editable}
+            placeholder={placeholder}
+            className={cn(
+              "rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500",
+              error ? "border-red-600 focus:border-red-600" : "border-input focus:border-blue-500",
+              isExceeded && "border-red-600 focus-visible:ring-red-600 focus:border-red-600",
+              !editable && "opacity-80 bg-gray-100"
+            )}
+            tabIndex={tabIndex ? tabIndex + 1 : undefined}
+            onClick={onInputClick}
+            onFocus={onFocus}
+            // maxLength={maxLength || 299}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            onKeyUp={onKeyUp}
+          />
         </div>
-        <Input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          disabled={!editable}
-          placeholder={placeholder}
-          // className={cn(
-          //   "rounded-l-none border-l-0 flex-1 h-8 focus:border-blue-500",
-          //   !editable && "opacity-80 bg-gray-100"
-          // )}
-          className={cn(
-  "rounded-l-none border-l-0 flex-1 h-8",
-  error ? "border-red-500 focus:border-red-500" : "border-input focus:border-blue-500",
-  !editable && "opacity-80 bg-gray-100"
-)}
-
-          tabIndex={tabIndex ? tabIndex + 1 : undefined}
-          onClick={onInputClick}
-          onFocus={onFocus}
-          maxLength={maxLength || 299}
-          onBlur={onBlur}
-          onKeyDown={onKeyDown}
-          onKeyUp={onKeyUp}
-        />
+        {isExceeded && (
+          <p className="text-xs text-red-500 mt-1">
+            {`Maximum character limit is ${limit}. [${inputValue.length}/${limit}]`}
+          </p>
+        )}
       </div>
     );
   }

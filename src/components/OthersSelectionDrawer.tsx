@@ -687,6 +687,7 @@ export const OthersSelectionDrawer: React.FC<OthersSelectionDrawerProps> = ({
                 onChange={setQCUserDefined}
                 options={QC}
                 placeholder="Enter Value"
+                maxLength={255}
               />
             </div>
             <div className="space-y-2">
