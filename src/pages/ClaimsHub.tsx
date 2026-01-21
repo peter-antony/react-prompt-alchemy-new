@@ -185,7 +185,7 @@ export const ClaimsHub = () => {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
           title: "Error",
-          description: "Failed to save changes.",
+          description: (response as any)?.data?.Message || "Failed to save changes.",
           variant: "destructive",
         });
       }
