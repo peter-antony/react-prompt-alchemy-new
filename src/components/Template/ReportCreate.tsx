@@ -1272,6 +1272,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four", // Assuming it takes half width next to dispatchDocNo
       placeholder: "",
       labelFlag: false,
+      maxLength: 255,
     },
     unCode: {
       id: "unCode",
@@ -1329,6 +1330,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 8,
       width: "four",
       placeholder: "",
+      maxLength: 255,
     },
     customerID: {
       id: "customerID",
@@ -1357,6 +1359,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "",
       labelFlag: false,
+      maxLength: 255,
     },
     contractID: {
       id: "contractID",
@@ -1592,6 +1595,7 @@ const handleTemplateNumberCallback = (value: string) => {
     width: 'four',
     placeholder: 'Declaration of Value',
     options: getUomOptions(currencyUomList), 
+    maxLength: 255,
       },
       
       interestInDelivery: {
@@ -1609,6 +1613,7 @@ const handleTemplateNumberCallback = (value: string) => {
     width: 'four',
     placeholder: 'Interest in Delivery',
     options: getUomOptions(currencyUomList), 
+    maxLength: 255,
       },
      cashOnDelivery: {
     id: 'cashOnDelivery',
@@ -1625,6 +1630,7 @@ const handleTemplateNumberCallback = (value: string) => {
     width: 'four',
     placeholder: 'Enter Cash on Delivery',
     options: getUomOptions(currencyUomList), 
+    maxLength: 255,
   },
   
     };
@@ -1860,6 +1866,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 9,
       width: "half",
       placeholder: "Enter Acknowledgement of Receipt",
+      maxLength: 500,
     },
   };
 
@@ -1902,6 +1909,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 3,
       width: "four",
       placeholder: "Enter NHM Code",
+      maxLength: 500,
     },
     currency: {
       id: "currency",
@@ -1914,6 +1922,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 4,
       width: "four",
       placeholder: "Enter Currency",
+      maxLength: 500,
     },
     chargedMassWeight: {
       id: "chargedMassWeight",
@@ -1926,6 +1935,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 5,
       width: "four",
       placeholder: "Enter Charged Mass Weight",
+      maxLength: 500,
     },
     customerAgreementOrTariffApplied: {
       id: "customerAgreementOrTariffApplied",
@@ -1938,6 +1948,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 6,
       width: "four",
       placeholder: "Enter Customer Agreement or Tariff Applied",
+      maxLength: 500,
     },
     kmZone: {
       id: "kmZone",
@@ -1950,6 +1961,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 7,
       width: "four",
       placeholder: "Enter KM/Zone",
+      maxLength: 500,
     },
     supplementsFeesDeductions: {
       id: "supplementsFeesDeductions",
@@ -1975,6 +1987,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 9,
       width: "four",
       placeholder: "Enter Unit Price",
+      maxLength: 255,
     },
     charges: {
       id: "charges",
@@ -1987,6 +2000,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 10,
       width: "four",
       placeholder: "Enter Charges",
+      maxLength: 255,
     },
   };
 
@@ -2003,6 +2017,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 1,
       width: "four",
       placeholder: "Enter Code for the Charging Sections",
+      maxLength: 500,
     },
     routeCodeB: {
       id: "routeCodeB",
@@ -2015,6 +2030,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 2,
       width: "four",
       placeholder: "Enter Route Code",
+      maxLength: 500,
     },
     nhmCodeB: {
       id: "nhmCodeB",
@@ -2027,6 +2043,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 3,
       width: "four",
       placeholder: "Enter NHM Code",
+      maxLength: 500,
     },
     currencyB: {
       id: "currencyB",
@@ -2039,6 +2056,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 4,
       width: "four",
       placeholder: "Enter Currency",
+      maxLength: 500,
     },
     chargedMassWeightB: {
       id: "chargedMassWeightB",
@@ -2051,6 +2069,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 5,
       width: "four",
       placeholder: "Enter Charged Mass Weight",
+      maxLength: 500,
     },
     customerAgreementOrTariffAppliedB: {
       id: "customerAgreementOrTariffAppliedB",
@@ -2063,6 +2082,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 6,
       width: "four",
       placeholder: "Enter Customer Agreement or Tariff Applied",
+      maxLength: 500,
     },
     kmZoneB: {
       id: "kmZoneB",
@@ -2075,6 +2095,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 7,
       width: "four",
       placeholder: "Enter KM/Zone",
+      maxLength: 500,
     },
     supplementsFeesDeductionsB: {
       id: "supplementsFeesDeductionsB",
@@ -2087,6 +2108,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 8,
       width: "four",
       placeholder: "Enter Supplements, Fees, Deductions",
+      maxLength: 500,
     },
     unitPriceB: {
       id: "unitPriceB",
@@ -2099,6 +2121,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 9,
       width: "four",
       placeholder: "Enter Unit Price",
+      maxLength: 255,
     },
     chargesB: {
       id: "chargesB",
@@ -2111,6 +2134,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 10,
       width: "four",
       placeholder: "Enter Charges",
+      maxLength: 255,
     },
   };
 
@@ -2127,6 +2151,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 1,
       width: "four",
       placeholder: "Enter Code for the Charging Sections",
+      maxLength: 500,
     },
     routeCodeC: {
       id: "routeCodeC",
@@ -2139,6 +2164,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 2,
       width: "four",
       placeholder: "Enter Route Code",
+      maxLength: 500,
     },
     nhmCodeC: {
       id: "nhmCodeC",
@@ -2151,6 +2177,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 3,
       width: "four",
       placeholder: "Enter NHM Code",
+      maxLength: 500,
     },
     currencyC: {
       id: "currencyC",
@@ -2163,6 +2190,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 4,
       width: "four",
       placeholder: "Enter Currency",
+      maxLength: 500,
     },
     chargedMassWeightC: {
       id: "chargedMassWeightC",
@@ -2175,6 +2203,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 5,
       width: "four",
       placeholder: "Enter Charged Mass Weight",
+      maxLength: 500,
     },
     customerAgreementOrTariffAppliedC: {
       id: "customerAgreementOrTariffAppliedC",
@@ -2187,6 +2216,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 6,
       width: "four",
       placeholder: "Enter Customer Agreement or Tariff Applied",
+      maxLength: 500,
     },
     kmZoneC: {
       id: "kmZoneC",
@@ -2199,6 +2229,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 7,
       width: "four",
       placeholder: "Enter KM/Zone",
+      maxLength: 500,
     },
     supplementsFeesDeductionsC: {
       id: "supplementsFeesDeductionsC",
@@ -2211,6 +2242,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 8,
       width: "four",
       placeholder: "Enter Supplements, Fees, Deductions",
+      maxLength: 500,
     },
     unitPriceC: {
       id: "unitPriceC",
@@ -2223,6 +2255,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 9,
       width: "four",
       placeholder: "Enter Unit Price",
+      maxLength: 255,
     },
     chargesC: {
       id: "chargesC",
@@ -2235,6 +2268,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 10,
       width: "four",
       placeholder: "Enter Charges",
+      maxLength: 255,
     },
   };
 
@@ -2251,6 +2285,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 1,
       width: "four",
       placeholder: "Enter train",
+      maxLength: 500,
     },
     itinerary: {
       id: "itinerary",
@@ -2320,6 +2355,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Enter Fixed Net Train [13]",
        options: getUomOptions(weightUomList), 
+       maxLength: 255,
     },
     number: {
       id: "number",
@@ -2332,6 +2368,7 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 7,
       width: "four",
       placeholder: "Enter number",
+      maxLength: 500,
     },
     LoadingConfiguration: {
       id: "LoadingConfiguration",
@@ -2422,7 +2459,8 @@ const handleTemplateNumberCallback = (value: string) => {
       order: 14,
       width: "four",
       placeholder: "Length x Width x Height",
-       options: getUomOptions(lengthWeightUomList)
+       options: getUomOptions(lengthWeightUomList),
+       maxLength: 255,
     },
     MarkandNumber: {
       id: "MarkandNumber",
@@ -2510,6 +2548,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Enter Gross Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     TareWeight: {
@@ -2527,6 +2566,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Enter Tare Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     NetWeight: {
@@ -2544,6 +2584,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Enter Net Weight",
       options: getUomOptions(thuQtyUomList),
+      maxLength: 255,
     },
 
     TotalBrutto: {
@@ -2561,6 +2602,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Total Brutto",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
 
     TotalNetto: {
@@ -2578,6 +2620,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Total Netto",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
 
     TotalGross: {
@@ -2595,6 +2638,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Total Gross",
       options: getUomOptions(currencyUomList),
+      maxLength: 255,
     },
   };
 
@@ -2805,6 +2849,7 @@ const handleTemplateNumberCallback = (value: string) => {
       width: "four",
       placeholder: "Enter Simplified Transit Procedure For Rail",
       labelFlag: false,
+      maxLength: 255,
     },
   };
 
