@@ -353,6 +353,11 @@ const ClaimsForm = () => {
 		}
 	];
 
+	// Initialize document details grid columns
+	useEffect(() => {
+		gridState.setColumns(documentDetailsColumns);
+	}, []);
+
     // Dummy fetcher for lazyselect fields
 	const fetchMaster = (
 		messageType: string,
@@ -892,26 +897,28 @@ const ClaimsForm = () => {
 		);
 	};
 
-    useEffect(() => {
-        setFooter({
-            visible: true,
-            leftButtons: [],
-            rightButtons: [
-                {
-                    label: "Cancel",
-                    onClick: handleClaimCancel,
-                    // variant: "outline", // Removed unauthorized property
-                    type: "Button"
-                },
-                {
-					label: "Amend",
-					onClick: handleClaimAmend,
-                    type: "Button"
-                },
-            ],
-        });
-        return () => resetFooter();
-    }, [setFooter, resetFooter, navigate]);
+    // useEffect(() => {
+    //     setFooter({
+    //         visible: true,
+    //         leftButtons: [],
+    //         rightButtons: [
+    //             {
+    //                 label: "Cancel",
+    //                 onClick: handleClaimCancel,
+    //                 // variant: "outline", // Removed unauthorized property
+    //                 type: "Button"
+    //             },
+    //             {
+	// 				label: "Amend",
+	// 				onClick: handleClaimAmend,
+    //                 type: "Button"
+    //             },
+    //         ],
+    //     });
+    //     return () => resetFooter();
+    // }, [setFooter, resetFooter, navigate]);
+
+	const [showDocumentDetails, setShowDocumentDetails] = useState(false);
 
 	// Function to sync form field data to Claims Findings panel
 	const syncFormDataToFindings = () => {
@@ -1621,6 +1628,23 @@ const ClaimsForm = () => {
 		console.log("Approve claim clicked");
 	};
 
+	const handleClaimProcess = () => {
+		// TODO: Implement process functionality
+		console.log("Process claim clicked");
+	};
+
+    const handleClaimFindingsAmend = () => {
+        // TODO: Implement findings amend functionality
+        console.log("Findings amend clicked");
+    };
+
+    const documentDetailsShowPanel = () => {
+        setShowDocumentDetails(true);
+		if (apiResponse?.Document?.Details) {
+			gridState.setGridData(apiResponse.Document.Details);
+		}
+    };
+
     return (
         <AppLayout>
 			<div className="relative flex flex-col h-full bg-gray-50">
@@ -1974,124 +1998,125 @@ const ClaimsForm = () => {
 					</div>)
 					}
 					{/* Document Details Panel */}
-					{apiResponse?.Document.Details && (<div className="mt-4">
-						<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-							<Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
-								{/* Header Section */}
-								<CollapsibleTrigger className="w-full">
-									<div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-										{/* Left side: Icon and Title */}
-										<div className="flex items-center">
-											<div className="flex items-center justify-center w-10 h-10 rounded-md">
-												<FileBarChart className="h-5 w-5 text-blue-600" />
-											</div>
-											<h3 className="text-sm font-semibold text-gray-800">Document Details</h3>
-										</div>
+					{showDocumentDetails && (
+                        <div className="mt-4">
+                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
+                                    {/* Header Section */}
+                                    <CollapsibleTrigger className="w-full">
+                                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                            {/* Left side: Icon and Title */}
+                                            <div className="flex items-center">
+                                                <div className="flex items-center justify-center w-10 h-10 rounded-md">
+                                                    <FileBarChart className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <h3 className="text-sm font-semibold text-gray-800">Document Details</h3>
+                                            </div>
 
-										{/* Right side: Edit Button and Chevron */}
-										<div className="flex items-center gap-2">
-											<Button
-												variant="outline"
-												size="icon"
-												className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-												onClick={(e) => {
-													e.stopPropagation();
-													// Handle edit action
-													console.log("Edit Document Details clicked");
-												}}
-											>
-												<SquarePen className="h-4 w-4 text-gray-600" />
-											</Button>
-											{isDocumentDetailsOpen ? (
-												<ChevronUp className="h-5 w-5 text-gray-600" />
-											) : (
-												<ChevronDown className="h-5 w-5 text-gray-600" />
-											)}
-										</div>
-									</div>
-								</CollapsibleTrigger>
+                                            {/* Right side: Edit Button and Chevron */}
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // Handle edit action
+                                                        console.log("Edit Document Details clicked");
+                                                    }}
+                                                >
+                                                    <SquarePen className="h-4 w-4 text-gray-600" />
+                                                </Button>
+                                                {isDocumentDetailsOpen ? (
+                                                    <ChevronUp className="h-5 w-5 text-gray-600" />
+                                                ) : (
+                                                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CollapsibleTrigger>
 
-								<CollapsibleContent>
-									{/* Summary Boxes Section */}
-									<div className="px-4 pb-4 mt-3">
-										<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-											{/* Total Invoice Amount */}
-											<div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-												<label className="text-xs text-gray-700 font-medium mb-1 block">Total Invoice Amount</label>
-												<span className="text-lg font-semibold text-purple-600">
-													€ {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)}
-												</span>
-											</div>
+                                    <CollapsibleContent>
+                                        {/* Summary Boxes Section */}
+                                        <div className="px-4 pb-4 mt-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                                {/* Total Invoice Amount */}
+                                                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Invoice Amount</label>
+                                                    <span className="text-lg font-semibold text-purple-600">
+                                                        € {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)}
+                                                    </span>
+                                                </div>
 
-											{/* Total Claim Amount */}
-											<div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-												<label className="text-xs text-gray-700 font-medium mb-1 block">Total Claim Amount</label>
-												<span className="text-lg font-semibold text-pink-600">
-													€ {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)}
-												</span>
-											</div>
+                                                {/* Total Claim Amount */}
+                                                <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
+                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Claim Amount</label>
+                                                    <span className="text-lg font-semibold text-pink-600">
+                                                        € {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)}
+                                                    </span>
+                                                </div>
 
-											{/* Total Balance Amount */}
-											<div className="bg-green-50 rounded-lg p-4 border border-green-200">
-												<label className="text-xs text-gray-700 font-medium mb-1 block">Total Balance Amount</label>
-												<span className="text-lg font-semibold text-green-600">
-													€ {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2)}
-												</span>
-											</div>
-										</div>
-									</div>
+                                                {/* Total Balance Amount */}
+                                                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Balance Amount</label>
+                                                    <span className="text-lg font-semibold text-green-600">
+                                                        € {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-									{/* SmartGrid Table Section */}
-									<div className="px-4 pb-4">
-										<SmartGrid
-											columns={gridState.columns}
-											data={gridState.gridData || []}
-											hideToolbar={true}
-											hideRightToolbar={true}
-											hideCheckboxToggle={true}
-											onLinkClick={(rowData: any, columnKey: string) => {
-												console.log("Link clicked:", columnKey, rowData);
-												// Handle link clicks for Credit Note No. and Supplier Note No.
-											}}
-											onInlineEdit={handleInlineEditDocumentDetails}
-											gridId={gridId}
-											gridTitle="Document Details"
-											userId="user-1"
-										/>
-										{/* <SmartGridWithGrouping
-											columns={documentDetailsColumns}
-											data={apiResponse?.Document?.Details || []}
-											groupableColumns={[]}
-											showGroupingDropdown={false}
-											paginationMode="pagination"
-											customPageSize={500} // made 500 for infinte pagnation replication
-											// selectedRows={selectedRows}
-											// onSelectionChange={setSelectedRows}
-											// onRowClick={handleRowClick}
-											onLinkClick={
-												(rowData: any, columnKey: string) => {
-													console.log("Link clicked:", columnKey, rowData);
-													// Handle link clicks for Credit Note No. and Supplier Note No.
-												}
-											}
-											hideToolbar={true}
-											// rowClassName={(row: any, index: number) => {
-											// 	return selectedRowIds.has(row.ItemName) ? 'selected' : ''; // Row Selection based on ItemName
-											// }}
-											showDefaultConfigurableButton={false}
-											gridTitle=""
-											recordCount={formattedLineItems.length || 0}
-											showCreateButton={false}
-											userId="current-user"
-											gridId="Claims-grid"
-											onInlineEdit={handleInlineEditDocumentDetails}
-										/> */}
-									</div>
-								</CollapsibleContent>
-							</Collapsible>
-						</Card>
-					</div>)
-					}
+                                        {/* SmartGrid Table Section */}
+                                        <div className="px-4 pb-4">
+                                            <SmartGrid
+                                                columns={gridState.columns}
+                                                data={gridState.gridData || []}
+                                                hideToolbar={true}
+                                                hideRightToolbar={true}
+                                                hideCheckboxToggle={true}
+                                                onLinkClick={(rowData: any, columnKey: string) => {
+                                                    console.log("Link clicked:", columnKey, rowData);
+                                                    // Handle link clicks for Credit Note No. and Supplier Note No.
+                                                }}
+                                                onInlineEdit={handleInlineEditDocumentDetails}
+                                                gridId={gridId}
+                                                gridTitle="Document Details"
+                                                userId="user-1"
+                                            />
+                                            {/* <SmartGridWithGrouping
+                                                columns={documentDetailsColumns}
+                                                data={apiResponse?.Document?.Details || []}
+                                                groupableColumns={[]}
+                                                showGroupingDropdown={false}
+                                                paginationMode="pagination"
+                                                customPageSize={500} // made 500 for infinte pagnation replication
+                                                // selectedRows={selectedRows}
+                                                // onSelectionChange={setSelectedRows}
+                                                // onRowClick={handleRowClick}
+                                                onLinkClick={
+                                                    (rowData: any, columnKey: string) => {
+                                                        console.log("Link clicked:", columnKey, rowData);
+                                                        // Handle link clicks for Credit Note No. and Supplier Note No.
+                                                    }
+                                                }
+                                                hideToolbar={true}
+                                                // rowClassName={(row: any, index: number) => {
+                                                // 	return selectedRowIds.has(row.ItemName) ? 'selected' : ''; // Row Selection based on ItemName
+                                                // }}
+                                                showDefaultConfigurableButton={false}
+                                                gridTitle=""
+                                                recordCount={formattedLineItems.length || 0}
+                                                showCreateButton={false}
+                                                userId="current-user"
+                                                gridId="Claims-grid"
+                                                onInlineEdit={handleInlineEditDocumentDetails}
+                                            /> */}
+                                        </div>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            </Card>
+                        </div>
+                    )}
 
 				</div>
 			</div>
@@ -2174,69 +2199,99 @@ const ClaimsForm = () => {
 
 			{/* Custom footer button */}
 			<div className="fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-end items-center gap-3 z-40 shadow-lg">
-                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 hover:text-red-600 hover:bg-red-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleClaimCancel}>
-                    Cancel
-                </button>
-                <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
-					{/* Save Button - Clickable */}
-					<Button
-						onClick={handleSaveClaim}
-						className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
-					>
-						Save
-					</Button>
-					{/* Dropdown Arrow - Only this triggers the dropdown */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
-								onClick={(e) => {
-									e.stopPropagation();
-								}}
-							>
-								<ChevronDown className="w-4 h-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem onClick={handleClaimCancel}>
-								Cancel
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={handleClaimReject}>
-								Reject
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-                <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
-					{/* Save Button - Clickable */}
-					<Button
-						onClick={handleClaimAmend}
-						className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
-					>
-						Amend
-					</Button>
-					{/* Dropdown Arrow - Only this triggers the dropdown */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
-								onClick={(e) => {
-									e.stopPropagation();
-								}}
-							>
-								<ChevronDown className="w-4 h-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-                            <DropdownMenuItem onClick={handleClaimShortClose}>
-                                Short Close
-                            </DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-white text-blue-500 border-blue-600 border hover:text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 h-8 text-[13px] rounded-sm" onClick={handleClaimApprove}>
-                    Approve
-                </button>
+                {claimStatus === "" && (
+                    <>
+                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Cancel
+                        </button>
+                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-blue-300 border border-blue-600 hover:bg-blue-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                            Save
+                        </button>
+                    </>
+                )}
+                {(claimStatus === "Claim Initiated" || claimStatus === "In Progress") && (
+                    <>
+                        <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+                            {/* Save Button - Clickable */}
+                            <Button
+                                onClick={handleSaveClaim}
+                                className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+                            >
+                                Save
+                            </Button>
+                            {/* Dropdown Arrow - Only this triggers the dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        <ChevronDown className="w-4 h-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={handleClaimCancel}>
+                                        Cancel
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleClaimReject}>
+                                        Reject
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimProcess}>
+                            Process Claim
+                        </button>
+                    </>
+                )}
+                
+                {claimStatus === "Processed" && (
+                    <>
+                        <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+                            {/* Save Button - Clickable */}
+                            <Button
+                                onClick={handleClaimAmend}
+                                className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+                            >
+                                Amend
+                            </Button>
+                            {/* Dropdown Arrow - Only this triggers the dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        <ChevronDown className="w-4 h-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={handleClaimShortClose}>
+                                        Short Close
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimApprove}>
+                            Approve
+                        </button>            
+                    </>
+                )}
+
+                {claimStatus === "Approved" && (
+                    <>
+                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimFindingsAmend}>
+                            Amend
+                        </button>
+                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
+                            Document Details
+                        </button>
+                    </>
+                )}
             </div>
         </AppLayout>
     );
