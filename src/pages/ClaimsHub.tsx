@@ -1255,6 +1255,11 @@ export const ClaimsHub = () => {
 
   const dynamicServerFilters: ServerFilter[] = [
     {
+      key: 'ClaimNo',
+      label: 'Claim No.',
+      type: 'text'
+    },
+    {
       key: 'CustomerOrderNo',
       label: 'Customer Order No.',
       type: 'lazyselect', // lazy-loaded dropdown
@@ -1385,7 +1390,7 @@ export const ClaimsHub = () => {
       key: 'DraftBill',
       label: 'DraftBill',
       type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Claim Draft Bill No Init")
+      fetchOptions: makeLazyFetcher("Draft Bill No Init")
     },
     {
       key: 'IncidentLocation',
