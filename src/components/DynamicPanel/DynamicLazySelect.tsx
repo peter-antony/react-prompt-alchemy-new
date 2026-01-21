@@ -29,6 +29,8 @@ interface DynamicLazySelectProps {
   tooltip?: any;
   allowNewEntry?: boolean;
   minSearchLength?: number;
+  error?: boolean;
+
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -38,6 +40,7 @@ export function DynamicLazySelect({
   value,
   onChange,
   placeholder = "Select an option...",
+   error = false ,
   multiSelect = false,
   disabled = false,
   className,
@@ -51,6 +54,7 @@ export function DynamicLazySelect({
   tooltip,
   allowNewEntry = false,
   minSearchLength = 1,
+  
 }: DynamicLazySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<LazySelectOption[]>([]);
@@ -234,11 +238,18 @@ export function DynamicLazySelect({
           role="combobox"
           type="button"
           aria-expanded={isOpen}
+          // className={cn(
+          //   "w-full justify-between text-left font-normal group",
+          //   !hasValue && "text-muted-foreground",
+          //   className
+          // )}
           className={cn(
-            "w-full justify-between text-left font-normal group",
-            !hasValue && "text-muted-foreground",
-            className
-          )}
+  "w-full justify-between text-left font-normal group",
+  !hasValue && "text-muted-foreground",
+  error && "border-red-500 focus:border-red-500 focus:ring-red-500",
+  className
+)}
+
           disabled={disabled}
           tabIndex={tabIndex}
           onClick={handleButtonClick}

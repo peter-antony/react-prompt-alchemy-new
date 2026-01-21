@@ -271,11 +271,35 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       Object.entries(panelConfig).forEach(([fieldId, config]) => {
         if (config.mandatory && config.visible) {
           const value = values[fieldId];
-          const isEmpty = value === undefined || 
-                         value === null || 
-                         value === '' || 
-                         (Array.isArray(value) && value.length === 0) ||
-                         (typeof value === 'object' && value !== null && Object.keys(value).length === 0);
+         const isEmpty =
+  // primitive empty
+  value === undefined ||
+  value === null ||
+  value === '' ||
+
+  // arrays
+  (Array.isArray(value) && value.length === 0) ||
+
+  // ✅ InputDropdown → ONLY input matters
+  (
+    typeof value === 'object' &&
+    value !== null &&
+    'input' in value &&
+    (
+      value.input === undefined ||
+      value.input === null ||
+      (typeof value.input === 'string' && value.input.trim() === '')
+    )
+  ) ||
+
+  // LazySelect / other object fields
+  (
+    typeof value === 'object' &&
+    value !== null &&
+    !('input' in value) &&
+    Object.keys(value).length === 0
+  );
+
           
           if (isEmpty) {
             mandatoryFieldsEmpty.push(config.label || fieldId);

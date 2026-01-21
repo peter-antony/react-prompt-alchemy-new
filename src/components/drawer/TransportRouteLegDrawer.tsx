@@ -118,6 +118,8 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const [apiData, setApiData] = useState(null);
   const [QCCode1, setQCCode1] = useState<any[]>([]);
   const { toast } = useToast();
+  const [reasonForUpdateError, setReasonForUpdateError] = useState(false);
+
 
   // states for DynamicPanel Personalization
   const [panelPersonalizationModeFlag, setPanelPersonalizationModeFlag] = useState<'Insert' | 'Update'>('Insert');
@@ -561,6 +563,7 @@ const handleValidateAllLegPanels = () => {
   const reasonStr = (formData.reasonForUpdate ?? "").toString().trim();
   if (!reasonStr) {
     missingFields.push("Reason For Update");
+      setReasonForUpdateError(true);
   }
 
   if (missingFields.length > 0) {
@@ -1341,8 +1344,18 @@ const handleValidateAllLegPanels = () => {
           <DynamicLazySelect
             fetchOptions={fetchReasonForUpdate}
             value={reasonForUpdate}
-            onChange={(value) => setReasonForUpdate(value as string)}
+            onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setReasonForUpdate(value as string);
+
+    if (val) {
+      setReasonForUpdateError(false); // ✅ clear only when valid
+    }
+  }}
+         error={reasonForUpdateError}
             placeholder="Select Type"
+            
           />
         </div>
       </div>

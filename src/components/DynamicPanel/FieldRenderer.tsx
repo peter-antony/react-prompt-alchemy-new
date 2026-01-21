@@ -463,6 +463,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                 <DynamicLazySelect
                   fetchOptions={fetchOptions}
                   value={field.value}
+                   error={!!validationErrors[fieldId]}
                   onChange={(value, isNewEntry) => {
                     field.onChange(value);
                     if (events?.onChange) {
@@ -671,12 +672,11 @@ const disableDropdown = config.disableDropdown ?? false;
           render={({ field }) => {
             const eventHandlers = createEventHandlers(field);
             const fieldValue = field.value || {};
-            const borderClass = getFieldBorderClass(mandatory, fieldValue.input || fieldValue.dropdown);
-
+            const hasError = !!validationErrors[fieldId];
             return (
             <div
   className={`relative rounded-md border ${
-    hasError ? "border-red-500" : "border-gray-300"
+    hasError  ? "border-red-500" : "border-gray-300"
   }`}
   onMouseDownCapture={(e) => {
     if (!disableDropdown) return;
