@@ -43,6 +43,7 @@ interface ClaimCancelModalProps {
   iconColor?: string; // Custom icon color class
   submitBg?: string; // Custom submit button background color class
   submitHover?: string; // Custom submit button hover color class
+  messageType?: string; // Message type for loading dropdown data
 }
 
 export const ClaimCancelModal: React.FC<ClaimCancelModalProps> = ({
@@ -58,6 +59,7 @@ export const ClaimCancelModal: React.FC<ClaimCancelModalProps> = ({
   iconColor = "text-red-600",
   submitBg = "bg-red-500",
   submitHover = "hover:bg-red-600",
+  messageType = "Cancellation Reason Init", // Default fallback
 }) => {
   const [dates, setDates] = useState<Record<string, Date | undefined>>({});
   const [selectOptions, setSelectOptions] = useState<any>([]);
@@ -91,7 +93,7 @@ export const ClaimCancelModal: React.FC<ClaimCancelModalProps> = ({
         if (f.type === "select") {
           try {
             const res: any = await quickOrderService.getMasterCommonData({
-              messageType: "Cancellation Reason Init",
+              messageType: messageType,
             });
             const parsedData = JSON.parse(res?.data?.ResponseData || "[]");
             setSelectOptions(parsedData);
@@ -101,7 +103,7 @@ export const ClaimCancelModal: React.FC<ClaimCancelModalProps> = ({
         }
       }
     })();
-  }, [open]);
+  }, [open, messageType]);
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};

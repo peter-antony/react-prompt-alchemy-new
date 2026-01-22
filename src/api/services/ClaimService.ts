@@ -134,12 +134,12 @@ export const ClaimService = {
     return response.data;
   },
 
-  amendClaim: async (params: any): Promise<any> => {
+  processedAmendClaim: async (params: any): Promise<any> => {
     const userContext = getUserContext();
     const payload = {
       context: {
         MessageID: "12345",
-        MessageType: "Claim-Amend",
+        MessageType: "Claim-Processed Amend",
         OUID: userContext.ouId,
         Role: userContext.roleName,
         UserID: "ramcouser",
@@ -153,6 +153,30 @@ export const ClaimService = {
 
     const response = await apiClient.post(
       API_ENDPOINTS.CLAIMS.AMEND,
+      requestBody
+    );
+    return response.data;
+  },
+
+  approveClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Approve",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.APPROVE,
       requestBody
     );
     return response.data;
@@ -177,6 +201,30 @@ export const ClaimService = {
 
     const response = await apiClient.post(
       API_ENDPOINTS.CLAIMS.SHORTCLOSE,
+      requestBody
+    );
+    return response.data;
+  },
+
+  processClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Process",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.PROCESS,
       requestBody
     );
     return response.data;

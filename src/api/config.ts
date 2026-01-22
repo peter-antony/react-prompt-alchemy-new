@@ -240,10 +240,12 @@ export const API_ENDPOINTS = {
     SAVE: "manageclaims/claimsave",
     AMEND: "manageclaims/claimamend",
     REJECT: "manageclaims/claimreject",
+    APPROVE: "manageclaims/claimapprove",
     SMARTEDIT: "manageclaims/claimsmartedit",
     AUDIT_TRAIL: "manageclaims/claimsaudittrail",
     WORKFLOW_REPORT: "managedraftbill/viewworkflow",
     FINDINGS_SAVE: "manageclaims/claimfindingsave",
+    PROCESS: "manageclaims/claimprocess",
   }
 } as const;
 

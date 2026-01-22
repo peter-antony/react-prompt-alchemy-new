@@ -1019,7 +1019,7 @@ const ClaimsForm = () => {
 					BusinessPartnerID: Header?.Reference?.BusinessPartnerID || '',
 					ClaimDate: Header?.Reference?.ClaimDate || null,
 					ClaimCategory: Header?.Reference?.ClaimCategory || '',
-					CurrencyAmount: Header?.Reference ? { dropdown: Header?.Reference?.Currency, input: Header?.Reference?.ClaimAmount } : { dropdown: '', input: '' },
+					CurrencyAmount: Header?.Reference ? { dropdown: (Header?.Reference?.Currency || '').trim(), input: Header?.Reference?.ClaimAmount } : { dropdown: '', input: '' },
 					ClaimantRefNo: Header?.Reference?.ClaimantRefNo || '',
 					IncidentType: Header?.Reference?.IncidentType || '',
 					IncidentDateTime: Header?.Reference?.IncidentDateTime || null,
@@ -1152,7 +1152,7 @@ const ClaimsForm = () => {
 					BusinessPartnerID: splitPipeValueWithDescription(values.BusinessPartnerID).code,
 					BusinessPartnerDescription: splitPipeValueWithDescription(values.BusinessPartnerID).description,
 					IncidentType: splitPipeValue(values.IncidentType),
-					IncidentDateTime: values.IncidentDateTime || "",
+					IncidentDateTime: values.IncidentDateTime || null,
 					IncidentLocation: splitPipeValueWithDescription(values.IncidentLocation).code,
 					IncidentLocationDescription: splitPipeValueWithDescription(values.IncidentLocation).description,
 					ClaimCategory: splitPipeValue(values.ClaimCategory),
@@ -1217,6 +1217,8 @@ const ClaimsForm = () => {
 					variant: "default",
 				});
 				// Refresh claim data after successful short close
+                // const params = new URLSearchParams(responseData?.Header?.ClaimNo);
+                // console.log("params ====", params);
                 setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
 				setSearchQuery(responseData?.Header?.ClaimNo || "");
                 setClaimStatus(responseData?.Header?.ClaimStatus || "");
@@ -1578,7 +1580,7 @@ const ClaimsForm = () => {
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
                 ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
                 Reason: {
-                    ShortClose: {
+                    ShortClosed: {
                         RecordedDateTime: mappedObj?.ShortClosedatetime || null,
                         ReasonCode: ReasonCodeValue,
                         ReasonDescription: ReasonCodeLabel,
@@ -1690,13 +1692,16 @@ const ClaimsForm = () => {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
                 ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-				Amendment: {
-                    AmendmentRequestedDateTime: mappedObj?.Amenddatetime || null,
-					AmendmentReasonCode: ReasonCodeValue,
-					AmendmentReasonCodeDescription: ReasonCodeLabel,
-					AmendmentRemarks: mappedObj?.Remarks || null,
-                    ModeFlag: "Update"
-				},
+                Reference: apiResponse?.Header?.Reference || {},
+				Reason: {
+                    Amend: {
+                        RecordedDateTime: mappedObj?.Amenddatetime || null,
+                        ReasonCode: ReasonCodeValue,
+                        ReasonDescription: ReasonCodeLabel,
+                        Remarks: mappedObj?.Remarks || null,
+                        ModeFlag: "Update"
+                    }
+                }
 			}
 		};
 		
@@ -1705,7 +1710,7 @@ const ClaimsForm = () => {
 		
 		try {
 			console.log('Calling amendClaim API...');
-			const response: any = await ClaimService.amendClaim(claimPayload);
+			const response: any = await ClaimService.processedAmendClaim(claimPayload);
 			
 			console.log('Amend Claim API Response:', response);
 			setAmendModalOpen(false);
@@ -1770,14 +1775,158 @@ const ClaimsForm = () => {
 		}
 	};
 
-	const handleClaimApprove = () => {
+	const handleClaimApprove = async () => {
 		// TODO: Implement approve functionality
-		console.log("Approve claim clicked");
+		console.log("Approve claim clicked", apiResponse);
+        const approvePayload = {
+            Header: {
+                ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+                ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+                Document: apiResponse?.Document || [],
+            }
+        };
+        console.log("Approve Payload:", approvePayload);
+        setIsLoadingClaim(true);
+		try {
+			console.log('Calling approveClaim API...');
+			const response: any = await ClaimService.approveClaim(approvePayload);
+			
+			console.log('Approve Claim API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim approved successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Approved",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				
+				// Refresh claim data after successful amendment
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim approved failed.";
+				
+				toast({
+					title: "⚠️ Claim Approved Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Approve Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while approving the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error approving claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
 	};
 
-	const handleClaimProcess = () => {
+	const handleClaimProcess = async () => {
 		// TODO: Implement process functionality
-		console.log("Process claim clicked");
+		console.log("Process claim clicked", apiResponse);
+        const processPayload = {
+            Header: {
+                ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+                ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+                Reference: apiResponse?.Header?.Reference || {},
+            }
+        };
+        setIsLoadingClaim(true);
+		try {
+			const response: any = await ClaimService.processClaim(processPayload);
+			console.log('Process Claim API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim processed successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Processed",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				// Refresh claim data after successful short close
+                setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchQuery(responseData?.Header?.ClaimNo || "");
+                setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				await fetchClaimData(responseData?.Header?.ClaimNo);
+				
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim processed failed.";
+				
+				toast({
+					title: "⚠️ Claim Processed Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Process Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while processing the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error processing claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
 	};
 
     const handleClaimFindingsAmend = () => {
@@ -2155,7 +2304,8 @@ const ClaimsForm = () => {
                     )}
 
 					{/* Document Details Panel */}
-					{showDocumentDetails && (
+					{/* {showDocumentDetails && ( */}
+					{apiResponse?.Document?.Details && (
                         <div className="mt-4">
                             <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
                                 <Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
@@ -2308,6 +2458,7 @@ const ClaimsForm = () => {
 				onFieldChange={handleCancelFieldChange}
 				onSubmit={handleClaimCancelSubmit}
 				submitLabel="Cancel"
+				messageType="Reason Code for Claims Cancel Init"
 			/>
 
 			{/* Amend Modal */}
@@ -2336,6 +2487,7 @@ const ClaimsForm = () => {
 				iconColor="text-red-700"
 				submitBg="bg-red-600"
 				submitHover="hover:bg-red-700"
+				messageType="Reject ReasonCode for Claims Init"
 			/>
 
 			{/* Short Close Modal */}
@@ -2352,10 +2504,11 @@ const ClaimsForm = () => {
 				iconColor="text-yellow-700"
 				submitBg="bg-yellow-500"
 				submitHover="hover:bg-yellow-600"
+				messageType="Reason Code for Claims Short Close Init"
 			/>
 
 			{/* Custom footer button */}
-			<div className="fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-end items-center gap-3 z-40 shadow-lg">
+			<div className="h-15 fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-end items-center gap-3 z-40 shadow-lg">
                 {claimStatus === "" && (
                     <>
                         <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
