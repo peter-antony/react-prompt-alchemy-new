@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Home, Logs, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle, LayoutTemplate, Banknote } from 'lucide-react';
+import { Home, Logs, Calendar, Package, Truck, Users, IdCard, Fence, BarChart3, Settings, MapPinned, HelpCircle, LayoutTemplate, Banknote, BaggageClaim } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import MenuIcon2 from '../assets/images/Menu-2.svg';
 import MenuIcon3 from '../assets/images/Menu-3.svg';
@@ -169,6 +169,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ collapsed = false }) => 
     { icon: Logs, label: 'Work Order', path: '/work-order-hub', tooltip: 'Work Order Management' }, // transport Route Update
     { icon: LayoutTemplate, label: 'CIM / CUV', path: '/cim-cuv', tooltip: 'CIM/CUV Management' }, // transport Route Update
     { icon: Banknote, label: 'Draft Bill', path: '/draft-bill', tooltip: 'Draft Bill Management' }, // transport Route Update
+    { icon: BaggageClaim , label: 'Manage Claims', path: '/claims-hub', tooltip: 'Manage Claims' }, // transport Route Update
     // { icon: MenuIcon3, label: 'Create Template', path: '/create-template', tooltip: 'Create Template' }, // Create Template
     // { icon: COHubIcon, label: 'RFQ Hub', path: '/rfq-hub', tooltip: 'RFQ Hub' }, // RFQ Hub - sassy
     // { icon: RFQIcon, label: 'RFQ', path: '/rfq', tooltip: 'RFQ' }, // RFQ - sassy

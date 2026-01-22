@@ -237,6 +237,7 @@ export const API_ENDPOINTS = {
     HUBSEARCH: "ManageClaims/HubSearch",
     CANCEL: "manageclaims/claimcancel",
     SHORTCLOSE: "manageclaims/claimshortclose",
+    SAVE: "manageclaims/claimsave",
     AMEND: "manageclaims/claimamend",
     REJECT: "manageclaims/claimreject",
     SMARTEDIT: "manageclaims/claimsmartedit",

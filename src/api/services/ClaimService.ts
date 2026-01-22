@@ -62,6 +62,30 @@ export const ClaimService = {
     return response.data;
   },
 
+  saveClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Save",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.SAVE,
+      requestBody
+    );
+    return response.data;
+  },
+
   cancelClaim: async (params: any): Promise<any> => {
     const userContext = getUserContext();
     const payload = {

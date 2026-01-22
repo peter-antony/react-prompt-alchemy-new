@@ -73,7 +73,7 @@ export const ClaimAmendModal: React.FC<ClaimAmendModalProps> = ({
         if (f.type === "select") {
           try {
             const res: any = await quickOrderService.getMasterCommonData({
-              messageType: "Cancellation Reason Init",
+              messageType: "Reason Code for Claims Amendment Init",
             });
             const parsedData = JSON.parse(res?.data?.ResponseData || "[]");
             setSelectOptions(parsedData);

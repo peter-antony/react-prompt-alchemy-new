@@ -29,11 +29,12 @@ const ClaimsForm = () => {
 	const gridId = "ClaimsForm_DocumentDetails";
     const navigate = useNavigate();
 	const gridState = useSmartGridState();
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
     const formRef = useRef<DynamicPanelRef>(null);
     const { setFooter, resetFooter } = useFooterStore();
     const [searchQuery, setSearchQuery] = useState("");
 	const [claimStatus, setClaimStatus] = useState<string>(""); // Default status
+	const [investigationNeeded, setInvestigationNeeded] = useState<boolean>(false); // State for InvestigationNeeded switch
     const [showTooltip, setShowTooltip] = useState(false);
 	const [showDropdownMenu, setShowDropdownMenu] = useState(false);
 	const [investigationCount, setInvestigationCount] = useState(3); // State for investigation count
@@ -1010,7 +1011,7 @@ const ClaimsForm = () => {
 			// Map returned record to panel fields (best-effort mapping)
 			if (formRef.current && Header) {
 				const mapped: Record<string, any> = {
-					InvestigationNeeded: Header?.Reference?.InvestigationNeeded === 1 || Header?.Reference?.InvestigationNeeded === '1' || Header?.Reference?.InvestigationNeeded === 'YES' || Header?.Reference?.InvestigationNeeded === 'Yes',
+					InvestigationNeeded: Header?.Reference?.InvestigationNeeded === 'Yes' || Header?.Reference?.InvestigationNeeded === 'yes' || Header?.Reference?.InvestigationNeeded === 'true' || Header?.Reference?.InvestigationNeeded === 'True' ? true : false,
 					InitiatedBy: Header?.Reference?.InitiatedBy || '',
 					Counterparty: Header?.Reference?.Counterparty || '',
 					ForwardisFinancialAction: Header?.Reference?.ForwardisFinancialAction || '',
@@ -1046,6 +1047,9 @@ const ClaimsForm = () => {
 				};
 
 				formRef.current.setFormValues(mapped);
+				
+				// Update investigationNeeded state
+				setInvestigationNeeded(Header?.Reference?.InvestigationNeeded === 'Yes' || Header?.Reference?.InvestigationNeeded === 'yes' || Header?.Reference?.InvestigationNeeded === 'true' || Header?.Reference?.InvestigationNeeded === 'True' ? true : false);
 
 				// capture snapshot after slight delay to allow form to set
 				setTimeout(() => {
@@ -1078,6 +1082,59 @@ const ClaimsForm = () => {
 		const values = formRef.current?.getFormValues();
 		if (!values) return;
 
+		// Validate required fields
+		const requiredFields = [
+			{ key: 'InitiatedBy', label: 'Initiate By' },
+			{ key: 'Counterparty', label: 'Counterparty' },
+			{ key: 'ForwardisFinancialAction', label: 'Forwardis Financial Action' },
+			{ key: 'ExpectedDocument', label: 'Expected Document' },
+			{ key: 'BusinessPartnerID', label: 'Business Partner' },
+			{ key: 'ClaimDate', label: 'Claim Date' },
+			{ key: 'CurrencyAmount', label: 'Claim Amount', type: 'inputdropdown' },
+			{ key: 'IncidentType', label: 'Incident Type' },
+			{ key: 'WBS', label: 'WBS' },
+			{ key: 'ActionResolution', label: 'Action/ Resolution' },
+			{ key: 'ActionResolutionRemark', label: 'Remark for Action/Resolution' },
+			{ key: 'FirstInformationRegister', label: 'First Information Register' },
+			{ key: 'Remark1', label: 'Remarks 1' },
+			{ key: 'Remark2', label: 'Remarks 2' },
+			{ key: 'Remark3', label: 'Remarks 3' },
+			{ key: 'Remark4', label: 'Remarks 4' },
+			{ key: 'Remark5', label: 'Remarks 5' },
+		];
+
+		const missingFields: string[] = [];
+
+		requiredFields.forEach((field) => {
+			const value = values[field.key];
+			
+			if (field.type === 'inputdropdown') {
+				// For inputdropdown, check both dropdown and input
+				if (!value || !value.dropdown || !value.input || value.dropdown.trim() === '') {
+					missingFields.push(field.label);
+				}
+			} else if (field.key === 'ClaimDate') {
+				// For date fields, check if null or empty
+				if (!value || value === null) {
+					missingFields.push(field.label);
+				}
+			} else {
+				// For string fields, check if empty or just whitespace
+				if (!value || (typeof value === 'string' && value.trim() === '')) {
+					missingFields.push(field.label);
+				}
+			}
+		});
+
+		if (missingFields.length > 0) {
+			toast({
+				title: "⚠️ Validation Error",
+				description: "Please fill all the required fields.",
+				variant: "destructive",
+			});
+			return;
+		}
+
 		// Debug: raw form values
 		console.log('ClaimsForm - Save and Submit - form values before payload:', values);
 
@@ -1088,48 +1145,119 @@ const ClaimsForm = () => {
 				ClaimStatus: values.ClaimStatus || "",
 				ClaimStatusDescription: values.ClaimStatusDescription || "",
 				Reference: {
-					InitiatedBy: values.InitiatedBy || "",
-					Counterparty: values.Counterparty || "",
-					ExpectedDocument: values.ExpectedDocument || "",
-					ForwardisFinancialAction: values.ForwardisFinancialAction || "",
-					BusinessPartnerID: values.BusinessPartnerID || "",
-					BusinessPartnerDescription: values.BusinessPartnerDescription || "",
-					IncidentType: values.IncidentType || "",
+					InitiatedBy: splitPipeValue(values.InitiatedBy),
+					Counterparty: splitPipeValue(values.Counterparty),
+					ExpectedDocument: splitPipeValue(values.ExpectedDocument),
+					ForwardisFinancialAction: splitPipeValue(values.ForwardisFinancialAction),
+					BusinessPartnerID: splitPipeValueWithDescription(values.BusinessPartnerID).code,
+					BusinessPartnerDescription: splitPipeValueWithDescription(values.BusinessPartnerID).description,
+					IncidentType: splitPipeValue(values.IncidentType),
 					IncidentDateTime: values.IncidentDateTime || "",
-					IncidentLocation: values.IncidentLocation || "",
-					IncidentLocationDescription: values.IncidentLocationDescription || "",
-					ClaimCategory: values.ClaimCategory || "",
+					IncidentLocation: splitPipeValueWithDescription(values.IncidentLocation).code,
+					IncidentLocationDescription: splitPipeValueWithDescription(values.IncidentLocation).description,
+					ClaimCategory: splitPipeValue(values.ClaimCategory),
 					Currency: values.CurrencyAmount.dropdown || "",
 					ClaimAmount: values.CurrencyAmount.input || "",
 					ClaimDate: values.ClaimDate || null,
-					RefDocType: values.RefDocType || "",
+					RefDocType: splitPipeValue(values.RefDocType),
 					RefDocID: values.RefDocID || "",
 					ClaimantRefNo: values.ClaimantRefNo || "",
 					SecondaryRefNo: values.SecondaryRefNo || null,
-					InvestigationNeeded: values.InvestigationNeeded || false,
-					Wagon: values.Wagon || null,
+					InvestigationNeeded: values.InvestigationNeeded === true ? "Yes" : "No",
+					Wagon: splitPipeValue(values.Wagon) || null,
 					Container: values.Container || null,
 					THU: values.THU || null,
-					WBS: values.WBS || null,
-					ActionResolution: values.ActionResolution || null,
-					AssignedUser: values.AssignedUser || null,
-					QCUserDefined1: values.QCUserDefined1 || null,
-					QCUserDefined2: values.QCUserDefined2 || null,
-					QCUserDefined3: values.QCUserDefined3 || null,
+					WBS: splitPipeValueWithDescription(values.WBS).code,
+                    WBSDescription: splitPipeValueWithDescription(values.WBS).description,
+					ActionResolution: splitPipeValue(values.ActionResolution),
+					AssignedUser: splitPipeValueWithDescription(values.AssignedUser).code,
+                    ActionResolutionRemark: values.ActionResolutionRemark || null,
+                    FirstInformationRegister: values.FirstInformationRegister || null,
+                    AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
+					QuickCode1: values.QCUserDefined1.dropdown || null,
+                    QCValue1: values.QCUserDefined1.input || null,
+					QuickCode2: values.QCUserDefined2.dropdown || null,
+					QCValue2: values.QCUserDefined2.input || null,
+					QuickCode3: values.QCUserDefined3.dropdown || null,
+					QCValue3: values.QCUserDefined3.input || null,
 					Remark1: values.Remark1 || null,
 					Remark2: values.Remark2 || null,
 					Remark3: values.Remark3 || null,
 					Remark4: values.Remark4 || null,
 					Remark5: values.Remark5 || null,
 					ModeFlag: resolveModeFlag(values, initialSnapshotRef.current, searchQuery),
-					Reason: values.Reason || ""
+					// Reason: values.Reason || ""
 				}
 			}
 		};
 
 		console.log('ClaimsForm - final payload to send:', JSON.stringify(payloadFull, null, 2));
-
-		// Call save endpoint (existing limited smart-edit endpoint)
+        setIsLoadingClaim(true);
+		
+		try {
+			console.log('Calling saveClaim API...');
+			const response: any = await ClaimService.saveClaim(payloadFull);
+			
+			console.log('Save Claim API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+				
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim saved successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+				
+				toast({
+					title: "✅ Claim Saved",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				// Refresh claim data after successful short close
+                setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchQuery(responseData?.Header?.ClaimNo || "");
+                setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				await fetchClaimData(responseData?.Header?.ClaimNo);
+				
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+				
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim saved failed.";
+				
+				toast({
+					title: "⚠️ Claim Saved Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Save Claim API Error:', error);
+			setIsLoadingClaim(false);
+			
+			let errorMessage = "An unexpected error occurred while saving the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+			
+			toast({
+				title: "Error saving claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
 	};
 
     const breadcrumbItems = [
@@ -1141,6 +1269,25 @@ const ClaimsForm = () => {
 	const pipedData = (id: any, desc: any) => {
 		if (id && desc) return `${id} - ${desc}`;
 		return id || desc || '-';
+	}
+
+	// Helper function to split pipe-separated values and extract code
+	const splitPipeValue = (value: string | null | undefined): string => {
+		if (!value || typeof value !== 'string') return '';
+		// Split by "||" and return the code part (first part) trimmed
+		const parts = value.split('||');
+		return parts[0]?.trim() || '';
+	}
+
+	// Helper function to split pipe-separated values into code and description
+	const splitPipeValueWithDescription = (value: string | null | undefined): { code: string; description: string } => {
+		if (!value || typeof value !== 'string') return { code: '', description: '' };
+		// Split by "||" and return both code and description
+		const parts = value.split('||');
+		return {
+			code: parts[0]?.trim() || '',
+			description: parts[1]?.trim() || ''
+		};
 	}
 
 	const handleInlineEditDocumentDetails = (rowIndex: number, row: any) => {
@@ -1874,129 +2021,139 @@ const ClaimsForm = () => {
                         panelConfig={claimPanelConfig}
                         initialData={{}}
                         badgeValue=""
+                        onDataChange={(data) => {
+                            // Update investigationNeeded state when form data changes
+                            if (data?.InvestigationNeeded !== undefined) {
+                                setInvestigationNeeded(data.InvestigationNeeded === true || data.InvestigationNeeded === 'true' || data.InvestigationNeeded === 'True');
+                            }
+                        }}
                     />
 
 					{/* Investigation Details Panel */}
-					{apiResponse?.InvestigationDetails && (<div className="mt-4">
-						<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-							<div className="flex items-center justify-between px-4 py-3">
-								{/* Left side: Icon and Title */}
-								<div className="flex items-center">
-									<div className="flex items-center justify-center w-10 h-10 rounded-lg">
-										<FileSearch className="h-5 w-5 text-purple-600" />
-									</div>
-									<h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
+					{investigationNeeded && searchQuery && (
+                        <div className="mt-4">
+                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <div className="flex items-center justify-between px-4 py-3">
+                                    {/* Left side: Icon and Title */}
+                                    <div className="flex items-center">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-lg">
+                                            <FileSearch className="h-5 w-5 text-purple-600" />
+                                        </div>
+                                        <h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
+                    </div>
+
+                                    {/* Right side: Badge and Edit Button */}
+                                    <div className="flex items-center gap-3 cursor-pointer">
+                                        {/* Count Badge */}
+                                        <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
+                                            {apiResponse?.InvestigationDetails?.length || investigationCount} Nos
+                                        </div>
+
+                                        {/* Edit Button */}
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+                                            onClick={() => {
+                                                // Handle edit action
+                                                console.log("Edit Investigation Details clicked");
+                                                setInvestigationDetailsOpen(true);
+                                            }}
+                                        >
+                                            <SquarePen className="h-4 w-4 text-gray-600" />
+                                        </Button>
                 </div>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
 
-								{/* Right side: Badge and Edit Button */}
-								<div className="flex items-center gap-3 cursor-pointer">
-									{/* Count Badge */}
-									<div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
-										{apiResponse?.InvestigationDetails.length} Nos
-									</div>
-
-									{/* Edit Button */}
-									<Button
-										variant="outline"
-										size="icon"
-										className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-										onClick={() => {
-											// Handle edit action
-											console.log("Edit Investigation Details clicked");
-											setInvestigationDetailsOpen(true);
-										}}
-									>
-										<SquarePen className="h-4 w-4 text-gray-600" />
-									</Button>
-            </div>
-							</div>
-						</Card>
-					</div>)
-					}
 					{/* Claims Findings Panel */}
-					{apiResponse?.ClaimFindings && (<div className="mt-4">
-						<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-							{/* Header Section */}
-							<div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-								{/* Left side: Icon and Title */}
-								<div className="flex items-center">
-									<div className="flex items-center justify-center w-10 h-10 rounded-md">
-										<FileText className="h-5 w-5 text-red-400" />
-									</div>
-									<h3 className="text-sm font-semibold text-gray-800">Claims Findings</h3>
-								</div>
+					{apiResponse?.ClaimFindings && (
+                        <div className="mt-4">
+                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                                {/* Header Section */}
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                    {/* Left side: Icon and Title */}
+                                    <div className="flex items-center">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-md">
+                                            <FileText className="h-5 w-5 text-red-400" />
+                                        </div>
+                                        <h3 className="text-sm font-semibold text-gray-800">Claims Findings</h3>
+                                    </div>
 
-								{/* Right side: Edit Button */}
-								<Button
-									variant="outline"
-									size="icon"
-									className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-									onClick={() => {
-										// Handle edit action
-										console.log("Edit Claims Findings clicked");
-										setClaimFindingsOpen(true);
-									}}
-								>
-									<SquarePen className="h-4 w-4 text-gray-600" />
-								</Button>
-							</div>
+                                    {/* Right side: Edit Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+                                        onClick={() => {
+                                            // Handle edit action
+                                            console.log("Edit Claims Findings clicked");
+                                            setClaimFindingsOpen(true);
+                                        }}
+                                    >
+                                        <SquarePen className="h-4 w-4 text-gray-600" />
+                                    </Button>
+                                </div>
 
-							{/* Content Section */}
-							<div className="p-4">
-								{/* First Row - 5 Key-Value Pairs */}
-								<div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-									{/* Ref. Doc. Type/ ID */}
-									<div className="flex flex-col">
-										<label className="text-xs text-muted-foreground mb-1">Ref. Doc. Type/ ID</label>
-										<span className="text-sm font-semibold text-foreground">
-											{pipedData(apiResponse?.ClaimFindings?.ReferenceDocType, apiResponse?.ClaimFindings?.ReferenceDocNo)}
-										</span>
-									</div>
+                                {/* Content Section */}
+                                <div className="p-4">
+                                    {/* First Row - 5 Key-Value Pairs */}
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                                        {/* Ref. Doc. Type/ ID */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-muted-foreground mb-1">Ref. Doc. Type/ ID</label>
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {pipedData(apiResponse?.ClaimFindings?.ReferenceDocType, apiResponse?.ClaimFindings?.ReferenceDocNo)}
+                                            </span>
+                                        </div>
 
-									{/* Final Claim Amount */}
-									<div className="flex flex-col">
-										<label className="text-xs text-muted-foreground mb-1">Final Claim Amount</label>
-										<span className="text-sm font-semibold text-foreground">
-											{apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.FinalClaimAmount}
-										</span>
-									</div>
+                                        {/* Final Claim Amount */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-muted-foreground mb-1">Final Claim Amount</label>
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.FinalClaimAmount}
+                                            </span>
+                                        </div>
 
-									{/* Usage ID/GL Account */}
-									<div className="flex flex-col">
-										<label className="text-xs text-muted-foreground mb-1">Usage ID/GL Account</label>
-										<span className="text-sm font-semibold text-foreground">
-											{apiResponse?.ClaimFindings?.UsageIDOrGLAccount || "--"}
-										</span>
-									</div>
+                                        {/* Usage ID/GL Account */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-muted-foreground mb-1">Usage ID/GL Account</label>
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {apiResponse?.ClaimFindings?.UsageIDOrGLAccount || "--"}
+                                            </span>
+                                        </div>
 
-									{/* Supplier Note No. */}
-									<div className="flex flex-col">
-										<label className="text-xs text-muted-foreground mb-1">Supplier Note No.</label>
-										<span className="text-sm font-semibold text-foreground">
-											{apiResponse?.ClaimFindings?.SupplierNoteNo || "--"}
-										</span>
-									</div>
+                                        {/* Supplier Note No. */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-muted-foreground mb-1">Supplier Note No.</label>
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {apiResponse?.ClaimFindings?.SupplierNoteNo || "--"}
+                                            </span>
+                                        </div>
 
-									{/* Supplier Note Amount */}
-									<div className="flex flex-col">
-										<label className="text-xs text-muted-foreground mb-1">Supplier Note Amount</label>
-										<span className="text-sm font-semibold text-foreground">
-											{apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.SupplierNoteAmount}
-										</span>
-									</div>
-								</div>
+                                        {/* Supplier Note Amount */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-muted-foreground mb-1">Supplier Note Amount</label>
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.SupplierNoteAmount}
+                                            </span>
+                                        </div>
+                                    </div>
 
-								{/* Second Row - Comments/Remarks (Full Width) */}
-								<div className="flex flex-col">
-									<label className="text-xs text-muted-foreground mb-1">Comments/Remarks</label>
-									<span className="text-sm font-semibold text-foreground">
-										{apiResponse?.ClaimFindings?.CommentRemark || "--"}
-									</span>
-								</div>
-							</div>
-						</Card>
-					</div>)
-					}
+                                    {/* Second Row - Comments/Remarks (Full Width) */}
+                                    <div className="flex flex-col">
+                                        <label className="text-xs text-muted-foreground mb-1">Comments/Remarks</label>
+                                        <span className="text-sm font-semibold text-foreground">
+                                            {apiResponse?.ClaimFindings?.CommentRemark || "--"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
 					{/* Document Details Panel */}
 					{showDocumentDetails && (
                         <div className="mt-4">
@@ -2204,7 +2361,7 @@ const ClaimsForm = () => {
                         <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                             Cancel
                         </button>
-                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-blue-300 border border-blue-600 hover:bg-blue-100 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+                        <button onClick={handleSaveClaim} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
                             Save
                         </button>
                     </>
