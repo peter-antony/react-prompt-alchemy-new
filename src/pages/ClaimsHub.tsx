@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ClaimService } from "@/api/services/ClaimService";
 import { ClaimsHubAuditTrail } from "@/components/Claims/ClaimsHubAuditTrail";
 import { ClaimsHubEditSave } from "@/components/Claims/ClaimsHubEditSave";
-import TripPlanActionModal from "@/components/ManageTrip/TripPlanActionModal";
+import ReasonClaimModal from "@/components/Claims/ReasonClaimModal";
 
 export const ClaimsHub = () => {
   const [searchParams] = useSearchParams();
@@ -126,6 +126,10 @@ export const ClaimsHub = () => {
         });
         // Refresh the grid data to show the updated trip status and close the modal
         setCancelModalOpen(false);
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
         await fetchClaims();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -180,6 +184,10 @@ export const ClaimsHub = () => {
         });
         // Refresh the grid data to show the updated trip status and close the modal
         setShortCloseModalOpen(false);
+        setSelectedRows(new Set());
+        setSelectedRowIds(new Set());
+        setSelectedRowObjects([]);
+        setRowTripId([]);
         await fetchClaims();
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -1663,7 +1671,7 @@ export const ClaimsHub = () => {
       />
 
       {/* New TripPlan Action Modals */}
-      <TripPlanActionModal
+      <ReasonClaimModal
         open={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
         title="Cancel Claim"
@@ -1673,10 +1681,11 @@ export const ClaimsHub = () => {
         onSubmit={cancelClaimsubmission}
         submitLabel="Cancel"
         actionType="cancel"
+        dynamicReasonMessageType={"Reason Code for Claims Cancel Init"}
       />
 
       {/* New TripPlan Action Modals */}
-      <TripPlanActionModal
+      <ReasonClaimModal
         open={shortCloseModalOpen}
         onClose={() => setShortCloseModalOpen(false)}
         title="Short Close Claim"
@@ -1686,6 +1695,7 @@ export const ClaimsHub = () => {
         onSubmit={shortCloseClaimsubmission}
         submitLabel="Short Close"
         actionType="short close"
+        dynamicReasonMessageType={"Reason Code for Claims Short Close Init"}
       />
 
       {/* Add a beautiful loading overlay when fetching data from API */}
