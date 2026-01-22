@@ -315,7 +315,7 @@ export const ClaimsHub = () => {
     },
     {
       key: "Counterparty",
-      label: "Type",
+      label: "Counterparty",
       type: "Text",
       width: 100,
       sortable: true,
@@ -1371,7 +1371,7 @@ export const ClaimsHub = () => {
       key: 'AdjustmentInvoiceNo',
       label: 'Adjustment Invoice No.',
       type: 'lazyselect', // lazy-loaded dropdown
-      fetchOptions: makeLazyFetcher(selectedClaimType == "CUS" ? "LRI Invoice No Init" : selectedClaimType == "VEN" ? "LPI Invoice No Init": ""),
+      fetchOptions: makeLazyFetcher(selectedClaimType == "CUS" ? "LRI Invoice No Init" : selectedClaimType == "VEN" ? "LPI Invoice No Init" : ""),
     },
     {
       key: 'IncidentDate', label: 'Incident Date', type: 'dateRange'
@@ -1379,10 +1379,14 @@ export const ClaimsHub = () => {
     {
       key: 'Investigation',
       label: 'Investigation',
-      type: 'lazyselect',
-      fetchOptions: makeLazyFetcher("Claim Investigation Required Init"),
-      hideSearch: true,
-      disableLazyLoading: true
+      type: 'select',
+      options: [
+        { id: '1', name: 'Yes', default: "N", description: "", seqNo: 1 },
+        { id: '2', name: 'No', default: "N", description: "", seqNo: 2 }
+      ] as any[],
+      // fetchOptions: makeLazyFetcher("Claim Investigation Required Init"),
+      // hideSearch: true,
+      // disableLazyLoading: true
     },
     {
       key: 'ClaimDates', label: 'Claim Date', type: 'dateRange'
@@ -1513,13 +1517,13 @@ export const ClaimsHub = () => {
       const response = await ClaimService.claimHubSmartEdit(Payload);
       const responseDataString = response?.data?.ResponseData;
       if (!responseDataString) return;
-      if(response?.data?.IsSuccess) {
+      if (response?.data?.IsSuccess) {
         setIsClaimsEditOpen(false);
         fetchClaims(); // Refresh the grid data
         toast({
-        title: "Success",
-        description: `Claim fields updated successfully`,
-      });
+          title: "Success",
+          description: `Claim fields updated successfully`,
+        });
       }
     }
     catch (error) {
