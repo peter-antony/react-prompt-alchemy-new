@@ -64,7 +64,7 @@ const orderFormRef = React.useRef<OrderFormHandle | null>(null);
 
 useImperativeHandle(ref, () => ({
   getOrderValues: () => orderFormRef.current?.getOrderValues() || {},
-  doValidation: () => orderFormRef.current?.doValidation()
+  // doValidation: () => orderFormRef.current?.doValidation()
 }));
 
 
