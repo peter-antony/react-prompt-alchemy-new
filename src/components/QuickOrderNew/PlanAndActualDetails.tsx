@@ -1696,6 +1696,7 @@ useEffect(() => {
       editable: true,
       order: 3,
       inputType: 'number',
+      maxLength: 20,
       options: wagonQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonTareWeight: {
@@ -1709,6 +1710,7 @@ useEffect(() => {
       editable: true,
       order: 4,
       inputType: 'number',
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonGrossWeight: {
@@ -1722,6 +1724,7 @@ useEffect(() => {
       order: 5,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonLength: {
@@ -1735,6 +1738,7 @@ useEffect(() => {
       order: 6,
       value: '',
       inputType: 'number',
+      maxLength: 20,
       options: weightLength?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     WagonSequence: {
@@ -1748,6 +1752,7 @@ useEffect(() => {
       editable: true,
       order: 7,
       inputType: 'number',
+      maxLength: 50
     },
   };
 
@@ -1834,6 +1839,7 @@ useEffect(() => {
       order: 3,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: containerQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerTareWeight: {
@@ -1847,6 +1853,7 @@ useEffect(() => {
       order: 4,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     ContainerLoadWeight: {
@@ -1860,6 +1867,7 @@ useEffect(() => {
       visible: true,
       editable: true,
       order: 5,
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
   };
@@ -1994,6 +2002,7 @@ useEffect(() => {
       order: 4,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       // options: productQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
       options: productQty
         ?.filter((qc: any, index: number, self: any[]) =>
@@ -2015,6 +2024,7 @@ useEffect(() => {
       order: 5,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     UNCode: {
@@ -2232,6 +2242,7 @@ useEffect(() => {
       visible: true,
       editable: true,
       order: 2,
+      maxLength: 40,
     },
     THUQuantity: {
       id: "THUQuantity",
@@ -2244,6 +2255,7 @@ useEffect(() => {
       order: 3,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: thuQty?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
     THUWeight: {
@@ -2257,6 +2269,7 @@ useEffect(() => {
       order: 5,
       value: "",
       inputType: 'number',
+      maxLength: 20,
       options: weightList?.filter((qc: any) => qc.id).map((qc: any) => ({ label: qc.name, value: qc.id })),
     },
   };
