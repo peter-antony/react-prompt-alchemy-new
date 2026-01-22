@@ -125,6 +125,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [qc1Options, setQc1Options] = useState<{ label: string; value: string }[]>([]);
   const { fetchTrip } = manageTripStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [reasonForUpdateError, setReasonForUpdateError] = useState(false);
  
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
@@ -187,6 +188,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     const reasonStr = (reasonForUpdate ?? "").toString().trim();
     if (!reasonStr) {
       const missingFields: string[] = ["Reason For Update"];
+         setReasonForUpdateError(true);
       toast({
         title: "⚠️ Missing Mandatory Fields",
         description: (
@@ -746,12 +748,28 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
               <SelectItem value="customer_request">Customer Request</SelectItem>
             </SelectContent>
           </Select> */}
-          <DynamicLazySelect
+          {/* <DynamicLazySelect
             fetchOptions={fetchReasonForUpdate}
             value={reasonForUpdate}
             onChange={(value) => setReasonForUpdate(value as string)}
             placeholder="Select Type"
-          />
+          /> */}
+          <DynamicLazySelect
+  fetchOptions={fetchReasonForUpdate}
+  value={reasonForUpdate}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setReasonForUpdate(value as string);
+
+    if (val) {
+      setReasonForUpdateError(false); 
+    }
+  }}
+  error={reasonForUpdateError}
+  placeholder="Select Type"
+/>
+
         </div>
 
         <div className="flex justify-end">

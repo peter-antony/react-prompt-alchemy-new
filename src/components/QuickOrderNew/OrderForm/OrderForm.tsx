@@ -30,7 +30,15 @@ import CardDetails, { CardDetailsItem } from '../../Common/Card-View-Details';
 import { initializeJsonStore } from '../../../pages/JsonCreater';
 import { useToast } from '@/hooks/use-toast';
 
-export type OrderFormHandle = { getOrderValues: () => any };
+export type OrderFormHandle = {
+  getOrderValues: () => any;
+  doValidation: () => {
+    isValid: boolean;
+    errors: Record<string, string>;
+    mandatoryFieldsEmpty: string[];
+  };
+};
+
 
 interface OrderFormProps {
   onSaveDraft: () => void;

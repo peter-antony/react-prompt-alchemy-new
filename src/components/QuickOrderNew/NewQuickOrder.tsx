@@ -59,9 +59,15 @@ const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderP
 
   // expose child OrderForm getter through this component
   let orderFormGetter: (() => any) | null = null;
-  useImperativeHandle(ref, () => ({
-    getOrderValues: () => orderFormGetter?.() || {},
-  }));
+const orderFormRef = React.useRef<OrderFormHandle | null>(null);
+
+
+useImperativeHandle(ref, () => ({
+  getOrderValues: () => orderFormRef.current?.getOrderValues() || {},
+  doValidation: () => orderFormRef.current?.doValidation()
+}));
+
+
 
   return (
     <div className="flex gap-6">
@@ -71,7 +77,8 @@ const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderP
             ref={(r: OrderFormHandle | null) => {
               orderFormGetter = r?.getOrderValues || null;
             }}
-            onSaveDraft={onSaveDraft || handleSaveDraft}
+            // ref={orderFormRef}
+            onSaveDraft={onSaveDraft}
             onConfirm={onConfirm || handleConfirm}
             onCancel={onCancel|| handleCancel}
             isEditQuickOrder={isEditQuickOrder}

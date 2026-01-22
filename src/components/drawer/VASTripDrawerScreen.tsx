@@ -73,6 +73,7 @@ export const VASTripDrawerScreen = ({ tripUniqueNo, tripInformationData }: { tri
   const [vasItems, setVasItems] = useState<VASItem[]>([]);
   const [selectedVAS, setSelectedVAS] = useState<string | null>(null);
   const [selectedVASForCopy, setSelectedVASForCopy] = useState<string[]>([]);
+  const [customerError, setCustomerError] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   // Use tripInformationData if provided, otherwise fallback to store
   const { tripData: storeTripData } = manageTripStore();
@@ -130,6 +131,7 @@ export const VASTripDrawerScreen = ({ tripUniqueNo, tripInformationData }: { tri
   const fetchSupplierContract = fetchMasterData("Contract Init", { OrderType: 'BUY' });
   const fetchSupplier = fetchMasterData("Supplier Init");
   const [customerValue, setCustomerValue] = useState<string | undefined>();
+  
 
 
 
@@ -384,6 +386,13 @@ const saveCurrentFormData = () => {
   // };
 
   const handleSave = async () => {
+    const customerVal = (formData.CustomerID ?? "").toString().trim();
+
+if (!customerVal) {
+  setCustomerError(true);          // 🔴 show red border
+  // missingFields.push("Customer");
+}
+
   // Check if CustomerOrderNo is empty when creating new VAS
   if (!selectedVAS && !formData.CustomerOrderNo) {
     toast({
@@ -575,7 +584,7 @@ const saveCurrentFormData = () => {
             </SelectContent>
           </Select>
         </div> */}
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-4 border-c">
   <Label>Customer Order No.</Label>
   <Select
     value={formData.CustomerOrderNo}
@@ -754,7 +763,23 @@ const saveCurrentFormData = () => {
                 value={formData.CustomerID && formData.CustomerDescription
                   ? `${formData.CustomerID} || ${formData.CustomerDescription}`
                   : (formData.CustomerID || formData.CustomerDescription || '')}
-                onChange={(value) => setFormData({ ...formData, CustomerID: value as string })}
+                // onChange={(value) => setFormData({ ...formData, CustomerID: value as string })}
+                onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setFormData({
+      ...formData,
+      CustomerID: value as string,
+      CustomerDescription: val.includes("||")
+        ? val.split("||")[1]?.trim()
+        : formData.CustomerDescription,
+    });
+
+    if (val) {
+      setCustomerError(false); // ✅ clear red border
+    }
+  }}
+  error={customerError}
                 placeholder="Select Customer"
               />
             </div>

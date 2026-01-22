@@ -103,6 +103,7 @@ export const VASDrawerScreen = ({ tripUniqueNo }) => {
   const [selectedVASForCopy, setSelectedVASForCopy] = useState<string[]>([]);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { tripData } = manageTripStore();
+   const [customerError, setCustomerError] = useState(false);
   const tripId: any = tripData?.Header?.TripNo || tripUniqueNo;
   const { toast } = useToast();
 
@@ -404,6 +405,13 @@ const saveCurrentFormData = () => {
   const handleSave = async () => {
   // Check if CustomerOrderNo is empty when creating new VAS
   // Show error when there is no Customer Order No selected && Customer is checked
+   const customerVal = (formData.CustomerID ?? "").toString().trim();
+
+if (!customerVal) {
+  setCustomerError(true);          // 🔴 show red border
+  // missingFields.push("Customer");
+}
+
   if (!selectedVAS && formData.IsApplicableToCustomer && !formData.CustomerOrderNo) {
     toast({
       title: "❌ Validation Error",
@@ -797,7 +805,23 @@ const saveCurrentFormData = () => {
                 value={formData.CustomerID && formData.CustomerDescription
                   ? `${formData.CustomerID} || ${formData.CustomerDescription}`
                   : (formData.CustomerID || formData.CustomerDescription || '')}
-                onChange={(value) => setFormData({ ...formData, CustomerID: value as string })}
+                // onChange={(value) => setFormData({ ...formData, CustomerID: value as string })}
+                 onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setFormData({
+      ...formData,
+      CustomerID: value as string,
+      CustomerDescription: val.includes("||")
+        ? val.split("||")[1]?.trim()
+        : formData.CustomerDescription,
+    });
+
+    if (val) {
+      setCustomerError(false); // ✅ clear red border
+    }
+  }}
+  error={customerError}
                 placeholder="Select Customer"
               />
             </div>

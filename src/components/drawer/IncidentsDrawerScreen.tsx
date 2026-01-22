@@ -190,6 +190,24 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   // const [incidentItems, setIncidentItems] = useState<VASItem[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [incidentIdError, setIncidentIdError] = useState(false);
+const [incidentStatusError, setIncidentStatusError] = useState(false);
+const [incidentTypeError, setIncidentTypeError] = useState(false);
+const [incidentDateError, setIncidentDateError] = useState(false);
+const [incidentTimeError, setIncidentTimeError] = useState(false);
+
+const [accidentTypeError, setAccidentTypeError] = useState(false);
+const [incidentResolutionError, setIncidentResolutionError] = useState(false);
+const [causeCodeError, setCauseCodeError] = useState(false);
+const [containerError, setContainerError] = useState(false);
+const [workTypeError, setWorkTypeError] = useState(false);
+const [workCategoryError, setWorkCategoryError] = useState(false);
+const [workGroupError, setWorkGroupError] = useState(false);
+const [maintenanceDescError, setMaintenanceDescError] = useState(false);
+const [wagonError, setWagonError] = useState(false);
+
+
+
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
   const { toast } = useToast();
@@ -407,6 +425,71 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
   //   }
   // };
   const handleSave = async () => {
+    let hasError = false;
+if (!formData.Wagon?.trim()) {
+  setWagonError(true);
+  hasError = true;
+}
+
+    // Incident Details
+if (!formData.IncidentType?.trim()) {
+  setIncidentTypeError(true); hasError = true;
+}
+if (!formData.IncidentDate) {
+  setIncidentDateError(true); hasError = true;
+}
+if (!formData.IncidentTime) {
+  setIncidentTimeError(true); hasError = true;
+}
+
+// Maintenance Details
+if (!formData.AccidentType?.trim()) {
+  setAccidentTypeError(true); hasError = true;
+}
+if (!formData.IncidentResolution?.trim()) {
+  setIncidentResolutionError(true); hasError = true;
+}
+if (!formData.CauseCode?.trim()) {
+  setCauseCodeError(true); hasError = true;
+}
+if (!formData.Container?.trim()) {
+  setContainerError(true); hasError = true;
+}
+if (!formData.WorkType?.trim()) {
+  setWorkTypeError(true); hasError = true;
+}
+if (!formData.WorkCategory?.trim()) {
+  setWorkCategoryError(true); hasError = true;
+}
+if (!formData.WorkGroup?.trim()) {
+  setWorkGroupError(true); hasError = true;
+}
+if (!formData.MaintenanceDescription?.trim()) {
+  setMaintenanceDescError(true); hasError = true;
+}
+
+
+// Incident ID mandatory
+if (!formData.IncidentId || !formData.IncidentId.trim()) {
+  setIncidentIdError(true);
+  hasError = true;
+}
+
+// Incident Status mandatory
+if (!formData.IncidentStatus || !formData.IncidentStatus.trim()) {
+  setIncidentStatusError(true);
+  hasError = true;
+}
+
+if (hasError) {
+  toast({
+    title: "⚠️ Validation Failed",
+    description: "Please fill all mandatory Incident fields",
+    variant: "destructive",
+  });
+  return;
+}
+
     let updatedIncidentItems = [...incidents];
     let newIncidentForApi: Incident | null = null;
 
@@ -662,11 +745,31 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 /> */}
                 <Input id="incidentId" 
                 value={formData.IncidentId} 
-                onChange={(e) => setFormData({ ...formData, IncidentId: e.target.value })} 
+                // onChange={(e) => setFormData({ ...formData, IncidentId: e.target.value })} 
+                onChange={(e) => {
+  const val = e.target.value;
+  setFormData({ ...formData, IncidentId: val });
+
+  if (val.trim()) {
+    setIncidentIdError(false); // ✅ clear mandatory error
+  }
+}}
+
                 placeholder="Enter Incident ID"
+                // className={`h-10 ${
+                //   formData.IncidentId && formData.IncidentId.length > MAX_LENGTH_IncidentId ? "border-red-600 focus-visible:ring-red-600" : ""
+                //     }`}
                 className={`h-10 ${
-                  formData.IncidentId && formData.IncidentId.length > MAX_LENGTH_IncidentId ? "border-red-600 focus-visible:ring-red-600" : ""
-                    }`}
+  incidentIdError
+    ? "border-red-600 focus-visible:ring-red-600"
+    : ""
+} ${
+  formData.IncidentId &&
+  formData.IncidentId.length > MAX_LENGTH_IncidentId
+    ? "border-red-600 focus-visible:ring-red-600"
+    : ""
+}`}
+
                 />
                 <p className="text-xs min-h-[16px] text-red-500">
                   {formData.IncidentId &&
@@ -685,7 +788,17 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                 <DynamicLazySelect
                   fetchOptions={fetchIncidentStatus}
                   value={formData.IncidentStatus}
-                  onChange={(value) => setFormData({ ...formData, IncidentStatus: value as string })}
+                  // onChange={(value) => setFormData({ ...formData, IncidentStatus: value as string })}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setFormData({ ...formData, IncidentStatus: value as string });
+
+    if (val) {
+      setIncidentStatusError(false); // ✅ clear red border
+    }
+  }}
+  error={incidentStatusError}
                   placeholder="Select Incident Status"
                 />
                 <div className="min-h-[16px]" />
@@ -728,23 +841,47 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                           <SelectItem value="theft">Theft</SelectItem>
                         </SelectContent>
                       </Select> */}
-                      <DynamicLazySelect
+                      {/* <DynamicLazySelect
                         fetchOptions={fetchIncidentType}
                         value={formData.IncidentType}
                         onChange={(value) => setFormData({ ...formData, IncidentType: value as string })}
                         placeholder="Select Incident Type"
                       />
-                    </div>
+                    </div> */}
+                    <DynamicLazySelect
+  fetchOptions={fetchIncidentType}
+  value={formData.IncidentType}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, IncidentType: value as string });
+    if (val) setIncidentTypeError(false);
+  }}
+  error={incidentTypeError}
+  placeholder="Select Incident Type"
+/>
+   </div>
+
 
                     <div className="space-y-2">
                       <Label htmlFor="incidentDate">Incident Date <span className="text-destructive">*</span></Label>
                       <div className="relative">
-                        <Input
+                        {/* <Input
                           type="date"
                           value={formData.IncidentDate}
                           onChange={(e) => setFormData({ ...formData, IncidentDate: e.target.value })}
                           placeholder="DD-MMM-YYYY"
-                        />
+                        /> */}
+                        <Input
+  type="date"
+  value={formData.IncidentDate}
+  onChange={(e) => {
+    const val = e.target.value;
+    setFormData({ ...formData, IncidentDate: val });
+    if (val) setIncidentDateError(false);
+  }}
+  className={incidentDateError ? "border-red-600 focus-visible:ring-red-600" : ""}
+/>
+
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
@@ -753,13 +890,25 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <Label htmlFor="incidentTime">Incident Time <span className="text-destructive">*</span></Label>
                       <div className="relative">
                         {/* <Input id="IncidentTime" type="time" value={formData.IncidentTime} onChange={(e) => handleInputChange('IncidentTime', e.target.value)} /> */}
-                        <Input
+                        {/* <Input
                           type="time"
                           id="incidentTime"
                           value={formData.IncidentTime}
                           onChange={(e) => setFormData({ ...formData, IncidentTime: e.target.value })}
                           placeholder="HH:MM"
-                        />
+                        /> */}
+                        <Input
+  type="time"
+  value={formData.IncidentTime}
+  onChange={(e) => {
+    const val = e.target.value;
+    setFormData({ ...formData, IncidentTime: val });
+    if (val) setIncidentTimeError(false);
+  }}
+  className={incidentTimeError ? "border-red-600 focus-visible:ring-red-600" : ""}
+/>
+
+
                         <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
@@ -903,12 +1052,25 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select> */}
-                        <DynamicLazySelect
+                        {/* <DynamicLazySelect
                           fetchOptions={fetchIncidentAccident}
                           value={formData.AccidentType}
                           onChange={(value) => setFormData({ ...formData, AccidentType: value as string })}
                           placeholder="Select Accident Type"
-                        />
+                        /> */}
+
+                        <DynamicLazySelect
+  fetchOptions={fetchIncidentCause}
+  value={formData.CauseCode}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, CauseCode: value as string });
+    if (val) setCauseCodeError(false);
+  }}
+  error={causeCodeError}
+  placeholder="Select Cause Code"
+/>
+
                       </div>
 
                       <div className="space-y-2">
@@ -923,18 +1085,48 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="weather">Weather Related</SelectItem>
                           </SelectContent>
                         </Select> */}
-                        <DynamicLazySelect
+                        {/* <DynamicLazySelect
                           fetchOptions={fetchIncidentCause}
                           value={formData.CauseCode}
                           onChange={(value) => setFormData({ ...formData, CauseCode: value as string })}
                           placeholder="Select Cause Code"
-                        />
+                        /> */}
+
+                        <DynamicLazySelect
+  fetchOptions={fetchIncidentCause}
+  value={formData.CauseCode}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, CauseCode: value as string });
+    if (val) setCauseCodeError(false);
+  }}
+  error={causeCodeError}
+  placeholder="Select Cause Code"
+/>
+
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="incidentResolution">Incident Resolution <span className="text-destructive">*</span></Label>
-                        <Input id="incidentResolution" value={formData.IncidentResolution} onChange={(e) => handleInputChange('IncidentResolution', e.target.value)} placeholder="Enter Incident Resolution"
-                          className={`h-10 ${formData.IncidentResolution && formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution ? "border-red-600 focus-visible:ring-red-600" : ""}`} />
+                        {/* <Input id="incidentResolution" value={formData.IncidentResolution} onChange={(e) => handleInputChange('IncidentResolution', e.target.value)} placeholder="Enter Incident Resolution"
+                          className={`h-10 ${formData.IncidentResolution && formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution ? "border-red-600 focus-visible:ring-red-600" : ""}`} /> */}
+                          <Input
+  value={formData.IncidentResolution}
+  onChange={(e) => {
+    const val = e.target.value;
+    handleInputChange('IncidentResolution', val);
+    if (val.trim()) setIncidentResolutionError(false);
+  }}
+  className={`h-10 ${
+    incidentResolutionError ? "border-red-600 focus-visible:ring-red-600" : ""
+  } ${
+    formData.IncidentResolution &&
+    formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution
+      ? "border-red-600 focus-visible:ring-red-600"
+      : ""
+  }`}
+/>
+
                         <p className="text-xs  text-red-500">
                           {formData.IncidentResolution &&
                             formData.IncidentResolution.length > MAX_LENGTH_IncidentResolution &&
@@ -967,23 +1159,45 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                       <div className="space-y-2">
                         <Label htmlFor="wagon">Wagon <span className="text-destructive">*</span></Label>
                         {/* <Input id="Wagon" value={formData.Wagon} onChange={(e) => handleInputChange('Wagon', e.target.value)} placeholder="Enter Wagon" /> */}
-                        <DynamicLazySelect
-                          fetchOptions={fetchIncidentWagon}
-                          value={formData.Wagon}
-                          onChange={(value) => setFormData({ ...formData, Wagon: value as string })}
-                          placeholder="Select Wagon"
-                        />
+                       <DynamicLazySelect
+  fetchOptions={fetchIncidentWagon}
+  value={formData.Wagon}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setFormData({ ...formData, Wagon: value as string });
+
+    if (val) {
+      setWagonError(false); // ✅ clear red border
+    }
+  }}
+  error={wagonError}
+  placeholder="Select Wagon"
+/>
+
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="container">Container <span className="text-destructive">*</span></Label>
                         {/* <Input id="Container" value={formData.Container} onChange={(e) => handleInputChange('Container', e.target.value)} placeholder="Enter Container" /> */}
-                        <DynamicLazySelect
+                        {/* <DynamicLazySelect
                           fetchOptions={fetchIncidentContainer}
                           value={formData.Container}
                           onChange={(value) => setFormData({ ...formData, Container: value as string })}
                           placeholder="Select Container"
-                        />
+                        /> */}
+                        <DynamicLazySelect
+  fetchOptions={fetchIncidentContainer}
+  value={formData.Container}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, Container: value as string });
+    if (val) setContainerError(false);
+  }}
+  error={containerError}
+  placeholder="Select Container"
+/>
+
                       </div>
 
                       <div className="space-y-2">
@@ -998,12 +1212,25 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="replacement">Replacement</SelectItem>
                           </SelectContent>
                         </Select> */}
-                         <DynamicLazySelect
+                         {/* <DynamicLazySelect
                           fetchOptions={fetchWorkType}
                           value={formData.WorkType}
                           onChange={(value) => setFormData({ ...formData, WorkType: value as string })}
                           placeholder="Select Work Type"
-                        />
+                        /> */}
+
+                        <DynamicLazySelect
+  fetchOptions={fetchWorkType}
+  value={formData.WorkType}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, WorkType: value as string });
+    if (val) setWorkTypeError(false);
+  }}
+  error={workTypeError}
+  placeholder="Select Work Type"
+/>
+
 
                       </div>
 
@@ -1019,12 +1246,25 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="structural">Structural</SelectItem>
                           </SelectContent>
                         </Select> */}
-                        <DynamicLazySelect
+                        {/* <DynamicLazySelect
                           fetchOptions={fetchWorkCategory}
                           value={formData.WorkCategory}
                           onChange={(value) => setFormData({ ...formData, WorkCategory: value as string })}
                           placeholder="Select Work Category"
-                        />
+                        /> */}
+
+                        <DynamicLazySelect
+  fetchOptions={fetchWorkCategory}
+  value={formData.WorkCategory}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, WorkCategory: value as string });
+    if (val) setWorkCategoryError(false);
+  }}
+  error={workCategoryError}
+  placeholder="Select Work Category"
+/>
+
                       </div>
 
                       <div className="space-y-2">
@@ -1039,19 +1279,50 @@ export const IncidentsDrawerScreen: React.FC<IncidentsDrawerScreenProps> = ({ on
                             <SelectItem value="technical">Technical</SelectItem>
                           </SelectContent>
                         </Select> */}
-                        <DynamicLazySelect
+                        {/* <DynamicLazySelect
                           fetchOptions={fetchWorkGroup}
                           value={formData.WorkGroup}
                           onChange={(value) => setFormData({ ...formData, WorkGroup: value as string })}
                           placeholder="Select Work Group"
-                        />
+                        /> */}
+
+                        <DynamicLazySelect
+  fetchOptions={fetchWorkGroup}
+  value={formData.WorkGroup}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+    setFormData({ ...formData, WorkGroup: value as string });
+    if (val) setWorkGroupError(false);
+  }}
+  error={workGroupError}
+  placeholder="Select Work Group"
+/>
+
                       </div>
 
                       <div className="col-span-5 space-y-2">
                         <Label htmlFor="maintenanceDescription">Maintenance Description <span className="text-destructive">*</span></Label>
-                        <Textarea id="maintenanceDescription" value={formData.MaintenanceDescription} onChange={(e) => handleInputChange('MaintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." 
+                        {/* <Textarea id="maintenanceDescription" value={formData.MaintenanceDescription} onChange={(e) => handleInputChange('MaintenanceDescription', e.target.value)} placeholder="Enter Maintenance Desc." 
                         className={`min-h-[80px] resize-none ${formData.MaintenanceDescription && formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription ? "border-red-600 focus-visible:ring-red-600" : ""
-                          }`} />
+                          }`} /> */}
+
+                          <Textarea
+  value={formData.MaintenanceDescription}
+  onChange={(e) => {
+    const val = e.target.value;
+    handleInputChange('MaintenanceDescription', val);
+    if (val.trim()) setMaintenanceDescError(false);
+  }}
+  className={`min-h-[80px] ${
+    maintenanceDescError ? "border-red-600 focus-visible:ring-red-600" : ""
+  } ${
+    formData.MaintenanceDescription &&
+    formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription
+      ? "border-red-600 focus-visible:ring-red-600"
+      : ""
+  }`}
+/>
+
                       <p className="text-xs  text-red-500">
                         {formData.MaintenanceDescription &&
                           formData.MaintenanceDescription.length > MAX_LENGTH_MaintenanceDescription &&

@@ -153,6 +153,7 @@ const TripPlanning = () => {
       setLocation('FWDS_SAS || Forwardis SAS');
     }
   }, []);
+const [locationError, setLocationError] = useState(false);
 
   const { hasAlert, setAlert, clearAlert, colorClass } = useTrainParametersAlertStore();
   const tripId: any = tripData?.Header?.TripNo || urlTripID || tripNo;
@@ -2110,6 +2111,13 @@ const TripPlanning = () => {
     };
 
     if (location === undefined || location === null || location === "") {
+      const locationStr = (location ?? "").toString().trim();
+      let missingFields: string[] = [];
+if (!locationStr) {
+  setLocationError(true); 
+  missingFields.push("Location");
+}
+
       toast({
         title: "⚠️ Location is required",
         description: "Please select a location",
@@ -2206,6 +2214,21 @@ const TripPlanning = () => {
   }, [showConfirmReleaseBtn, customerOrderList]);
 
   const confirmTripPlanning = async () => {
+    let missingFields: string[] = [];
+    const locationStr = (location ?? "").toString().trim();
+  if (!locationStr) {
+    setLocationError(true);
+    missingFields.push("Location");
+  }
+
+  if (!locationStr) {
+    toast({
+      title: "⚠️ Missing Mandatory Fields",
+      description: missingFields.join(", "),
+      variant: "destructive",
+    });
+    return;
+  }
     // console.log("confirmTripPlanning ===", selectedRowObjects);
     console.log("confirmTripPlanning ===", customerOrderList + tripNo);
     console.log("confirmTripPlanning ===", tripCustomerOrdersData);
@@ -2358,9 +2381,24 @@ const TripPlanning = () => {
   }
 
   const releseTripPlanning = async () => {
+   
     console.log("releaseTripPlanning ===", tripCustomerOrdersData);
     console.log("releaseTripPlanning - selectedTripIDs ===", selectedTripIDs);
-    
+      let missingFields: string[] = [];
+    const locationStr = (location ?? "").toString().trim();
+  if (!locationStr) {
+    setLocationError(true);
+    missingFields.push("Location");
+  }
+
+  if (!locationStr) {
+    toast({
+      title: "⚠️ Missing Mandatory Fields",
+      description: missingFields.join(", "),
+      variant: "destructive",
+    });
+    return;
+  }
     const messageType = "Manage Trip Plan - Release Trip";
     
     // Check if a single customer order is selected
@@ -3470,12 +3508,28 @@ const TripPlanning = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location <span className="text-red-500 ml-1">*</span></label>
-                <DynamicLazySelect
+                {/* <DynamicLazySelect
                   fetchOptions={fetchLocations}
                   value={location}
                   onChange={(value) => setLocation(value as string)}
                   placeholder=""
-                />
+                /> */}
+                <DynamicLazySelect
+  fetchOptions={fetchLocations}
+  value={location}
+  onChange={(value) => {
+    const val = (value ?? "").toString().trim();
+
+    setLocation(value as string);
+
+    if (val) {
+      setLocationError(false); 
+    }
+  }}
+  error={locationError}
+  placeholder=""
+/>
+
               </div>
 
               <div className="space-y-2">

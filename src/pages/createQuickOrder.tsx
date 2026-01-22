@@ -16,6 +16,11 @@ import CommonPopup from '@/components/Common/CommonPopup';
 import { NotebookPen } from 'lucide-react';
 import { json } from 'stream/consumers';
 import { format } from "date-fns";
+interface ValidationResult {
+  isValid: boolean;
+  errors?: Record<string, string>;
+  mandatoryFieldsEmpty?: string[];
+}
 
 const CreateQuickOrder = () => {
   const navigate = useNavigate();
@@ -402,9 +407,10 @@ const CreateQuickOrder = () => {
   //     });
   //   }
   // }
-
+   const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
   const quickOrderSaveDraftHandler = async () => {
     // Pull current OrderForm values via forwarded ref
+    
     const orderFormValues = newQuickOrderRef.current?.getOrderValues() || {};
     console.log('SAVE HANDLER', orderFormValues);
     console.log('OrderForm current values:', orderFormValues);

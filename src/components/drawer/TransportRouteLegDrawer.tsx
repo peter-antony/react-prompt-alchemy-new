@@ -530,7 +530,15 @@ const handleValidateAllLegPanels = () => {
   console.log('💾 selectedRoute form data:', selectedRoute);
 
    const isValid = handleValidateAllLegPanels();
-
+const reasonStr = (formData.reasonForUpdate ?? "").toString().trim();
+  if (!reasonStr) {
+    // missingFields.push("Reason For Update");
+      setReasonForUpdateError(true);
+  }
+   if (reasonStr) {
+    // missingFields.push("Reason For Update");
+      setReasonForUpdateError(false);
+  }
   if (!isValid) {
     toast({
       title: "⚠️ Validation Failed",
@@ -560,13 +568,9 @@ const handleValidateAllLegPanels = () => {
   });
 
   // Validate Reason For Update is provided
-  const reasonStr = (formData.reasonForUpdate ?? "").toString().trim();
-  if (!reasonStr) {
-    missingFields.push("Reason For Update");
-      setReasonForUpdateError(true);
-  }
+  
 
-  if (missingFields.length > 0) {
+  if (!reasonStr) {
     toast({
       title: "⚠️ Missing Mandatory Fields",
       description: (
@@ -1349,9 +1353,9 @@ const handleValidateAllLegPanels = () => {
 
     setReasonForUpdate(value as string);
 
-    if (val) {
-      setReasonForUpdateError(false); // ✅ clear only when valid
-    }
+    // if (val) {
+    //   setReasonForUpdateError(false); 
+    // }
   }}
          error={reasonForUpdateError}
             placeholder="Select Type"

@@ -265,6 +265,8 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   const { toast } = useToast();
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
+  const [reasonError, setReasonError] = useState(false);
+
   
   // Auto-select first resource on mount
   useEffect(() => {
@@ -381,6 +383,13 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
   };
 
   const handleSave = async() => {
+    setReasonError(false);
+let hasError = false;
+    if (!formData.reason?.trim()) {
+  setReasonError(true);
+  hasError = true;
+}
+
     console.log("formData ==== before save (changed data from forms):", formData.reason);
     console.log("selectedResource ====", selectedResource);
     console.log("resources array ====", resources);
@@ -1039,6 +1048,7 @@ export const ResourcesDrawerScreen = ({ onClose }: { onClose?: () => void }) => 
                 <Label>Reason <span className="text-destructive">*</span></Label>
                 <DynamicLazySelect
                   fetchOptions={fetchReason}
+                  error={reasonError}
                   value={formData.reason}
                   onChange={(value) => setFormData({ ...formData, reason: value as string })}
                   placeholder="Select Reason"
