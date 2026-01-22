@@ -32,12 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export type OrderFormHandle = {
   getOrderValues: () => any;
-  doValidation: () => {
-    isValid: boolean;
-    errors: Record<string, string>;
-    mandatoryFieldsEmpty: string[];
-  };
-};
+ };
 
 
 interface OrderFormProps {
