@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Download } from 'lucide-react';
 import { DynamicLazySelect } from "../DynamicPanel/DynamicLazySelect";
 import { quickOrderService } from "@/api/services";
+import { useToast } from '@/hooks/use-toast';
+import { ClaimService } from "@/api/services/ClaimService";
 
 type InvestigationEntry = {
   UniqueID: string;
@@ -22,7 +24,9 @@ export const InvestigationDetails: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   rowData?: any;
-}> = ({ isOpen, onClose, rowData }) => {
+  apiData?: any;
+}> = ({ isOpen, onClose, rowData, apiData }) => {
+  console.log("InvestigationDetails render", { apiData });
   // Sample JSON data (temporary) — parent will pass real data later
   const sampleEntries: InvestigationEntry[] = [
     {
@@ -56,8 +60,24 @@ export const InvestigationDetails: React.FC<{
     }
   ];
 
-  const [entries, setEntries] = useState<InvestigationEntry[]>(sampleEntries);
-  const [selectedId, setSelectedId] = useState<string | null>(entries[0]?.UniqueID ?? null);
+  const [entries, setEntries] = useState<InvestigationEntry[]>(apiData?.InvestigationDetails || []);
+  const [selectedId, setSelectedId] = useState<string | null>(entries?.[0]?.UniqueID ?? null);
+
+  // Ensure we default to the first entry when `entries` are loaded/changed.
+  // apiData may arrive after initial render, so setSelectedId here instead
+  // of relying only on initial useState value.
+  useEffect(() => {
+    if (!entries || entries.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+
+    // If current selectedId is missing or not present in entries, pick the first one
+    const exists = entries.some(e => e.UniqueID === selectedId);
+    if (!exists) {
+      setSelectedId(entries[0].UniqueID);
+    }
+  }, [entries]);
 
   const emptyForm = (): FormData => ({
     UniqueID: '',
@@ -71,8 +91,9 @@ export const InvestigationDetails: React.FC<{
   });
 
   // single formData for selected entry
-  const selected = entries.find(e => e.UniqueID === selectedId) || null;
+  const selected = entries?.find(e => e.UniqueID === selectedId) || null;
   const [formData, setFormData] = useState<FormData>(selected ? { ...selected } : emptyForm());
+  const { toast } = useToast();
   const fetchMasterData = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
     try {
       // Call the API using the same service pattern as PlanAndActualDetails component
@@ -104,6 +125,15 @@ export const InvestigationDetails: React.FC<{
   const fetchUsers = fetchMasterData("Employee Init");
 
   useEffect(() => {
+    // when apiData changes (new data from parent), load entries
+    // If apiData.InvestigationDetails is null/empty we must clear entries to avoid showing stale data
+    if (apiData) {
+      setEntries(apiData.InvestigationDetails || []);
+    }
+
+  }, [apiData]);
+
+  useEffect(() => {
     // when selection or drawer open changes, load selected fields into formData
     // If selectedId exists but isn't in entries (unsaved new entry), keep current formData.
     if (selected) {
@@ -124,14 +154,21 @@ export const InvestigationDetails: React.FC<{
       AdditionalAttachment: [],
       ModeFlag: 'Insert'
     };
-    // setEntries(prev => [newEntry, ...prev]);
+    // Do NOT append a blank new entry into `entries` yet — wait until user fills required fields and saves.
+    // Keep the new entry only in the form state until saveDetails commits it.
     setSelectedId(id);
     setFormData({ ...newEntry });
   };
 
   const removeEntry = (id: string) => {
-    setEntries(prev => prev.filter(e => e.UniqueID !== id));
-    if (selectedId === id) setSelectedId(entries[0]?.UniqueID ?? null);
+    setEntries(prev => {
+      const updated = prev.filter(e => e.UniqueID !== id);
+      // If the removed entry was the currently selected one, select the first available
+      if (selectedId === id) {
+        setSelectedId(updated[0]?.UniqueID ?? null);
+      }
+      return updated;
+    });
   };
 
   const onFileAdd = (file: File) => {
@@ -146,34 +183,150 @@ export const InvestigationDetails: React.FC<{
     e.currentTarget.value = '';
   };
 
-  const saveDetails = () => {
-    if (!selectedId) return;
+  const pipedFormat = (user: any) => {
+    if (user == null) {
+      return null; // handles null & undefined
+    }
+    const value = String(user).trim();
+    if (value.includes("||")) {
+      return value.split("||")[0].trim();
+    }
+    return value;
+  }
+
+  const saveDetails = async () => {
+    // if (!selectedId) return [];
+
     const currentForm = { ...formData };
-    // determine if entry exists already
-    const existing = entries.find(e => e.UniqueID === selectedId);
-    if (!existing) {
-      // new insert
-      const toInsert: InvestigationEntry = { ...currentForm, UniqueID: selectedId, ModeFlag: currentForm.ModeFlag || 'Insert' };
-      // setEntries(prev => [toInsert, ...prev]);
-      console.log('Inserted investigation entry:', toInsert);
-      return;
+
+    // Validate required fields before saving
+    const errors: Record<string, string> = {};
+    if (!currentForm.Date) errors.Date = 'Date is required';
+    if (!currentForm.CommunicationChannel || !String(currentForm.CommunicationChannel).trim()) errors.CommunicationChannel = 'Communication Channel is required';
+    if (!currentForm.RemarkMessage || !String(currentForm.RemarkMessage).trim()) errors.RemarkMessage = 'Remarks/Message is required';
+    if (!currentForm.User || !String(currentForm.User).trim()) errors.User = 'User is required';
+
+    if (Object.keys(errors).length > 0) {
+      const messages = Object.values(errors);
+      toast({
+        title: "❌ Validation Error",
+        description: messages.join(' • '),
+        variant: 'destructive',
+      });
+      console.warn('Validation failed for investigation entry:', errors);
+      return [];
     }
 
-    // compare fields to detect changes
-    const fieldsChanged = (
-      existing.Date !== (currentForm.Date || '') ||
-      existing.CommunicationChannel !== (currentForm.CommunicationChannel || '') ||
-      existing.RemarkMessage !== (currentForm.RemarkMessage || '') ||
-      existing.User !== (currentForm.User || '') ||
-      (existing.AdditionalRemark || '') !== (currentForm.AdditionalRemark || '') ||
-      JSON.stringify(existing.AdditionalAttachment || []) !== JSON.stringify(currentForm.AdditionalAttachment || [])
-    );
+    // find existing index
+    const idx = entries.findIndex(e => e.UniqueID === selectedId);
+    let updatedEntries: InvestigationEntry[] = [];
 
-    const newMode = existing.ModeFlag === 'Insert' ? 'Insert' : (fieldsChanged ? 'Update' : existing.ModeFlag || 'NoChange');
+    if (idx === -1) {
+      // New insert: ensure ModeFlag is Insert
+      const toInsert: InvestigationEntry = {
+        ...currentForm,
+        UniqueID: selectedId,
+        User: pipedFormat(currentForm.User || ''),
+        ModeFlag: currentForm.ModeFlag || 'Insert'
+      };
+      updatedEntries = [...entries, toInsert];
+    } else {
+      const existing = entries[idx];
+      // lightweight comparison of relevant fields
+      const fieldsChanged = (
+        (existing.Date || '') !== (currentForm.Date || '') ||
+        (existing.CommunicationChannel || '') !== (currentForm.CommunicationChannel || '') ||
+        (existing.RemarkMessage || '') !== (currentForm.RemarkMessage || '') ||
+        (existing.User || '') !== (currentForm.User || '') ||
+        (existing.AdditionalRemark || '') !== (currentForm.AdditionalRemark || '') ||
+        JSON.stringify(existing.AdditionalAttachment || []) !== JSON.stringify(currentForm.AdditionalAttachment || [])
+      );
 
-    // setEntries(prev => prev.map(e => e.UniqueID === selectedId ? ({ ...e, ...currentForm, UniqueID: selectedId, ModeFlag: newMode }) : e));
-    console.log('Saved investigation entry:', { ...currentForm, UniqueID: selectedId, ModeFlag: newMode });
-    // keep drawer open — or close depending on requirements
+      const newMode = existing.ModeFlag === 'Insert' ? 'Insert' : (fieldsChanged ? 'Update' : (existing.ModeFlag || 'NoChange'));
+
+      const merged: InvestigationEntry = {
+        ...existing,
+        ...currentForm,
+        UniqueID: selectedId,
+        ModeFlag: newMode
+      };
+
+      updatedEntries = entries.map(e => e.UniqueID === selectedId ? merged : e);
+    }
+
+    // Persist updated entries in state first
+    // setEntries(updatedEntries);
+
+    // Build payload: full list (existing + newly inserted + modified)
+    const changesToSave = updatedEntries;
+
+    console.log('Investigation changes to save:', changesToSave);
+    let payloadFull: any = {
+      ...apiData,
+      Header: {
+        ...apiData?.Header,
+        Reference: {
+          ...apiData?.Header?.Reference,
+          InvestigationNeeded: 'Yes',
+          ModeFlag: 'Update'
+        }
+      },
+      InvestigationDetails: changesToSave
+    }
+    try {
+      console.log('Calling saveClaim API...');
+      const response: any = await ClaimService.saveClaim(payloadFull);
+
+      console.log('Save Claim API Response:', response);
+      if (response?.data?.IsSuccess) {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+
+        const successMessage = responseData?.Message || response?.data?.Message || "Claim saved successfully.";
+        const reasonCode = responseData?.ReasonCode || "";
+
+        toast({
+          title: "✅ Claim Saved",
+          description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+          variant: "default",
+        });
+        // Refresh claim data after successful short close
+      } else {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed Error ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse error ResponseData:', parseError);
+        }
+
+        const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim saved failed.";
+
+        toast({
+          title: "⚠️ Claim Saved Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Save Claim API Error:', error);
+      let errorMessage = "An unexpected error occurred while saving the claim.";
+      if ((error as any)?.response?.data?.Message) {
+        errorMessage = (error as any).response.data.Message;
+      } else if ((error as any)?.message) {
+        errorMessage = (error as any).message;
+      }
+      toast({
+        title: "Error saving claim",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -217,8 +370,8 @@ export const InvestigationDetails: React.FC<{
                         <div className="font-normal text-xs text-gray-500 truncate">{e.Date} | {e.User}</div>
                         <div className="font-normal text-xs text-gray-600 truncate mt-1 break-words">{e.RemarkMessage}</div>
                       </div>
-                      <button className="text-red-500 p-1" onClick={() => removeEntry(e.UniqueID)} title="Delete">
-                        <Trash2 className="w-4 h-4" />
+                      <button className="text-red-500 p-1" title="Delete">
+                        {/* <Trash2 onClick={() => removeEntry(e.UniqueID)} className="w-4 h-4" /> */}
                       </button>
                     </div>
                   </div>
@@ -251,13 +404,13 @@ export const InvestigationDetails: React.FC<{
                     onChange={(e) => setFormData(fd => ({ ...fd, User: e.target.value }))}
                     className="w-full rounded-md border px-3 py-2 h-9 text-[13px] mt-1" /> */}
                   {/* <div className="w-full h-9 text-[13px] mt-1"> */}
-                    <DynamicLazySelect
-                      fetchOptions={fetchUsers}
-                      value={formData.User}
-                      onChange={(value) => setFormData({ ...formData, User: value as string })}
-                      placeholder="Enter User"
-                      className="w-full h-9 text-[13px] mt-1"
-                    />
+                  <DynamicLazySelect
+                    fetchOptions={fetchUsers}
+                    value={formData.User}
+                    onChange={(value) => setFormData({ ...formData, User: value as string })}
+                    placeholder="Enter User"
+                    className="w-full h-9 text-[13px] mt-1"
+                  />
                   {/* </div> */}
                 </div>
                 <div>

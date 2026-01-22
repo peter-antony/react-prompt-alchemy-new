@@ -37,7 +37,7 @@ const ClaimsForm = () => {
 	const [investigationNeeded, setInvestigationNeeded] = useState<boolean>(false); // State for InvestigationNeeded switch
     const [showTooltip, setShowTooltip] = useState(false);
 	const [showDropdownMenu, setShowDropdownMenu] = useState(false);
-	const [investigationCount, setInvestigationCount] = useState(3); // State for investigation count
+	const [investigationCount, setInvestigationCount] = useState(0); // State for investigation count
 	const [isDocumentDetailsOpen, setIsDocumentDetailsOpen] = useState(true); // State for document details collapse
 	const [investigationDetailsOpen, setInvestigationDetailsOpen] = useState(false); // State for investigation details sidedrawer
 	const [claimFindingsOpen, setClaimFindingsOpen] = useState(false); // State for claim findings sidedrawer
@@ -2429,10 +2429,14 @@ const ClaimsForm = () => {
 			</div>
 
 			{/* Investigation Details Section */}
-			<InvestigationDetails
+			{
+				apiResponse && 
+				<InvestigationDetails
 				isOpen={investigationDetailsOpen}
 				onClose={() => setInvestigationDetailsOpen(false)}
-			/>
+				apiData={apiResponse}
+				/>
+			}
 
 			{/* Claim Findings Section */}
 			<ClaimFindings
