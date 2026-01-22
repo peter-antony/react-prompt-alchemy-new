@@ -207,7 +207,11 @@ export const ClaimLinkedInternalOrders: React.FC<{
                   {/* <button className="p-2 rounded-md border bg-white h-9">+</button> */}
                   <button className="p-1 rounded-lg text-gray-600 hover:bg-blue-50 border border-[#D0D5DD]"
                     title="Add Claim"
-                    onClick={() => setShowLinkClaimDialog(true)}>
+                    onClick={() => {
+                      setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
+                      setShowLinkClaimDialog(true)}
+                    }
+                    >
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
@@ -336,6 +340,7 @@ export const ClaimLinkedInternalOrders: React.FC<{
                     title="Add Internal Order"
                     onClick={() => {
                       console.log('Add Internal Orders Dialog');
+                      setLinkInternalOrderObj({ Type: '', Contract: '', InternalOrderNo: '' });
                       setShowLinkInternalOrderDialog(true);
                     }}>
                     <Plus className="w-5 h-5" />

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DynamicLazySelect } from "../DynamicPanel/DynamicLazySelect";
 import { DynamicLazySelect1 } from "../DynamicPanel/DynamicLazySelect1";
 import { quickOrderService } from "@/api/services";
+import { ClaimService } from "@/api/services/ClaimService";
 
 type ClaimFindingsData = {
   docType?: string;
@@ -52,12 +53,12 @@ export const ClaimFindings: React.FC<{
     if (apiData) {
       setForm({
         ...apiData?.ClaimFindings,
-        CreditNoteBasedOnAdjustmentDoc: apiData?.ClaimFindings?.CreditNoteBasedOnAdjustmentDoc || "",
-        FinalClaimAmount: apiData?.ClaimFindings?.FinalClaimAmount || "",
-        Currency: apiData?.ClaimFindings?.Currency.trim() || "€",
-        CommentRemark: apiData?.ClaimFindings?.CommentRemark || "",
-        SupplierNoteNo: apiData?.ClaimFindings?.SupplierNoteNo || "",
-        SupplierNoteAmount: apiData?.ClaimFindings?.SupplierNoteAmount || "",
+        CreditNoteBasedOnAdjustmentDoc: apiData?.ClaimFindings?.CreditNoteBasedOnAdjustmentDoc,
+        FinalClaimAmount: apiData?.ClaimFindings?.FinalClaimAmount,
+        Currency: apiData?.ClaimFindings?.Currency.trim(),
+        CommentRemark: apiData?.ClaimFindings?.CommentRemark,
+        SupplierNoteNo: apiData?.ClaimFindings?.SupplierNoteNo,
+        SupplierNoteAmount: apiData?.ClaimFindings?.SupplierNoteAmount,
         // supplierCurrency: apiData?.ClaimFindings?.Currency || "€",
       });
       return;
@@ -98,9 +99,38 @@ export const ClaimFindings: React.FC<{
 
   const fetchUsageIDOptions = fetchMasterData("Claim Usage ID Init");
 
-  const handleSave = () => {
+  const formatUsageId = (usageIdOrGLAccount: string) => {
+    if (usageIdOrGLAccount == null) {
+      return null; // handles null & undefined
+    }
+    const value = String(usageIdOrGLAccount).trim();
+    if (value.includes("||")) {
+      return value.split("||")[0].trim();
+    }
+    return value;
+  }
+
+  const handleSave = async () => {
     if (onSave) onSave(form);
-    console.log("Saved Claim Findings:", form);
+    console.log("Saved Claim Findings:", form, apiData);
+    let payLoad = {
+      Header: {
+        ClaimNo: apiData?.Header?.ClaimNo || "",
+        ClaimStatus: apiData?.Header?.ClaimStatus || "",
+        ClaimStatusDescription: apiData?.Header?.ClaimStatusDescription || "",
+      },
+      ClaimFindings: {
+        ...form,
+        FinalClaimAmount: typeof form.FinalClaimAmount === 'string' ? parseFloat(form.FinalClaimAmount) : form.FinalClaimAmount,
+        SupplierNoteAmount: typeof form.SupplierNoteAmount === 'string' ? parseFloat(form.SupplierNoteAmount) : form.SupplierNoteAmount,
+        UsageIDOrGLAccount: formatUsageId(form?.UsageIDOrGLAccount)
+      },
+      Document: apiData?.Document,
+    };
+    console.log("Payload for Claim Findings Save:", payLoad);
+    const response = await ClaimService.claimFindingsSave({ requestPayload: payLoad });
+    console.log("Claim Findings Save Response:", response);
+    onClose();
   };
 
   return (

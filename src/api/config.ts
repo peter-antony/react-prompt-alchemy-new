@@ -243,7 +243,7 @@ export const API_ENDPOINTS = {
     SMARTEDIT: "manageclaims/claimsmartedit",
     AUDIT_TRAIL: "manageclaims/claimsaudittrail",
     WORKFLOW_REPORT: "managedraftbill/viewworkflow",
-
+    FINDINGS_SAVE: "manageclaims/claimfindingsave",
   }
 } as const;
 

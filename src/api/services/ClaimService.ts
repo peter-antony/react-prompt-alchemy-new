@@ -320,4 +320,28 @@ export const ClaimService = {
     );
     return response.data;
   },
+
+  claimFindingsSave: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+        MessageType: "Claim-findingssave"
+      },
+      RequestPayload: params.requestPayload,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.FINDINGS_SAVE,
+      requestBody
+    );
+    return response.data;
+  },
 };
