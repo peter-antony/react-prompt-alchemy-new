@@ -48,6 +48,8 @@ const CreateQuickOrder = () => {
   ];
 
   const newQuickOrderRef = React.useRef<NewQuickOrderHandle>(null);
+  const formReadyRef = React.useRef(false);
+
   
   // Helper function to update footerLabelData from QuickOrder data
   const updateFooterLabelData = (quickOrderData: any) => {
@@ -67,13 +69,15 @@ const CreateQuickOrder = () => {
   }
 
   useEffect(() => {
+    // 
+
     fetchAll();
     //  Fetch the full quick order details
     initializeJsonStore();
     const oldQuickOrder = jsonStore.getQuickOrder();
     console.log("inside createQuickOrder useEffect()")
     console.log("INITIALIZING CREATE : ", isEditQuickOrder)
-    setLoading(false);
+    // setLoading(false);
     quickOrderService.getQuickOrder(quickOrderUniqueID).then((fetchRes: any) => {
       let parsedData = JSON.parse(fetchRes?.data?.ResponseData);
       console.log("screenFetchQuickOrder byId result:", JSON.parse(fetchRes?.data?.ResponseData));
@@ -196,8 +200,9 @@ const CreateQuickOrder = () => {
         ]),
       ],
     });
+    formReadyRef.current = true;
     return () => resetFooter();
-  }, [showAmendButton, isConfirmButtonDisabled, isSaveButtonDisabled]);
+  }, [showAmendButton, isConfirmButtonDisabled, isSaveButtonDisabled ]);
   const fetchQuickOrder = () => {
     const id = jsonStore.getQuickUniqueID();
     quickOrderService.getQuickOrder(id).then((fetchRes: any) => {
@@ -351,6 +356,18 @@ const CreateQuickOrder = () => {
   };
   // Iterate through all messageTypes
   const fetchAll = async () => {
+     const validation =
+    newQuickOrderRef.current?.doValidation();
+    if (!validation?.isValid) {
+    console.log("Validation failed", validation);
+
+    toast({
+      title: "⚠️ Mandatory fields missing",
+      description: validation.mandatoryFieldsEmpty?.join(", "),
+      variant: "destructive",
+    });
+
+    return;} 
     setLoading(false);
     for (const type of messageTypes) {
       setSelectedType(type);
@@ -410,6 +427,26 @@ const CreateQuickOrder = () => {
    const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
   const quickOrderSaveDraftHandler = async () => {
     // Pull current OrderForm values via forwarded ref
+if (!formReadyRef.current) {
+  console.log("Form not ready yet – skipping validwwwation");
+  return;
+}
+
+    const validation =
+    newQuickOrderRef.current?.doValidation();
+
+  if (!validation?.isValid) {
+    console.log("Validation failed", validation);
+
+    toast({
+      title: "⚠️ Mandatory fields missing",
+      description: validation.mandatoryFieldsEmpty?.join(", "),
+      variant: "destructive",
+    });
+
+    return; // 🚫 STOP API CALL
+  }
+
     
     const orderFormValues = newQuickOrderRef.current?.getOrderValues() || {};
     console.log('SAVE HANDLER', orderFormValues);

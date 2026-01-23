@@ -19,7 +19,11 @@ interface NewCreateQuickOrderProps {
   onCancel?: () => void;
 }
 
-export type NewQuickOrderHandle = { getOrderValues: () => any };
+export type NewQuickOrderHandle = { getOrderValues: () => any ;  doValidation: () => {
+    isValid: boolean;
+    errors: Record<string, string>;
+    mandatoryFieldsEmpty: string[];
+  };};
 
 const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated, onConfirm,onSaveDraft,onCancel, quickOrderNoCallback }, ref) => {
   useEffect(() => {
@@ -65,6 +69,12 @@ const orderFormRef = React.useRef<OrderFormHandle | null>(null);
 useImperativeHandle(ref, () => ({
   getOrderValues: () => orderFormRef.current?.getOrderValues() || {},
   // doValidation: () => orderFormRef.current?.doValidation()
+   doValidation: () =>
+    orderFormRef.current?.doValidation() || {
+      isValid: true,
+      errors: {},
+      mandatoryFieldsEmpty: [],
+    },
 }));
 
 
@@ -74,10 +84,10 @@ useImperativeHandle(ref, () => ({
         {/* Left Column - Order Form */}
         {/* <div className="lg:col-span-1 w-2/6"> */}
           <OrderForm
-            ref={(r: OrderFormHandle | null) => {
-              orderFormGetter = r?.getOrderValues || null;
-            }}
-            // ref={orderFormRef}
+            // ref={(r: OrderFormHandle | null) => {
+            //   orderFormGetter = r?.getOrderValues || null;
+            // }}
+             ref={orderFormRef}
             onSaveDraft={onSaveDraft}
             onConfirm={onConfirm || handleConfirm}
             onCancel={onCancel|| handleCancel}

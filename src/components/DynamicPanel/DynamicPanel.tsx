@@ -207,6 +207,9 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
           value !== null &&
           !('input' in value) &&
           Object.keys(value).length === 0
+
+    
+
         );
 
       if (isEmpty) {
@@ -223,7 +226,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
     });
 
     setPanelValidationErrors(validationErrors);
-
+      trigger();
+      
     return {
       isValid: Object.keys(validationErrors).length === 0,
       errors: validationErrors,
@@ -304,7 +308,14 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
           if (isEmpty) {
             mandatoryFieldsEmpty.push(config.label || fieldId);
             validationErrors[fieldId] = " ";
+            setError(fieldId, {
+  type: 'manual',
+  message: `${config.label || fieldId} is required`
+});
+
           }
+
+          
            else {
   // ✅ remove error when valid
   delete validationErrors[fieldId];
@@ -322,6 +333,14 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
       
       const isValid = Object.keys(validationErrors).length === 0;
       setPanelValidationErrors(validationErrors);
+      trigger();
+      // ✅ ADD THIS ONCE
+Object.keys(validationErrors).forEach((fieldId) => {
+  if (!validationErrors[fieldId]) {
+    clearErrors(fieldId);
+  }
+});
+
 
       return {
         isValid,

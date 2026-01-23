@@ -32,6 +32,11 @@ import { useToast } from '@/hooks/use-toast';
 
 export type OrderFormHandle = {
   getOrderValues: () => any;
+  doValidation: () => {
+    isValid: boolean;
+    errors: Record<string, string>;
+    mandatoryFieldsEmpty: string[];
+  };
  };
 
 
@@ -880,6 +885,15 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
 
   useImperativeHandle(ref, () => ({
     getOrderValues: () => orderDetailsRef.current?.getFormValues() || {},
+    doValidation: () => {
+    return (
+      orderDetailsRef.current?.doValidation() || {
+        isValid: true,
+        errors: {},
+        mandatoryFieldsEmpty: [],
+      }
+    );
+  },
   }));
   // const onSaveDetails = () => {
   //   const formValues = {
