@@ -22,21 +22,21 @@ import { quickOrderService } from "@/api/services";
 import { ClaimService } from '@/api/services/ClaimService';
 import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
-import { Ban, NotebookPen, XCircle, Lock } from "lucide-react";
+import { Ban, NotebookPen, XCircle, Lock, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ClaimsHubAuditTrail } from "./ClaimsHubAuditTrail";
 
 const ClaimsForm = () => {
 	const gridId = "ClaimsForm_DocumentDetails";
-    const navigate = useNavigate();
+	const navigate = useNavigate();
 	const gridState = useSmartGridState();
 	const [searchParams, setSearchParams] = useSearchParams();
-    const formRef = useRef<DynamicPanelRef>(null);
-    const { setFooter, resetFooter } = useFooterStore();
-    const [searchQuery, setSearchQuery] = useState("");
+	const formRef = useRef<DynamicPanelRef>(null);
+	const { setFooter, resetFooter } = useFooterStore();
+	const [searchQuery, setSearchQuery] = useState("");
 	const [claimStatus, setClaimStatus] = useState<string>(""); // Default status
 	const [investigationNeeded, setInvestigationNeeded] = useState<boolean>(false); // State for InvestigationNeeded switch
-    const [showTooltip, setShowTooltip] = useState(false);
+	const [showTooltip, setShowTooltip] = useState(false);
 	const [showDropdownMenu, setShowDropdownMenu] = useState(false);
 	const [investigationCount, setInvestigationCount] = useState(0); // State for investigation count
 	const [isDocumentDetailsOpen, setIsDocumentDetailsOpen] = useState(true); // State for document details collapse
@@ -48,14 +48,14 @@ const ClaimsForm = () => {
 	const [qcList3, setqcList3] = useState<any>();
 	const [currencyList, setCurrencyList] = useState<any>();
 	const [counterParty, setCounterParty] = useState<any>();
-	
+
 	// Modal states
 	const [cancelModalOpen, setCancelModalOpen] = useState(false);
 	const [amendModalOpen, setAmendModalOpen] = useState(false);
 	const [rejectModalOpen, setRejectModalOpen] = useState(false);
 	const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
 	const [isAuditOpen, setIsAuditOpen] = useState(false);
-	
+
 	// Fields for Cancel modal (with date, reasonCode, remarks)
 	const [cancelFields, setCancelFields] = useState([
 		{
@@ -253,6 +253,35 @@ const ClaimsForm = () => {
 		loadQcMasters();
 	}, []);
 
+	// Ensure smartgrid preferences are initialized for this grid (no personalization API used here)
+	useEffect(() => {
+		try {
+			const colOrder = documentDetailsColumns.map(c => c.key);
+			const hiddenCols = documentDetailsColumns.filter(c => c.hidden).map(c => c.key);
+			const columnWidths: Record<string, number> = {};
+			documentDetailsColumns.forEach(c => { if (c.width) columnWidths[c.key] = c.width; });
+			const subRowCols = documentDetailsColumns.filter(c => c.subRow).map(c => c.key);
+
+			const prefs = {
+				columnOrder: colOrder,
+				hiddenColumns: hiddenCols,
+				columnWidths: columnWidths,
+				columnHeaders: {},
+				subRowColumns: subRowCols,
+				subRowColumnOrder: subRowCols,
+				enableSubRowConfig: subRowCols.length > 0,
+				filters: [],
+				pageSize: 10
+			};
+
+			// Persist to localStorage under the key used by SmartGrid's preferences hook
+			localStorage.setItem('smartgrid-preferences', JSON.stringify(prefs));
+			console.log('ClaimsForm: smartgrid-preferences initialized for DocumentDetails', prefs);
+		} catch (err) {
+			console.error('Failed to initialize smartgrid-preferences for ClaimsForm', err);
+		}
+	}, [/* run once when columns change */]);
+
 	// Claims Findings data state - bound to form fields
 	const [claimsFindingsData, setClaimsFindingsData] = useState({
 		refDocTypeID: "Internal Order - IO_DE24_0239",
@@ -310,14 +339,14 @@ const ClaimsForm = () => {
 			subRow: false,
 			// width:
 		},
-		// {
-		// 	key: 'Amount',
-		// 	label: 'Invoice Amount',
-		// 	type: 'CurrencyWithSymbol',
-		// 	sortable: false,
-		// 	editable: false,
-		// 	width: 150
-		// },
+		{
+			key: 'Amount',
+			label: 'Invoice Amount',
+			type: 'CurrencyWithSymbol',
+			sortable: false,
+			editable: false,
+			width: 150
+		},
 		{
 			key: 'ClaimAmount',
 			label: 'Claim Amount',
@@ -328,11 +357,11 @@ const ClaimsForm = () => {
 			width: 150
 		},
 		{
-			key: 'Amount',
+			key: 'BalanceAmount',
 			label: 'Balance Amount',
 			type: 'Integer',
 			sortable: false,
-			editable: true,
+			editable: false,
 			subRow: false,
 			width: 150
 		},
@@ -353,6 +382,43 @@ const ClaimsForm = () => {
 			editable: false,
 			subRow: false,
 			width: 180
+		},
+		{
+			key: 'DocumentDetails_Actions',
+			label: 'Actions',
+			type: 'ActionButton',
+			sortable: false,
+			editable: false,
+			subRow: false,
+			filterable: false,
+			width: 60,
+			actionButtons: [
+				{
+					icon: <Trash2 size={16} className="text-red-600 hover:text-red-700" />,
+					tooltip: 'Delete',
+					onClick: (rowData) => {
+						const currentData = gridState.gridData || [];
+						const idx = currentData.findIndex((r: any) => r.Line_No === rowData?.Line_No);
+						console.log("Index:", idx);
+						if (idx >= 0) {
+							// Mark row as deleted (do NOT remove it from gridData)
+							const updatedData = currentData.map((r: any, i: number) =>
+								i === idx ? { ...r, ModeFlag: "Delete" } : r
+							);
+							// gridState.setGridData(updatedData);
+							console.log("updatedData :", updatedData);
+							// Existing logic to remove row from gridData (kept for reference)
+							// const newData = currentData.filter((_: any, i: number) => i !== idx);
+							// gridState.setGridData(newData);
+							// console.log("New Data:", newData);
+							// handleGenerateNote(newData);
+						}
+						console.log("New Data:");
+					},
+					variant: 'ghost',
+					size: 'icon'
+				}
+			]
 		}
 	];
 
@@ -361,7 +427,7 @@ const ClaimsForm = () => {
 		gridState.setColumns(documentDetailsColumns);
 	}, []);
 
-    // Dummy fetcher for lazyselect fields
+	// Dummy fetcher for lazyselect fields
 	const fetchMaster = (
 		messageType: string,
 		// additionalFilter?: { FilterName: string; FilterValue: string }[]
@@ -389,7 +455,7 @@ const ClaimsForm = () => {
 					};
 				});
 			} catch (err) {
-        return [];
+				return [];
 			}
 		};
 	};
@@ -434,41 +500,41 @@ const ClaimsForm = () => {
 				name: qc.name
 			})) || [];
 
-    // Defining the config as PanelConfig object (Record<string, FieldConfig>)
-    const claimPanelConfig: PanelConfig = {
+	// Defining the config as PanelConfig object (Record<string, FieldConfig>)
+	const claimPanelConfig: PanelConfig = {
 		InvestigationNeeded: {
 			id: "InvestigationNeeded",
-            label: "Investigation Required",
-            fieldType: "switch",
-            width: "full",
-            value: false,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 1
-        },
+			label: "Investigation Required",
+			fieldType: "switch",
+			width: "full",
+			value: false,
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 1
+		},
 		InitiatedBy: {
 			id: "InitiatedBy",
-            label: "Initiate By",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "Initiate By",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims Initiated by Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 2
-        },
-        Counterparty: {
-            id: "Counterparty",
-            label: "Counterparty",
-            fieldType: "lazyselect",
-            width: "four",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 2
+		},
+		Counterparty: {
+			id: "Counterparty",
+			label: "Counterparty",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims Counter Party Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
 			order: 3,
 			events: {
 				onChange: (value) => {
@@ -488,139 +554,139 @@ const ClaimsForm = () => {
 					// Clear Wagon/Container selection in the DynamicPanel UI
 				},
 			},
-        },
-        ForwardisFinancialAction: {
-            id: "ForwardisFinancialAction",
-            label: "Forwardis Financial Action",
-            fieldType: "lazyselect",
-            width: "four",
+		},
+		ForwardisFinancialAction: {
+			id: "ForwardisFinancialAction",
+			label: "Forwardis Financial Action",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 4
-        },
-        ExpectedDocument: {
-            id: "ExpectedDocument",
-            label: "Expected Document",
-            fieldType: "lazyselect",
-            width: "four",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 4
+		},
+		ExpectedDocument: {
+			id: "ExpectedDocument",
+			label: "Expected Document",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims Expected Document Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 5
-        },
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 5
+		},
 		BusinessPartnerID: {
 			id: "BusinessPartnerID",
-            label: "Business Partner",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "Business Partner",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMasterClaims("Claims Counter Party OnSelect", { selectedClaimCounterParty: counterParty || "" }),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 6
-        },
-        ClaimDate: {
-            id: "ClaimDate",
-            label: "Claim Date",
-            fieldType: "date",
-            width: "four",
-            value: null,
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 7
-        },
-        ClaimCategory: {
-            id: "ClaimCategory",
-            label: "Claim Category",
-            fieldType: "lazyselect",
-            width: "four",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 6
+		},
+		ClaimDate: {
+			id: "ClaimDate",
+			label: "Claim Date",
+			fieldType: "date",
+			width: "four",
+			value: null,
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 7
+		},
+		ClaimCategory: {
+			id: "ClaimCategory",
+			label: "Claim Category",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claim Category Init"),
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 8
-        },
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 8
+		},
 		CurrencyAmount: {
 			id: "CurrencyAmount",
-            label: "Claim Amount",
+			label: "Claim Amount",
 			fieldType: "inputdropdown",
-            width: "four",
-            mandatory: true,
-            visible: true,
-            editable: true,
+			width: "four",
+			mandatory: true,
+			visible: true,
+			editable: true,
 			order: 9,
 			value: {
 				dropdown: "",
 				input: "",
 			},
 			options: getQcOptions(currencyList),
-        },
-        ClaimantRefNo: {
-            id: "ClaimantRefNo",
-            label: "Claimant Ref. No.",
-            fieldType: "text",
-            width: "four",
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 10
-        },
-        IncidentType: {
-            id: "IncidentType",
-            label: "Incident Type",
-            fieldType: "lazyselect",
-            width: "four",
+		},
+		ClaimantRefNo: {
+			id: "ClaimantRefNo",
+			label: "Claimant Ref. No.",
+			fieldType: "text",
+			width: "four",
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 10
+		},
+		IncidentType: {
+			id: "IncidentType",
+			label: "Incident Type",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claim Incident Type Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 11
-        },
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 11
+		},
 		IncidentDateTime: {
 			id: "IncidentDateTime",
-            label: "Incident Date and Time",
-            fieldType: "date",
-            width: "four",
-            value: null,
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 12
-        },
-        IncidentLocation: {
-            id: "IncidentLocation",
-            label: "Incident Location",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "Incident Date and Time",
+			fieldType: "date",
+			width: "four",
+			value: null,
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 12
+		},
+		IncidentLocation: {
+			id: "IncidentLocation",
+			label: "Incident Location",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Location Init"),
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 13
-        },
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 13
+		},
 		RefDocType: {
 			id: "RefDocType",
 			label: "Ref. Doc. Type",
-            fieldType: "lazyselect",
-            width: "four",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claim Ref Doc Type Init"),
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 14
-        },
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 14
+		},
 		RefDocID: {
 			id: "RefDocID",
 			label: "Ref. Doc. ID",
@@ -634,117 +700,117 @@ const ClaimsForm = () => {
 		},
 		Wagon: {
 			id: "Wagon",
-            label: "Wagon No.",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "Wagon No.",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Wagon id Init"),
-            value: [],
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 15,
-            // multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
-        },
+			value: [],
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 15,
+			// multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
+		},
 		Container: {
 			id: "Container",
-            label: "Container ID",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "Container ID",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
-            value: [],
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 16,
-            // multiSelect: true
-        },
+			value: [],
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 16,
+			// multiSelect: true
+		},
 		THU: {
 			id: "THU",
-            label: "THU ID",
-            fieldType: "lazyselect",
-            width: "four",
+			label: "THU ID",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("THU id Init"),
-            value: [],
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 17,
-            // multiSelect: true
-        },
-        WBS: {
-            id: "WBS",
-            label: "WBS",
-            fieldType: "lazyselect",
-            width: "four",
+			value: [],
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 17,
+			// multiSelect: true
+		},
+		WBS: {
+			id: "WBS",
+			label: "WBS",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("WBS Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 18
-        },
-        ActionResolution: {
-            id: "ActionResolution",
-            label: "Action/ Resolution",
-            fieldType: "lazyselect",
-            width: "four",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 18
+		},
+		ActionResolution: {
+			id: "ActionResolution",
+			label: "Action/ Resolution",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Claims Action/Resolution Init"),
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 19
-        },
-        AssignedUser: {
-            id: "AssignedUser",
-            label: "Assigned User",
-            fieldType: "lazyselect",
-            width: "four",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 19
+		},
+		AssignedUser: {
+			id: "AssignedUser",
+			label: "Assigned User",
+			fieldType: "lazyselect",
+			width: "four",
 			fetchOptions: fetchMaster("Createdby Init"),
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 20
-        },
-        SecondaryRefNo: {
-            id: "SecondaryRefNo",
-            label: "Secondary Ref. No.",
-            fieldType: "text",
-            width: "four",
-            placeholder: "Enter Secondary Ref. No.",
-            value: "",
-            mandatory: false,
-            visible: true,
-            editable: true,
-            order: 21
-        },
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 20
+		},
+		SecondaryRefNo: {
+			id: "SecondaryRefNo",
+			label: "Secondary Ref. No.",
+			fieldType: "text",
+			width: "four",
+			placeholder: "Enter Secondary Ref. No.",
+			value: "",
+			mandatory: false,
+			visible: true,
+			editable: true,
+			order: 21
+		},
 		ActionResolutionRemark: {
 			id: "ActionResolutionRemark",
-            label: "Remark for Action/Resolution",
-            fieldType: "text",
+			label: "Remark for Action/Resolution",
+			fieldType: "text",
 			width: "four",
-            value: "",
-            maxLength: 255,
-            placeholder: "Enter Remark for Action/Resolution",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 22
-        },
-        FirstInformationRegister: {
-            id: "FirstInformationRegister",
-            label: "First Information Register",
-            fieldType: "text",
+			value: "",
+			maxLength: 255,
+			placeholder: "Enter Remark for Action/Resolution",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 22
+		},
+		FirstInformationRegister: {
+			id: "FirstInformationRegister",
+			label: "First Information Register",
+			fieldType: "text",
 			width: "four",
-            maxLength: 255,
-            placeholder: "Enter First Information Register",
-            value: "",
-            mandatory: true,
-            visible: true,
-            editable: true,
-            order: 23
-        },
+			maxLength: 255,
+			placeholder: "Enter First Information Register",
+			value: "",
+			mandatory: true,
+			visible: true,
+			editable: true,
+			order: 23
+		},
 		FinanceYear: {
 			id: "FinanceYear",
 			label: "Finance Year",
@@ -867,7 +933,7 @@ const ClaimsForm = () => {
 			editable: true,
 			order: 32
 		},
-    };
+	};
 
 	// Handler functions for Cancel and Amend
 	const handleClaimCancel = () => {
@@ -876,7 +942,7 @@ const ClaimsForm = () => {
 
 	const handleClaimAmend = () => {
 		setAmendModalOpen(true);
-    };
+	};
 
 	const handleClaimReject = () => {
 		setRejectModalOpen(true);
@@ -900,26 +966,26 @@ const ClaimsForm = () => {
 		);
 	};
 
-    // useEffect(() => {
-    //     setFooter({
-    //         visible: true,
-    //         leftButtons: [],
-    //         rightButtons: [
-    //             {
-    //                 label: "Cancel",
-    //                 onClick: handleClaimCancel,
-    //                 // variant: "outline", // Removed unauthorized property
-    //                 type: "Button"
-    //             },
-    //             {
+	// useEffect(() => {
+	//     setFooter({
+	//         visible: true,
+	//         leftButtons: [],
+	//         rightButtons: [
+	//             {
+	//                 label: "Cancel",
+	//                 onClick: handleClaimCancel,
+	//                 // variant: "outline", // Removed unauthorized property
+	//                 type: "Button"
+	//             },
+	//             {
 	// 				label: "Amend",
 	// 				onClick: handleClaimAmend,
-    //                 type: "Button"
-    //             },
-    //         ],
-    //     });
-    //     return () => resetFooter();
-    // }, [setFooter, resetFooter, navigate]);
+	//                 type: "Button"
+	//             },
+	//         ],
+	//     });
+	//     return () => resetFooter();
+	// }, [setFooter, resetFooter, navigate]);
 
 	const [showDocumentDetails, setShowDocumentDetails] = useState(false);
 
@@ -1049,7 +1115,7 @@ const ClaimsForm = () => {
 				};
 
 				formRef.current.setFormValues(mapped);
-				
+				setCounterParty(Header?.Reference?.Counterparty || '');
 				// Update investigationNeeded state
 				setInvestigationNeeded(Header?.Reference?.InvestigationNeeded === 'Yes' || Header?.Reference?.InvestigationNeeded === 'yes' || Header?.Reference?.InvestigationNeeded === 'true' || Header?.Reference?.InvestigationNeeded === 'True' ? true : false);
 
@@ -1109,7 +1175,7 @@ const ClaimsForm = () => {
 
 		requiredFields.forEach((field) => {
 			const value = values[field.key];
-			
+
 			if (field.type === 'inputdropdown') {
 				// For inputdropdown, check both dropdown and input
 				if (!value || !value.dropdown || !value.input || value.dropdown.trim() === '') {
@@ -1170,14 +1236,14 @@ const ClaimsForm = () => {
 					Container: values.Container || null,
 					THU: values.THU || null,
 					WBS: splitPipeValueWithDescription(values.WBS).code,
-                    WBSDescription: splitPipeValueWithDescription(values.WBS).description,
+					WBSDescription: splitPipeValueWithDescription(values.WBS).description,
 					ActionResolution: splitPipeValue(values.ActionResolution),
 					AssignedUser: splitPipeValueWithDescription(values.AssignedUser).code,
-                    ActionResolutionRemark: values.ActionResolutionRemark || null,
-                    FirstInformationRegister: values.FirstInformationRegister || null,
-                    AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
+					ActionResolutionRemark: values.ActionResolutionRemark || null,
+					FirstInformationRegister: values.FirstInformationRegister || null,
+					AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
 					QuickCode1: values.QCUserDefined1.dropdown || null,
-                    QCValue1: values.QCUserDefined1.input || null,
+					QCValue1: values.QCUserDefined1.input || null,
 					QuickCode2: values.QCUserDefined2.dropdown || null,
 					QCValue2: values.QCUserDefined2.input || null,
 					QuickCode3: values.QCUserDefined3.dropdown || null,
@@ -1194,12 +1260,12 @@ const ClaimsForm = () => {
 		};
 
 		console.log('ClaimsForm - final payload to send:', JSON.stringify(payloadFull, null, 2));
-        setIsLoadingClaim(true);
-		
+		setIsLoadingClaim(true);
+
 		try {
 			console.log('Calling saveClaim API...');
 			const response: any = await ClaimService.saveClaim(payloadFull);
-			
+
 			console.log('Save Claim API Response:', response);
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
@@ -1209,23 +1275,23 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim saved successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Saved",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
 				// Refresh claim data after successful short close
-                // const params = new URLSearchParams(responseData?.Header?.ClaimNo);
-                // console.log("params ====", params);
-                setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				// const params = new URLSearchParams(responseData?.Header?.ClaimNo);
+				// console.log("params ====", params);
+				setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
 				setSearchQuery(responseData?.Header?.ClaimNo || "");
-                setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				setClaimStatus(responseData?.Header?.ClaimStatus || "");
 				await fetchClaimData(responseData?.Header?.ClaimNo);
-				
+
 				setIsLoadingClaim(false);
 			} else {
 				let responseData = null;
@@ -1235,9 +1301,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim saved failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Saved Failed",
 					description: errorMessage,
@@ -1248,14 +1314,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Save Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while saving the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error saving claim",
 				description: errorMessage,
@@ -1264,11 +1330,11 @@ const ClaimsForm = () => {
 		}
 	};
 
-    const breadcrumbItems = [
-        { label: "Home", href: "/" },
-        { label: "Manage Claims", href: "/claims-hub" },
-        { label: "Claims", active: true },
-    ];
+	const breadcrumbItems = [
+		{ label: "Home", href: "/" },
+		{ label: "Manage Claims", href: "/claims-hub" },
+		{ label: "Claims", active: true },
+	];
 
 	const pipedData = (id: any, desc: any) => {
 		if (id && desc) return `${id} - ${desc}`;
@@ -1297,6 +1363,23 @@ const ClaimsForm = () => {
 	const handleInlineEditDocumentDetails = (rowIndex: number, row: any) => {
 		// Update document details data with edited rows
 		console.log("Edited Row:", row, rowIndex);
+
+		// Get current grid data
+		const currentGridData = [...(gridState.gridData || [])];
+
+		// Update the row at the specified index with the edited data and set ModeFlag to "Update"
+		if (rowIndex >= 0 && rowIndex < currentGridData.length) {
+			currentGridData[rowIndex] = {
+				...row,
+				ModeFlag: "Update"
+			};
+
+			// Update the grid data
+			gridState.setGridData(currentGridData);
+			console.log("Updated grid data with ModeFlag='Update' for row at index:", rowIndex);
+		} else {
+			console.warn("Invalid row index:", rowIndex, "Grid data length:", currentGridData.length);
+		}
 	};
 	useEffect(() => {
 		gridState.setColumns(documentDetailsColumns);
@@ -1336,7 +1419,7 @@ const ClaimsForm = () => {
 			mappedObj[mappedName] = field.value;
 		});
 		console.log('Mapped Object for Cancel API:', mappedObj);
-		
+
 		// Handle ReasonCode splitting if it contains '||'
 		let ReasonCodeValue = '';
 		let ReasonCodeLabel = '';
@@ -1356,29 +1439,29 @@ const ClaimsForm = () => {
 			Header: {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Reason: {
-                    Cancel: {
-                        RecordedDateTime: mappedObj?.Canceldatetime || null,
-                        ReasonCode: ReasonCodeValue,
-                        ReasonDescription: ReasonCodeLabel,
-                        Remarks: mappedObj?.Remarks || null,
-                        ModeFlag: "Update"
-                    },
-                }
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Reason: {
+					Cancel: {
+						RecordedDateTime: mappedObj?.Canceldatetime || null,
+						ReasonCode: ReasonCodeValue,
+						ReasonDescription: ReasonCodeLabel,
+						Remarks: mappedObj?.Remarks || null,
+						ModeFlag: "Update"
+					},
+				}
 			}
 		};
-		
+
 		console.log('Claim Data Object for Cancel API:', claimPayload);
 		setIsLoadingClaim(true);
-		
+
 		try {
 			console.log('Calling cancelClaim API...');
 			const response: any = await ClaimService.cancelClaim(claimPayload);
-			
+
 			console.log('Cancel Claim API Response:', response);
 			setCancelModalOpen(false);
-			
+
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
 				try {
@@ -1387,16 +1470,16 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim cancelled successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Cancelled",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
-				
+
 				// Refresh claim data after successful cancellation
 				if (searchQuery) {
 					await fetchClaimData(searchQuery);
@@ -1410,9 +1493,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim cancellation failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Cancellation Failed",
 					description: errorMessage,
@@ -1423,14 +1506,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Cancel Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while cancelling the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error cancelling claim",
 				description: errorMessage,
@@ -1448,7 +1531,7 @@ const ClaimsForm = () => {
 			mappedObj[mappedName] = field.value;
 		});
 		console.log('Mapped Object for Reject API:', mappedObj);
-		
+
 		// Handle ReasonCode splitting if it contains '||'
 		let ReasonCodeValue = '';
 		let ReasonCodeLabel = '';
@@ -1468,29 +1551,29 @@ const ClaimsForm = () => {
 			Header: {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Reason: {
-                    Reject: {
-                        RecordedDateTime: mappedObj?.Rejectdatetime || null,
-                        ReasonCode: ReasonCodeValue,
-                        ReasonDescription: ReasonCodeLabel,
-                        Remarks: mappedObj?.Remarks || null,
-                        ModeFlag: "Update"
-                    },
-                }
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Reason: {
+					Reject: {
+						RecordedDateTime: mappedObj?.Rejectdatetime || null,
+						ReasonCode: ReasonCodeValue,
+						ReasonDescription: ReasonCodeLabel,
+						Remarks: mappedObj?.Remarks || null,
+						ModeFlag: "Update"
+					},
+				}
 			}
 		};
-		
+
 		console.log('Claim Data Object for Reject API:', claimPayload);
 		setIsLoadingClaim(true);
-		
+
 		try {
 			console.log('Calling rejectClaim API...');
 			const response: any = await ClaimService.rejectClaim(claimPayload);
-			
+
 			console.log('Reject Claim API Response:', response);
 			setRejectModalOpen(false);
-			
+
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
 				try {
@@ -1499,16 +1582,16 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim rejected successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Rejected",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
-				
+
 				// Refresh claim data after successful rejection
 				if (searchQuery) {
 					await fetchClaimData(searchQuery);
@@ -1522,9 +1605,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim rejection failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Rejection Failed",
 					description: errorMessage,
@@ -1535,14 +1618,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Reject Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while rejecting the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error rejecting claim",
 				description: errorMessage,
@@ -1560,7 +1643,7 @@ const ClaimsForm = () => {
 			mappedObj[mappedName] = field.value;
 		});
 		console.log('Mapped Object for Short Close API:', mappedObj);
-		
+
 		// Handle ReasonCode splitting if it contains '||'
 		let ReasonCodeValue = '';
 		let ReasonCodeLabel = '';
@@ -1580,29 +1663,29 @@ const ClaimsForm = () => {
 			Header: {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Reason: {
-                    ShortClosed: {
-                        RecordedDateTime: mappedObj?.ShortClosedatetime || null,
-                        ReasonCode: ReasonCodeValue,
-                        ReasonDescription: ReasonCodeLabel,
-                        Remarks: mappedObj?.Remarks || null,
-                        ModeFlag: "Update"
-                    },
-                }
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Reason: {
+					ShortClosed: {
+						RecordedDateTime: mappedObj?.ShortClosedatetime || null,
+						ReasonCode: ReasonCodeValue,
+						ReasonDescription: ReasonCodeLabel,
+						Remarks: mappedObj?.Remarks || null,
+						ModeFlag: "Update"
+					},
+				}
 			}
 		};
-		
+
 		console.log('Claim Data Object for Short Close API:', claimPayload);
 		setIsLoadingClaim(true);
-		
+
 		try {
 			console.log('Calling shortCloseClaim API...');
 			const response: any = await ClaimService.shortCloseClaim(claimPayload);
-			
+
 			console.log('Short Close Claim API Response:', response);
 			setShortCloseModalOpen(false);
-			
+
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
 				try {
@@ -1611,16 +1694,16 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim short closed successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Short Closed",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
-				
+
 				// Refresh claim data after successful short close
 				if (searchQuery) {
 					await fetchClaimData(searchQuery);
@@ -1634,9 +1717,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim short close failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Short Close Failed",
 					description: errorMessage,
@@ -1647,14 +1730,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Short Close Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while short closing the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error short closing claim",
 				description: errorMessage,
@@ -1665,7 +1748,7 @@ const ClaimsForm = () => {
 
 	const handleClaimAmendSubmit = async (formFields: any) => {
 		console.log('Amend form fields received:', formFields);
-		
+
 		// Map form fields to API object
 		let mappedObj: any = {}
 		formFields.forEach((field: any) => {
@@ -1673,7 +1756,7 @@ const ClaimsForm = () => {
 			mappedObj[mappedName] = field.value;
 		});
 		console.log('Mapped Object for Amend API:', mappedObj);
-		
+
 		// Handle ReasonCode splitting if it contains '||'
 		let ReasonCodeValue = '';
 		let ReasonCodeLabel = '';
@@ -1693,30 +1776,30 @@ const ClaimsForm = () => {
 			Header: {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Reference: apiResponse?.Header?.Reference || {},
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Reference: apiResponse?.Header?.Reference || {},
 				Reason: {
-                    Amend: {
-                        RecordedDateTime: mappedObj?.Amenddatetime || null,
-                        ReasonCode: ReasonCodeValue,
-                        ReasonDescription: ReasonCodeLabel,
-                        Remarks: mappedObj?.Remarks || null,
-                        ModeFlag: "Update"
-                    }
-                }
+					Amend: {
+						RecordedDateTime: mappedObj?.Amenddatetime || null,
+						ReasonCode: ReasonCodeValue,
+						ReasonDescription: ReasonCodeLabel,
+						Remarks: mappedObj?.Remarks || null,
+						ModeFlag: "Update"
+					}
+				}
 			}
 		};
-		
+
 		console.log('Claim Data Object for Amend API:', claimPayload);
 		setIsLoadingClaim(true);
-		
+
 		try {
 			console.log('Calling amendClaim API...');
 			const response: any = await ClaimService.processedAmendClaim(claimPayload);
-			
+
 			console.log('Amend Claim API Response:', response);
 			setAmendModalOpen(false);
-			
+
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
 				try {
@@ -1725,16 +1808,16 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim amended successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Amended",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
-				
+
 				// Refresh claim data after successful amendment
 				if (searchQuery) {
 					await fetchClaimData(searchQuery);
@@ -1748,9 +1831,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim amendment failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Amendment Failed",
 					description: errorMessage,
@@ -1761,14 +1844,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Amend Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while amending the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error amending claim",
 				description: errorMessage,
@@ -1780,20 +1863,24 @@ const ClaimsForm = () => {
 	const handleClaimApprove = async () => {
 		// TODO: Implement approve functionality
 		console.log("Approve claim clicked", apiResponse);
-        const approvePayload = {
-            Header: {
-                ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
-                ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Document: apiResponse?.Document || [],
-            }
-        };
-        console.log("Approve Payload:", approvePayload);
-        setIsLoadingClaim(true);
+		const approvePayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				ClaimFindings: apiResponse?.ClaimFindings || "",
+				Document: {
+					Details: [...(gridState.gridData || [])],
+					Summary: apiResponse?.Document?.Summary || {},
+				},
+			}
+		};
+		console.log("Approve Payload:", approvePayload);
+		setIsLoadingClaim(true);
 		try {
 			console.log('Calling approveClaim API...');
 			const response: any = await ClaimService.approveClaim(approvePayload);
-			
+
 			console.log('Approve Claim API Response:', response);
 			if (response?.data?.IsSuccess) {
 				let responseData = null;
@@ -1803,16 +1890,16 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim approved successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Approved",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
-				
+
 				// Refresh claim data after successful amendment
 				if (searchQuery) {
 					await fetchClaimData(searchQuery);
@@ -1826,9 +1913,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim approved failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Approved Failed",
 					description: errorMessage,
@@ -1839,14 +1926,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Approve Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while approving the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error approving claim",
 				description: errorMessage,
@@ -1858,15 +1945,15 @@ const ClaimsForm = () => {
 	const handleClaimProcess = async () => {
 		// TODO: Implement process functionality
 		console.log("Process claim clicked", apiResponse);
-        const processPayload = {
-            Header: {
-                ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
-                ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
-                ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-                Reference: apiResponse?.Header?.Reference || {},
-            }
-        };
-        setIsLoadingClaim(true);
+		const processPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				Reference: apiResponse?.Header?.Reference || {},
+			}
+		};
+		setIsLoadingClaim(true);
 		try {
 			const response: any = await ClaimService.processClaim(processPayload);
 			console.log('Process Claim API Response:', response);
@@ -1878,21 +1965,21 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse ResponseData:', parseError);
 				}
-				
+
 				const successMessage = responseData?.Message || response?.data?.Message || "Claim processed successfully.";
 				const reasonCode = responseData?.ReasonCode || "";
-				
+
 				toast({
 					title: "✅ Claim Processed",
 					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
 					variant: "default",
 				});
 				// Refresh claim data after successful short close
-                setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
 				setSearchQuery(responseData?.Header?.ClaimNo || "");
-                setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				setClaimStatus(responseData?.Header?.ClaimStatus || "");
 				await fetchClaimData(responseData?.Header?.ClaimNo);
-				
+
 				setIsLoadingClaim(false);
 			} else {
 				let responseData = null;
@@ -1902,9 +1989,9 @@ const ClaimsForm = () => {
 				} catch (parseError) {
 					console.warn('Failed to parse error ResponseData:', parseError);
 				}
-				
+
 				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim processed failed.";
-				
+
 				toast({
 					title: "⚠️ Claim Processed Failed",
 					description: errorMessage,
@@ -1915,14 +2002,14 @@ const ClaimsForm = () => {
 		} catch (error) {
 			console.error('Process Claim API Error:', error);
 			setIsLoadingClaim(false);
-			
+
 			let errorMessage = "An unexpected error occurred while processing the claim.";
 			if ((error as any)?.response?.data?.Message) {
 				errorMessage = (error as any).response.data.Message;
 			} else if ((error as any)?.message) {
 				errorMessage = (error as any).message;
 			}
-			
+
 			toast({
 				title: "Error processing claim",
 				description: errorMessage,
@@ -1931,20 +2018,103 @@ const ClaimsForm = () => {
 		}
 	};
 
-    const handleClaimFindingsAmend = () => {
-        // TODO: Implement findings amend functionality
-        console.log("Findings amend clicked");
-    };
+	const handleClaimFindingsAmend = () => {
+		// TODO: Implement findings amend functionality
+		console.log("Findings amend clicked");
+	};
 
-    const documentDetailsShowPanel = () => {
-        setShowDocumentDetails(true);
+	const documentDetailsShowPanel = () => {
+		setShowDocumentDetails(true);
 		if (apiResponse?.Document?.Details) {
 			gridState.setGridData(apiResponse.Document.Details);
 		}
-    };
+	};
 
-    return (
-        <AppLayout>
+	const handleGenerateNote = async () => {
+		console.log("generate note", apiResponse);
+		// Get current grid data
+		const currentGridData = [...(gridState.gridData || [])];
+		console.log("Current Grid Data:", currentGridData);
+		const generateNotePayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				ClaimFindings: apiResponse?.ClaimFindings || "",
+				Document: {
+					Details: currentGridData,
+					Summary: apiResponse?.Document?.Summary || {},
+				},
+			}
+		};
+		setIsLoadingClaim(true);
+		try {
+			console.log('Calling generateNoteClaim API...');
+			const response: any = await ClaimService.generateNoteClaim(generateNotePayload);
+			console.log('Generate Note Claim API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim generate note successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+
+				toast({
+					title: "✅ Claim Generate Note",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				// Refresh claim data after successful short close
+				setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchQuery(responseData?.Header?.ClaimNo || "");
+				setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				await fetchClaimData(responseData?.Header?.ClaimNo);
+
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim generate note failed.";
+
+				toast({
+					title: "⚠️ Claim Generate Note Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Generate Note Claim API Error:', error);
+			setIsLoadingClaim(false);
+
+			let errorMessage = "An unexpected error occurred while generating the note for the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+
+			toast({
+				title: "Error generating note for claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	return (
+		<AppLayout>
 			<div className="relative flex flex-col h-full bg-gray-50">
 				{isLoadingClaim && (
 					<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
@@ -1953,20 +2123,20 @@ const ClaimsForm = () => {
 						<div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
 					</div>
 				)}
-                {/* Breadcrumb */}
-                <div className="px-6 pt-4">
-                    <Breadcrumb items={breadcrumbItems} />
-                 </div>
+				{/* Breadcrumb */}
+				<div className="px-6 pt-4">
+					<Breadcrumb items={breadcrumbItems} />
+				</div>
 
-                {/* Header */}
-                <div className="px-6 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-semibold">Claims</h1>
-                        <div className="relative max-w-md">
-                            <Input
-                                placeholder="Search Claim No."
-                                className="pr-10"
-                                value={searchQuery}
+				{/* Header */}
+				<div className="px-6 py-4 flex justify-between items-center">
+					<div className="flex items-center gap-4">
+						<h1 className="text-2xl font-semibold">Claims</h1>
+						<div className="relative max-w-md">
+							<Input
+								placeholder="Search Claim No."
+								className="pr-10"
+								value={searchQuery}
 								onChange={(e) => {
 									const claimNo = e.target.value;
 									setSearchQuery(claimNo);
@@ -1998,46 +2168,46 @@ const ClaimsForm = () => {
 							{isLoadingClaim ? (
 								<Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
 							) : (
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+								<Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							)}
 						</div>
 						<div className="">
 							<span className={getStatusColor(claimStatus) + ' text-xs'}>
 								{claimStatus}
 							</span>
-                        </div>
-                    </div>
+						</div>
+					</div>
 
 					{/* new claim button and action buttons */}
 					<div className="flex items-center gap-3">
 						{/* New Claim Button */}
-                    <div className="relative inline-block">
-                        <button
-                            onClick={() => {
-                                // Dynamically get the base path from the current URL
-                                const { pathname } = window.location;
-                                // Find the base path 
-                                const basePathMatch = pathname.match(/^\/[^/]+/);
-                                const basePath = basePathMatch ? basePathMatch[0] : "";
-                                window.location.href = `${basePath}/create-claim`;
-                            }}
-                            className="border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
-                            type='button'
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                        >
-                            <Plus className="h-4 w-4" />
-                            New Claim
-                        </button>
+						<div className="relative inline-block">
+							<button
+								onClick={() => {
+									// Dynamically get the base path from the current URL
+									const { pathname } = window.location;
+									// Find the base path 
+									const basePathMatch = pathname.match(/^\/[^/]+/);
+									const basePath = basePathMatch ? basePathMatch[0] : "";
+									window.location.href = `${basePath}/create-claim`;
+								}}
+								className="border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 h-9 rounded flex items-center transition-colors duration-200 gap-2 px-3"
+								type='button'
+								onMouseEnter={() => setShowTooltip(true)}
+								onMouseLeave={() => setShowTooltip(false)}
+							>
+								<Plus className="h-4 w-4" />
+								New Claim
+							</button>
 
-                        {/* Tooltip */}
-                        {showTooltip && (
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
-                                Create New Claim
-                                {/* Tooltip arrow */}
-                                <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
-                            </div>
-                        )}
+							{/* Tooltip */}
+							{showTooltip && (
+								<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow z-50 whitespace-nowrap">
+									Create New Claim
+									{/* Tooltip arrow */}
+									<div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 top-full left-1/2 -translate-x-1/2 -mt-1" />
+								</div>
+							)}
 						</div>
 
 						{/* Copy Icon Button */}
@@ -2158,242 +2328,242 @@ const ClaimsForm = () => {
 								</>
 							)}
 						</div>
-                    </div>
-                </div>
+					</div>
+				</div>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-auto px-6 pb-20 pt-3">
-                    {/* Claim & Reference Panel */}
-                    <DynamicPanel
-                        ref={formRef}
-                        panelId="claim-form-panel"
-                        panelIcon={<Banknote className="h-5 w-5 text-green-600" />}
-                        panelTitle="Claim & Reference"
-                        collapsible={true}
-                        panelConfig={claimPanelConfig}
-                        initialData={{}}
-                        badgeValue=""
-                        onDataChange={(data) => {
-                            // Update investigationNeeded state when form data changes
-                            if (data?.InvestigationNeeded !== undefined) {
-                                setInvestigationNeeded(data.InvestigationNeeded === true || data.InvestigationNeeded === 'true' || data.InvestigationNeeded === 'True');
-                            }
-                        }}
-                    />
+				{/* Scrollable Content */}
+				<div className="flex-1 overflow-auto px-6 pb-20 pt-3">
+					{/* Claim & Reference Panel */}
+					<DynamicPanel
+						ref={formRef}
+						panelId="claim-form-panel"
+						panelIcon={<Banknote className="h-5 w-5 text-green-600" />}
+						panelTitle="Claim & Reference"
+						collapsible={true}
+						panelConfig={claimPanelConfig}
+						initialData={{}}
+						badgeValue=""
+						onDataChange={(data) => {
+							// Update investigationNeeded state when form data changes
+							if (data?.InvestigationNeeded !== undefined) {
+								setInvestigationNeeded(data.InvestigationNeeded === true || data.InvestigationNeeded === 'true' || data.InvestigationNeeded === 'True');
+							}
+						}}
+					/>
 
 					{/* Investigation Details Panel */}
 					{investigationNeeded && searchQuery && (
-                        <div className="mt-4">
-                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                                <div className="flex items-center justify-between px-4 py-3">
-                                    {/* Left side: Icon and Title */}
-                                    <div className="flex items-center">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-lg">
-                                            <FileSearch className="h-5 w-5 text-purple-600" />
-                                        </div>
-                                        <h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
-                    </div>
+						<div className="mt-4">
+							<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+								<div className="flex items-center justify-between px-4 py-3">
+									{/* Left side: Icon and Title */}
+									<div className="flex items-center">
+										<div className="flex items-center justify-center w-10 h-10 rounded-lg">
+											<FileSearch className="h-5 w-5 text-purple-600" />
+										</div>
+										<h3 className="text-sm font-medium text-gray-700">Investigation Details</h3>
+									</div>
 
-                                    {/* Right side: Badge and Edit Button */}
-                                    <div className="flex items-center gap-3 cursor-pointer">
-                                        {/* Count Badge */}
-                                        <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
-                                            {apiResponse?.InvestigationDetails?.length || investigationCount} Nos
-                                        </div>
+									{/* Right side: Badge and Edit Button */}
+									<div className="flex items-center gap-3 cursor-pointer">
+										{/* Count Badge */}
+										<div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium text-center">
+											{apiResponse?.InvestigationDetails?.length || investigationCount} Nos
+										</div>
 
-                                        {/* Edit Button */}
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-                                            onClick={() => {
-                                                // Handle edit action
-                                                console.log("Edit Investigation Details clicked");
-                                                setInvestigationDetailsOpen(true);
-                                            }}
-                                        >
-                                            <SquarePen className="h-4 w-4 text-gray-600" />
-                                        </Button>
-                </div>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
+										{/* Edit Button */}
+										<Button
+											variant="outline"
+											size="icon"
+											className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+											onClick={() => {
+												// Handle edit action
+												console.log("Edit Investigation Details clicked");
+												setInvestigationDetailsOpen(true);
+											}}
+										>
+											<SquarePen className="h-4 w-4 text-gray-600" />
+										</Button>
+									</div>
+								</div>
+							</Card>
+						</div>
+					)}
 
 					{/* Claims Findings Panel */}
 					{apiResponse?.ClaimFindings && (
-                        <div className="mt-4">
-                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                                {/* Header Section */}
-                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                                    {/* Left side: Icon and Title */}
-                                    <div className="flex items-center">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-md">
-                                            <FileText className="h-5 w-5 text-red-400" />
-                                        </div>
-                                        <h3 className="text-sm font-semibold text-gray-800">Claims Findings</h3>
-                                    </div>
+						<div className="mt-4">
+							<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+								{/* Header Section */}
+								<div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+									{/* Left side: Icon and Title */}
+									<div className="flex items-center">
+										<div className="flex items-center justify-center w-10 h-10 rounded-md">
+											<FileText className="h-5 w-5 text-red-400" />
+										</div>
+										<h3 className="text-sm font-semibold text-gray-800">Claims Findings</h3>
+									</div>
 
-                                    {/* Right side: Edit Button */}
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-                                        onClick={() => {
-                                            // Handle edit action
-                                            console.log("Edit Claims Findings clicked");
-                                            setClaimFindingsOpen(true);
-                                        }}
-                                    >
-                                        <SquarePen className="h-4 w-4 text-gray-600" />
-                                    </Button>
-                                </div>
+									{/* Right side: Edit Button */}
+									<Button
+										variant="outline"
+										size="icon"
+										className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+										onClick={() => {
+											// Handle edit action
+											console.log("Edit Claims Findings clicked");
+											setClaimFindingsOpen(true);
+										}}
+									>
+										<SquarePen className="h-4 w-4 text-gray-600" />
+									</Button>
+								</div>
 
-                                {/* Content Section */}
-                                <div className="p-4">
-                                    {/* First Row - 5 Key-Value Pairs */}
-                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                                        {/* Ref. Doc. Type/ ID */}
-                                        <div className="flex flex-col">
-                                            <label className="text-xs text-muted-foreground mb-1">Ref. Doc. Type/ ID</label>
-                                            <span className="text-sm font-semibold text-foreground">
-                                                {pipedData(apiResponse?.ClaimFindings?.ReferenceDocType, apiResponse?.ClaimFindings?.ReferenceDocNo)}
-                                            </span>
-                                        </div>
+								{/* Content Section */}
+								<div className="p-4">
+									{/* First Row - 5 Key-Value Pairs */}
+									<div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+										{/* Ref. Doc. Type/ ID */}
+										<div className="flex flex-col">
+											<label className="text-xs text-muted-foreground mb-1">Ref. Doc. Type/ ID</label>
+											<span className="text-sm font-semibold text-foreground">
+												{pipedData(apiResponse?.ClaimFindings?.ReferenceDocType, apiResponse?.ClaimFindings?.ReferenceDocNo)}
+											</span>
+										</div>
 
-                                        {/* Final Claim Amount */}
-                                        <div className="flex flex-col">
-                                            <label className="text-xs text-muted-foreground mb-1">Final Claim Amount</label>
-                                            <span className="text-sm font-semibold text-foreground">
-                                                {apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.FinalClaimAmount}
-                                            </span>
-                                        </div>
+										{/* Final Claim Amount */}
+										<div className="flex flex-col">
+											<label className="text-xs text-muted-foreground mb-1">Final Claim Amount</label>
+											<span className="text-sm font-semibold text-foreground">
+												{apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.FinalClaimAmount}
+											</span>
+										</div>
 
-                                        {/* Usage ID/GL Account */}
-                                        <div className="flex flex-col">
-                                            <label className="text-xs text-muted-foreground mb-1">Usage ID/GL Account</label>
-                                            <span className="text-sm font-semibold text-foreground">
-                                                {apiResponse?.ClaimFindings?.UsageIDOrGLAccount || "--"}
-                                            </span>
-                                        </div>
+										{/* Usage ID/GL Account */}
+										<div className="flex flex-col">
+											<label className="text-xs text-muted-foreground mb-1">Usage ID/GL Account</label>
+											<span className="text-sm font-semibold text-foreground">
+												{apiResponse?.ClaimFindings?.UsageIDOrGLAccount || "--"}
+											</span>
+										</div>
 
-                                        {/* Supplier Note No. */}
-                                        <div className="flex flex-col">
-                                            <label className="text-xs text-muted-foreground mb-1">Supplier Note No.</label>
-                                            <span className="text-sm font-semibold text-foreground">
-                                                {apiResponse?.ClaimFindings?.SupplierNoteNo || "--"}
-                                            </span>
-                                        </div>
+										{/* Supplier Note No. */}
+										<div className="flex flex-col">
+											<label className="text-xs text-muted-foreground mb-1">Supplier Note No.</label>
+											<span className="text-sm font-semibold text-foreground">
+												{apiResponse?.ClaimFindings?.SupplierNoteNo || "--"}
+											</span>
+										</div>
 
-                                        {/* Supplier Note Amount */}
-                                        <div className="flex flex-col">
-                                            <label className="text-xs text-muted-foreground mb-1">Supplier Note Amount</label>
-                                            <span className="text-sm font-semibold text-foreground">
-                                                {apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.SupplierNoteAmount}
-                                            </span>
-                                        </div>
-                                    </div>
+										{/* Supplier Note Amount */}
+										<div className="flex flex-col">
+											<label className="text-xs text-muted-foreground mb-1">Supplier Note Amount</label>
+											<span className="text-sm font-semibold text-foreground">
+												{apiResponse?.ClaimFindings?.Currency} {apiResponse?.ClaimFindings?.SupplierNoteAmount}
+											</span>
+										</div>
+									</div>
 
-                                    {/* Second Row - Comments/Remarks (Full Width) */}
-                                    <div className="flex flex-col">
-                                        <label className="text-xs text-muted-foreground mb-1">Comments/Remarks</label>
-                                        <span className="text-sm font-semibold text-foreground">
-                                            {apiResponse?.ClaimFindings?.CommentRemark || "--"}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
+									{/* Second Row - Comments/Remarks (Full Width) */}
+									<div className="flex flex-col">
+										<label className="text-xs text-muted-foreground mb-1">Comments/Remarks</label>
+										<span className="text-sm font-semibold text-foreground">
+											{apiResponse?.ClaimFindings?.CommentRemark || "--"}
+										</span>
+									</div>
+								</div>
+							</Card>
+						</div>
+					)}
 
 					{/* Document Details Panel */}
 					{/* {showDocumentDetails && ( */}
 					{apiResponse?.Document?.Details && (
-                        <div className="mt-4">
-                            <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                                <Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
-                                    {/* Header Section */}
-                                    <CollapsibleTrigger className="w-full">
-                                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                                            {/* Left side: Icon and Title */}
-                                            <div className="flex items-center">
-                                                <div className="flex items-center justify-center w-10 h-10 rounded-md">
-                                                    <FileBarChart className="h-5 w-5 text-blue-600" />
-                                                </div>
-                                                <h3 className="text-sm font-semibold text-gray-800">Document Details</h3>
-                                            </div>
+						<div className="mt-4">
+							<Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
+								<Collapsible open={isDocumentDetailsOpen} onOpenChange={setIsDocumentDetailsOpen}>
+									{/* Header Section */}
+									<CollapsibleTrigger className="w-full">
+										<div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+											{/* Left side: Icon and Title */}
+											<div className="flex items-center">
+												<div className="flex items-center justify-center w-10 h-10 rounded-md">
+													<FileBarChart className="h-5 w-5 text-blue-600" />
+												</div>
+												<h3 className="text-sm font-semibold text-gray-800">Document Details</h3>
+											</div>
 
-                                            {/* Right side: Edit Button and Chevron */}
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        // Handle edit action
-                                                        console.log("Edit Document Details clicked");
-                                                    }}
-                                                >
-                                                    <SquarePen className="h-4 w-4 text-gray-600" />
-                                                </Button>
-                                                {isDocumentDetailsOpen ? (
-                                                    <ChevronUp className="h-5 w-5 text-gray-600" />
-                                                ) : (
-                                                    <ChevronDown className="h-5 w-5 text-gray-600" />
-                                                )}
-                                            </div>
-                                        </div>
-                                    </CollapsibleTrigger>
+											{/* Right side: Edit Button and Chevron */}
+											<div className="flex items-center gap-2">
+												<Button
+													variant="outline"
+													size="icon"
+													className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+													onClick={(e) => {
+														e.stopPropagation();
+														// Handle edit action
+														console.log("Edit Document Details clicked");
+													}}
+												>
+													<SquarePen className="h-4 w-4 text-gray-600" />
+												</Button>
+												{isDocumentDetailsOpen ? (
+													<ChevronUp className="h-5 w-5 text-gray-600" />
+												) : (
+													<ChevronDown className="h-5 w-5 text-gray-600" />
+												)}
+											</div>
+										</div>
+									</CollapsibleTrigger>
 
-                                    <CollapsibleContent>
-                                        {/* Summary Boxes Section */}
-                                        <div className="px-4 pb-4 mt-3">
-                                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                                {/* Total Invoice Amount */}
-                                                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Invoice Amount</label>
-                                                    <span className="text-lg font-semibold text-purple-600">
-                                                        € {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)}
-                                                    </span>
-                                                </div>
+									<CollapsibleContent>
+										{/* Summary Boxes Section */}
+										<div className="px-4 pb-4 mt-3">
+											<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+												{/* Total Invoice Amount */}
+												<div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Invoice Amount</label>
+													<span className="text-lg font-semibold text-purple-600">
+														€ {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)}
+													</span>
+												</div>
 
-                                                {/* Total Claim Amount */}
-                                                <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Claim Amount</label>
-                                                    <span className="text-lg font-semibold text-pink-600">
-                                                        € {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)}
-                                                    </span>
-                                                </div>
+												{/* Total Claim Amount */}
+												<div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
+													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Claim Amount</label>
+													<span className="text-lg font-semibold text-pink-600">
+														€ {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)}
+													</span>
+												</div>
 
-                                                {/* Total Balance Amount */}
-                                                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                                                    <label className="text-xs text-gray-700 font-medium mb-1 block">Total Balance Amount</label>
-                                                    <span className="text-lg font-semibold text-green-600">
-                                                        € {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+												{/* Total Balance Amount */}
+												<div className="bg-green-50 rounded-lg p-4 border border-green-200">
+													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Balance Amount</label>
+													<span className="text-lg font-semibold text-green-600">
+														€ {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2)}
+													</span>
+												</div>
+											</div>
+										</div>
 
-                                        {/* SmartGrid Table Section */}
-                                        <div className="px-4 pb-4">
-                                            <SmartGrid
-                                                columns={gridState.columns}
-                                                data={gridState.gridData || []}
-                                                hideToolbar={true}
-                                                hideRightToolbar={true}
-                                                hideCheckboxToggle={true}
-                                                onLinkClick={(rowData: any, columnKey: string) => {
-                                                    console.log("Link clicked:", columnKey, rowData);
-                                                    // Handle link clicks for Credit Note No. and Supplier Note No.
-                                                }}
-                                                onInlineEdit={handleInlineEditDocumentDetails}
-                                                gridId={gridId}
-                                                gridTitle="Document Details"
-                                                userId="user-1"
-                                            />
-                                            {/* <SmartGridWithGrouping
+										{/* SmartGrid Table Section */}
+										<div className="px-4 pb-4">
+											<SmartGrid
+												columns={gridState.columns}
+												data={gridState.gridData || []}
+												hideToolbar={true}
+												hideRightToolbar={true}
+												hideCheckboxToggle={true}
+												onLinkClick={(rowData: any, columnKey: string) => {
+													console.log("Link clicked:", columnKey, rowData);
+													// Handle link clicks for Credit Note No. and Supplier Note No.
+												}}
+												onInlineEdit={handleInlineEditDocumentDetails}
+												gridId={gridId}
+												gridTitle="Document Details"
+												userId="user-1"
+											/>
+											{/* <SmartGridWithGrouping
                                                 columns={documentDetailsColumns}
                                                 data={apiResponse?.Document?.Details || []}
                                                 groupableColumns={[]}
@@ -2421,12 +2591,12 @@ const ClaimsForm = () => {
                                                 gridId="Claims-grid"
                                                 onInlineEdit={handleInlineEditDocumentDetails}
                                             /> */}
-                                        </div>
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            </Card>
-                        </div>
-                    )}
+										</div>
+									</CollapsibleContent>
+								</Collapsible>
+							</Card>
+						</div>
+					)}
 
 				</div>
 			</div>
@@ -2439,11 +2609,17 @@ const ClaimsForm = () => {
 
 			{/* Investigation Details Section */}
 			{
-				apiResponse && 
+				apiResponse &&
 				<InvestigationDetails
-				isOpen={investigationDetailsOpen}
-				onClose={() => setInvestigationDetailsOpen(false)}
-				apiData={apiResponse}
+					isOpen={investigationDetailsOpen}
+					onClose={() => setInvestigationDetailsOpen(false)}
+					apiData={apiResponse}
+					onSaveCallback={async () => {
+						// Refresh claim data after successful investigation details save
+						if (searchQuery) {
+							await fetchClaimData(searchQuery);
+						}
+					}}
 				/>
 			}
 
@@ -2527,102 +2703,105 @@ const ClaimsForm = () => {
 
 			{/* Custom footer button */}
 			<div className="h-15 fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-end items-center gap-3 z-40 shadow-lg">
-                {claimStatus === "" && (
-                    <>
-                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                            Cancel
-                        </button>
-                        <button onClick={handleSaveClaim} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
-                            Save
-                        </button>
-                    </>
-                )}
-                {(claimStatus === "Claim Initiated" || claimStatus === "In Progress") && (
-                    <>
-                        <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
-                            {/* Save Button - Clickable */}
-                            <Button
-                                onClick={handleSaveClaim}
-                                className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
-                            >
-                                Save
-                            </Button>
-                            {/* Dropdown Arrow - Only this triggers the dropdown */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                        }}
-                                    >
-                                        <ChevronDown className="w-4 h-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={handleClaimCancel}>
-                                        Cancel
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleClaimReject}>
-                                        Reject
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimProcess}>
-                            Process Claim
-                        </button>
-                    </>
-                )}
-                
-                {claimStatus === "Processed" && (
-                    <>
-                        <div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
-                            {/* Save Button - Clickable */}
-                            <Button
-                                onClick={handleClaimAmend}
-                                className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
-                            >
-                                Amend
-                            </Button>
-                            {/* Dropdown Arrow - Only this triggers the dropdown */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                        }}
-                                    >
-                                        <ChevronDown className="w-4 h-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={handleClaimShortClose}>
-                                        Short Close
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimApprove}>
-                            Approve
-                        </button>            
-                    </>
-                )}
+				{claimStatus === "" && (
+					<>
+						<button className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-red-300 font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+							Cancel
+						</button>
+						<button onClick={handleSaveClaim} className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white font-semibold transition-colors px-4 py-2 h-8 text-[13px] rounded-sm">
+							Save
+						</button>
+					</>
+				)}
+				{(claimStatus === "Claim Initiated" || claimStatus === "In Progress") && (
+					<>
+						<div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+							{/* Save Button - Clickable */}
+							<Button
+								onClick={handleSaveClaim}
+								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+							>
+								Save
+							</Button>
+							{/* Dropdown Arrow - Only this triggers the dropdown */}
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+										onClick={(e) => {
+											e.stopPropagation();
+										}}
+									>
+										<ChevronDown className="w-4 h-4" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem onClick={handleClaimCancel}>
+										Cancel
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={handleClaimReject}>
+										Reject
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimProcess}>
+							Process Claim
+						</button>
+					</>
+				)}
 
-                {claimStatus === "Approved" && (
-                    <>
-                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimFindingsAmend}>
-                            Amend
-                        </button>
-                        <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
+				{claimStatus === "Processed" && (
+					<>
+						<div className="inline-flex items-center border border-blue-600 rounded-sm overflow-hidden">
+							{/* Save Button - Clickable */}
+							<Button
+								onClick={handleClaimAmend}
+								className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-3 text-[13px] rounded-none border-0 border-r border-blue-600"
+							>
+								Amend
+							</Button>
+							{/* Dropdown Arrow - Only this triggers the dropdown */}
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:bg-blue-100 font-semibold transition-colors h-8 px-2 text-[13px] rounded-none border-0"
+										onClick={(e) => {
+											e.stopPropagation();
+										}}
+									>
+										<ChevronDown className="w-4 h-4" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem onClick={handleClaimShortClose}>
+										Short Close
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimApprove}>
+							Approve
+						</button>
+					</>
+				)}
+
+				{claimStatus === "Approved" && (
+					<>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimFindingsAmend}>
+							Amend
+						</button>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
+							Generate Note
+						</button>
+						{/* <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
                             Document Details
-                        </button>
-                    </>
-                )}
-            </div>
-        </AppLayout>
-    );
+                        </button> */}
+					</>
+				)}
+			</div>
+		</AppLayout>
+	);
 };
 
 export default ClaimsForm;

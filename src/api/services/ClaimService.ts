@@ -230,6 +230,30 @@ export const ClaimService = {
     return response.data;
   },
 
+  generateNoteClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Generate Note",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.GENERATE_NOTE,
+      requestBody
+    );
+    return response.data;
+  },
+
   viewAuditTrail: async (params: any): Promise<any> => {
     const userContext = getUserContext();
     const payload = {
