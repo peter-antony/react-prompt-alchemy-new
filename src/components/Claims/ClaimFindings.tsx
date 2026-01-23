@@ -5,6 +5,7 @@ import { DynamicLazySelect } from "../DynamicPanel/DynamicLazySelect";
 import { DynamicLazySelect1 } from "../DynamicPanel/DynamicLazySelect1";
 import { quickOrderService } from "@/api/services";
 import { ClaimService } from "@/api/services/ClaimService";
+import { useToast } from '@/hooks/use-toast';
 
 type ClaimFindingsData = {
   docType?: string;
@@ -21,10 +22,11 @@ export const ClaimFindings: React.FC<{
   onClose: () => void;
   onSave?: (data: any) => void;
   apiData?: any;
-}> = ({ isOpen, onClose, onSave, apiData }) => {
+  onSuccessCallback: () => void;
+}> = ({ isOpen, onClose, onSave, apiData, onSuccessCallback }) => {
   const [form, setForm] = useState<any>({});
   const [currencyList, setCurrencyList] = useState<any>();
-
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadQcMasters = async () => {
@@ -128,9 +130,62 @@ export const ClaimFindings: React.FC<{
       Document: apiData?.Document,
     };
     console.log("Payload for Claim Findings Save:", payLoad);
-    const response = await ClaimService.claimFindingsSave({ requestPayload: payLoad });
-    console.log("Claim Findings Save Response:", response);
-    onClose();
+    try {
+      console.log('Calling saveClaim API...');
+      const response = await ClaimService.claimFindingsSave({ requestPayload: payLoad });
+
+      console.log('Save Claim API Response:', response);
+      if (response?.data?.IsSuccess) {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+
+        const successMessage = responseData?.Message || response?.data?.Message || "Claim saved successfully.";
+        const reasonCode = responseData?.ReasonCode || "";
+
+        toast({
+          title: "✅ Claim Details Saved",
+          description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+          variant: "default",
+        });
+        onClose();
+        onSuccessCallback()
+        // Refresh claim data after successful short close
+      } else {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed Error ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse error ResponseData:', parseError);
+        }
+
+        const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim saved failed.";
+
+        toast({
+          title: "⚠️ Claim Save details Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Save Claim API Error:', error);
+      let errorMessage = "An unexpected error occurred while saving the claim.";
+      if ((error as any)?.response?.data?.Message) {
+        errorMessage = (error as any).response.data.Message;
+      } else if ((error as any)?.message) {
+        errorMessage = (error as any).message;
+      }
+      toast({
+        title: "Error saving claim",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (

@@ -2443,7 +2443,12 @@ const ClaimsForm = () => {
 				isOpen={claimFindingsOpen}
 				onClose={() => setClaimFindingsOpen(false)}
 				apiData={apiResponse}
-
+				onSuccessCallback={async () => {
+					// Refresh claim data after successful findings amend
+					if (searchQuery) {
+						await fetchClaimData(searchQuery);
+					}
+				}}
 			/>
 			{/* Linked Internal Orders Section */}
 			<ClaimLinkedInternalOrders
