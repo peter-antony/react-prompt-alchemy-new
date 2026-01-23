@@ -897,8 +897,8 @@ export const ClaimsHub = () => {
         {
           label: "Audit Trail",
           type: 'Button',
-          // disabled: selectedRowObjects.length !== 1, // <-- Enable if exactly one row is selected
-          disabled: true, // <-- Enable if exactly one row is selected
+          disabled: selectedRowObjects.length !== 1, // <-- Enable if exactly one row is selected
+          // disabled: true, // <-- Enable if exactly one row is selected
           onClick: () => {
             console.log("Audit Trail clicked");
             if (selectedRowObjects.length === 0) {
@@ -1663,7 +1663,7 @@ export const ClaimsHub = () => {
       <ClaimsHubAuditTrail
         isOpen={isAuditOpen}
         onClose={() => setIsAuditOpen(false)}
-        auditClaimObj={auditClaimNo}
+        auditClaimObj={auditClaimNo?.ClaimNo}
       />
 
       {/* Claims Hub Edit Save Component */}

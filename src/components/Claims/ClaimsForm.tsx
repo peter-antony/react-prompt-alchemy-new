@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { Ban, NotebookPen, XCircle, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { ClaimsHubAuditTrail } from "./ClaimsHubAuditTrail";
 
 const ClaimsForm = () => {
 	const gridId = "ClaimsForm_DocumentDetails";
@@ -53,6 +54,7 @@ const ClaimsForm = () => {
 	const [amendModalOpen, setAmendModalOpen] = useState(false);
 	const [rejectModalOpen, setRejectModalOpen] = useState(false);
 	const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
+	const [isAuditOpen, setIsAuditOpen] = useState(false);
 	
 	// Fields for Cancel modal (with date, reasonCode, remarks)
 	const [cancelFields, setCancelFields] = useState([
@@ -2126,6 +2128,7 @@ const ClaimsForm = () => {
 												onClick={() => {
 													setShowDropdownMenu(false);
 													console.log("Audit Trail clicked");
+													setIsAuditOpen(true);
 												}}
 												className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
 											>
@@ -2427,6 +2430,12 @@ const ClaimsForm = () => {
 
 				</div>
 			</div>
+
+			<ClaimsHubAuditTrail
+				isOpen={isAuditOpen}
+				onClose={() => setIsAuditOpen(false)}
+				auditClaimObj={searchQuery}
+			/>
 
 			{/* Investigation Details Section */}
 			{

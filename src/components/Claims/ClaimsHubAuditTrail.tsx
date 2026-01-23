@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SideDrawer } from '@/components/Common/SideDrawer';
 import { Zap } from 'lucide-react';
 import { ClaimService } from '@/api/services/ClaimService';
+import { dateTimeFormatter } from '@/utils/formatter';
 
 export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimObj }) => {
   const [auditEntries, setAuditEntries] = useState<any[]>([]);
@@ -36,32 +37,31 @@ export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimObj }) => 
   ];
 
   useEffect(() => {
+    console.log('Fetching audit trail for claim:', auditClaimObj);
     const fetchAuditTrail = async () => {
       try {
         const response = await ClaimService.viewAuditTrail({
-          RefDocType: auditClaimObj.RefDocType,
-          RefDocNo: auditClaimObj.RefDocNo,
+          RefDocType: 'Claims',
+          RefDocNo: auditClaimObj,
         });
 
-        const responseDataString = response?.data?.ResponseData;
-
-        // Case 1: Backend returned error inside ResponseData
-        if (responseDataString) {
-          const parsed = JSON.parse(responseDataString);
-
-          if (parsed?.error) {
-            // console.error('Audit Trail SP Error:', parsed.error.errorMessage);
-            setAuditEntries(DEFAULT_AUDIT_TRAILS);
-            return;
+        if (response?.data?.IsSuccess) {
+          let responseData = null;
+          try {
+            responseData = JSON.parse(response?.data?.ResponseData);
+            console.log('Parsed ResponseData:', responseData);
+          } catch (parseError) {
+            console.warn('Failed to parse ResponseData:', parseError);
           }
+          setAuditEntries(responseData?.AuditEvents || []);
+          // Refresh claim data after successful short close
+        } else {
+          setAuditEntries([]);
         }
-
-        // Case 2: Valid data
-        setAuditEntries(response?.data?.data ?? DEFAULT_AUDIT_TRAILS);
       } catch (error) {
         // Case 3: Network / runtime error
         console.error('Audit Trail API Error:', error);
-        setAuditEntries(DEFAULT_AUDIT_TRAILS);
+        setAuditEntries([]);
       }
     };
 
@@ -80,41 +80,41 @@ export const ClaimsHubAuditTrail: any = ({ isOpen, onClose, auditClaimObj }) => 
       contentBgColor='#f8f9fc'
       onScrollPanel={true}
       isBadgeRequired={true}
-      badgeContent={auditClaimObj?.ClaimNo || ''}
+      badgeContent={auditClaimObj || ''}
     >
       <div className="p-4">
         {auditEntries?.length === 0 ? (
           <div className="text-sm text-gray-500">No audit entries available.</div>
         ) : (
-          auditEntries?.map(entry => (
-            <div key={entry.id} className="bg-white rounded-lg shadow-sm p-4 mb-4 border">
+          auditEntries?.map((entry, index) => (
+            <div key={'entry-' + index} className="bg-white rounded-lg shadow-sm p-4 mb-4 border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Zap className="h-5 w-5 text-[#6938EF]" strokeWidth={1.33} />
-                  <div className="text-sm font-semibold text-gray-800">{entry.title}</div>
+                  <div className="text-sm font-semibold text-gray-800">{entry.EventName} - {entry.EventUniqueID}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-3 text-sm text-gray-600 ml-8">
                 <div>
                   <div className="text-xs text-gray-600 font-normal">Date and Time</div>
-                  <div className="font-medium text-gray-800">{entry.date}</div>
+                  <div className="font-medium text-gray-800">{dateTimeFormatter(entry.EventDateTime)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-600 font-normal">User Name</div>
-                  <div className="font-medium text-gray-800">{entry.userName}</div>
+                  <div className="font-medium text-gray-800">{entry.UserDescription}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-600 font-normal">User Role</div>
-                  <div className="font-medium text-gray-800">{entry.userRole}</div>
+                  <div className="font-medium text-gray-800">{entry.RoleName}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-600 font-normal">Reason Code</div>
-                  <div className="font-medium text-gray-800">{entry.reasonCode}</div>
+                  <div className="font-medium text-gray-800">{entry.ReasonCode || '--'}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-600 font-normal">System Remarks</div>
-                  <div className="font-medium text-gray-800">{entry.systemRemarks}</div>
+                  <div className="font-medium text-gray-800">{entry.Remark}</div>
                 </div>
               </div>
             </div>
