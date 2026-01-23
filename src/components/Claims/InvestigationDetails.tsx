@@ -25,7 +25,8 @@ export const InvestigationDetails: React.FC<{
   onClose: () => void;
   rowData?: any;
   apiData?: any;
-}> = ({ isOpen, onClose, rowData, apiData }) => {
+  onSaveCallback?: () => void;
+}> = ({ isOpen, onClose, rowData, apiData, onSaveCallback }) => {
   console.log("InvestigationDetails render", { apiData });
   // Sample JSON data (temporary) — parent will pass real data later
   const sampleEntries: InvestigationEntry[] = [
@@ -295,6 +296,8 @@ export const InvestigationDetails: React.FC<{
           description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
           variant: "default",
         });
+        onClose();
+        onSaveCallback?.();
         // Refresh claim data after successful short close
       } else {
         let responseData = null;
