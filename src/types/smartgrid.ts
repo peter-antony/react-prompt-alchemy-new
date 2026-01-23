@@ -265,7 +265,7 @@ export interface SmartGridProps {
   serverFilterFieldOrder?: string[];
   enableExpandCollapseAll?: boolean;
 
-  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[]) => void;
+  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
 }
 
 // Legacy interface for backward compatibility

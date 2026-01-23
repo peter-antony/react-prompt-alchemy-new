@@ -95,12 +95,14 @@ export function SmartGrid({
   exportFilename = `export-${new Date().toISOString().split('T')[0]}`,
   serverFilterVisibleFields,
   serverFilterFieldOrder,
+  serverFilterFieldLabels,
   onServerFilterPreferenceSave
 }: SmartGridProps & {
   exportFilename?: string;
   serverFilterVisibleFields?: string[];
   serverFilterFieldOrder?: string[];
-  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[]) => void;
+  serverFilterFieldLabels?: Record<string, string>;
+  onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
 }) {
   const {
     gridData,
@@ -946,6 +948,7 @@ export function SmartGrid({
           api={api}
           initialVisibleFields={serverFilterVisibleFields}
           initialFieldOrder={serverFilterFieldOrder}
+          initialFieldLabels={serverFilterFieldLabels}
           onFilterPreferencesSave={onServerFilterPreferenceSave}
         />
       )}

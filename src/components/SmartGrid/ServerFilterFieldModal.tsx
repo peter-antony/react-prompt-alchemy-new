@@ -17,7 +17,8 @@ interface ServerFilterFieldModalProps {
   serverFilters: ServerFilter[];
   visibleFields: string[];
   fieldOrder: string[];
-  onSave: (visibleFields: string[], fieldOrder: string[]) => void;
+  onSave: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
+  fieldLabels?: Record<string, string>;
 }
 
 export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
@@ -26,7 +27,8 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
   serverFilters,
   visibleFields,
   fieldOrder,
-  onSave
+  onSave,
+  fieldLabels = {}
 }) => {
   const [fieldConfigs, setFieldConfigs] = useState<ServerFilterFieldConfig[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -40,9 +42,11 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
       const filter = serverFilters.find(f => f.key === fieldKey);
       if (filter) {
         orderedConfigs.push({
+          // ...filter,
           ...filter,
           visible: visibleFields.includes(fieldKey),
-          order: orderedConfigs.length
+          order: orderedConfigs.length,
+          label: fieldLabels[filter.key] || filter.label
         });
       }
     });
@@ -51,15 +55,17 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
     serverFilters.forEach(filter => {
       if (!fieldOrder.includes(filter.key)) {
         orderedConfigs.push({
+          // ...filter,
           ...filter,
           visible: visibleFields.includes(filter.key),
-          order: orderedConfigs.length
+          order: orderedConfigs.length,
+          label: fieldLabels[filter.key] || filter.label
         });
       }
     });
     
     setFieldConfigs(orderedConfigs);
-  }, [serverFilters, visibleFields, fieldOrder, open]);
+  }, [serverFilters, visibleFields, fieldOrder, open, fieldLabels]);
 
   const handleVisibilityChange = (fieldKey: string, visible: boolean) => {
     setFieldConfigs(prev => 
@@ -96,14 +102,29 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
     setDraggedIndex(null);
   };
 
+  const handleLabelChange = (fieldKey: string, newLabel: string) => {
+    setFieldConfigs(prev =>
+      prev.map(config =>
+        config.key === fieldKey ? { ...config, label: newLabel } : config
+      )
+    );
+  };
+
   const handleSave = () => {
     const newVisibleFields = fieldConfigs
       .filter(config => config.visible)
       .map(config => config.key);
     
     const newFieldOrder = fieldConfigs.map(config => config.key);
-    
-    onSave(newVisibleFields, newFieldOrder);
+
+
+    // Create label map
+    const newFieldLabels: Record<string, string> = {};
+    fieldConfigs.forEach(config => {
+      newFieldLabels[config.key] = config.label;
+    });
+
+    onSave(newVisibleFields, newFieldOrder, newFieldLabels);
     onClose();
   };
 
@@ -148,7 +169,11 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
               />
               
               <div className="flex-1">
-                <div className="font-medium text-sm">{fieldConfig.label}</div>
+                <Input
+                  value={fieldConfig.label}
+                  onChange={(e) => handleLabelChange(fieldConfig.key, e.target.value)}
+                  className="mb-1 h-8"
+                />
                 <div className="text-xs text-muted-foreground">{fieldConfig.key}</div>
                 {fieldConfig.type && (
                   <div className="text-xs text-muted-foreground capitalize">

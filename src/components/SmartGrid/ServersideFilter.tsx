@@ -26,7 +26,8 @@ interface ServersideFilterProps {
   api?: FilterSystemAPI;
   initialVisibleFields?: string[];
   initialFieldOrder?: string[];
-  onFilterPreferencesSave?: (visibleFields: string[], fieldOrder: string[]) => void;
+  initialFieldLabels?: Record<string, string>;
+  onFilterPreferencesSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
 }
 
 export function ServersideFilter({
@@ -42,6 +43,7 @@ export function ServersideFilter({
   api,
   initialVisibleFields,
   initialFieldOrder,
+  initialFieldLabels,
   onFilterPreferencesSave
 }: ServersideFilterProps) {
   // Use persistent filter store to maintain state across component unmount/mount
@@ -53,7 +55,8 @@ export function ServersideFilter({
   const [loading, setLoading] = useState(false);
   const [visibleFields, setVisibleFields] = useState<string[]>([]);
   const [fieldOrder, setFieldOrder] = useState<string[]>([]);
-  
+  const [fieldLabels, setFieldLabels] = useState<Record<string, string>>({});
+
   const { toast } = useToast();
 
   // Get current grid's active filters - Memoize to prevent unnecessary re-runs
@@ -136,8 +139,12 @@ export function ServersideFilter({
         const allFieldKeys = serverFilters.map(f => f.key);
         setFieldOrder(allFieldKeys);
       }
+
+      if (initialFieldLabels) {
+        setFieldLabels(initialFieldLabels);
+      }
     }
-  }, [serverFilters, initialVisibleFields, initialFieldOrder]);
+  }, [serverFilters, initialVisibleFields, initialFieldOrder, initialFieldLabels]);
 
   const loadFilterSets = useCallback(async () => {
     if (!api) return;
@@ -399,8 +406,8 @@ export function ServersideFilter({
 
   const activeFilterCount = Object.keys(pendingFilters).length;
 
-  const handleFieldVisibilitySave = (newVisibleFields: string[], newFieldOrder: string[]) => {
-    console.log('ServersideFilter: handleFieldVisibilitySave called', { newVisibleFields, newFieldOrder });
+  const handleFieldVisibilitySave = (newVisibleFields: string[], newFieldOrder: string[], newFieldLabels?: Record<string, string>) => {
+    console.log('ServersideFilter: handleFieldVisibilitySave called', { newVisibleFields, newFieldOrder, newFieldLabels });
 
     // Clear all active filters before saving preferences
     // console.log('ServersideFilter: Clearing all filters before saving preferences');
@@ -408,9 +415,14 @@ export function ServersideFilter({
 
     setVisibleFields(newVisibleFields);
     setFieldOrder(newFieldOrder);
+
+    if (newFieldLabels) {
+      setFieldLabels(newFieldLabels);
+    }
+
     if (onFilterPreferencesSave) {
       console.log('ServersideFilter: Calling onFilterPreferencesSave prop');
-      onFilterPreferencesSave(newVisibleFields, newFieldOrder);
+      onFilterPreferencesSave(newVisibleFields, newFieldOrder, newFieldLabels);
     } else {
       console.warn('ServersideFilter: onFilterPreferencesSave prop is missing!');
     }
@@ -425,11 +437,12 @@ export function ServersideFilter({
         filter !== undefined && visibleFields.includes(filter.key)
       );
     return orderedVisibleFilters.map((filter) => {
-       // Handle switch type
-       if (filter.type === 'switch') {
+      // Handle switch type
+      if (filter.type === 'switch') {
+        const label = fieldLabels[filter.key] || filter.label;
         return (
           <div key={filter.key} className="space-y-1">
-            <span className="text-xs font-medium text-gray-600">{filter.label}</span>
+            <span className="text-xs font-medium text-gray-600">{label}</span>
             <div className="relative">
               <Switch
                 checked={!!pendingFilters[filter.key]?.value}
@@ -447,10 +460,11 @@ export function ServersideFilter({
       }
       // Handle lazyselect type specially
       if (filter.type === 'lazyselect' && filter.fetchOptions) {
+        const label = fieldLabels[filter.key] || filter.label;
         return (
           <div key={filter.key} className="space-y-1">
             <div className="text-xs font-medium text-gray-600 truncate">
-              {filter.label}
+              {label}
             </div>
             <div className="relative group">
               <LazySelect
@@ -483,7 +497,7 @@ export function ServersideFilter({
                   }
                 }}
                 multiSelect={filter.multiSelect}
-                placeholder={`Select ${filter.label.toLowerCase()}...`}
+                placeholder={`Select ${label.toLowerCase()}...`}
                 hideSearch={filter.hideSearch}
                 disableLazyLoading={filter.disableLazyLoading}
                 returnType={filter.returnType} // 👈 Pass from config to LazySelect
@@ -505,9 +519,10 @@ export function ServersideFilter({
         );
       }
       // Convert ServerFilter to GridColumnConfig for compatibility with ColumnFilterInput
+      const label = fieldLabels[filter.key] || filter.label;
       const columnConfig: GridColumnConfig = {
         key: filter.key,
-        label: filter.label,
+        label: label,
         type: filter.type === 'numberRange' ? 'NumberRange' : 
               filter.type === 'dropdownText' ? 'DropdownText' :
               filter.type === 'dateRange' ? 'DateRange' :
@@ -522,7 +537,7 @@ export function ServersideFilter({
       return (
         <div key={filter.key} className="space-y-1">
           <div className="text-xs font-medium text-Gray-600 truncate">
-            {filter.label}
+            {label}
           </div>
           <div className="relative group">
             <ColumnFilterInput
@@ -661,6 +676,7 @@ export function ServersideFilter({
         serverFilters={serverFilters}
         visibleFields={visibleFields}
         fieldOrder={fieldOrder}
+        fieldLabels={fieldLabels}
         onSave={handleFieldVisibilitySave}
       />
     </div>
