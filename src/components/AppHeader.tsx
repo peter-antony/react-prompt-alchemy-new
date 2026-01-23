@@ -36,7 +36,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
         setIsLoading(true);
 
         // Check if we already have user context data
-        const existingUserInfo = localStorage.getItem('ForwardisUserInfo');
+        const existingUserInfo = localStorage.getItem('nebulaUserInfo');
         const existingSelectedContext = localStorage.getItem('selectedUserContext');
 
         if (existingUserInfo) {
