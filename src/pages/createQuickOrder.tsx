@@ -356,18 +356,7 @@ const CreateQuickOrder = () => {
   };
   // Iterate through all messageTypes
   const fetchAll = async () => {
-     const validation =
-    newQuickOrderRef.current?.doValidation();
-    if (!validation?.isValid) {
-    console.log("Validation failed", validation);
-
-    toast({
-      title: "⚠️ Mandatory fields missing",
-      description: validation.mandatoryFieldsEmpty?.join(", "),
-      variant: "destructive",
-    });
-
-    return;} 
+   
     setLoading(false);
     for (const type of messageTypes) {
       setSelectedType(type);
