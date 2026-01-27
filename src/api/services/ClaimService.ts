@@ -387,7 +387,7 @@ export const ClaimService = {
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.CLAIMS.COMBO,
+      API_ENDPOINTS.CLAIMS.GET_LINKED_CLAIM_ORDERS,
       requestBody
     );
     return response.data;
@@ -445,6 +445,68 @@ export const ClaimService = {
 
     const response = await apiClient.post(
       API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
+
+  getOnSelectClaimLinked: async (params?: any): Promise<any> => {
+    console.log("params1 ---", params);
+    const userContext = getUserContext();
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: params?.messageType || "",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName
+      },
+      SearchCriteria: {
+        id: params?.searchTerm || "",
+        name: params?.searchTerm || "",
+      },
+      AdditionalFilter: params?.messageType === 'Claim No Init' ? {
+        Type: params?.Type,
+        Category: params?.Category
+      }: params?.messageType === 'Internal Order No Init' ? {
+        Type: params?.Type,
+        Contract: params?.Contract
+      } : {},
+      Pagination: {
+        PageNumber: params?.offset,
+        PageSize: params?.limit,
+      },
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.QUICK_ORDERS.COMBO,
+      requestBody
+    );
+    return response.data;
+  },
+
+  saveLinkedClaimOrders: async (params?: any): Promise<any> => {
+    console.log("params1 ---", params);
+    const userContext = getUserContext();
+    const stringifyData: any = JSON.stringify({
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Save Linked Orders",
+        UserID: "ramcouser",
+        OUID: userContext.ouId,
+        Role: userContext.roleName
+      },
+      RequestPayload: params?.RequestPayload || {}
+    });
+    const requestBody = {
+      RequestData: stringifyData,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.SAVE_LINKED_CLAIM_ORDERS,
       requestBody
     );
     return response.data;

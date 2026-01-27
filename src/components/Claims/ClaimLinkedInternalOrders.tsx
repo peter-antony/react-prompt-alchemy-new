@@ -1,12 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { SideDrawer } from '../Common/SideDrawer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Filter, Plus, LucidePaperclip, Link, Users, FileText, Calendar, Banknote, ReceiptText } from 'lucide-react';
+import { Search, Filter, Plus, LucidePaperclip, Link, Users, FileText, Calendar, Banknote, ReceiptText, Type } from 'lucide-react';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
 import { quickOrderService } from '@/api/services';
 import { ClaimService } from '@/api/services/ClaimService';
 import { dateFormatter } from '@/utils/formatter';
+import { link } from 'fs';
 
 type ClaimCard = {
   id: string;
@@ -106,46 +107,184 @@ export const ClaimLinkedInternalOrders: React.FC<{
       return [];
     }
   };
+  const fetchMasterDataOnSelection = (messageType: string, extraParams?: Record<string, any>) => async ({ searchTerm, offset, limit }: { searchTerm: string; offset: number; limit: number }) => {
+    try {
+      // Call the API using the same service pattern as PlanAndActualDetails component
+      const response = await ClaimService.getOnSelectClaimLinked({
+        messageType: messageType,
+        searchTerm: searchTerm || '',
+        offset,
+        limit,
+        Type: extraParams?.Type || '',
+        Category: extraParams?.Category || '',
+        Contract: extraParams?.Contract || '',
+        ...(extraParams || {}),
+      });
+
+      const rr: any = response.data
+      return (JSON.parse(rr.ResponseData) || []).map((item: any) => ({
+        ...(item.id !== undefined && item.id !== '' && item.name !== undefined && item.name !== ''
+          ? {
+            label: `${item.id} || ${item.name}`,
+            value: `${item.id} || ${item.name}`,
+          }
+          : {})
+      }));
+      return [];
+    } catch (error) {
+      console.error(`Error fetching ${messageType}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  };
+
+  const splitPipeValue = (value: string | null | undefined): string => {
+    if (!value || typeof value !== 'string') return '';
+    // Split by "||" and return the code part (first part) trimmed
+    const parts = value.split('||');
+    return parts[0]?.trim() || '';
+  }
 
   const fetchTypes = fetchMasterData("Claim For Init");
   const fetchCategories = fetchMasterData("Claim Category Init");
-  const fetchClaims = fetchMasterData("Claim No Init");
-  const fetchContracts = fetchMasterData("Contract Init");
-  const fetchInternalOrderNo = fetchMasterData("Internal Order No Init");
+  const fetchClaims = fetchMasterDataOnSelection("Claim No Init", {
+    // You can pass additional parameters based on selected Type and Category
+    Type: linkClaimObj.Type ? splitPipeValue(linkClaimObj.Type) : '',
+    Category: linkClaimObj.Category ? splitPipeValue(linkClaimObj.Category) : '',
+  });
+  const fetchContracts = [{ label: 'Buy', value: 'Buy' }, { label: 'Sell', value: 'Sell' }]; //fetchMasterData("Contract Init");
+  const fetchInternalOrderNo = fetchMasterDataOnSelection("Internal Order No Init", {
+    // You can pass additional parameters based on selected Type and Contract
+    Type: linkInternalOrderObj.Type ? splitPipeValue(linkInternalOrderObj.Type) : '',
+    Contract: linkInternalOrderObj.Contract ? splitPipeValue(linkInternalOrderObj.Contract) : '',
+  });
 
-  // Fetch linked claims/internal orders when claimNo or drawer open changes
-  useEffect(() => {
-    let mounted = true;
-    const fetchLinked = async () => {
-      if (!isOpen) return;
-      if (!claimNo) {
+  // Reusable fetchLinked function to load linked claims/internal orders
+  const mountedRef = useRef(true);
+  const fetchLinked = useCallback(async () => {
+    if (!isOpen) return;
+    if (!claimNo) {
+      setLinkedClaims([]);
+      setLinkedInternalOrders([]);
+      return;
+    }
+
+    setIsLoadingLinked(true);
+    try {
+      const resp: any = await ClaimService.getLinkedIOClaims({ claimNo });
+      const parsed = JSON.parse(resp?.data?.ResponseData || '{}');
+      const record = Array.isArray(parsed?.ResultSet) && parsed.ResultSet.length > 0 ? parsed.ResultSet[0] : parsed;
+      const lc = record?.LinkedClaims || [];
+      const li = record?.LinkedInternalOrders || [];
+      if (!mountedRef.current) return;
+      setLinkedClaims(lc || []);
+      setLinkedInternalOrders(li || []);
+    } catch (err) {
+      console.error('Failed to load linked claims/internal orders:', err);
+      if (mountedRef.current) {
         setLinkedClaims([]);
         setLinkedInternalOrders([]);
-        return;
       }
-      setIsLoadingLinked(true);
-      try {
-        const resp: any = await ClaimService.getLinkedIOClaims({ claimNo });
-        const parsed = JSON.parse(resp?.data?.ResponseData || '{}');
-        const record = Array.isArray(parsed?.ResultSet) && parsed.ResultSet.length > 0 ? parsed.ResultSet[0] : parsed;
-        const lc = record?.LinkedClaims || record?.LinkedClaims || [];
-        const li = record?.LinkedInternalOrders || [];
-        if (!mounted) return;
-        setLinkedClaims(lc || []);
-        setLinkedInternalOrders(li || []);
-      } catch (err) {
-        console.error('Failed to load linked claims/internal orders:', err);
-        if (mounted) {
-          setLinkedClaims([]);
-          setLinkedInternalOrders([]);
-        }
-      } finally {
-        if (mounted) setIsLoadingLinked(false);
-      }
-    };
-    fetchLinked();
-    return () => { mounted = false; };
+    } finally {
+      if (mountedRef.current) setIsLoadingLinked(false);
+    }
   }, [claimNo, isOpen]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchLinked();
+    return () => { mountedRef.current = false; };
+  }, [fetchLinked]);
+
+  const saveLinkedClaimOrders = async (type: any) => {
+    if (!claimNo) return;
+    const RequestPayload = {
+      Header: {
+        ClaimNo: claimNo
+      },
+      LinkedOrders: type === 'claims' ? [
+        {
+          LinkedDocNo: linkClaimObj.ClaimNo ? splitPipeValue(linkClaimObj.ClaimNo) : '',
+          LinkedDocType: "Claims",
+          ModeFlag: "Insert"
+        }
+      ] : type === 'internal order' ? [
+        {
+          LinkedDocNo: linkInternalOrderObj.InternalOrderNo ? splitPipeValue(linkInternalOrderObj.InternalOrderNo) : '',
+          LinkedDocType: "InternalOrderNo",
+          ModeFlag: "Insert"
+        }
+      ] : []
+    };
+    try {
+      setIsLoadingLinked(true);
+      console.log('Calling saveLinkedClaimOrders API...');
+      const response = await ClaimService.saveLinkedClaimOrders({ RequestPayload });
+      console.log('Save Linked Claims/IO API Response:', response);
+
+      if (response?.data?.IsSuccess) {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse ResponseData:', parseError);
+        }
+
+        const successMessage = responseData?.Message || response?.data?.Message || "Claim cancelled successfully.";
+        const reasonCode = responseData?.ReasonCode || "";
+
+        // toast({
+        //   title: "✅ Claim Cancelled",
+        //   description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+        //   variant: "default",
+        // });
+
+        // Refresh claim data after successful cancellation
+        if (claimNo) {
+          await fetchLinked();
+        }
+        setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
+        setLinkInternalOrderObj({ Type: '', Contract: '', InternalOrderNo: '' });
+        setShowLinkClaimDialog(false);
+        setShowLinkInternalOrderDialog(false);
+        setIsLoadingLinked(false);
+      } else {
+        let responseData = null;
+        try {
+          responseData = JSON.parse(response?.data?.ResponseData);
+          console.log('Parsed Error ResponseData:', responseData);
+        } catch (parseError) {
+          console.warn('Failed to parse error ResponseData:', parseError);
+        }
+
+        const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim cancellation failed.";
+
+        // toast({
+        //   title: "⚠️ Claim Cancellation Failed",
+        //   description: errorMessage,
+        //   variant: "destructive",
+        // });
+        setIsLoadingLinked(false);
+      }
+    } catch (error) {
+      console.error('Cancel Claim API Error:', error);
+      setIsLoadingLinked(false);
+
+      let errorMessage = "An unexpected error occurred while cancelling the claim.";
+      if ((error as any)?.response?.data?.Message) {
+        errorMessage = (error as any).response.data.Message;
+      } else if ((error as any)?.message) {
+        errorMessage = (error as any).message;
+      }
+
+      // toast({
+      //   title: "Error cancelling claim",
+      //   description: errorMessage,
+      //   variant: "destructive",
+      // });
+    }
+  };
 
   return (
     <SideDrawer
@@ -209,9 +348,10 @@ export const ClaimLinkedInternalOrders: React.FC<{
                     title="Add Claim"
                     onClick={() => {
                       setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
-                      setShowLinkClaimDialog(true)}
+                      setShowLinkClaimDialog(true)
                     }
-                    >
+                    }
+                  >
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
@@ -271,10 +411,11 @@ export const ClaimLinkedInternalOrders: React.FC<{
 
                     <div className="px-6 py-4">
                       <button onClick={() => {
+                        saveLinkedClaimOrders('claims');
                         console.log('Link Claim payload:', linkClaimObj);
                         // TODO: emit payload to parent via prop or API call
-                        setShowLinkClaimDialog(false);
-                        setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
+                        // setShowLinkClaimDialog(false);
+                        // setLinkClaimObj({ Type: '', Category: '', ClaimNo: '' });
                       }} className="w-full bg-blue-600 text-white py-2 rounded">Save</button>
                     </div>
                   </div>
@@ -379,12 +520,28 @@ export const ClaimLinkedInternalOrders: React.FC<{
                       <div>
                         <label className="text-xs text-gray-600 font-medium">Contract</label>
                         <DynamicLazySelect
-                          fetchOptions={fetchContracts}
+                          fetchOptions={async ({ searchTerm, offset, limit }) => {
+                            // For demo, using static options. Replace with actual API call if needed.
+                            return fetchContracts;
+                          }}
                           value={linkInternalOrderObj.Contract}
                           onChange={(value) => setLinkInternalOrderObj({ ...linkInternalOrderObj, Contract: value as string })}
                           placeholder="Select Contract"
                           className="w-full h-9 text-[13px] mt-1"
+                          hideSearch={true}
                         />
+                        {/* select */}
+                        {/* <select
+                          value={linkInternalOrderObj.Contract}
+                          onChange={(e) => setLinkInternalOrderObj({ ...linkInternalOrderObj, Contract: e.target.value })}
+                          className="w-full h-9 text-[13px] mt-1 border border-gray-300 rounded-md px-2"
+                        >
+                          {fetchContracts.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select> */}
                       </div>
 
                       <div>
@@ -401,10 +558,11 @@ export const ClaimLinkedInternalOrders: React.FC<{
 
                     <div className="px-6 py-4">
                       <button onClick={() => {
+                        saveLinkedClaimOrders('internal order')
                         console.log('Link Internal Order payload:', linkInternalOrderObj);
                         // TODO: emit payload to parent via prop or API call
-                        setShowLinkInternalOrderDialog(false);
-                        setLinkInternalOrderObj({ Type: '', Contract: '', InternalOrderNo: '' });
+                        // setShowLinkInternalOrderDialog(false);
+                        // setLinkInternalOrderObj({ Type: '', Contract: '', InternalOrderNo: '' });
                       }} className="w-full bg-blue-600 text-white py-2 rounded">Save</button>
                     </div>
                   </div>

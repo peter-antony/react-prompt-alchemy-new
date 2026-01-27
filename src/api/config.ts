@@ -246,7 +246,9 @@ export const API_ENDPOINTS = {
     WORKFLOW_REPORT: "managedraftbill/viewworkflow",
     FINDINGS_SAVE: "manageclaims/claimfindingsave",
     PROCESS: "manageclaims/claimprocess",
-    GENERATE_NOTE: "manageclaims/claimgeneratenote"
+    GENERATE_NOTE: "manageclaims/claimgeneratenote",
+    SAVE_LINKED_CLAIM_ORDERS: "manageclaims/claimsavelinkedorders",
+    GET_LINKED_CLAIM_ORDERS: "manageclaims/claimgetlinkedorders",
   }
 } as const;
 
