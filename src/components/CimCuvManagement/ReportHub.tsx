@@ -33,6 +33,7 @@ export const ReportSearchHub = () => {
   // State for server filtering
   const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering
   const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
+  const [serverFilterFieldLabels, setServerFilterFieldLabels] = useState<Record<string, string>>({}); // Store custom labels
   const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
 
 
@@ -84,12 +85,13 @@ export const ReportSearchHub = () => {
     }
   };
 
-  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
-    console.log('WorkOrderHub: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => {
+    console.log('WorkOrderHub: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder, fieldLabels });
     try {
       const preferencesToSave = {
         visibleFields,
-        fieldOrder
+        fieldOrder,
+        fieldLabels
       };
 
       const response = await quickOrderService.savePersonalization({
@@ -107,6 +109,7 @@ export const ReportSearchHub = () => {
       if (apiData?.IsSuccess) {
         setServerFilterVisibleFields(visibleFields);
         setServerFilterFieldOrder(fieldOrder);
+        if (fieldLabels) setServerFilterFieldLabels(fieldLabels);
         // Update the empty flag since we now have saved data
         setIsServerFilterPersonalizationEmpty(false);
 
@@ -411,6 +414,7 @@ export const ReportSearchHub = () => {
               if (data) {
                 if (data.visibleFields) setServerFilterVisibleFields(data.visibleFields);
                 if (data.fieldOrder) setServerFilterFieldOrder(data.fieldOrder);
+                if (data.fieldLabels) setServerFilterFieldLabels(data.fieldLabels);
               }
             }
           }
@@ -929,6 +933,7 @@ export const ReportSearchHub = () => {
               api={filterService}
               serverFilterVisibleFields={serverFilterVisibleFields}
               serverFilterFieldOrder={serverFilterFieldOrder}
+              serverFilterFieldLabels={serverFilterFieldLabels}
               onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
             />
           ) : (

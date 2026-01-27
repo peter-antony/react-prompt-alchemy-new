@@ -263,6 +263,7 @@ export interface SmartGridProps {
   // Server-side filter personalization props
   serverFilterVisibleFields?: string[];
   serverFilterFieldOrder?: string[];
+  serverFilterFieldLabels?: Record<string, string>;
   enableExpandCollapseAll?: boolean;
 
   onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;

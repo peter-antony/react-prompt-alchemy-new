@@ -97,6 +97,7 @@ export function SmartGridNested({
   // Server-side filter personalization props
   serverFilterVisibleFields,
   serverFilterFieldOrder,
+  serverFilterFieldLabels,
   onServerFilterPreferenceSave,
   enableExpandCollapseAll = false
 }: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void; }) {
@@ -1027,6 +1028,7 @@ const handleExpandCollapseAll = useCallback(() => {
           api={api}
           initialVisibleFields={serverFilterVisibleFields}
           initialFieldOrder={serverFilterFieldOrder}
+          initialFieldLabels={serverFilterFieldLabels}
           onFilterPreferencesSave={onServerFilterPreferenceSave}
         />
       )}

@@ -61,6 +61,7 @@ const QuickOrderManagement = () => {
   const [isPersonalizationEmpty, setIsPersonalizationEmpty] = useState(false);
   const [serverFilterVisibleFields, setServerFilterVisibleFields] = useState<string[]>([]); // Store the visible fields for server filtering 
   const [serverFilterFieldOrder, setServerFilterFieldOrder] = useState<string[]>([]); // Store the field order for server filtering
+  const [serverFilterFieldLabels, setServerFilterFieldLabels] = useState<Record<string, string>>({}); // Store custom labels
   const [isServerFilterPersonalizationEmpty, setIsServerFilterPersonalizationEmpty] = useState(false); // Flag to check if server filter personalization is empty (Insert / Update)
   const gridState = useSmartGridState();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -387,6 +388,7 @@ const QuickOrderManagement = () => {
               if (data) {
                 if (data.visibleFields) setServerFilterVisibleFields(data.visibleFields);
                 if (data.fieldOrder) setServerFilterFieldOrder(data.fieldOrder);
+                if (data.fieldLabels) setServerFilterFieldLabels(data.fieldLabels);
               }
             }
           }
@@ -503,12 +505,13 @@ const QuickOrderManagement = () => {
     }
   };
 
-  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[]) => {
-    console.log('QuickOrderManagement: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder });
+  const handleServerFilterPreferenceSave = async (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => {
+    console.log('QuickOrderManagement: handleServerFilterPreferenceSave called', { visibleFields, fieldOrder, fieldLabels });
     try {
       const preferencesToSave = {
         visibleFields,
-        fieldOrder
+        fieldOrder,
+        fieldLabels
       };
 
       const response = await quickOrderService.savePersonalization({
@@ -526,6 +529,7 @@ const QuickOrderManagement = () => {
       if (apiData?.IsSuccess) {
         setServerFilterVisibleFields(visibleFields);
         setServerFilterFieldOrder(fieldOrder);
+        if (fieldLabels) setServerFilterFieldLabels(fieldLabels);
         // Update the empty flag since we now have saved data
         setIsServerFilterPersonalizationEmpty(false);
 
@@ -1573,6 +1577,7 @@ const QuickOrderManagement = () => {
                 api={customFilterService}
                 serverFilterVisibleFields={serverFilterVisibleFields}
                 serverFilterFieldOrder={serverFilterFieldOrder}
+                serverFilterFieldLabels={serverFilterFieldLabels}
                 onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
               />
               {/* {!filtersLoading ? ( */}
