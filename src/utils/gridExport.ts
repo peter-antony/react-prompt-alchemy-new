@@ -69,7 +69,8 @@ export function exportToCSV(
   
   const rows = data.map(row => {
     return columns.map(col => {
-      const value = row[col.key];
+      const value = row[col.dataKey ?? col.key];
+
       
       // Handle null/undefined values
       if (value == null) return '';
@@ -129,7 +130,8 @@ export function exportToExcel(
     const processedData = data.map(row => {
       const processedRow: Record<string, any> = {};
       columns.forEach(col => {
-        const value = row[col.key];
+        const value = row[col.dataKey ?? col.key];
+
         
         // Handle null/undefined values
         // if (value == null) {

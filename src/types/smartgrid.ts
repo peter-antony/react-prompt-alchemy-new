@@ -41,6 +41,7 @@ export type GridColumnType =
 
 export interface GridColumnConfig {
   key: string;
+   dataKey?: string;
   label: string;
   type: GridColumnType;
   width?: number;          // Column width in pixels

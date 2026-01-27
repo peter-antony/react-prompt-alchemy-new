@@ -323,6 +323,7 @@ export const TripExecutionHub = () => {
     {
       key: "CustomerOrderDetails",
       label: "Customer",
+       dataKey: "CustomerOrderDetails",
       type: "CustomerCountBadge",
       sortable: true,
       editable: false,
@@ -456,18 +457,23 @@ export const TripExecutionHub = () => {
     {
       key: "CustomerService",
       label: "Service",
+       dataKey: "CustomerOrderDetails",
       type: "TextCustom",
       sortable: true,
       editable: false,
-      subRow: true,
+         subRow: false,
+        exportArrayPath: "ServiceDescription", 
+   
     },
     {
       key: "CustomerSubService",
+       dataKey: "CustomerOrderDetails",
       label: "Sub Service",
       type: "TextCustom",
       sortable: true,
       editable: false,
       subRow: true,
+         exportArrayPath: "SubServiceDescription", 
     },
     {
       key: "CancellationRequestedDateandTime",
