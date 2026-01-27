@@ -34,7 +34,7 @@ export interface FieldConfig {
   disableDropdown?: boolean;
   id: string;
   label: string;
-  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header' | 'checkbox';
+  fieldType: 'text' | 'select' | 'search' | 'currency' | 'date' | 'time' | 'textarea' | 'radio' | 'card' | 'inputdropdown' | 'lazyselect' | 'switch' | 'header' | 'checkbox' | 'multiselectlazyselect';
   value: any;
   mandatory: boolean;
   visible: boolean;
@@ -63,6 +63,9 @@ export interface FieldConfig {
   addNewEntry?: boolean; // Allow creating new entries when search term doesn't exist (for lazyselect)
   minSearchLength?: number; // Minimum characters required for new entry creation (for lazyselect)
   // Event handlers for field interactions
+  allowAddNew?: boolean; // Enable adding new items not in the list
+  onAddNew?: (newValue: string) => Promise<void> | void; // Callback when adding new item
+  maxVisibleChips?: number; // For multiselectlazyselect - max chips to show before +N indicator
   events?: {
     onClick?: (event: React.MouseEvent, value: any) => void;
     onChange?: (value: any, event: React.ChangeEvent) => void;

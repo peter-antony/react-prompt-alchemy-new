@@ -48,6 +48,7 @@ const ClaimsForm = () => {
 	const [qcList3, setqcList3] = useState<any>();
 	const [currencyList, setCurrencyList] = useState<any>();
 	const [counterParty, setCounterParty] = useState<any>();
+	const [refDocType, setRefDocType] = useState<any>();
 
 	// Modal states
 	const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -490,6 +491,70 @@ const ClaimsForm = () => {
 			}
 		};
 	};
+	const fetchMultiSelectOptions = (
+		messageType: string,
+		// additionalFilter?: { FilterName: string; FilterValue: string }[]
+		extraParams?: { type?: string }
+	) => {
+		return async ({ searchTerm, offset, limit }) => {
+			try {
+				const response = await ClaimService.getOnSelectRefDocTypeId({
+					messageType,
+					searchTerm: searchTerm || "",
+					offset,
+					limit,
+					ClaimNo: searchQuery || "",
+					RefDocType: refDocType || "",
+					TripPlanNo: formRef.current?.getFormValues()?.RefDocID || "",
+					...(extraParams || {}),
+				});
+
+				const rr: any = response?.data;
+				const arr = rr && rr.ResponseData ? JSON.parse(rr.ResponseData) : [];
+
+				// 🚃 WAGON
+				if (extraParams?.type === "wagon") {
+					return arr
+						.filter(
+							(item: any) =>
+								item?.ResourceType?.toLowerCase() === "wagon"
+						)
+						.map((item: any) => ({
+							label: `${item.ResourceID} || ${item.ResourceDescription}`,
+							value: `${item.ResourceID} || ${item.ResourceDescription}`,
+						}));
+				}
+
+				// 📦 CONTAINER
+				if (extraParams?.type === "container") {
+					return arr
+						.filter(
+							(item: any) =>
+								item?.ResourceType?.toLowerCase() === "container"
+						)
+						.map((item: any) => ({
+							label: `${item.ResourceID} || ${item.ResourceDescription}`,
+							value: `${item.ResourceID} || ${item.ResourceDescription}`,
+						}));
+				}
+
+				// 🚚 THU
+				if (extraParams?.type === "thu") {
+					return arr
+						.filter(
+							(item: any) =>
+								item?.ResourceType?.toLowerCase() === "thu"
+						)
+						.map((item: any) => ({
+							label: `${item.ResourceID} || ${item.ResourceDescription}`,
+							value: `${item.ResourceID} || ${item.ResourceDescription}`,
+						}));
+				}
+			} catch (err) {
+				return [];
+			}
+		};
+	}
 
 	const getQcOptions = (list: any[]) =>
 		list
@@ -499,6 +564,34 @@ const ClaimsForm = () => {
 				value: qc.id,
 				name: qc.name
 			})) || [];
+
+	const returnOptions = (type: any, list: any[]) => {
+		const rr: any = list;
+		const arr = rr || [];
+
+		// Return array of string values (not objects) so the multiselect can render
+		// the selected chips without trying to render an object as a React child.
+		if (type === 'Wagon') {
+			return arr.map((item: any) => {
+				const id = item.WagonNo ?? "";
+				const name = item.WagonDescription ?? "";
+				if (id && name) return `${id} || ${name}`;
+			});
+		} else if (type === 'Container') {
+			return arr.map((item: any) => {
+				const id = item.ContainerId ?? "";
+				const name = item.ContainerDescription ?? "";
+				if (id && name) return `${id} || ${name}`;
+			});
+		}
+		else if (type === 'THU') {
+			return arr.map((item: any) => {
+				const id = item.THUID ?? "";
+				const name = item.THUDescription ?? "";
+				if (id && name) return `${id} || ${name}`;
+			});
+		}
+	}
 
 	// Defining the config as PanelConfig object (Record<string, FieldConfig>)
 	const claimPanelConfig: PanelConfig = {
@@ -685,7 +778,26 @@ const ClaimsForm = () => {
 			mandatory: false,
 			visible: true,
 			editable: true,
-			order: 14
+			order: 14,
+			events: {
+				onChange: (value) => {
+					const [id, description] = (value?.value || value || "").split(" || ");
+					setRefDocType(id);
+					console.log("RefDocType selected:", id, refDocType);
+					// Clear Wagon/Container/THU selection in the DynamicPanel UI
+					if (formRef.current) {
+						const currentValues = formRef.current.getFormValues() || {};
+						// Update form values - explicitly set Wagon, Container, THU to empty arrays
+						const updatedValues = {
+							...currentValues,
+							Wagon: [],
+							Container: [],
+							THU: []
+						};
+						formRef.current.setFormValues(updatedValues);
+					}
+				},
+			},
 		},
 		RefDocID: {
 			id: "RefDocID",
@@ -701,40 +813,43 @@ const ClaimsForm = () => {
 		Wagon: {
 			id: "Wagon",
 			label: "Wagon No.",
-			fieldType: "lazyselect",
+			fieldType: "multiselectlazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("Wagon id Init"),
+			fetchOptions: fetchMultiSelectOptions('Claims RefDocType OnSelect', { type: "wagon" }),
 			value: [],
 			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 15,
+			hideSearch: true,
 			// multiSelect: true // Not supported in FieldConfig yet, commenting out to avoid error
 		},
 		Container: {
 			id: "Container",
 			label: "Container ID",
-			fieldType: "lazyselect",
+			fieldType: "multiselectlazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("Claims RefDocType OnSelect"),
+			fetchOptions: fetchMultiSelectOptions("Claims RefDocType OnSelect", { type: "container" }),
 			value: [],
 			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 16,
+			hideSearch: true,
 			// multiSelect: true
 		},
 		THU: {
 			id: "THU",
 			label: "THU ID",
-			fieldType: "lazyselect",
+			fieldType: "multiselectlazyselect",
 			width: "four",
-			fetchOptions: fetchMaster("THU id Init"),
+			fetchOptions: fetchMultiSelectOptions("Claims RefDocType OnSelect", { type: "thu" }),
 			value: [],
 			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 17,
+			hideSearch: true,
 			// multiSelect: true
 		},
 		WBS: {
@@ -1094,9 +1209,9 @@ const ClaimsForm = () => {
 					IncidentLocation: Header?.Reference?.IncidentLocation || '',
 					RefDocType: Header?.Reference?.RefDocType || '',
 					RefDocID: Header?.Reference?.RefDocID || '',
-					Wagon: Header?.Reference?.Wagon || '',
-					Container: Header?.Reference?.Container || '',
-					THU: Header?.Reference?.THU || '',
+					Wagon: returnOptions('Wagon', Header?.Reference?.Wagon),
+					Container: returnOptions('Container', Header?.Reference?.Container),
+					THU: returnOptions('THU', Header?.Reference?.THU),
 					WBS: Header?.Reference?.WBS || '',
 					ActionResolution: Header?.Reference?.ActionResolution || '',
 					AssignedUser: Header?.Reference?.AssignedUser || '',
@@ -1116,6 +1231,7 @@ const ClaimsForm = () => {
 
 				formRef.current.setFormValues(mapped);
 				setCounterParty(Header?.Reference?.Counterparty || '');
+				setRefDocType(Header?.Reference?.RefDocType || '');
 				// Update investigationNeeded state
 				setInvestigationNeeded(Header?.Reference?.InvestigationNeeded === 'Yes' || Header?.Reference?.InvestigationNeeded === 'yes' || Header?.Reference?.InvestigationNeeded === 'true' || Header?.Reference?.InvestigationNeeded === 'True' ? true : false);
 
@@ -1130,6 +1246,29 @@ const ClaimsForm = () => {
 		finally {
 			setIsLoadingClaim(false);
 		}
+	};
+
+	const buildKeyValueJson = (
+		values: string[],
+		idKey: string,
+		descKey: string
+	) => {
+		return (values || [])
+			.map(value => {
+				if (!value) return null;
+
+				const [id, description] = value
+					.split("||")
+					.map(v => v.trim());
+
+				if (!id && !description) return null;
+
+				return {
+					[idKey]: id || "",
+					[descKey]: description || "",
+				};
+			})
+			.filter(Boolean);
 	};
 
 	// Load claim when searchQuery changes
@@ -1232,9 +1371,9 @@ const ClaimsForm = () => {
 					ClaimantRefNo: values.ClaimantRefNo || "",
 					SecondaryRefNo: values.SecondaryRefNo || null,
 					InvestigationNeeded: values.InvestigationNeeded === true ? "Yes" : "No",
-					Wagon: splitPipeValue(values.Wagon) || null,
-					Container: values.Container || null,
-					THU: values.THU || null,
+					Wagon: buildKeyValueJson(values?.Wagon, "WagonNo", "WagonDescription"),
+					Container: buildKeyValueJson(values?.Container, "ContainerID", "ContainerDescription"),
+					THU: buildKeyValueJson(values?.THU, "THUID", "THUDescription"),
 					WBS: splitPipeValueWithDescription(values.WBS).code,
 					WBSDescription: splitPipeValueWithDescription(values.WBS).description,
 					ActionResolution: splitPipeValue(values.ActionResolution),

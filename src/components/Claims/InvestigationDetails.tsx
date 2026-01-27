@@ -249,6 +249,7 @@ export const InvestigationDetails: React.FC<{
         ...existing,
         ...currentForm,
         UniqueID: selectedId,
+        User: pipedFormat(currentForm.User || ''),
         ModeFlag: newMode
       };
 

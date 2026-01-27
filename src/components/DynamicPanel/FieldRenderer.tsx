@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import jsonStore from '@/stores/jsonStore';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MultiselectLazySelect } from './MultiselectLazySelect';
 
 interface FieldRendererProps {
   config: FieldConfig;
@@ -492,7 +493,56 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
           }}
         />
       );
-      
+    
+    case 'multiselectlazyselect':
+      return (
+        <Controller
+          name={fieldId}
+          control={control}
+          render={({ field }) => {
+            const fetchOptions = config.fetchOptions;
+            
+            if (!fetchOptions) {
+              return (
+                <div>
+                  <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div>
+                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded border">
+                    fetchOptions is required for multiselectlazyselect field type
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div>
+                {/* <div className="text-xs text-blue-600 mb-1">TabIndex: {tabIndex}</div> */}
+                <MultiselectLazySelect
+                  fetchOptions={fetchOptions}
+                  value={Array.isArray(field.value) ? field.value : []}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    if (events?.onChange) {
+                      events.onChange(value, { target: { value } } as any);
+                    }
+                  }}
+                  placeholder={placeholder || 'Select...'}
+                  maxVisibleChips={config.maxVisibleChips ?? 2}
+                  tabIndex={tabIndex}
+                  onClick={events?.onClick}
+                  onFocus={events?.onFocus}
+                  onBlur={events?.onBlur}
+                  hideSearch={config.hideSearch}
+                  disableLazyLoading={config.disableLazyLoading}
+                  allowAddNew={config?.allowAddNew}
+                  onAddNew={config?.onAddNew}
+                  hasError={!!hasError}
+                />
+              </div>
+            );
+          }}
+        />
+      );
+    
     case 'date':
       return (
         <Controller
