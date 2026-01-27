@@ -511,4 +511,52 @@ export const ClaimService = {
     );
     return response.data;
   },
+
+  processedFindingsAmendClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Findings Amend",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.FINDINGS_AMEND,
+      requestBody
+    );
+    return response.data;
+  },
+
+documentDetailsSaveClaim: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Document Save",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: "ramcouser",
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.DOCUMENT_SAVE,
+      requestBody
+    );
+    return response.data;
+  },
 };

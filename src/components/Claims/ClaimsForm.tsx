@@ -49,6 +49,7 @@ const ClaimsForm = () => {
 	const [currencyList, setCurrencyList] = useState<any>();
 	const [counterParty, setCounterParty] = useState<any>();
 	const [refDocType, setRefDocType] = useState<any>();
+	const [findingsAmendModalOpen, setFindingsAmendModalOpen] = useState(false);
 
 	// Modal states
 	const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -160,6 +161,37 @@ const ClaimsForm = () => {
 			value: "",
 			required: true,
 			mappedName: 'ShortClosedatetime'
+		},
+		{
+			type: "select",
+			label: "Reason Code and Description",
+			name: "ReasonCode",
+			placeholder: "Enter Reason Code and Description",
+			options: [],
+			value: "",
+			required: true,
+			mappedName: 'ReasonCode'
+		},
+		{
+			type: "text",
+			label: "Remarks",
+			name: "remarks",
+			placeholder: "Enter Remarks",
+			value: "",
+			mappedName: 'Remarks'
+		},
+	]);
+
+	// Fields for Findings Amend modal (same structure as Amend modal)
+	const [findingsAmendFields, setFindingsAmendFields] = useState([
+		{
+			type: "date",
+			label: "Reason Date and Time",
+			name: "date",
+			placeholder: "Select Reason Date and Time",
+			value: "",
+			required: true,
+			mappedName: 'Amenddatetime'
 		},
 		{
 			type: "select",
@@ -2157,11 +2189,6 @@ const ClaimsForm = () => {
 		}
 	};
 
-	const handleClaimFindingsAmend = () => {
-		// TODO: Implement findings amend functionality
-		console.log("Findings amend clicked");
-	};
-
 	const documentDetailsShowPanel = () => {
 		setShowDocumentDetails(true);
 		if (apiResponse?.Document?.Details) {
@@ -2246,6 +2273,219 @@ const ClaimsForm = () => {
 
 			toast({
 				title: "Error generating note for claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleFindingsAmendFieldChange = (name: string, value: string) => {
+		console.log('Findings Amend field changed:', name, value);
+		setFindingsAmendFields(fields =>
+			fields.map(f => (f.name === name ? { ...f, value } : f))
+		);
+	};
+
+const handleClaimFindingsAmendSubmit = async (formFields: any) => {
+		console.log('Findings Amend form fields received:', formFields);
+
+		// Map form fields to API object
+		let mappedObj: any = {}
+		formFields.forEach((field: any) => {
+			const mappedName = field.mappedName;
+			mappedObj[mappedName] = field.value;
+		});
+		console.log('Mapped Object for Findings Amend API:', mappedObj);
+
+		// Handle ReasonCode splitting if it contains '||'
+		let ReasonCodeValue = '';
+		let ReasonCodeLabel = '';
+
+		if (typeof mappedObj.ReasonCode === 'string' && mappedObj.ReasonCode.includes('||')) {
+			const [value, ...labelParts] = mappedObj.ReasonCode.split('||');
+			ReasonCodeValue = value.trim();
+			ReasonCodeLabel = labelParts.join('||').trim();
+		} else if (typeof mappedObj.ReasonCode === 'string') {
+			ReasonCodeValue = mappedObj.ReasonCode;
+			ReasonCodeLabel = mappedObj.ReasonCode;
+		}
+		console.log("Findings Amend mappedObj:", mappedObj);
+		console.log("Findings Amend apiResponse:", apiResponse);
+		// Prepare claim data object for API
+		const claimPayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+				// Reference: apiResponse?.Header?.Reference || {},
+			},
+			Reason: {
+				Amend: {
+					RecordedDateTime: mappedObj?.Amenddatetime || null,
+					ReasonCode: ReasonCodeValue,
+					ReasonDescription: ReasonCodeLabel,
+					Remarks: mappedObj?.Remarks || null,
+					ModeFlag: "Update"
+				}
+			},
+			ClaimFindings: apiResponse?.ClaimFindings || "",
+			Document: {
+				Details: [...(gridState.gridData || [])],
+				Summary: apiResponse?.Document?.Summary || {},
+			}			
+		};
+
+		console.log('Claim Data Object for Findings Amend API:', claimPayload);
+		setIsLoadingClaim(true);
+
+		try {
+			console.log('Calling findingsAmendClaim API...');
+			const response: any = await ClaimService.processedFindingsAmendClaim(claimPayload);
+
+			console.log('Findings Amend Claim API Response:', response);
+			setFindingsAmendModalOpen(false);
+
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim findings amended successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+
+				toast({
+					title: "✅ Claim Findings Amended",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+
+				// Refresh claim data after successful findings amendment
+				if (searchQuery) {
+					await fetchClaimData(searchQuery);
+				}
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim findings amendment failed.";
+
+				toast({
+					title: "⚠️ Claim Findings Amendment Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Findings Amend Claim API Error:', error);
+			setIsLoadingClaim(false);
+
+			let errorMessage = "An unexpected error occurred while amending the claim findings.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+
+			toast({
+				title: "Error amending claim findings",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+
+	const handleClaimFindingsAmend = () => {
+		setFindingsAmendModalOpen(true);
+	};
+	
+	const documentDetailsSave = async () => {
+		console.log("document details save clicked");
+		// Get current grid data
+		const currentGridData = [...(gridState.gridData || [])];
+		console.log("Current Grid Data:", currentGridData);
+		const documentSavePayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+			},
+			ClaimFindings: apiResponse?.ClaimFindings || "",
+			Document: {
+				Details: currentGridData,
+				Summary: apiResponse?.Document?.Summary || {},
+			}
+		};
+		setIsLoadingClaim(true);
+		try {
+			console.log('Calling documentDetailsSaveClaim API...');
+			const response: any = await ClaimService.documentDetailsSaveClaim(documentSavePayload);
+			console.log('Document Details Save Claim API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim document details save successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+
+				toast({
+					title: "✅ Claim Document Details Save",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				// Refresh claim data after successful short close
+				setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchQuery(responseData?.Header?.ClaimNo || "");
+				setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				await fetchClaimData(responseData?.Header?.ClaimNo);
+
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim document details save failed.";
+
+				toast({
+					title: "⚠️ Claim Document Details Save Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Document Details Save Claim API Error:', error);
+			setIsLoadingClaim(false);
+
+			let errorMessage = "An unexpected error occurred while saving the document details for the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+
+			toast({
+				title: "Error saving document details for claim",
 				description: errorMessage,
 				variant: "destructive",
 			});
@@ -2806,6 +3046,18 @@ const ClaimsForm = () => {
 				submitLabel="Amend"
 			/>
 
+			{/* Findings Amend Modal */}
+			<ClaimAmendModal
+				open={findingsAmendModalOpen}
+				onClose={() => setFindingsAmendModalOpen(false)}
+				title="Amend Claim Findings"
+				icon={<NotebookPen className="w-4 h-4" color="blue" strokeWidth={1.5} />}
+				fields={findingsAmendFields as any}
+				onFieldChange={handleFindingsAmendFieldChange}
+				onSubmit={handleClaimFindingsAmendSubmit}
+				submitLabel="Amend"
+			/>
+
 			{/* Reject Modal */}
 			<ClaimCancelModal
 				open={rejectModalOpen}
@@ -2930,6 +3182,9 @@ const ClaimsForm = () => {
 						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimFindingsAmend}>
 							Amend
 						</button>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsSave}>
+                            Document Save Details
+                        </button>
 						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
 							Generate Note
 						</button>
