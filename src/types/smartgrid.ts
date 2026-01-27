@@ -56,6 +56,10 @@ export interface GridColumnConfig {
   subRow?: boolean; // Property for sub-row display
   multiSelect?: boolean; // Enable multi-select for dropdowns
   
+   exportPath?: string;        // for object → object.field
+  exportArrayPath?: string;   // for array<object> → object.field
+  exportSeparator?: string; 
+  
   // Badge specific properties
   statusMap?: Record<string, string>;
   

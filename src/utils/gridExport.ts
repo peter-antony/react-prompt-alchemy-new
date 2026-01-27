@@ -1,6 +1,64 @@
 
 import { GridColumnConfig } from '@/types/smartgrid';
 import * as XLSX from 'xlsx';
+function getValueByPath(obj: any, path?: string) {
+  if (!obj || !path) return obj;
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
+}
+
+function normalizeForExport(
+  value: any,
+  col: GridColumnConfig
+): string | number {
+
+  if (value == null) return '';
+
+  const separator = col.exportSeparator ?? '; ';
+
+  // ✅ Array of objects
+  if (Array.isArray(value)) {
+  return value
+    .map(item => {
+      // Object inside array
+      if (typeof item === 'object' && item !== null) {
+
+        // 1️⃣ If exportArrayPath is provided → use it
+        if (col.exportArrayPath) {
+          const extracted = getValueByPath(item, col.exportArrayPath);
+          if (extracted != null) return extracted;
+        }
+
+        // 2️⃣ AUTO-FALLBACK (VERY IMPORTANT)
+        // Pick the first primitive value from the object
+        const primitive = Object.values(item).find(
+          v => typeof v === 'string' || typeof v === 'number'
+        );
+
+        return primitive ?? '';
+      }
+
+      // Primitive item
+      return String(item);
+    })
+    .filter(Boolean)
+    .join(separator);
+}
+
+
+  // ✅ Object
+  if (typeof value === 'object') {
+    // Badge support (keep existing behavior)
+    if ('value' in value) {
+      return value.value;
+    }
+
+    const extracted = getValueByPath(value, col.exportPath);
+    return extracted ?? JSON.stringify(value);
+  }
+
+  // ✅ Primitive
+  return value;
+}
 
 export function exportToCSV(
   data: any[],
@@ -16,25 +74,26 @@ export function exportToCSV(
       // Handle null/undefined values
       if (value == null) return '';
       
-      // Handle object values (like Badge type with {value, variant})
-      let displayValue: string;
-      if (typeof value === 'object' && value !== null) {
-        if ('value' in value) {
-          // Handle Badge type objects {value, variant}
-          displayValue = String(value.value);
-        } else if (Array.isArray(value)) {
-          // Handle arrays by joining with semicolons
-          displayValue = value.map(item => 
-            typeof item === 'object' && item !== null && 'value' in item ? item.value : String(item)
-          ).join('; ');
-        } else {
-          // For other objects, try to extract meaningful content
-          displayValue = JSON.stringify(value);
-        }
-      } else {
-        displayValue = String(value);
-      }
-      
+      // // Handle object values (like Badge type with {value, variant})
+      // let displayValue: string;
+      // if (typeof value === 'object' && value !== null) {
+      //   if ('value' in value) {
+      //     // Handle Badge type objects {value, variant}
+      //     displayValue = String(value.value);
+      //   } else if (Array.isArray(value)) {
+      //     // Handle arrays by joining with semicolons
+      //     displayValue = value.map(item => 
+      //       typeof item === 'object' && item !== null && 'value' in item ? item.value : String(item)
+      //     ).join('; ');
+      //   } else {
+      //     // For other objects, try to extract meaningful content
+      //     displayValue = JSON.stringify(value);
+      //   }
+      // } else {
+      //   displayValue = String(value);
+      // }
+      const displayValue = String(normalizeForExport(value, col));
+
       // Escape CSV values
       if (displayValue.includes(',') || displayValue.includes('"') || displayValue.includes('\n')) {
         return `"${displayValue.replace(/"/g, '""')}"`;
@@ -73,28 +132,30 @@ export function exportToExcel(
         const value = row[col.key];
         
         // Handle null/undefined values
-        if (value == null) {
-          processedRow[col.label] = '';
-          return;
-        }
+        // if (value == null) {
+        //   processedRow[col.label] = '';
+        //   return;
+        // }
         
         // Handle object values (like Badge type with {value, variant})
-        if (typeof value === 'object' && value !== null) {
-          if ('value' in value) {
-            // Handle Badge type objects {value, variant}
-            processedRow[col.label] = value.value;
-          } else if (Array.isArray(value)) {
-            // Handle arrays by joining with semicolons
-            processedRow[col.label] = value.map(item => 
-              typeof item === 'object' && item !== null && 'value' in item ? item.value : String(item)
-            ).join('; ');
-          } else {
-            // For other objects, convert to string
-            processedRow[col.label] = JSON.stringify(value);
-          }
-        } else {
-          processedRow[col.label] = value;
-        }
+        // if (typeof value === 'object' && value !== null) {
+        //   if ('value' in value) {
+        //     // Handle Badge type objects {value, variant}
+        //     processedRow[col.label] = value.value;
+        //   } else if (Array.isArray(value)) {
+        //     // Handle arrays by joining with semicolons
+        //     processedRow[col.label] = value.map(item => 
+        //       typeof item === 'object' && item !== null && 'value' in item ? item.value : String(item)
+        //     ).join('; ');
+        //   } else {
+        //     // For other objects, convert to string
+        //     processedRow[col.label] = JSON.stringify(value);
+        //   }
+        // } else {
+        //   processedRow[col.label] = value;
+        // }
+        processedRow[col.label] = normalizeForExport(value, col);
+
       });
       return processedRow;
     });

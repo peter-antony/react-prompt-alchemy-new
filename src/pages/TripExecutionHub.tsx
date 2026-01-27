@@ -327,6 +327,7 @@ export const TripExecutionHub = () => {
       sortable: true,
       editable: false,
       subRow: false,
+      exportArrayPath: "Customer", 
       order: 4
     },
     {
@@ -570,6 +571,7 @@ export const TripExecutionHub = () => {
       type: "CustomerCountBadge",
       sortable: true,
       editable: false,
+      exportArrayPath: "WorkorderNo",
       subRow: true,
     },
     // {
