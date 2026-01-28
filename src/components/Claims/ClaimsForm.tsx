@@ -34,6 +34,8 @@ const ClaimsForm = () => {
 	const formRef = useRef<DynamicPanelRef>(null);
 	const { setFooter, resetFooter } = useFooterStore();
 	const [searchQuery, setSearchQuery] = useState("");
+	// Local input state to avoid triggering fetch on every key press
+	const [inputClaimNo, setInputClaimNo] = useState<string>("");
 	const [claimStatus, setClaimStatus] = useState<string>(""); // Default status
 	const [investigationNeeded, setInvestigationNeeded] = useState<boolean>(false); // State for InvestigationNeeded switch
 	const [showTooltip, setShowTooltip] = useState(false);
@@ -256,6 +258,11 @@ const ClaimsForm = () => {
 			setClaimStatus(status);
 		}
 	}, [searchParams]);
+
+	// Keep the input box in sync when searchQuery changes programmatically
+	useEffect(() => {
+		setInputClaimNo(searchQuery || "");
+	}, [searchQuery]);
 
 	useEffect(() => {
 		const loadQcMasters = async () => {
@@ -1298,6 +1305,7 @@ const ClaimsForm = () => {
 				return {
 					[idKey]: id || "",
 					[descKey]: description || "",
+					ModeFlag: 'Insert'
 				};
 			})
 			.filter(Boolean);
@@ -2515,17 +2523,19 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 							<Input
 								placeholder="Search Claim No."
 								className="pr-10"
-								value={searchQuery}
+								value={inputClaimNo}
 								onChange={(e) => {
-									const claimNo = e.target.value;
-									setSearchQuery(claimNo);
+									setInputClaimNo(e.target.value);
 								}}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
-										const claimNo = e.currentTarget.value;
+										const claimNo = (e.currentTarget as HTMLInputElement).value;
 										if (claimNo && claimNo.trim() !== '') {
 											console.log("🔍 Enter pressed - Fetching claim data for:", claimNo);
 											handleClaimNoChange(claimNo);
+											// update URL search params so the claim is shareable/bookmarkable
+											setSearchParams({ id: claimNo.trim() });
+											// setSearchQuery(claimNo.trim());
 										} else {
 											toast({
 												title: "⚠️ Invalid Claim No.",
@@ -2535,14 +2545,14 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 										}
 									}
 								}}
-								onBlur={(e) => {
-									const claimNo = e.target.value;
-									// Auto-trigger on blur if URL param exists and value changed
-									if (searchQuery && claimNo && claimNo.trim() !== '' && claimNo !== searchQuery) {
-										console.log("🔍 Input blur - Fetching claim data for:", claimNo);
-										handleClaimNoChange(claimNo);
-									}
-								}}
+								// onBlur={(e) => {
+								// 	const claimNo = e.target.value;
+								// 	// Auto-trigger on blur if URL param exists and value changed
+								// 	if (searchQuery && claimNo && claimNo.trim() !== '' && claimNo !== searchQuery) {
+								// 		console.log("🔍 Input blur - Fetching claim data for:", claimNo);
+								// 		handleClaimNoChange(claimNo);
+								// 	}
+								// }}
 							/>
 							{isLoadingClaim ? (
 								<Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
@@ -2550,11 +2560,13 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 								<Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							)}
 						</div>
-						<div className="">
+						{/* <div className=""> */}
+						{claimStatus &&	
 							<span className={getStatusColor(claimStatus) + ' text-xs'}>
 								{claimStatus}
 							</span>
-						</div>
+						}
+						{/* </div> */}
 					</div>
 
 					{/* new claim button and action buttons */}
@@ -2980,11 +2992,14 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 				</div>
 			</div>
 
-			<ClaimsHubAuditTrail
-				isOpen={isAuditOpen}
-				onClose={() => setIsAuditOpen(false)}
-				auditClaimObj={searchQuery}
-			/>
+			{/* Audit Trail Modal */}
+			{isAuditOpen && (
+				<ClaimsHubAuditTrail
+					isOpen={isAuditOpen}
+					onClose={() => setIsAuditOpen(false)}
+					auditClaimObj={searchQuery}
+				/>
+			)}
 
 			{/* Investigation Details Section */}
 			{
