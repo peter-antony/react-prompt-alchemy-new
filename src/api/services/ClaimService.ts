@@ -254,6 +254,30 @@ export const ClaimService = {
     return response.data;
   },
 
+  NoteCancel: async (params: any): Promise<any> => {
+    const userContext = getUserContext();
+    const payload = {
+      context: {
+        MessageID: "12345",
+        MessageType: "Claim-Note Cancel",
+        OUID: userContext.ouId,
+        Role: userContext.roleName,
+        UserID: getNebulaUserID(),
+      },
+      RequestPayload: params,
+    };
+
+    const requestBody = {
+      RequestData: JSON.stringify(payload),
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.CLAIMS.NOTE_CANCEL,
+      requestBody
+    );
+    return response.data;
+  },
+
   viewAuditTrail: async (params: any): Promise<any> => {
     const userContext = getUserContext();
     const payload = {

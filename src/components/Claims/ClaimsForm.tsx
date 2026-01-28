@@ -977,7 +977,8 @@ const ClaimsForm = () => {
 			mandatory: false,
 			visible: true,
 			editable: true,
-			order: 24
+			order: 24,
+			hideSearch: true,
 		},
 		QCUserDefined1: {
 			id: "QCUserDefined1",
@@ -1423,6 +1424,7 @@ const ClaimsForm = () => {
 					ActionResolutionRemark: values.ActionResolutionRemark || null,
 					FirstInformationRegister: values.FirstInformationRegister || null,
 					AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
+					FinanceYear: splitPipeValue(values.FinanceYear),
 					QuickCode1: values.QCUserDefined1.dropdown || null,
 					QCValue1: values.QCUserDefined1.input || null,
 					QuickCode2: values.QCUserDefined2.dropdown || null,
@@ -2049,12 +2051,12 @@ const ClaimsForm = () => {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
 				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-				ClaimFindings: apiResponse?.ClaimFindings || "",
-				Document: {
-					Details: [...(gridState.gridData || [])],
-					Summary: apiResponse?.Document?.Summary || {},
-				},
-			}
+			},
+			ClaimFindings: apiResponse?.ClaimFindings || "",
+			Document: {
+				Details: [...(gridState.gridData || [])],
+				Summary: apiResponse?.Document?.Summary || {},
+			},
 		};
 		console.log("Approve Payload:", approvePayload);
 		setIsLoadingClaim(true);
@@ -2216,11 +2218,11 @@ const ClaimsForm = () => {
 				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
 				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
 				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
-				ClaimFindings: apiResponse?.ClaimFindings || "",
-				Document: {
-					Details: currentGridData,
-					Summary: apiResponse?.Document?.Summary || {},
-				},
+			},
+			ClaimFindings: apiResponse?.ClaimFindings || "",
+			Document: {
+				Details: currentGridData,
+				Summary: apiResponse?.Document?.Summary || {},
 			}
 		};
 		setIsLoadingClaim(true);
@@ -2283,6 +2285,83 @@ const ClaimsForm = () => {
 
 			toast({
 				title: "Error generating note for claim",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		}
+	};
+	const handleNoteCancel = async () => {
+		console.log("generate note", apiResponse);
+		// Get current grid data
+		const currentGridData = [...(gridState.gridData || [])];
+		console.log("Current Grid Data:", currentGridData);
+		const cancelNotePayload = {
+			Header: {
+				ClaimNo: searchQuery || apiResponse?.Header?.ClaimNo || "",
+				ClaimStatus: apiResponse?.Header?.ClaimStatus || "",
+				ClaimStatusDescription: apiResponse?.Header?.ClaimStatusDescription || "",
+			}
+		};
+		setIsLoadingClaim(true);
+		try {
+			console.log('Calling NoteCancel API...');
+			const response: any = await ClaimService.NoteCancel(cancelNotePayload);
+			console.log('Note Cancel API Response:', response);
+			if (response?.data?.IsSuccess) {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse ResponseData:', parseError);
+				}
+
+				const successMessage = responseData?.Message || response?.data?.Message || "Claim note cancel successfully.";
+				const reasonCode = responseData?.ReasonCode || "";
+
+				toast({
+					title: "✅ Claim Note Cancelled",
+					description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+					variant: "default",
+				});
+				// Refresh claim data after successful short close
+				setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+				setSearchQuery(responseData?.Header?.ClaimNo || "");
+				setClaimStatus(responseData?.Header?.ClaimStatus || "");
+				await fetchClaimData(responseData?.Header?.ClaimNo);
+
+				setIsLoadingClaim(false);
+			} else {
+				let responseData = null;
+				try {
+					responseData = JSON.parse(response?.data?.ResponseData);
+					console.log('Parsed Error ResponseData:', responseData);
+				} catch (parseError) {
+					console.warn('Failed to parse error ResponseData:', parseError);
+				}
+
+				const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim generate note failed.";
+
+				toast({
+					title: "⚠️ Claim Note Cancel Failed",
+					description: errorMessage,
+					variant: "destructive",
+				});
+				setIsLoadingClaim(false);
+			}
+		} catch (error) {
+			console.error('Cancel Note Claim API Error:', error);
+			setIsLoadingClaim(false);
+
+			let errorMessage = "An unexpected error occurred while generating the note for the claim.";
+			if ((error as any)?.response?.data?.Message) {
+				errorMessage = (error as any).response.data.Message;
+			} else if ((error as any)?.message) {
+				errorMessage = (error as any).message;
+			}
+
+			toast({
+				title: "Error cancelling note for claim",
 				description: errorMessage,
 				variant: "destructive",
 			});
@@ -2502,6 +2581,130 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 		}
 	};
 
+	const handleCopyClaim = async () => {
+		if (apiResponse?.Header?.ClaimNo) {
+			const ref = apiResponse?.Header?.Reference;
+			const payloadCopy = {
+				Header: {
+					ClaimNo: "",
+					ClaimStatus: "",
+					ClaimStatusDescription: "",
+					Reference: {
+						InitiatedBy: ref?.InitiatedBy,
+						Counterparty: ref?.Counterparty,
+						ExpectedDocument: ref?.ExpectedDocument,
+						ForwardisFinancialAction: ref?.ForwardisFinancialAction,
+						BusinessPartnerID: ref?.BusinessPartnerID,
+						BusinessPartnerDescription: ref?.BusinessPartnerDescription,
+						IncidentType: ref?.IncidentType,
+						IncidentDateTime: null,
+						IncidentLocation: ref?.IncidentLocation,
+						IncidentLocationDescription: ref?.IncidentLocationDescription,
+						ClaimCategory: ref?.ClaimCategory,
+						Currency: ref?.Currency,
+						ClaimAmount: ref?.ClaimAmount,
+						ClaimDate: new Date().toLocaleDateString('en-CA'),
+						RefDocType: ref?.RefDocType,
+						RefDocID: "",
+						ClaimantRefNo: "",
+						SecondaryRefNo: ref?.SecondaryRefNo,
+						InvestigationNeeded: ref?.InvestigationNeeded,
+						Wagon: [],
+						Container: [],
+						THU: [],
+						WBS: ref?.WBS,
+						WBSDescription: ref?.WBSDescription,
+						ActionResolution: ref?.ActionResolution,
+						AssignedUser: ref?.AssignedUser,
+						ActionResolutionRemark: ref?.ActionResolutionRemark,
+						FirstInformationRegister: ref?.FirstInformationRegister,
+						AssignedUserDescription: ref?.AssignedUserDescription,
+						FinanceYear: ref?.FinanceYear,
+						QuickCode1: ref?.QuickCode1,
+						QCValue1: ref?.QCValue1,
+						QuickCode2: ref?.QuickCode2,
+						QCValue2: ref?.QCValue2,
+						QuickCode3: ref?.QuickCode3,
+						QCValue3: ref?.QCValue3,
+						Remark1: ref?.Remark1,
+						Remark2: ref?.Remark2,
+						Remark3: ref?.Remark3,
+						Remark4: ref?.Remark4,
+						Remark5: ref?.Remark5,
+						ModeFlag: "Insert",
+					}
+				}
+			};
+			setIsLoadingClaim(true);
+			try {
+				console.log('Calling saveClaim API...');
+				const response: any = await ClaimService.saveClaim(payloadCopy);
+
+				console.log('Save Claim API Response:', response);
+				if (response?.data?.IsSuccess) {
+					let responseData = null;
+					try {
+						responseData = JSON.parse(response?.data?.ResponseData);
+						console.log('Parsed ResponseData:', responseData);
+					} catch (parseError) {
+						console.warn('Failed to parse ResponseData:', parseError);
+					}
+
+					const successMessage = responseData?.Message || response?.data?.Message || "Claim saved successfully.";
+					const reasonCode = responseData?.ReasonCode || "";
+
+					toast({
+						title: "✅ Claim Copy Saved",
+						description: `${successMessage}${reasonCode ? ` (${reasonCode})` : ""}`,
+						variant: "default",
+					});
+					// Refresh claim data after successful short close
+					// const params = new URLSearchParams(responseData?.Header?.ClaimNo);
+					// console.log("params ====", params);
+					setSearchParams({ id: responseData?.Header?.ClaimNo || "" });
+					setSearchQuery(responseData?.Header?.ClaimNo || "");
+					setClaimStatus(responseData?.Header?.ClaimStatus || "");
+					await fetchClaimData(responseData?.Header?.ClaimNo);
+
+					setIsLoadingClaim(false);
+				} else {
+					let responseData = null;
+					try {
+						responseData = JSON.parse(response?.data?.ResponseData);
+						console.log('Parsed Error ResponseData:', responseData);
+					} catch (parseError) {
+						console.log('Failed to parse error ResponseData:', parseError);
+					}
+
+					const errorMessage = responseData?.Message || responseData?.Errormessage || response?.data?.Message || "Claim saved failed.";
+
+					toast({
+						title: "⚠️ Claim Copy save Failed",
+						description: errorMessage,
+						variant: "destructive",
+					});
+					setIsLoadingClaim(false);
+				}
+			} catch (error) {
+				console.error('Save Claim API Error:', error);
+				setIsLoadingClaim(false);
+
+				let errorMessage = "An unexpected error occurred while saving the claim.";
+				if ((error as any)?.response?.data?.Message) {
+					errorMessage = (error as any).response.data.Message;
+				} else if ((error as any)?.message) {
+					errorMessage = (error as any).message;
+				}
+
+				toast({
+					title: "Error copy saving claim",
+					description: errorMessage,
+					variant: "destructive",
+				});
+			}
+		}
+	};
+
 	return (
 		<AppLayout>
 			<div className="relative flex flex-col h-full bg-gray-50">
@@ -2608,6 +2811,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 							onClick={() => {
 								// Handle copy action
 								console.log("Copy clicked");
+								handleCopyClaim();
 							}}
 							className="h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200"
 							type='button'
@@ -3214,6 +3418,9 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
                         </button>
 						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
 							Generate Note
+						</button>
+						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
+							Note Cancel
 						</button>
 						{/* <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
                             Document Details
