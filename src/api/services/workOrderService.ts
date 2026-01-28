@@ -1,6 +1,6 @@
 // api/services/workOrderService.ts
 import { apiClient } from "@/api/client";
-import { API_ENDPOINTS, getUserContext } from "@/api/config";
+import { API_ENDPOINTS, getUserContext ,getNebulaUserID} from "@/api/config";
 import { ApiResponse, PaginatedResponse, Trip } from "../types";
 
 // ---- Types for selection payload ----
@@ -129,7 +129,7 @@ export const workOrderService = {
 
   const payload = {
     context: {
-      UserID: "ramcouser",
+      UserID: getNebulaUserID(),
       Role: userContext.roleName,
       OUID: userContext.ouId,
       MessageID: "12345",

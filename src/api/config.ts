@@ -38,6 +38,17 @@ export const setUserContext = (ouId: number, roleName: string, ouDescription?: s
   localStorage.setItem('selectedUserContext', JSON.stringify(contextData));
   console.log('User context saved to localStorage:', contextData);
 };
+export const getNebulaUserID = (): string => {
+  try {
+    const raw = localStorage.getItem("nebulaUserInfo");
+    if (!raw) return "ramcouser";
+
+    const parsed = JSON.parse(raw);
+    return parsed?.data?.name || "ramcouser";
+  } catch {
+    return "ramcouser";
+  }
+};
 
 //User Context Fetch 
 export const getUserContext = () => {
