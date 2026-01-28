@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_CONFIG, API_ENDPOINTS, getUserContext } from "../config";
+import { API_CONFIG, API_ENDPOINTS, getUserContext , getNebulaUserID } from "../config";
 import {
   ApiResponse,
   PaginatedResponse,
@@ -69,7 +69,7 @@ export const CimCuvService = {
         MessageType: "CIM CUV Report Hub Search",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+     UserID: "ramcouser",
       },
       SearchCriteria: params?.searchCriteria,
     };
@@ -90,7 +90,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -118,7 +118,7 @@ export const CimCuvService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -144,7 +144,7 @@ export const CimCuvService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -170,7 +170,7 @@ export const CimCuvService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -196,7 +196,7 @@ export const CimCuvService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -222,7 +222,7 @@ export const CimCuvService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -248,7 +248,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -273,7 +273,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -298,7 +298,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -322,7 +322,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -345,7 +345,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -367,7 +367,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -390,7 +390,7 @@ export const CimCuvService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",

@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_CONFIG, API_ENDPOINTS, getUserContext } from "../config";
+import { API_CONFIG, API_ENDPOINTS, getUserContext , getNebulaUserID} from "../config";
 import {
   ApiResponse,
   PaginatedResponse,
@@ -44,7 +44,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -70,7 +70,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -93,7 +93,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -123,7 +123,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -151,7 +151,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -174,7 +174,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -202,7 +202,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -230,7 +230,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -258,7 +258,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -306,7 +306,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -335,7 +335,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -362,7 +362,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -393,7 +393,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -423,7 +423,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -453,7 +453,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -481,7 +481,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -504,7 +504,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -527,7 +527,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -554,7 +554,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -579,7 +579,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -604,7 +604,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -631,7 +631,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -653,7 +653,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -689,7 +689,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -722,7 +722,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -756,7 +756,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -791,7 +791,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -834,7 +834,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -875,7 +875,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -900,7 +900,7 @@ export const tripService = {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -929,7 +929,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -981,7 +981,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -1017,7 +1017,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -1042,7 +1042,7 @@ export const tripService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",

@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { API_ENDPOINTS, getUserContext } from "@/api/config";
+import { API_ENDPOINTS, getUserContext ,getNebulaUserID } from "@/api/config";
 import { ApiResponse } from "../types";
 
 export const draftBillService = {
@@ -9,7 +9,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -47,7 +47,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -77,7 +77,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -103,7 +103,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -128,7 +128,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -153,7 +153,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -178,7 +178,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -203,7 +203,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",
@@ -228,7 +228,7 @@ export const draftBillService = {
 
         const requestPayload = JSON.stringify({
             context: {
-                UserID: "RAMCOUSER", // Fixed as per requirements
+                UserID: getNebulaUserID(), // Fixed as per requirements
                 OUID: userContext.ouId,
                 Role: userContext.roleName,
                 MessageID: "12345",

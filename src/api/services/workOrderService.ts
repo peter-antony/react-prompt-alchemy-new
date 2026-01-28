@@ -80,7 +80,7 @@ export const workOrderService = {
       MessageType: "Work Order Selection",
       OUID: userContext.ouId,
       Role: userContext.roleName,
-      UserID: "ramcouser",
+      UserID: getNebulaUserID(),
     },
     SearchCriteria: {
       WorkOrderNo: workOrderNo,
@@ -156,7 +156,7 @@ export const workOrderService = {
 
     const payload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -183,7 +183,7 @@ export const workOrderService = {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -211,7 +211,7 @@ export const workOrderService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -240,7 +240,7 @@ export const workOrderService = {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -268,7 +268,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
 
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -293,7 +293,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -318,7 +318,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -343,7 +343,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -368,7 +368,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -394,7 +394,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -423,7 +423,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -450,7 +450,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = {
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -474,7 +474,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     const userContext = getUserContext();
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",
@@ -510,7 +510,7 @@ saveBillingDetails: async (payload: any): Promise<ApiResponse<any>> => {
     // const response = await apiClient.get(API_ENDPOINTS.TRIPS.LIST, { params });
     const requestPayload = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         Role: userContext.roleName,
         OUID: userContext.ouId,
         MessageID: "12345",

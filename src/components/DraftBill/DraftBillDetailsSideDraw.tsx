@@ -1290,7 +1290,7 @@ const handleValidateAllPanels = () => {
                         <div className="flex items-center text-sm text-gray-700">
                           <FileText className="w-4 h-4 mr-2 text-gray-400" />
                           <span>
-                            {localLineItems[0]?.ReferenceInformation}
+                            {activeLine?.RefDocID}
                             <div className="relative group inline-block">
                               <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
                               <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">

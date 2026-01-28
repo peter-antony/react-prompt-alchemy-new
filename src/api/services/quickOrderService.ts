@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_ENDPOINTS, fetchUserContext, getUserContext } from "../config";
+import { API_ENDPOINTS, fetchUserContext, getUserContext , getNebulaUserID } from "../config";
 import { ApiResponse, PaginatedResponse, QueryParams } from "../types";
 
 // Quick Order interface
@@ -65,7 +65,7 @@ export const quickOrderService = {
     //   context: {
     //     MessageID: "12345",
     //     MessageType: "Quick Order Hub Search",
-    //     UserID: "ramcouser",
+    //     UserID: getNebulaUserID(),
     //     OUID: 4,
     //     Role: "ramcorole",
     //   },
@@ -82,7 +82,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Hub Search",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -109,7 +109,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         // searchTerm: params?.searchTerm || '',
@@ -197,7 +197,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -229,7 +229,7 @@ export const quickOrderService = {
     console.log("getPersonalization - QO - ",levelKey)
     const stringifyData = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -259,7 +259,7 @@ export const quickOrderService = {
     const userContext = getUserContext();
     const stringifyData = JSON.stringify({
       context: {
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
         MessageID: "12345",
@@ -304,7 +304,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -350,7 +350,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -385,7 +385,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -421,7 +421,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -452,7 +452,7 @@ export const quickOrderService = {
         context: {
           MessageID: "121215",
           MessageType: "n",
-          UserID: "ramcouser",
+          UserID: getNebulaUserID(),
           OUID: userContext.ouId,
           Role: userContext.roleName,
         },
@@ -516,7 +516,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -538,7 +538,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Delete",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -566,7 +566,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -599,7 +599,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -612,7 +612,7 @@ export const quickOrderService = {
       // context: {
       //   MessageID: "12345",
       //   MessageType: "Quick Order Update",
-      //   UserID: "ramcouser",
+      //   UserID: getNebulaUserID(),
       //   OUID: 4,
       //   Role: "ramcorole",
       // },
@@ -641,7 +641,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: messageType.messageType,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -780,7 +780,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Update",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -810,7 +810,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "QuickOrder-Show Linked Order",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -852,7 +852,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -900,7 +900,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "Quick Order Get",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -930,7 +930,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -958,7 +958,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: "WorkOrder-GetServiceMode",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },
@@ -987,7 +987,7 @@ export const quickOrderService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName,
       },

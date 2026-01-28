@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { API_CONFIG, API_ENDPOINTS, getUserContext } from "../config";
+import { API_CONFIG, API_ENDPOINTS, getUserContext,getNebulaUserID } from "../config";
 
 export const ClaimService = {
   // Get master common data
@@ -10,7 +10,7 @@ export const ClaimService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName
       },
@@ -46,7 +46,7 @@ export const ClaimService = {
         MessageType: "Claim-Hub Search",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       SearchCriteria: params?.searchCriteria,
     };
@@ -70,7 +70,7 @@ export const ClaimService = {
         MessageType: "Claim-Save",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -94,7 +94,7 @@ export const ClaimService = {
         MessageType: "Claim-Cancel",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -118,7 +118,7 @@ export const ClaimService = {
         MessageType: "Claim-Reject",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -142,7 +142,7 @@ export const ClaimService = {
         MessageType: "Claim-Processed Amend",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -166,7 +166,7 @@ export const ClaimService = {
         MessageType: "Claim-Approve",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -190,7 +190,7 @@ export const ClaimService = {
         MessageType: "Claim-ShortClose",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -214,7 +214,7 @@ export const ClaimService = {
         MessageType: "Claim-Process",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -238,7 +238,7 @@ export const ClaimService = {
         MessageType: "Claim-Generate Note",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -262,7 +262,7 @@ export const ClaimService = {
         MessageType: "View Audit Trail",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       SearchCriteria: {
         RefDocType: params?.RefDocType,
@@ -289,7 +289,7 @@ export const ClaimService = {
         MessageType: "View Workflow Report",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       SearchCriteria: {
         RefDocType: params?.RefDocType,
@@ -316,7 +316,7 @@ export const ClaimService = {
         MessageType: "Claim-SmartEdit",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: {
         Header: {
@@ -349,7 +349,7 @@ export const ClaimService = {
         MessageType: "Claim-Get",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       SearchCriteria: {
         ClaimNo: params?.claimNo
@@ -375,7 +375,7 @@ export const ClaimService = {
         MessageType: "Claim-Get Linked Orders",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       SearchCriteria: {
         ClaimNo: params?.claimNo
@@ -400,7 +400,7 @@ export const ClaimService = {
         MessageID: "12345",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         MessageType: "Claim-findingssave"
       },
       RequestPayload: params.requestPayload,
@@ -424,7 +424,7 @@ export const ClaimService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName
       },
@@ -457,7 +457,7 @@ export const ClaimService = {
       context: {
         MessageID: "12345",
         MessageType: params?.messageType || "",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName
       },
@@ -495,7 +495,7 @@ export const ClaimService = {
       context: {
         MessageID: "12345",
         MessageType: "Claim-Save Linked Orders",
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
         OUID: userContext.ouId,
         Role: userContext.roleName
       },
@@ -520,7 +520,7 @@ export const ClaimService = {
         MessageType: "Claim-Findings Amend",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
@@ -544,7 +544,7 @@ documentDetailsSaveClaim: async (params: any): Promise<any> => {
         MessageType: "Claim-Document Save",
         OUID: userContext.ouId,
         Role: userContext.roleName,
-        UserID: "ramcouser",
+        UserID: getNebulaUserID(),
       },
       RequestPayload: params,
     };
