@@ -1572,6 +1572,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         if (selectedBillItemsFlag) {
             // Header level payload - make separate API calls for each selected draft bill
             try {
+                  gridState.setLoading(true);
                 const apiCalls = selectedDraftBills.map(async (draftBill) => {
                     const headerLevelPayload = {
                         Header: {
@@ -1609,11 +1610,13 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     if (resourceStatus) {
                         successCount++;
                         successfullyCancelledDraftBillNos.push(draftBillNo);
+                          gridState.setLoading(false);
                         console.log(`Draft Bill ${draftBillNo} cancelled successfully`);
                     } else {
                         failureCount++;
                         const errorMessage = (response as any)?.data?.Message || `Failed to cancel draft bill ${draftBillNo}`;
                         failureMessages.push(errorMessage);
+                           gridState.setLoading(false);
                         console.log(`Error cancelling draft bill ${draftBillNo}:`, errorMessage);
                     }
                 });
@@ -1634,6 +1637,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         description: `Successfully cancelled ${successCount} draft bill(s).`,
                         variant: "default",
                     });
+                     gridState.setLoading(false);
                     // Clear all selections and uncheck checkboxes on full success
                     clearAllSelections();
                     fetchDraftBills();
@@ -1643,6 +1647,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                         description: `Cancelled ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
                         variant: "default",
                     });
+                     gridState.setLoading(false);
                     // Remove successfully cancelled bills from selection
                     setSelectedDraftBills(selectedDraftBills.filter((bill) => {
                         const draftBillNo = bill.DraftBillNo || bill.id;
@@ -1670,6 +1675,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                     description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill(s).",
                     variant: "destructive",
                 });
+                 gridState.setLoading(false);
                 setIsCancelModalOpen(false);
             }
         } else {
@@ -1717,22 +1723,25 @@ console.log("updatedItemDetails", updatedItemDetails);
             console.log("lineLevelPayload", JSON.stringify(lineLevelPayload, null, 2));
 
             try {
+                 gridState.setLoading(true);
                 const response = await draftBillService.cancelDraftBillByID(lineLevelPayload);
 
                 const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
                 const resourceStatus = (response as any)?.data?.IsSuccess;
                 if (resourceStatus) {
                     console.log("Template cancelled successfully");
-                    
+                     gridState.setLoading(false);
                     // Track successfully cancelled line items
                     const cancelledLineNos = selectedDbLines.map(({ nestedRow }) => nestedRow.DBLineNo).filter(Boolean);
                     const parentDraftBillNo = selectedDbLines[0]?.parentRow?.DraftBillNo;
 
                     // Remove cancelled line items from grid data
                     if (cancelledLineNos.length > 0 && parentDraftBillNo) {
+                         gridState.setLoading(false);
                         const updatedGridData = gridState.gridData.map((item: any) => {
                             const draftBillNo = item.DraftBillNo || item.id;
                             if (draftBillNo === parentDraftBillNo && item.lineItems) {
+                                gridState.setLoading(false);
                                 // Filter out cancelled line items
                                 const updatedLineItems = item.lineItems.filter((lineItem: any) => {
                                     return !cancelledLineNos.includes(lineItem.DBLineNo);
@@ -1755,10 +1764,12 @@ console.log("updatedItemDetails", updatedItemDetails);
                         description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
                         variant: "default",
                     });
+                    gridState.setLoading(false);
                     setIsCancelModalOpen(false);
                     fetchDraftBills();
                 } else {
                     console.log("error as any ===", (response as any)?.data?.Message);
+                    gridState.setLoading(false);
                     toast({
                         title: "⚠️ Cancel Failed",
                         description: (response as any)?.data?.Message || "Failed to cancel changes.",
@@ -1768,6 +1779,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 setIsCancelModalOpen(false);
             } catch (error) {
                 console.error("Error canceling Draft:", error);
+                gridState.setLoading(false);
                 toast({
                     title: "⚠️ Error",
                     description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill.",
@@ -1951,7 +1963,7 @@ console.log("updatedItemDetails", updatedItemDetails);
         if (selectedBillItemsFlag) {
             // Header level payload - make separate API calls for each selected draft bill
             try {
-                
+                 gridState.setLoading(true);
                 const apiCalls = selectedDraftBills.map(async (draftBill) => {
                     const headerLevelPayload = {
                         Header: {
@@ -2008,6 +2020,7 @@ console.log("updatedItemDetails", updatedItemDetails);
 
                 // Show appropriate toast based on results
                 if (successCount > 0 && failureCount === 0) {
+                    gridState.setLoading(false);
                     toast({
                         title: "✅ Draft Bills Approved Successfully",
                         description: `Successfully Approved ${successCount} draft bill(s).`,
@@ -2017,6 +2030,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     clearAllSelections();
                     fetchDraftBills();
                 } else if (successCount > 0 && failureCount > 0) {
+                    gridState.setLoading(false);
                     toast({
                         title: "⚠️ Partial Success",
                         description: `Approved ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
@@ -2033,7 +2047,9 @@ console.log("updatedItemDetails", updatedItemDetails);
                         const draftBillNo = bill.DraftBillNo || bill.id;
                         return !successfullyCancelledDraftBillNos.includes(draftBillNo);
                     }));
+                     fetchDraftBills();
                 } else {
+                    gridState.setLoading(false);
                     toast({
                         title: "⚠️ Approve Failed",
                         description: failureMessages.join('; ') || "Failed to Approve draft bills.",
@@ -2044,6 +2060,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 setIsCancelModalOpen(false);
             } catch (error) {
                 console.error("Error Approving Draft:", error);
+                  gridState.setLoading(false);
                 toast({
                     title: "⚠️ Error",
                     description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill(s).",
@@ -2081,12 +2098,14 @@ console.log("updatedItemDetails", updatedItemDetails);
             console.log("lineLevelPayload", JSON.stringify(lineLevelPayload, null, 2));
 
             try {
+                  gridState.setLoading(true);
                 const response = await draftBillService.approveDraftBillByID(lineLevelPayload);
 
                 const parsedResponse = JSON.parse(response?.data?.ResponseData || "{}");
                 const resourceStatus = (response as any)?.data?.IsSuccess;
                 if (resourceStatus) {
                     console.log("Approve successfully");
+                      gridState.setLoading(false);
                     
                     // Track successfully cancelled line items
                     const cancelledLineNos = selectedDbLines.map(({ nestedRow }) => nestedRow.DBLineNo).filter(Boolean);
@@ -2113,7 +2132,7 @@ console.log("updatedItemDetails", updatedItemDetails);
 
                     // Clear all selections and uncheck checkboxes
                     clearAllSelections();
-
+  gridState.setLoading(false);
                     toast({
                         title: "✅ Draft Approve Successfully",
                         description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approve.",
@@ -2123,6 +2142,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     fetchDraftBills();
                 } else {
                     console.log("error as any ===", (response as any)?.data?.Message);
+                      gridState.setLoading(false);
                     toast({
                         title: "⚠️ Approve Failed",
                         description: (response as any)?.data?.Message || "Failed to Approve changes.",
@@ -2132,6 +2152,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 setIsCancelModalOpen(false);
             } catch (error) {
                 console.error("Error Approving Draft:", error);
+                  gridState.setLoading(false);
                 toast({
                     title: "⚠️ Error",
                     description: error instanceof Error ? error.message : "An error occurred while cancelling draft bill.",
