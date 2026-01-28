@@ -1250,14 +1250,14 @@ export const TripRouteUpdate = () => {
             {/* Grid Container */}
             <div className={`rounded-lg mt-4 ${config.visible ? 'pb-4' : ''}`}>
               {/* Selected rows indicator */}
-              {selectedRowObjects.length > 0 && (
+              {/* {selectedRowObjects.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200 mb-2">
                   <div className="text-sm text-blue-700">
                     <span className="font-medium">{selectedRowObjects.length}</span> row{selectedRowObjects.length !== 1 ? 's' : ''} selected
                     <span className="ml-2 text-xs">
                       ({selectedRowObjects.map(row => row.TripPlanID).join(', ')})
                     </span>
-                  </div>
+                  </div> */}
                   {/* Right section - clear icon */}
                   {/* <button
                     onClick={() => {
@@ -1273,7 +1273,7 @@ export const TripRouteUpdate = () => {
                   >
                     <X className="w-4 h-4" />
                   </button> */}
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
@@ -1305,7 +1305,7 @@ export const TripRouteUpdate = () => {
                 }
               `;
               }).join('\n')}
-          `}</style>
+          `}</style> */}
               {/* <SmartGridWithGrouping
                 key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
