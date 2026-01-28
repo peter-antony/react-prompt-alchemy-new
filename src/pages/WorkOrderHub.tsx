@@ -394,7 +394,7 @@ export const WorkOrderHub = () => {
     // },
     {
       key: "LastMaintenance",
-      label: "Last Maintenance",
+      label: "Event Date",
       type: "Date",
       sortable: true,
       editable: false,
