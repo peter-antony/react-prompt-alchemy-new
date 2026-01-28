@@ -27,7 +27,7 @@ export const InvestigationDetails: React.FC<{
   apiData?: any;
   onSaveCallback?: () => void;
 }> = ({ isOpen, onClose, rowData, apiData, onSaveCallback }) => {
-  console.log("InvestigationDetails render", { apiData });
+  // console.log("InvestigationDetails render", { apiData });
   // Sample JSON data (temporary) — parent will pass real data later
   const sampleEntries: InvestigationEntry[] = [
     {

@@ -25,6 +25,7 @@ import { useSmartGridState } from '@/hooks/useSmartGridState';
 import { Ban, NotebookPen, XCircle, Lock, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ClaimsHubAuditTrail } from "./ClaimsHubAuditTrail";
+import { ClaimsWorkflowSidedraw } from "./ClaimsWorkflow";
 
 const ClaimsForm = () => {
 	const gridId = "ClaimsForm_DocumentDetails";
@@ -59,6 +60,7 @@ const ClaimsForm = () => {
 	const [rejectModalOpen, setRejectModalOpen] = useState(false);
 	const [shortCloseModalOpen, setShortCloseModalOpen] = useState(false);
 	const [isAuditOpen, setIsAuditOpen] = useState(false);
+	const [isWorkflowOpen, setIsWorkflowOpen] = useState(false);
 
 	// Fields for Cancel modal (with date, reasonCode, remarks)
 	const [cancelFields, setCancelFields] = useState([
@@ -2709,6 +2711,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 												onClick={() => {
 													setShowDropdownMenu(false);
 													console.log("Workflow clicked");
+													setIsWorkflowOpen(true);
 												}}
 												className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
 											>
@@ -2998,6 +3001,15 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 					isOpen={isAuditOpen}
 					onClose={() => setIsAuditOpen(false)}
 					auditClaimObj={searchQuery}
+				/>
+			)}
+
+			{/* Workflow Modal */}
+			{isWorkflowOpen && (
+				<ClaimsWorkflowSidedraw
+					isOpen={isWorkflowOpen}
+					onClose={() => setIsWorkflowOpen(false)}
+					workFlowObj={apiResponse}
 				/>
 			)}
 
