@@ -73,7 +73,7 @@ export function exportToCSV(
 
       
       // Handle null/undefined values
-      if (value == null) return '';
+      // if (value == null) return '';
       
       // // Handle object values (like Badge type with {value, variant})
       // let displayValue: string;
@@ -93,7 +93,15 @@ export function exportToCSV(
       // } else {
       //   displayValue = String(value);
       // }
-      const displayValue = String(normalizeForExport(value, col));
+     const normalized = normalizeForExport(value, col);
+
+const displayValue =
+  normalized == null ||
+  String(normalized).trim().toLowerCase() === 'null' ||
+  String(normalized).trim().toLowerCase() === 'undefined'
+    ? ''
+    : String(normalized);
+
 
       // Escape CSV values
       if (displayValue.includes(',') || displayValue.includes('"') || displayValue.includes('\n')) {
