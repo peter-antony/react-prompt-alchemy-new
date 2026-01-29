@@ -334,6 +334,19 @@ const ClaimsForm = () => {
 		commentsRemarks: "Mistake Invoice"
 	});
 
+	// Helper function to calculate BalanceAmount for each row: BalanceAmount = Amount - ClaimAmount
+	const calculateBalanceAmount = (data: any[]): any[] => {
+		return data.map((row: any) => {
+			const amount = parseFloat(row.Amount) || 0;
+			const claimAmount = parseFloat(row.ClaimAmount) || 0;
+			const balanceAmount = amount - claimAmount;
+			return {
+				...row,
+				BalanceAmount: balanceAmount
+			};
+		});
+	};
+
 	// Document Details Grid Columns
 	const documentDetailsColumns: GridColumnConfig[] = [
 		{
@@ -396,7 +409,20 @@ const ClaimsForm = () => {
 			sortable: false,
 			editable: true,
 			subRow: false,
-			width: 150
+			width: 150,
+			onChange: (value: any, rowData: any, rowIndex?: number) => {
+				// Recalculate BalanceAmount when ClaimAmount changes
+				const currentGridData = [...(gridState.gridData || [])];
+				if (rowIndex !== undefined && rowIndex >= 0 && rowIndex < currentGridData.length) {
+					currentGridData[rowIndex] = {
+						...currentGridData[rowIndex],
+						ClaimAmount: value
+					};
+					// Recalculate BalanceAmount for all rows
+					const updatedData = calculateBalanceAmount(currentGridData);
+					gridState.setGridData(updatedData);
+				}
+			}
 		},
 		{
 			key: 'BalanceAmount',
@@ -1229,7 +1255,9 @@ const ClaimsForm = () => {
 			setInitialApiResponse(record);
 			console.log('Fetched claim data:', record, apiResponse);
 			if (Array.isArray(record?.Document?.Details)) {
-				gridState.setGridData(record.Document.Details);
+				// Calculate BalanceAmount for each row: BalanceAmount = Amount - ClaimAmount
+				const calculatedData = calculateBalanceAmount(record.Document.Details);
+				gridState.setGridData(calculatedData);
 			}
 			const Header = record?.Header || {};
 			setClaimStatus(Header?.ClaimStatus || '');
@@ -1546,7 +1574,7 @@ const ClaimsForm = () => {
 	const handleInlineEditDocumentDetails = (rowIndex: number, row: any) => {
 		// Update document details data with edited rows
 		console.log("Edited Row:", row, rowIndex);
-
+		
 		// Get current grid data
 		const currentGridData = [...(gridState.gridData || [])];
 
@@ -1557,8 +1585,11 @@ const ClaimsForm = () => {
 				ModeFlag: "Update"
 			};
 
+			// Calculate BalanceAmount for all rows after edit
+			const updatedData = calculateBalanceAmount(currentGridData);
+
 			// Update the grid data
-			gridState.setGridData(currentGridData);
+			gridState.setGridData(updatedData);
 			console.log("Updated grid data with ModeFlag='Update' for row at index:", rowIndex);
 		} else {
 			console.warn("Invalid row index:", rowIndex, "Grid data length:", currentGridData.length);
@@ -2204,7 +2235,9 @@ const ClaimsForm = () => {
 	const documentDetailsShowPanel = () => {
 		setShowDocumentDetails(true);
 		if (apiResponse?.Document?.Details) {
-			gridState.setGridData(apiResponse.Document.Details);
+			// Calculate BalanceAmount for each row: BalanceAmount = Amount - ClaimAmount
+			const calculatedData = calculateBalanceAmount(apiResponse.Document.Details);
+			gridState.setGridData(calculatedData);
 		}
 	};
 
@@ -3007,13 +3040,17 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 										variant="outline"
 										size="icon"
 										className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
+										disabled={claimStatus === "Claim Initiated"}
 										onClick={() => {
 											// Handle edit action
+											if (claimStatus === "Claim Initiated") {
+												return; // Prevent action when disabled
+											}
 											console.log("Edit Claims Findings clicked");
 											setClaimFindingsOpen(true);
 										}}
 									>
-										<SquarePen className="h-4 w-4 text-gray-600" />
+										<SquarePen className={`h-4 w-4 ${claimStatus === "Claim Initiated" ? "text-gray-400" : "text-gray-600"}`} />
 									</Button>
 								</div>
 
@@ -3413,15 +3450,19 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleClaimFindingsAmend}>
 							Amend
 						</button>
-						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsSave}>
-                            Document Save Details
-                        </button>
-						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
-							Generate Note
-						</button>
-						<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
-							Note Cancel
-						</button>
+						{apiResponse?.Document?.Details && (
+							<>
+								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsSave}>
+									Document Save Details
+								</button>
+								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
+									Generate Note
+								</button>
+								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
+									Note Cancel
+								</button>
+							</>
+						)}
 						{/* <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
                             Document Details
                         </button> */}
