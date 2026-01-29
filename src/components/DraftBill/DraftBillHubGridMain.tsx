@@ -2773,6 +2773,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                         setIsDraftBillDetailsSideDraw(false);
                         setDraftBillData(null);
                     }}
+                    fetchDraftBills={fetchDraftBills}
                     lineItems={loadingDrawerData ? [] : (draftBillData?.ItemDetails || [])}
                     headerData={loadingDrawerData ? null : (draftBillData?.Header || null)}
                     isLoading={loadingDrawerData}

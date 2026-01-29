@@ -19,6 +19,7 @@ import { ArrowLeft } from "lucide-react";
 interface DraftBillDetailsSideDrawProps {
   isOpen: boolean;
   onClose: () => void;
+  fetchDraftBills: () => void;
   width?: string;
   initialConsignorData?: any;
   initialConsigneeData?: any;
@@ -152,6 +153,7 @@ const BasicDetailsPanelConfig: PanelConfig = {
 
 const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   isOpen,
+  fetchDraftBills,
   width,
   onClose,
   lineItems,
@@ -169,6 +171,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
   const [isWorkFlowOpen, setIsWorkFlowOpen] = useState(false);
+  const [loader , setLoader] =  useState(false)
   
   // Local state to manage lineItems and headerData (can be updated after refresh)
   const [localLineItems, setLocalLineItems] = useState<any[]>(lineItems);
@@ -602,6 +605,12 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
     console.log("active line number ----", line);
   };
 
+  const handleClose = () => {
+  onClose();
+  fetchDraftBills();
+
+  }
+
   const handleLineDelete = (lineToDelete: any) => {
     // TODO: Implement actual delete logic, potentially updating parent component
     console.log("Deleting line:", lineToDelete);
@@ -667,17 +676,19 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           console.error("Error refreshing data after cancel:", refreshError);
           // Still show success toast even if refresh fails
         }
-        
+         fetchDraftBills();
         toast({
           title: "✅ Draft Bill Amended Successfully",
           description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Amended.",
           variant: "default",
         });
         setIsAmendModalOpen(false);
+        onClose();
+         
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
-          title: "⚠️ Cancel Failed",
+          title: "⚠️ Amend Failed",
           description: (response as any)?.data?.Message || "Failed to Amend changes.",
           variant: "destructive",
         });
@@ -725,6 +736,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
         console.log("cancelled successfully");
         
         // Refresh the data by calling getDraftBillByID API
+        
         try {
           const refreshResponse = await draftBillService.getDraftBillByID({
             searchCriteria: { DraftBillNo: localHeaderData?.DraftBillNo }
@@ -762,13 +774,18 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           variant: "default",
         });
         setIsCancelModalOpen(false);
+         fetchDraftBills();
       } else {
+           fetchDraftBills();
+
         console.log("error as any ===", (response as any)?.data?.Message);
         toast({
           title: "⚠️ Cancel Failed",
           description: (response as any)?.data?.Message || "Failed to cancel changes.",
           variant: "destructive",
         });
+            setIsCancelModalOpen(false);
+          
       }
       // Optionally, handle success or display a message
     } catch (error) {
@@ -928,6 +945,7 @@ const handleValidateAllPanels = () => {
 
       if (resourceStatus) {
         console.log("Draft Bill By ID fetched successfully");
+       
         // isValidatingRef.current = false;
         toast({
           title: "✅ Draft Bill Saved Successfully",
@@ -936,6 +954,7 @@ const handleValidateAllPanels = () => {
         });
         // Set the draft bill data in state
         onClose();
+         fetchDraftBills();
       } else {
         // throw new Error("Failed to fetch draft bill details");
         toast({
@@ -1177,10 +1196,19 @@ const handleValidateAllPanels = () => {
 
   return `${day}-${month}-${year}`;
 };
-
+ const refDocIds = Array.from(
+  new Set(localLineItems?.map(item => item.RefDocID).filter(Boolean))
+);
 
   return (
     <>
+     {isLoading  && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-gray-200 mb-4"></div>
+                    <div className="text-lg font-semibold text-blue-700">Loading Draft Bills...</div>
+                    <div className="text-sm text-gray-500 mt-1">Fetching data from server, please wait.</div>
+                </div>
+            )}
       <div className="fixed inset-0 z-50 overflow-hidden">
         <div className="absolute inset-0 bg-gray-600 bg-opacity-75 transition-opacity" onClick={onClose}></div>
         <section
@@ -1202,7 +1230,7 @@ const handleValidateAllPanels = () => {
                     <button
                       type="button"
                       className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      onClick={onClose}
+                      onClick={handleClose}
                     >
                       <ArrowLeft className="h-5 w-5" /> 
                     </button>
@@ -1213,7 +1241,7 @@ const handleValidateAllPanels = () => {
                     <button
                       type="button"
                       className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                      onClick={onClose}
+                      onClick={handleClose}
                     >
                       <span className="sr-only">Close panel</span>
                       <X className="h-6 w-6" aria-hidden="true" />
@@ -1287,10 +1315,12 @@ const handleValidateAllPanels = () => {
                           <FileText className="w-4 h-4 mr-2 text-gray-400" />
                           <span>{localHeaderData?.InvoiceNo} <span className="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">{localHeaderData?.InvoiceStatus}</span></span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-700">
+                        <div className="flex items-center text-sm text-gray-700"> 
                           <FileText className="w-4 h-4 mr-2 text-gray-400" />
                           <span>
-                            {activeLine?.RefDocID}
+                         {refDocIds.length === 1
+    ? refDocIds[0]
+    : "Multiple"}
                             <div className="relative group inline-block">
                               <AlertCircle className="w-4 h-4 text-gray-600 cursor-pointer rotate-180" />
                               <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
@@ -1318,7 +1348,9 @@ const handleValidateAllPanels = () => {
                                     <div className="">{"Reference Doc. ID"}</div>
                                   </div>
                                   <div className="font-semibold text-gray-700">
-                                    <div>{activeLine?.RefDocID}</div>
+                                    <div>  {refDocIds.length === 1
+    ? refDocIds[0]
+    : refDocIds.join(", ")}</div>
 
                                   </div>
 

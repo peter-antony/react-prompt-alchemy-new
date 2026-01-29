@@ -1202,7 +1202,7 @@ const handleTemplateNumberCallback = (value: string) => {
       label: "Template ID/Description",
       fieldType: "lazyselect",
       value: "",
-      mandatory: true,
+      mandatory: false,
       visible: true,
       editable: true,
       order: 1,
