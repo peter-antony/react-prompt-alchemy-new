@@ -169,12 +169,12 @@ export const ServerFilterFieldModal: React.FC<ServerFilterFieldModalProps> = ({
               />
               
               <div className="flex-1">
-                <div className="font-medium text-sm">{fieldConfig.label}</div>
-                {/* <Input
+                {/* <div className="font-medium text-sm">{fieldConfig.label}</div> */}
+                <Input
                   value={fieldConfig.label}
                   onChange={(e) => handleLabelChange(fieldConfig.key, e.target.value)}
                   className="mb-1 h-8"
-                /> */}
+                />
                 <div className="text-xs text-muted-foreground">{fieldConfig.key}</div>
                 {fieldConfig.type && (
                   <div className="text-xs text-muted-foreground capitalize">
