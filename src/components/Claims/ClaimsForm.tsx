@@ -340,9 +340,10 @@ const ClaimsForm = () => {
 			const amount = parseFloat(row.Amount) || 0;
 			const claimAmount = parseFloat(row.ClaimAmount) || 0;
 			const balanceAmount = amount - claimAmount;
+			const balanceAmountFormatted = Number((balanceAmount).toFixed(2));
 			return {
 				...row,
-				BalanceAmount: balanceAmount
+				BalanceAmount: balanceAmountFormatted
 			};
 		});
 	};
@@ -361,6 +362,15 @@ const ClaimsForm = () => {
 		{
 			key: 'TariffIDOrUsageID',
 			label: 'Tariff/Usage ID',
+			type: 'Link',
+			sortable: false,
+			editable: false,
+			subRow: false,
+			width: 250
+		},
+		{
+			key: 'DraftBillNo',
+			label: 'Draft Bill No',
 			type: 'Link',
 			sortable: false,
 			editable: false,
@@ -451,43 +461,43 @@ const ClaimsForm = () => {
 			subRow: false,
 			width: 180
 		},
-		{
-			key: 'DocumentDetails_Actions',
-			label: 'Actions',
-			type: 'ActionButton',
-			sortable: false,
-			editable: false,
-			subRow: false,
-			filterable: false,
-			width: 60,
-			actionButtons: [
-				{
-					icon: <Trash2 size={16} className="text-red-600 hover:text-red-700" />,
-					tooltip: 'Delete',
-					onClick: (rowData) => {
-						const currentData = gridState.gridData || [];
-						const idx = currentData.findIndex((r: any) => r.Line_No === rowData?.Line_No);
-						console.log("Index:", idx);
-						if (idx >= 0) {
-							// Mark row as deleted (do NOT remove it from gridData)
-							const updatedData = currentData.map((r: any, i: number) =>
-								i === idx ? { ...r, ModeFlag: "Delete" } : r
-							);
-							// gridState.setGridData(updatedData);
-							console.log("updatedData :", updatedData);
-							// Existing logic to remove row from gridData (kept for reference)
-							// const newData = currentData.filter((_: any, i: number) => i !== idx);
-							// gridState.setGridData(newData);
-							// console.log("New Data:", newData);
-							// handleGenerateNote(newData);
-						}
-						console.log("New Data:");
-					},
-					variant: 'ghost',
-					size: 'icon'
-				}
-			]
-		}
+		// {
+		// 	key: 'DocumentDetails_Actions',
+		// 	label: 'Actions',
+		// 	type: 'ActionButton',
+		// 	sortable: false,
+		// 	editable: false,
+		// 	subRow: false,
+		// 	filterable: false,
+		// 	width: 60,
+		// 	actionButtons: [
+		// 		{
+		// 			icon: <Trash2 size={16} className="text-red-600 hover:text-red-700" />,
+		// 			tooltip: 'Delete',
+		// 			onClick: (rowData) => {
+		// 				const currentData = gridState.gridData || [];
+		// 				const idx = currentData.findIndex((r: any) => r.Line_No === rowData?.Line_No);
+		// 				console.log("Index:", idx);
+		// 				if (idx >= 0) {
+		// 					// Mark row as deleted (do NOT remove it from gridData)
+		// 					const updatedData = currentData.map((r: any, i: number) =>
+		// 						i === idx ? { ...r, ModeFlag: "Delete" } : r
+		// 					);
+		// 					// gridState.setGridData(updatedData);
+		// 					console.log("updatedData :", updatedData);
+		// 					// Existing logic to remove row from gridData (kept for reference)
+		// 					// const newData = currentData.filter((_: any, i: number) => i !== idx);
+		// 					// gridState.setGridData(newData);
+		// 					// console.log("New Data:", newData);
+		// 					// handleGenerateNote(newData);
+		// 				}
+		// 				console.log("New Data:");
+		// 			},
+		// 			variant: 'ghost',
+		// 			size: 'icon'
+		// 		}
+		// 	]
+		// }
 	];
 
 	// Initialize document details grid columns

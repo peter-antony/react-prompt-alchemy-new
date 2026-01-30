@@ -261,7 +261,7 @@ export const API_ENDPOINTS = {
     SAVE_LINKED_CLAIM_ORDERS: "manageclaims/claimsavelinkedorders",
     GET_LINKED_CLAIM_ORDERS: "manageclaims/claimgetlinkedorders",
     DOCUMENT_SAVE: 'manageclaims/claimdocumentsave',
-    FINDINGS_AMEND: 'manageclaims/claimfindingamend',
+    FINDINGS_AMEND: 'manageclaims/claimfindingsamend',
     NOTE_CANCEL: 'manageclaims/claimnotecancel',
   }
 } as const;
