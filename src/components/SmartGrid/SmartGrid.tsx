@@ -96,7 +96,8 @@ export function SmartGrid({
   serverFilterVisibleFields,
   serverFilterFieldOrder,
   serverFilterFieldLabels,
-  onServerFilterPreferenceSave
+  onServerFilterPreferenceSave,
+  enableExpandCollapseAll = false,
 }: SmartGridProps & {
   exportFilename?: string;
   serverFilterVisibleFields?: string[];
@@ -594,6 +595,41 @@ export function SmartGrid({
     return processedData.slice(start, start + pageSize);
   }, [processedData, paginationMode, currentPage, pageSize, onDataFetch, setCurrentPage]);
 
+  // Handle row expansion
+  const areAllRowsExpanded = useMemo(() => {
+    if (!effectiveNestedRowRenderer && !hasCollapsibleColumns) return false;
+    if (paginatedData.length === 0) return false;
+
+    return paginatedData.every((_, index) => expandedRows.has(index));
+  }, [
+    expandedRows,
+    paginatedData,
+    effectiveNestedRowRenderer,
+    hasCollapsibleColumns
+  ]);
+
+  const handleExpandCollapseAll = useCallback(() => {
+    if (!effectiveNestedRowRenderer && !hasCollapsibleColumns) return;
+
+    if (areAllRowsExpanded) {
+      // Collapse all
+      setExpandedRows(new Set());
+    } else {
+      // Expand all visible rows
+      const newExpanded = new Set<number>();
+      paginatedData.forEach((_, index) => {
+        newExpanded.add(index);
+      });
+      setExpandedRows(newExpanded);
+    }
+  }, [
+    areAllRowsExpanded,
+    paginatedData,
+    setExpandedRows,
+    effectiveNestedRowRenderer,
+    hasCollapsibleColumns
+  ]);
+
 
   const totalPages = Math.ceil(processedData.length / pageSize);
 
@@ -930,6 +966,9 @@ export function SmartGrid({
         selectedRowsCount={currentSelectedRows.size}
         onClearSelection={handleClearSelection}
         onSavePreferences={onPreferenceSave ? handleSavePreferences : undefined}
+        enableExpandCollapseAll={enableExpandCollapseAll}
+        areAllRowsExpanded={areAllRowsExpanded}
+        onExpandCollapseAll={handleExpandCollapseAll}
       />
       )}
 
