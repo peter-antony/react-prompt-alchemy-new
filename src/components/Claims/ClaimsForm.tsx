@@ -1273,28 +1273,29 @@ const ClaimsForm = () => {
 			setClaimStatus(Header?.ClaimStatus || '');
 			// Map returned record to panel fields (best-effort mapping)
 			if (formRef.current && Header) {
+				const Ref = Header?.Reference || {};
 				const mapped: Record<string, any> = {
 					InvestigationNeeded: Header?.Reference?.InvestigationNeeded === 'Yes' || Header?.Reference?.InvestigationNeeded === 'yes' || Header?.Reference?.InvestigationNeeded === 'true' || Header?.Reference?.InvestigationNeeded === 'True' ? true : false,
-					InitiatedBy: Header?.Reference?.InitiatedBy || '',
-					Counterparty: Header?.Reference?.Counterparty || '',
-					ForwardisFinancialAction: Header?.Reference?.ForwardisFinancialAction || '',
-					ExpectedDocument: Header?.Reference?.ExpectedDocument || '',
-					BusinessPartnerID: Header?.Reference?.BusinessPartnerID || '',
+					InitiatedBy: formatCodeDescription(Ref.InitiatedBy, Ref.InitiatedbyDescription),
+					Counterparty: formatCodeDescription(Ref.Counterparty, Ref.CounterpartyDescription),
+					ForwardisFinancialAction: formatCodeDescription(Ref.ForwardisFinancialAction, Ref.ForwardisFinancialActionDescription),
+					ExpectedDocument: formatCodeDescription(Ref.ExpectedDocument, Ref.ExpectedDocumentDescription),
+					BusinessPartnerID: formatCodeDescription(Ref.BusinessPartnerID, Ref.BusinessPartnerDescription),
 					ClaimDate: Header?.Reference?.ClaimDate || null,
-					ClaimCategory: Header?.Reference?.ClaimCategory || '',
+					ClaimCategory: formatCodeDescription(Ref.ClaimCategory, Ref.ClaimCategoryDescription),
 					CurrencyAmount: Header?.Reference ? { dropdown: (Header?.Reference?.Currency || '').trim(), input: Header?.Reference?.ClaimAmount } : { dropdown: '', input: '' },
 					ClaimantRefNo: Header?.Reference?.ClaimantRefNo || '',
-					IncidentType: Header?.Reference?.IncidentType || '',
+					IncidentType: formatCodeDescription(Ref.IncidentType, Ref.IncidentTypeDescription),
 					IncidentDateTime: Header?.Reference?.IncidentDateTime || null,
-					IncidentLocation: Header?.Reference?.IncidentLocation || '',
-					RefDocType: Header?.Reference?.RefDocType || '',
+					IncidentLocation: formatCodeDescription(Ref.IncidentLocation, Ref.IncidentLocationDescription),
+					RefDocType: formatCodeDescription(Ref.RefDocType, Ref.RefDocTypeDescription),
 					RefDocID: Header?.Reference?.RefDocID || '',
 					Wagon: returnOptions('Wagon', Header?.Reference?.Wagon),
 					Container: returnOptions('Container', Header?.Reference?.Container),
 					THU: returnOptions('THU', Header?.Reference?.THU),
-					WBS: Header?.Reference?.WBS || '',
-					ActionResolution: Header?.Reference?.ActionResolution || '',
-					AssignedUser: Header?.Reference?.AssignedUser || '',
+					WBS: formatCodeDescription(Ref.WBS, Ref.WBSDescription),
+					ActionResolution: formatCodeDescription(Ref.ActionResolution, Ref.ActionResolutionDescription),
+					AssignedUser: formatCodeDescription(Ref.AssignedUser, Ref.AssignedUserDescription),
 					SecondaryRefNo: Header?.Reference?.SecondaryRefNo || '',
 					ActionResolutionRemark: Header?.Reference?.ActionResolutionRemark || '',
 					FirstInformationRegister: Header?.Reference?.FirstInformationRegister || '',
@@ -1433,21 +1434,28 @@ const ClaimsForm = () => {
 				ClaimStatus: values.ClaimStatus || "",
 				ClaimStatusDescription: values.ClaimStatusDescription || "",
 				Reference: {
-					InitiatedBy: splitPipeValue(values.InitiatedBy),
-					Counterparty: splitPipeValue(values.Counterparty),
-					ExpectedDocument: splitPipeValue(values.ExpectedDocument),
-					ForwardisFinancialAction: splitPipeValue(values.ForwardisFinancialAction),
+					InitiatedBy: splitPipeValueWithDescription(values.InitiatedBy).code,
+					InitiatedbyDescription: splitPipeValueWithDescription(values.InitiatedBy).description,
+					Counterparty: splitPipeValueWithDescription(values.Counterparty).code,
+					CounterpartyDescription: splitPipeValueWithDescription(values.Counterparty).description,
+					ExpectedDocument: splitPipeValueWithDescription(values.ExpectedDocument).code,
+					ExpectedDocumentDescription: splitPipeValueWithDescription(values.ExpectedDocument).description,
+					ForwardisFinancialAction: splitPipeValueWithDescription(values.ForwardisFinancialAction).code,
+					ForwardisFinancialActionDescription: splitPipeValueWithDescription(values.ForwardisFinancialAction).description,
 					BusinessPartnerID: splitPipeValueWithDescription(values.BusinessPartnerID).code,
 					BusinessPartnerDescription: splitPipeValueWithDescription(values.BusinessPartnerID).description,
-					IncidentType: splitPipeValue(values.IncidentType),
+					IncidentType: splitPipeValueWithDescription(values.IncidentType).code,
+					IncidentTypeDescription: splitPipeValueWithDescription(values.IncidentType).description,
 					IncidentDateTime: values.IncidentDateTime || null,
 					IncidentLocation: splitPipeValueWithDescription(values.IncidentLocation).code,
 					IncidentLocationDescription: splitPipeValueWithDescription(values.IncidentLocation).description,
-					ClaimCategory: splitPipeValue(values.ClaimCategory),
+					ClaimCategory: splitPipeValueWithDescription(values.ClaimCategory).code,
+					ClaimCategoryDescription: splitPipeValueWithDescription(values.ClaimCategory).description,
 					Currency: values.CurrencyAmount.dropdown || "",
 					ClaimAmount: values.CurrencyAmount.input || "",
 					ClaimDate: values.ClaimDate || null,
-					RefDocType: splitPipeValue(values.RefDocType),
+					RefDocType: splitPipeValueWithDescription(values.RefDocType).code,
+					RefDocTypeDescription: splitPipeValueWithDescription(values.RefDocType).description,
 					RefDocID: values.RefDocID || "",
 					ClaimantRefNo: values.ClaimantRefNo || "",
 					SecondaryRefNo: values.SecondaryRefNo || null,
@@ -1457,11 +1465,12 @@ const ClaimsForm = () => {
 					THU: buildKeyValueJson(values?.THU, "THUID", "THUDescription"),
 					WBS: splitPipeValueWithDescription(values.WBS).code,
 					WBSDescription: splitPipeValueWithDescription(values.WBS).description,
-					ActionResolution: splitPipeValue(values.ActionResolution),
+					ActionResolution: splitPipeValueWithDescription(values.ActionResolution).code,
+					ActionResolutionDescription: splitPipeValueWithDescription(values.ActionResolution).description,
 					AssignedUser: splitPipeValueWithDescription(values.AssignedUser).code,
+					AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
 					ActionResolutionRemark: values.ActionResolutionRemark || null,
 					FirstInformationRegister: values.FirstInformationRegister || null,
-					AssignedUserDescription: splitPipeValueWithDescription(values.AssignedUser).description,
 					FinanceYear: splitPipeValue(values.FinanceYear),
 					QuickCode1: values.QCUserDefined1.dropdown || null,
 					QCValue1: values.QCUserDefined1.input || null,
@@ -1562,22 +1571,30 @@ const ClaimsForm = () => {
 		return id || desc || '-';
 	}
 
-	// Helper function to split pipe-separated values and extract code
+	// Format code and description for dropdown display (e.g. "CODE | Description")
+	const formatCodeDescription = (code: string | null | undefined, description: string | null | undefined): string => {
+		const c = (code != null && code !== '') ? String(code).trim() : '';
+		const d = (description != null && description !== '') ? String(description).trim() : '';
+		if (c && d) return `${c} || ${d}`;
+		return c || d || '';
+	};
+
+	// Helper function to split pipe-separated values and extract code (supports " | " and "||")
 	const splitPipeValue = (value: string | null | undefined): string => {
 		if (!value || typeof value !== 'string') return '';
-		// Split by "||" and return the code part (first part) trimmed
-		const parts = value.split('||');
+		const sep = value.includes(' || ') ? ' || ' : '||';
+		const parts = value.split(sep);
 		return parts[0]?.trim() || '';
 	}
 
-	// Helper function to split pipe-separated values into code and description
+	// Helper function to split pipe-separated values into code and description (supports " | " and "||")
 	const splitPipeValueWithDescription = (value: string | null | undefined): { code: string; description: string } => {
 		if (!value || typeof value !== 'string') return { code: '', description: '' };
-		// Split by "||" and return both code and description
-		const parts = value.split('||');
+		const sep = value.includes(' || ') ? ' || ' : '||';
+		const parts = value.split(sep);
 		return {
 			code: parts[0]?.trim() || '',
-			description: parts[1]?.trim() || ''
+			description: parts.slice(1).join(sep).trim() || ''
 		};
 	}
 
