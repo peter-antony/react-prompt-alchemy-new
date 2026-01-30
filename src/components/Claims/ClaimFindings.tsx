@@ -209,12 +209,12 @@ export const ClaimFindings: React.FC<{
         `}</style>
         <div className="flex-1 overflow-auto px-6 py-4 investigation-scroll bg-[#F8F9FC]">
           <div className="mb-4">
-            <label className="text-xs text-gray-600 font-medium">Credit Note Based on Adjustment Doc. Type/No. <span className="text-red-500">*</span></label>
+            <label className="text-xs text-gray-600 font-medium">Credit Note Based on Adjustment Doc. Type/No.</label>
             <input value={form.CreditNoteBasedOnAdjustmentDoc} readOnly className="w-full rounded-md border px-3 py-2 h-9 text-[13px] mt-1" />
           </div>
 
           <div className="mb-4">
-            <label className="text-xs text-gray-600 font-medium">Final Claim Amount <span className="text-red-500">*</span></label>
+            <label className="text-xs text-gray-600 font-medium">Final Claim Amount </label>
             <div className="flex items-center">
               <select disabled value={form.Currency} onChange={e => setForm(f => ({ ...f, Currency: e.target.value, ModeFlag: 'Update' }))} className="rounded-l-md border px-2 py-2 h-9 text-[13px] w-20 mt-1">
                 {/* <option>€</option>
@@ -247,7 +247,7 @@ export const ClaimFindings: React.FC<{
           }
 
           <div className="mb-4">
-            <label className="text-xs text-gray-600 font-medium">Comments/Remarks <span className="text-red-500">*</span></label>
+            <label className="text-xs text-gray-600 font-medium">Comments/Remarks </label>
             <textarea value={form.CommentRemark} onChange={e => setForm(f => ({ ...f, CommentRemark: e.target.value, ModeFlag: 'Update' }))} rows={3} className="w-full rounded-md border px-3 py-2 text-[13px] mt-1" />
           </div>
 

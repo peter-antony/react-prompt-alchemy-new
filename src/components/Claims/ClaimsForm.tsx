@@ -732,7 +732,7 @@ const ClaimsForm = () => {
 			width: "four",
 			fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 4
@@ -840,7 +840,7 @@ const ClaimsForm = () => {
 			width: "four",
 			fetchOptions: fetchMaster("Location Init"),
 			value: "",
-			mandatory: false,
+			mandatory: true,
 			visible: true,
 			editable: true,
 			order: 13
@@ -1069,7 +1069,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remarks",
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 28
@@ -1082,7 +1082,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remarks",
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 29
@@ -1095,7 +1095,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remarks",
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 30
@@ -1108,7 +1108,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remarks",
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 31
@@ -1121,7 +1121,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remarks",
 			value: "",
-			mandatory: true,
+			mandatory: false,
 			visible: true,
 			editable: true,
 			order: 32
