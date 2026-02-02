@@ -8,7 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit2, Trash2, Calendar, Clock, Maximize2, Copy, Download, Car, Wrench, FileText, Users, DollarSign } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, Clock, Maximize2, Copy, Download, Car, Wrench, FileText, Users, DollarSign, Expand } from 'lucide-react';
 import { manageTripStore } from '@/stores/mangeTripStore';
 import { quickOrderService, tripService } from '@/api/services';
 import { DynamicLazySelect } from '../DynamicPanel/DynamicLazySelect';
@@ -207,6 +207,28 @@ const [maintenanceDescError, setMaintenanceDescError] = useState(false);
 const [wagonError, setWagonError] = useState(false);
 
 
+
+
+  // Expand/Collapse All Logic
+  const ACCORDION_ITEMS = [
+    "incident-details",
+    "maintenance-details",
+    "more-details",
+    "work-order-details",
+    "claim-details"
+  ];
+
+  // State to track expanded/collapsed accordion items
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const isAllExpanded = ACCORDION_ITEMS.every(item => expandedItems.includes(item));
+
+  const handleToggleExpandAll = () => {
+    if (isAllExpanded) {
+      setExpandedItems([]);
+    } else {
+      setExpandedItems(ACCORDION_ITEMS);
+    }
+  };
 
   const { tripData } = manageTripStore();
   const tripId: any = tripData?.Header?.TripNo;
@@ -803,21 +825,34 @@ if (hasError) {
                 />
                 <div className="min-h-[16px]" />
               </div>
-              <div className="flex gap-2 self-center pt-2">
+              <div className="flex gap-2 self-center pt-2 ml-8">
                 <Button variant="outline" size="icon" className="h-10 w-10">
                   <Copy className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-10 w-10">
                   <Download className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-10 w-10">
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
+                <button
+                  className={`rounded-lg p-2 cursor-pointer ${isAllExpanded
+                    ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                    } h-10 w-10 flex items-center justify-center`}
+                  aria-label="Expand/Collapse All"
+                  title="Expand/Collapse All"
+                  onClick={handleToggleExpandAll}
+                >
+                  <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+                </button>
               </div>
             </div>
 
             {/* Accordion Sections */}
-            <Accordion type="single" collapsible className="w-full space-y-4">
+            <Accordion
+              type="multiple"
+              className="w-full space-y-4"
+              value={expandedItems}
+              onValueChange={setExpandedItems}
+            >
               {/* Incident Details Section */}
               <AccordionItem value="incident-details" className="border rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">

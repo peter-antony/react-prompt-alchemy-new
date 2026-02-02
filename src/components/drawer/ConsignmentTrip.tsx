@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, EllipsisVertical, Settings, NotebookPen } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, EllipsisVertical, Settings, NotebookPen, Expand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6982,6 +6982,16 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
     }
   };
 
+  // Handler for expanding/collapsing all sections
+  const isAllExpanded = expandedCOInfo && expandedPlanned && expandedActuals;
+
+  const handleToggleExpandAll = () => {
+  const newState = !isAllExpanded;
+  setExpandedCOInfo(newState);
+  setExpandedPlanned(newState);
+  setExpandedActuals(newState);
+};
+
   return (
     <>
       <style>{`
@@ -7072,6 +7082,18 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Consignment Details</h3>
             <div className="flex items-center gap-2">
+              <button
+                className={`rounded-lg p-2 cursor-pointer ${isAllExpanded
+                    ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                  } h-10 w-10 flex items-center justify-center`}
+                aria-label="Expand/Collapse All"
+                title="Expand/Collapse All"
+                onClick={handleToggleExpandAll}
+              >
+                <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+              </button>
+              
               <Popover open={listPopoverOpen} onOpenChange={setListPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, Plus, NotebookPen, CalendarIcon, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Plus, NotebookPen, CalendarIcon, User, FileText, MapPin, Truck, Package, Calendar, Info, Trash2, RefreshCw, Send, AlertCircle, Download, Filter, CheckSquare, MoreVertical, Container, Box, Boxes, Search, Clock, PackageCheck, FileEdit, Expand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -2352,6 +2352,15 @@ const getDelayedTime = (activity: any): string => {
       });
     }
   };
+
+  // Handler for expanding/collapsing all sections
+  const isAllExpanded = expandedActivities && expandedAdditional;
+
+  const handleToggleExpandAll = () => {
+    const newState = !isAllExpanded;
+    setExpandedActivities(newState);
+    setExpandedAdditional(newState);
+  };
   
   return (
     <>
@@ -2521,6 +2530,19 @@ const getDelayedTime = (activity: any): string => {
 
             {/* Activities Content */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <div className="flex items-center justify-end">
+                <button
+                  className={`rounded-lg p-2 cursor-pointer ${isAllExpanded
+                      ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                      : "bg-white border border-gray-300 hover:bg-gray-100"
+                    } h-10 w-10 flex items-center justify-center`}
+                  aria-label="Expand/Collapse All"
+                  title="Expand/Collapse All"
+                  onClick={handleToggleExpandAll}
+                >
+                  <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+                </button>
+              </div>
               {/* Activities Section */}
               <div className="space-y-3 border p-3">
                 <div 
