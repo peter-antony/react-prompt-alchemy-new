@@ -113,6 +113,7 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   useEffect(() => {
     if (isExpanded !== undefined) {
       setIsOpen(isExpanded);
+      setIsCollapsible(true);
     }
   }, [isExpanded]);
 
@@ -391,7 +392,7 @@ Object.keys(validationErrors).forEach((fieldId) => {
             if (userSettings.width) {
               setCurrentPanelWidth(userSettings.width);
             }
-            if (userSettings.collapsible !== undefined) {
+            if (userSettings.collapsible !== undefined && isExpanded === undefined) {
               setIsCollapsible(userSettings.collapsible);
             }
             if (userSettings.showStatusIndicator !== undefined) {

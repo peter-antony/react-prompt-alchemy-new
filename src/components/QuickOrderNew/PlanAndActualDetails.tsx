@@ -69,6 +69,26 @@ export const PlanAndActualDetails = ({ onCloseDrawer, isEditQuickOrder, resource
     useState(true);
   const [billingDetailsVisible, setBillingDetailsVisible] = useState(true);
 
+  // Expansion State for Dynamic Panels
+  const [isWagonExpanded, setIsWagonExpanded] = useState(true);
+  const [isContainerExpanded, setIsContainerExpanded] = useState(true);
+  const [isProductExpanded, setIsProductExpanded] = useState(true);
+  const [isTHUExpanded, setIsTHUExpanded] = useState(true);
+  const [isJourneyExpanded, setIsJourneyExpanded] = useState(true);
+  const [isOtherExpanded, setIsOtherExpanded] = useState(true);
+
+  const isAllExpanded = isWagonExpanded && isContainerExpanded && isProductExpanded && isTHUExpanded && isJourneyExpanded && isOtherExpanded;
+
+  const handleToggleExpandAll = () => {
+    const newState = !isAllExpanded;
+    setIsWagonExpanded(newState);
+    setIsContainerExpanded(newState);
+    setIsProductExpanded(newState);
+    setIsTHUExpanded(newState);
+    setIsJourneyExpanded(newState);
+    setIsOtherExpanded(newState);
+  };
+
   const [wagonDetailsTitle, setWagonDetailsTitle] = useState("Wagon Details");
   const [containerDetailsTitle, setContainerDetailsTitle] =
     useState("Container Details");
@@ -3453,7 +3473,7 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-screen">
         {/* Left Side - Stepper and Main Content */}
         <div className="flex-1 flex">
           {/* Vertical Stepper */}
@@ -3620,9 +3640,17 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                 </div>
               )}
               <div className="flex gap-4">
-                <span className="bg-blue-600 rounded-lg p-3 hover:bg-blue-700 cursor-pointer">
-                  <Expand className="w-4 h-4 text-white" />
-                </span>
+                <button
+                  className={`rounded-lg p-2 cursor-pointer ${isAllExpanded
+                    ? "bg-blue-600 border border-blue-600 hover:bg-blue-700"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                    } h-9 w-9 flex items-center justify-center`}
+                  aria-label="Expand/Collapse All"
+                  title="Expand/Collapse All"
+                  onClick={handleToggleExpandAll}
+                >
+                  <Expand className={`w-4 h-4 ${isAllExpanded ? "text-white" : "text-gray-700"}`} />
+                </button>
               </div>
             </div>
             {currentStep === 1 && (
@@ -3654,6 +3682,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             saveUserPanelConfig={saveUserPanelConfig_wagonDetails}
                             userId="current-user"
                           // panelWidth={basicDetailsWidth}
+                            collapsible={true}
+                            isExpanded={isWagonExpanded}
+                            onOpenChange={setIsWagonExpanded}
                           />
                         );
                         currentTabIndex += wagonDetailsVisibleCount;
@@ -3677,6 +3708,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             getUserPanelConfig={getUserPanelConfig_containerDetails}
                             saveUserPanelConfig={saveUserPanelConfig_containerDetails}
                             userId="current-user"
+                            collapsible={true}
+                            isExpanded={isContainerExpanded}
+                            onOpenChange={setIsContainerExpanded}
                           />
                         );
                         currentTabIndex += containerDetailsVisibleCount;
@@ -3700,6 +3734,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             getUserPanelConfig={getUserPanelConfig_productDetails}
                             saveUserPanelConfig={saveUserPanelConfig_productDetails}
                             userId="current-user"
+                            collapsible={true}
+                            isExpanded={isProductExpanded}
+                            onOpenChange={setIsProductExpanded}
                           />
                         );
                         currentTabIndex += productDetailsVisibleCount;
@@ -3723,6 +3760,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             getUserPanelConfig={getUserPanelConfig_thuDetails}
                             saveUserPanelConfig={saveUserPanelConfig_thuDetails}
                             userId="current-user"
+                            collapsible={true}
+                            isExpanded={isTHUExpanded}
+                            onOpenChange={setIsTHUExpanded}
                           />
                         );
                         currentTabIndex += thuDetailsVisibleCount;
@@ -3746,6 +3786,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             getUserPanelConfig={getUserPanelConfig_journeyDetails}
                             saveUserPanelConfig={saveUserPanelConfig_journeyDetails}
                             userId="current-user"
+                            collapsible={true}
+                            isExpanded={isJourneyExpanded}
+                            onOpenChange={setIsJourneyExpanded}
                           />
                         );
                         currentTabIndex += journeyDetailsVisibleCount;
@@ -3769,6 +3812,9 @@ const saveUserPanelConfig_bulkUpdate = async (userId: string, panelId: string, s
                             getUserPanelConfig={getUserPanelConfig_otherDetails}
                             saveUserPanelConfig={saveUserPanelConfig_otherDetails}
                             userId="current-user"
+                            collapsible={true}
+                            isExpanded={isOtherExpanded}
+                            onOpenChange={setIsOtherExpanded}
                           />
                         );
                         currentTabIndex += otherDetailsVisibleCount;
