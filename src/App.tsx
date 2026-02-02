@@ -35,6 +35,7 @@ import CimCuvHub from "./pages/CimCuvHubManagement";
 import DraftBillHubManagement from "./pages/DraftBillHubManagement";
 import { ClaimsHub } from "./pages/ClaimsHub";
 import ClaimsForm from "./components/Claims/ClaimsForm";
+import ReceivablesAuthorisation from "./components/ReceivablesCustomer/ReceivablesAuthorisation";
 // import MockPage from "./pages/MockPage";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
           <Route path="/draft-bill" element={<DraftBillHubManagement />} />
           <Route path="/claims-hub" element={<ClaimsHub />} />
           <Route path="/create-claim" element={<ClaimsForm />} />
+          <Route path="/receivables-authorisation" element={<ReceivablesAuthorisation />} />
 
           {/* Public Routes - no token required */}
           <Route path={ROUTES.SIGNIN} element={<SignIn />} />

@@ -23,6 +23,7 @@ export interface DynamicPanelRef {
     errors: Record<string, string>;
     mandatoryFieldsEmpty: string[];
   };
+  openConfigModal?: () => void;
 }
 
 interface DynamicPanelPropsExtended extends DynamicPanelProps {
@@ -40,6 +41,7 @@ interface DynamicPanelPropsExtended extends DynamicPanelProps {
   editCimNO?:string;
   isExpanded?: boolean; // prop for syncing expand/collapse state 
   onOpenChange?: (isOpen: boolean) => void; // prop for syncing expand/collapse state
+  hideSettingsButton?: boolean; // when true, hide the panel's settings button (e.g. when trigger is in page header)
 }
 
 export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtended>(({ 
@@ -78,7 +80,8 @@ export const DynamicPanel = forwardRef<DynamicPanelRef, DynamicPanelPropsExtende
   // onBadgeChange
   currency,
   isExpanded,
-  onOpenChange
+  onOpenChange,
+  hideSettingsButton = false
 }, ref) => {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(initialPanelConfig);
   const [panelTitle, setPanelTitle] = useState(initialPanelTitle);
@@ -347,7 +350,8 @@ Object.keys(validationErrors).forEach((fieldId) => {
         errors: validationErrors,
         mandatoryFieldsEmpty
       };
-    }
+    },
+    openConfigModal: () => setIsConfigModalOpen(true)
   }), [getValues, panelConfig, errors]);
 
   // Load user configuration on mount
@@ -661,7 +665,7 @@ Object.keys(validationErrors).forEach((fieldId) => {
   }, [isWorkOrderMenuOpen]);
 
   const SettingsButton = () => (
-    !showPreview && isHovered && (
+    !hideSettingsButton && !showPreview && isHovered && (
       <Button
         variant="ghost"
         size="icon"
@@ -767,7 +771,7 @@ Object.keys(validationErrors).forEach((fieldId) => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {showHeader ? (
+        {showHeader && !hideSettingsButton ? (
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-3 px-4 pt-4` +
             (panelTitle === "Order Details" ? " " : " border-b mb-3")
           }>
@@ -967,9 +971,11 @@ Object.keys(validationErrors).forEach((fieldId) => {
             <SettingsButton />
           </CardHeader>
         ) : (
-          <div className="absolute top-2 right-2 z-10">
-            <SettingsButton />
-          </div>
+          !hideSettingsButton && (
+            <div className="absolute top-2 right-2 z-10">
+              <SettingsButton />
+            </div>
+          )
         )}
         
         <CardContent className={`px-4 pb-4 ${!showHeader ? 'pt-8' : ''}`}>

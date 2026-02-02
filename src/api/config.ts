@@ -241,6 +241,13 @@ export const API_ENDPOINTS = {
     SAVE: (userId: string, gridId: string) =>
       `/users/${userId}/preferences/${gridId}`,
   },
+  // Receivables Authorization
+  RECEIVABLES_AUTH: {
+    HUB_SEARCH: "/receivablesauth/hubsearch",
+    GET_DATA: "/managefinance/receivable-invoice-get",
+    SAVE: "/receivablesauth/save",
+    COMBO: "/common/combo",
+  },
   // Claims management
   CLAIMS: {
     GET: "manageclaims/claimget",
