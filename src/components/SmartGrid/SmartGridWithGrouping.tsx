@@ -33,6 +33,13 @@ interface SmartGridWithGroupingProps extends SmartGridProps {
   serverFilterFieldOrder?: string[];
   serverFilterFieldLabels?: Record<string, string>;
   onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
+  // Status filter passthrough
+  showStatusFilter?: boolean;
+  statusOptions?: string[];
+  selectedStatuses?: string[];
+  onToggleStatus?: (status: string) => void;
+  onClearStatusSelection?: () => void;
+  statusCounts?: Record<string, number>;
 }
 
 export function SmartGridWithGrouping({
@@ -57,6 +64,13 @@ export function SmartGridWithGrouping({
   serverFilterFieldOrder,
   serverFilterFieldLabels,
   onServerFilterPreferenceSave,
+  // Status filter passthrough
+  showStatusFilter,
+  statusOptions,
+  selectedStatuses,
+  onToggleStatus,
+  onClearStatusSelection,
+  statusCounts,
   ...props
 }: SmartGridWithGroupingProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -285,6 +299,13 @@ export function SmartGridWithGrouping({
         serverFilterFieldOrder={serverFilterFieldOrder}
         serverFilterFieldLabels={serverFilterFieldLabels}
         onServerFilterPreferenceSave={onServerFilterPreferenceSave}
+        // Status filter passthrough
+        showStatusFilter={showStatusFilter}
+        statusOptions={statusOptions}
+        selectedStatuses={selectedStatuses}
+        onToggleStatus={onToggleStatus}
+        onClearStatusSelection={onClearStatusSelection}
+        statusCounts={statusCounts}
       />
     </div>
   );

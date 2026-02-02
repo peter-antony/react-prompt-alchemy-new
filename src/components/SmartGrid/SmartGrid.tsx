@@ -98,12 +98,25 @@ export function SmartGrid({
   serverFilterFieldLabels,
   onServerFilterPreferenceSave,
   enableExpandCollapseAll = false,
+  // Status filter props (optional)
+  showStatusFilter = false,
+  statusOptions,
+  selectedStatuses,
+  onToggleStatus,
+  onClearStatusSelection,
+  statusCounts,
 }: SmartGridProps & {
   exportFilename?: string;
   serverFilterVisibleFields?: string[];
   serverFilterFieldOrder?: string[];
   serverFilterFieldLabels?: Record<string, string>;
   onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
+  showStatusFilter?: boolean;
+  statusOptions?: string[];
+  selectedStatuses?: string[];
+  onToggleStatus?: (status: string) => void;
+  onClearStatusSelection?: () => void;
+  statusCounts?: Record<string, number>;
 }) {
   const {
     gridData,
@@ -991,6 +1004,66 @@ export function SmartGrid({
           onFilterPreferencesSave={onServerFilterPreferenceSave}
         />
       )}
+
+      {/* Status Filter (render below server-side filter) */}
+      {showStatusFilter && (() => {
+        // Helper: parse numeric amount from row value
+        const getAmountFromRow = (row: any) => {
+          if (!row) return 0;
+          // Prefer explicit key
+          const keysToTry = ['Total_Amount_Exc_VAT'];
+          let v: any = undefined;
+          for (const k of keysToTry) {
+            if (row[k] !== undefined && row[k] !== null) { v = row[k]; break; }
+          }
+          if (v === undefined || v === null) return 0;
+          if (typeof v === 'number') return v as number;
+          if (typeof v === 'string') {
+            // remove non-numeric except dot, comma, minus
+            const cleaned = v.replace(/[^0-9.,-]/g, '');
+            // assume commas are thousand separators -> remove them
+            const normalized = cleaned.replace(/,/g, '');
+            const parsed = parseFloat(normalized);
+            return isNaN(parsed) ? 0 : parsed;
+          }
+          return 0;
+        };
+
+        const totalAmount = (data || []).reduce((sum: number, row: any) => {
+          if (row && row.__isGroupHeader) return sum;
+          return sum + getAmountFromRow(row);
+        }, 0);
+
+        const formatCurrency = (n: number) => `€ ${new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
+
+        return (
+          <div className="px-0 pt-2 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {(statusOptions || []).map((s) => {
+                const count = statusCounts?.[s] ?? data.filter((r: any) => (r?.Status?.value || r?.Status) === s).length;
+                const isSelected = Array.isArray(selectedStatuses) ? selectedStatuses.includes(s) : false;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => onToggleStatus && onToggleStatus(s)}
+                    className={`flex items-center gap-2 px-3 py-1 text-sm rounded-lg border transition-colors ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+                    <span className={`${isSelected ? 'font-semibold text-blue-700' : 'text-gray-600 font-medium'}`}>{s}</span>
+                    <span className={`text-xs ${isSelected ? 'font-semibold text-blue-700' : 'text-gray-600 font-medium'}`}>{count}</span>
+                  </button>
+                );
+              })}
+              {/* {selectedStatuses && selectedStatuses.length > 0 && (
+                <button onClick={() => onClearStatusSelection && onClearStatusSelection()} className="ml-2 text-sm text-red-600 hover:underline">Clear</button>
+              )} */}
+            </div>
+
+            <div className="mt-3 text-sm mb-2 mt-4 flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Total Amount (Excl. VAT):</span>
+              <span className="text-sm font-semibold text-foreground">{formatCurrency(totalAmount)}</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Advanced Filter System */}
       {/* <AdvancedFilter

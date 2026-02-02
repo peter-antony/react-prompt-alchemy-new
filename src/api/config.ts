@@ -270,6 +270,9 @@ export const API_ENDPOINTS = {
     DOCUMENT_SAVE: 'manageclaims/claimdocumentsave',
     FINDINGS_AMEND: 'manageclaims/claimfindingsamend',
     NOTE_CANCEL: 'manageclaims/claimnotecancel',
+  },
+  Receivables: {
+    RECEIVABLES_HUBSEARCH: "managefinance/receivable-hubsearch",
   }
 } as const;
 
