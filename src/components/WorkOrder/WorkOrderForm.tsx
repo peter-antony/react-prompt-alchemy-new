@@ -3026,7 +3026,7 @@ if (formatted.Provider?.includes(" || ")) {
                 <div className="flex gap-4">
                   <div className="lg:col-span-1 w-2/6 ">
                     <div className="bg-white rounded-lg border border-gray-200">
-<div className="p-4 overflow-y-auto no-scrollbar" style={{ height: leftScrollHeight }}>
+                      <div className="overflow-y-auto no-scrollbar" style={{ height: leftScrollHeight }}>
                         <DynamicPanel
                           ref={workOrderPanelRef}
                           panelId="WorkOrder"
@@ -3049,7 +3049,7 @@ if (formatted.Provider?.includes(" || ")) {
                               // No need for manual refresh as the useEffect handles data fetching
                             }
                           }}
-
+                          className="!border-0 !p-0"
                         />
                       </div>
                       {/* Form Actions */}
