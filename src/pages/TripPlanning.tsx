@@ -59,6 +59,7 @@ const TripPlanning = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false)
   const [loadingText, setLoadingText] = useState("");
+  const [isPlanningOpen, setIsPlanningOpen] = useState(true);  // State to expand/collapse the planning details section
 
   const workOrderFlag = searchParams.get('workOrder'); // Extract workOrder flag
   const urlCluster = searchParams.get('cluster'); // Extract cluster from URL
@@ -3481,7 +3482,14 @@ if (!locationStr) {
           </div>
 
           {/* Planning Details Card */}
-          <div className="bg-card border border-border rounded-lg px-6 pt-3 pb-6 mb-6">
+          <div
+            className={cn(
+              "bg-card border border-border rounded-lg px-6 pt-3 mb-6 transition-all",
+              isPlanningOpen ? "pb-6" : "pb-3"
+            )}
+          >
+
+            {/* Header */}
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-medium">Planning Details</h2>
@@ -3499,13 +3507,32 @@ if (!locationStr) {
                 <Badge variant="outline" className="text-muted-foreground">
                   {planDate ? format(planDate, "dd-MMM-yyyy") : ''}
                 </Badge>
-                <Button variant="ghost" size="icon">
-                  <ChevronDown className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title={isPlanningOpen ? "Collapse" : "Expand"}
+                  aria-label={isPlanningOpen ? "Collapse planning details" : "Expand planning details"}
+                  onClick={() => setIsPlanningOpen(prev => !prev)}
+                >
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      !isPlanningOpen && "-rotate-90"
+                    )}
+                  />
                 </Button>
+
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Collapsible Content */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all ",
+                isPlanningOpen ? "max-h-[1000px] " : "max-h-0 "
+              )}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location <span className="text-red-500 ml-1">*</span></label>
                 {/* <DynamicLazySelect
@@ -3651,6 +3678,7 @@ if (!locationStr) {
                 Request Supplier
               </label>
             </div> */}
+            </div>
           </div>
 
           {/* Conditional Content Based on Trip Type */}
