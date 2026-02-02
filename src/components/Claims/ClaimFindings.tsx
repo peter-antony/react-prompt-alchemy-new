@@ -216,7 +216,7 @@ export const ClaimFindings: React.FC<{
           <div className="mb-4">
             <label className="text-xs text-gray-600 font-medium">Final Claim Amount </label>
             <div className="flex items-center">
-              <select disabled value={form.Currency} onChange={e => setForm(f => ({ ...f, Currency: e.target.value, ModeFlag: 'Update' }))} className="rounded-l-md border px-2 py-2 h-9 text-[13px] w-20 mt-1">
+              <select  value={form.Currency} onChange={e => setForm(f => ({ ...f, Currency: e.target.value, ModeFlag: 'Update' }))} className="rounded-l-md border px-2 py-2 h-9 text-[13px] w-20 mt-1">
                 {/* <option>€</option>
                 <option>$</option>
                 <option>£</option> */}
