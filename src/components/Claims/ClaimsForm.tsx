@@ -54,6 +54,10 @@ const ClaimsForm = () => {
 	const [refDocType, setRefDocType] = useState<any>();
 	const [findingsAmendModalOpen, setFindingsAmendModalOpen] = useState(false);
 
+	// validation states
+	const [validationResults, setValidationResults] = useState<Record<string, { isValid: boolean; errors: Record<string, string>; mandatoryFieldsEmpty: string[] }>>({});
+	
+
 	// Modal states
 	const [cancelModalOpen, setCancelModalOpen] = useState(false);
 	const [amendModalOpen, setAmendModalOpen] = useState(false);
@@ -335,25 +339,33 @@ const ClaimsForm = () => {
 	});
 
 	// Helper function to calculate BalanceAmount for each row: BalanceAmount = Amount - ClaimAmount
-	const calculateBalanceAmount = (data: any[]): any[] => {
-		return data.map((row: any) => {
-			const amountVal = row.Amount;
-			const claimAmountVal = row.ClaimAmount;
-			const hasAmount = amountVal != null && amountVal !== "" && !Number.isNaN(parseFloat(String(amountVal)));
-			const hasClaimAmount = claimAmountVal != null && claimAmountVal !== "" && !Number.isNaN(parseFloat(String(claimAmountVal)));
-			// Only calculate when both Amount and ClaimAmount are present; otherwise avoid showing negative
-			let balanceAmountFormatted = 0;
-			if (hasAmount && hasClaimAmount) {
-				const amount = parseFloat(String(amountVal));
-				const claimAmount = parseFloat(String(claimAmountVal));
-				balanceAmountFormatted = Number((amount - claimAmount).toFixed(2));
-			}
-			return {
-				...row,
-				BalanceAmount: balanceAmountFormatted
-			};
-		});
-	};
+	function calculateBalanceAmount(data: any[]) {
+  return data.map(row => {
+    const invoiceAmount = row.Amount;
+    const claimAmount = row.ClaimAmount;
+
+    // ✅ IF invoice amount is missing → balance empty
+    if (
+      invoiceAmount === null ||
+      invoiceAmount === undefined ||
+      invoiceAmount === ''
+    ) {
+      return {
+        ...row,
+        BalanceAmount: ''
+      };
+    }
+
+    // ✅ Claim default to 0 if empty
+    const safeClaim = Number(claimAmount) || 0;
+
+    return {
+      ...row,
+      BalanceAmount: Number(invoiceAmount) - safeClaim
+    };
+  });
+}
+
 
 	// Document Details Grid Columns
 	const documentDetailsColumns: GridColumnConfig[] = [
@@ -663,7 +675,7 @@ const ClaimsForm = () => {
 			});
 		} else if (type === 'Container') {
 			return arr.map((item: any) => {
-				const id = item.ContainerId ?? "";
+				const id = item.ContainerID ?? "";
 				const name = item.ContainerDescription ?? "";
 				if (id && name) return `${id} || ${name}`;
 			});
@@ -692,7 +704,7 @@ const ClaimsForm = () => {
 		},
 		InitiatedBy: {
 			id: "InitiatedBy",
-			label: "Initiate By",
+			label: "Initiated by",
 			fieldType: "lazyselect",
 			width: "four",
 			fetchOptions: fetchMaster("Claims Initiated by Init"),
@@ -1372,6 +1384,29 @@ const ClaimsForm = () => {
 		}
 	}, [searchQuery]);
 
+	 const panelRefs = [
+  { key: "formRef", ref: formRef },
+ 
+];
+const handleValidateAllPanels = () => {
+  const results: Record<string, any> = {};
+  let overallValid = true;
+
+  panelRefs.forEach(({ key, ref }) => {
+    if (!ref.current?.doValidation) return;
+
+    const validationResult = ref.current.doValidation();
+    results[key] = validationResult;
+
+    if (!validationResult.isValid) {
+      overallValid = false;
+    }
+  });
+
+  setValidationResults(results);
+  return overallValid;
+};
+
 	const handleSaveClaim = async () => {
 		// Sync findings
 		syncFormDataToFindings();
@@ -1394,6 +1429,17 @@ const ClaimsForm = () => {
 			{ key: 'ActionResolutionRemark', label: 'Remark for Action/Resolution' },
 			{ key: 'FirstInformationRegister', label: 'First Information Register' },
 		];
+
+		 const isValid = handleValidateAllPanels();
+
+  if (!isValid) {
+    toast({
+      title: "⚠️ Validation Failed",
+      description: "Please fill all mandatory fields",
+      variant: "destructive",
+    });
+    return; // ⛔ STOP SAVE, KEEP DRAWER OPEN
+  }
 
 		const missingFields: string[] = [];
 
@@ -3073,7 +3119,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 										disabled={claimStatus === "Claim Initiated"}
 										onClick={() => {
 											// Handle edit action
-											if (claimStatus === "Claim Initiated") {
+											if (claimStatus === "Claim Initiated" || claimStatus === "Approved") {
 												return; // Prevent action when disabled
 											}
 											console.log("Edit Claims Findings clicked");

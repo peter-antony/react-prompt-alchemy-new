@@ -1199,6 +1199,29 @@ const handleValidateAllPanels = () => {
  const refDocIds = Array.from(
   new Set(localLineItems?.map(item => item.RefDocID).filter(Boolean))
 );
+type RefDoc = {
+  id: string;
+  type: string;
+  date: string;
+};
+
+const refDocs: RefDoc[] = Array.from(
+  (localLineItems ?? []).reduce<Map<string, RefDoc>>((map, item) => {
+    if (!item.RefDocID) return map;
+
+    if (!map.has(item.RefDocID)) {
+      map.set(item.RefDocID, {
+        id: item.RefDocID,
+        type: item.RefDocType,
+        date: item.RefDocDate,
+      });
+    }
+
+    return map;
+  }, new Map()).values()
+);
+
+
 
   return (
     <>
@@ -1339,7 +1362,7 @@ const handleValidateAllPanels = () => {
 
                                 </div>
                               </div>
-                              <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+                              {/* <div className="absolute -right-120 hidden top-5 z-30 group-hover:block min-w-[275px] max-w-xs bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
                                 <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
                                   {"Reference Doc.Details"}
                                 </div>
@@ -1386,7 +1409,47 @@ const handleValidateAllPanels = () => {
 
 
                                 </div>
-                              </div>
+                              </div> */}
+                              <div className="absolute -right-120 hidden top-5 z-30 group-hover:block w-[320px] bg-white rounded-md shadow-xl border border-gray-200 text-xs text-gray-700">
+  <div className="bg-gray-100 px-4 py-2 rounded-t-md font-semibold text-gray-800 border-b border-gray-200">
+    Reference Doc. Details
+  </div>
+
+  {/* Scroll container */}
+  <div className="max-h-64 overflow-y-auto px-4 py-3 space-y-4">
+    {refDocs.map((doc, index) => (
+      <div
+        key={doc.id}
+        className="border border-gray-200 rounded-md p-3 bg-white"
+      >
+        {/* Ref Doc ID */}
+        <div className="text-[11px] text-gray-400 mb-1">
+          Reference Doc. ID
+        </div>
+        <div className="font-semibold text-gray-700 break-all mb-2">
+          {doc.id}
+        </div>
+
+        {/* Ref Doc Type */}
+        <div className="text-[11px] text-gray-400 mb-1">
+          Reference Doc. Type
+        </div>
+        <div className="font-semibold text-gray-700 mb-2">
+          {doc.type}
+        </div>
+
+        {/* Ref Doc Date */}
+        <div className="text-[11px] text-gray-400 mb-1">
+          Reference Doc. Date
+        </div>
+        <div className="font-semibold text-gray-700">
+          {doc.date ? doc.date.split("T")[0] : ""}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
                             </div>
                           </span>
                           <FileText className="w-4 h-4 ml-3 text-gray-400" />
