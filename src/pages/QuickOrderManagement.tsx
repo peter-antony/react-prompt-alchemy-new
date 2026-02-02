@@ -1579,6 +1579,7 @@ const QuickOrderManagement = () => {
                 serverFilterFieldOrder={serverFilterFieldOrder}
                 serverFilterFieldLabels={serverFilterFieldLabels}
                 onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
+                enableExpandCollapseAll={true}
               />
               {/* {!filtersLoading ? ( */}
               {/* ) : ( */}

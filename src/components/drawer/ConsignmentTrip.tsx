@@ -7418,6 +7418,7 @@ export const ConsignmentTrip = ({ legId, selectedLeg, tripData, onClose }: { leg
                             gridId={gridPlanId}
                             userId="current-user"
                             onPreferenceSave={handleGridPreferenceSave}
+                            enableExpandCollapseAll={true}
                           />
                         </div>
                       )}

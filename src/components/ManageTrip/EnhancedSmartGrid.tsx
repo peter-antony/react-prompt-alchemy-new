@@ -329,6 +329,7 @@ export const EnhancedSmartGrid = () => {
           editableColumns={true}
           paginationMode="pagination"
           customPageSize={10}
+          enableExpandCollapseAll={true}
           onRowClick={(row) => {
             console.log('Nested Row clicked:', row);
             // Pass the selected row data (which should contain LegSequence) to the drawer

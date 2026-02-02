@@ -935,6 +935,7 @@ export const ReportSearchHub = () => {
               serverFilterFieldOrder={serverFilterFieldOrder}
               serverFilterFieldLabels={serverFilterFieldLabels}
               onServerFilterPreferenceSave={handleServerFilterPreferenceSave}
+              enableExpandCollapseAll={true}
             />
           ) : (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">

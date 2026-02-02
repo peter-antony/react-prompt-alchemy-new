@@ -779,6 +779,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
                 gridId={gridId}
                 userId="current-user"
                 api={filterService}
+                enableExpandCollapseAll={true}
               />
             ) : (
               <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm">

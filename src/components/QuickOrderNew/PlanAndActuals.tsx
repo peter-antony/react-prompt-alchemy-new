@@ -759,6 +759,7 @@ const PlanAndActuals: React.FC<PlanAndActualsProps> = ({ view, resouceId, isEdit
                       gridId="Plan-actuals-management"
                       userId="current-user"
                       api={undefined}
+                      enableExpandCollapseAll={true}
                     />
                   </div>
                 </div>
