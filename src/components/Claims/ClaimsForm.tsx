@@ -337,10 +337,17 @@ const ClaimsForm = () => {
 	// Helper function to calculate BalanceAmount for each row: BalanceAmount = Amount - ClaimAmount
 	const calculateBalanceAmount = (data: any[]): any[] => {
 		return data.map((row: any) => {
-			const amount = parseFloat(row.Amount) || 0;
-			const claimAmount = parseFloat(row.ClaimAmount) || 0;
-			const balanceAmount = amount - claimAmount;
-			const balanceAmountFormatted = Number((balanceAmount).toFixed(2));
+			const amountVal = row.Amount;
+			const claimAmountVal = row.ClaimAmount;
+			const hasAmount = amountVal != null && amountVal !== "" && !Number.isNaN(parseFloat(String(amountVal)));
+			const hasClaimAmount = claimAmountVal != null && claimAmountVal !== "" && !Number.isNaN(parseFloat(String(claimAmountVal)));
+			// Only calculate when both Amount and ClaimAmount are present; otherwise avoid showing negative
+			let balanceAmountFormatted = 0;
+			if (hasAmount && hasClaimAmount) {
+				const amount = parseFloat(String(amountVal));
+				const claimAmount = parseFloat(String(claimAmountVal));
+				balanceAmountFormatted = Number((amount - claimAmount).toFixed(2));
+			}
 			return {
 				...row,
 				BalanceAmount: balanceAmountFormatted
@@ -732,7 +739,7 @@ const ClaimsForm = () => {
 			width: "four",
 			fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
 			value: "",
-			mandatory: false,
+			mandatory: true,
 			visible: true,
 			editable: true,
 			order: 4
@@ -1381,15 +1388,11 @@ const ClaimsForm = () => {
 			{ key: 'ClaimDate', label: 'Claim Date' },
 			{ key: 'CurrencyAmount', label: 'Claim Amount', type: 'inputdropdown' },
 			{ key: 'IncidentType', label: 'Incident Type' },
+			{ key: 'IncidentLocation', label: 'Incident Location' },
 			{ key: 'WBS', label: 'WBS' },
 			{ key: 'ActionResolution', label: 'Action/ Resolution' },
 			{ key: 'ActionResolutionRemark', label: 'Remark for Action/Resolution' },
 			{ key: 'FirstInformationRegister', label: 'First Information Register' },
-			{ key: 'Remark1', label: 'Remarks 1' },
-			{ key: 'Remark2', label: 'Remarks 2' },
-			{ key: 'Remark3', label: 'Remarks 3' },
-			{ key: 'Remark4', label: 'Remarks 4' },
-			{ key: 'Remark5', label: 'Remarks 5' },
 		];
 
 		const missingFields: string[] = [];
@@ -3157,7 +3160,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 
 											{/* Right side: Edit Button and Chevron */}
 											<div className="flex items-center gap-2">
-												<Button
+												{/* <Button
 													variant="outline"
 													size="icon"
 													className="h-9 w-9 rounded-md border-gray-300 hover:bg-gray-50"
@@ -3168,7 +3171,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 													}}
 												>
 													<SquarePen className="h-4 w-4 text-gray-600" />
-												</Button>
+												</Button> */}
 												{isDocumentDetailsOpen ? (
 													<ChevronUp className="h-5 w-5 text-gray-600" />
 												) : (
@@ -3482,12 +3485,15 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsSave}>
 									Document Save Details
 								</button>
-								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
-									Generate Note
-								</button>
-								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
-									Note Cancel
-								</button>
+								{apiResponse.Document.Details.some((d: any) => d?.CreditNoteNumber != null && String(d.CreditNoteNumber).trim() !== "") ? (
+									<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
+										Note Cancel
+									</button>
+								) : (
+									<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
+										Generate Note
+									</button>
+								)}
 							</>
 						)}
 						{/* <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
