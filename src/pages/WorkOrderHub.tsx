@@ -540,7 +540,7 @@ export const WorkOrderHub = () => {
             value: row.WorkOrderStatus,
             variant: getStatusColorLocal(row.WorkOrderStatus),
           },
-          CreationDate: (row.CreatedBy ?? '--') + ' || ' + dateFormatter(row.CreationDate),
+          CreationDate: (row.CreatedBy ?? '--') + ' || ' + dateFormatter(row.CreationDate) ,
           WorkOrderFrom: formatDateRange(row.WorkOrderFrom, row.WorkOrderTo),
           SupplierName: pipedData(row.SupplierID, row.SupplierDescription),
           CustomerContract: pipedData(row.CustomerContractID, row.CustomerContractDescription),
