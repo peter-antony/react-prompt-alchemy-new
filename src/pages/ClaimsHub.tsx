@@ -464,7 +464,7 @@ export const ClaimsHub = () => {
       width: 50,
       sortable: true,
       editable: false,
-      subRow: true
+      subRow: false
     },
     {
       key: "AdjustmentDocumentInvoiceNo",
@@ -472,7 +472,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true
+      subRow: false
     },
     {
       key: "InvoiceAmount",
@@ -480,7 +480,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true
+      subRow: false
     },
     {
       key: "BalanceInvoiceAmount",
@@ -488,7 +488,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "Currency",
@@ -496,7 +496,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "WBS",
@@ -504,7 +504,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "CustomerOrderNo",
@@ -512,7 +512,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "AssignedUser",
@@ -520,7 +520,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "MatchingStatus",
@@ -528,7 +528,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "ClaimantRefNo",
@@ -536,7 +536,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "SupplierNoteNo",
@@ -544,7 +544,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "DraftBillNo",
@@ -552,7 +552,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "SecondaryRefNo",
@@ -560,7 +560,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "Remark1",
@@ -568,7 +568,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "Remark2",
@@ -576,7 +576,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "Remark3",
@@ -584,7 +584,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QC1",
@@ -592,7 +592,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QCValue1",
@@ -600,7 +600,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QC2",
@@ -608,7 +608,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QCValue2",
@@ -616,7 +616,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QC3",
@@ -624,7 +624,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "QCValue3",
@@ -632,7 +632,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "InitiatedBy",
@@ -640,7 +640,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "ExpectedDocument",
@@ -648,7 +648,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
     {
       key: "ForwardisFinancialAction",
@@ -656,7 +656,7 @@ export const ClaimsHub = () => {
       type: "Text",
       sortable: true,
       editable: false,
-      subRow: true,
+      subRow: false,
     },
   ];
 
@@ -721,6 +721,11 @@ export const ClaimsHub = () => {
             value: row.ClaimStatus,
             variant: getStatusColorLocal(row.ClaimStatus),
           },
+          Counterparty: pipedData(row.Counterparty, row.CounterpartyDescription),
+          ActionResolution: pipedData(row.ActionResolution, row.ActionResolutionDescription),
+          InitiatedBy: pipedData(row.InitiatedBy, row.InitiatedbyDescription),
+          ExpectedDocument: pipedData(row.ExpectedDocument, row.ExpectedDocumentDescription),
+          ForwardisFinancialAction: pipedData(row.ForwardisFinancialAction, row.ForwardisFinancialActionDescription),
           BusinessPartnerID: pipedData(row.BusinessPartnerID, row.BusinessPartnerName),
           NoteType: pipedData(row.NoteType, row.NoteNo)
         }
@@ -1161,6 +1166,11 @@ export const ClaimsHub = () => {
             value: row.ClaimStatus,
             variant: getStatusColorLocal(row.ClaimStatus),
           },
+          Counterparty: pipedData(row.Counterparty, row.CounterpartyDescription),
+          ActionResolution: pipedData(row.ActionResolution, row.ActionResolutionDescription),
+          InitiatedBy: pipedData(row.InitiatedBy, row.InitiatedbyDescription),
+          ExpectedDocument: pipedData(row.ExpectedDocument, row.ExpectedDocumentDescription),
+          ForwardisFinancialAction: pipedData(row.ForwardisFinancialAction, row.ForwardisFinancialActionDescription),
           BusinessPartnerID: pipedData(row.BusinessPartnerID, row.BusinessPartnerName),
           NoteType: pipedData(row.NoteType, row.NoteNo)
         };
