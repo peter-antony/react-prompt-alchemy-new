@@ -639,7 +639,7 @@ const ClaimsForm = () => {
 					return arr
 						.filter(
 							(item: any) =>
-								item?.ResourceType?.toLowerCase() === "thu"
+								item?.ResourceType?.toLowerCase() === "thuid"
 						)
 						.map((item: any) => ({
 							label: `${item.ResourceID} || ${item.ResourceDescription}`,
