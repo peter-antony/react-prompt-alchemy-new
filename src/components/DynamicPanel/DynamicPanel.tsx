@@ -584,7 +584,7 @@ Object.keys(validationErrors).forEach((fieldId) => {
                   control={control}
                   //  validationErrors={panelValidationErrors} 
                   fieldId={fieldId}
-                  tabIndex={tabIndex}
+                  // tabIndex={tabIndex}
                    currency={currency}
                   validationErrors={panelValidationErrors}
                   mandatory={config.mandatory}
@@ -615,7 +615,7 @@ Object.keys(validationErrors).forEach((fieldId) => {
                   control={control}
                   //  validationErrors={panelValidationErrors} 
                   fieldId={fieldId}
-                  tabIndex={tabIndex}
+                  // tabIndex={tabIndex}
                   currency={currency}
                   validationErrors={panelValidationErrors}
                   // Pass mandatory info
