@@ -76,7 +76,7 @@ const mapApiResourceToResource = (apiResource: any): Resource => {
   } else if (apiResource.ResourceType === 'Supplier') {
     resourceType = 'Supplier';
   } else if (apiResource.ResourceType === 'Agent') {
-    resourceType = 'Agent';
+    resourceType = 'Supplier';
   } else if (apiResource.ResourceType === 'Driver') {
     resourceType = 'Driver';
   } else if (apiResource.ResourceType === 'Vehicle') {
