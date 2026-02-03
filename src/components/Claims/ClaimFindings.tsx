@@ -28,6 +28,16 @@ export const ClaimFindings: React.FC<{
   const [currencyList, setCurrencyList] = useState<any>();
   const { toast } = useToast();
 
+  const clearValue = () => {
+  setForm((f) => ({
+    ...f,
+    SupplierNoteCurrency: 'EUR',
+    SupplierNoteAmount: '',
+    ModeFlag: '',
+  }));
+};
+
+
   useEffect(() => {
     const loadQcMasters = async () => {
       try {
@@ -58,10 +68,11 @@ export const ClaimFindings: React.FC<{
         CreditNoteBasedOnAdjustmentDoc: apiData?.ClaimFindings?.CreditNoteBasedOnAdjustmentDoc,
         FinalClaimAmount: apiData?.ClaimFindings?.FinalClaimAmount,
         Currency: apiData?.ClaimFindings?.Currency.trim(),
+          // SupplierNoteCurrency: apiData?.ClaimFindings?.Currency.trim(),
         CommentRemark: apiData?.ClaimFindings?.CommentRemark,
         SupplierNoteNo: apiData?.ClaimFindings?.SupplierNoteNo,
         SupplierNoteAmount: apiData?.ClaimFindings?.SupplierNoteAmount,
-        // supplierCurrency: apiData?.ClaimFindings?.Currency || "€",
+        SupplierNoteCurrency: apiData?.ClaimFindings?.SupplierNoteCurrency || "EUR",
       });
       return;
     }
@@ -153,6 +164,7 @@ export const ClaimFindings: React.FC<{
           variant: "default",
         });
         onClose();
+        clearValue();
         onSuccessCallback()
         // Refresh claim data after successful short close
       } else {
@@ -261,16 +273,32 @@ export const ClaimFindings: React.FC<{
               <div className="mb-2">
                 <label className="text-xs text-gray-600 font-medium">Supplier Note Amount</label>
                 <div className="flex items-center">
-                  <select disabled value={form.Currency} onChange={e => setForm(f => ({ ...f, Currency: e.target.value, ModeFlag: 'Update' }))} className="rounded-l-md border px-2 py-2 h-9 text-[13px] w-20 mt-1">
-                    {/* <option>€</option>
-                  <option>$</option>
-                  <option>£</option> */}
+                  {/* <select  value={form.Currency} onChange={e => setForm(f => ({ ...f, Currency: e.target.value, ModeFlag: 'Update' }))} className="rounded-l-md border px-2 py-2 h-9 text-[13px] w-20 mt-1">
+                  
                     {currencyList?.map((currency: any) => (
                       <option key={currency.value} value={currency.value}>
                         {currency.value}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <select
+  value={form.SupplierNoteCurrency}
+  onChange={(e) =>
+    setForm((f) => ({
+      ...f,
+      SupplierNoteCurrency: e.target.value,
+      ModeFlag: 'Update',
+    }))
+  }
+  className="rounded-l-md border px-3 py-2 h-9 text-[13px] mt-1"
+>
+  {currencyList?.map((currency: any) => (
+    <option key={currency.value} value={currency.value}>
+      {currency.value}
+    </option>
+  ))}
+</select>
+
                   <input type="number" min={0} value={form.SupplierNoteAmount} onChange={e => setForm(f => ({ ...f, SupplierNoteAmount: e.target.value, ModeFlag: 'Update' }))} className="flex-1 rounded-r-md border border-l-0 px-3 py-2 h-9 text-[13px] mt-1" />
                 </div>
               </div>

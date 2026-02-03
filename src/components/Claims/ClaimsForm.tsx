@@ -426,7 +426,7 @@ const ClaimsForm = () => {
 		{
 			key: 'Amount',
 			label: 'Invoice Amount',
-			type: 'CurrencyWithSymbol',
+			type: 'Integer',
 			sortable: false,
 			editable: false,
 			width: 150
@@ -710,6 +710,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claims Initiated by Init"),
 			value: "",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 2
@@ -722,6 +723,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claims Counter Party Init"),
 			value: "",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 3,
@@ -752,6 +754,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claims Forwardis Financial Action Init"),
 			value: "",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 4
@@ -764,6 +767,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claims Expected Document Init"),
 			value: "",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 5
@@ -799,6 +803,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claim Category Init"),
 			value: "",
 			mandatory: false,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 8
@@ -837,6 +842,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claim Incident Type Init"),
 			value: "",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 11
@@ -872,6 +878,7 @@ const ClaimsForm = () => {
 			fetchOptions: fetchMaster("Claim Ref Doc Type Init"),
 			value: "",
 			mandatory: false,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 14,
@@ -1005,6 +1012,7 @@ const ClaimsForm = () => {
 			maxLength: 255,
 			placeholder: "Enter Remark for Action/Resolution",
 			mandatory: true,
+			hideSearch: true,
 			visible: true,
 			editable: true,
 			order: 22
@@ -1071,6 +1079,7 @@ const ClaimsForm = () => {
 			fieldType: "inputdropdown",
 			width: "four",
 			mandatory: false,
+			
 			visible: true,
 			editable: true,
 			value: {
@@ -3235,7 +3244,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 												<div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
 													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Invoice Amount</label>
 													<span className="text-lg font-semibold text-purple-600">
-														€ {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)}
+														 {apiResponse?.Document?.Summary?.TotalInvoiceAmount?.toFixed(2)  || "--"}
 													</span>
 												</div>
 
@@ -3243,7 +3252,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 												<div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
 													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Claim Amount</label>
 													<span className="text-lg font-semibold text-pink-600">
-														€ {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)}
+														 {apiResponse?.Document?.Summary?.TotalClaimAmount?.toFixed(2)  || "--"}
 													</span>
 												</div>
 
@@ -3251,7 +3260,7 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 												<div className="bg-green-50 rounded-lg p-4 border border-green-200">
 													<label className="text-xs text-gray-700 font-medium mb-1 block">Total Balance Amount</label>
 													<span className="text-lg font-semibold text-green-600">
-														€ {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2)}
+														 {apiResponse?.Document?.Summary?.TotalBalanceAmount?.toFixed(2) || "--"}
 													</span>
 												</div>
 											</div>
@@ -3531,15 +3540,28 @@ const handleClaimFindingsAmendSubmit = async (formFields: any) => {
 								<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsSave}>
 									Document Save Details
 								</button>
-								{apiResponse.Document.Details.some((d: any) => d?.CreditNoteNumber != null && String(d.CreditNoteNumber).trim() !== "") ? (
-									<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleNoteCancel}>
-										Note Cancel
-									</button>
-								) : (
-									<button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={handleGenerateNote}>
-										Generate Note
-									</button>
-								)}
+				{
+  apiResponse?.Document?.Details?.some(
+    (d: any) =>
+      (d?.SupplierNoteNo != null && String(d.SupplierNoteNo).trim() !== "") ||
+      (d?.CreditNoteNumber != null && String(d.CreditNoteNumber).trim() !== "")
+  ) ? (
+    <button
+      className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm"
+      onClick={handleNoteCancel}
+    >
+      Note Cancel
+    </button>
+  ) : (
+    <button
+      className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm"
+      onClick={handleGenerateNote}
+    >
+      Generate Note
+    </button>
+  )
+}
+
 							</>
 						)}
 						{/* <button className="inline-flex items-center justify-center whitespace-nowrap bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 font-semibold transition-colors h-8 px-3 text-[13px] rounded-sm" onClick={documentDetailsShowPanel}>
