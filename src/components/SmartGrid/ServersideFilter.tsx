@@ -497,7 +497,8 @@ export function ServersideFilter({
                   }
                 }}
                 multiSelect={filter.multiSelect}
-                placeholder={`Select ${label.toLowerCase()}...`}
+                placeholder={``}
+                // placeholder={`Select ${label.toLowerCase()}...`}
                 hideSearch={filter.hideSearch}
                 disableLazyLoading={filter.disableLazyLoading}
                 returnType={filter.returnType} // 👈 Pass from config to LazySelect

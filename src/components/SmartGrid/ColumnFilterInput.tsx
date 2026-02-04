@@ -395,7 +395,7 @@ export function ColumnFilterInput({
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
-                <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem>
+                {/* <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem> */}
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
@@ -457,7 +457,7 @@ export function ColumnFilterInput({
                   <CalendarIcon className="mr-2 h-3 w-3" />
                   {localValue?.from
                     ? format(new Date(localValue.from), "dd/MM/yyyy")
-                    : "From date"
+                    : ""
                   }
                 </Button>
               </PopoverTrigger>
@@ -493,7 +493,7 @@ export function ColumnFilterInput({
                   <CalendarIcon className="mr-2 h-3 w-3" />
                   {localValue?.to
                     ? format(new Date(localValue.to), "dd/MM/yyyy")
-                    : "To date"
+                    : ""
                   }
                 </Button>
               </PopoverTrigger>
@@ -535,7 +535,7 @@ export function ColumnFilterInput({
                   e.preventDefault();
                 }
               }}
-              placeholder="From"
+              // placeholder="From"
               className="h-7 text-xs flex-1"
               type="number"
             />
@@ -562,7 +562,7 @@ export function ColumnFilterInput({
                   }, 0);
                 }
               }}
-              placeholder="To"
+              // placeholder="To"
               className="h-7 text-xs flex-1"
               type="number"
             />
@@ -587,7 +587,7 @@ export function ColumnFilterInput({
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg z-50">
-                <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem>
+                {/* <SelectItem value="__all__" className="text-xs">Select {column?.label.toLowerCase()}</SelectItem> */}
                 {column.options?.map((option: any, index) => (
                   option.name ? (
                     <SelectItem key={(option.name || option.label || option) + '-' + index}
@@ -605,7 +605,7 @@ export function ColumnFilterInput({
               value={textValue}
               onChange={(e) => handleDropdownTextChange('', e.target.value, 'text')}
               onFocus={() => setDropdownMode('text')}
-              placeholder="Type text..."
+              // placeholder="Type text..."
               className="h-7 text-xs flex-1"
             />
                 {/* className={cn(
@@ -629,7 +629,7 @@ export function ColumnFilterInput({
             value={localValue}
             onChange={(e) => handleValueChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Filter ${column.label.toLowerCase()}...`}
+            // placeholder={`Filter ${column.label.toLowerCase()}...`}
             className="h-7 text-xs"
           />
           //     className={cn(
