@@ -307,6 +307,8 @@ export function SmartGridWithNestedRows({
                       editableColumns={nestedSectionConfig.editableColumns}
                       onInlineEdit={nestedSectionConfig.onInlineEdit
                         ? async (nestedRowIndex, updatedRow) => {
+                          console.log("updatedRow", updatedRow);
+                          console.log("nestedRowIndex", nestedRowIndex);
                             nestedSectionConfig.onInlineEdit!(rowIndex, nestedRowIndex, updatedRow);
                             // Trigger server callback if provided
                             if (nestedSectionConfig.onServerUpdate) {

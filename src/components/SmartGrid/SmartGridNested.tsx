@@ -749,12 +749,14 @@ const handleExpandCollapseAll = useCallback(() => {
 
   // Cell editing functions
   const handleCellEdit = useCallback(async (rowIndex: number, columnKey: string, value: any) => {
-    const actualRowIndex = onDataFetch ? rowIndex : (currentPage - 1) * pageSize + rowIndex;
+    const displayedRow = paginatedData[rowIndex];
+    if (!displayedRow) return;
+    const updatedRow = { ...displayedRow, [columnKey]: value };
     const updatedData = [...gridData];
-    const originalRow = updatedData[actualRowIndex];
-    const updatedRow = { ...originalRow, [columnKey]: value };
-
-    updatedData[actualRowIndex] = updatedRow;
+    const fullDataIndex = gridData.findIndex((r) => r === displayedRow);
+    const indexToUpdate = fullDataIndex !== -1 ? fullDataIndex : (onDataFetch ? rowIndex : (currentPage - 1) * pageSize + rowIndex);
+    const originalRow = updatedData[indexToUpdate];
+    updatedData[indexToUpdate] = updatedRow;
     setGridData(updatedData);
     setEditingCell(null);
 
@@ -768,7 +770,7 @@ const handleExpandCollapseAll = useCallback(() => {
           description: "Row updated successfully"
         });
       } catch (err) {
-        updatedData[actualRowIndex] = originalRow;
+        updatedData[indexToUpdate] = originalRow;
         setGridData(updatedData);
         setError('Failed to update row');
         toast({
@@ -781,9 +783,9 @@ const handleExpandCollapseAll = useCallback(() => {
         setLoading(false);
       }
     } else if (onInlineEdit) {
-      onInlineEdit(actualRowIndex, updatedRow);
+      onInlineEdit(indexToUpdate, updatedRow);
     }
-  }, [gridData, currentPage, pageSize, onInlineEdit, onUpdate, onDataFetch, toast, setGridData, setEditingCell, setLoading, setError]);
+  }, [gridData, paginatedData, currentPage, pageSize, onInlineEdit, onUpdate, onDataFetch, toast, setGridData, setEditingCell, setLoading, setError]);
 
   const handleEditStart = useCallback((rowIndex: number, columnKey: string) => {
     setEditingCell({ rowIndex, columnKey });

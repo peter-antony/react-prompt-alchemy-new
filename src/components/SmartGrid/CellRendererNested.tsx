@@ -244,7 +244,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
 
   // Simple text renderer with inline editing support
   const renderTextData = () => {
-    if (isEditing) {
+    if (isEditable) {
       return (
         <Input
           type="text"

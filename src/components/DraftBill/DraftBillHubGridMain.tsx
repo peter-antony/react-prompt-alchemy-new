@@ -2652,16 +2652,22 @@ console.log("updatedItemDetails", updatedItemDetails);
         }
     };
 
-    // Handler to update main trip row
-  const handleTripInlineEdit = (rowIndex: number, updatedRow: any) => {
-    console.log('Inline edit at row index:', rowIndex, 'with data:', updatedRow);
-    console.log('Previous row data:', gridState.gridData);
-    
-    // Update the grid data by merging the updated row with existing row data
+    // Handler to update main trip row by DraftBillNo (not by rowIndex).
+  // Finds the row in the full grid data that matches the edited row's DraftBillNo and updates that row.
+  const handleTripInlineEdit = (_rowIndex: number, updatedRow: any) => {
+    console.log("updatedRow", updatedRow);
+    console.log("_rowIndex", _rowIndex);
+    const draftBillNo = updatedRow?.DraftBillNo ?? updatedRow?.id;
+    console.log("draftBillNo", draftBillNo);
+    if (draftBillNo == null) return;
+
     gridState.setGridData((prevData) => {
       const newData = [...prevData];
-      if (newData[rowIndex]) {
-        newData[rowIndex] = { ...newData[rowIndex], ...updatedRow };
+      const index = newData.findIndex(
+        (row: any) => (row?.DraftBillNo ?? row?.id) === draftBillNo
+      );
+      if (index !== -1) {
+        newData[index] = { ...newData[index], ...updatedRow };
       }
       return newData;
     });

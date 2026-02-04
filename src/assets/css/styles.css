@@ -107,6 +107,28 @@ body::-webkit-scrollbar-thumb {
   background: #ced1d3;
   border-radius: 10px;
 }
+
+/* Table horizontal scrollbar: smaller size, custom color */
+.table-scroll-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #ccd3dc #fff;
+}
+.table-scroll-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 5px;
+}
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: #fff;
+  border-radius: 4px;
+}
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #ccd3dc;
+  border-radius: 4px;
+}
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .font-color-100 {
   color: var(--font-color-100);
 }
