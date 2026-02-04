@@ -2626,7 +2626,35 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
       editable: true,
       order: 4,
       inputType: 'number',
-      maxLength: 28
+      maxLength: 28,
+      events: {
+        onChange: (value) => {
+          const billingQtyRaw = billingDetailsRef.current?.getFormValues()?.BillingQty || 0;
+          const unitPriceRaw = value || 0;
+
+          // Helper to clean and parse currency/number strings
+          const parseValue = (val) => {
+            if (!val) return 0;
+            // Remove text chars like EUR, keep digits, dot, comma, minus
+            // Then replace comma with dot for standard parsing
+            const clean = String(val).replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+            return parseFloat(clean) || 0;
+          };
+
+          const billingQty = parseValue(billingQtyRaw);
+          const unitPrice = parseValue(unitPriceRaw);
+
+          const netAmount = (billingQty * unitPrice);
+          // Format back for display (dot to comma for consistency with initial data)
+          const formattedNetAmount = netAmount.toFixed(2).replace('.', ',');
+
+          if (billingDetailsRef.current) {
+            billingDetailsRef.current.setFormValues({
+              NetAmount: formattedNetAmount
+            });
+          }
+        }
+      }
     },
     BillingQty: {
       id: 'BillingQty',
@@ -2640,6 +2668,30 @@ const saveUserPanelConfig_billingDetails = async (userId: string, panelId: strin
       width: 'half',
       maxLength: 28,
       inputType: 'number',
+      events: {
+        onChange: (value) => {
+          const unitPriceRaw = billingDetailsRef.current?.getFormValues()?.UnitPrice || 0;
+          const billingQtyRaw = value || 0;
+
+          const parseValue = (val) => {
+            if (!val) return 0;
+            const clean = String(val).replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+            return parseFloat(clean) || 0;
+          };
+
+          const unitPrice = parseValue(unitPriceRaw);
+          const billingQty = parseValue(billingQtyRaw);
+
+          const netAmount = (billingQty * unitPrice);
+          const formattedNetAmount = netAmount.toFixed(2).replace('.', ',');
+
+          if (billingDetailsRef.current) {
+            billingDetailsRef.current.setFormValues({
+              NetAmount: formattedNetAmount
+            });
+          }
+        }
+      }
     },
     Tariff: {
       id: 'Tariff',

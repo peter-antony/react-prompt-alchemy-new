@@ -373,7 +373,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
       label: 'Quick Order Date',
       fieldType: 'date',
       width: 'half',
-      value: new Date().toISOString().split("T")[0], // today's date
+      value: isEditQuickOrder ? '' : new Date().toISOString().split("T")[0], // if Edit - api data, else current date
       mandatory: true,
       visible: true,
       editable: true,

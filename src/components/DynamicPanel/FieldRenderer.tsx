@@ -259,6 +259,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               // }
 
               field.onChange(value);
+              // Also call the event handler defined in config
+              events?.onChange?.(value, e);
             };
             return (
               <div>
