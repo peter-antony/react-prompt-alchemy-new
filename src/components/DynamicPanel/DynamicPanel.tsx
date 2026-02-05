@@ -382,7 +382,8 @@ Object.keys(validationErrors).forEach((fieldId) => {
                 mandatory: initialField.mandatory, // Prioritize code-defined validation
                 inputType: initialField.inputType, // Prioritize code-defined validation
                 fieldType: initialField.fieldType, // Prioritize code-defined structure
-                options: initialField.options // Prioritize code-defined options
+                options: initialField.options, // Prioritize code-defined options
+                visible: initialField.visible // Code-defined visibility (e.g. OrderType-based) wins over saved user config
               };
             });
             setPanelConfig(mergedConfig);

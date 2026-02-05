@@ -249,7 +249,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'DBTotalValue',
-            label: 'DB Total Value',
+            label: 'DB Proposed',
             type: 'CurrencyWithSymbol',
             sortable: true,
             filterable: true,

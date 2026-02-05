@@ -683,7 +683,7 @@ const DraftBillDetailsSideDraw: React.FC<DraftBillDetailsSideDrawProps> = ({
           variant: "default",
         });
         setIsAmendModalOpen(false);
-        onClose();
+        // onClose();
          
       } else {
         console.log("error as any ===", (response as any)?.data?.Message);
@@ -953,7 +953,7 @@ const handleValidateAllPanels = () => {
           variant: "default",
         });
         // Set the draft bill data in state
-        onClose();
+        // onClose();
          fetchDraftBills();
       } else {
         // throw new Error("Failed to fetch draft bill details");
