@@ -1146,8 +1146,9 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
     }
     return newObj;
   }
-
+  
   const handleCOToTrip = async () => {
+    setApiStatus('loading');
     console.log("handleCOToTrip - Original selectedRowObjects ===", selectedRowObjects);
     console.log("handleCOToTrip - selectedTripData.CustomerOrders ===", selectedTripData?.CustomerOrders);
 
@@ -1163,6 +1164,8 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
       Header: {
         TripNo: selectedTripData?.Header?.TripNo,
       },
+       
+
       CustomerOrders: [
         ...existingCustomerOrders.map((order:any) => {
           return {
@@ -1200,6 +1203,7 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
       // Check for error in parsed ResponseData even if IsSuccess is true
       if (parsedResponseData?.error) {
         const { errorCode, errorMessage } = parsedResponseData.error;
+         setApiStatus('error');
         toast({
           title: errorCode || "Error",
           description: errorMessage || Message || "Failed to save CO",
@@ -1208,7 +1212,8 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
         return;
       }
 
-      if(!IsSuccess) {
+      if(!IsSuccess) { 
+  setApiStatus('error');
         toast({
           title: "Error",
           description: Message || "Failed to save CO",
@@ -1219,6 +1224,7 @@ export const AddCOToTripSidedraw: React.FC<AddCOToTripSidedrawProps> = ({
 
       // If IsSuccess is true and no error in ResponseData, show success
       if (IsSuccess) {
+            setApiStatus('success');
         toast({
           title: "Success",
           description: Message || "",

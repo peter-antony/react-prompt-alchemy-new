@@ -1095,15 +1095,15 @@ if (hasError) {
                         /> */}
 
                         <DynamicLazySelect
-  fetchOptions={fetchIncidentCause}
-  value={formData.CauseCode}
+  fetchOptions={fetchIncidentAccident}
+  value={formData.AccidentType}
   onChange={(value) => {
     const val = (value ?? "").toString().trim();
-    setFormData({ ...formData, CauseCode: value as string });
-    if (val) setCauseCodeError(false);
+    setFormData({ ...formData, AccidentType: value as string });
+    if (val) setAccidentTypeError(false);
   }}
-  error={causeCodeError}
-  placeholder="Select Cause Code"
+  error={accidentTypeError}
+  placeholder="Select Accident Type "
 />
 
                       </div>
