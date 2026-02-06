@@ -1322,11 +1322,11 @@ const refDocs: RefDoc[] = Array.from(
                       <div className="grid grid-cols-2 gap-y-2 mb-4">
                         <div>
                           <p className="text-sm text-gray-500">Total Proposed</p>
-                          <p className="text-base font-medium text-purple-600">EUR {localHeaderData?.DBAcceptedValue}</p>
+                          <p className="text-base font-medium text-purple-600">EUR {localHeaderData?.DBTotalValue}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Total Accepted</p>
-                          <p className="text-base font-medium text-green-600">EUR {localHeaderData?.DBTotalValue}</p>
+                          <p className="text-base font-medium text-green-600">EUR {localHeaderData?.DBAcceptedValue}</p>
                         </div>
                       </div>
                       <div className="space-y-3">

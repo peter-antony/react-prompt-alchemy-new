@@ -642,6 +642,7 @@ if (!formReadyRef.current) {
         //   { value: "Reason B", label: "Reason B" },
         // ],
         value: "",
+        required: true,
         options: reasonCodeTypeList?.filter((qc: any) => qc.id).map(c => ({ label: `${c.id} || ${c.name}`, value: c.id })),
         // events: {
         //   onChange: (value, event) => {

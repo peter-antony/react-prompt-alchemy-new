@@ -2098,7 +2098,13 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
 
   const [showTooltip, setShowTooltip] = useState(false);
 
-
+  const quickOrderAttachments = jsonStore.getQuickOrder()?.Attachments;
+  const totalAttachmentCount = Array.isArray(quickOrderAttachments) && quickOrderAttachments.length > 0
+    ? Number(quickOrderAttachments[0]?.TotalAttachment ?? quickOrderAttachments[0]?.totalAttachment ?? 0)
+    : 0;
+  const hasAttachments = totalAttachmentCount > 0;
+  console.log("totalAttachmentCount", totalAttachmentCount);
+  console.log("hasAttachments", hasAttachments);
   return (
     <>
       <div className="lg:col-span-1 w-2/6">
@@ -2144,8 +2150,11 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
             {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setMoreInfoOpen(true)}>
               <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
             </button> */}
-            <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
+            <button className="relative p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)}>
               <Paperclip className="w-5 h-5 text-gray-600" />
+              {hasAttachments && (
+                <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-green-600 ring-2 ring-white shadow-sm" aria-hidden />
+              )}
             </button>
             <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Amendment History" onClick={(e) => setHistoryOpen(true)}>
               <BookX className="w-5 h-5 text-gray-600" />
