@@ -157,7 +157,38 @@ const TripPlanning = () => {
 const [locationError, setLocationError] = useState(false);
 
   const { hasAlert, setAlert, clearAlert, colorClass } = useTrainParametersAlertStore();
+  const [hasAttachments, setHasAttachments] = useState(false);
   const tripId: any = tripData?.Header?.TripNo || urlTripID || tripNo;
+
+  // Function to check if the trip has attachments for alert dot
+  const checkAttachments = async () => {
+    const tripId = urlTripID || tripNo;
+    if (!tripId) return;
+    try {
+      const response = await tripService.getAttachments(tripId);
+      const res: any = response.data;
+      let parsedData = { AttachItems: [] };
+      if (res?.ResponseData) {
+        try {
+          parsedData = JSON.parse(res?.ResponseData);
+        } catch (e) {
+          console.log("Error parsing ResponseData", e);
+        }
+      }
+      if (parsedData?.AttachItems?.length > 0) {
+        setHasAttachments(true);
+      } else {
+        setHasAttachments(false);
+      }
+    } catch (error) {
+      console.error("Error checking attachments:", error);
+      setHasAttachments(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAttachments();
+  }, [urlTripID, tripNo]);
 
   useEffect(() => {
     // console.log("Checking path constraints for tripId:", tripId);
@@ -3416,11 +3447,16 @@ if (!locationStr) {
                         className="listOfOptions relative inline-flex items-center justify-center text-foreground border border-border hover:bg-muted transition-colors rounded-sm">
 
                         {/* Alert dot on trigger */}
-                        {hasAlert && (
+                        {/* Priority: Train Parameters (Orange/from store) > Attachments (Green) */}
+                        {hasAlert ? (
                           <span
                             className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full ${colorClass} ring-2 ring-white shadow-sm`}
                           />
-                        )}
+                        ) : hasAttachments ? (
+                          <span
+                            className={`absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-green-600 ring-2 ring-white shadow-sm`}
+                          />
+                        ) : null}
                         <EllipsisVertical className="h-4 w-4" />
                       </Button>)
                     }
@@ -3470,7 +3506,12 @@ if (!locationStr) {
                         console.log('Attachments');
                         setAttachmentsOpen(true);
                         setListPopoverOpen(false);
-                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left">
+                      }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left relative">
+                        {hasAttachments && (
+                          <span
+                            className="absolute top-2 right-2 h-2 w-2 rounded-full bg-green-600"
+                          />
+                        )}
                         <FileUp className="h-4 w-4" />
                         <span>Attachments</span>
                       </button>
@@ -4608,10 +4649,10 @@ if (!locationStr) {
         selectedTripData={tripInformation}
       />
       {/* Attachment Drawer */}
-      <AttachmentDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={tripNo} onScrollPanel={true} isBadgeRequired={true}>
-            <div className="">
-              <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} tripId={tripNo} /></div>
-            </div>
+      <AttachmentDrawer isOpen={isAttachmentsOpen} onClose={() => { setAttachmentsOpen(false); checkAttachments(); }} width="80%" title="Attachments" isBack={false} badgeContent={tripNo} onScrollPanel={true} isBadgeRequired={true}>
+        <div className="">
+          <div className="mt-0 text-sm text-gray-600"><Attachments isTripLogAttachments={true} tripId={tripNo} onAttachmentsUpdate={checkAttachments} /></div>
+        </div>
       </AttachmentDrawer>
       {/* Loading Overlay for Resources */}
       {isLoadingResource && (

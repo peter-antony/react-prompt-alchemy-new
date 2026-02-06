@@ -121,20 +121,35 @@ const Attachments = ({
   }, [isResourceGroupAttchment, isResourceID]);
 
   const getAttachments = async () => {
-    let id=tripUniqueID?tripUniqueID:tripId;
-    const response = await tripService.getAttachments(id);
-    const res: any = response.data;
-    console.log("GET ALL ATTACHMENTS : ", response.data);
-    setLoading(true);
-    const parsedData = JSON.parse(res?.ResponseData) || [];
-    console.log("GET ALL ATTACHMENTS 3 : ", JSON.parse(res?.ResponseData));
-    console.log(
-      "GET ALL ATTACHMENTS parsedDataparsedDataparsedData : ",
-      parsedData
-    );
+    let id = tripUniqueID ? tripUniqueID : tripId;
+    try {
+      const response = await tripService.getAttachments(id);
+      const res: any = response.data;
+      console.log("GET ALL ATTACHMENTS : ", response.data);
+      setLoading(true);
 
-    setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
-    setReloadKey((prev) => prev + 1);
+      let parsedData = { AttachItems: [], TotalAttachment: 0 };
+      if (res?.ResponseData) {
+        try {
+          parsedData = JSON.parse(res?.ResponseData);
+        } catch (e) {
+          console.log("Error parsing ResponseData, assuming empty", e);
+        }
+      }
+
+      console.log(
+        "GET ALL ATTACHMENTS parsedData : ",
+        parsedData
+      );
+
+      setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
+      setReloadKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error fetching attachments:", error);
+      setAttachmentData({ AttachItems: [], TotalAttachment: 0 });
+      setReloadKey((prev) => prev + 1);
+      setLoading(true);
+    }
     // set({ tripList: response.data, loading: false });
   };
   const handleUpload = async (files: StagedFile[]) => {
