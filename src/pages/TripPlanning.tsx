@@ -3398,7 +3398,7 @@ if (!locationStr) {
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-                {(urlTripID || (consolidatedTrip && selectedArrCOData.length > 0) || tripType === "Wagon/Container Movement") && tripStatus && (
+                {(urlTripID || tripNo || (consolidatedTrip && selectedArrCOData.length > 0) || tripType === "Wagon/Container Movement") && tripStatus && (
                   <span className={cn('inline-flex items-center justify-center rounded-full text-xs ml-3 font-medium px-2 py-1', getDefaultStatusColor(tripStatus))}>
                     {tripStatus}
                   </span>
