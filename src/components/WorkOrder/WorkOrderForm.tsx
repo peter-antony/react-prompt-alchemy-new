@@ -797,6 +797,7 @@ if (formatted.Provider?.includes(" || ")) {
         EquipmentID: selectedEquipmentID,
         EquipmentDescription: ""
       }));
+      
       if (workOrderPanelRef.current) {
         const currentValues = workOrderPanelRef.current.getFormValues() || {};
         // Update form values - explicitly set UNCodeID and UNCodeDescription
@@ -833,18 +834,28 @@ if (formatted.Provider?.includes(" || ")) {
         const formattedContract = formatIdDesc(contractId, contractDesc);
 
         // Update the form values
+        // if (workOrderPanelRef.current) {
+        //   workOrderPanelRef.current.setFormValues({
+        //     SuplierContract: formattedContract,
+        //   });
+        // }
         if (workOrderPanelRef.current) {
-          workOrderPanelRef.current.setFormValues({
-            SuplierContract: formattedContract,
-          });
-        }
+   workOrderPanelRef.current.setFormValues({
+  SuplierContract: formattedContract,          // UI field
+  SupplierContractID: contractId,               // 🔥 backend field
+  SupplierContractDescription: contractDesc,    // 🔥 backend field
+});
 
-        if (workOrderNo) {
-          updateHeader("SupplierContractID", contractId); // Update SupplierContractID
-          updateHeader("SupplierContractDescription", contractDesc); // Update SupplierContractDescription
-        } else {
-          setUiHeader((prev) => ({ ...prev, SuplierContract: formattedContract }));
-        }
+  }
+  updateHeader("SupplierContractID", contractId);
+  updateHeader("SupplierContractDescription", contractDesc);
+
+        // if (workOrderNo) {
+        //   updateHeader("SupplierContractID", contractId); // Update SupplierContractID
+        //   updateHeader("SupplierContractDescription", contractDesc); // Update SupplierContractDescription
+        // } else {
+        //   setUiHeader((prev) => ({ ...prev, SuplierContract: formattedContract }));
+        // }
       }
     } catch (error) {
       console.error("Error fetching data in handleEquipmentChange - SupplierContract on select EquipmentID:", error);
@@ -864,6 +875,15 @@ if (formatted.Provider?.includes(" || ")) {
       value: qc.id,                     
       name: qc.name                    
     })) || [];
+const clearLazyField = (fieldId: string) => {
+  if (!workOrderPanelRef.current) return;
+
+  const current = workOrderPanelRef.current.getFormValues() || {};
+  workOrderPanelRef.current.setFormValues({
+    ...current,
+    [fieldId]: null, // 🔥 critical
+  });
+};
 
   //123
   const workOrderPanelConfig = (currentOrderType: string): PanelConfig => ({
@@ -945,13 +965,30 @@ if (formatted.Provider?.includes(" || ")) {
       addNewEntry: true,
       minSearchLength: 4,
       events: {
+        // onChange: (value) => {
+        //   // value object contains: { label: '', value: string, isNewEntry?: boolean }
+        //   // or can be accessed via event.target.isNewEntry
+        //   console.log('WagonCondainterID onChange - value:', value);
+        //   console.log('WagonCondainterID onChange - isNewEntry:', value?.isNewEntry);
+        //   handleEquipmentChange(value);
+        // },
         onChange: (value) => {
-          // value object contains: { label: '', value: string, isNewEntry?: boolean }
-          // or can be accessed via event.target.isNewEntry
-          console.log('WagonCondainterID onChange - value:', value);
-          console.log('WagonCondainterID onChange - isNewEntry:', value?.isNewEntry);
-          handleEquipmentChange(value);
-        },
+  // CLEAR
+  if (!value) {
+    workOrderPanelRef.current?.setFormValues({
+      ...workOrderPanelRef.current.getFormValues(),
+      WagonCondainterID: null,
+    });
+
+    useWorkOrderStore.getState().updateHeader("EquipmentID", "");
+    useWorkOrderStore.getState().updateHeader("EquipmentDescription", "");
+    return;
+  }
+
+  // SELECT
+  handleEquipmentChange(value);
+},
+
       },
     },
 
@@ -971,6 +1008,31 @@ if (formatted.Provider?.includes(" || ")) {
 
       order: 3,
       fetchOptions: fetchMaster("Contract Init", { OrderType: "Buy" }),
+      events: {
+  onChange: (value) => {
+    // 🔥 CLEAR (❌ clicked)
+    if (!value) {
+      workOrderPanelRef.current?.setFormValues({
+        ...workOrderPanelRef.current.getFormValues(),
+        SuplierContract: null,
+      });
+
+      const updateHeader = useWorkOrderStore.getState().updateHeader;
+      updateHeader("SupplierContractID", "");
+      updateHeader("SupplierContractDescription", "");
+
+      return;
+    }
+
+    // ✅ SELECT
+    const [id, desc] = value.value.split(" || ").map((v: string) => v.trim());
+
+    const updateHeader = useWorkOrderStore.getState().updateHeader;
+    updateHeader("SupplierContractID", id);
+    updateHeader("SupplierContractDescription", desc);
+  },
+},
+
       // events: {
       //   onChange: (val) => {
       //     const updateHeader = useWorkOrderStore.getState().updateHeader;
