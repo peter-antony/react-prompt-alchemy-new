@@ -100,6 +100,7 @@ const WorkOrderForm = forwardRef<WorkOrderFormHandle>((props, ref) => {
 const [getCUUCodes, setGetCUUCodes] = useState<Record<string, any>>({});
 const [showCUUCode, setShowCUUCode] = useState<boolean>(false);
 const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
+const [hasAttachments, setHasAttachments] = useState(false);
 
   const forwardTripId = workOrder?.WorkorderSchedule?.RUForwardTripID || "";
   const returnTripId = workOrder?.WorkorderSchedule?.RUReturnTripID || "";
@@ -696,6 +697,35 @@ if (formatted.Provider?.includes(" || ")) {
     }
 
   }, [workOrderNo]);
+
+  // Fetch attachments on load (and when drawer closes) to show green indicator
+  const fetchAttachmentIndicator = useCallback(async () => {
+    if (!workOrderNo) {
+      setHasAttachments(false);
+      return;
+    }
+    try {
+      const response = await workOrderService.getAttachments(workOrderNo);
+      const res: any = response?.data;
+      let parsedData = { AttachItems: [], TotalAttachment: 0 };
+      if (res?.ResponseData) {
+        try {
+          parsedData = JSON.parse(res.ResponseData) || parsedData;
+        } catch {
+          parsedData = { AttachItems: [], TotalAttachment: 0 };
+        }
+      }
+      const total = Number(parsedData?.TotalAttachment ?? 0);
+      const itemsLen = Array.isArray(parsedData?.AttachItems) ? parsedData.AttachItems.length : 0;
+      setHasAttachments(total > 0 || itemsLen > 0);
+    } catch {
+      setHasAttachments(false);
+    }
+  }, [workOrderNo]);
+
+  useEffect(() => {
+    fetchAttachmentIndicator();
+  }, [workOrderNo, fetchAttachmentIndicator]);
 
   useEffect(() => {
     if (workOrder?.Header) {
@@ -3119,8 +3149,11 @@ const clearLazyField = (fieldId: string) => {
                         {/* <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" onClick={() => setMoreInfoOpen(true)}>
                           <CircleArrowOutUpRight className="w-5 h-5 text-gray-600" />
                         </button> */}
-                        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)} >
+                        <button className="relative p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title='Attachments' onClick={() => setAttachmentsOpen(true)} >
                           <Paperclip className="w-5 h-5 text-gray-600" />
+                          {hasAttachments && (
+                            <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-green-600 ring-2 ring-white shadow-sm" aria-hidden />
+                          )}
                         </button>
                         <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100" title="Copy" onClick={()=>handleWorkOrderCopy(workOrderNo)} >
                           <Copy className="w-5 h-5 text-gray-600" />
@@ -3633,7 +3666,7 @@ const clearLazyField = (fieldId: string) => {
               />
             </SideDrawer>
             {/* Attachment SideDrawer */}
-            <SideDrawer isOpen={isAttachmentsOpen} onClose={() => setAttachmentsOpen(false)} width="80%" title="Attachments" isBack={false} badgeContent={workOrderNo} onScrollPanel={true} isBadgeRequired={true}>
+            <SideDrawer isOpen={isAttachmentsOpen} onClose={() => { setAttachmentsOpen(false); fetchAttachmentIndicator(); }} width="80%" title="Attachments" isBack={false} badgeContent={workOrderNo} onScrollPanel={true} isBadgeRequired={true}>
             <div className="">
               <div className="mt-0 text-sm text-gray-600"><Attachments isWorkOrderAttachment={true} /></div>
             </div>

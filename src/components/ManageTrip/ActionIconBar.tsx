@@ -133,19 +133,30 @@ export const ActionIconBar = () => {
         fetchData();
       }, [tripId]);
 
+  // Show green when attachment data exists; hide when empty or error (e.g. on drawer close)
   const checkAttachments = async () => {
-    if (!tripId) return;
+    if (!tripId) {
+      setHasAttachments(false);
+      return;
+    }
     try {
       const response = await tripService.getAttachments(tripId);
-      const res: any = response.data;
-      const parsedData = JSON.parse(res?.ResponseData) || [];
-      if (parsedData?.AttachItems?.length > 0) {
-        setHasAttachments(true);
-      } else {
-        setHasAttachments(false);
+      const res: any = response?.data;
+      let parsedData: { AttachItems?: unknown[]; TotalAttachment?: number } = { AttachItems: [], TotalAttachment: 0 };
+      if (res?.ResponseData) {
+        try {
+          const parsed = JSON.parse(res.ResponseData);
+          parsedData = typeof parsed === 'object' && parsed !== null ? parsed : parsedData;
+        } catch {
+          parsedData = { AttachItems: [], TotalAttachment: 0 };
+        }
       }
+      const itemsLen = Array.isArray(parsedData?.AttachItems) ? parsedData.AttachItems.length : 0;
+      const total = Number(parsedData?.TotalAttachment ?? 0);
+      setHasAttachments(itemsLen > 0 || total > 0);
     } catch (error) {
       console.error("Error checking attachments:", error);
+      setHasAttachments(false);
     }
   };
 

@@ -148,22 +148,31 @@ export const TransportRouteLegDrawer = forwardRef<TransportRouteLegDrawerRef, Tr
   const [isAttachmentsOpen, setAttachmentsOpen] = useState(false);
   const [hasAttachments, setHasAttachments] = useState(false); // State for attachments indicator
 
-  // Function to check if attachments exist
+  // Function to check if attachments exist (show green when data present, hide when empty or error)
   const checkAttachments = async () => {
     const tripId = selectedRoute?.CustomerOrderID;
-    if (!tripId) return;
+    if (!tripId) {
+      setHasAttachments(false);
+      return;
+    }
     try {
-      // const response = await tripService.getAttachments(tripId);
       const response = await tripService.getTransportRouteUpdateAttachments(tripId);
       const res: any = response.data;
-      const parsedData = JSON.parse(res?.ResponseData) || [];
-      if (parsedData?.AttachItems?.length > 0) {
-        setHasAttachments(true);
-      } else {
-        setHasAttachments(false);
+      let parsedData: { AttachItems?: unknown[]; TotalAttachment?: number } = { AttachItems: [], TotalAttachment: 0 };
+      if (res?.ResponseData) {
+        try {
+          const parsed = JSON.parse(res.ResponseData);
+          parsedData = typeof parsed === 'object' && parsed !== null ? parsed : parsedData;
+        } catch {
+          parsedData = { AttachItems: [], TotalAttachment: 0 };
+        }
       }
+      const itemsLen = Array.isArray(parsedData?.AttachItems) ? parsedData.AttachItems.length : 0;
+      const total = Number(parsedData?.TotalAttachment ?? 0);
+      setHasAttachments(itemsLen > 0 || total > 0);
     } catch (error) {
       console.error("Error checking attachments:", error);
+      setHasAttachments(false);
     }
   };
 

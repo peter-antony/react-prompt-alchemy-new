@@ -3509,7 +3509,7 @@ if (!locationStr) {
                       }} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm text-left relative">
                         {hasAttachments && (
                           <span
-                            className="absolute top-2 right-2 h-2 w-2 rounded-full bg-green-600"
+                            className="absolute top-2 right-44 h-2 w-2 rounded-full bg-green-600"
                           />
                         )}
                         <FileUp className="h-4 w-4" />

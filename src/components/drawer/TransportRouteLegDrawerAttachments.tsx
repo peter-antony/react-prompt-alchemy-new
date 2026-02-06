@@ -123,20 +123,35 @@ const TransportRouteLegDrawerAttachments = ({
   const getAttachments = async () => {
     let id = tripUniqueID ? tripUniqueID : tripId;
     // const response = await tripService.getAttachments(id);
-    const response = await tripService.getTransportRouteUpdateAttachments(id);
-    const res: any = response.data;
-    console.log("GET ALL ATTACHMENTS : ", response.data);
-    setLoading(true);
-    const parsedData = JSON.parse(res?.ResponseData) || [];
-    console.log("GET ALL ATTACHMENTS 3 : ", JSON.parse(res?.ResponseData));
-    console.log(
-      "GET ALL ATTACHMENTS parsedDataparsedDataparsedData : ",
-      parsedData
-    );
-
-    setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
-    setReloadKey((prev) => prev + 1);
-    // set({ tripList: response.data, loading: false });
+    try{
+      const response = await tripService.getTransportRouteUpdateAttachments(id);
+      const res: any = response.data;
+      console.log("GET ALL ATTACHMENTS : ", response.data);
+      setLoading(true);
+      let parsedData = { AttachItems: [], TotalAttachment: 0 };
+      if (res?.ResponseData) {
+        try {
+          parsedData = JSON.parse(res?.ResponseData);
+        } catch (e) {
+          console.log("Error parsing ResponseData, assuming empty", e);
+        }
+      }
+      // const parsedData = JSON.parse(res?.ResponseData) || [];
+      console.log("GET ALL ATTACHMENTS 3 : ", JSON.parse(res?.ResponseData));
+      console.log(
+        "GET ALL ATTACHMENTS parsedDataparsedDataparsedData : ",
+        parsedData
+      );
+  
+      setAttachmentData(parsedData || { AttachItems: [], TotalAttachment: 0 });
+      setReloadKey((prev) => prev + 1);
+      // set({ tripList: response.data, loading: false });
+    }catch (error) {
+      console.error("Error fetching attachments:", error);
+      setAttachmentData({ AttachItems: [], TotalAttachment: 0 });
+      setReloadKey((prev) => prev + 1);
+      setLoading(true);
+    }
   };
   const handleUpload = async (files: StagedFile[]) => {
 
