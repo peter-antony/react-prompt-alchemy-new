@@ -822,6 +822,8 @@ const ClaimsForm = () => {
 				input: "",
 			},
 			options: getQcOptions(currencyList),
+			inputType: "number",
+			maxLength: 50
 		},
 		ClaimantRefNo: {
 			id: "ClaimantRefNo",
@@ -832,7 +834,8 @@ const ClaimsForm = () => {
 			mandatory: false,
 			visible: true,
 			editable: true,
-			order: 10
+			order: 10,
+			maxLength: 500
 		},
 		IncidentType: {
 			id: "IncidentType",
@@ -911,7 +914,8 @@ const ClaimsForm = () => {
 			mandatory: false,
 			visible: true,
 			editable: true,
-			order: 14
+			order: 14,
+			maxLength: 500
 		},
 		Wagon: {
 			id: "Wagon",
@@ -1001,7 +1005,8 @@ const ClaimsForm = () => {
 			mandatory: false,
 			visible: true,
 			editable: true,
-			order: 21
+			order: 21,
+			maxLength: 255
 		},
 		ActionResolutionRemark: {
 			id: "ActionResolutionRemark",
