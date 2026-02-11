@@ -113,14 +113,36 @@ export const manageTripStore = create<TripState>((set, get) => ({
       }
 
       // Update the specific activity
-      const activities = [...leg.Activities];
-      activities[activityIndex] = {
-        ...activities[activityIndex],
-        ...updates,
-        ModeFlag: "Update" as ModeFlag, // Set ModeFlag to Update if not specified
-      };
+      // Update the specific activity
+const activities = [...leg.Activities];
+const existing = activities[activityIndex];
 
-      leg.Activities = activities;
+
+
+
+
+const updatedActivity: any = {
+  ...existing,
+  ...updates,
+  ModeFlag: "Update" as ModeFlag,
+};
+
+
+
+// IMPORTANT: null means "do not overwrite"
+if ((updates as any)["ActualDate"] === null || (updates as any)["ActualDate"] === undefined) {
+  updatedActivity["ActualDate"] = (existing as any)["ActualDate"];
+}
+
+if ((updates as any)["ActualTime"] === null || (updates as any)["ActualTime"] === undefined) {
+  updatedActivity["ActualTime"] = (existing as any)["ActualTime"];
+}
+
+activities[activityIndex] = updatedActivity;
+
+
+leg.Activities = activities;
+
       legDetails[legIndex] = leg;
 
       return {

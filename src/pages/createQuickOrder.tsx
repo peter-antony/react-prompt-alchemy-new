@@ -50,7 +50,12 @@ const CreateQuickOrder = () => {
   const newQuickOrderRef = React.useRef<NewQuickOrderHandle>(null);
   const formReadyRef = React.useRef(false);
 
-  
+  const enableButtons = () =>{
+    setIsSaveButtonDisabled(false);
+    setIsConfirmButtonDisabled(false);
+    setShowAmendButton(false);
+
+  }
   // Helper function to update footerLabelData from QuickOrder data
   const updateFooterLabelData = (quickOrderData: any) => {
     if (quickOrderData) {
@@ -872,6 +877,7 @@ if (!formReadyRef.current) {
                 onCancel={quickOrderCancelhandler} 
                 key={refreshTrigger} 
                 quickOrderNoCallback={quickOrderNoCallback}
+                enableButtons={enableButtons}
               />
               : ''
             }

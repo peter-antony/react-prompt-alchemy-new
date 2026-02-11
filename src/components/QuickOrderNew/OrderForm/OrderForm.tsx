@@ -43,6 +43,7 @@ export type OrderFormHandle = {
 interface OrderFormProps {
   onSaveDraft: () => void;
   onConfirm: () => void;
+  enableButtons: () => void;
   onCancel: () => void;
   isEditQuickOrder?: boolean;
   onScroll?: boolean;
@@ -51,7 +52,7 @@ interface OrderFormProps {
 }
 
 const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({  
-  onConfirm,onSaveDraft, onCancel, isEditQuickOrder, 
+  onConfirm,onSaveDraft, onCancel, isEditQuickOrder,  enableButtons,
   onScroll, onOrderCreated, quickOrderNoCallback }: OrderFormProps, ref) => {
   const navigate = useNavigate();
   const [OrderType, setOrderType] = useState('BUY');
@@ -1094,6 +1095,7 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
   const closeResource = () => {
     console.log("ON CLOSE calledd")
     setResourceGroupOpen(false);
+    enableButtons();
     setIsBack(true);
     setIsResourceClosed(true);
     const resourceGroups = jsonStore.getAllResourceGroups();

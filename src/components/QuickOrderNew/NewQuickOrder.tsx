@@ -17,6 +17,7 @@ interface NewCreateQuickOrderProps {
   onConfirm?: () => void;
   onSaveDraft?: () => void;
   onCancel?: () => void;
+  enableButtons ?: () => void;
 }
 
 export type NewQuickOrderHandle = { getOrderValues: () => any ;  doValidation: () => {
@@ -25,7 +26,7 @@ export type NewQuickOrderHandle = { getOrderValues: () => any ;  doValidation: (
     mandatoryFieldsEmpty: string[];
   };};
 
-const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated, onConfirm,onSaveDraft,onCancel, quickOrderNoCallback }, ref) => {
+const NewCreateQuickOrder = forwardRef<NewQuickOrderHandle, NewCreateQuickOrderProps>(({ isEditQuickOrder, onOrderCreated, onConfirm,onSaveDraft,onCancel, quickOrderNoCallback,enableButtons }, ref) => {
   useEffect(() => {
     if (!isEditQuickOrder) {
       // Set ResourceGroup as empty array in jsonStore
@@ -95,6 +96,7 @@ useImperativeHandle(ref, () => ({
             onOrderCreated={onOrderCreated}
             onScroll={true}
             quickOrderNoCallback={quickOrderNoCallback}
+             enableButtons={enableButtons}
           />
         {/* </div> */}
         

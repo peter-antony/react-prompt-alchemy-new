@@ -1,5 +1,5 @@
  
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -119,6 +119,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   fetchDepartures,
   fetchArrivals,
 }) => {
+  const { getLegDetails, updateActivity } = manageTripStore();
   const [selectedLegIndex, setSelectedLegIndex] = useState<number>(0);
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
@@ -126,7 +127,8 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const { fetchTrip } = manageTripStore();
   const [isSaving, setIsSaving] = useState(false);
   const [reasonForUpdateError, setReasonForUpdateError] = useState(false);
- 
+  const [count , setCount] = useState(0);
+  const [legDetail, setLegDetail] = useState<any[]>([]);
   // Safety check: ensure LegDetails exists and is an array
   const legDetails = tripData?.LegDetails || [];
   const selectedLeg = legDetails[selectedLegIndex];
@@ -182,8 +184,22 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
     };
     loadQC1();
   }, []);
- 
+
+  useEffect(()=>{
+  const value =  getLegDetails();
+  setLegDetail(value);
+  console.log("getLegDetails in drawer" , value)
+  },[count])
+
+  
+ const legDetailsRef = useRef(legDetails);
+
+useEffect(() => {
+  legDetailsRef.current = legDetails;
+}, [legDetails]);
+
   const handleSave = async () => {
+    setCount(prev => prev + 1);
     // Validate Reason For Update is provided (mandatory)
     const reasonStr = (reasonForUpdate ?? "").toString().trim();
     if (!reasonStr) {
@@ -259,7 +275,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
 
 
       // Process ExecutionLegDetails to handle pipe-separated values
-      const processedExecutionLegDetails = leg.ExecutionLegDetails.map(execLeg => {
+      const processedExecutionLegDetails = leg.ExecutionLegDetails.map((execLeg , index )=> {
       const legIdParts = splitAtPipe(execLeg.LegID);
       const departureParts = splitAtPipe(execLeg.Departure);
       const arrivalParts = splitAtPipe(execLeg.Arrival);
@@ -271,6 +287,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       console.log("execLeg  == ",execLeg)
       console.log("execLeg.CustomerOrderDetails  == ",execLeg.CustomerOrderDetails)
       console.log("execLeg.ModeFlag  == ",execLeg.ModeFlag)
+
 
 
         // const isNewLeg = !execLeg.CustomerOrderDetails || execLeg.CustomerOrderDetails.length === 0;
@@ -291,6 +308,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
 
       const finalLegID = isDepartureOrArrivalChanged ? null : legIdParts.value;
       const finalLegIDDescription = isDepartureOrArrivalChanged ? null : legIdParts.description;
+     
 
       return {
         ...execLeg,
@@ -320,7 +338,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
         LegDetails: processedLegDetails,
       };
    
-    console.log('💾 formatFinalRouteData:', formatFinalRouteData);
+    console.log('formatFinalRouteData:', processedLegDetails);
     setIsSaving(true);
     try {
       const response: any = await tripService.saveManageExecutionUpdateTripLevel(formatFinalRouteData);
@@ -360,7 +378,6 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
       setIsSaving(false);
     }
   };
- 
   const getTripStatusBadgeClass = (status: string) => {
     const statusMap: Record<string, string> = {
       'Draft': 'bg-gray-100 text-gray-800 border-gray-200',
@@ -590,7 +607,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
                       <div className="flex items-start gap-2">
                         <span className="font-medium min-w-[60px]">{leg.DeparturePointDescription}</span>
                         <ArrowRight className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                        <span className="font-medium">{leg.ArrivalPointDescription}</span>
+                        <span className="font-medium">{legDetail[index]?.ArrivalPointDescription || leg.ArrivalPointDescription}</span>
                       </div>
                       <div className="text-muted-foreground">
                         {formatDateTime(leg.DepartureDateTime)} - {formatDateTime(leg.ArrivalDateTime)}

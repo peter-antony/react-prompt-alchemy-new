@@ -301,7 +301,7 @@ const [locationError, setLocationError] = useState(false);
     if (manageFlag) {
       console.log("🔗 URL Manage flag extracted:", manageFlag);
     }
-  }, [urlTripID, manageFlag, tripResourceDetailsData,tripNo]);
+  }, [urlTripID, manageFlag, tripResourceDetailsData]);
   // Ref to store the timeout for debouncing trip ID changes
   const tripIdChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
