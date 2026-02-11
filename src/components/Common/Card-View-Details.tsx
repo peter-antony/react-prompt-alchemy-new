@@ -11,6 +11,7 @@ import { SideDrawer } from "./SideDrawer";
 import { dateFormatter, formattedAmount } from "@/utils/formatter";
 import { format } from 'date-fns';
 import jsonStore from '@/stores/jsonStore';
+import { quickOrderService } from '@/api/services/quickOrderService';
 interface CardStatus {
     label: string;
     color: string;
@@ -78,7 +79,108 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         if (!dateStr) return "";
         return format(new Date(dateStr), "dd-MMM-yyyy");
     };
+    const formatDateToYYYYMMDD = (dateString: string | Date | null | undefined) => {
+        if (!dateString) return '';
+        const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().slice(0, 10);
+    };
     const [isBack, setIsBack] = useState(true);
+
+    // Same as OrderForm: fetch contract/combo data and bind to jsonStore so Resource Group form fields are populated when drawer opens
+    const openResourceGroupGetID = async () => {
+        const quickOrder = jsonStore.getQuickOrder();
+        const orderType = quickOrder?.OrderType ?? 'BUY';
+        try {
+            const data: any = await quickOrderService.getCommonComboData({
+                messageType: "ContractID Selection",
+                contractId: quickOrder?.Contract,
+                type: orderType
+            });
+            let parsedData: any = {};
+            let contract: any = {};
+            if (data?.data?.ResponseData) {
+                parsedData = JSON.parse(data.data.ResponseData);
+                contract = parsedData;
+                if (parsedData?.ContractTariff) {
+                    jsonStore.setContractTariffList(parsedData.ContractTariff);
+                }
+                if (contract) {
+                    jsonStore.setQuickOrderFields({
+                        OrderType: orderType,
+                        Contract: contract.ContractID,
+                        ContractDescription: contract.ContractDesc,
+                        Customer: contract.CustomerID,
+                        Vendor: contract.VendorID,
+                        VendorName: contract.VendorName,
+                        Cluster: contract.ClusterLocation,
+                        ClusterLocationDesc: contract.ClusterLocationDesc,
+                        WBS: contract.WBS,
+                        Currency: contract.Currency
+                    });
+                    jsonStore.setResourceGroupFields({ OperationalLocation: contract.Location });
+                    const additionalInfo = contract.ContractTariff;
+                    if (additionalInfo?.[0]) {
+                        jsonStore.setResourceType({
+                            Resource: additionalInfo[0].Resource,
+                            ResourceDescription: additionalInfo[0].ResourceDescription,
+                            ResourceType: additionalInfo[0].ResourceType,
+                            ResourceTypeDescription: additionalInfo[0].ResourceTypeDescription
+                        });
+                        jsonStore.setTariffFields({
+                            tariff: additionalInfo[0].TariffID,
+                            tariffDescription: additionalInfo[0].TariffDescription,
+                            contractPrice: additionalInfo[0].TariffRate ?? "",
+                            unitPrice: additionalInfo[0].TariffRate ?? "",
+                            tariffType: additionalInfo[0].TariffType ?? "",
+                            tariffTypeDescription: additionalInfo[0].TariffTypeDescription ?? ""
+                        });
+                    }
+                }
+            }
+            const quickOrderData = jsonStore.getQuickOrder();
+            jsonStore.setQuickOrderFields({
+                OrderType: quickOrderData?.OrderType ?? "",
+                Contract: quickOrderData?.ContractID ?? "",
+                ContractDescription: quickOrderData?.ContractDesc ?? "",
+                Customer: quickOrderData?.CustomerID ?? quickOrderData?.Customer ?? "",
+                Vendor: quickOrderData?.VendorID ?? quickOrderData?.Vendor ?? "",
+                VendorName: quickOrderData?.VendorName ?? "",
+                Cluster: quickOrderData?.ClusterLocation ?? quickOrderData?.Cluster ?? "",
+                ClusterLocationDesc: quickOrderData?.ClusterLocationDesc ?? "",
+                WBS: quickOrderData?.WBS ?? "",
+                Currency: quickOrderData?.Currency ?? "",
+                QuickOrderDate: quickOrderData?.QuickOrderDate ? formatDateToYYYYMMDD(quickOrderData.QuickOrderDate) : "",
+                Summary: quickOrderData?.Summary ?? "",
+                Remark1: quickOrderData?.Remark1 ?? "",
+                Remarks2: quickOrderData?.Remarks2 ?? "",
+                Remarks3: quickOrderData?.Remarks3 ?? "",
+                QCUserDefined1: (() => {
+                    const q = quickOrderData?.QCUserDefined1;
+                    if (q && typeof q === "object") {
+                        return { input: q.input ?? quickOrderData?.QCUserDefined1Value ?? "", dropdown: q.dropdown ?? q ?? "" };
+                    }
+                    return { input: quickOrderData?.QCUserDefined1Value ?? "", dropdown: quickOrderData?.QCUserDefined1 ?? "" };
+                })(),
+                QCUserDefined2: (() => {
+                    const q = quickOrderData?.QCUserDefined2;
+                    if (q && typeof q === "object") {
+                        return { input: q.input ?? quickOrderData?.QCUserDefined2Value ?? "", dropdown: q.dropdown ?? q ?? "" };
+                    }
+                    return { input: quickOrderData?.QCUserDefined2Value ?? "", dropdown: quickOrderData?.QCUserDefined2 ?? "" };
+                })(),
+                QCUserDefined3: (() => {
+                    const q = quickOrderData?.QCUserDefined3;
+                    if (q && typeof q === "object") {
+                        return { input: q.input ?? quickOrderData?.QCUserDefined3Value ?? "", dropdown: q.dropdown ?? q ?? "" };
+                    }
+                    return { input: quickOrderData?.QCUserDefined3Value ?? "", dropdown: quickOrderData?.QCUserDefined3 ?? "" };
+                })()
+            });
+        } catch (err) {
+            console.error("Card-View-Details openResourceGroupGetID:", err);
+        }
+    };
     // Close menu on outside click
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -156,14 +258,20 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
         setAttachmentsOpen(true);
     }
 
+    const handleOpenResourceGroup = async (item: CardDetailsItem, initialStep: number) => {
+        await openResourceGroupGetID();
+        setTimeout(() => {
+            setResourceGroupOpen({
+                isResourceGroupOpen: true,
+                ResourceUniqueID: item.ResourceUniqueID,
+                initialStep
+            });
+        }, 500);
+    };
+
     const handleShowPlanDetails = (item: CardDetailsItem) => {
         console.log("handleShowPlanDetails", item);
-        // Open side drawer and set initial step to 2 (Plan data)
-        setResourceGroupOpen({ 
-            isResourceGroupOpen: true, 
-            ResourceUniqueID: item.ResourceUniqueID,
-            initialStep: 2
-        });
+        handleOpenResourceGroup(item, 2);
     }
     
     return (
@@ -179,7 +287,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ data, isEditQuickOrder, showM
                                     </span>
                                     <div>
                                         {/* <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: item.ResourceStatus!='Approved'? true, ResourceUniqueID: item.ResourceUniqueID, initialStep: 1 })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div> */}
-                                        <div className="font-semibold text-sm cursor-pointer" onClick={() => setResourceGroupOpen({ isResourceGroupOpen: true, ResourceUniqueID: item.ResourceUniqueID, initialStep: 1 })}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
+                                        <div className="font-semibold text-sm cursor-pointer" onClick={() => handleOpenResourceGroup(item, 1)}>{item?.BillingDetails?.InternalOrderNo} - {item?.BasicDetails?.ResourceDescription}</div>
                                         {/* <div className="text-xs text-gray-400">subtitle :{item.subtitle}</div> */}
                                         <div className="d-flex relative">
                                             <span className="text-xs text-gray-400">{item?.BasicDetails?.ResourceTypeDescription}</span>
