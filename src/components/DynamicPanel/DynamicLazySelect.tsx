@@ -164,9 +164,11 @@ export function DynamicLazySelect({
   };
 
   const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    onChange(undefined, false, undefined);
-    setSearchTerm(''); // Clear the search box as well
+    onChange('', false, undefined);
+    setSearchTerm('');
+    setIsOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -887,14 +887,14 @@ const OrderForm = forwardRef<OrderFormHandle, OrderFormProps>(({
   useImperativeHandle(ref, () => ({
     getOrderValues: () => orderDetailsRef.current?.getFormValues() || {},
     doValidation: () => {
-    return (
-      orderDetailsRef.current?.doValidation() || {
+      const result = orderDetailsRef.current?.doValidation() || {
         isValid: true,
         errors: {},
         mandatoryFieldsEmpty: [],
-      }
-    );
-  },
+      };
+      setValidationResults((prev) => ({ ...prev, 'Order Details': result }));
+      return result;
+    },
   }));
   // const onSaveDetails = () => {
   //   const formValues = {

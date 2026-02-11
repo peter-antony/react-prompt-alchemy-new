@@ -196,8 +196,9 @@ export function MultiselectLazySelect({
   };
 
   const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    onChange(undefined);
+    onChange([]);
     setSearchTerm('');
   };
 

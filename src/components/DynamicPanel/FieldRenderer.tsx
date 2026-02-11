@@ -468,10 +468,11 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   value={field.value}
                    error={!!validationErrors[fieldId]}
                   onChange={(value, isNewEntry) => {
-                    field.onChange(value);
+                    const clearedValue = value === undefined || value === null ? '' : value;
+                    field.onChange(clearedValue);
                     if (events?.onChange) {
-                      const selectedOption = value ? { label: '', value, isNewEntry } : null;
-                      events.onChange(selectedOption, { target: { value, isNewEntry } } as any);
+                      const selectedOption = clearedValue ? { label: '', value: clearedValue, isNewEntry } : null;
+                      events.onChange(selectedOption, { target: { value: clearedValue, isNewEntry } } as any);
                     }
                   }}
                   placeholder={placeholder || 'Select...'}
@@ -522,9 +523,10 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
                   fetchOptions={fetchOptions}
                   value={Array.isArray(field.value) ? field.value : []}
                   onChange={(value) => {
-                    field.onChange(value);
+                    const clearedValue = value === undefined || value === null ? [] : value;
+                    field.onChange(Array.isArray(clearedValue) ? clearedValue : []);
                     if (events?.onChange) {
-                      events.onChange(value, { target: { value } } as any);
+                      events.onChange(clearedValue, { target: { value: clearedValue } } as any);
                     }
                   }}
                   placeholder={placeholder || 'Select...'}
