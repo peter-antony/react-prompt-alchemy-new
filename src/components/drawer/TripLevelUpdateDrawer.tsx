@@ -105,7 +105,7 @@ interface TripLevelUpdateDrawerProps {
   onAddExecutionLeg: (legIndex: number) => void;
   onRemoveExecutionLeg: (legIndex: number, execLegIndex: number) => void;
   onUpdateExecutionLeg: (legIndex: number, execLegIndex: number, field: string, value: any) => void;
-  onSave: () => Promise<void>;
+  onSave: () => Promise<void> | void;
   fetchDepartures: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
   fetchArrivals: (params: { searchTerm: string; offset: number; limit: number }) => Promise<{ label: string; value: string }[]>;
 }
@@ -124,7 +124,7 @@ export const TripLevelUpdateDrawer: React.FC<TripLevelUpdateDrawerProps> = ({
   const [reasonForUpdate, setReasonForUpdate] = useState<string>('');
   const { toast } = useToast();
   const [qc1Options, setQc1Options] = useState<{ label: string; value: string }[]>([]);
-  const { fetchTrip } = manageTripStore();
+  // const { fetchTrip } = manageTripStore();
   const [isSaving, setIsSaving] = useState(false);
   const [reasonForUpdateError, setReasonForUpdateError] = useState(false);
   const [count , setCount] = useState(0);
@@ -347,8 +347,13 @@ useEffect(() => {
       // if (response?.data) {
       const { IsSuccess, ResponseData, Message } = response.data;
       // }
-      if(IsSuccess) {
-        fetchTrip(tripData?.Header.TripID || '');
+      // if(IsSuccess) {
+      //   fetchTrip(tripData?.Header.TripID || '');
+      if (IsSuccess) {
+        // Notify parent component to refresh data
+        if (onSave) {
+          await onSave();
+        }
       }
       // Access the response data safely
       const responseData = response as any;
@@ -457,9 +462,16 @@ useEffect(() => {
           <div className="space-y-2">
             <Label>Arrival</Label>
             <DynamicLazySelect
-              value={execLeg.Arrival && execLeg.ArrivalDescription
-                ? `${execLeg.Arrival} || ${execLeg.ArrivalDescription}`
-                : (execLeg.Arrival || execLeg.ArrivalDescription || '')}
+            // value={execLeg.Arrival && execLeg.ArrivalDescription
+            //     ? `${execLeg.Arrival} || ${execLeg.ArrivalDescription}`
+            //     : (execLeg.Arrival || execLeg.ArrivalDescription || '')}
+              value={
+                (execLeg.Arrival && execLeg.Arrival.includes('||'))
+                  ? execLeg.Arrival
+                  : (execLeg.Arrival && execLeg.ArrivalDescription
+                    ? `${execLeg.Arrival} || ${execLeg.ArrivalDescription}`
+                    : (execLeg.Arrival || execLeg.ArrivalDescription || ''))
+              }
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'Arrival', value)}
               fetchOptions={fetchArrivals}
               placeholder="Select Arrival"
@@ -486,9 +498,16 @@ useEffect(() => {
             
            
             <DynamicLazySelect
-              value={execLeg.LegBehaviour && execLeg.LegBehaviourDescription
-                ? `${execLeg.LegBehaviour} || ${execLeg.LegBehaviourDescription}`
-                : (execLeg.LegBehaviour || execLeg.LegBehaviourDescription || '')}
+            // value={execLeg.LegBehaviour && execLeg.LegBehaviourDescription
+            //     ? `${execLeg.LegBehaviour} || ${execLeg.LegBehaviourDescription}`
+            //     : (execLeg.LegBehaviour || execLeg.LegBehaviourDescription || '')}
+              value={
+                (execLeg.LegBehaviour && execLeg.LegBehaviour.includes('||'))
+                  ? execLeg.LegBehaviour
+                  : (execLeg.LegBehaviour && execLeg.LegBehaviourDescription
+                    ? `${execLeg.LegBehaviour} || ${execLeg.LegBehaviourDescription}`
+                    : (execLeg.LegBehaviour || execLeg.LegBehaviourDescription || ''))
+              }
               onChange={(value) => onUpdateExecutionLeg(legIndex, execLegIndex, 'LegBehaviour', value)}
               fetchOptions={fetchLegBehaviours}
               placeholder="Select Behaviour"
@@ -607,7 +626,8 @@ useEffect(() => {
                       <div className="flex items-start gap-2">
                         <span className="font-medium min-w-[60px]">{leg.DeparturePointDescription}</span>
                         <ArrowRight className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                        <span className="font-medium">{legDetail[index]?.ArrivalPointDescription || leg.ArrivalPointDescription}</span>
+                        {/* <span className="font-medium">{legDetail[index]?.ArrivalPointDescription || leg.ArrivalPointDescription}</span> */}
+                        <span className="font-medium">{leg.ArrivalPointDescription}</span>
                       </div>
                       <div className="text-muted-foreground">
                         {formatDateTime(leg.DepartureDateTime)} - {formatDateTime(leg.ArrivalDateTime)}

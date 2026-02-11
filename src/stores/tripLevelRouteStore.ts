@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { tripService } from '@/api/services/tripService';
 import { quickOrderService } from '@/api/services/quickOrderService';
+import { manageTripStore } from '@/stores/mangeTripStore';
 
 interface TripInfo {
   TripID: string;
@@ -408,11 +409,22 @@ export const useTransportRouteStore = create<TransportRouteStore>((set, get) => 
   },
 
   saveTripDetails: async () => {
-    const { selectedTrip } = get();
+    const { selectedTrip, openTripDrawer } = get();
     if (!selectedTrip) return;
 
-    // Simulate API call
-    console.log('Saving trip details:', selectedTrip);
+    // Get the trip ID from the selected trip
+    const tripId = selectedTrip.Header.TripID;
+
+    // Refresh the drawer data by calling openTripDrawer
+    if (tripId) {
+      await openTripDrawer(tripId);
+
+      // Also refresh the manageTripStore data
+      const { fetchTrip } = manageTripStore.getState();
+      if (fetchTrip) {
+        await fetchTrip(tripId);
+      }
+    }
   },
 
   fetchDepartures: async ({ searchTerm, offset, limit }) => {
