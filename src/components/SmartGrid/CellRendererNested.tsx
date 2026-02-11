@@ -829,7 +829,7 @@ export const CellRendererNested: React.FC<CellRendererNestedProps> = ({
       return (
         <Input
           type="time"
-          value={tempValue || ''}
+          value={formatTime(tempValue) || ''}
           onChange={(e) => setTempValue(e.target.value)}
           onBlur={() => {
             onEdit(rowIndex, column.key, tempValue);
