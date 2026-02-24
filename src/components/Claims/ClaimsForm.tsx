@@ -439,19 +439,19 @@ const ClaimsForm = () => {
 			editable: true,
 			subRow: false,
 			width: 150,
-			onChange: (value: any, rowData: any, rowIndex?: number) => {
-				// Recalculate BalanceAmount when ClaimAmount changes
-				const currentGridData = [...(gridState.gridData || [])];
-				if (rowIndex !== undefined && rowIndex >= 0 && rowIndex < currentGridData.length) {
-					currentGridData[rowIndex] = {
-						...currentGridData[rowIndex],
-						ClaimAmount: value
-					};
-					// Recalculate BalanceAmount for all rows
-					const updatedData = calculateBalanceAmount(currentGridData);
-					gridState.setGridData(updatedData);
-				}
-			}
+			// onChange: (value: any, rowData: any, rowIndex?: number) => {
+			// 	// Recalculate BalanceAmount when ClaimAmount changes
+			// 	const currentGridData = [...(gridState.gridData || [])];
+			// 	if (rowIndex !== undefined && rowIndex >= 0 && rowIndex < currentGridData.length) {
+			// 		currentGridData[rowIndex] = {
+			// 			...currentGridData[rowIndex],
+			// 			ClaimAmount: value
+			// 		};
+			// 		// Recalculate BalanceAmount for all rows
+			// 		const updatedData = calculateBalanceAmount(currentGridData);
+			// 		gridState.setGridData(updatedData);
+			// 	}
+			// }
 		},
 		{
 			key: 'BalanceAmount',
