@@ -109,7 +109,7 @@ useEffect(()=>{console.log(invoiceType,"invoiceType")},[invoiceType])
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="STI_SFI" id="sfi-sti"/>
-                <Label htmlFor="sfi-sti" className="text-sm font-normal text-gray-700 cursor-not-allowed">
+                <Label htmlFor="sfi-sti" className="text-sm font-normal text-gray-700 cursor-pointer">
                   STI-SFI
                 </Label>
               </div>
