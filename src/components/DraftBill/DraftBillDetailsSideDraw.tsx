@@ -76,7 +76,8 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
      disableDropdown: true,
      options: [{ value: "TON", label: "TON" }], // Placeholder, replace with actual units
-     maxLength: 50
+     maxLength: 50,
+     inputType: "number"
   },
   rate: {
     id: "rate",
@@ -91,7 +92,8 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
     disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
-    maxLength: 100
+    maxLength: 100,
+    inputType: "number"
   },
   acceptedValue: {
     id: "acceptedValue",
@@ -106,7 +108,8 @@ const BasicDetailsPanelConfig: PanelConfig = {
     placeholder: "",
         disableDropdown: true,
     options: [{ value: "EUR", label: "EUR" }], // Placeholder, replace with actual currency
-    maxLength: 100
+    maxLength: 100,
+    inputType: "number"
   },
   userAssigned: {
     id: "userAssigned",
