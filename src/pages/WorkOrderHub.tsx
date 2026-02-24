@@ -1222,7 +1222,7 @@ export const WorkOrderHub = () => {
               {/* Load the grid only when preferences are loaded */}
               {isPreferencesLoaded ? (
               <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
+                // key={`grid-${gridState.forceUpdate}`}
                 onPreferenceSave={handleGridPreferenceSave}
                 columns={gridState.columns}
                 data={gridState.gridData}

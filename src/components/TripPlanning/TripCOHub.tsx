@@ -2001,7 +2001,7 @@ export const TripCOHub = ({ onCustomerOrderClick, tripID, manageFlag, customerOr
             {/* Selected rows indicator */}
             {isPreferencesLoaded ? (
               <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
+                // key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
                 data={gridState.gridData}
                 highlightedRowIndices={highlightedRows}

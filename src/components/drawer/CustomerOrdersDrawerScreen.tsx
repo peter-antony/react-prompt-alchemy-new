@@ -733,7 +733,7 @@ export const CustomerOrdersDrawerScreen: React.FC<CustomerOrdersDrawerScreenProp
             {/* Selected rows indicator */}
             {isPreferencesLoaded ? (
               <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
+                // key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
                 data={gridState.gridData}
                 highlightedRowIndices={highlightedRows}

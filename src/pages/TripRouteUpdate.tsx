@@ -1344,7 +1344,7 @@ export const TripRouteUpdate = () => {
               {/* Load the grid only when preferences are loaded */}
               {isPreferencesLoaded ? (
                 <SmartGridWithGrouping
-                  key={`grid-${gridState.forceUpdate}`}
+                  // key={`grid-${gridState.forceUpdate}`}
                   columns={gridState.columns}
                   data={gridState.gridData}
                   groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}

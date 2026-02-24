@@ -1537,7 +1537,7 @@ const QuickOrderManagement = () => {
               /> */}
               {/* {!filtersLoading ? ( */}
               <SmartGridWithGrouping
-                key={`grid-${gridState.forceUpdate}`}
+                // key={`grid-${gridState.forceUpdate}`}
                 columns={gridState.columns}
                 data={gridState.gridData}
                 groupableColumns={['OrderType', 'CustomerOrVendor', 'Status', 'Contract']}
