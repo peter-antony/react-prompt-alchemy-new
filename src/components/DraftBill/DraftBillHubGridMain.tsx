@@ -1634,7 +1634,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 if (successCount > 0 && failureCount === 0) {
                     toast({
                         title: "✅ Draft Bills Cancelled Successfully",
-                        description: `Successfully cancelled ${successCount} draft bill(s).`,
+                        description: `Successfully cancelled ${successCount} draft bill(s): ${successfullyCancelledDraftBillNos.join(', ')}`,
                         variant: "default",
                     });
                      gridState.setLoading(false);
@@ -1644,7 +1644,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
                 } else if (successCount > 0 && failureCount > 0) {
                     toast({
                         title: "⚠️ Partial Success",
-                        description: `Cancelled ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
+                        description: `Cancelled ${successCount} draft bill(s): ${successfullyCancelledDraftBillNos.join(', ')}, but ${failureCount} failed. ${failureMessages.join('; ')}`,
                         variant: "default",
                     });
                      gridState.setLoading(false);
@@ -1761,7 +1761,7 @@ console.log("updatedItemDetails", updatedItemDetails);
 
                     toast({
                         title: "✅ Draft Cancelled Successfully",
-                        description: (response as any)?.data?.ResponseData?.Message || "Your changes have been cancelled.",
+                        description: (response as any)?.data?.ResponseData?.Message || `Draft Bill ${parentDraftBillNo} cancelled successfully.`,
                         variant: "default",
                     });
                     gridState.setLoading(false);
@@ -2023,7 +2023,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     gridState.setLoading(false);
                     toast({
                         title: "✅ Draft Bills Approved Successfully",
-                        description: `Successfully Approved ${successCount} draft bill(s).`,
+                        description: `Successfully Approved ${successCount} draft bill(s): ${successfullyCancelledDraftBillNos.join(', ')}`,
                         variant: "default",
                     });
                     // Clear all selections and uncheck checkboxes on full success
@@ -2033,7 +2033,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                     gridState.setLoading(false);
                     toast({
                         title: "⚠️ Partial Success",
-                        description: `Approved ${successCount} draft bill(s), but ${failureCount} failed. ${failureMessages.join('; ')}`,
+                        description: `Approved ${successCount} draft bill(s): ${successfullyCancelledDraftBillNos.join(', ')}, but ${failureCount} failed. ${failureMessages.join('; ')}`,
                         variant: "default",
                     });
                     // Remove successfully cancelled bills from selection
@@ -2135,7 +2135,7 @@ console.log("updatedItemDetails", updatedItemDetails);
   gridState.setLoading(false);
                     toast({
                         title: "✅ Draft Approve Successfully",
-                        description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Approve.",
+                        description: (response as any)?.data?.ResponseData?.Message || `Draft Bill ${parentDraftBillNo} approved successfully.`,
                         variant: "default",
                     });
                     setIsCancelModalOpen(false);
@@ -2175,6 +2175,9 @@ console.log("updatedItemDetails", updatedItemDetails);
             "RecordSupplierInvoiceDate": draftBill.RecordSupplierInvoiceDate // Same for all
         }));
 
+        // for getiing the draftbillnos
+        const draftBillNos = draftBillsArray.map(db => db.DraftBillNo);
+
         const generateOption = {
   IsManual: invoiceType === 'MANUAL' ? 1 : 0,
   IsSTI_SFI: invoiceType === 'STI_SFI' ? 1 : 0,
@@ -2207,7 +2210,7 @@ console.log("updatedItemDetails", updatedItemDetails);
             if (resourceStatus) {
                 toast({
                     title: "✅ Draft Bill Invoice Generated Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Invoice Generated Successfully.",
+                    description: (response as any)?.data?.ResponseData?.Message || `Invoice generated successfully for Draft Bill(s): ${draftBillNos.join(', ')}`,
                     variant: "default",
                 });
                 setIsGenerateInvoiceModalOpen(false);
@@ -2236,6 +2239,9 @@ console.log("updatedItemDetails", updatedItemDetails);
 
         console.log("selectedDraftBills", selectedDraftBills[0]?.lineItems ?? [])
         const selectedBill = selectedDbLines[0]?.parentRow;
+        
+        // for getting the draftbillno
+        const draftBillNo = selectedBill?.DraftBillNo;
 
         const payload = {
             Header: {
@@ -2333,7 +2339,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 console.log("Rerun successfully");
                 toast({
                     title: "✅ Rerun Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Rerun Successfully.",
+                    description: (response as any)?.data?.ResponseData?.Message || draftBillNo? `Draft Bill ${draftBillNo} rerun successfully.` : "Rerun completed successfully.",
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
@@ -2371,6 +2377,10 @@ console.log("updatedItemDetails", updatedItemDetails);
             }))
         };
 
+        const draftBillNos = selectedDraftBills.map(
+            bill => bill.DraftBillNo || bill.id
+        );
+
 
 
         console.log(JSON.stringify(payload, null, 2))
@@ -2387,7 +2397,7 @@ console.log("updatedItemDetails", updatedItemDetails);
                 console.log("Revert successfully");
                 toast({
                     title: "✅ Revert Successfully",
-                    description: (response as any)?.data?.ResponseData?.Message || "Your changes have been Reverted.",
+                    description: (response as any)?.data?.ResponseData?.Message || draftBillNos.length ? `Reverted successfully for Draft Bill(s): ${draftBillNos.join(', ')}` : "Reverted successfully.",
                     variant: "default",
                 });
                 setIsCancelModalOpen(false);
