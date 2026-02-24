@@ -464,7 +464,7 @@ export function GridToolbar({
 
         {/* Save Preferences Star Icon Button */}
         {/* {onSavePreferences && ( */}
-        {gridTitle !== "Item Service" && (
+        {gridTitle !== "Item Service" && gridTitle !== 'Leg Details' && (
           <Button
             variant="ghost"
             size="sm"
