@@ -1782,6 +1782,7 @@ export const ResourceSelectionDrawer: React.FC<ResourceSelectionDrawerProps> = (
                     showFilterTypeDropdown={false}
                     showServersideFilter={false}
                     userId="current-user"
+                    preferencesKey={`smartgrid-preferences-resource-${resourceType.toLowerCase()}`}
                   />
                 )}
               </div>

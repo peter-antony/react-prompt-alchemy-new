@@ -105,6 +105,7 @@ export function SmartGrid({
   onToggleStatus,
   onClearStatusSelection,
   statusCounts,
+  preferencesKey,
 }: SmartGridProps & {
   exportFilename?: string;
   serverFilterVisibleFields?: string[];
@@ -210,7 +211,7 @@ export function SmartGrid({
   } = useGridPreferences(
     preferencesColumns,
     true, // persistPreferences
-    'smartgrid-preferences',
+    preferencesKey || 'smartgrid-preferences',
     undefined // Pass undefined to prevent auto-save on every change
   );
 
