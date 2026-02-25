@@ -340,6 +340,7 @@ export function SmartGridWithNestedRows({
       {...smartGridProps}
       nestedRowRenderer={finalNestedRowRenderer}
       onRowDataSelection={onRowSelectionChange}
+      nestedSectionConfig={nestedSectionConfig}
       // selectedRows={smartGridProps.selectedRows}
     />
   );

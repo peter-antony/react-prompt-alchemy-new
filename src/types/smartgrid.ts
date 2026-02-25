@@ -272,7 +272,7 @@ export interface SmartGridProps {
   enableExpandCollapseAll?: boolean;
 
   onServerFilterPreferenceSave?: (visibleFields: string[], fieldOrder: string[], fieldLabels?: Record<string, string>) => void;
-  
+  nestedSectionConfig?: any;
   /** Optional localStorage key for grid preferences. Defaults to 'smartgrid-preferences'.
    *  Pass a unique key per grid instance to prevent preference bleed-over between grids. */
   preferencesKey?: string;

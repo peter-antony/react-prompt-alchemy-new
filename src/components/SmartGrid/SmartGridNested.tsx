@@ -99,7 +99,8 @@ export function SmartGridNested({
   serverFilterFieldOrder,
   serverFilterFieldLabels,
   onServerFilterPreferenceSave,
-  enableExpandCollapseAll = false
+  enableExpandCollapseAll = false,
+  nestedSectionConfig
 }: SmartGridProps & { exportFilename?: string; onRowDataSelection?: (rows: any[]) => void; }) {
   const {
     gridData,
@@ -463,16 +464,52 @@ export function SmartGridNested({
     // Build export columns: initial columns order + any extra sub-row columns
     const initialKeys = columns.map(col => col.key);
     const extraSubRowColumns = subRowColumns.filter(col => !initialKeys.includes(col.key));
-    const exportColumns = [...columns, ...extraSubRowColumns];
+    let exportColumns = [...columns, ...extraSubRowColumns];
+
+    let dataToExport = processedData;
+
+    // Handle nested section data export
+    if (nestedSectionConfig && nestedSectionConfig.nestedDataKey && nestedSectionConfig.columns) {
+      // 1. Add nested columns to export columns if not already present
+      const nestedColumns = nestedSectionConfig.columns;
+      const nestedKeys = new Set(nestedColumns.map((col: any) => col.key));
+      const combinedColumns = [...exportColumns];
+
+      nestedColumns.forEach((col: any) => {
+        if (!combinedColumns.find(c => c.key === col.key)) {
+          combinedColumns.push(col);
+        }
+      });
+      exportColumns = combinedColumns;
+
+      // 2. Flatten data: one row per nested item, including parent data
+      const flattenedData: any[] = [];
+      processedData.forEach((parentRow) => {
+        const nestedItems = parentRow[nestedSectionConfig.nestedDataKey];
+        if (Array.isArray(nestedItems) && nestedItems.length > 0) {
+          nestedItems.forEach((nestedItem) => {
+            flattenedData.push({
+              ...parentRow,
+              ...nestedItem
+            });
+          });
+        } else {
+          // If no nested items, still include the parent row
+          flattenedData.push(parentRow);
+        }
+      });
+      dataToExport = flattenedData;
+    }
+
     try {
       if (format === 'csv') {
-        exportToCSV(processedData, exportColumns, filename);
+        exportToCSV(dataToExport, exportColumns, filename);
         toast({
           title: "Success",
           description: "CSV file exported successfully"
         });
       } else if (format === 'xlsx') {
-        exportToExcel(processedData, exportColumns, filename);
+        exportToExcel(dataToExport, exportColumns, filename);
         toast({
           title: "Success",
           description: "Excel file exported successfully"
@@ -486,7 +523,7 @@ export function SmartGridNested({
         variant: "destructive"
       });
     }
-  }, [processedData, columns, subRowColumns, toast, exportFilename]);
+  }, [processedData, columns, subRowColumns, toast, exportFilename, nestedSectionConfig]);
 
   const handleResetPreferences = useCallback(async () => {
     const defaultPreferences = {
