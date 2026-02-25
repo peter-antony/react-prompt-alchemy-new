@@ -851,11 +851,11 @@ const handleTemplateNumberCallback = (value: string) => {
 
    const wagonGritDetailsColumns: GridColumnConfig[] = [
       { key: "WagonNo", label: "Wagon No", type: "Text", editable: true },
-      { key: "Short_Description_of_Goods", label: "Short Description of Goods", type: "Text", editable: true},
+      { key: "Short_Description_of_Goods", label: "Short Description of Goods [21]/[17]", type: "Text", editable: true},
       { key: "RID", label: "RID", type: "Text", editable: true },
-      { key: "Gross_Weight", label: "Gross Weight", type: "Text", editable: true },
+      { key: "Gross_Weight", label: "Gross Weight [25]/[19]", type: "Text", editable: true },
       { key: "Tare_Weight", label: "Tare Weight", type: "Text", editable: true },
-      { key: "Net_Weight_", label: "Net Weight", type: "Text", editable: true },
+      { key: "Net_Weight_", label: "Net Weight [25]/[21]", type: "Text", editable: true },
       { key: "No_of_Axle", label: "No of Axle", type: "Text", editable: true },
       { key: "NHM", label: "NHM", type: "Text", editable: true },
       { key: "Mass_Weight", label: "Mass Weight", type: "Text", editable: true },
@@ -2535,7 +2535,7 @@ const handleTemplateNumberCallback = (value: string) => {
     },
     GrossWeight: {
       id: "GrossWeight",
-      label: "Gross Weight [26]/[19]",
+      label: "Gross Weight [25]/[19]",
       fieldType: "inputdropdown",
       value: {
         dropdown: "",
@@ -2571,7 +2571,7 @@ const handleTemplateNumberCallback = (value: string) => {
 
     NetWeight: {
       id: "NetWeight",
-      label: "Net Weight [25]/[20]",
+      label: "Net Weight [25]/[21]",
       fieldType: "inputdropdown",
       value: {
         dropdown: "",
