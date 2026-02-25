@@ -11,7 +11,7 @@ const CreateTemplateMain = () => {
 
   //BreadCrumb data
   const breadcrumbItems = [
-    { label: 'Home', href: '/dashboard', active: false },
+    { label: 'Home', href: '/', active: false },
     { label: 'CIM/CUV Management', href: '/cim-cuv?tab=template', active: false },
     { label: 'Create Template', active: true }
   ];

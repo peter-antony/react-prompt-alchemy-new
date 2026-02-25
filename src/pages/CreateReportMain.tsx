@@ -11,7 +11,7 @@ const CreateReportMain = () => {
 
     //BreadCrumb data
     const breadcrumbItems = [
-        { label: 'Home', href: '/dashboard', active: false },
+        { label: 'Home', href: '/', active: false },
         { label: 'CIM/CUV Management', href: '/cim-cuv?tab=report', active: false },
         { label: 'CIM/CUV Report', active: true }
     ];
