@@ -476,7 +476,7 @@ const DraftBillHubGridMain = ({ onDraftBillSelection }: any) => {
         },
         {
             key: 'ReferenceInformation',
-            label: 'Ref Info',
+            label: 'Ref Information',
             type: 'Text',
             width: 200
         },
