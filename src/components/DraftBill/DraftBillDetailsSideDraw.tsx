@@ -1629,7 +1629,7 @@ const refDocs: RefDoc[] = Array.from(
                           <div className="grid grid-cols-4 gap-x-6 gap-y-4 text-sm">
                             <div>
                               <p className="text-gray-500">Tariff ID</p>
-                              <p className="font-medium text-gray-900">{activeLine?.TariffID || '--'}</p>
+                              <p className="font-medium text-gray-900">{activeLine?.TariffID || '--'} || {activeLine?.TariffDescription || '--'}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Triggering Doc.</p>
@@ -1653,6 +1653,14 @@ const refDocs: RefDoc[] = Array.from(
                               <p className="font-medium text-gray-900">
                                 EUR {activeLine?.MinimumCharge || '0.00'} / EUR {activeLine?.MaximumCharge || '0.00'}
                               </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Reference Information</p>
+                              <p className="font-medium text-gray-900">{activeLine?.ReferenceInformation || '--'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Reference Doc. Date</p>
+                              <p className="font-medium text-gray-900">{formatDateTimeWithOutDate(activeLine?.RefDocDate || '--')}</p>
                             </div>
                             <div>
                               <p className="text-gray-500">Reference Doc. No.</p>
